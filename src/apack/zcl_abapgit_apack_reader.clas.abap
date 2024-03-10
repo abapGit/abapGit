@@ -98,6 +98,19 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
     lv_descriptor_cust = zif_abapgit_apack_definitions=>c_apack_interface_cust && '~DESCRIPTOR'.
     lv_descriptor_sap  = zif_abapgit_apack_definitions=>c_apack_interface_sap && '~DESCRIPTOR'.
 
+    DATA(lv_class_name) = cl_abap_classdescr=>get_class_name( io_manifest_provider ).
+    SPLIT lv_class_name AT '\CLASS=' INTO DATA(lv_empty) lv_class_name.
+
+    IF lv_class_name(1) = '/'.
+      DATA: lo_nspc      TYPE REF TO zcl_abapgit_sap_namespace.
+      CREATE OBJECT lo_nspc.
+
+      DATA(ls_namespace) = lo_nspc->zif_abapgit_sap_namespace~split_by_name( iv_obj_with_namespace = lv_class_name ).
+      IF ls_namespace-namespace IS NOT INITIAL.
+        lv_descriptor_cust = |{ ls_namespace-namespace }{ lv_descriptor_sap }|.
+      ENDIF.
+    ENDIF.
+
     ASSIGN io_manifest_provider->(lv_descriptor_cust) TO <lg_descriptor>.
     IF <lg_descriptor> IS NOT ASSIGNED.
       ASSIGN io_manifest_provider->(lv_descriptor_sap) TO <lg_descriptor>.
