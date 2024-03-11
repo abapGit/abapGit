@@ -205,9 +205,7 @@ CLASS ltcl_json_path IMPLEMENTATION.
     DATA: lt_file     TYPE string_table,
           lo_cut      TYPE REF TO zcl_abapgit_json_path,
           lv_xact     TYPE xstring,
-
-          lv_act      TYPE string,
-          lv_is_equal TYPE abap_bool.
+          lv_act      TYPE string.
 
     APPEND `# comment = abc` TO lt_file.
     APPEND `!this is a comment [abc]` TO lt_file.
