@@ -992,12 +992,19 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
 
       WHEN zif_abapgit_ajson_types=>node_type-string.
         " TODO: check type ?
-        IF is_node_type-type_kind = lif_kind=>date AND is_node-value IS NOT INITIAL.
-          <container> = to_date( is_node-value ).
-        ELSEIF is_node_type-type_kind = lif_kind=>time AND is_node-value IS NOT INITIAL.
-          <container> = to_time( is_node-value ).
-        ELSEIF is_node_type-type_kind = lif_kind=>packed AND is_node-value IS NOT INITIAL.
-          <container> = to_timestamp( is_node-value ).
+        IF is_node-value IS NOT INITIAL.
+          IF is_node_type-type_kind = lif_kind=>date.
+            <container> = to_date( is_node-value ).
+          ELSEIF is_node_type-type_kind = lif_kind=>time.
+            <container> = to_time( is_node-value ).
+          ELSEIF is_node_type-dd->absolute_name = '\TYPE=TIMESTAMP'
+            OR is_node_type-dd->absolute_name = '\TYPE=TIMESTAMPL'.
+            <container> = to_timestamp( is_node-value ).
+          ELSEIF is_node_type-type_kind = lif_kind=>packed. " Number as a string, but not a timestamp
+            <container> = is_node-value.
+          ELSE.
+            <container> = is_node-value.
+          ENDIF.
         ELSE.
           <container> = is_node-value.
         ENDIF.
