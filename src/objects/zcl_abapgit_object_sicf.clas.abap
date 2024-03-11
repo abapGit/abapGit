@@ -19,7 +19,15 @@ CLASS zcl_abapgit_object_sicf DEFINITION
       BEGIN OF ty_sicf_key,
         icf_name   TYPE icfservice-icf_name,
         icfparguid TYPE icfservice-icfparguid,
-      END OF ty_sicf_key .
+      END OF ty_sicf_key.
+
+    TYPES:
+      BEGIN OF ty_additional_language,
+        icf_langu TYPE icfdocu-icf_langu,
+        icf_docu  TYPE icfdocu-icf_docu,
+      END OF ty_additional_language,
+      ty_additional_languages TYPE STANDARD TABLE OF ty_additional_language
+                                   WITH NON-UNIQUE DEFAULT KEY.
 
     METHODS serialize_otr
       IMPORTING
@@ -34,30 +42,33 @@ CLASS zcl_abapgit_object_sicf DEFINITION
         zcx_abapgit_exception .
     METHODS read
       IMPORTING
-        !iv_clear      TYPE abap_bool DEFAULT abap_true
+        !iv_clear                 TYPE abap_bool DEFAULT abap_true
       EXPORTING
-        !es_icfservice TYPE icfservice
-        !es_icfdocu    TYPE icfdocu
-        !et_icfhandler TYPE ty_icfhandler_tt
-        !ev_url        TYPE string
+        !es_icfservice            TYPE icfservice
+        !es_icfdocu               TYPE icfdocu
+        !et_icfdocu_add_languages TYPE ty_additional_languages
+        !et_icfhandler            TYPE ty_icfhandler_tt
+        !ev_url                   TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS insert_sicf
       IMPORTING
-        !is_icfservice TYPE icfservice
-        !is_icfdocu    TYPE icfdocu
-        !it_icfhandler TYPE ty_icfhandler_tt
-        !iv_package    TYPE devclass
-        !iv_url        TYPE string
+        !is_icfservice   TYPE icfservice
+        !is_icfdocu      TYPE icfdocu
+        !it_icfhandler   TYPE ty_icfhandler_tt
+        !iv_package      TYPE devclass
+        !iv_url          TYPE string
+        it_add_languages TYPE ty_additional_languages
       RAISING
         zcx_abapgit_exception .
     METHODS change_sicf
       IMPORTING
-        !is_icfservice TYPE icfservice
-        !is_icfdocu    TYPE icfdocu
-        !it_icfhandler TYPE ty_icfhandler_tt
-        !iv_package    TYPE devclass
-        !iv_parent     TYPE icfparguid
+        !is_icfservice   TYPE icfservice
+        !is_icfdocu      TYPE icfdocu
+        !it_icfhandler   TYPE ty_icfhandler_tt
+        !iv_package      TYPE devclass
+        !iv_parent       TYPE icfparguid
+        it_add_languages TYPE ty_additional_languages
       RAISING
         zcx_abapgit_exception .
     METHODS to_icfhndlist
@@ -67,11 +78,16 @@ CLASS zcl_abapgit_object_sicf DEFINITION
         VALUE(rt_list) TYPE icfhndlist .
     METHODS find_parent
       IMPORTING
-        !iv_url          TYPE string
+        iv_url           TYPE string
       RETURNING
         VALUE(rv_parent) TYPE icfparguid
       RAISING
         zcx_abapgit_exception .
+    METHODS save_additional_languages
+      IMPORTING
+        iv_name          TYPE icfname
+        !iv_parent       TYPE icfparguid
+        it_add_languages TYPE ty_additional_languages.
 
     CLASS-METHODS get_hash_from_object
       IMPORTING
@@ -150,6 +166,12 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
         OTHERS                    = 27 ).
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    IF lines( it_add_languages ) > 0.
+      save_additional_languages( iv_name          = is_icfservice-icf_name
+                                 iv_parent        = iv_parent
+                                 it_add_languages = it_add_languages ).
     ENDIF.
 
   ENDMETHOD.
@@ -307,6 +329,12 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
     SELECT SINGLE icfparguid INTO ms_item-obj_name+15 FROM icfservice
       WHERE icfnodguid = lv_icfnodguid.
 
+    IF lines( it_add_languages ) > 0.
+      save_additional_languages( iv_name          = is_icfservice-icf_name
+                                 iv_parent        = lv_parent
+                                 it_add_languages = it_add_languages ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -364,6 +392,14 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
     LOOP AT et_icfhandler ASSIGNING <ls_icfhandler>.
       CLEAR <ls_icfhandler>-icfparguid.
     ENDLOOP.
+
+    SELECT icf_langu icf_docu
+      FROM icfdocu
+      INTO TABLE et_icfdocu_add_languages
+      WHERE icf_name   = ls_key-icf_name
+        AND icfparguid = ls_key-icfparguid
+        AND icf_langu <> mv_language
+      ORDER BY PRIMARY KEY.
 
   ENDMETHOD.
 
@@ -486,13 +522,13 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_icfservice TYPE icfservice,
-          ls_read       TYPE icfservice,
-          ls_icfdocu    TYPE icfdocu,
-          lv_url        TYPE string,
-          lv_exists     TYPE abap_bool,
-          lt_icfhandler TYPE TABLE OF icfhandler.
-
+    DATA: ls_icfservice    TYPE icfservice,
+          ls_read          TYPE icfservice,
+          ls_icfdocu       TYPE icfdocu,
+          lv_url           TYPE string,
+          lv_exists        TYPE abap_bool,
+          lt_icfhandler    TYPE TABLE OF icfhandler,
+          lt_add_languages TYPE ty_additional_languages.
     io_xml->read( EXPORTING iv_name = 'URL'
                   CHANGING cg_data = lv_url ).
     io_xml->read( EXPORTING iv_name = 'ICFSERVICE'
@@ -501,21 +537,25 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
                   CHANGING cg_data = ls_icfdocu ).
     io_xml->read( EXPORTING iv_name = 'ICFHANDLER_TABLE'
                   CHANGING cg_data = lt_icfhandler ).
+    io_xml->read( EXPORTING iv_name = 'ICFDOCU_ADDITIONAL_LANGUAGES'
+                  CHANGING cg_data = lt_add_languages ).
 
     lv_exists = zif_abapgit_object~exists( ).
     IF lv_exists = abap_false.
-      insert_sicf( is_icfservice = ls_icfservice
-                   is_icfdocu    = ls_icfdocu
-                   it_icfhandler = lt_icfhandler
-                   iv_package    = iv_package
-                   iv_url        = lv_url ).
+      insert_sicf( is_icfservice    = ls_icfservice
+                   is_icfdocu       = ls_icfdocu
+                   it_icfhandler    = lt_icfhandler
+                   iv_package       = iv_package
+                   iv_url           = lv_url
+                   it_add_languages = lt_add_languages ).
     ELSE.
       read( IMPORTING es_icfservice = ls_read ).
-      change_sicf( is_icfservice = ls_icfservice
-                   is_icfdocu    = ls_icfdocu
-                   it_icfhandler = lt_icfhandler
-                   iv_package    = iv_package
-                   iv_parent     = ls_read-icfparguid ).
+      change_sicf( is_icfservice    = ls_icfservice
+                   is_icfdocu       = ls_icfdocu
+                   it_icfhandler    = lt_icfhandler
+                   iv_package       = iv_package
+                   iv_parent        = ls_read-icfparguid
+                   it_add_languages = lt_add_languages ).
     ENDIF.
 
     " OTR long texts
@@ -647,15 +687,17 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_icfservice TYPE icfservice,
-          ls_icfdocu    TYPE icfdocu,
-          lv_url        TYPE string,
-          lt_icfhandler TYPE TABLE OF icfhandler.
+    DATA: ls_icfservice    TYPE icfservice,
+          ls_icfdocu       TYPE icfdocu,
+          lv_url           TYPE string,
+          lt_icfhandler    TYPE TABLE OF icfhandler,
+          lt_add_languages TYPE ty_additional_languages.
 
-    read( IMPORTING es_icfservice = ls_icfservice
-                    es_icfdocu    = ls_icfdocu
-                    et_icfhandler = lt_icfhandler
-                    ev_url        = lv_url ).
+    read( IMPORTING es_icfservice            = ls_icfservice
+                    es_icfdocu               = ls_icfdocu
+                    et_icfhandler            = lt_icfhandler
+                    ev_url                   = lv_url
+                    et_icfdocu_add_languages = lt_add_languages ).
 
     IF ls_icfservice IS INITIAL.
       RETURN.
@@ -680,9 +722,38 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
                  ig_data = ls_icfdocu ).
     io_xml->add( iv_name = 'ICFHANDLER_TABLE'
                  ig_data = lt_icfhandler ).
+    io_xml->add( iv_name = 'ICFDOCU_ADDITIONAL_LANGUAGES'
+                 ig_data = lt_add_languages ).
 
     " OTR long texts
     serialize_otr( io_xml ).
 
   ENDMETHOD.
+
+  METHOD save_additional_languages.
+
+    DATA:
+      lt_icfdocu TYPE STANDARD TABLE OF icfdocu
+                      WITH NON-UNIQUE DEFAULT KEY,
+      ls_icfdocu LIKE LINE OF lt_icfdocu.
+
+    FIELD-SYMBOLS: <ls_add_language> TYPE ty_additional_language.
+
+    IF lines( it_add_languages ) = 0.
+      RETURN.
+    ENDIF.
+
+    " see report RSICFTREE, form UPDATE_ICFDOCU_DB
+
+    ls_icfdocu-icf_name = iv_name.
+    ls_icfdocu-icfparguid = iv_parent.
+    LOOP AT it_add_languages ASSIGNING <ls_add_language>.
+      MOVE-CORRESPONDING <ls_add_language> TO ls_icfdocu.
+      INSERT ls_icfdocu INTO TABLE lt_icfdocu.
+    ENDLOOP.
+
+    MODIFY icfdocu FROM TABLE lt_icfdocu.
+
+  ENDMETHOD.
+
 ENDCLASS.
