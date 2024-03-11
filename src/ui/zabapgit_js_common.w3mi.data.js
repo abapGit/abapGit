@@ -2403,7 +2403,7 @@ function enumerateUiActions() {
   // - label links
   // - command links
   // - other header links
-  [].slice.call(document.querySelectorAll("form a, a.command, #header ul:not([id*='toolbar']) a"))
+  [].slice.call(document.querySelectorAll("form a, a.command:not(.unlisted), #header ul:not([id*='toolbar']) a"))
     .filter(function(anchor) {
       return !!anchor.title || !!anchor.text;
     }).forEach(function(anchor) {
@@ -2420,16 +2420,6 @@ function enumerateUiActions() {
         })()
       });
     });
-
-  // Check if the title already exists before adding to items array
-  var titlesAdded = {};
-  items = items.filter(function(item) {
-    if (!titlesAdded[item.title]) {
-      titlesAdded[item.title] = true;
-      return true;
-    }
-    return false;
-  });
 
   return items;
 }
