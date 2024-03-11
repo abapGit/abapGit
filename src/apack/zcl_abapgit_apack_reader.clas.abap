@@ -89,7 +89,10 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
           ls_my_dependency       TYPE zif_abapgit_apack_definitions=>ty_dependency,
           ls_descriptor          TYPE zif_abapgit_apack_definitions=>ty_descriptor,
           lv_descriptor_cust     TYPE string,
-          lv_descriptor_sap      TYPE string.
+          lv_descriptor_sap      TYPE string,
+          lv_class_name          TYPE abap_abstypename,
+          lv_empty               TYPE string,
+          ls_namespace           TYPE zif_abapgit_definitions=>ty_obj_namespace.
 
     FIELD-SYMBOLS: <lg_descriptor>   TYPE any,
                    <lt_dependencies> TYPE ANY TABLE,
@@ -97,6 +100,14 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
 
     lv_descriptor_cust = zif_abapgit_apack_definitions=>c_apack_interface_cust && '~DESCRIPTOR'.
     lv_descriptor_sap  = zif_abapgit_apack_definitions=>c_apack_interface_sap && '~DESCRIPTOR'.
+
+    lv_class_name = cl_abap_classdescr=>get_class_name( io_manifest_provider ).
+    SPLIT lv_class_name AT '\CLASS=' INTO lv_empty lv_class_name.
+    ls_namespace = zcl_abapgit_factory=>get_sap_namespace( )->split_by_name( lv_class_name ).
+
+    IF ls_namespace-namespace IS NOT INITIAL.
+      lv_descriptor_cust = |{ ls_namespace-namespace }{ lv_descriptor_sap }|.
+    ENDIF.
 
     ASSIGN io_manifest_provider->(lv_descriptor_cust) TO <lg_descriptor>.
     IF <lg_descriptor> IS NOT ASSIGNED.
