@@ -378,7 +378,9 @@ CLASS ltcl_validate_form IMPLEMENTATION.
 
   METHOD when_validate_form.
 
-    mo_act_validation_log = mo_cut->validate_form( mo_given_form_data ).
+    mo_act_validation_log = mo_cut->validate_form(
+      io_form_data        = mo_given_form_data
+      iv_connection_check = abap_false ).
 
   ENDMETHOD.
 

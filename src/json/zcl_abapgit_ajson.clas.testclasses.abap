@@ -1409,6 +1409,7 @@ CLASS ltcl_json_to_abap DEFINITION
         timestamp1 TYPE timestamp,
         timestamp2 TYPE timestamp,
         timestamp3 TYPE timestamp,
+        timestamp4 TYPE timestampl,
       END OF ty_complex.
 
     METHODS to_abap_struc
@@ -1462,6 +1463,9 @@ CLASS ltcl_json_to_abap DEFINITION
     METHODS to_abap_time
       FOR TESTING
       RAISING cx_static_check.
+    METHODS to_abap_str_to_packed
+      FOR TESTING
+      RAISING cx_static_check.
 ENDCLASS.
 
 CLASS zcl_abapgit_ajson DEFINITION LOCAL FRIENDS ltcl_json_to_abap.
@@ -1491,6 +1495,7 @@ CLASS ltcl_json_to_abap IMPLEMENTATION.
     lo_nodes->add( '/      |timestamp1 |str    |2020-07-28T00:00:00       | ' ).
     lo_nodes->add( '/      |timestamp2 |str    |2020-07-28T00:00:00Z      | ' ).
     lo_nodes->add( '/      |timestamp3 |str    |2020-07-28T01:00:00+01:00 | ' ).
+    lo_nodes->add( '/      |timestamp4 |str    |2020-07-28T01:00:00+01:00 | ' ).
 
     CREATE OBJECT lo_cut.
     lo_cut->to_abap(
@@ -1509,6 +1514,7 @@ CLASS ltcl_json_to_abap IMPLEMENTATION.
     ls_exp-timestamp1 = lv_exp_timestamp.
     ls_exp-timestamp2 = lv_exp_timestamp.
     ls_exp-timestamp3 = lv_exp_timestamp.
+    ls_exp-timestamp4 = lv_exp_timestamp.
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_mock
@@ -1573,6 +1579,28 @@ CLASS ltcl_json_to_abap IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_mock_init
       exp = '000000' ).
+
+  ENDMETHOD.
+
+  METHOD to_abap_str_to_packed.
+
+    DATA lo_cut TYPE REF TO lcl_json_to_abap.
+    DATA lv_act TYPE p LENGTH 10 DECIMALS 3.
+    DATA lo_nodes TYPE REF TO lcl_nodes_helper.
+
+    CREATE OBJECT lo_nodes.
+    lo_nodes->add( '       |           |str    |1.3333                    | ' ).
+
+    CREATE OBJECT lo_cut.
+    lo_cut->to_abap(
+      EXPORTING
+        it_nodes    = lo_nodes->sorted( )
+      CHANGING
+        c_container = lv_act ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_act
+      exp = '1.333' ).
 
   ENDMETHOD.
 
@@ -2198,6 +2226,7 @@ CLASS ltcl_writer_test DEFINITION FINAL
     METHODS read_only FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_array_obj FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_with_type FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS new_array_w_keep_order_touch FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS overwrite_w_keep_order_touch FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS overwrite_w_keep_order_set FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS setx FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -3268,6 +3297,37 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = li_cut->stringify( )
       exp = '{"b":0,"a":1}' ). " still ordered after overwrite
+
+  ENDMETHOD.
+
+  METHOD new_array_w_keep_order_touch.
+
+    DATA li_cut TYPE REF TO zif_abapgit_ajson.
+
+    " default order adds new arrays at beginning of node (pos 0)
+    li_cut = zcl_abapgit_ajson=>create_empty(
+    )->set(
+      iv_path = '/b'
+      iv_val  = 1 ).
+
+    li_cut->touch_array( '/a' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = li_cut->stringify( )
+      exp = '{"a":[],"b":1}' ).
+
+    " with keep order, new array is created at end of node
+    li_cut = zcl_abapgit_ajson=>create_empty(
+    )->keep_item_order(
+    )->set(
+      iv_path = '/b'
+      iv_val  = 1 ).
+
+    li_cut->touch_array( '/a' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = li_cut->stringify( )
+      exp = '{"b":1,"a":[]}' ).
 
   ENDMETHOD.
 
