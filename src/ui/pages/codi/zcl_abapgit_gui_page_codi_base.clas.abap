@@ -12,6 +12,7 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         rerun  TYPE string VALUE 'rerun',
         stage  TYPE string VALUE 'stage',
         commit TYPE string VALUE 'commit',
+        filter_kind TYPE string VALUE 'filter_kind',
         apply_filter TYPE string VALUE 'apply_filter',
       END OF c_actions .
 
@@ -58,7 +59,8 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
     CONSTANTS c_object_separator TYPE c LENGTH 1 VALUE '|'.
     CONSTANTS c_ci_sig TYPE string VALUE 'cinav:'.
     CONSTANTS c_limit TYPE i VALUE 500.
-    DATA mv_filter TYPE string.
+    DATA mv_filter TYPE string. " TODO remove ?
+    DATA mv_filter_kind TYPE string.
     DATA ms_sorting_state TYPE zif_abapgit_html_table=>ty_sorting_state.
 
     TYPES:
@@ -99,9 +101,20 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
     METHODS apply_sorting
       CHANGING
         ct_view TYPE ty_view_tab.
+    METHODS apply_filter_kind
+      CHANGING
+        ct_view TYPE ty_view_tab.
     METHODS handle_navigation
       IMPORTING
         iv_link TYPE string
+      RAISING
+        zcx_abapgit_exception.
+    METHODS render_stat
+      IMPORTING
+        !ii_html   TYPE REF TO zif_abapgit_html
+        !iv_count  TYPE i
+        !iv_type   TYPE string
+        !iv_title  TYPE string
       RAISING
         zcx_abapgit_exception.
 
@@ -110,6 +123,22 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
+
+
+  METHOD apply_filter_kind.
+
+    CASE mv_filter_kind.
+      WHEN 'error'.
+        DELETE ct_view WHERE kind <> 'E'.
+      WHEN 'warn'.
+        DELETE ct_view WHERE kind <> 'W'.
+      WHEN 'info'.
+        DELETE ct_view WHERE NOT ( kind = 'E' OR kind = 'W' ).
+      WHEN OTHERS.
+        RETURN.
+    ENDCASE.
+
+  ENDMETHOD.
 
 
   METHOD apply_sorting.
@@ -351,6 +380,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
       rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDIF.
 
+    IF ii_event->mv_action = c_actions-filter_kind.
+      mv_filter_kind =  ii_event->query( )->get( 'kind' ).
+      rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -389,6 +423,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     ENDIF.
 
     apply_sorting( CHANGING ct_view = lt_view ).
+    apply_filter_kind( CHANGING ct_view = lt_view ).
 
     ii_html->div(
       iv_class   = 'ci-result'
@@ -398,13 +433,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
         it_data      = lt_view ) ).
 
     " TODO
-    " - status design
-    " - filter by kind
+    " - design
     " - search
 
     IF lines( it_result ) > c_limit.
       render_limit_warning( ii_html ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD render_stat.
+
+    ii_html->add( |<span class="{ iv_type }-count">| &&
+      ii_html->a(
+        iv_txt = |{ iv_count } { iv_title }|
+        iv_act = |{ c_actions-filter_kind }?kind={ iv_type }|
+        iv_typ = zif_abapgit_html=>c_action_type-sapevent ) &&
+      '</span>' ).
 
   ENDMETHOD.
 
@@ -439,14 +485,32 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     ii_html->add( |</form>| ).
 
     IF lv_errors > 0.
-      ii_html->add( |<span class="error-count">{ lv_errors } errors</span>| ).
+      render_stat(
+        ii_html  = ii_html
+        iv_count = lv_errors
+        iv_type  = 'error'
+        iv_title = 'errors' ).
     ENDIF.
     IF lv_warnings > 0.
-      ii_html->add( |<span class="warn-count">{ lv_warnings } warnings</span>| ).
+      render_stat(
+        ii_html  = ii_html
+        iv_count = lv_warnings
+        iv_type  = 'warn'
+        iv_title = 'warnings' ).
     ENDIF.
     IF lv_infos > 0.
-      ii_html->add( |<span class="info-count">{ lv_infos } info</span>| ).
+      render_stat(
+        ii_html  = ii_html
+        iv_count = lv_infos
+        iv_type  = 'info'
+        iv_title = 'infos' ).
     ENDIF.
+    render_stat(
+      ii_html  = ii_html
+      iv_count = lv_infos + lv_errors + lv_warnings
+      iv_type  = 'all'
+      iv_title = 'all' ).
+
     ii_html->add( '</div>' ).
 
   ENDMETHOD.
