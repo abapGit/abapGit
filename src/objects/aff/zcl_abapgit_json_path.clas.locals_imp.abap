@@ -70,8 +70,7 @@ ENDCLASS.
 CLASS lcl_json_path IMPLEMENTATION.
 
   METHOD to_json.
-    DATA: lo_matcher       TYPE REF TO cl_abap_matcher,
-          lv_path          TYPE string,
+    DATA: lv_path          TYPE string,
           lv_value         TYPE string,
           lt_path_elements TYPE string_table,
           lv_json          TYPE string.
