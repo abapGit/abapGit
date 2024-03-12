@@ -76,13 +76,7 @@ CLASS lcl_json_path IMPLEMENTATION.
           lt_path_elements TYPE string_table,
           lv_json          TYPE string.
 
-
-    lo_matcher = cl_abap_regex=>create_pcre( `(.*)=(.*$)` )->create_matcher( text = iv_json_path ).
-
-    IF lo_matcher->match( ) = abap_true.
-      lv_path  = lo_matcher->get_submatch( 1 ).
-      lv_value = lo_matcher->get_submatch( 2 ).
-    ENDIF.
+    FIND REGEX `(.*)=(.*$)` IN iv_json_path SUBMATCHES lv_path lv_value.
 
     IF path_contains_array( lv_path ) = abap_true.
 
