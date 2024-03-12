@@ -56,8 +56,7 @@ CLASS lcl_json_path DEFINITION CREATE PUBLIC.
       IMPORTING iv_json_path     TYPE string
       RETURNING VALUE(ro_result) TYPE REF TO zcl_abapgit_ajson
       RAISING   zcx_abapgit_ajson_error
-                cx_sy_regex
-                cx_sy_matcher.
+                cx_sy_regex_too_complex.
     CLASS-METHODS: is_primitiv
       IMPORTING iv_string        TYPE string
       RETURNING VALUE(rv_result) TYPE abap_bool.
@@ -359,7 +358,7 @@ CLASS lcl_json_path IMPLEMENTATION.
 
       TRY.
           lo_deserialization_result = to_json( lv_json_path ).
-        CATCH zcx_abapgit_ajson_error cx_sy_regex cx_sy_matcher.
+        CATCH zcx_abapgit_ajson_error cx_dynamic_check.
           zcx_abapgit_exception=>raise( `Failed to deserialize translation.` ).
       ENDTRY.
 
