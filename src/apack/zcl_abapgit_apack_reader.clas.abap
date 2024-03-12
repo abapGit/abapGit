@@ -90,6 +90,7 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
           ls_descriptor          TYPE zif_abapgit_apack_definitions=>ty_descriptor,
           lv_descriptor_cust     TYPE string,
           lv_descriptor_sap      TYPE string,
+          lv_descriptor_nspc     TYPE string,
           lv_class_name          TYPE abap_abstypename,
           lv_empty               TYPE string,
           ls_namespace           TYPE zif_abapgit_definitions=>ty_obj_namespace.
@@ -106,12 +107,15 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
     ls_namespace = zcl_abapgit_factory=>get_sap_namespace( )->split_by_name( lv_class_name ).
 
     IF ls_namespace-namespace IS NOT INITIAL.
-      lv_descriptor_cust = |{ ls_namespace-namespace }{ lv_descriptor_sap }|.
+      lv_descriptor_nspc = |{ ls_namespace-namespace }{ lv_descriptor_sap }|.
     ENDIF.
 
     ASSIGN io_manifest_provider->(lv_descriptor_cust) TO <lg_descriptor>.
     IF <lg_descriptor> IS NOT ASSIGNED.
       ASSIGN io_manifest_provider->(lv_descriptor_sap) TO <lg_descriptor>.
+      IF <lg_descriptor> IS NOT ASSIGNED AND lv_descriptor_nspc IS NOT INITIAL.
+        ASSIGN io_manifest_provider->(lv_descriptor_nspc) TO <lg_descriptor>.
+      ENDIF.
     ENDIF.
     IF <lg_descriptor> IS ASSIGNED.
       " A little more complex than a normal MOVE-CORRSPONDING
