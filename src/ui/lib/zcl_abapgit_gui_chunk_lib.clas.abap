@@ -177,6 +177,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         it_labels           TYPE string_table
         io_label_colors     TYPE REF TO zcl_abapgit_string_map
         iv_clickable_action TYPE string OPTIONAL
+        iv_unlisted         TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rv_html)      TYPE string.
 
@@ -661,12 +662,18 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     DATA lt_fragments TYPE string_table.
     DATA lv_l TYPE string.
     DATA lv_class TYPE string.
+    DATA lv_class_cmd TYPE string.
     DATA lv_style TYPE string.
     DATA ls_parsed_color TYPE zcl_abapgit_repo_labels=>ty_color.
     DATA li_html TYPE REF TO zif_abapgit_html.
 
     IF it_labels IS INITIAL.
       RETURN.
+    ENDIF.
+
+    lv_class_cmd = 'command'.
+    IF iv_unlisted = abap_true.
+      lv_class_cmd = lv_class_cmd && ' unlisted'.
     ENDIF.
 
     li_html = zcl_abapgit_html=>create( ).
@@ -697,9 +704,9 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
       IF iv_clickable_action IS NOT INITIAL.
         lv_l = li_html->a(
-          iv_txt = lv_l
-          iv_act = |{ iv_clickable_action }|
-          iv_class = 'command'
+          iv_txt   = lv_l
+          iv_act   = |{ iv_clickable_action }|
+          iv_class = lv_class_cmd
           iv_query = lv_l ).
       ENDIF.
       lv_l = |<li{ lv_class }{ lv_style }>{ lv_l }</li>|.
