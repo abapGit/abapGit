@@ -10,9 +10,6 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
     CONSTANTS:
       BEGIN OF c_actions,
         rerun  TYPE string VALUE 'rerun',
-        sort_1 TYPE string VALUE 'sort_1',
-        sort_2 TYPE string VALUE 'sort_2',
-        sort_3 TYPE string VALUE 'sort_3',
         stage  TYPE string VALUE 'stage',
         commit TYPE string VALUE 'commit',
         apply_filter TYPE string VALUE 'apply_filter',
@@ -57,12 +54,12 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
     METHODS build_base_menu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
-
   PRIVATE SECTION.
     CONSTANTS c_object_separator TYPE c LENGTH 1 VALUE '|'.
     CONSTANTS c_ci_sig TYPE string VALUE 'cinav:'.
     CONSTANTS c_limit TYPE i VALUE 500.
     DATA mv_filter TYPE string.
+    DATA ms_sorting_state TYPE zif_abapgit_html_table=>ty_sorting_state.
 
     TYPES:
       BEGIN OF ty_result_view,
@@ -99,6 +96,15 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         !iv_line_number TYPE i
       RAISING
         zcx_abapgit_exception .
+    METHODS apply_sorting
+      CHANGING
+        ct_view TYPE ty_view_tab.
+    METHODS handle_navigation
+      IMPORTING
+        iv_link TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -106,29 +112,30 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
 
+  METHOD apply_sorting.
+
+    DATA lv_field TYPE abap_compname.
+
+    CASE ms_sorting_state-column_id.
+      WHEN 'kind' OR 'obj_type' OR 'location' OR 'text'.
+        lv_field = to_upper( ms_sorting_state-column_id ).
+      WHEN OTHERS.
+        RETURN.
+    ENDCASE.
+
+    IF ms_sorting_state-descending = abap_true.
+      SORT ct_view BY (lv_field) DESCENDING.
+    ELSE.
+      SORT ct_view BY (lv_field) ASCENDING.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD build_base_menu.
 
-    DATA lo_sort_menu TYPE REF TO zcl_abapgit_html_toolbar.
-
-    CREATE OBJECT lo_sort_menu.
-
-    lo_sort_menu->add(
-      iv_txt = 'By Object, Check, Sub-object'
-      iv_act = c_actions-sort_1
+    ro_menu = zcl_abapgit_html_toolbar=>create(
     )->add(
-      iv_txt = 'By Object, Sub-object, Line'
-      iv_act = c_actions-sort_2
-    )->add(
-      iv_txt = 'By Check, Object, Sub-object'
-      iv_act = c_actions-sort_3 ).
-
-    CREATE OBJECT ro_menu.
-
-    ro_menu->add(
-      iv_txt = 'Sort'
-      io_sub = lo_sort_menu ).
-
-    ro_menu->add(
       iv_txt = 'Re-Run'
       iv_act = c_actions-rerun ).
 
@@ -223,6 +230,34 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD handle_navigation.
+
+    DATA: ls_item          TYPE zif_abapgit_definitions=>ty_item,
+          ls_sub_item      TYPE zif_abapgit_definitions=>ty_item,
+          lv_main_object   TYPE string,
+          lv_sub_object    TYPE string,
+          lv_line_number_s TYPE string,
+          lv_line_number   TYPE i.
+
+    SPLIT iv_link AT c_object_separator INTO lv_main_object lv_sub_object lv_line_number_s.
+    ls_item-obj_type = to_upper( lv_main_object(4) ).
+    ls_item-obj_name = to_upper( lv_main_object+4(*) ).
+
+    IF lv_sub_object IS NOT INITIAL.
+      ls_sub_item-obj_type = to_upper( lv_sub_object(4) ).
+      ls_sub_item-obj_name = to_upper( lv_sub_object+4(*) ).
+    ENDIF.
+
+    lv_line_number = lv_line_number_s.
+
+    jump(
+      is_item        = ls_item
+      is_sub_item    = ls_sub_item
+      iv_line_number = lv_line_number ).
+
+  ENDMETHOD.
+
+
   METHOD jump.
 
     DATA: lo_test             TYPE REF TO cl_ci_test_root,
@@ -297,13 +332,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
   METHOD on_event.
 
-    DATA: ls_item          TYPE zif_abapgit_definitions=>ty_item,
-          ls_sub_item      TYPE zif_abapgit_definitions=>ty_item,
-          lv_temp          TYPE string,
-          lv_main_object   TYPE string,
-          lv_sub_object    TYPE string,
-          lv_line_number_s TYPE string,
-          lv_line_number   TYPE i.
+    DATA lv_temp TYPE string.
+    DATA ls_sorting_req TYPE zif_abapgit_html_table=>ty_sorting_state.
 
     lv_temp = replace(
       val   = ii_event->mv_action
@@ -311,39 +341,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
       with  = `` ).
 
     IF lv_temp <> ii_event->mv_action. " CI navigation request detected
-
-      SPLIT lv_temp AT c_object_separator INTO lv_main_object lv_sub_object lv_line_number_s.
-      ls_item-obj_type = to_upper( lv_main_object(4) ).
-      ls_item-obj_name = to_upper( lv_main_object+4(*) ).
-
-      IF lv_sub_object IS NOT INITIAL.
-        ls_sub_item-obj_type = to_upper( lv_sub_object(4) ).
-        ls_sub_item-obj_name = to_upper( lv_sub_object+4(*) ).
-      ENDIF.
-
-      lv_line_number = lv_line_number_s.
-
-      jump( is_item        = ls_item
-            is_sub_item    = ls_sub_item
-            iv_line_number = lv_line_number ).
-
+      handle_navigation( lv_temp ).
       rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
     ENDIF.
 
-    CASE ii_event->mv_action.
-
-      WHEN c_actions-sort_1.
-        SORT mt_result BY objtype objname test code sobjtype sobjname line col.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN c_actions-sort_2.
-        SORT mt_result BY objtype objname sobjtype sobjname line col test code.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN c_actions-sort_3.
-        SORT mt_result BY test code objtype objname sobjtype sobjname line col.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-
-    ENDCASE.
+    ls_sorting_req = zcl_abapgit_html_table=>detect_sorting_request( ii_event->mv_action ).
+    IF ls_sorting_req IS NOT INITIAL.
+      ms_sorting_state = ls_sorting_req.
+      rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -359,6 +365,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
   METHOD render_result.
 
     DATA li_table TYPE REF TO zcl_abapgit_html_table.
+    DATA lt_view TYPE ty_view_tab.
 
     li_table = zcl_abapgit_html_table=>create( me
       )->define_column(
@@ -375,16 +382,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
         iv_column_title = 'Text'
       ).
 
+    lt_view = convert_result_to_view( it_result ).
+
+    IF ms_sorting_state-column_id IS INITIAL.
+      ms_sorting_state-column_id = 'kind'.
+    ENDIF.
+
+    apply_sorting( CHANGING ct_view = lt_view ).
+
     ii_html->div(
       iv_class   = 'ci-result'
       ii_content = li_table->render(
+        is_sorting_state = ms_sorting_state
         iv_with_cids = abap_true
-        it_data      = convert_result_to_view( it_result ) ) ).
+        it_data      = lt_view ) ).
 
     " TODO
     " - status design
-    " - sorting
-    " - filter
+    " - filter by kind
     " - search
 
     IF lines( it_result ) > c_limit.
