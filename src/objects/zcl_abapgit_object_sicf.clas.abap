@@ -529,6 +529,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
           lv_exists        TYPE abap_bool,
           lt_icfhandler    TYPE TABLE OF icfhandler,
           lt_add_languages TYPE ty_additional_languages.
+
     io_xml->read( EXPORTING iv_name = 'URL'
                   CHANGING cg_data = lv_url ).
     io_xml->read( EXPORTING iv_name = 'ICFSERVICE'
