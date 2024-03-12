@@ -85,8 +85,8 @@ CLASS zcl_abapgit_object_sicf DEFINITION
         zcx_abapgit_exception .
     METHODS save_additional_languages
       IMPORTING
-        iv_name          TYPE icfname
-        !iv_parent       TYPE icfparguid
+        iv_name          TYPE icfservice-icf_name
+        iv_parent        TYPE icfparguid
         it_add_languages TYPE ty_additional_languages.
 
     CLASS-METHODS get_hash_from_object
