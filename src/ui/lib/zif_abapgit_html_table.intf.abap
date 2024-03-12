@@ -14,6 +14,12 @@ INTERFACE zif_abapgit_html_table
       html TYPE REF TO zif_abapgit_html,
     END OF ty_cell_render.
 
+  TYPES:
+    BEGIN OF ty_sorting_state,
+      column_id TYPE string,
+      descending TYPE abap_bool,
+    END OF ty_sorting_state.
+
   METHODS get_row_attrs
     IMPORTING
       iv_table_id TYPE string

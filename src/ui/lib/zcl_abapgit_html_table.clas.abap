@@ -15,11 +15,12 @@ CLASS zcl_abapgit_html_table DEFINITION
     " maybe auto class for td
     METHODS define_column
       IMPORTING
-        !iv_column_id  TYPE string
+        !iv_column_id    TYPE string
         !iv_column_title TYPE string OPTIONAL
-        !iv_from_field TYPE abap_compname OPTIONAL
+        !iv_from_field   TYPE abap_compname OPTIONAL
+        !iv_sortable     TYPE abap_bool DEFAULT abap_true
       RETURNING
-        VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_table .
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_table .
     " Maybe also data_provider
     " Record Limit
     METHODS render
@@ -28,19 +29,31 @@ CLASS zcl_abapgit_html_table DEFINITION
         !iv_css_class  TYPE csequence OPTIONAL
         !iv_with_cids  TYPE abap_bool DEFAULT abap_false
         !it_data       TYPE ANY TABLE
+        !is_sorting_state TYPE zif_abapgit_html_table=>ty_sorting_state OPTIONAL
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
 
+    " Static utils
+    CLASS-METHODS detect_sorting_request
+      IMPORTING
+        iv_event TYPE string
+      RETURNING
+        VALUE(rs_sorting_request) TYPE zif_abapgit_html_table=>ty_sorting_state.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    CONSTANTS c_sort_by_event_prefix TYPE string VALUE `sort_by:`.
+    CONSTANTS c_sort_by_event_regex TYPE string VALUE `^sort_by:\w+:(asc|dsc)$`.
+
     TYPES:
       BEGIN OF ty_column,
-        column_id TYPE string,
+        column_id    TYPE string,
         column_title TYPE string,
-        from_field  TYPE abap_compname,
+        from_field   TYPE abap_compname,
+        sortable     TYPE abap_bool,
       END OF ty_column,
       ty_columns TYPE STANDARD TABLE OF ty_column WITH KEY column_id.
 
@@ -50,6 +63,7 @@ CLASS zcl_abapgit_html_table DEFINITION
     DATA mi_html TYPE REF TO zif_abapgit_html.
     DATA mv_with_cids TYPE abap_bool.
     DATA mv_table_id TYPE string.
+    DATA ms_sorting_state TYPE zif_abapgit_html_table=>ty_sorting_state.
 
     METHODS render_thead
       RAISING
@@ -65,6 +79,14 @@ CLASS zcl_abapgit_html_table DEFINITION
       IMPORTING
         iv_row_index TYPE i
         is_row TYPE any
+      RAISING
+        zcx_abapgit_exception .
+
+    METHODS render_column_title
+      IMPORTING
+        is_col TYPE ty_column
+      RETURNING
+        VALUE(rv_text) TYPE string
       RAISING
         zcx_abapgit_exception .
 
@@ -107,6 +129,22 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
     <ls_c>-column_id    = iv_column_id.
     <ls_c>-column_title = iv_column_title.
     <ls_c>-from_field   = to_upper( iv_from_field ).
+    <ls_c>-sortable     = iv_sortable.
+
+  ENDMETHOD.
+
+
+  METHOD detect_sorting_request.
+
+    DATA lv_req TYPE string.
+
+    IF find( val = iv_event regex = c_sort_by_event_regex ) = 0.
+
+      lv_req = replace( val = iv_event sub = c_sort_by_event_prefix with = '' ).
+      SPLIT lv_req AT ':' INTO rs_sorting_request-column_id lv_req.
+      rs_sorting_request-descending = boolc( lv_req = 'dsc' ).
+
+    ENDIF.
 
   ENDMETHOD.
 
@@ -117,6 +155,7 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
 
     mv_with_cids = iv_with_cids.
     mv_table_id  = iv_id.
+    ms_sorting_state = is_sorting_state.
 
     IF iv_id IS NOT INITIAL.
       lv_attrs = lv_attrs && | id="{ iv_id }"|.
@@ -133,6 +172,37 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
     render_thead( ).
     render_tbody( it_data ).
     mi_html->add( '</table>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_column_title.
+
+    DATA lv_direction TYPE string.
+
+    rv_text = is_col-column_title.
+
+    IF is_col-sortable = abap_true AND ms_sorting_state IS NOT INITIAL.
+
+      IF is_col-column_id = ms_sorting_state-column_id AND ms_sorting_state-descending = abap_false.
+        lv_direction = 'dsc'.
+      ELSE.
+        lv_direction = 'asc'.
+      ENDIF.
+
+      rv_text = mi_html->a(
+        iv_txt   = rv_text
+        iv_act   = |{ c_sort_by_event_prefix }{ is_col-column_id }:{ lv_direction }| ).
+
+      IF is_col-column_id = ms_sorting_state-column_id.
+        IF ms_sorting_state-descending = abap_false.
+          rv_text = rv_text && | &#x25B4;|. " arrow up
+        ELSE.
+          rv_text = rv_text && | &#x25BE;|. " arrow down
+        ENDIF.
+      ENDIF.
+
+    ENDIF.
 
   ENDMETHOD.
 
@@ -230,8 +300,9 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
       IF mv_with_cids = abap_true.
         ls_cid = cid_attr( <ls_col>-column_id ).
       ENDIF.
+
       mi_html->th(
-        iv_content   = <ls_col>-column_title
+        iv_content   = render_column_title( <ls_col> )
         is_data_attr = ls_cid ).
     ENDLOOP.
 
