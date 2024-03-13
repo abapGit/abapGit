@@ -43,7 +43,7 @@ CLASS lcl_json_path DEFINITION CREATE PUBLIC.
     CLASS-METHODS get_path_elements
       IMPORTING iv_path          TYPE string
       RETURNING VALUE(rt_result) TYPE string_table
-      RAISING   cx_root.
+      RAISING   zcx_abapgit_exception.
     CLASS-METHODS build_json
       IMPORTING it_path_elements TYPE string_table
                 iv_value         TYPE string
@@ -77,11 +77,8 @@ CLASS lcl_json_path IMPLEMENTATION.
 
     IF path_contains_array( lv_path ) = abap_true.
 
-      TRY.
-          lt_path_elements = get_path_elements( lv_path ).
-        CATCH cx_root.
-          zcx_abapgit_exception=>raise( `Failed to parse JSONPaths` ).
-      ENDTRY.
+      lt_path_elements = get_path_elements( lv_path ).
+
       build_json( EXPORTING it_path_elements = lt_path_elements
                             iv_value         = lv_value
                   CHANGING  cv_json_string   = lv_json ).
@@ -183,12 +180,16 @@ CLASS lcl_json_path IMPLEMENTATION.
     DATA: lv_pcre_pattern TYPE string,
           lt_match_result TYPE match_result_tab,
           lv_match        TYPE match_result,
-          lv_hit          TYPE string.
+          lv_hit          TYPE string,
+          lx_find         TYPE REF TO cx_root.
 
     lv_pcre_pattern = `(^\$)|(\.\w+)|(\[[^]]*\])`.
 
-    FIND ALL OCCURRENCES OF REGEX lv_pcre_pattern IN iv_path RESULTS lt_match_result.
-
+    TRY.
+        FIND ALL OCCURRENCES OF REGEX lv_pcre_pattern IN iv_path RESULTS lt_match_result.
+      CATCH cx_sy_find_infinite_loop cx_sy_range_out_of_bounds cx_sy_invalid_regex cx_sy_regex_too_complex INTO lx_find.
+        zcx_abapgit_exception=>raise_with_text( lx_find ).
+    ENDTRY.
     LOOP AT lt_match_result INTO lv_match.
       lv_hit = substring( val = iv_path
                           off = lv_match-offset
