@@ -43,8 +43,7 @@ CLASS lcl_json_path DEFINITION CREATE PUBLIC.
     CLASS-METHODS get_path_elements
       IMPORTING iv_path          TYPE string
       RETURNING VALUE(rt_result) TYPE string_table
-      RAISING   cx_sy_regex_too_complex
-                cx_sy_invalid_regex.
+      RAISING   cx_root.
     CLASS-METHODS build_json
       IMPORTING it_path_elements TYPE string_table
                 iv_value         TYPE string
@@ -80,7 +79,7 @@ CLASS lcl_json_path IMPLEMENTATION.
 
       TRY.
           lt_path_elements = get_path_elements( lv_path ).
-        CATCH cx_sy_invalid_regex cx_sy_regex_too_complex.
+        CATCH cx_root.
           zcx_abapgit_exception=>raise( `Failed to parse JSONPaths` ).
       ENDTRY.
       build_json( EXPORTING it_path_elements = lt_path_elements
