@@ -43,8 +43,8 @@ CLASS lcl_json_path DEFINITION CREATE PUBLIC.
     CLASS-METHODS get_path_elements
       IMPORTING iv_path          TYPE string
       RETURNING VALUE(rt_result) TYPE string_table
-      RAISING   cx_sy_matcher
-                cx_sy_regex.
+      RAISING   cx_sy_regex_too_complex
+                cx_sy_invalid_regex.
     CLASS-METHODS build_json
       IMPORTING it_path_elements TYPE string_table
                 iv_value         TYPE string
@@ -56,7 +56,7 @@ CLASS lcl_json_path DEFINITION CREATE PUBLIC.
       IMPORTING iv_json_path     TYPE string
       RETURNING VALUE(ro_result) TYPE REF TO zcl_abapgit_ajson
       RAISING   zcx_abapgit_ajson_error
-                cx_sy_regex_too_complex.
+                zcx_abapgit_exception.
     CLASS-METHODS: is_primitiv
       IMPORTING iv_string        TYPE string
       RETURNING VALUE(rv_result) TYPE abap_bool.
@@ -78,7 +78,11 @@ CLASS lcl_json_path IMPLEMENTATION.
 
     IF path_contains_array( lv_path ) = abap_true.
 
-      lt_path_elements = get_path_elements( lv_path ).
+      TRY.
+          lt_path_elements = get_path_elements( lv_path ).
+        CATCH cx_sy_invalid_regex cx_sy_regex_too_complex.
+          zcx_abapgit_exception=>raise( `Failed to parse JSONPaths` ).
+      ENDTRY.
       build_json( EXPORTING it_path_elements = lt_path_elements
                             iv_value         = lv_value
                   CHANGING  cv_json_string   = lv_json ).
@@ -178,15 +182,13 @@ CLASS lcl_json_path IMPLEMENTATION.
 
   METHOD get_path_elements.
     DATA: lv_pcre_pattern TYPE string,
-          lo_matcher      TYPE REF TO cl_abap_matcher,
           lt_match_result TYPE match_result_tab,
           lv_match        TYPE match_result,
           lv_hit          TYPE string.
 
-    lv_pcre_pattern = `(^\$)|(\.\w+)|(\[.*?\])|\.(\w+)`.
+    lv_pcre_pattern = `(^\$)|(\.\w+)|(\[[^]]*\])`.
 
-    lo_matcher = cl_abap_regex=>create_pcre( lv_pcre_pattern )->create_matcher( text = iv_path ).
-    lt_match_result = lo_matcher->find_all( ).
+    FIND ALL OCCURRENCES OF REGEX lv_pcre_pattern IN iv_path RESULTS lt_match_result.
 
     LOOP AT lt_match_result INTO lv_match.
       lv_hit = substring( val = iv_path
@@ -358,8 +360,8 @@ CLASS lcl_json_path IMPLEMENTATION.
 
       TRY.
           lo_deserialization_result = to_json( lv_json_path ).
-        CATCH zcx_abapgit_ajson_error cx_dynamic_check.
-          zcx_abapgit_exception=>raise( `Failed to deserialize translation.` ).
+        CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+          zcx_abapgit_exception=>raise_with_text( lx_ajson ).
       ENDTRY.
 
       TRY.
