@@ -80,6 +80,12 @@ CLASS zcl_abapgit_object_sicf DEFINITION
         VALUE(rv_hash) TYPE ty_hash
       RAISING
         zcx_abapgit_exception.
+
+    CLASS-METHODS get_icfaltname
+      IMPORTING
+        !is_icfservice      TYPE icfservice
+      RETURNING
+        VALUE(rv_icfaltnme) TYPE icfservice-icfaltnme.
 ENDCLASS.
 
 
@@ -98,8 +104,8 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
 
     lt_icfhndlist = to_icfhndlist( it_icfhandler ).
 
-* Do not add handlers if they already exist, it will make the below
-* call to SAP standard code raise an exception
+    " Do not add handlers if they already exist, it will make the below
+    " call to SAP standard code raise an exception
     SELECT * FROM icfhandler INTO TABLE lt_existing
       WHERE icf_name = is_icfservice-icf_name
       ORDER BY PRIMARY KEY.
@@ -112,6 +118,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
     cl_icf_tree=>if_icf_tree~change_node(
       EXPORTING
         icf_name                  = is_icfservice-orig_name
+        icfaltnme                 = get_icfaltname( is_icfservice )
         icfparguid                = iv_parent
         icfdocu                   = is_icfdocu
         doculang                  = mv_language
@@ -240,6 +247,17 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_icfaltname.
+
+    rv_icfaltnme = is_icfservice-icfaltnme.
+    " If the original name is different (lower vs upper case), it needs to be deserialized
+    IF is_icfservice-icfaltnme <> is_icfservice-icfaltnme_orig.
+      rv_icfaltnme = is_icfservice-icfaltnme_orig.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD insert_sicf.
 
     DATA: lt_icfhndlist TYPE icfhndlist,
@@ -252,7 +270,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
     lt_icfhndlist = to_icfhndlist( it_icfhandler ).
     lv_parent = find_parent( iv_url ).
 
-* nice, it seems that the structure should be mistreated
+    " Nice, it seems that the structure should be mistreated
     ls_icfdocu = is_icfdocu-icf_docu.
 
     MOVE-CORRESPONDING is_icfservice TO ls_icfserdesc.
@@ -268,7 +286,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
         application               = space
         icfserdesc                = ls_icfserdesc
         icfactive                 = abap_true
-        icfaltnme                 = is_icfservice-icfaltnme
+        icfaltnme                 = get_icfaltname( is_icfservice )
       IMPORTING
         icfnodguid                = lv_icfnodguid
       EXCEPTIONS
@@ -402,7 +420,6 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF it_list.
 
-
     " Convert to sorted table
     LOOP AT it_list ASSIGNING <ls_list>.
       INSERT <ls_list>-icfhandler INTO TABLE rt_list.
@@ -414,7 +431,6 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
 
     DATA: ls_icfservice TYPE icfservice.
-
 
     read( EXPORTING iv_clear = abap_false
           IMPORTING es_icfservice = ls_icfservice ).
