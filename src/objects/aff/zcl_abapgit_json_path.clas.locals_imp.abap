@@ -183,7 +183,7 @@ CLASS lcl_json_path IMPLEMENTATION.
           lv_hit          TYPE string,
           lx_find         TYPE REF TO cx_root.
 
-    lv_pcre_pattern = `(^\$)|(\.\w+)|(\[[^]]*\])`.
+    lv_pcre_pattern = `(^\$)|(\.\w+)|(\[[^\]]*\])`.
 
     TRY.
         FIND ALL OCCURRENCES OF REGEX lv_pcre_pattern IN iv_path RESULTS lt_match_result.
