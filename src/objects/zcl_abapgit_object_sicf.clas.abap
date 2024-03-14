@@ -669,7 +669,10 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
     CLEAR ls_icfservice-icf_user.
     CLEAR ls_icfservice-icf_cclnt.
     CLEAR ls_icfservice-icf_mclnt.
-    CLEAR ls_icfservice-icfaltnme_orig.
+    " If the original name is different (lower vs upper case), it needs to be serialized
+    IF ls_icfservice-icfaltnme = ls_icfservice-icfaltnme_orig.
+      CLEAR ls_icfservice-icfaltnme_orig.
+    ENDIF.
     CLEAR ls_icfservice-icfbitmap.
 
     io_xml->add( iv_name = 'URL'
