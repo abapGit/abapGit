@@ -75,7 +75,7 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lv_where TYPE string.
 
     IF sy-sysid = 'ABC'.
-* dont run on open-abap
+* don't run on open-abap
       RETURN.
     ENDIF.
 
