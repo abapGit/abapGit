@@ -1528,7 +1528,7 @@ LinkHints.prototype.displayHints = function(isActivate) {
 LinkHints.prototype.hintActivate = function(hint) {
   if (hint.parent.nodeName === "A"
     // hint.parent.href doesn`t have a # at the end while accessing dropdowns the first time.
-    // Seems like a idiosyncrasy of SAPGUI`s IE. So let`s ignore the last character.
+    // Seems like a idiosyncrasy of SAP GUI`s IE. So let`s ignore the last character.
     && (hint.parent.href.substr(0, hint.parent.href.length - 1) === document.location.href)// href is #
     && !hint.parent.onclick // no handler
     && hint.parent.parentElement && hint.parent.parentElement.nodeName === "LI") {
