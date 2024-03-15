@@ -802,7 +802,7 @@ StageHelper.prototype.collectData = function() {
 
 StageHelper.prototype.markVisiblesAsAdded = function() {
   this.iterateStageTab(false, function(row) {
-    // TODO refacotr, unify updateRow logic
+    // TODO refactor, unify updateRow logic
     if (row.style.display === "" && row.className === "local") { // visible
       this.updateRow(row, this.STATUS.add);
     } else {
