@@ -159,7 +159,7 @@ function setInitialFocus(id) {
   document.getElementById(id).focus();
 }
 
-// Set focus to a element with query selector
+// Set focus to an element with query selector
 function setInitialFocusWithQuerySelector(sSelector, bFocusParent) {
   var oSelected = document.querySelector(sSelector);
 
