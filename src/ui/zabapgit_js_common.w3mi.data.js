@@ -1061,7 +1061,7 @@ DiffHelper.prototype.iterateDiffList = function(cb /*, ...*/) {
   }
 };
 
-// Highlight filter button if filter is activate
+// Highlight filter button if filter is activated
 DiffHelper.prototype.highlightButton = function(state) {
   this.counter += state ? -1 : 1;
   if (this.counter > 0) {
