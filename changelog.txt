@@ -1571,7 +1571,7 @@ Legend
 ------------------
 * minor fixes for tags
 * downport
-* fix serilization of SXCI in background mode
+* fix serialization of SXCI in background mode
 
 2018-01-03 v1.51.0
 ------------------
