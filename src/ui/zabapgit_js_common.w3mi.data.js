@@ -2055,7 +2055,7 @@ function registerStagePatch() {
 }
 
 /**********************************************************
- * Command Palette (Ctrl + P)
+ * Command Palette (F1)
  **********************************************************/
 
 // fuzzy match helper
