@@ -126,7 +126,7 @@ Legend
 * Don't dump for unknown frontend (#6302)
 * IDOC, TABL: Set released and closed status (#6306)
 * Fix is_dirty check for Repo Settings (#6309)
-* Unit test page: dont show SAUNIT_NO_TEST_CLASS err (#6310)
+* Unit test page: don't show SAUNIT_NO_TEST_CLASS err (#6310)
 * Fixed links to new documentation (#6319)
 * Fix "Data" page: On back go back (#6322)
 * OO serializer: skip includes not found (#6324)
