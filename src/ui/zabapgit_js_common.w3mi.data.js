@@ -1643,7 +1643,7 @@ function Hotkeys(oKeyMap) {
         return;
       }
 
-      // Or a SAP event input
+      // Or an SAP event input
       var sUiSapEventInputAction = this.getSapEventInputAction(action);
       if (sUiSapEventInputAction) {
         submitSapeventForm({}, sUiSapEventInputAction, "post");
