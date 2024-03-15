@@ -123,7 +123,7 @@ Legend
 + APIS: API Release State (#6403)
 + IWOM/IWPR/TRAN: Implement changed_by (#6411)
 + Add online/offline filter option for repo list (#6449)
-* Dont dump for unknown frontend (#6302)
+* Don't dump for unknown frontend (#6302)
 * IDOC, TABL: Set released and closed status (#6306)
 * Fix is_dirty check for Repo Settings (#6309)
 * Unit test page: dont show SAUNIT_NO_TEST_CLASS err (#6310)
