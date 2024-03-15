@@ -1,4 +1,4 @@
-CLASS lcl_object_descision_list DEFINITION FINAL.
+CLASS lcl_object_decision_list DEFINITION FINAL.
   PUBLIC SECTION.
 
     CONSTANTS c_default_column     TYPE abap_componentdescr-name VALUE 'DEFAULT_COLUMN'.
@@ -105,7 +105,7 @@ CLASS lcl_object_descision_list DEFINITION FINAL.
 
 ENDCLASS.
 
-CLASS lcl_object_descision_list IMPLEMENTATION.
+CLASS lcl_object_decision_list IMPLEMENTATION.
 
   METHOD display.
 
