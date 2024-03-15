@@ -51,7 +51,7 @@ CLASS zcl_abapgit_git_time IMPLEMENTATION.
 
 
   METHOD get_unix.
-* returns seconds since unix epoch, including timezone indicator
+* returns seconds since Unix epoch, including timezone indicator
 
     CONSTANTS lc_epoch TYPE timestamp VALUE '19700101000000'.
     DATA lv_time TYPE timestamp.
