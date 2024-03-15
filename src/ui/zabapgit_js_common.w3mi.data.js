@@ -1361,7 +1361,7 @@ KeyNavigation.prototype.getHandler = function() {
   return this.onkeydown.bind(this);
 };
 
-// this functions enables the navigation with arrows through list items (li)
+// this function enables the navigation with arrows through list items (li)
 // e.g. in dropdown menus
 function enableArrowListNavigation() {
   document.addEventListener("keydown", new KeyNavigation().getHandler());
