@@ -1651,7 +1651,7 @@ function Hotkeys(oKeyMap) {
         return;
       }
 
-      // Or a SAP event main form
+      // Or an SAP event main form
       var elForm = this.getSapEventForm(action);
       if (elForm) {
         elForm.submit();
