@@ -133,8 +133,7 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
         iv_column_title = 'Col 1'
       )->define_column(
         iv_column_id    = 'col2'
-        iv_column_title = 'Col 2'
-      ).
+        iv_column_title = 'Col 2' ).
 
     lv_html_act = lo_tab->render(
       iv_id        = 'with-cids'
@@ -186,8 +185,7 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
       )->define_column(
         iv_column_id    = 'col3'
         iv_column_title = 'Col 3'
-        iv_sortable     = abap_false
-      ).
+        iv_sortable     = abap_false ).
 
     ls_sort-column_id = 'col1'.
 
@@ -202,8 +200,8 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
       '<table id="with-sort">' )->add(
       '<thead>' )->add(
       '<tr>' )->add(
-      '<th><a href="sapevent:sort_by:col1:dsc">Col 1</a> &#x25B4;</th>' )->add(
-      '<th><a href="sapevent:sort_by:col2:asc">Col 2</a></th>' )->add(
+      '<th><a href="sapevent:sort_by:col1:dsc">Col 1</a><span class="sort-arrow sort-active">&#x25BE;</span></th>' )->add(
+      '<th><a href="sapevent:sort_by:col2:asc">Col 2</a><span class="sort-arrow">&#x25BE;</span></th>' )->add(
       '<th>Col 3</th>' )->add(
       '</tr>' )->add(
       '</thead>' )->add(

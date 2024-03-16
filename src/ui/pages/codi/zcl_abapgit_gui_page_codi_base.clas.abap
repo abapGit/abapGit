@@ -33,17 +33,13 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         !ii_html        TYPE REF TO zif_abapgit_html
         !iv_variant     TYPE sci_chkv
         !iv_success_msg TYPE string
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception.
     METHODS render_head
       IMPORTING
         !ii_html       TYPE REF TO zif_abapgit_html
         !iv_variant    TYPE sci_chkv
-        !iv_summary    TYPE string
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html.
+        !iv_summary    TYPE string.
     METHODS render_detail
       IMPORTING
         !ii_html   TYPE REF TO zif_abapgit_html
@@ -440,8 +436,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
         iv_column_title = 'Obj. name / location'
       )->define_column(
         iv_column_id    = 'text'
-        iv_column_title = 'Text'
-      ).
+        iv_column_title = 'Text' ).
 
     lt_view = convert_result_to_view( it_result ).
 
@@ -575,7 +570,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
   METHOD zif_abapgit_html_table~get_row_attrs.
 
     FIELD-SYMBOLS <ls_item> TYPE ty_result_view.
-    DATA lv_render_kind TYPE string.
 
     ASSIGN is_row TO <ls_item>.
     rs_attrs-data-name = 'kind'.

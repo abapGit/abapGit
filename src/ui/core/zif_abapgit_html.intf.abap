@@ -4,8 +4,7 @@ INTERFACE zif_abapgit_html PUBLIC.
     BEGIN OF ty_data_attr,
       name TYPE string,
       value TYPE string,
-    END OF ty_data_attr,
-    ty_data_attr_tab TYPE STANDARD TABLE OF ty_data_attr WITH KEY name.
+    END OF ty_data_attr.
 
   CONSTANTS:
     BEGIN OF c_action_type,

@@ -142,9 +142,14 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
 
     DATA lv_req TYPE string.
 
-    IF find( val = iv_event regex = c_sort_by_event_regex ) = 0.
+    IF find(
+        val = iv_event
+        regex = c_sort_by_event_regex ) = 0.
 
-      lv_req = replace( val = iv_event sub = c_sort_by_event_prefix with = '' ).
+      lv_req = replace(
+        val  = iv_event
+        sub  = c_sort_by_event_prefix
+        with = '' ).
       SPLIT lv_req AT ':' INTO rs_sorting_request-column_id lv_req.
       rs_sorting_request-descending = boolc( lv_req = 'dsc' ).
 
