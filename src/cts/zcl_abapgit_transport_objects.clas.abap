@@ -74,7 +74,7 @@ CLASS zcl_abapgit_transport_objects IMPLEMENTATION.
       ENDLOOP.
       IF sy-subrc <> 0.
         " Since not all objects in a transport might be in the local repo
-        " i.e generated SADL objects, we don't add these objects to
+        " i.e. generated SADL objects, we don't add these objects to
         " the stage.
       ENDIF.
     ENDLOOP.

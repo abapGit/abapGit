@@ -6,7 +6,7 @@ CLASS zcl_abapgit_gui_html_processor DEFINITION
   PUBLIC SECTION.
 
     CONSTANTS c_css_build_name TYPE string VALUE 'css/bundle.css'.
-    CONSTANTS c_preprocess_marker TYPE string VALUE `<!-- abapgit HTML preprocessor -->`.
+    CONSTANTS c_preprocess_marker TYPE string VALUE `<!-- abapGit HTML preprocessor -->`.
     CONSTANTS c_comment_start TYPE string VALUE `<!--`.
     CONSTANTS c_comment_end TYPE string VALUE `-->`.
 

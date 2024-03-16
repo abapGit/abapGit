@@ -121,7 +121,7 @@ CLASS ltcl_html IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD indent5.
-* dont dump if something messes up or the nesting gets too wide
+* don't dump if something messes up or the nesting gets too wide
     DO 300 TIMES.
       mo_html->add( '<td>' ).
     ENDDO.

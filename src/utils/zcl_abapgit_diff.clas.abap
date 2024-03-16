@@ -513,7 +513,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
     lv_old = zcl_abapgit_convert=>xstring_to_string_utf8( iv_old ).
 
     " Check if one value contains a final newline but the other not
-    " If yes, add a special characters that's visible in diff render
+    " If yes, add a special character that's visible in diff render
     IF lv_new IS NOT INITIAL.
       lv_new_last = substring(
         val = lv_new

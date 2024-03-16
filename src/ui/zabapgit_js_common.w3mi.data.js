@@ -159,7 +159,7 @@ function setInitialFocus(id) {
   document.getElementById(id).focus();
 }
 
-// Set focus to a element with query selector
+// Set focus to an element with query selector
 function setInitialFocusWithQuerySelector(sSelector, bFocusParent) {
   var oSelected = document.querySelector(sSelector);
 
@@ -802,7 +802,7 @@ StageHelper.prototype.collectData = function() {
 
 StageHelper.prototype.markVisiblesAsAdded = function() {
   this.iterateStageTab(false, function(row) {
-    // TODO refacotr, unify updateRow logic
+    // TODO refactor, unify updateRow logic
     if (row.style.display === "" && row.className === "local") { // visible
       this.updateRow(row, this.STATUS.add);
     } else {
@@ -1061,7 +1061,7 @@ DiffHelper.prototype.iterateDiffList = function(cb /*, ...*/) {
   }
 };
 
-// Highlight filter button if filter is activate
+// Highlight filter button if filter is activated
 DiffHelper.prototype.highlightButton = function(state) {
   this.counter += state ? -1 : 1;
   if (this.counter > 0) {
@@ -1361,7 +1361,7 @@ KeyNavigation.prototype.getHandler = function() {
   return this.onkeydown.bind(this);
 };
 
-// this functions enables the navigation with arrows through list items (li)
+// this function enables the navigation with arrows through list items (li)
 // e.g. in dropdown menus
 function enableArrowListNavigation() {
   document.addEventListener("keydown", new KeyNavigation().getHandler());
@@ -1528,7 +1528,7 @@ LinkHints.prototype.displayHints = function(isActivate) {
 LinkHints.prototype.hintActivate = function(hint) {
   if (hint.parent.nodeName === "A"
     // hint.parent.href doesn`t have a # at the end while accessing dropdowns the first time.
-    // Seems like a idiosyncrasy of SAPGUI`s IE. So let`s ignore the last character.
+    // Seems like a idiosyncrasy of SAP GUI`s IE. So let`s ignore the last character.
     && (hint.parent.href.substr(0, hint.parent.href.length - 1) === document.location.href)// href is #
     && !hint.parent.onclick // no handler
     && hint.parent.parentElement && hint.parent.parentElement.nodeName === "LI") {
@@ -1643,7 +1643,7 @@ function Hotkeys(oKeyMap) {
         return;
       }
 
-      // Or a SAP event input
+      // Or an SAP event input
       var sUiSapEventInputAction = this.getSapEventInputAction(action);
       if (sUiSapEventInputAction) {
         submitSapeventForm({}, sUiSapEventInputAction, "post");
@@ -1651,7 +1651,7 @@ function Hotkeys(oKeyMap) {
         return;
       }
 
-      // Or a SAP event main form
+      // Or an SAP event main form
       var elForm = this.getSapEventForm(action);
       if (elForm) {
         elForm.submit();
@@ -2055,7 +2055,7 @@ function registerStagePatch() {
 }
 
 /**********************************************************
- * Command Palette (Ctrl + P)
+ * Command Palette (F1)
  **********************************************************/
 
 // fuzzy match helper

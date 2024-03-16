@@ -703,7 +703,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     ls_clskey-clsname = ms_item-obj_name.
 
-    "If class was deserialized with a previous versions of abapGit and current language was different
+    "If class was deserialized with a previous version of abapGit and current language was different
     "from main language at this time, this call would return SY-LANGU as main language. To fix
     "these objects, set SY-LANGU to main language temporarily.
     zcl_abapgit_language=>set_current_language( mv_language ).
