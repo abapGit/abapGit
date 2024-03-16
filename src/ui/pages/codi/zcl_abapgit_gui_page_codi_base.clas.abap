@@ -456,7 +456,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
       iv_class   = 'ci-detail'
       ii_content = li_table->render(
         is_sorting_state = ms_sorting_state
-        iv_wrap_in_div   = 'ci-detail-table-container'
+        iv_wrap_in_div   = 'default-table-container'
+        iv_css_class     = 'default-table'
         iv_with_cids     = abap_true
         it_data          = lt_view ) ).
 
