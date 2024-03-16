@@ -566,7 +566,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_services~register_page_asset.
 
-    " Maybe forbid registering cacheable existing assets, maybe this is the right place (see also asset_man commments)
+    " Maybe forbid registering cacheable existing assets, maybe this is the right place (see also asset_man comments)
 
     mi_asset_man->register_asset(
       iv_url = iv_url

@@ -384,7 +384,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
             CATCH cx_abap_not_a_table INTO lx_abap_not_a_table.
               zcx_abapgit_exception=>raise_with_text( lx_abap_not_a_table ).
             CATCH cx_abap_not_in_package.
-              "thats fine
+              "that's fine
           ENDTRY.
 
           CLEAR lr_tabledescr.
