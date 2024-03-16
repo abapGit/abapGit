@@ -139,23 +139,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
         io_repo        = mo_repo
         iv_show_commit = abap_false ) ).
 
-    render_variant(
+    render_ci_report(
       ii_html    = ri_html
       iv_variant = c_variant
-      iv_summary = mv_summary ).
-
-    IF lines( mt_result ) = 0.
-      render_success(
-        ii_html    = ri_html
-        iv_message = 'No syntax errors' ).
-    ELSE.
-      render_stats(
-        ii_html   = ri_html
-        it_result = mt_result ).
-      render_result(
-        ii_html   = ri_html
-        it_result = mt_result ).
-    ENDIF.
+      iv_success_msg = 'No syntax errors' ).
 
   ENDMETHOD.
 ENDCLASS.

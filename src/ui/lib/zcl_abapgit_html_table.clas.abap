@@ -25,11 +25,12 @@ CLASS zcl_abapgit_html_table DEFINITION
     " Record Limit
     METHODS render
       IMPORTING
+        !it_data       TYPE ANY TABLE
         !iv_id         TYPE csequence OPTIONAL
         !iv_css_class  TYPE csequence OPTIONAL
         !iv_with_cids  TYPE abap_bool DEFAULT abap_false
-        !it_data       TYPE ANY TABLE
         !is_sorting_state TYPE zif_abapgit_html_table=>ty_sorting_state OPTIONAL
+        !iv_wrap_in_div   TYPE string OPTIONAL " div class name
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -57,13 +58,16 @@ CLASS zcl_abapgit_html_table DEFINITION
       END OF ty_column,
       ty_columns TYPE STANDARD TABLE OF ty_column WITH KEY column_id.
 
-
     DATA mi_renderer TYPE REF TO zif_abapgit_html_table.
     DATA mt_columns TYPE ty_columns.
     DATA mi_html TYPE REF TO zif_abapgit_html.
     DATA mv_with_cids TYPE abap_bool.
     DATA mv_table_id TYPE string.
     DATA ms_sorting_state TYPE zif_abapgit_html_table=>ty_sorting_state.
+
+    " potentially receive from outside
+    DATA mv_sort_span_class TYPE string VALUE `sort-arrow`.
+    DATA mv_sort_active_class TYPE string VALUE `sort-active`.
 
     METHODS render_thead
       RAISING
@@ -153,8 +157,8 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
 
     DATA lv_attrs TYPE string.
 
-    mv_with_cids = iv_with_cids.
-    mv_table_id  = iv_id.
+    mv_with_cids     = iv_with_cids.
+    mv_table_id      = iv_id.
     ms_sorting_state = is_sorting_state.
 
     IF iv_id IS NOT INITIAL.
@@ -168,10 +172,18 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
     CREATE OBJECT mi_html TYPE zcl_abapgit_html.
     ri_html = mi_html.
 
+    IF iv_wrap_in_div IS NOT INITIAL.
+      mi_html->add( |<div class="{ iv_wrap_in_div }">| ).
+    ENDIF.
+
     mi_html->add( |<table{ lv_attrs }>| ).
     render_thead( ).
     render_tbody( it_data ).
     mi_html->add( '</table>' ).
+
+    IF iv_wrap_in_div IS NOT INITIAL.
+      mi_html->add( '</div>' ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -179,8 +191,8 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
   METHOD render_column_title.
 
     DATA lv_direction TYPE string.
-
-    rv_text = is_col-column_title.
+    DATA lv_arrow TYPE string.
+    DATA lv_sort_active TYPE string.
 
     IF is_col-sortable = abap_true AND ms_sorting_state IS NOT INITIAL.
 
@@ -190,18 +202,24 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
         lv_direction = 'asc'.
       ENDIF.
 
-      rv_text = mi_html->a(
-        iv_txt   = rv_text
-        iv_act   = |{ c_sort_by_event_prefix }{ is_col-column_id }:{ lv_direction }| ).
-
-      IF is_col-column_id = ms_sorting_state-column_id.
-        IF ms_sorting_state-descending = abap_false.
-          rv_text = rv_text && | &#x25B4;|. " arrow up
-        ELSE.
-          rv_text = rv_text && | &#x25BE;|. " arrow down
-        ENDIF.
+      IF is_col-column_id = ms_sorting_state-column_id AND ms_sorting_state-descending = abap_true.
+        lv_arrow     = '&#x25B4;'. " arrow up
+      ELSE.
+        lv_arrow     = '&#x25BE;'. " arrow down
       ENDIF.
 
+      IF is_col-column_id = ms_sorting_state-column_id.
+        lv_sort_active = | { mv_sort_active_class }|.
+      ENDIF.
+
+      rv_text = mi_html->a(
+        iv_txt   = is_col-column_title
+        iv_act   = |{ c_sort_by_event_prefix }{ is_col-column_id }:{ lv_direction }| ).
+
+      rv_text = rv_text && |<span class="{ mv_sort_span_class }{ lv_sort_active }">{ lv_arrow }</span>|.
+
+    ELSE.
+      rv_text = is_col-column_title.
     ENDIF.
 
   ENDMETHOD.

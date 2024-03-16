@@ -12,12 +12,12 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         rerun  TYPE string VALUE 'rerun',
         stage  TYPE string VALUE 'stage',
         commit TYPE string VALUE 'commit',
-        filter_kind TYPE string VALUE 'filter_kind',
+        filter_kind  TYPE string VALUE 'filter_kind',
         apply_filter TYPE string VALUE 'apply_filter',
       END OF c_actions .
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
-    DATA mt_result TYPE zif_abapgit_code_inspector=>ty_results .
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo.
+    DATA mt_result TYPE zif_abapgit_code_inspector=>ty_results.
     DATA mv_summary TYPE string.
 
     METHODS on_event
@@ -28,14 +28,23 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS render_variant
+    METHODS render_ci_report
+      IMPORTING
+        !ii_html        TYPE REF TO zif_abapgit_html
+        !iv_variant     TYPE sci_chkv
+        !iv_success_msg TYPE string
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+    METHODS render_head
       IMPORTING
         !ii_html       TYPE REF TO zif_abapgit_html
         !iv_variant    TYPE sci_chkv
         !iv_summary    TYPE string
       RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
-    METHODS render_result
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html.
+    METHODS render_detail
       IMPORTING
         !ii_html   TYPE REF TO zif_abapgit_html
         !it_result TYPE zif_abapgit_code_inspector=>ty_results
@@ -51,15 +60,15 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
       IMPORTING
         ii_html TYPE REF TO zif_abapgit_html
         iv_message TYPE string.
-
     METHODS build_base_menu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+
   PRIVATE SECTION.
+
     CONSTANTS c_object_separator TYPE c LENGTH 1 VALUE '|'.
     CONSTANTS c_ci_sig TYPE string VALUE 'cinav:'.
     CONSTANTS c_limit TYPE i VALUE 500.
-    DATA mv_filter TYPE string. " TODO remove ?
     DATA mv_filter_kind TYPE string.
     DATA ms_sorting_state TYPE zif_abapgit_html_table=>ty_sorting_state.
 
@@ -90,14 +99,14 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
       IMPORTING
         !is_result     TYPE zif_abapgit_code_inspector=>ty_result
       RETURNING
-        VALUE(rv_link) TYPE string .
+        VALUE(rv_link) TYPE string.
     METHODS jump
       IMPORTING
         !is_item        TYPE zif_abapgit_definitions=>ty_item
         !is_sub_item    TYPE zif_abapgit_definitions=>ty_item
         !iv_line_number TYPE i
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS apply_sorting
       CHANGING
         ct_view TYPE ty_view_tab.
@@ -163,8 +172,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
   METHOD build_base_menu.
 
-    ro_menu = zcl_abapgit_html_toolbar=>create(
-    )->add(
+    ro_menu = zcl_abapgit_html_toolbar=>create( )->add(
       iv_txt = 'Re-Run'
       iv_act = c_actions-rerun ).
 
@@ -381,22 +389,41 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     ENDIF.
 
     IF ii_event->mv_action = c_actions-filter_kind.
-      mv_filter_kind =  ii_event->query( )->get( 'kind' ).
+      mv_filter_kind = ii_event->query( )->get( 'kind' ).
       rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDIF.
 
   ENDMETHOD.
 
 
-  METHOD render_limit_warning.
-    ii_html->add( '<div class="dummydiv warning">' ).
-    ii_html->add( ii_html->icon( 'exclamation-triangle' ) ).
-    ii_html->add( |Only first { c_limit } findings shown in list!| ).
+  METHOD render_ci_report.
+
+    ii_html->add( '<div class="ci">' ).
+
+    render_head(
+      ii_html    = ii_html
+      iv_variant = iv_variant
+      iv_summary = mv_summary ).
+
+    IF lines( mt_result ) = 0.
+      render_success(
+        ii_html    = ii_html
+        iv_message = iv_success_msg ).
+    ELSE.
+      render_stats(
+        ii_html   = ii_html
+        it_result = mt_result ).
+      render_detail(
+        ii_html   = ii_html
+        it_result = mt_result ).
+    ENDIF.
+
     ii_html->add( '</div>' ).
+
   ENDMETHOD.
 
 
-  METHOD render_result.
+  METHOD render_detail.
 
     DATA li_table TYPE REF TO zcl_abapgit_html_table.
     DATA lt_view TYPE ty_view_tab.
@@ -426,15 +453,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     apply_filter_kind( CHANGING ct_view = lt_view ).
 
     ii_html->div(
-      iv_class   = 'ci-result'
+      iv_class   = 'ci-detail'
       ii_content = li_table->render(
         is_sorting_state = ms_sorting_state
-        iv_with_cids = abap_true
-        it_data      = lt_view ) ).
-
-    " TODO
-    " - design
-    " - search
+        iv_wrap_in_div   = 'ci-detail-table-container'
+        iv_with_cids     = abap_true
+        it_data          = lt_view ) ).
 
     IF lines( it_result ) > c_limit.
       render_limit_warning( ii_html ).
@@ -443,14 +467,39 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_head.
+
+    ii_html->div(
+      iv_class = 'ci-msg'
+      iv_content =
+        |Code inspector check variant <span class="ci-variant">{
+        iv_variant }</span> completed ({ iv_summary })| ).
+
+  ENDMETHOD.
+
+
+  METHOD render_limit_warning.
+    ii_html->add( '<div class="dummydiv warning">' ).
+    ii_html->add( ii_html->icon( 'exclamation-triangle' ) ).
+    ii_html->add( |Only first { c_limit } findings shown in list!| ).
+    ii_html->add( '</div>' ).
+  ENDMETHOD.
+
+
   METHOD render_stat.
 
-    ii_html->add( |<span class="{ iv_type }-count">| &&
-      ii_html->a(
-        iv_txt = |{ iv_count } { iv_title }|
+    DATA lv_txt TYPE string.
+
+    lv_txt = |{ iv_count } { iv_title }|.
+
+    IF iv_type <> mv_filter_kind.
+      lv_txt = ii_html->a(
+        iv_txt = lv_txt
         iv_act = |{ c_actions-filter_kind }?kind={ iv_type }|
-        iv_typ = zif_abapgit_html=>c_action_type-sapevent ) &&
-      '</span>' ).
+        iv_typ = zif_abapgit_html=>c_action_type-sapevent ).
+    ENDIF.
+
+    ii_html->add( |<span class="count { iv_type }-count">{ lv_txt }</span>| ).
 
   ENDMETHOD.
 
@@ -462,6 +511,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     DATA lv_errors TYPE i.
     DATA lv_warnings TYPE i.
     DATA lv_infos TYPE i.
+
+    IF mv_filter_kind IS INITIAL.
+      mv_filter_kind = 'all'.
+    ENDIF.
 
     LOOP AT it_result ASSIGNING <ls_i>.
       CASE <ls_i>-kind.
@@ -475,14 +528,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     ENDLOOP.
 
     ii_html->add( '<div class="ci-stats">' ).
-
-    ii_html->add( |<form class="inline" method="post" action="sapevent:{ c_actions-apply_filter }">| ).
-    ii_html->add( zcl_abapgit_gui_chunk_lib=>render_text_input(
-      iv_name      = 'filter'
-      iv_label     = 'Filter:'
-      iv_value     = mv_filter ) ). " TODO placeholder ?
-    ii_html->add( |<input type="submit" class="hidden-submit" title="Filter">| ).
-    ii_html->add( |</form>| ).
 
     IF lv_errors > 0.
       render_stat(
@@ -526,17 +571,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_variant.
-
-    ii_html->div(
-      iv_class = 'ci-head'
-      iv_content =
-        |Code inspector check variant <span class="ci-variant">{
-        iv_variant }</span> completed ({ iv_summary })| ).
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_html_table~get_row_attrs.
 
     FIELD-SYMBOLS <ls_item> TYPE ty_result_view.
@@ -565,7 +599,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
     CASE iv_column_id.
       WHEN 'kind'.
-        rs_render-content = <ls_item>-kind.
+        rs_render-content = |<span>{ <ls_item>-kind }</span>|.
       WHEN 'obj_type'.
         rs_render-content = <ls_item>-obj_type.
       WHEN 'location'.
