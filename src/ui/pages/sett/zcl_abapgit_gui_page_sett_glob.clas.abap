@@ -154,7 +154,7 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
       iv_name        = c_id-commitmsg_body_size
       iv_required    = abap_true
       iv_label       = 'Maximum Line Size of Body'
-      iv_hint        = |At least { zcl_abapgit_settings=>c_commitmsg_body_size_dft } characters|
+      iv_hint        = |Wrap body message at { zcl_abapgit_settings=>c_commitmsg_body_size_dft } characters per line|
       iv_min         = zcl_abapgit_settings=>c_commitmsg_body_size_dft
     )->checkbox(
       iv_name        = c_id-commitmsg_hide_author
