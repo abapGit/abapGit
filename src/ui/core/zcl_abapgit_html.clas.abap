@@ -29,7 +29,7 @@ CLASS zcl_abapgit_html DEFINITION
         iv_checked     TYPE abap_bool OPTIONAL
       RETURNING
         VALUE(rv_html) TYPE string .
-    CLASS-METHODS data_attr
+    CLASS-METHODS parse_data_attr
       IMPORTING
         iv_str         TYPE string OPTIONAL
       RETURNING
@@ -127,16 +127,6 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     IF iv_initial_chunk IS NOT INITIAL.
       ri_instance->add( iv_initial_chunk ).
     ENDIF.
-  ENDMETHOD.
-
-
-  METHOD data_attr.
-
-    SPLIT iv_str AT '=' INTO rs_data_attr-name rs_data_attr-value.
-    IF rs_data_attr-name IS INITIAL.
-      CLEAR rs_data_attr.
-    ENDIF.
-
   ENDMETHOD.
 
 
@@ -242,6 +232,16 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       ELSE.
         cv_line = gv_spaces && cv_line.
       ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD parse_data_attr.
+
+    SPLIT iv_str AT '=' INTO rs_data_attr-name rs_data_attr-value.
+    IF rs_data_attr-name IS INITIAL.
+      CLEAR rs_data_attr.
     ENDIF.
 
   ENDMETHOD.

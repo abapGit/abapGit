@@ -28,7 +28,7 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
     IF iv_table_id = 'simple'.
       rs_attrs-css_class = |r{ iv_row_index }|.
     ELSEIF iv_table_id = 'with-cids'.
-      rs_attrs-data = zcl_abapgit_html=>data_attr( |attr={ iv_row_index }| ).
+      rs_attrs-data = zcl_abapgit_html=>parse_data_attr( |attr={ iv_row_index }| ).
     ENDIF.
   ENDMETHOD.
 

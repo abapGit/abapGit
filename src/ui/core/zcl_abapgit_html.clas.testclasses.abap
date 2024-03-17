@@ -220,7 +220,7 @@ CLASS ltcl_html IMPLEMENTATION.
     mo_html->wrap(
       iv_tag     = 'td'
       iv_content = 'Hello'
-      is_data_attr = zcl_abapgit_html=>data_attr( 'id=123' )
+      is_data_attr = zcl_abapgit_html=>parse_data_attr( 'id=123' )
       iv_format_single_line = abap_true ).
 
     cl_abap_unit_assert=>assert_equals(
