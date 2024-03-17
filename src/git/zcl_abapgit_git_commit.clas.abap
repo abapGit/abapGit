@@ -81,7 +81,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
   METHOD extract_author_data.
 
-    " unix time stamps are in same time zone, so ignore the zone
+    " Unix time stamps are in same time zone, so ignore the zone
     FIND REGEX zif_abapgit_definitions=>c_author_regex IN iv_author
       SUBMATCHES
       ev_author
