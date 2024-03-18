@@ -534,7 +534,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
         lcl_aff_metadata_handler=>deserialize_translation(
           EXPORTING
-            it_files           = mo_files
+            io_files           = mo_files
           IMPORTING
             et_description     = lt_description
             et_description_sub = lt_description_sub ).
