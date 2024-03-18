@@ -652,7 +652,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
 
     LOOP AT it_language INTO lv_langu.
 
-      ls_data = fill_translation( iv_name     = is_intf-vseointerf-clsname
+      ls_data = fill_translation( iv_name  = is_intf-vseointerf-clsname
                                   iv_language = lv_langu ).
 
       " convert AFF type to JSON
@@ -675,8 +675,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
       lt_translation = lo_json_path->serialize( lv_json ).
 
       CREATE OBJECT lo_trans_file
-        EXPORTING
-          iv_lang = lv_langu.
+        EXPORTING iv_lang = lv_langu.
 
       lo_trans_file->push_text_pairs( lt_translation ).
 
