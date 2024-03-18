@@ -512,7 +512,7 @@ CLASS lcl_aff_metadata_handler DEFINITION.
       RETURNING VALUE(rv_result) TYPE zif_abapgit_aff_intf_v1=>ty_main
       RAISING   zcx_abapgit_exception.
     CLASS-METHODS deserialize_translation
-      IMPORTING it_files           TYPE REF TO zcl_abapgit_objects_files
+      IMPORTING io_files           TYPE REF TO zcl_abapgit_objects_files
       EXPORTING et_description     TYPE zcl_abapgit_object_intf=>ty_intf-description
                 et_description_sub TYPE zcl_abapgit_object_intf=>ty_intf-description_sub
       RAISING   zcx_abapgit_exception.
@@ -716,7 +716,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
           lo_type_mapper      TYPE REF TO zif_abapgit_aff_type_mapping,
           ls_ag_data          TYPE zcl_abapgit_object_intf=>ty_intf.
 
-    lt_translation_file = it_files->get_i18n_properties_file( ).
+    lt_translation_file = io_files->get_i18n_properties_file( ).
     CREATE OBJECT lo_json_path.
 
     LOOP AT lt_translation_file INTO ls_translation_file.
