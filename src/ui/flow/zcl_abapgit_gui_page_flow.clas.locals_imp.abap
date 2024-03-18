@@ -648,7 +648,7 @@ CLASS lcl_helper IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD find_changed_files.
-* dont care if its added or removed or changed, just remove identical
+* don't care if its added or removed or changed, just remove identical
 * also list identical moved files
 
     DATA ls_path_name LIKE LINE OF rt_files.

@@ -974,7 +974,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     ASSIGN COMPONENT 'ROWORCOLST' OF STRUCTURE ls_internal-dd09l TO <lg_roworcolst>.
     IF sy-subrc = 0 AND <lg_roworcolst> = 'C'.
-      CLEAR <lg_roworcolst>. "To avoid diff errors. This field doesn't exists in all releases
+      CLEAR <lg_roworcolst>. "To avoid diff errors. This field doesn't exist in all releases
     ENDIF.
 
 

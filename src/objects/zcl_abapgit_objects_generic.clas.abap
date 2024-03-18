@@ -671,7 +671,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
     lt_key_component_uncovered = it_key_component.
 
-*    we want to fill the atribute values which are not covered by explicit key components yet
+*    we want to fill the attribute values which are not covered by explicit key components yet
     LOOP AT ct_objkey INTO ls_dummy.
       DELETE lt_key_component_uncovered INDEX 1.
     ENDLOOP.
