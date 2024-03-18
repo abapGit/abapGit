@@ -8,7 +8,7 @@ CLASS zcl_abapgit_html_table DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        !ii_renderer    TYPE REF TO zif_abapgit_html_table
+        !ii_renderer    TYPE REF TO zif_abapgit_html_table OPTIONAL
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_html_table .
     " probably th css_class
@@ -25,6 +25,7 @@ CLASS zcl_abapgit_html_table DEFINITION
     " Record Limit
     METHODS render
       IMPORTING
+        !ii_renderer   TYPE REF TO zif_abapgit_html_table OPTIONAL
         !it_data       TYPE ANY TABLE
         !iv_id         TYPE csequence OPTIONAL
         !iv_css_class  TYPE csequence OPTIONAL
@@ -116,7 +117,6 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
 
 
   METHOD create.
-    ASSERT ii_renderer IS BOUND.
     CREATE OBJECT ro_instance.
     ro_instance->mi_renderer = ii_renderer.
   ENDMETHOD.
@@ -161,6 +161,12 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
   METHOD render.
 
     DATA lv_attrs TYPE string.
+
+    IF ii_renderer IS BOUND.
+      mi_renderer = ii_renderer.
+    ENDIF.
+
+    ASSERT mi_renderer IS BOUND.
 
     mv_with_cids     = iv_with_cids.
     mv_table_id      = iv_id.

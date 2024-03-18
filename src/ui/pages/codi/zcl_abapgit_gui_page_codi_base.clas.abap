@@ -424,7 +424,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     DATA li_table TYPE REF TO zcl_abapgit_html_table.
     DATA lt_view TYPE ty_view_tab.
 
-    li_table = zcl_abapgit_html_table=>create( me
+    li_table = zcl_abapgit_html_table=>create(
       )->define_column(
         iv_column_id    = 'kind'
         iv_column_title = zcl_abapgit_html=>icon( 'exclamation-circle' )
@@ -450,6 +450,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     ii_html->div(
       iv_class   = 'ci-detail'
       ii_content = li_table->render(
+        ii_renderer      = me
         is_sorting_state = ms_sorting_state
         iv_wrap_in_div   = 'default-table-container'
         iv_css_class     = 'default-table'
