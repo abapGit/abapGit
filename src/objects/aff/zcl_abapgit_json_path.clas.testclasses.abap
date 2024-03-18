@@ -175,8 +175,8 @@ CLASS ltcl_json_path IMPLEMENTATION.
     lv_is_equal = zcl_abapgit_ajson_utilities=>new( )->is_equal( iv_json_a = lv_act
                                                                  iv_json_b = lv_exp ).
 
-    cl_abap_unit_assert=>assert_equal( act = lv_is_equal
-                                       exp = abap_true ).
+    cl_abap_unit_assert=>assert_equals( act = lv_is_equal
+                                        exp = abap_true ).
 
   ENDMETHOD.
 
@@ -198,8 +198,8 @@ CLASS ltcl_json_path IMPLEMENTATION.
       iv_json_a = lv_act
       iv_json_b = ` { "header": { "description": "Text" } } ` ).
 
-    cl_abap_unit_assert=>assert_equal( act = lv_is_equal
-                                       exp = abap_true ).
+    cl_abap_unit_assert=>assert_equals( act = lv_is_equal
+                                        exp = abap_true ).
 
   ENDMETHOD.
 
