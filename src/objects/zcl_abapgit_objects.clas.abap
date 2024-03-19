@@ -1337,15 +1337,28 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD update_original_system.
 
-    DATA lv_srcsystem TYPE tadir-srcsystem.
-    DATA lv_errors TYPE abap_bool.
-    DATA lv_msg TYPE string.
+    DATA:
+      lv_srcsystem           TYPE tadir-srcsystem,
+      lv_transport_type_from TYPE trfunction,
+      lv_transport_type_to   TYPE trfunction,
+      lv_errors              TYPE abap_bool,
+      lv_msg                 TYPE string.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF it_items.
 
     lv_srcsystem = io_dot->get_original_system( ).
+
     IF lv_srcsystem IS INITIAL.
       RETURN.
+    ELSEIF lv_srcsystem = 'SID'.
+      " Change objects to local system and switch repairs to development requests
+      lv_srcsystem           = sy-sysid.
+      lv_transport_type_from = zif_abapgit_cts_api=>c_transport_type-wb_repair.
+      lv_transport_type_to   = zif_abapgit_cts_api=>c_transport_type-wb_task.
+    ELSE.
+      " Change objects to external system and switch development requests to repairs
+      lv_transport_type_from = zif_abapgit_cts_api=>c_transport_type-wb_task.
+      lv_transport_type_to   = zif_abapgit_cts_api=>c_transport_type-wb_repair.
     ENDIF.
 
     ii_log->add_info( |>> Setting original system| ).
@@ -1401,10 +1414,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
     IF lv_errors IS INITIAL.
-      " Since original system has changed, the type of transport request needs to be switched to "Repair"
+      " Since original system has changed, the type of transport request needs to be adjusted
       zcl_abapgit_factory=>get_cts_api( )->change_transport_type(
-        iv_transport_request = iv_transport
-        iv_transport_type    = zif_abapgit_cts_api=>c_transport_type-wb_repair ).
+        iv_transport_request   = iv_transport
+        iv_transport_type_from = lv_transport_type_from
+        iv_transport_type_to   = lv_transport_type_to ).
     ENDIF.
 
   ENDMETHOD.

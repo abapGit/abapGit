@@ -215,7 +215,9 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
   METHOD zif_abapgit_cts_api~change_transport_type.
 
-    DATA ls_request_header TYPE trwbo_request_header.
+    DATA:
+      ls_request_header  TYPE trwbo_request_header,
+      lt_request_headers TYPE trwbo_request_headers.
 
     CALL FUNCTION 'ENQUEUE_E_TRKORR'
       EXPORTING
@@ -228,33 +230,49 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    CALL FUNCTION 'TRINT_READ_REQUEST_HEADER'
+    CALL FUNCTION 'TR_READ_REQUEST_WITH_TASKS'
       EXPORTING
-        iv_read_e070   = abap_true
-        iv_read_e070c  = abap_true
-      CHANGING
-        cs_request     = ls_request_header
+        iv_trkorr          = iv_transport_request
+      IMPORTING
+        et_request_headers = lt_request_headers
       EXCEPTIONS
-        empty_trkorr   = 1
-        not_exist_e070 = 2
-        OTHERS         = 3.
+        invalid_input      = 1
+        OTHERS             = 2.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    CALL FUNCTION 'TRINT_CHANGE_TRFUNCTION'
-      EXPORTING
-        iv_new_trfunction      = iv_transport_type
-      CHANGING
-        cs_request_header      = ls_request_header
-      EXCEPTIONS
-        action_aborted_by_user = 1
-        change_not_allowed     = 2
-        db_access_error        = 3
-        OTHERS                 = 4.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    LOOP AT lt_request_headers INTO ls_request_header WHERE trfunction = iv_transport_type_from.
+
+      CALL FUNCTION 'TRINT_READ_REQUEST_HEADER'
+        EXPORTING
+          iv_read_e070   = abap_true
+          iv_read_e070c  = abap_true
+        CHANGING
+          cs_request     = ls_request_header
+        EXCEPTIONS
+          empty_trkorr   = 1
+          not_exist_e070 = 2
+          OTHERS         = 3.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+      CALL FUNCTION 'TRINT_CHANGE_TRFUNCTION'
+        EXPORTING
+          iv_new_trfunction      = iv_transport_type_to
+        CHANGING
+          cs_request_header      = ls_request_header
+        EXCEPTIONS
+          action_aborted_by_user = 1
+          change_not_allowed     = 2
+          db_access_error        = 3
+          OTHERS                 = 4.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+    ENDLOOP.
 
     CALL FUNCTION 'DEQUEUE_E_TRKORR'
       EXPORTING
