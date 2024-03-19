@@ -54,7 +54,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_hoc IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_HOC IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -92,6 +92,20 @@ CLASS zcl_abapgit_gui_page_hoc IMPLEMENTATION.
     ls_control-extra_css_url       = iv_extra_css_url.
     ls_control-extra_js_url        = iv_extra_js_url.
     ls_control-show_as_modal       = iv_show_as_modal.
+
+    IF ls_control-page_menu_provider IS NOT BOUND. " try component itself
+      TRY.
+          ls_control-page_menu_provider ?= ii_child_component.
+        CATCH cx_sy_move_cast_error.
+      ENDTRY.
+    ENDIF.
+
+    IF ls_control-page_title_provider IS NOT BOUND. " try component itself
+      TRY.
+          ls_control-page_title_provider ?= ii_child_component.
+        CATCH cx_sy_move_cast_error.
+      ENDTRY.
+    ENDIF.
 
     CREATE OBJECT lo_page
       EXPORTING
