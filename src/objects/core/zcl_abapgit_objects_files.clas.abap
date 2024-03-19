@@ -105,6 +105,8 @@ CLASS zcl_abapgit_objects_files DEFINITION
         VALUE(rt_i18n_files) TYPE zif_abapgit_i18n_file=>ty_table_of
       RAISING
         zcx_abapgit_exception .
+    METHODS get_i18n_properties_file
+        RETURNING VALUE(rt_result) TYPE zif_abapgit_git_definitions=>ty_files_tt.
 
   PROTECTED SECTION.
 
@@ -497,4 +499,31 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
+  METHOD get_i18n_properties_file.
+
+    DATA lv_lang TYPE laiso.
+    DATA lv_ext TYPE string.
+    FIELD-SYMBOLS <ls_file> LIKE LINE OF mt_files.
+
+    LOOP AT mt_files ASSIGNING <ls_file>.
+
+      " TODO: Maybe this should be in zcl_abapgit_filename_logic
+      FIND FIRST OCCURRENCE OF REGEX 'i18n\.([^.]{2})\.([^.]+)$' IN <ls_file>-filename SUBMATCHES lv_lang lv_ext.
+      CHECK sy-subrc = 0.
+
+      IF sy-subrc = 0 AND lv_ext = `properties`.
+
+        APPEND <ls_file> TO rt_result.
+        mark_accessed(
+          iv_path = <ls_file>-path
+          iv_file = <ls_file>-filename
+          iv_sha1 = <ls_file>-sha1 ).
+
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.
