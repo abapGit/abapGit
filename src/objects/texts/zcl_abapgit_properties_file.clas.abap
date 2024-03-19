@@ -51,8 +51,8 @@ CLASS zcl_abapgit_properties_file IMPLEMENTATION.
 
   METHOD zif_abapgit_i18n_file~render.
     DATA: lv_translation TYPE string,
-          lo_buf      TYPE REF TO zcl_abapgit_string_buffer,
-          lv_str      TYPE string.
+          lo_buf         TYPE REF TO zcl_abapgit_string_buffer,
+          lv_str         TYPE string.
 
     lv_translation = concat_lines_of( table = mt_translation
                                       sep   = cl_abap_char_utilities=>newline ).
@@ -60,7 +60,7 @@ CLASS zcl_abapgit_properties_file IMPLEMENTATION.
     lo_buf->add( lv_translation ).
 
     lv_str = lo_buf->join_w_newline_and_flush( ) && cl_abap_char_utilities=>newline.
-    rv_data = zcl_abapgit_convert=>string_to_xstring_utf8_bom( lv_str ).
+    rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_str ).
 
   ENDMETHOD.
 
