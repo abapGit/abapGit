@@ -226,6 +226,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
           iv_key    = lv_key ).
 
         rs_handled-page = zcl_abapgit_gui_page_stage=>create(
+          ii_force_refresh = abap_false
           io_repo       = lo_online
           ii_obj_filter = lo_filter ).
 

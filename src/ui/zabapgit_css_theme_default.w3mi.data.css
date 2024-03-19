@@ -405,14 +405,39 @@ div.corner-hint {
 
 /* CODE INSPECTOR */
 
-.ci-head { background-color: var(--theme-container-background-color); }
-.ci-head .package-name span { color: grey; }
-.ci-variant   { color: #444; }
-.ci-result    { background-color: #f6f6f6; }
-.ci-result li { color: #444; }
-.ci-result li.ci-error   { border-left-color: #cd5353; }
-.ci-result li.ci-warning { border-left-color: #ecd227; }
-.ci-result li.ci-info    { border-left-color: #acacac; }
+div.ci { background-color: var(--theme-container-background-color); }
+
+div.ci-msg span.ci-variant { color: var(--theme-primary-font-color); }
+
+div.ci-stats span.error-count {
+  border-color: hsl(350, 100%, 80%);
+  background-color: hsl(350, 100%, 90%);
+}
+div.ci-stats span.warn-count {
+  border-color: hsl(60, 100%, 42%);
+  background-color: hsl(60, 100%, 90%);
+}
+div.ci-stats span.info-count {
+  border-color: hsl(120, 80%, 80%);
+  background-color: hsl(120, 80%, 94%);
+}
+div.ci-stats span.all-count {
+  border-color: hsl(235, 100%, 89%);
+  background-color: hsl(235, 100%, 93%);
+}
+div.ci-detail table td[data-cid="text"] {
+  color: hsl(0, 0%, 40%);
+}
+
+div.ci-detail table tr[data-kind="error"] td[data-cid="kind"] span {
+  background-color: hsl(0, 100%, 68%);
+}
+div.ci-detail table tr[data-kind="warning"] td[data-cid="kind"] span {
+  background-color:hsl(52, 100%, 49%);
+}
+div.ci-detail table tr[data-kind="info"] td[data-cid="kind"] span {
+  background-color: hsl(118, 67%, 47%);
+}
 
 /* COMMAND PALETTE */
 
