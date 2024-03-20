@@ -247,7 +247,7 @@ CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
     DATA:
       lt_fields TYPE zif_abapgit_html_form=>ty_fields,
       lv_value  TYPE string,
-      lv_number TYPE i.
+      lv_number TYPE int8.
 
     FIELD-SYMBOLS <ls_field> LIKE LINE OF lt_fields.
 
