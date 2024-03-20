@@ -18,15 +18,43 @@ CLASS ZCL_ABAPGIT_OBJECT_UIPG IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    TRY.
-        DATA(lo_api) = NEW /ui2/cl_uist_sval_sql( ).
-        DATA(ls_metadata) = /ui2/cl_uipg_db_access=>get_instance( )->read_wb_metadata( iv_page_id  = CONV #( ms_item-obj_name )
-                                                                                       iv_version  = 'A'
-                                                                                       iv_language = sy-langu ).
-        rv_user = ls_metadata-changed_by.
 
-      CATCH /ui2/cx_uipg INTO DATA(lx_error).
-        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    DATA: lo_db_api     TYPE REF TO object,
+          lr_data       TYPE REF TO data,
+          lv_object_key TYPE c LENGTH 35,
+          lx_root       TYPE REF TO cx_root.
+
+    FIELD-SYMBOLS: <ls_metadata>   TYPE any,
+                   <lv_changed_by> TYPE any.
+
+    TRY.
+        CALL METHOD ('/UI2/CL_UIPG_DB_ACCESS')=>('GET_INSTANCE')
+          RECEIVING
+            ro_instance = lo_db_api.
+        CREATE DATA lr_data TYPE ('CL_BLUE_AFF_WB_ACCESS=>TY_METADATA').
+        ASSIGN lr_data->* TO <ls_metadata>.
+      CATCH cx_sy_create_object_error
+              cx_sy_create_data_error.
+        zcx_abapgit_exception=>raise( 'Object UIPG not supported' ).
     ENDTRY.
+
+    TRY.
+        lv_object_key = ms_item-obj_name.
+        CALL METHOD lo_db_api->('/UI2/IF_UIPG_DB_ACCESS~READ_WB_METADATA')
+          EXPORTING
+            iv_page_id  = lv_object_key
+            iv_version  = 'A'
+            iv_language = sy-langu
+          RECEIVING
+            rs_metadata = <ls_metadata>.
+
+        ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <ls_metadata> TO <lv_changed_by>.
+        rv_user = <lv_changed_by>.
+
+      CATCH cx_root INTO lx_root.
+        zcx_abapgit_exception=>raise( iv_text     = lx_root->get_text( )
+                                      ix_previous = lx_root ).
+    ENDTRY.
+
   ENDMETHOD.
 ENDCLASS.

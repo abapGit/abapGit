@@ -18,16 +18,41 @@ CLASS ZCL_ABAPGIT_OBJECT_UIST IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
+
+    DATA: lo_db_api     TYPE REF TO object,
+          lr_data       TYPE REF TO data,
+          lv_object_key TYPE seu_objkey,
+          lx_root       TYPE REF TO cx_root.
+
+    FIELD-SYMBOLS: <ls_metadata>   TYPE any,
+                   <lv_changed_by> TYPE any.
+
+
     TRY.
+        CREATE OBJECT lo_db_api TYPE ('/UI2/CL_UIST_SVAL_SQL').
+        CREATE DATA lr_data TYPE ('CL_BLUE_AFF_WB_ACCESS=>TY_METADATA').
+        ASSIGN lr_data->* TO <ls_metadata>.
+      CATCH cx_sy_create_object_error
+              cx_sy_create_data_error.
+        zcx_abapgit_exception=>raise( 'Object UIST not supported' ).
+    ENDTRY.
 
-        DATA(lo_api) = NEW /ui2/cl_uist_sval_sql( ).
-        DATA(ls_metadata) = lo_api->/ui2/if_uist_sval~get_metadata( object_name = CONV #( ms_item-obj_name )
-                                                                    version     = 'A'
-                                                                    language    = sy-langu ).
-        rv_user = ls_metadata-changed_by.
+    TRY.
+        lv_object_key = ms_item-obj_name.
+        CALL METHOD lo_db_api->('/UI2/IF_UIST_SVAL~GET_METADATA')
+          EXPORTING
+            object_name = lv_object_key
+            version     = 'A'
+            language    = sy-langu
+          RECEIVING
+            result      = <ls_metadata>.
 
-      CATCH /ui2/cx_fdm INTO DATA(lx_error).
-        zcx_abapgit_exception=>raise_with_text( lx_error ).
+        ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <ls_metadata> TO <lv_changed_by>.
+        rv_user = <lv_changed_by>.
+
+      CATCH cx_root INTO lx_root.
+        zcx_abapgit_exception=>raise( iv_text     = lx_root->get_text( )
+                                      ix_previous = lx_root ).
     ENDTRY.
   ENDMETHOD.
 ENDCLASS.
