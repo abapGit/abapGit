@@ -43,7 +43,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UIST IMPLEMENTATION.
           EXPORTING
             object_name = lv_object_key
             version     = 'A'
-            language    = sy-langu
+            language    = mv_language
           RECEIVING
             result      = <ls_metadata>.
 
