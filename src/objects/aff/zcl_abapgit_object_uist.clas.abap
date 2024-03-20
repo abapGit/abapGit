@@ -50,7 +50,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UIST IMPLEMENTATION.
         ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <ls_metadata> TO <lv_changed_by>.
         rv_user = <lv_changed_by>.
 
-    CATCH cx_root INTO lx_root.
+      CATCH cx_root INTO lx_root.
         zcx_abapgit_exception=>raise_with_text( lx_root ).
     ENDTRY.
   ENDMETHOD.
