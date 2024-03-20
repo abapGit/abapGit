@@ -44,7 +44,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UIPG IMPLEMENTATION.
           EXPORTING
             iv_page_id  = lv_object_key
             iv_version  = 'A'
-            iv_language = sy-langu
+            iv_language = mv_language
           RECEIVING
             rs_metadata = <ls_metadata>.
 
