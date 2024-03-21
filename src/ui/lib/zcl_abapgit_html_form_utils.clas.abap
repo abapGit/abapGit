@@ -289,7 +289,7 @@ CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
             CATCH cx_root.
               ro_validation_log->set(
                 iv_key = <ls_field>-name
-                iv_val = |Input Value Out of Range. Please enter a number with less than 32 digits| ).
+                iv_val = |Input Out of Range: Please enter a valid entry with fewer than 32 digits| ).
               CONTINUE.
           ENDTRY.
           IF <ls_field>-min <> cl_abap_math=>min_int4 AND lv_number < <ls_field>-min.
