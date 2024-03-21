@@ -289,7 +289,7 @@ CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
             CATCH cx_root.
               ro_validation_log->set(
                 iv_key = <ls_field>-name
-                iv_val = |Exceeded Limit: Please use less than 32 digits| ).
+                iv_val = |{ <ls_field>-label } is not numeric| ).
               CONTINUE.
           ENDTRY.
           IF <ls_field>-min <> cl_abap_math=>min_int4 AND lv_number < <ls_field>-min.
