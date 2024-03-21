@@ -59,6 +59,8 @@ CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
     register( 'SMBC' ).
     register( 'NONT' ).
     register( 'RONT' ).
+    register( 'UIPG' ).
+    register( 'UIST' ).
   ENDMETHOD.
 
 
