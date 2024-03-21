@@ -146,7 +146,7 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
       iv_label       = 'Maximum Length of Comment'
       iv_hint        = |At most { zcl_abapgit_settings=>c_commitmsg_comment_length_dft } characters|
       iv_min         = 1
-      iv_max         = zcl_abapgit_settings=>c_commitmsg_comment_length_dft
+      iv_max         = 250
     )->text(
       iv_name        = c_id-commitmsg_comment_deflt
       iv_label       = 'Default Text For Comment'
