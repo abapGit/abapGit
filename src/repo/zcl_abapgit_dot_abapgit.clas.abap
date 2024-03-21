@@ -208,10 +208,6 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
       iv_main_language  = get_main_language( )
       it_i18n_languages = get_i18n_languages( ) ).
 
-    IF rs_i18n_params-main_language IS INITIAL.
-      rs_i18n_params-main_language = sy-langu.
-    ENDIF.
-
   ENDMETHOD.
 
 
@@ -256,6 +252,9 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
   METHOD get_main_language.
     rv_language = ms_data-master_language.
+    IF rv_language IS INITIAL.
+      rv_language = sy-langu.
+    ENDIF.
   ENDMETHOD.
 
 
