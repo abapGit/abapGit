@@ -149,6 +149,7 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
   METHOD get_form_schema.
 
     DATA lv_commitmsg_comment_length TYPE i.
+    DATA lv_commitmsg_comment_max_len TYPE i VALUE 255.
 
     IF io_form_data IS BOUND AND io_form_data->is_empty( ) = abap_false.
       ms_tag-type = io_form_data->get( c_id-tag_type ).
@@ -194,7 +195,7 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
         iv_name        = c_id-message
         iv_label       = 'Comment'
         iv_max         = lv_commitmsg_comment_length
-        iv_placeholder = |Add a mandatory comment with max { lv_commitmsg_comment_length } characters|
+        iv_placeholder = |Add a mandatory comment with max { lv_commitmsg_comment_max_len } characters|
       )->textarea(
         iv_name        = c_id-body
         iv_label       = 'Body'
