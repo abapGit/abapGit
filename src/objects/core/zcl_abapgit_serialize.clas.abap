@@ -118,14 +118,7 @@ CLASS zcl_abapgit_serialize DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
-    CLASS-METHODS determine_i18n_params
-      IMPORTING
-        !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
-        !iv_main_language_only TYPE abap_bool
-      RETURNING
-        VALUE(rs_i18n_params)  TYPE zif_abapgit_definitions=>ty_i18n_params
-      RAISING
-        zcx_abapgit_exception.
+
     METHODS is_parallelization_possible
       RETURNING
         VALUE(rv_result) TYPE abap_bool.
@@ -271,33 +264,16 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     mo_dot_abapgit = io_dot_abapgit.
     ms_local_settings = is_local_settings.
 
-    ms_i18n_params = determine_i18n_params(
-      io_dot = io_dot_abapgit
-      iv_main_language_only = is_local_settings-main_language_only ).
+    IF io_dot_abapgit IS BOUND.
+      ms_i18n_params = io_dot_abapgit->determine_i18n_parameters( is_local_settings-main_language_only ).
+    ELSE.
+      ms_i18n_params-main_language      = sy-langu.
+      ms_i18n_params-main_language_only = is_local_settings-main_language_only.
+    ENDIF.
 
     CREATE OBJECT mo_abap_language_version
       EXPORTING
         io_dot_abapgit = mo_dot_abapgit.
-
-  ENDMETHOD.
-
-
-  METHOD determine_i18n_params.
-
-    " TODO: unify with ZCL_ABAPGIT_OBJECTS=>DETERMINE_I18N_PARAMS, same code
-
-    IF io_dot IS BOUND.
-      rs_i18n_params-main_language         = io_dot->get_main_language( ).
-      rs_i18n_params-use_lxe               = io_dot->use_lxe( ).
-      rs_i18n_params-main_language_only    = iv_main_language_only.
-      rs_i18n_params-translation_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
-        iv_main_language  = io_dot->get_main_language( )
-        it_i18n_languages = io_dot->get_i18n_languages( ) ).
-    ENDIF.
-
-    IF rs_i18n_params-main_language IS INITIAL.
-      rs_i18n_params-main_language = sy-langu.
-    ENDIF.
 
   ENDMETHOD.
 
@@ -503,6 +479,20 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_parallelization_possible.
+
+    rv_result = boolc( zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false
+                   AND zcl_abapgit_persist_factory=>get_settings( )->read( )->get_parallel_proc_disabled( ) = abap_false
+                   AND mv_group IS NOT INITIAL
+                   " The function module below should always exist here as is_merged evaluated to false above.
+                   " It does however not exist in the transpiled version which then causes unit tests to fail.
+                   " Therefore the check needs to stay.
+                   AND zcl_abapgit_factory=>get_function_module(
+                                         )->function_exists( 'Z_ABAPGIT_SERIALIZE_PARALLEL' ) = abap_true ).
+
+  ENDMETHOD.
+
+
   METHOD on_end_of_task.
 
 * this method will be called from the parallel processing, thus it must be public
@@ -693,19 +683,4 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     lo_timer->end( abap_true ).
 
   ENDMETHOD.
-
-
-  METHOD is_parallelization_possible.
-
-    rv_result = boolc( zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false
-                   AND zcl_abapgit_persist_factory=>get_settings( )->read( )->get_parallel_proc_disabled( ) = abap_false
-                   AND mv_group IS NOT INITIAL
-                   " The function module below should always exist here as is_merged evaluated to false above.
-                   " It does however not exist in the transpiled version which then causes unit tests to fail.
-                   " Therefore the check needs to stay.
-                   AND zcl_abapgit_factory=>get_function_module(
-                                         )->function_exists( 'Z_ABAPGIT_SERIALIZE_PARALLEL' ) = abap_true ).
-
-  ENDMETHOD.
-
 ENDCLASS.
