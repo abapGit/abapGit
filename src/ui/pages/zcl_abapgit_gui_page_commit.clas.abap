@@ -289,8 +289,8 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
   METHOD get_form_schema.
 
-    DATA: lv_commitmsg_comment_length  TYPE i.
-    DATA: lv_commitmsg_comment_max_len TYPE i VALUE 255.
+    DATA lv_commitmsg_comment_min_len TYPE i VALUE 1.
+    DATA lv_commitmsg_comment_max_len TYPE i VALUE 255.
 
     ro_form = zcl_abapgit_html_form=>create(
       iv_form_id   = 'commit-form'
@@ -302,7 +302,8 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
       iv_name        = c_id-comment
       iv_label       = 'Comment'
       iv_required    = abap_true
-      iv_max         = lv_commitmsg_comment_length
+      iv_min         = lv_commitmsg_comment_min_len
+      iv_max         = lv_commitmsg_comment_max_len
       iv_placeholder = |Add a mandatory comment with max { lv_commitmsg_comment_max_len } characters|
     )->textarea(
       iv_name        = c_id-body
