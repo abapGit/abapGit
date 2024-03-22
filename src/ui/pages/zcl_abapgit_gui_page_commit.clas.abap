@@ -296,8 +296,6 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
       iv_form_id   = 'commit-form'
       iv_help_page = 'https://docs.abapgit.org/guide-stage-commit.html' ).
 
-    lv_commitmsg_comment_length = mo_settings->get_commitmsg_comment_length( ).
-
     ro_form->text(
       iv_name        = c_id-comment
       iv_label       = 'Comment'
