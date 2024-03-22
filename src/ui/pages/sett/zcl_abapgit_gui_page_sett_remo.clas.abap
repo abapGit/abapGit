@@ -114,6 +114,14 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS prepare_for_compare
+      IMPORTING
+        io_form_data        TYPE REF TO zcl_abapgit_string_map
+      RETURNING
+        VALUE(ro_form_data) TYPE REF TO zcl_abapgit_string_map
+      RAISING
+        zcx_abapgit_exception.
+
     METHODS check_protection
       RAISING
         zcx_abapgit_exception.
@@ -656,6 +664,44 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD prepare_for_compare.
+
+    ro_form_data = zcl_abapgit_string_map=>create( )->merge( io_form_data ).
+
+    CASE ro_form_data->get( c_id-head_type ).
+      WHEN c_head_types-branch.
+        ro_form_data->set(
+          iv_key = c_id-pull_request
+          iv_val = '' ).
+        ro_form_data->set(
+          iv_key = c_id-commit
+          iv_val = '' ).
+        ro_form_data->set(
+          iv_key = c_id-tag
+          iv_val = '' ).
+      WHEN c_head_types-tag.
+        ro_form_data->set(
+          iv_key = c_id-pull_request
+          iv_val = '' ).
+        ro_form_data->set(
+          iv_key = c_id-commit
+          iv_val = '' ).
+        ro_form_data->set(
+          iv_key = c_id-branch
+          iv_val = '' ).
+      WHEN c_head_types-commit.
+        ro_form_data->set(
+          iv_key = c_id-pull_request
+          iv_val = '' ).
+      WHEN c_head_types-pull_request.
+        ro_form_data->set(
+          iv_key = c_id-commit
+          iv_val = '' ).
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD render_content.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -939,7 +985,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         ENDIF.
 
         rs_handled-state = zcl_abapgit_html_form_utils=>create( mo_form )->exit(
-          io_form_data    = mo_form_data
+          io_form_data    = prepare_for_compare( mo_form_data )
           io_compare_with = initialize_form_data( ) ).
 
       WHEN c_event-choose_url.
