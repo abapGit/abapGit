@@ -110,8 +110,8 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
 
 
   METHOD get_form_schema.
-    DATA: lv_commitmsg_comment_min_len TYPE i VALUE 1.
-    DATA: lv_commitmsg_comment_max_len TYPE i VALUE 255.
+    DATA lv_commitmsg_comment_min_len TYPE i VALUE 1.
+    DATA lv_commitmsg_comment_max_len TYPE i VALUE 255.
 
     ro_form = zcl_abapgit_html_form=>create(
       iv_form_id   = 'global-setting-form'
