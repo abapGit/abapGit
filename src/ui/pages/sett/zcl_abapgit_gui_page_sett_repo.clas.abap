@@ -206,7 +206,8 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_label       = 'Original System'
       iv_upper_case  = abap_true
       iv_max         = 3
-      iv_hint        = 'Sets the source system of objects during deserialize in downstream systems' ).
+      iv_hint        = 'Sets the source system of objects during deserialize in downstream systems'
+                       && ' (use "SID" to force the source system to sy-sysid)' ).
 
     IF zcl_abapgit_feature=>is_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
       ro_form->radio(
