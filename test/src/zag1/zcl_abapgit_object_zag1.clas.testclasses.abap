@@ -24,9 +24,11 @@ CLASS ltcl_test IMPLEMENTATION.
 
     INSERT 'ENQUEUE_EZABAPGIT' INTO TABLE lt_deps.
     INSERT 'DEQUEUE_EZABAPGIT' INTO TABLE lt_deps.
+    INSERT 'TR_OBJECT_TABLE' INTO TABLE lt_deps.
     mi_env = cl_function_test_environment=>create( lt_deps ).
     mi_env->get_double( 'ENQUEUE_EZABAPGIT' )->configure_call( )->ignore_all_parameters( )->then_answer( me ).
     mi_env->get_double( 'DEQUEUE_EZABAPGIT' )->configure_call( )->ignore_all_parameters( )->then_answer( me ).
+    mi_env->get_double( 'TR_OBJECT_TABLE' )->configure_call( )->ignore_all_parameters( )->then_answer( me ).
 
   ENDMETHOD.
 
