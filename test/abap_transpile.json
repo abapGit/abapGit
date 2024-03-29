@@ -10,6 +10,8 @@
     "src/env/*",
     "zcl_abapgit_adt_link",
     "zcl_abapgit_aff_registry",
+    "zcl_abapgit_apack_helper",
+    "zcl_abapgit_apack_writer",
     "zcl_abapgit_ajson*",
     "zcl_abapgit_apack_reader",
     "zcl_abapgit_auth",
