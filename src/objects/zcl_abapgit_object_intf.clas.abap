@@ -520,14 +520,28 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-    DATA: lt_source TYPE rswsourcet,
-          ls_clskey TYPE seoclskey,
-          ls_intf   TYPE ty_intf.
+    DATA:
+      lt_source          TYPE rswsourcet,
+      ls_clskey          TYPE seoclskey,
+      ls_intf            TYPE ty_intf,
+      lt_description     TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
+      lt_description_sub TYPE zif_abapgit_oo_object_fnc=>ty_seosubcotx_tt.
 
     IF iv_step = zif_abapgit_object=>gc_step_id-abap.
       " HERE: switch with feature flag between XML and JSON file format
       IF mv_aff_enabled = abap_true.
         ls_intf = read_json( ).
+
+        lcl_aff_metadata_handler=>deserialize_translation(
+          EXPORTING
+            io_files           = mo_files
+          IMPORTING
+            et_description     = lt_description
+            et_description_sub = lt_description_sub ).
+
+        APPEND LINES OF lt_description TO ls_intf-description.
+        APPEND LINES OF lt_description_sub TO ls_intf-description_sub.
+
       ELSE.
         ls_intf = read_xml( io_xml ).
       ENDIF.

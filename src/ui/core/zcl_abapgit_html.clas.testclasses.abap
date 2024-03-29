@@ -121,7 +121,7 @@ CLASS ltcl_html IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD indent5.
-* dont dump if something messes up or the nesting gets too wide
+* don't dump if something messes up or the nesting gets too wide
     DO 300 TIMES.
       mo_html->add( '<td>' ).
     ENDDO.
@@ -217,18 +217,24 @@ CLASS ltcl_html IMPLEMENTATION.
       iv_tag     = 'td'
       iv_content = 'Hello'
       iv_format_single_line = abap_true ).
+    mo_html->wrap(
+      iv_tag     = 'td'
+      iv_content = 'Hello'
+      is_data_attr = zcl_abapgit_html=>parse_data_attr( 'id=123' )
+      iv_format_single_line = abap_true ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_html->render( )
       exp =
-        '<td></td>' && cl_abap_char_utilities=>newline &&
-        '<td>' && cl_abap_char_utilities=>newline &&
-        '  Hello' && cl_abap_char_utilities=>newline &&
-        '</td>' && cl_abap_char_utilities=>newline &&
-        '<td id="id" class="class" title="hint">' && cl_abap_char_utilities=>newline &&
-        '  Hello' && cl_abap_char_utilities=>newline &&
-        '</td>' && cl_abap_char_utilities=>newline &&
-        '<td>Hello</td>' ).
+        |<td></td>\n| &&
+        |<td>\n| &&
+        |  Hello\n| &&
+        |</td>\n| &&
+        |<td id="id" class="class" title="hint">\n| &&
+        |  Hello\n| &&
+        |</td>\n| &&
+        |<td>Hello</td>\n| &&
+        |<td data-id="123">Hello</td>| ).
 
   ENDMETHOD.
 

@@ -7,6 +7,7 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION
   PUBLIC SECTION.
 
     INTERFACES:
+      zif_abapgit_gui_page_title,
       zif_abapgit_gui_event_handler,
       zif_abapgit_gui_hotkeys,
       zif_abapgit_gui_menu_provider,
@@ -20,12 +21,11 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS:
-      constructor
-        IMPORTING
-          io_repo TYPE REF TO zcl_abapgit_repo
-        RAISING
-          zcx_abapgit_exception.
+    METHODS constructor
+      IMPORTING
+        io_repo TYPE REF TO zcl_abapgit_repo
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
 
@@ -33,16 +33,15 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION
 
   PRIVATE SECTION.
 
-    METHODS:
-      run_syntax_check
-        RAISING
-          zcx_abapgit_exception.
+    METHODS run_syntax_check
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -60,10 +59,7 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
       EXPORTING
         io_repo = io_repo.
 
-    ri_page = zcl_abapgit_gui_page_hoc=>create(
-      iv_page_title         = 'Syntax Check'
-      ii_page_menu_provider = lo_component
-      ii_child_component    = lo_component ).
+    ri_page = zcl_abapgit_gui_page_hoc=>create( lo_component ).
 
   ENDMETHOD.
 
@@ -126,32 +122,27 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_page_title~get_page_title.
+    rv_title = 'Syntax Check'.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_renderable~render.
 
     register_handlers( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( `<div class="repo">` ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( io_repo        = mo_repo
-                                                              iv_show_commit = abap_false ) ).
-    ri_html->add( `</div>` ).
+    ri_html->div(
+      iv_class   = 'repo'
+      ii_content = zcl_abapgit_gui_chunk_lib=>render_repo_top(
+        io_repo        = mo_repo
+        iv_show_commit = abap_false ) ).
 
-    ri_html->add( '<div class="toc">' ).
-
-    ri_html->add( render_variant(
+    render_ci_report(
+      ii_html    = ri_html
       iv_variant = c_variant
-      iv_summary = mv_summary ) ).
-
-    IF lines( mt_result ) = 0.
-      ri_html->add( '<div class="dummydiv success">' ).
-      ri_html->add( ri_html->icon( 'check' ) ).
-      ri_html->add( 'No syntax errors' ).
-      ri_html->add( '</div>' ).
-    ELSE.
-      render_result( ii_html   = ri_html
-                     it_result = mt_result ).
-    ENDIF.
+      iv_success_msg = 'No syntax errors' ).
 
   ENDMETHOD.
 ENDCLASS.

@@ -233,12 +233,12 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     LOOP AT is_internal-segment_definitions ASSIGNING <ls_segment_definition>.
       ls_segment_definition = <ls_segment_definition>.
-      <ls_segment_definition>-segmentheader-presp = sy-uname.
-      <ls_segment_definition>-segmentheader-pwork = sy-uname.
+      ls_segment_definition-segmentheader-presp = sy-uname.
+      ls_segment_definition-segmentheader-pwork = sy-uname.
 
       CALL FUNCTION 'SEGMENT_READ'
         EXPORTING
-          segmenttyp = <ls_segment_definition>-segmentdefinition-segtyp
+          segmenttyp = ls_segment_definition-segmentdefinition-segtyp
         IMPORTING
           result     = lv_result
         EXCEPTIONS
@@ -246,11 +246,11 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       IF sy-subrc <> 0 OR lv_result <> 0.
         CALL FUNCTION 'SEGMENT_CREATE'
           IMPORTING
-            segmentdefinition = <ls_segment_definition>-segmentdefinition
+            segmentdefinition = ls_segment_definition-segmentdefinition
           TABLES
-            segmentstructure  = <ls_segment_definition>-segmentstructures
+            segmentstructure  = ls_segment_definition-segmentstructures
           CHANGING
-            segmentheader     = <ls_segment_definition>-segmentheader
+            segmentheader     = ls_segment_definition-segmentheader
             devclass          = lv_package
           EXCEPTIONS
             OTHERS            = 1.
@@ -258,16 +258,16 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
         CALL FUNCTION 'SEGMENT_MODIFY'
           CHANGING
-            segmentheader = <ls_segment_definition>-segmentheader
+            segmentheader = ls_segment_definition-segmentheader
             devclass      = lv_package
           EXCEPTIONS
             OTHERS        = 1.
         IF sy-subrc = 0.
           CALL FUNCTION 'SEGMENTDEFINITION_MODIFY'
             TABLES
-              segmentstructure  = <ls_segment_definition>-segmentstructures
+              segmentstructure  = ls_segment_definition-segmentstructures
             CHANGING
-              segmentdefinition = <ls_segment_definition>-segmentdefinition
+              segmentdefinition = ls_segment_definition-segmentdefinition
             EXCEPTIONS
               OTHERS            = 1.
         ENDIF.
@@ -277,7 +277,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
-      IF ls_segment_definition-segmentdefinition-closed = abap_true.
+      " Check status of segment as stored in repo (field-symbol)
+      IF <ls_segment_definition>-segmentdefinition-closed = abap_true.
         IF lv_transport IS NOT INITIAL.
           CALL FUNCTION 'SEGMENTDEFINITION_CLOSE'
             EXPORTING
@@ -295,13 +296,13 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
         SELECT SINGLE * FROM edisdef INTO ls_edisdef
           WHERE segtyp  = ls_segment_definition-segmentdefinition-segtyp
             AND version = ls_segment_definition-segmentdefinition-version.
-        ls_edisdef-released = ls_segment_definition-segmentdefinition-released.
-        ls_edisdef-applrel  = ls_segment_definition-segmentdefinition-applrel.
-        ls_edisdef-closed   = ls_segment_definition-segmentdefinition-closed.
+        ls_edisdef-released = <ls_segment_definition>-segmentdefinition-released.
+        ls_edisdef-applrel  = <ls_segment_definition>-segmentdefinition-applrel.
+        ls_edisdef-closed   = <ls_segment_definition>-segmentdefinition-closed.
         UPDATE edisdef FROM ls_edisdef.
         IF sy-subrc <> 0.
           zcx_abapgit_exception=>raise( |Error updating IDOC segment {
-            <ls_segment_definition>-segmentdefinition-segtyp }| ).
+            ls_segment_definition-segmentdefinition-segtyp }| ).
         ENDIF.
       ENDIF.
     ENDLOOP.
@@ -973,7 +974,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     ASSIGN COMPONENT 'ROWORCOLST' OF STRUCTURE ls_internal-dd09l TO <lg_roworcolst>.
     IF sy-subrc = 0 AND <lg_roworcolst> = 'C'.
-      CLEAR <lg_roworcolst>. "To avoid diff errors. This field doesn't exists in all releases
+      CLEAR <lg_roworcolst>. "To avoid diff errors. This field doesn't exist in all releases
     ENDIF.
 
 

@@ -25,6 +25,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         iv_seed        TYPE string OPTIONAL
         iv_sci_result  TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
         ii_obj_filter  TYPE REF TO zif_abapgit_object_filter OPTIONAL
+        ii_force_refresh TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -36,6 +37,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         iv_seed       TYPE string OPTIONAL
         iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
         ii_obj_filter TYPE REF TO zif_abapgit_object_filter OPTIONAL
+        ii_force_refresh TYPE abap_bool DEFAULT abap_true
       RAISING
         zcx_abapgit_exception.
 
@@ -135,7 +137,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
 
   METHOD check_selected.
@@ -184,6 +186,11 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     super->constructor( ).
 
+    " force refresh on stage, to make sure the latest local and remote files are used
+    IF ii_force_refresh = abap_true.
+      io_repo->refresh( ).
+    ENDIF.
+
     mo_repo               = io_repo.
     mv_seed               = iv_seed.
     mv_sci_result         = iv_sci_result.
@@ -231,6 +238,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         io_repo       = io_repo
         iv_seed       = iv_seed
         iv_sci_result = iv_sci_result
+        ii_force_refresh = ii_force_refresh
         ii_obj_filter = ii_obj_filter.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(

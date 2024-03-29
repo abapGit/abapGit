@@ -667,7 +667,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   METHOD zif_abapgit_popups~popup_to_select_from_list.
 
-    DATA lo_popup TYPE REF TO lcl_object_descision_list.
+    DATA lo_popup TYPE REF TO lcl_object_decision_list.
 
     CLEAR et_list.
 
