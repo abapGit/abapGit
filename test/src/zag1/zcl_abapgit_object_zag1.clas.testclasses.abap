@@ -28,6 +28,7 @@ CLASS ltcl_test IMPLEMENTATION.
     mi_env->get_double( 'ENQUEUE_EZABAPGIT' )->configure_call( )->ignore_all_parameters( )->then_answer( me ).
     mi_env->get_double( 'DEQUEUE_EZABAPGIT' )->configure_call( )->ignore_all_parameters( )->then_answer( me ).
 
+
   ENDMETHOD.
 
   METHOD teardown.
