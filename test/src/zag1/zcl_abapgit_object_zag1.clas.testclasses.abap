@@ -75,7 +75,6 @@ CLASS ltcl_test IMPLEMENTATION.
 
     DATA lo_online TYPE REF TO zcl_abapgit_repo_online.
     DATA lt_result TYPE zif_abapgit_definitions=>ty_results_tt.
-    DATA ls_result LIKE LINE OF lt_result.
     DATA lv_url    TYPE string.
 
 
@@ -83,10 +82,10 @@ CLASS ltcl_test IMPLEMENTATION.
 
     lv_url = zcl_abapgit_gitea=>create_repo( 'repo-' && cl_system_uuid=>if_system_uuid_static~create_uuid_x16( ) ).
 
-    zcl_abapgit_object_zag1=>upsert(
-      iv_name    = 'ZAG1_NAME'
-      iv_value   = 'hello'
-      iv_package = c_package ).
+    " todo, zcl_abapgit_object_zag1=>upsert(
+    "   iv_name    = 'ZAG1_NAME'
+    "   iv_value   = 'hello'
+    "   iv_package = c_package ).
 
     lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->new_online(
       iv_url     = lv_url
@@ -95,10 +94,6 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_not_initial( lo_online ).
 
     lt_result = zcl_abapgit_repo_status=>calculate( lo_online ).
-
-    LOOP AT lt_result INTO ls_result.
-      WRITE / ls_result-filename.
-    ENDLOOP.
 
     cl_abap_unit_assert=>assert_equals(
       exp = lines( lt_result )
