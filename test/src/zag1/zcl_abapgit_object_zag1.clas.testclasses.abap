@@ -1,8 +1,14 @@
 CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL CRITICAL FINAL.
 
+  PUBLIC SECTION.
+    INTERFACES if_ftd_invocation_answer.
+
   PRIVATE SECTION.
     METHODS setup.
+    METHODS teardown.
     METHODS upsert FOR TESTING RAISING cx_static_check.
+
+    DATA mi_env TYPE REF TO if_function_test_environment.
 
 ENDCLASS.
 
@@ -10,8 +16,24 @@ ENDCLASS.
 CLASS ltcl_test IMPLEMENTATION.
 
   METHOD setup.
+    DATA lt_deps    TYPE if_function_test_environment=>tt_function_dependencies.
     DATA lo_initial TYPE REF TO zif_abapgit_repo_srv.
+
     zcl_abapgit_repo_srv=>inject_instance( lo_initial ).
+
+    INSERT 'ENQUEUE_EZABAPGIT' INTO TABLE lt_deps.
+    INSERT 'DEQUEUE_EZABAPGIT' INTO TABLE lt_deps.
+    mi_env = cl_function_test_environment=>create( lt_deps ).
+    mi_env->get_double( 'ENQUEUE_EZABAPGIT' )->configure_call( )->ignore_all_parameters( )->then_answer( me ).
+    mi_env->get_double( 'DEQUEUE_EZABAPGIT' )->configure_call( )->ignore_all_parameters( )->then_answer( me ).
+  ENDMETHOD.
+
+  METHOD teardown.
+    mi_env->clear_doubles( ).
+  ENDMETHOD.
+
+  METHOD if_ftd_invocation_answer~answer.
+    RETURN.
   ENDMETHOD.
 
   METHOD upsert.
