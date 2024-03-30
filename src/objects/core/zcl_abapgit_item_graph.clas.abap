@@ -19,6 +19,7 @@ CLASS zcl_abapgit_item_graph DEFINITION
         !ii_log        TYPE REF TO zif_abapgit_log
       RETURNING
         VALUE(rs_item) TYPE zif_abapgit_definitions=>ty_item .
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_edge,
              from TYPE zif_abapgit_definitions=>ty_item,
@@ -27,12 +28,11 @@ CLASS zcl_abapgit_item_graph DEFINITION
 
     DATA mt_vertices TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_item WITH DEFAULT KEY.
     DATA mt_edges TYPE STANDARD TABLE OF ty_edge WITH DEFAULT KEY
-                       WITH NON-UNIQUE SORTED KEY sec_key
-                       COMPONENTS to.
+      WITH NON-UNIQUE SORTED KEY sec_to COMPONENTS to
+      WITH NON-UNIQUE SORTED KEY sec_from COMPONENTS from.
     DATA mv_warning TYPE abap_bool.
 
     METHODS remove_vertex IMPORTING iv_index TYPE i.
-
 ENDCLASS.
 
 
@@ -63,7 +63,7 @@ CLASS ZCL_ABAPGIT_ITEM_GRAPH IMPLEMENTATION.
 
     LOOP AT mt_vertices INTO ls_vertex.
       lv_index = sy-tabix.
-      READ TABLE mt_edges WITH KEY sec_key COMPONENTS
+      READ TABLE mt_edges WITH KEY sec_to COMPONENTS
         to-obj_type = ls_vertex-obj_type
         to-obj_name = ls_vertex-obj_name
         TRANSPORTING NO FIELDS.
@@ -99,8 +99,9 @@ CLASS ZCL_ABAPGIT_ITEM_GRAPH IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     DELETE mt_vertices INDEX iv_index.
-    DELETE mt_edges WHERE
-      from-obj_type = ls_vertex-obj_type AND
-      from-obj_name = ls_vertex-obj_name.
+    DELETE mt_edges USING KEY sec_from
+      WHERE from-obj_type = ls_vertex-obj_type
+      AND from-obj_name = ls_vertex-obj_name.
+
   ENDMETHOD.
 ENDCLASS.
