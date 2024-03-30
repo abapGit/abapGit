@@ -289,7 +289,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
   METHOD get_form_schema.
 
-    DATA      lv_commitmsg_comment_length  TYPE i.
+    DATA lv_commitmsg_comment_length TYPE i.
     CONSTANTS lc_commitmsg_comment_min_len TYPE i VALUE 1.
     CONSTANTS lc_commitmsg_comment_max_len TYPE i VALUE 255.
 
