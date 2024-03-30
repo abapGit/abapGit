@@ -82,10 +82,10 @@ CLASS ltcl_test IMPLEMENTATION.
 
     lv_url = zcl_abapgit_gitea=>create_repo( 'repo-' && cl_system_uuid=>if_system_uuid_static~create_uuid_x16( ) ).
 
-    " todo, zcl_abapgit_object_zag1=>upsert(
-    "   iv_name    = 'ZAG1_NAME'
-    "   iv_value   = 'hello'
-    "   iv_package = c_package ).
+    zcl_abapgit_object_zag1=>upsert(
+      iv_name    = 'ZAG1_NAME'
+      iv_value   = 'hello'
+      iv_package = c_package ).
 
     lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->new_online(
       iv_url     = lv_url
@@ -97,7 +97,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       exp = lines( lt_result )
-      act = 1 ).
+      act = 2 ).
 
   ENDMETHOD.
 
