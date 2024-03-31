@@ -289,6 +289,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
   METHOD get_form_schema.
 
+    DATA lv_commitmsg_comment_length TYPE i.
     CONSTANTS lc_commitmsg_comment_min_len TYPE i VALUE 1.
     CONSTANTS lc_commitmsg_comment_max_len TYPE i VALUE 255.
 
@@ -296,12 +297,14 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
       iv_form_id   = 'commit-form'
       iv_help_page = 'https://docs.abapgit.org/guide-stage-commit.html' ).
 
+    lv_commitmsg_comment_length = mo_settings->get_commitmsg_comment_length( ).
+
     ro_form->text(
       iv_name        = c_id-comment
       iv_label       = 'Comment'
       iv_required    = abap_true
       iv_min         = lc_commitmsg_comment_min_len
-      iv_max         = lc_commitmsg_comment_max_len
+      iv_max         = lv_commitmsg_comment_length
       iv_placeholder = |Add a mandatory comment with max { lc_commitmsg_comment_max_len } characters|
     )->textarea(
       iv_name        = c_id-body
