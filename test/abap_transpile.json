@@ -72,6 +72,9 @@
   "libs": [
     {
       "url": "https://github.com/open-abap/open-abap-core"
+    },
+    {
+      "url": "https://github.com/open-abap/open-abap-gui"
     }
   ],
   "write_unit_tests": true,
