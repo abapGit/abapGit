@@ -3,6 +3,8 @@ CLASS zcl_abapgit_gitea DEFINITION PUBLIC.
     CLASS-METHODS create_repo
       IMPORTING
         iv_name TYPE string
+      RETURNING
+        VALUE(rv_url) TYPE string
       RAISING
         zcx_abapgit_exception.
 
@@ -60,6 +62,8 @@ CLASS zcl_abapgit_gitea IMPLEMENTATION.
     IF li_response->code( ) <> 201.
       zcx_abapgit_exception=>raise( |Error creating repository| ).
     ENDIF.
+
+    rv_url = |{ c_base }/abapgit/{ iv_name }|.
 
   ENDMETHOD.
 ENDCLASS.
