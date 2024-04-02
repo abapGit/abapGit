@@ -299,7 +299,7 @@ CLASS ZCL_ABAPGIT_SOTS_HANDLER IMPLEMENTATION.
 
     " OTR long text (string) usage: see TABLE BTFR_OBJ_IDS
     " LIMU: CPUB, WAPP
-    " R3TR: SICF, SMIF, XSLT
+    " R3TR: ENHO, ENHS, SICF, SMIF, WEBI, XSLT
 
     et_sots_use = get_sots_usage( iv_pgmid    = iv_pgmid
                                   iv_object   = iv_object
