@@ -41,7 +41,11 @@ CLASS zcl_abapgit_properties_file IMPLEMENTATION.
 
 
   METHOD parse.
-    " TODO: Convert input to mt_translations
+    DATA lv_data TYPE string.
+
+    lv_data = zcl_abapgit_convert=>xstring_to_string_utf8( iv_xdata ).
+
+    SPLIT lv_data AT cl_abap_char_utilities=>newline INTO TABLE mt_translation.
   ENDMETHOD.
 
 
