@@ -12,6 +12,12 @@ CLASS zcl_abapgit_properties_file DEFINITION
     METHODS constructor
       IMPORTING iv_lang TYPE laiso.
 
+    METHODS parse
+      IMPORTING
+        iv_xdata TYPE xstring
+      RAISING
+        zcx_abapgit_exception.
+
     METHODS push_text_pairs
       IMPORTING it_translation TYPE string_table.
 
@@ -28,9 +34,13 @@ ENDCLASS.
 CLASS zcl_abapgit_properties_file IMPLEMENTATION.
 
 
-
   METHOD constructor.
     mv_lang = to_lower( iv_lang ).
+  ENDMETHOD.
+
+
+  METHOD parse.
+    " TODO: Convert input to mt_translations
   ENDMETHOD.
 
 
