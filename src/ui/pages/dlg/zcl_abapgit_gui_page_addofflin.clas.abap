@@ -127,6 +127,7 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
       iv_label       = 'Package'
       iv_hint        = 'SAP package for repository (should be a dedicated one)'
       iv_placeholder = 'Z... / $...'
+      iv_max         = 30
     )->radio(
       iv_name        = c_id-folder_logic
       iv_default_value = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
