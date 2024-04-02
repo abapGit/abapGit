@@ -10,7 +10,8 @@ CLASS zcl_abapgit_properties_file DEFINITION
       c_properties_feature TYPE string VALUE 'TRANSL'.
 
     METHODS constructor
-      IMPORTING iv_lang TYPE laiso.
+      IMPORTING
+        iv_lang TYPE laiso.
 
     METHODS parse
       IMPORTING

@@ -432,10 +432,12 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
   METHOD read_i18n_files.
 
-    DATA lv_lang TYPE laiso.
-    DATA lv_ext TYPE string.
-    DATA lo_po TYPE REF TO zcl_abapgit_po_file.
-    DATA lo_properties TYPE REF TO zcl_abapgit_properties_file.
+    DATA:
+      lv_lang       TYPE laiso,
+      lv_ext        TYPE string,
+      lo_po         TYPE REF TO zcl_abapgit_po_file,
+      lo_properties TYPE REF TO zcl_abapgit_properties_file.
+
     FIELD-SYMBOLS <ls_file> LIKE LINE OF mt_files.
 
     LOOP AT mt_files ASSIGNING <ls_file>.
