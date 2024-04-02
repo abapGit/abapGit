@@ -9,8 +9,10 @@ CLASS zcl_abapgit_object_nspc DEFINITION
 
     METHODS constructor
       IMPORTING
-        is_item     TYPE zif_abapgit_definitions=>ty_item
-        iv_language TYPE spras.
+        is_item         TYPE zif_abapgit_definitions=>ty_item
+        iv_language     TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -83,8 +85,10 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor(
-      is_item     = is_item
-      iv_language = iv_language ).
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     mv_component = replace( val  = is_item-obj_name
                             sub  = '/'
@@ -193,13 +197,13 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
       ls_cvers_ref TYPE cvers_ref.
 
     SELECT SINGLE * FROM cvers INTO ls_cvers WHERE component = mv_component.
-    IF sy-subrc =  0.
+    IF sy-subrc = 0.
       ii_xml->add( iv_name = 'CVERS'
                    ig_data = ls_cvers ).
     ENDIF.
 
     SELECT SINGLE * FROM cvers_ref INTO ls_cvers_ref WHERE component = mv_component AND langu = mv_language.
-    IF sy-subrc =  0.
+    IF sy-subrc = 0.
       ii_xml->add( iv_name = 'CVERS_REF'
                    ig_data = ls_cvers_ref ).
     ENDIF.
@@ -237,7 +241,8 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
       ENDIF.
 
       SELECT * FROM cvers_ref APPENDING TABLE lt_cvers_refs
-        WHERE component = mv_component AND langu = <lv_lang>.
+        WHERE component = mv_component AND langu = <lv_lang>
+        ORDER BY PRIMARY KEY.
     ENDLOOP.
 
     SORT lt_i18n_langs ASCENDING.
