@@ -113,8 +113,67 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->div(
-      iv_class   = 'repo'
-      iv_content = |Hello { mv_package }| ).
+*      iv_class   = 'wu-header'
+      iv_content = |Where used for package <b>{ mv_package }</b> and it's subpackages| ).
+
+    DATA li_table TYPE REF TO zcl_abapgit_html_table.
+    DATA lt_where_used TYPE zcl_abapgit_where_used_tools=>tty_dependency.
+
+    " TODO join w obj_type+cls
+    " TODO groups
+    " TODO drill downs
+    " TODO some css?
+    " TODO auto sorting ?
+
+    li_table = zcl_abapgit_html_table=>create(
+      )->define_column(
+        iv_column_id    = 'package'
+        iv_column_title = 'Pkg'
+      )->define_column(
+        iv_column_id    = 'obj_type'
+        iv_column_title = 'Type'
+      )->define_column(
+        iv_column_id    = 'obj_prog_type'
+        iv_column_title = 'Prog type'
+      )->define_column(
+        iv_column_id    = 'obj_name'
+        iv_column_title = 'Obj name'
+      )->define_column(
+        iv_column_id    = 'obj_cls'
+        iv_column_title = 'Obj cls'
+      )->define_column(
+        iv_column_id    = 'dep_package'
+        iv_column_title = 'Pkg'
+      )->define_column(
+        iv_column_id    = 'dep_obj_type'
+        iv_column_title = 'Type'
+      )->define_column(
+        iv_column_id    = 'dep_obj_name'
+        iv_column_title = 'Obj name'
+      )->define_column(
+        iv_column_id    = 'dep_used_cls'
+        iv_column_title = 'Obj cls'
+      )->define_column(
+        iv_column_id    = 'dep_used_obj'
+        iv_column_title = 'Used obj' ).
+
+    lt_where_used = zcl_abapgit_where_used_tools=>new( )->select_external_usages( mv_package ).
+
+*    IF ms_sorting_state-column_id IS INITIAL.
+*      ms_sorting_state-column_id = 'package'.
+*    ENDIF.
+
+*    apply_sorting( CHANGING ct_view = lt_where_used ).
+
+    ri_html->div(
+      iv_class   = 'wu'
+      ii_content = li_table->render(
+        ii_renderer      = me
+*        is_sorting_state = ms_sorting_state
+        iv_wrap_in_div   = 'default-table-container'
+        iv_css_class     = 'default-table'
+*        iv_with_cids     = abap_true
+        it_data          = lt_where_used ) ).
 
   ENDMETHOD.
 
@@ -126,6 +185,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
 
   METHOD zif_abapgit_html_table~render_cell.
-
+    rs_render-content = iv_value.
+    " TODO add title for object cls ?
   ENDMETHOD.
 ENDCLASS.

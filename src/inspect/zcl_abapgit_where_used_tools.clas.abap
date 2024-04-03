@@ -18,7 +18,6 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
         dep_obj_name  TYPE tadir-obj_name,
         dep_used_cls  TYPE rsfindlst-used_cls,
         dep_used_obj  TYPE rsfindlst-used_obj,
-        cnt           TYPE i,
       END OF ty_dependency.
     TYPES:
       tty_dependency TYPE STANDARD TABLE OF ty_dependency WITH DEFAULT KEY.
@@ -185,7 +184,6 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
     LOOP AT it_where_used ASSIGNING <use>.
 
       APPEND INITIAL LINE TO rt_objs ASSIGNING <dep>.
-      <dep>-cnt = 1.
       <dep>-dep_package  = iv_package.
       <dep>-dep_obj_type = iv_obj_type.
       <dep>-dep_obj_name = iv_obj_name.
