@@ -865,6 +865,9 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-zip_object.                      " Export object as ZIP
         rs_handled-page  = zcl_abapgit_gui_page_ex_object=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-where_used.
+        rs_handled-page  = zcl_abapgit_gui_page_whereused=>create( |{ ii_event->query( )->get( 'PKG' ) }| ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
     ENDCASE.
 
   ENDMETHOD.
