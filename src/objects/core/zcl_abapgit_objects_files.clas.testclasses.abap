@@ -54,6 +54,8 @@ CLASS ltcl_objects_files IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
     <ls_files>-filename = 'zlf.prog.i18n.es.po'.
     APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
+    <ls_files>-filename = 'zlf.prog.i18n.fr.properties'.
+    APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
     <ls_files>-filename = 'zlf.prog.i18n.cz.other'.
 
     " object type and name are upper case
@@ -195,7 +197,7 @@ CLASS ltcl_objects_files IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lines( lt_i18n_files )
-      exp = 2 ).
+      exp = 3 ).
 
     LOOP AT lt_i18n_files INTO li_f.
       CASE sy-tabix.
@@ -207,12 +209,16 @@ CLASS ltcl_objects_files IMPLEMENTATION.
           cl_abap_unit_assert=>assert_equals(
             act = li_f->lang( )
             exp = 'es' ).
+        WHEN 3.
+          cl_abap_unit_assert=>assert_equals(
+            act = li_f->lang( )
+            exp = 'fr' ).
       ENDCASE.
     ENDLOOP.
 
     cl_abap_unit_assert=>assert_equals(
       act = lines( mo_cut->get_accessed_files( ) )
-      exp = 2 ).
+      exp = 3 ).
 
   ENDMETHOD.
 
