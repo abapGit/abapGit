@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_PROPERTIES_FILE</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Properties file serializer</DESCRIPT>
+    <DESCRIPT>abapGit - I18N Properties File</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
