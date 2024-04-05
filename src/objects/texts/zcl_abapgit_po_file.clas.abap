@@ -47,7 +47,6 @@ CLASS zcl_abapgit_po_file DEFINITION
         comments TYPE STANDARD TABLE OF ty_comment WITH KEY kind text,
       END OF ty_msg_pair.
 
-
     DATA mv_lang TYPE laiso.
     DATA mt_pairs TYPE SORTED TABLE OF ty_msg_pair WITH UNIQUE KEY source.
 
@@ -86,7 +85,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
+CLASS zcl_abapgit_po_file IMPLEMENTATION.
 
 
   METHOD build_po_body.
