@@ -482,6 +482,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       iv_tag   = 'div'
       iv_content = iv_content
       ii_content = ii_content
+      is_data_attr  = is_data_attr
+      it_data_attrs = it_data_attrs
       iv_id    = iv_id
       iv_class = iv_class ).
     ri_self = me.
@@ -512,14 +514,18 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     FIELD-SYMBOLS: <lv_line>   LIKE LINE OF lt_temp,
                    <lv_line_c> LIKE LINE OF lt_temp.
 
-    ls_context-no_indent_jscss = iv_no_indent_jscss.
+    IF iv_no_line_breaks = abap_true.
+      CONCATENATE LINES OF mt_buffer INTO rv_html.
+    ELSE.
+      ls_context-no_indent_jscss = iv_no_indent_jscss.
 
-    LOOP AT mt_buffer ASSIGNING <lv_line>.
-      APPEND <lv_line> TO lt_temp ASSIGNING <lv_line_c>.
-      indent_line( CHANGING cs_context = ls_context cv_line = <lv_line_c> ).
-    ENDLOOP.
+      LOOP AT mt_buffer ASSIGNING <lv_line>.
+        APPEND <lv_line> TO lt_temp ASSIGNING <lv_line_c>.
+        indent_line( CHANGING cs_context = ls_context cv_line = <lv_line_c> ).
+      ENDLOOP.
 
-    CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY cl_abap_char_utilities=>newline.
+      CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY cl_abap_char_utilities=>newline.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -538,7 +544,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       ii_content = ii_content
       iv_id    = iv_id
       iv_class = iv_class
-      is_data_attr = is_data_attr
+      is_data_attr  = is_data_attr
+      it_data_attrs = it_data_attrs
       iv_hint  = iv_hint ).
     ri_self = me.
   ENDMETHOD.
@@ -552,7 +559,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       ii_content = ii_content
       iv_id    = iv_id
       iv_class = iv_class
-      is_data_attr = is_data_attr
+      is_data_attr  = is_data_attr
+      it_data_attrs = it_data_attrs
       iv_hint  = iv_hint ).
     ri_self = me.
   ENDMETHOD.
@@ -562,6 +570,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     DATA lv_open_tag TYPE string.
     DATA lv_close_tag TYPE string.
+    DATA ls_data_attr LIKE LINE OF it_data_attrs.
 
     DATA: lv_class TYPE string,
           lv_id    TYPE string,
@@ -583,6 +592,10 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     IF is_data_attr IS NOT INITIAL.
       lv_data_attr = | data-{ is_data_attr-name }="{ is_data_attr-value }"|.
     ENDIF.
+
+    LOOP AT it_data_attrs INTO ls_data_attr.
+      lv_data_attr = lv_data_attr && | data-{ ls_data_attr-name }="{ ls_data_attr-value }"|.
+    ENDLOOP.
 
     lv_open_tag = |<{ iv_tag }{ lv_id }{ lv_class }{ lv_data_attr }{ lv_title }>|.
     lv_close_tag = |</{ iv_tag }>|.

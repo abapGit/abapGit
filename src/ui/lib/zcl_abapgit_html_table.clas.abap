@@ -112,6 +112,12 @@ CLASS zcl_abapgit_html_table DEFINITION
       RETURNING
         VALUE(rs_data_attr) TYPE zif_abapgit_html=>ty_data_attr.
 
+    CLASS-METHODS gid_attr
+      IMPORTING
+        iv_column_id TYPE string
+      RETURNING
+        VALUE(rs_data_attr) TYPE zif_abapgit_html=>ty_data_attr.
+
 ENDCLASS.
 
 
@@ -187,6 +193,14 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
       rs_sorting_request-descending = boolc( lv_req = 'dsc' ).
 
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD gid_attr.
+
+    rs_data_attr-name  = 'gid'.
+    rs_data_attr-value = iv_column_id.
 
   ENDMETHOD.
 
@@ -273,11 +287,18 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
 
     DATA ls_render TYPE zif_abapgit_html_table=>ty_cell_render.
     DATA lv_dummy TYPE string.
-    DATA ls_cid TYPE zif_abapgit_html=>ty_data_attr.
+    DATA lt_attrs TYPE zif_abapgit_html=>ty_data_attrs.
+
     FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_columns.
+    FIELD-SYMBOLS <ls_grp> LIKE LINE OF mt_columns.
     FIELD-SYMBOLS <lv_val> TYPE any.
 
-    LOOP AT mt_columns ASSIGNING <ls_col> WHERE is_group = abap_false.
+    LOOP AT mt_columns ASSIGNING <ls_col>.
+      IF <ls_col>-is_group = abap_true.
+        ASSIGN <ls_col> TO <ls_grp>.
+        CONTINUE.
+      ENDIF.
+
       IF <ls_col>-from_field IS NOT INITIAL AND <ls_col>-from_field <> '-'.
         ASSIGN COMPONENT <ls_col>-from_field OF STRUCTURE is_row TO <lv_val>.
         IF sy-subrc <> 0.
@@ -302,13 +323,17 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
         iv_value     = |{ <lv_val> }| ).
 
       IF mv_with_cids = abap_true.
-        ls_cid = cid_attr( <ls_col>-column_id ).
+        CLEAR lt_attrs.
+        APPEND cid_attr( <ls_col>-column_id ) TO lt_attrs.
+        IF <ls_grp> IS ASSIGNED AND <ls_grp>-column_id IS NOT INITIAL.
+          APPEND gid_attr( <ls_grp>-column_id ) TO lt_attrs.
+        ENDIF.
       ENDIF.
 
       mi_html->td(
         iv_content = ls_render-content
         ii_content = ls_render-html
-        is_data_attr = ls_cid
+        it_data_attrs = lt_attrs
         iv_class   = ls_render-css_class ).
     ENDLOOP.
 
@@ -353,39 +378,58 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
   METHOD render_thead.
 
     FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_columns.
-    DATA ls_cid TYPE zif_abapgit_html=>ty_data_attr.
+    FIELD-SYMBOLS <ls_grp> LIKE LINE OF mt_columns.
+    DATA lt_attrs TYPE zif_abapgit_html=>ty_data_attrs.
     DATA ls_grp_span TYPE string.
+    DATA lv_grp_data TYPE string.
 
     mi_html->add( '<thead>' ).
 
+    " Group headers
     IF mr_last_grp IS NOT INITIAL. " Has groups
 
       mi_html->add( '<tr>' ).
 
-      LOOP AT mt_columns ASSIGNING <ls_col> WHERE is_group = abap_true.
-        IF <ls_col>-group_span > 1.
-          ls_grp_span = | colspan="{ <ls_col>-group_span }"|.
+      LOOP AT mt_columns ASSIGNING <ls_grp> WHERE is_group = abap_true.
+        IF mv_with_cids = abap_true AND <ls_grp>-column_id IS NOT INITIAL.
+          lv_grp_data = | data-gid="{ <ls_grp>-column_id }"|.
+        ELSE.
+          CLEAR lv_grp_data.
+        ENDIF.
+
+        IF <ls_grp>-group_span > 1.
+          ls_grp_span = | colspan="{ <ls_grp>-group_span }"|.
         ELSE.
           CLEAR ls_grp_span.
         ENDIF.
 
-        mi_html->add( |<th{ ls_grp_span }>{ <ls_col>-column_title }</th>| ).
+        mi_html->add( |<th{ ls_grp_span }{ lv_grp_data }>{ <ls_grp>-column_title }</th>| ).
       ENDLOOP.
 
       mi_html->add( '</tr>' ).
 
     ENDIF.
 
+    " Regular headers
     mi_html->add( '<tr>' ).
 
-    LOOP AT mt_columns ASSIGNING <ls_col> WHERE is_group = abap_false.
+    LOOP AT mt_columns ASSIGNING <ls_col>.
+      IF <ls_col>-is_group = abap_true.
+        ASSIGN <ls_col> TO <ls_grp>.
+        CONTINUE.
+      ENDIF.
+
       IF mv_with_cids = abap_true.
-        ls_cid = cid_attr( <ls_col>-column_id ).
+        CLEAR lt_attrs.
+        APPEND cid_attr( <ls_col>-column_id ) TO lt_attrs.
+        IF <ls_grp> IS ASSIGNED AND <ls_grp>-column_id IS NOT INITIAL.
+          APPEND gid_attr( <ls_grp>-column_id ) TO lt_attrs.
+        ENDIF.
       ENDIF.
 
       mi_html->th(
-        iv_content   = render_column_title( <ls_col> )
-        is_data_attr = ls_cid ).
+        iv_content    = render_column_title( <ls_col> )
+        it_data_attrs = lt_attrs ).
     ENDLOOP.
 
     mi_html->add( '</tr>' ).

@@ -114,12 +114,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
     ri_html->div(
       iv_class   = 'wu-header'
-      iv_content = |Where used for package <b>{ mv_package }</b> and it's subpackages| ).
+      iv_content = |Where used for package {
+        zcl_abapgit_gui_chunk_lib=>render_package_name( mv_package )->render( iv_no_line_breaks = abap_true )
+        } and it's subpackages| ).
 
     DATA li_table TYPE REF TO zcl_abapgit_html_table.
     DATA lt_where_used TYPE zcl_abapgit_where_used_tools=>ty_dependency_tt.
 
-    " TODO some css?
     " TODO auto sorting ?
 
     li_table = zcl_abapgit_html_table=>create(
@@ -137,7 +138,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
         iv_column_id    = 'dep_used_obj'
         iv_column_title = 'Used obj'
 
-      )->define_column_group( 'Used in'
+      )->define_column_group(
+        iv_group_id    = 'where'
+        iv_group_title = 'Used in'
       )->define_column(
         iv_column_id    = 'package'
         iv_column_title = 'Pkg'
