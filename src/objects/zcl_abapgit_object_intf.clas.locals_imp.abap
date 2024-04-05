@@ -530,11 +530,7 @@ CLASS lcl_aff_metadata_handler DEFINITION.
       fill_translation
         IMPORTING iv_name          TYPE seoclsname
                   iv_language      TYPE laiso
-        RETURNING VALUE(rt_result) TYPE zif_abapgit_aff_intf_v1=>ty_main,
-      get_string_table
-        IMPORTING iv_xstring       TYPE xstring
-        RETURNING VALUE(rt_result) TYPE string_table
-        RAISING   zcx_abapgit_exception.
+        RETURNING VALUE(rt_result) TYPE zif_abapgit_aff_intf_v1=>ty_main.
 ENDCLASS.
 
 CLASS lcl_aff_metadata_handler IMPLEMENTATION.
@@ -735,15 +731,4 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
-
-  METHOD get_string_table.
-
-    DATA lv_data TYPE string.
-
-    lv_data = zcl_abapgit_convert=>xstring_to_string_utf8( iv_xstring ).
-    SPLIT lv_data AT cl_abap_char_utilities=>newline INTO TABLE rt_result.
-
-  ENDMETHOD.
-
 ENDCLASS.
