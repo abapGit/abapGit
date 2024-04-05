@@ -30,7 +30,7 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
     " here: https://github.com/sbcgua/crossdeps
     METHODS select_external_usages
       IMPORTING
-        i_package        TYPE tadir-devclass
+        iv_package       TYPE tadir-devclass
         ir_package_scope TYPE ty_devc_range OPTIONAL
       RETURNING
         VALUE(rt_objs)   TYPE ty_dependency_tt
@@ -358,10 +358,9 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
   METHOD select_external_usages.
 
     DATA lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lt_where_used TYPE ty_where_used_tt.
     DATA lt_package_scope LIKE ir_package_scope.
 
-    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( i_package ).
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( iv_package ).
 
     lt_package_scope = build_package_scope(
       ir_package_scope = ir_package_scope

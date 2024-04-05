@@ -83,6 +83,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_action-refresh.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN others.
+        RETURN.
     ENDCASE.
 
   ENDMETHOD.
@@ -118,6 +120,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
+    DATA li_table TYPE REF TO zcl_abapgit_html_table.
+    DATA lt_where_used TYPE zcl_abapgit_where_used_tools=>ty_dependency_tt.
+
     register_handlers( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -127,9 +132,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
       iv_content = |Where used for package {
         zcl_abapgit_gui_chunk_lib=>render_package_name( mv_package )->render( iv_no_line_breaks = abap_true )
         } and it's subpackages| ).
-
-    DATA li_table TYPE REF TO zcl_abapgit_html_table.
-    DATA lt_where_used TYPE zcl_abapgit_where_used_tools=>ty_dependency_tt.
 
     " TODO auto sorting ?
 
@@ -194,11 +196,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
     CASE iv_column_id.
       WHEN 'obj_type'.
-        if <ls_i>-obj_prog_type IS INITIAL.
+        IF <ls_i>-obj_prog_type IS INITIAL.
           rs_render-content = <ls_i>-obj_type.
-        else.
+        ELSE.
           rs_render-content = <ls_i>-obj_type && ':' && <ls_i>-obj_prog_type.
-        endif.
+        ENDIF.
       WHEN 'obj_name'.
         rs_render-content = zcl_abapgit_gui_chunk_lib=>get_item_link(
           iv_obj_type = <ls_i>-obj_type
