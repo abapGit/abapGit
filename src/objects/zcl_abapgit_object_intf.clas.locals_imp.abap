@@ -508,11 +508,12 @@ CLASS lcl_aff_metadata_handler DEFINITION.
       RETURNING VALUE(rt_result) TYPE zif_abapgit_i18n_file=>ty_table_of
       RAISING   zcx_abapgit_exception.
     CLASS-METHODS deserialize
-      IMPORTING iv_data          TYPE xstring
+      IMPORTING iv_data          TYPE string
       RETURNING VALUE(rv_result) TYPE zif_abapgit_aff_intf_v1=>ty_main
       RAISING   zcx_abapgit_exception.
     CLASS-METHODS deserialize_translation
       IMPORTING io_files           TYPE REF TO zcl_abapgit_objects_files
+                is_item            TYPE zif_abapgit_definitions=>ty_item
       EXPORTING et_description     TYPE zcl_abapgit_object_intf=>ty_intf-description
                 et_description_sub TYPE zcl_abapgit_object_intf=>ty_intf-description_sub
       RAISING   zcx_abapgit_exception.
@@ -702,50 +703,29 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
 
 
   METHOD deserialize_translation.
-    DATA: lt_data             TYPE string_table,
-          lv_xtranslation     TYPE xstring,
-          lo_ajson            TYPE REF TO zcl_abapgit_json_handler,
-          lx_exception        TYPE REF TO cx_static_check,
-          lv_obj_name         TYPE seoclsname,
-          lv_langu            TYPE laiso,
-          lt_translation_file TYPE zif_abapgit_git_definitions=>ty_files_tt,
-          ls_translation_file TYPE zif_abapgit_git_definitions=>ty_file,
-          lo_json_path        TYPE REF TO zcl_abapgit_json_path,
+    DATA: lo_properties_file  TYPE REF TO zcl_abapgit_properties_file,
+          lt_translation_file TYPE zif_abapgit_i18n_file=>ty_table_of,
+          li_translation_file LIKE LINE OF lt_translation_file,
           ls_aff_data         TYPE zif_abapgit_aff_intf_v1=>ty_main,
           lo_type_mapper      TYPE REF TO zif_abapgit_aff_type_mapping,
           ls_ag_data          TYPE zcl_abapgit_object_intf=>ty_intf.
 
-    lt_translation_file = io_files->get_i18n_properties_file( ).
-    CREATE OBJECT lo_json_path.
+    lt_translation_file = io_files->read_i18n_files( ).
 
-    LOOP AT lt_translation_file INTO ls_translation_file.
+    LOOP AT lt_translation_file INTO li_translation_file.
 
       CLEAR ls_ag_data.
 
-      lt_data = get_string_table( ls_translation_file-data ).
-      lv_xtranslation = lo_json_path->deserialize( lt_data ).
+      lo_properties_file ?= li_translation_file.
+      lo_properties_file->get_translations( IMPORTING ev_data = ls_aff_data ).
 
-      CREATE OBJECT lo_ajson.
-      TRY.
-          lo_ajson->deserialize(
-            EXPORTING
-              iv_content = lv_xtranslation
-            IMPORTING
-              ev_data    = ls_aff_data ).
-        CATCH cx_static_check INTO lx_exception.
-          zcx_abapgit_exception=>raise_with_text( lx_exception ).
-      ENDTRY.
-
-      FIND FIRST OCCURRENCE OF REGEX '^([\w]+).*\.i18n.([a-z]{2})\.'
-        IN ls_translation_file-filename SUBMATCHES lv_obj_name lv_langu.
-
-      ls_aff_data-header-original_language = to_upper( lv_langu ). " is target language
+      ls_aff_data-header-original_language = to_upper( li_translation_file->lang( ) ). " is target language
 
       CREATE OBJECT lo_type_mapper TYPE lcl_aff_type_mapping.
       lo_type_mapper->to_abapgit(
         EXPORTING
           iv_data        = ls_aff_data
-          iv_object_name = to_upper( lv_obj_name )
+          iv_object_name = is_item-obj_name
         IMPORTING
           es_data        = ls_ag_data ).
 
@@ -753,7 +733,6 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
       APPEND LINES OF ls_ag_data-description_sub TO et_description_sub.
 
     ENDLOOP.
-
 
   ENDMETHOD.
 
