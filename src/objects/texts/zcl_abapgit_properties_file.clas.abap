@@ -10,7 +10,14 @@ CLASS zcl_abapgit_properties_file DEFINITION
       c_properties_feature TYPE string VALUE 'TRANSL'.
 
     METHODS constructor
-      IMPORTING iv_lang TYPE laiso.
+      IMPORTING
+        iv_lang TYPE laiso.
+
+    METHODS parse
+      IMPORTING
+        iv_xdata TYPE xstring
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS push_text_pairs
       IMPORTING it_translation TYPE string_table.
@@ -28,9 +35,17 @@ ENDCLASS.
 CLASS zcl_abapgit_properties_file IMPLEMENTATION.
 
 
-
   METHOD constructor.
     mv_lang = to_lower( iv_lang ).
+  ENDMETHOD.
+
+
+  METHOD parse.
+    DATA lv_data TYPE string.
+
+    lv_data = zcl_abapgit_convert=>xstring_to_string_utf8( iv_xdata ).
+
+    SPLIT lv_data AT cl_abap_char_utilities=>newline INTO TABLE mt_translation.
   ENDMETHOD.
 
 
