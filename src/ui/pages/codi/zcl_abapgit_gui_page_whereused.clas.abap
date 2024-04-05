@@ -36,6 +36,7 @@ CLASS zcl_abapgit_gui_page_whereused DEFINITION
 
     CONSTANTS c_title TYPE string VALUE 'Where Used'.
     DATA mv_package TYPE devclass.
+    DATA ms_sorting_state TYPE zif_abapgit_html_table=>ty_sorting_state.
 
 ENDCLASS.
 
@@ -69,6 +70,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
+
+    DATA ls_sorting_req TYPE zif_abapgit_html_table=>ty_sorting_state.
+
+    ls_sorting_req = zcl_abapgit_html_table=>detect_sorting_request( ii_event->mv_action ).
+    IF ls_sorting_req IS NOT INITIAL.
+      ms_sorting_state = ls_sorting_req.
+      rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      RETURN.
+    ENDIF.
 
     CASE ii_event->mv_action.
       WHEN c_action-refresh.
@@ -153,9 +163,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
     lt_where_used = zcl_abapgit_where_used_tools=>new( )->select_external_usages( mv_package ).
 
-*    IF ms_sorting_state-column_id IS INITIAL.
-*      ms_sorting_state-column_id = 'package'.
-*    ENDIF.
+    IF ms_sorting_state-column_id IS INITIAL.
+      ms_sorting_state-column_id = 'package'.
+    ENDIF.
 
 *    apply_sorting( CHANGING ct_view = lt_where_used ).
 
@@ -163,7 +173,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
       iv_class   = 'wu'
       ii_content = li_table->render(
         ii_renderer      = me
-*        is_sorting_state = ms_sorting_state
+        is_sorting_state = ms_sorting_state
         iv_wrap_in_div   = 'default-table-container'
         iv_css_class     = 'default-table'
         iv_with_cids     = abap_true

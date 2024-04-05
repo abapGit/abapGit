@@ -47,7 +47,7 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
         obj_name TYPE tadir-obj_name,
       END OF ty_obj_signature.
 
-    TYPES tty_where_used TYPE STANDARD TABLE OF rsfindlst WITH DEFAULT KEY.
+    TYPES ty_where_used_tt TYPE STANDARD TABLE OF rsfindlst WITH DEFAULT KEY.
     TYPES ty_seu_obj TYPE STANDARD TABLE OF seu_obj WITH DEFAULT KEY.
     TYPES:
       BEGIN OF ty_dev_object,
@@ -65,7 +65,7 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
         it_scope           TYPE ty_seu_obj OPTIONAL
         ir_package_scope   TYPE ty_devc_range OPTIONAL
       RETURNING
-        VALUE(rt_findings) TYPE tty_where_used
+        VALUE(rt_findings) TYPE ty_where_used_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -103,7 +103,7 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
         iv_package     TYPE ty_dependency-dep_package
         iv_obj_type    TYPE ty_dependency-dep_obj_type
         iv_obj_name    TYPE ty_dependency-dep_obj_name
-        it_where_used  TYPE tty_where_used
+        it_where_used  TYPE ty_where_used_tt
       RETURNING
         VALUE(rt_objs) TYPE ty_dependency_tt.
 
@@ -140,7 +140,7 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
   METHOD collect_where_used.
 
     DATA li_progress TYPE REF TO zif_abapgit_progress.
-    DATA lt_where_used TYPE tty_where_used.
+    DATA lt_where_used TYPE ty_where_used_tt.
     DATA lt_objs_portion LIKE rt_objs.
 
     FIELD-SYMBOLS <tadir> TYPE zif_abapgit_definitions=>ty_tadir.
@@ -358,7 +358,7 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
   METHOD select_external_usages.
 
     DATA lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lt_where_used TYPE tty_where_used.
+    DATA lt_where_used TYPE ty_where_used_tt.
     DATA lt_package_scope LIKE ir_package_scope.
 
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( i_package ).
