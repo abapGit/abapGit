@@ -74,10 +74,9 @@ CLASS zcl_abapgit_http_client IMPLEMENTATION.
       WHEN 426.
         zcx_abapgit_exception=>raise(
             iv_text     = 'Upgrade Required (HTTP 426)'
-            iv_longtext = |The git server requires a different protocol than you are |
-                       && |sending. E.g. HTTP/1.1 instead of HTTP/1, |
-                       && |abapGit User-Exit ZIF_ABAPGIT_EXIT~HTTP_CLIENT can be considered |
-                       && |to change the protocol. See details in the abapGit online documentation.| ).
+            iv_longtext = |The git server requires a different HTTP-protocol than which is sent. |
+                       && |abapGit uses HTTP/1.1 as default.|
+                       && |See more details in the abapGit online documentation.| ).
       WHEN OTHERS.
         lv_text = mi_client->response->get_cdata( ).
         zcx_abapgit_exception=>raise( |(HTTP { lv_code }) { lv_text }| ).
