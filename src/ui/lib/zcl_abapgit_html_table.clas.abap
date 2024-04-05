@@ -11,8 +11,7 @@ CLASS zcl_abapgit_html_table DEFINITION
         !ii_renderer    TYPE REF TO zif_abapgit_html_table OPTIONAL
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_html_table .
-    " probably th css_class
-    " maybe auto class for td
+    " maybe also th css_class
     METHODS define_column
       IMPORTING
         !iv_column_id    TYPE string
@@ -21,8 +20,17 @@ CLASS zcl_abapgit_html_table DEFINITION
         !iv_sortable     TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(ro_self) TYPE REF TO zcl_abapgit_html_table .
+    METHODS define_column_group
+      IMPORTING
+        !iv_group_id    TYPE string OPTIONAL " not mandatory, but can be used for CSS (TODO data-gid)
+        !iv_group_title TYPE string OPTIONAL " can be empty !
+        PREFERRED PARAMETER iv_group_title
+      RETURNING
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_table
+      RAISING
+        zcx_abapgit_exception .
     " Maybe also data_provider
-    " Record Limit
+    " TODO record Limiter
     METHODS render
       IMPORTING
         !ii_renderer   TYPE REF TO zif_abapgit_html_table OPTIONAL
@@ -56,6 +64,8 @@ CLASS zcl_abapgit_html_table DEFINITION
         column_title TYPE string,
         from_field   TYPE abap_compname,
         sortable     TYPE abap_bool,
+        is_group     TYPE abap_bool,
+        group_span   TYPE i,
       END OF ty_column,
       ty_columns TYPE STANDARD TABLE OF ty_column WITH KEY column_id.
 
@@ -65,6 +75,7 @@ CLASS zcl_abapgit_html_table DEFINITION
     DATA mv_with_cids TYPE abap_bool.
     DATA mv_table_id TYPE string.
     DATA ms_sorting_state TYPE zif_abapgit_html_table=>ty_sorting_state.
+    DATA mr_last_grp TYPE REF TO ty_column.
 
     " potentially receive from outside
     DATA mv_sort_span_class TYPE string VALUE `sort-arrow`.
@@ -134,6 +145,28 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
     <ls_c>-column_title = iv_column_title.
     <ls_c>-from_field   = to_upper( iv_from_field ).
     <ls_c>-sortable     = iv_sortable.
+
+    IF mr_last_grp IS NOT INITIAL.
+      mr_last_grp->group_span = mr_last_grp->group_span + 1.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD define_column_group.
+
+    IF lines( mt_columns ) > 0 AND mr_last_grp IS INITIAL.
+      " Groups should cover all columns
+      " you can create a group with empty title if groups start later VISUALLY
+      zcx_abapgit_exception=>raise( 'Start groups from the beginning' ).
+    ENDIF.
+
+    ro_self = me.
+
+    APPEND INITIAL LINE TO mt_columns REFERENCE INTO mr_last_grp.
+    mr_last_grp->is_group     = abap_true.
+    mr_last_grp->column_id    = iv_group_id.
+    mr_last_grp->column_title = iv_group_title.
 
   ENDMETHOD.
 
@@ -244,7 +277,7 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
     FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_columns.
     FIELD-SYMBOLS <lv_val> TYPE any.
 
-    LOOP AT mt_columns ASSIGNING <ls_col>.
+    LOOP AT mt_columns ASSIGNING <ls_col> WHERE is_group = abap_false.
       IF <ls_col>-from_field IS NOT INITIAL AND <ls_col>-from_field <> '-'.
         ASSIGN COMPONENT <ls_col>-from_field OF STRUCTURE is_row TO <lv_val>.
         IF sy-subrc <> 0.
@@ -321,11 +354,31 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_columns.
     DATA ls_cid TYPE zif_abapgit_html=>ty_data_attr.
+    DATA ls_grp_span TYPE string.
 
     mi_html->add( '<thead>' ).
+
+    IF mr_last_grp IS NOT INITIAL. " Has groups
+
+      mi_html->add( '<tr>' ).
+
+      LOOP AT mt_columns ASSIGNING <ls_col> WHERE is_group = abap_true.
+        IF <ls_col>-group_span > 1.
+          ls_grp_span = | colspan="{ <ls_col>-group_span }"|.
+        ELSE.
+          CLEAR ls_grp_span.
+        ENDIF.
+
+        mi_html->add( |<th{ ls_grp_span }>{ <ls_col>-column_title }</th>| ).
+      ENDLOOP.
+
+      mi_html->add( '</tr>' ).
+
+    ENDIF.
+
     mi_html->add( '<tr>' ).
 
-    LOOP AT mt_columns ASSIGNING <ls_col>.
+    LOOP AT mt_columns ASSIGNING <ls_col> WHERE is_group = abap_false.
       IF mv_with_cids = abap_true.
         ls_cid = cid_attr( <ls_col>-column_id ).
       ENDIF.

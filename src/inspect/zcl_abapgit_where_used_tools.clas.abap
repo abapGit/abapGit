@@ -20,7 +20,7 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
         dep_used_obj  TYPE rsfindlst-used_obj,
       END OF ty_dependency.
     TYPES:
-      tty_dependency TYPE STANDARD TABLE OF ty_dependency WITH DEFAULT KEY.
+      ty_dependency_tt TYPE STANDARD TABLE OF ty_dependency WITH DEFAULT KEY.
 
     CLASS-METHODS new
       RETURNING
@@ -33,7 +33,7 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
         i_package        TYPE tadir-devclass
         ir_package_scope TYPE ty_devc_range OPTIONAL
       RETURNING
-        VALUE(rt_objs)   TYPE tty_dependency
+        VALUE(rt_objs)   TYPE ty_dependency_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -94,7 +94,7 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
         it_tadir         TYPE STANDARD TABLE
         ir_package_scope TYPE ty_devc_range
       RETURNING
-        VALUE(rt_objs)   TYPE tty_dependency
+        VALUE(rt_objs)   TYPE ty_dependency_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -105,7 +105,7 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
         iv_obj_name    TYPE ty_dependency-dep_obj_name
         it_where_used  TYPE tty_where_used
       RETURNING
-        VALUE(rt_objs) TYPE tty_dependency.
+        VALUE(rt_objs) TYPE ty_dependency_tt.
 
     METHODS decode_obj_type
       IMPORTING

@@ -195,7 +195,10 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
 
     CLASS-METHODS get_item_link
       IMPORTING
-        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
+        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item OPTIONAL
+        !iv_obj_type   TYPE zif_abapgit_definitions=>ty_repo_item-obj_type OPTIONAL
+        !iv_obj_name   TYPE zif_abapgit_definitions=>ty_repo_item-obj_name OPTIONAL
+        PREFERRED PARAMETER is_item
       RETURNING
         VALUE(rv_html) TYPE string.
 
@@ -234,7 +237,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
 
   METHOD class_constructor.
@@ -288,15 +291,23 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     DATA lv_encode TYPE string.
     DATA li_html TYPE REF TO zif_abapgit_html.
+    DATA ls_item LIKE is_item.
+
+    IF is_item IS INITIAL.
+      ls_item-obj_type = iv_obj_type.
+      ls_item-obj_name = iv_obj_name.
+    ELSE.
+      ls_item = is_item.
+    ENDIF.
 
     CREATE OBJECT li_html TYPE zcl_abapgit_html.
 
     lv_encode = zcl_abapgit_html_action_utils=>jump_encode(
-      iv_obj_type = is_item-obj_type
-      iv_obj_name = is_item-obj_name ).
+      iv_obj_type = ls_item-obj_type
+      iv_obj_name = ls_item-obj_name ).
 
     rv_html = li_html->a(
-      iv_txt = |{ is_item-obj_name }|
+      iv_txt = |{ ls_item-obj_name }|
       iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
 
   ENDMETHOD.
