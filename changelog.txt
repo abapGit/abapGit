@@ -8,6 +8,50 @@ Legend
 + : added
 - : removed
 
+2024-04-05 v1.128.0
+-------------------
+
+! Make HTTP/1.1 new default in abapGit (#6902)
+! Distinguish between "Global Settings" and "Repository Settings" (#6759)
++ Add support for DRTY - CDS Type (#6767)
++ Add support for DTEB - CDS Entity Buffer (#6769)
++ Add "ignore sub-packages" option to package export (#6815)
++ HTTP connection check and improved error messages (#6806)
++ UIPG, UIST: Add support for Launchpad Page and Space Templates (#6873)
++ ENHO/ENHS: Add missing longtexts (#6890)
+* Fix typos and adjust comments (#6778, #6779, #6780, #6783, #6785, #6786m #6858, #6864)
+* User exit: include settings parameters in change_tadir() (#6775)
+* Remove Duplicate Entries in Command Palette (#6763)
+* Ignore macOS "Desktop Services Store" files (#6787)
+* Fix ABAP Language Version Handling for Repository Setting "Any" for AFF Object Types (#6793)
+* Fix bug in Command Palette (#6799)
+* DIAL: Prefill package popup (#6805)
+* XSLT: Add check for correct EOL separator (#6803)
+* Update the text "Submit Query" in the Command Palette. (#6810)
+* CLAS/INTF-SYNTAX_CHECK: Suppress status message (#6812)
+* Improve error messages when checking branches/tags (#6814)
+* Improve form validation of text fields (#6813)
+* Fix bug in Personal settings page (#6818)
+* Fix Navigation Issue in "Config Display" and "Config Edit" pages. (#6820)
+* Fix Filter Application Bug (#6824)
+* Change transport type when setting original system (#6816)
+* FORM: Fix existence check (#6832)
+* Apack: fix namespace problem (#6841)
+* Remove duplicate labels from Command Palette. (#6821)
+* IDOC: Fix MOVE_TO_LIT_NOTALLOWED_NODATA (#6852)
+* SICF: Include alternate service name (#6853)
+* Apack: additional namespace case (#6851)
+* SFPI: exists() also look for inactive objects (#6867)
+* Code inspector pages improvements (#6862)
+* AFF: deserialize translation files (#6830)
+* Fix Unexpected Functionality for "Maximum Length of Comment" Field (#6871)
+* Avoid popup on exit after saving remote settings (#6875)
+* Fix Hint for "Maximum Length of Comment" Field (#6877)
+* Fix changing transport type when setting original system (#6870)
+* Limit Package Name to 30 characters (#6889)
+* Item graph: performance (#6885)
+* Add specific error message for 426 http error (#6901)
+
 2024-01-24 v1.127.0
 -------------------
 

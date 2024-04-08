@@ -1,6 +1,6 @@
-INTERFACE zif_abapgit_repo_online
-  PUBLIC .
+INTERFACE zif_abapgit_repo_online PUBLIC.
 
+  INTERFACES zif_abapgit_repo.
 
   METHODS get_url
     RETURNING
