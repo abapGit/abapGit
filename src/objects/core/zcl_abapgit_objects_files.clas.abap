@@ -106,7 +106,10 @@ CLASS zcl_abapgit_objects_files DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS get_i18n_properties_file
-        RETURNING VALUE(rt_result) TYPE zif_abapgit_git_definitions=>ty_files_tt.
+      RETURNING
+        VALUE(rt_result) TYPE zif_abapgit_git_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
 
   PROTECTED SECTION.
 
@@ -175,9 +178,9 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
     ENDIF.
 
     ls_file-path     = '/'.
-    ls_file-filename = zcl_abapgit_filename_logic=>object_to_file(
+    ls_file-filename = zcl_abapgit_filename_logic=>object_to_i18n_file(
       is_item  = ms_item
-      iv_extra = |i18n.{ ii_i18n_file->lang( ) }|
+      iv_lang  = ii_i18n_file->lang( )
       iv_ext   = ii_i18n_file->ext( ) ).
 
     APPEND ls_file TO mt_files.
@@ -204,7 +207,6 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
   METHOD add_string.
 
     DATA: ls_file TYPE zif_abapgit_git_definitions=>ty_file.
-
 
     ls_file-path = '/'.
     ls_file-filename = zcl_abapgit_filename_logic=>object_to_file(
@@ -292,6 +294,39 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
     " Escape special characters for use with 'covers pattern' (CP)
     REPLACE ALL OCCURRENCES OF '#' IN rv_pattern WITH '##'.
     REPLACE ALL OCCURRENCES OF '+' IN rv_pattern WITH '#+'.
+  ENDMETHOD.
+
+
+  METHOD get_i18n_properties_file.
+
+    " TODO: replace this method with read_i18n_files
+
+    DATA lv_lang TYPE laiso.
+    DATA lv_ext TYPE string.
+    FIELD-SYMBOLS <ls_file> LIKE LINE OF mt_files.
+
+    LOOP AT mt_files ASSIGNING <ls_file>.
+
+      zcl_abapgit_filename_logic=>i18n_file_to_object(
+        EXPORTING
+          iv_path     = <ls_file>-path
+          iv_filename = <ls_file>-filename
+        IMPORTING
+          ev_lang     = lv_lang
+          ev_ext      = lv_ext ).
+
+      IF lv_ext = 'properties'.
+
+        APPEND <ls_file> TO rt_result.
+        mark_accessed(
+          iv_path = <ls_file>-path
+          iv_file = <ls_file>-filename
+          iv_sha1 = <ls_file>-sha1 ).
+
+      ENDIF.
+
+    ENDLOOP.
+
   ENDMETHOD.
 
 
@@ -397,22 +432,33 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
   METHOD read_i18n_files.
 
-    DATA lv_lang TYPE laiso.
-    DATA lv_ext TYPE string.
-    DATA lo_po TYPE REF TO zcl_abapgit_po_file.
+    DATA:
+      lv_lang       TYPE laiso,
+      lv_ext        TYPE string,
+      lo_po         TYPE REF TO zcl_abapgit_po_file,
+      lo_properties TYPE REF TO zcl_abapgit_properties_file.
+
     FIELD-SYMBOLS <ls_file> LIKE LINE OF mt_files.
 
     LOOP AT mt_files ASSIGNING <ls_file>.
 
-      " TODO: Maybe this should be in zcl_abapgit_filename_logic
-      FIND FIRST OCCURRENCE OF REGEX 'i18n\.([^.]{2})\.([^.]+)$' IN <ls_file>-filename SUBMATCHES lv_lang lv_ext.
-      CHECK sy-subrc = 0.
+      zcl_abapgit_filename_logic=>i18n_file_to_object(
+        EXPORTING
+          iv_path     = <ls_file>-path
+          iv_filename = <ls_file>-filename
+        IMPORTING
+          ev_lang     = lv_lang
+          ev_ext      = lv_ext ).
 
       CASE lv_ext.
         WHEN 'po'.
           CREATE OBJECT lo_po EXPORTING iv_lang = lv_lang.
           lo_po->parse( <ls_file>-data ).
           APPEND lo_po TO rt_i18n_files.
+        WHEN 'properties'.
+          CREATE OBJECT lo_properties EXPORTING iv_lang = lv_lang.
+          lo_properties->parse( <ls_file>-data ).
+          APPEND lo_properties TO rt_i18n_files.
         WHEN OTHERS.
           CONTINUE. " Unsupported i18n file type
       ENDCASE.
@@ -499,31 +545,4 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
-  METHOD get_i18n_properties_file.
-
-    DATA lv_lang TYPE laiso.
-    DATA lv_ext TYPE string.
-    FIELD-SYMBOLS <ls_file> LIKE LINE OF mt_files.
-
-    LOOP AT mt_files ASSIGNING <ls_file>.
-
-      " TODO: Maybe this should be in zcl_abapgit_filename_logic
-      FIND FIRST OCCURRENCE OF REGEX 'i18n\.([^.]{2})\.([^.]+)$' IN <ls_file>-filename SUBMATCHES lv_lang lv_ext.
-      CHECK sy-subrc = 0.
-
-      IF sy-subrc = 0 AND lv_ext = `properties`.
-
-        APPEND <ls_file> TO rt_result.
-        mark_accessed(
-          iv_path = <ls_file>-path
-          iv_file = <ls_file>-filename
-          iv_sha1 = <ls_file>-sha1 ).
-
-      ENDIF.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
 ENDCLASS.

@@ -204,6 +204,8 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
       li_client->propertytype_logon_popup = li_client->co_disabled.
     ENDIF.
 
+    li_client->request->set_version( if_http_request=>co_protocol_version_1_1 ).
+
     zcl_abapgit_exit=>get_instance( )->http_client(
       iv_url    = iv_url
       ii_client = li_client ).
