@@ -8,7 +8,9 @@ CLASS zcl_abapgit_html_table DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        !ii_renderer    TYPE REF TO zif_abapgit_html_table OPTIONAL
+        !ii_renderer    TYPE REF TO zif_abapgit_html_table OPTIONAL " Can be passed to renderer
+        !is_initial_sorting_state TYPE zif_abapgit_html_table=>ty_sorting_state OPTIONAL
+        PREFERRED PARAMETER ii_renderer
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_html_table .
     " maybe also th css_class
@@ -45,12 +47,17 @@ CLASS zcl_abapgit_html_table DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    " Static utils
+    " Sorting utils
     CLASS-METHODS detect_sorting_request
       IMPORTING
         iv_event TYPE string
       RETURNING
         VALUE(rs_sorting_request) TYPE zif_abapgit_html_table=>ty_sorting_state.
+    METHODS process_sorting_request
+      IMPORTING
+        iv_event TYPE string
+      RETURNING
+        VALUE(rv_processed) TYPE abap_bool.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -118,11 +125,47 @@ CLASS zcl_abapgit_html_table DEFINITION
       RETURNING
         VALUE(rs_data_attr) TYPE zif_abapgit_html=>ty_data_attr.
 
+    METHODS apply_sorting
+      CHANGING
+        ct_data TYPE STANDARD TABLE.
+
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
+
+
+  METHOD apply_sorting.
+
+    DATA lv_field TYPE abap_compname.
+    DATA ls_col LIKE LINE OF mt_columns.
+
+    IF ms_sorting_state-column_id IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    READ TABLE mt_columns INTO ls_col WITH KEY column_id = ms_sorting_state-column_id.
+    IF sy-subrc <> 0.
+      RETURN. " ??? but let's not throw errors here
+    ENDIF.
+
+    IF ls_col-from_field IS NOT INITIAL.
+      lv_field = to_upper( ls_col-from_field ).
+    ELSE.
+      lv_field = to_upper( ms_sorting_state-column_id ).
+    ENDIF.
+
+    " What to do if column_id is not a table field ?
+    " Well ... then it is a complex case for an external sorting, don't use the simple one
+
+    IF ms_sorting_state-descending = abap_true.
+      SORT ct_data BY (lv_field) DESCENDING.
+    ELSE.
+      SORT ct_data BY (lv_field) ASCENDING.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD cid_attr.
@@ -136,6 +179,7 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
   METHOD create.
     CREATE OBJECT ro_instance.
     ro_instance->mi_renderer = ii_renderer.
+    ro_instance->ms_sorting_state = is_initial_sorting_state.
   ENDMETHOD.
 
 
@@ -205,9 +249,24 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD process_sorting_request.
+
+    DATA ls_sorting_req LIKE ms_sorting_state.
+
+    ls_sorting_req = detect_sorting_request( iv_event ).
+    IF ls_sorting_req IS NOT INITIAL.
+      ms_sorting_state = ls_sorting_req.
+      rv_processed     = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD render.
 
     DATA lv_attrs TYPE string.
+    DATA lr_data_copy TYPE REF TO data.
+    FIELD-SYMBOLS <lt_data> TYPE ANY TABLE.
 
     IF ii_renderer IS BOUND.
       mi_renderer = ii_renderer.
@@ -217,7 +276,20 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
 
     mv_with_cids     = iv_with_cids.
     mv_table_id      = iv_id.
-    ms_sorting_state = is_sorting_state.
+    ASSIGN it_data TO <lt_data>.
+
+    IF is_sorting_state IS NOT INITIAL.
+      ms_sorting_state = is_sorting_state.
+    ELSEIF ms_sorting_state IS NOT INITIAL.
+      " If sorting state is not passed,
+      " but there is non empty sort state then suppose simple sorting mode
+      " so that table sorts the data itself before rendering
+      " TODO not efficient, maybe bind changing data from outside
+      CREATE DATA lr_data_copy LIKE it_data.
+      ASSIGN lr_data_copy->* TO <lt_data>.
+      <lt_data> = it_data.
+      apply_sorting( CHANGING ct_data = <lt_data> ).
+    ENDIF.
 
     IF iv_id IS NOT INITIAL.
       lv_attrs = lv_attrs && | id="{ iv_id }"|.
@@ -236,7 +308,7 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
 
     mi_html->add( |<table{ lv_attrs }>| ).
     render_thead( ).
-    render_tbody( it_data ).
+    render_tbody( <lt_data> ).
     mi_html->add( '</table>' ).
 
     IF iv_wrap_in_div IS NOT INITIAL.

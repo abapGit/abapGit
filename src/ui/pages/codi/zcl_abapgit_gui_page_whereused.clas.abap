@@ -36,7 +36,11 @@ CLASS zcl_abapgit_gui_page_whereused DEFINITION
 
     CONSTANTS c_title TYPE string VALUE 'Where Used'.
     DATA mv_package TYPE devclass.
-    DATA ms_sorting_state TYPE zif_abapgit_html_table=>ty_sorting_state.
+    DATA mi_table TYPE REF TO zcl_abapgit_html_table.
+
+    METHODS init_table_component
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -69,13 +73,55 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD init_table_component.
+
+    DATA ls_sorting_state TYPE zif_abapgit_html_table=>ty_sorting_state.
+
+    IF mi_table IS BOUND.
+      RETURN.
+    ENDIF.
+
+    IF ls_sorting_state-column_id IS INITIAL.
+      ls_sorting_state-column_id = 'package'.
+    ENDIF.
+
+    mi_table = zcl_abapgit_html_table=>create(
+      ii_renderer              = me
+      is_initial_sorting_state = ls_sorting_state ).
+    mi_table->define_column_group(
+        iv_group_title = 'Repo object'
+        iv_group_id    = '' " No need
+      )->define_column(
+        iv_column_id    = 'dep_package'
+        iv_column_title = 'Pkg'
+      )->define_column(
+        iv_column_id    = 'dep_obj_type'
+        iv_column_title = 'Type'
+      )->define_column(
+        iv_column_id    = 'dep_obj_name'
+        iv_column_title = 'Obj name'
+      )->define_column(
+        iv_column_id    = 'dep_used_obj'
+        iv_column_title = 'Used obj' ).
+    mi_table->define_column_group(
+        iv_group_title = 'Used in'
+        iv_group_id    = 'where' " Needed for CSS
+      )->define_column(
+        iv_column_id    = 'package'
+        iv_column_title = 'Pkg'
+      )->define_column(
+        iv_column_id    = 'obj_type'
+        iv_column_title = 'Type'
+      )->define_column(
+        iv_column_id    = 'obj_name'
+        iv_column_title = 'Obj name' ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA ls_sorting_req TYPE zif_abapgit_html_table=>ty_sorting_state.
-
-    ls_sorting_req = zcl_abapgit_html_table=>detect_sorting_request( ii_event->mv_action ).
-    IF ls_sorting_req IS NOT INITIAL.
-      ms_sorting_state = ls_sorting_req.
+    IF mi_table->process_sorting_request( ii_event->mv_action ) = abap_true.
       rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       RETURN.
     ENDIF.
@@ -120,10 +166,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA li_table TYPE REF TO zcl_abapgit_html_table.
     DATA lt_where_used TYPE zcl_abapgit_where_used_tools=>ty_dependency_tt.
 
     register_handlers( ).
+    init_table_component( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -133,50 +179,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
         zcl_abapgit_gui_chunk_lib=>render_package_name( mv_package )->render( iv_no_line_breaks = abap_true )
         } and it's subpackages| ).
 
-    " TODO auto sorting ?
-
-    li_table = zcl_abapgit_html_table=>create( ).
-    li_table->define_column_group(
-        iv_group_title = 'Repo object'
-        iv_group_id    = '' " No need
-      )->define_column(
-        iv_column_id    = 'dep_package'
-        iv_column_title = 'Pkg'
-      )->define_column(
-        iv_column_id    = 'dep_obj_type'
-        iv_column_title = 'Type'
-      )->define_column(
-        iv_column_id    = 'dep_obj_name'
-        iv_column_title = 'Obj name'
-      )->define_column(
-        iv_column_id    = 'dep_used_obj'
-        iv_column_title = 'Used obj' ).
-    li_table->define_column_group(
-        iv_group_title = 'Used in'
-        iv_group_id    = 'where' " Needed for CSS
-      )->define_column(
-        iv_column_id    = 'package'
-        iv_column_title = 'Pkg'
-      )->define_column(
-        iv_column_id    = 'obj_type'
-        iv_column_title = 'Type'
-      )->define_column(
-        iv_column_id    = 'obj_name'
-        iv_column_title = 'Obj name' ).
-
     lt_where_used = zcl_abapgit_where_used_tools=>new( )->select_external_usages( mv_package ).
-
-    IF ms_sorting_state-column_id IS INITIAL.
-      ms_sorting_state-column_id = 'package'.
-    ENDIF.
-
-*    apply_sorting( CHANGING ct_view = lt_where_used ).
 
     ri_html->div(
       iv_class   = 'wu'
-      ii_content = li_table->render(
-        ii_renderer      = me
-        is_sorting_state = ms_sorting_state
+      ii_content = mi_table->render(
         iv_wrap_in_div   = 'default-table-container'
         iv_css_class     = 'default-table'
         iv_with_cids     = abap_true
