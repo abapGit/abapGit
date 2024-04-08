@@ -83,7 +83,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_action-refresh.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN others.
+      WHEN OTHERS.
         RETURN.
     ENDCASE.
 
@@ -135,8 +135,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
     " TODO auto sorting ?
 
-    li_table = zcl_abapgit_html_table=>create(
-      )->define_column_group( 'Repo object'
+    li_table = zcl_abapgit_html_table=>create( ).
+    li_table->define_column_group(
+        iv_group_title = 'Repo object'
+        iv_group_id    = '' " No need
       )->define_column(
         iv_column_id    = 'dep_package'
         iv_column_title = 'Pkg'
@@ -148,11 +150,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
         iv_column_title = 'Obj name'
       )->define_column(
         iv_column_id    = 'dep_used_obj'
-        iv_column_title = 'Used obj'
-
-      )->define_column_group(
-        iv_group_id    = 'where'
+        iv_column_title = 'Used obj' ).
+    li_table->define_column_group(
         iv_group_title = 'Used in'
+        iv_group_id    = 'where' " Needed for CSS
       )->define_column(
         iv_column_id    = 'package'
         iv_column_title = 'Pkg'

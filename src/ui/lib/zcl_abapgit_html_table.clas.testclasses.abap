@@ -99,7 +99,8 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
       '<th>Col 2</th>' )->add(
       '<th></th>' )->add(
       '</tr>' )->add(
-      '</thead>' )->add(
+      '</thead>' ).
+    li_html_exp->add(
       '<tbody>' )->add(
       '<tr class="r1">' )->add(
       '<td class="cell">Hello</td>' )->add(
@@ -150,7 +151,8 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
       '<th data-cid="col1">Col 1</th>' )->add(
       '<th data-cid="col2">Col 2</th>' )->add(
       '</tr>' )->add(
-      '</thead>' )->add(
+      '</thead>' ).
+    li_html_exp->add(
       '<tbody>' )->add(
       '<tr data-attr="1">' )->add(
       '<td data-cid="col1">Hello</td>' )->add(
@@ -201,12 +203,13 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
       '<table id="with-sort">' )->add(
       '<thead>' )->add(
       '<tr>' )->add(
-      '<th><a href="sapevent:sort_by:col1:dsc">Col 1</a><span class="sort-arrow sort-active">&#x25BE;</span></th>'
-      )->add(
+      '<th><a href="sapevent:sort_by:col1:dsc">Col 1</a>' &&
+        '<span class="sort-arrow sort-active">&#x25BE;</span></th>' )->add(
       '<th><a href="sapevent:sort_by:col2:asc">Col 2</a><span class="sort-arrow">&#x25BE;</span></th>' )->add(
       '<th>Col 3</th>' )->add(
       '</tr>' )->add(
-      '</thead>' )->add(
+      '</thead>' ).
+    li_html_exp->add(
       '<tbody>' )->add(
       '<tr>' )->add(
       '<td>Hello</td>' )->add(
@@ -241,6 +244,7 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
         iv_column_title = 'Col 1'
       )->define_column_group(
         iv_group_title = 'Group'
+        iv_group_id = ''
       )->define_column(
         iv_column_id    = 'col2'
         iv_column_title = 'Col 2'
@@ -264,16 +268,16 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
       '<tr>' )->add(
       '<th></th>' )->add(
       '<th colspan="2">Group</th>' )->add(
-      '</tr>' )->add(
-
+      '</tr>' ).
+    li_html_exp->add(
       '<tr>' )->add(
-      '<th><a href="sapevent:sort_by:col1:dsc">Col 1</a><span class="sort-arrow sort-active">&#x25BE;</span></th>'
-      )->add(
+      '<th><a href="sapevent:sort_by:col1:dsc">Col 1</a>' &&
+        '<span class="sort-arrow sort-active">&#x25BE;</span></th>' )->add(
       '<th><a href="sapevent:sort_by:col2:asc">Col 2</a><span class="sort-arrow">&#x25BE;</span></th>' )->add(
       '<th>Col 3</th>' )->add(
       '</tr>' )->add(
-      '</thead>' )->add(
-
+      '</thead>' ).
+    li_html_exp->add(
       '<tbody>' )->add(
       '<tr>' )->add(
       '<td>Hello</td>' )->add(
