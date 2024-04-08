@@ -105,11 +105,6 @@ CLASS zcl_abapgit_objects_files DEFINITION
         VALUE(rt_i18n_files) TYPE zif_abapgit_i18n_file=>ty_table_of
       RAISING
         zcx_abapgit_exception .
-    METHODS get_i18n_properties_file
-      RETURNING
-        VALUE(rt_result) TYPE zif_abapgit_git_definitions=>ty_files_tt
-      RAISING
-        zcx_abapgit_exception .
 
   PROTECTED SECTION.
 
@@ -294,39 +289,6 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
     " Escape special characters for use with 'covers pattern' (CP)
     REPLACE ALL OCCURRENCES OF '#' IN rv_pattern WITH '##'.
     REPLACE ALL OCCURRENCES OF '+' IN rv_pattern WITH '#+'.
-  ENDMETHOD.
-
-
-  METHOD get_i18n_properties_file.
-
-    " TODO: replace this method with read_i18n_files
-
-    DATA lv_lang TYPE laiso.
-    DATA lv_ext TYPE string.
-    FIELD-SYMBOLS <ls_file> LIKE LINE OF mt_files.
-
-    LOOP AT mt_files ASSIGNING <ls_file>.
-
-      zcl_abapgit_filename_logic=>i18n_file_to_object(
-        EXPORTING
-          iv_path     = <ls_file>-path
-          iv_filename = <ls_file>-filename
-        IMPORTING
-          ev_lang     = lv_lang
-          ev_ext      = lv_ext ).
-
-      IF lv_ext = 'properties'.
-
-        APPEND <ls_file> TO rt_result.
-        mark_accessed(
-          iv_path = <ls_file>-path
-          iv_file = <ls_file>-filename
-          iv_sha1 = <ls_file>-sha1 ).
-
-      ENDIF.
-
-    ENDLOOP.
-
   ENDMETHOD.
 
 

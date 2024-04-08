@@ -262,11 +262,11 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
 
   METHOD read_json.
-    DATA lv_json_data TYPE xstring.
+    DATA lv_json_data TYPE string.
     DATA ls_intf_aff TYPE zif_abapgit_aff_intf_v1=>ty_main.
     DATA lo_aff_mapper TYPE REF TO zif_abapgit_aff_type_mapping.
 
-    lv_json_data = mo_files->read_raw( 'json' ).
+    lv_json_data = mo_files->read_string( 'json' ).
     ls_intf_aff = lcl_aff_metadata_handler=>deserialize( lv_json_data ).
 
     CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
@@ -535,6 +535,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         lcl_aff_metadata_handler=>deserialize_translation(
           EXPORTING
             io_files           = mo_files
+            is_item            = ms_item
           IMPORTING
             et_description     = lt_description
             et_description_sub = lt_description_sub ).

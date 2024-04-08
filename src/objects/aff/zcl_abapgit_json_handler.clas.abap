@@ -51,7 +51,7 @@ CLASS zcl_abapgit_json_handler DEFINITION
     "! @parameter ev_data | data of the xstring
     METHODS deserialize
       IMPORTING
-        !iv_content       TYPE xstring
+        !iv_content       TYPE string
         !iv_defaults      TYPE ty_skip_paths OPTIONAL
         !iv_enum_mappings TYPE ty_enum_mappings OPTIONAL
       EXPORTING
@@ -99,14 +99,11 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
 
   METHOD deserialize.
-    DATA lv_json    TYPE string.
-    DATA lo_ajson   TYPE REF TO zif_abapgit_ajson.
+    DATA lo_ajson TYPE REF TO zif_abapgit_ajson.
 
     CLEAR ev_data.
 
-    lv_json = zcl_abapgit_convert=>xstring_to_string_utf8( iv_content ).
-
-    lo_ajson = zcl_abapgit_ajson=>parse( lv_json
+    lo_ajson = zcl_abapgit_ajson=>parse( iv_content
       )->map( zcl_abapgit_ajson_mapping=>create_to_snake_case( ) ).
 
     map2abap_original_language( CHANGING co_ajson = lo_ajson ).
