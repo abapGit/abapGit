@@ -128,16 +128,16 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
 
   METHOD build_package_scope.
 
-    FIELD-SYMBOLS <tadir> TYPE zif_abapgit_definitions=>ty_tadir.
-    FIELD-SYMBOLS <pkg> LIKE LINE OF rt_package_scope.
+    FIELD-SYMBOLS <ls_tadir> TYPE zif_abapgit_definitions=>ty_tadir.
+    FIELD-SYMBOLS <ls_pkg> LIKE LINE OF rt_package_scope.
 
     rt_package_scope = ir_package_scope.
-    LOOP AT it_tadir ASSIGNING <tadir>.
-      CHECK <tadir>-object = 'DEVC'.
-      APPEND INITIAL LINE TO rt_package_scope ASSIGNING <pkg>.
-      <pkg>-sign   = 'E'.
-      <pkg>-option = 'EQ'.
-      <pkg>-low    = <tadir>-obj_name.
+    LOOP AT it_tadir ASSIGNING <ls_tadir>.
+      CHECK <ls_tadir>-object = 'DEVC'.
+      APPEND INITIAL LINE TO rt_package_scope ASSIGNING <ls_pkg>.
+      <ls_pkg>-sign   = 'E'.
+      <ls_pkg>-option = 'EQ'.
+      <ls_pkg>-low    = <ls_tadir>-obj_name.
     ENDLOOP.
 
   ENDMETHOD.
@@ -149,26 +149,26 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
     DATA lt_where_used TYPE ty_where_used_tt.
     DATA lt_objs_portion LIKE rt_objs.
 
-    FIELD-SYMBOLS <tadir> TYPE zif_abapgit_definitions=>ty_tadir.
+    FIELD-SYMBOLS <ls_tadir> TYPE zif_abapgit_definitions=>ty_tadir.
 
     li_progress = zcl_abapgit_progress=>get_instance( lines( it_tadir ) ).
 
-    LOOP AT it_tadir ASSIGNING <tadir>.
-      CHECK <tadir>-object <> 'DEVC'.
+    LOOP AT it_tadir ASSIGNING <ls_tadir>.
+      CHECK <ls_tadir>-object <> 'DEVC'.
 
       li_progress->show(
         iv_current = sy-tabix
-        iv_text    = |{ <tadir>-object } { <tadir>-obj_name }| ).
+        iv_text    = |{ <ls_tadir>-object } { <ls_tadir>-obj_name }| ).
 
       lt_where_used = get_where_used(
-        iv_obj_type = |{ <tadir>-object }|
-        iv_obj_name = <tadir>-obj_name
+        iv_obj_type = |{ <ls_tadir>-object }|
+        iv_obj_name = <ls_tadir>-obj_name
         ir_package_scope = ir_package_scope ).
 
       lt_objs_portion = convert_list(
-        iv_package    = <tadir>-devclass
-        iv_obj_type   = <tadir>-object
-        iv_obj_name   = <tadir>-obj_name
+        iv_package    = <ls_tadir>-devclass
+        iv_obj_type   = <ls_tadir>-object
+        iv_obj_name   = <ls_tadir>-obj_name
         it_where_used = lt_where_used ).
 
       APPEND LINES OF lt_objs_portion TO rt_objs.
@@ -184,61 +184,61 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
 
     " See also CL_FINB_GN_BBI=>GET_CROSSREF
 
-    FIELD-SYMBOLS <dep> LIKE LINE OF rt_objs.
-    FIELD-SYMBOLS <use> LIKE LINE OF it_where_used.
+    FIELD-SYMBOLS <ls_dep> LIKE LINE OF rt_objs.
+    FIELD-SYMBOLS <ls_use> LIKE LINE OF it_where_used.
 
-    LOOP AT it_where_used ASSIGNING <use>.
+    LOOP AT it_where_used ASSIGNING <ls_use>.
 
-      APPEND INITIAL LINE TO rt_objs ASSIGNING <dep>.
-      <dep>-dep_package  = iv_package.
-      <dep>-dep_obj_type = iv_obj_type.
-      <dep>-dep_obj_name = iv_obj_name.
+      APPEND INITIAL LINE TO rt_objs ASSIGNING <ls_dep>.
+      <ls_dep>-dep_package  = iv_package.
+      <ls_dep>-dep_obj_type = iv_obj_type.
+      <ls_dep>-dep_obj_name = iv_obj_name.
 
-      <dep>-dep_used_obj = <use>-used_obj.
-      <dep>-dep_used_cls = <use>-used_cls.
+      <ls_dep>-dep_used_obj = <ls_use>-used_obj.
+      <ls_dep>-dep_used_cls = <ls_use>-used_cls.
 
-      <dep>-obj_cls  = <use>-object_cls.
-      <dep>-obj_name = <use>-encl_objec.
-      IF <dep>-obj_name IS INITIAL.
-        <dep>-obj_name = <use>-object.
+      <ls_dep>-obj_cls  = <ls_use>-object_cls.
+      <ls_dep>-obj_name = <ls_use>-encl_objec.
+      IF <ls_dep>-obj_name IS INITIAL.
+        <ls_dep>-obj_name = <ls_use>-object.
       ENDIF.
 
-      IF <use>-object_cls = 'FF'. " Function module
-        <dep>-obj_type = 'FUNC'.
-        <dep>-package = get_func_package( <dep>-obj_name ).
+      IF <ls_use>-object_cls = 'FF'. " Function module
+        <ls_dep>-obj_type = 'FUNC'.
+        <ls_dep>-package = get_func_package( <ls_dep>-obj_name ).
 
       ELSE.
-        <dep>-obj_type = decode_obj_type( <use>-object_cls ).
+        <ls_dep>-obj_type = decode_obj_type( <ls_use>-object_cls ).
 
-        <dep>-package = get_obj_package(
-          iv_obj_type = <dep>-obj_type
-          iv_obj_name = <dep>-obj_name ).
+        <ls_dep>-package = get_obj_package(
+          iv_obj_type = <ls_dep>-obj_type
+          iv_obj_name = <ls_dep>-obj_name ).
 
-        IF <dep>-package IS INITIAL AND <dep>-obj_type = 'CLAS'.
-          <dep>-package = get_obj_package(
+        IF <ls_dep>-package IS INITIAL AND <ls_dep>-obj_type = 'CLAS'.
+          <ls_dep>-package = get_obj_package(
             iv_obj_type = 'INTF'
-            iv_obj_name = <dep>-obj_name ).
-          IF <dep>-package IS NOT INITIAL.
-            <dep>-obj_type = 'INTF'.
+            iv_obj_name = <ls_dep>-obj_name ).
+          IF <ls_dep>-package IS NOT INITIAL.
+            <ls_dep>-obj_type = 'INTF'.
           ENDIF.
         ENDIF.
       ENDIF.
 
-      IF <dep>-package IS INITIAL.
-        IF <dep>-obj_type = 'PROG'. " Maybe it is an include
+      IF <ls_dep>-package IS INITIAL.
+        IF <ls_dep>-obj_type = 'PROG'. " Maybe it is an include
 
-          <dep>-package = get_incl_package( <dep>-obj_name ).
-          IF <dep>-package IS INITIAL.
-            SELECT SINGLE subc INTO <dep>-obj_prog_type FROM trdir WHERE name = <dep>-obj_name.
-            IF <dep>-obj_prog_type IS NOT INITIAL AND <dep>-obj_prog_type <> '1'. " Exec. prog
-              <dep>-obj_type = 'INCL'.
+          <ls_dep>-package = get_incl_package( <ls_dep>-obj_name ).
+          IF <ls_dep>-package IS INITIAL.
+            SELECT SINGLE subc INTO <ls_dep>-obj_prog_type FROM trdir WHERE name = <ls_dep>-obj_name.
+            IF <ls_dep>-obj_prog_type IS NOT INITIAL AND <ls_dep>-obj_prog_type <> '1'. " Exec. prog
+              <ls_dep>-obj_type = 'INCL'.
             ENDIF.
           ENDIF.
 
         ENDIF.
 
-        IF <dep>-package IS INITIAL.
-          <dep>-package = '????'.
+        IF <ls_dep>-package IS INITIAL.
+          <ls_dep>-package = '????'.
         ENDIF.
       ENDIF.
 
@@ -256,16 +256,16 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
 
   METHOD decode_obj_type.
 
-    FIELD-SYMBOLS <devobj> LIKE LINE OF mt_dev_obj_cache.
+    FIELD-SYMBOLS <ls_devobj> LIKE LINE OF mt_dev_obj_cache.
 
     IF mt_dev_obj_cache IS INITIAL.
       SELECT type tadir INTO TABLE mt_dev_obj_cache
         FROM euobjedit.
     ENDIF.
 
-    READ TABLE mt_dev_obj_cache ASSIGNING <devobj> WITH KEY type = iv_type.
+    READ TABLE mt_dev_obj_cache ASSIGNING <ls_devobj> WITH KEY type = iv_type.
     IF sy-subrc = 0.
-      rv_type = <devobj>-tadir.
+      rv_type = <ls_devobj>-tadir.
     ENDIF.
 
   ENDMETHOD.
