@@ -82,6 +82,12 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
       RETURNING
         VALUE(rv_package) TYPE tadir-devclass.
 
+    METHODS get_incl_package
+      IMPORTING
+        iv_prog_name      TYPE tadir-obj_name
+      RETURNING
+        VALUE(rv_package) TYPE tadir-devclass.
+
     METHODS build_package_scope
       IMPORTING
         it_tadir                TYPE STANDARD TABLE
@@ -219,23 +225,31 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
       ENDIF.
 
       IF <dep>-package IS INITIAL.
-        <dep>-package = '????'.
-
         IF <dep>-obj_type = 'PROG'. " Maybe it is an include
-          SELECT SINGLE subc INTO <dep>-obj_prog_type FROM trdir WHERE name = <dep>-obj_name.
-          IF <dep>-obj_prog_type IS NOT INITIAL AND <dep>-obj_prog_type <> '1'. " Exec. prog
-            <dep>-obj_type = 'INCL'.
+
+          <dep>-package = get_incl_package( <dep>-obj_name ).
+          IF <dep>-package IS INITIAL.
+            SELECT SINGLE subc INTO <dep>-obj_prog_type FROM trdir WHERE name = <dep>-obj_name.
+            IF <dep>-obj_prog_type IS NOT INITIAL AND <dep>-obj_prog_type <> '1'. " Exec. prog
+              <dep>-obj_type = 'INCL'.
+            ENDIF.
           ENDIF.
+
         ENDIF.
 
+        IF <dep>-package IS INITIAL.
+          <dep>-package = '????'.
+        ENDIF.
       ENDIF.
 
     ENDLOOP.
 
-    " some includes are FUGR and some are ENHO ...
+    " some includes are ENHO ...
     " include detection TRDIR, D010INC ???
-    " How to find FUGR by main program name ???
     " how to find connection with ENHO ?
+    " Useful: https://github.com/abaplint/abaplint-sci-client/blob/main/src/deps/zcl_abaplint_deps_find.clas.abap
+    " And cl_wb_manager->if_wb_manager~request_tool_access
+    " And discussions in https://github.com/abapGit/abapGit/pull/6897
 
   ENDMETHOD.
 
@@ -277,6 +291,50 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
     ENDIF.
 
     rv_package = ls_obj_sig-package.
+
+  ENDMETHOD.
+
+
+  METHOD get_incl_package.
+
+    DATA lv_program TYPE progname.
+    DATA lv_area    TYPE rs38l_area.
+
+    lv_program = iv_prog_name.
+
+    CALL FUNCTION 'FUNCTION_INCLUDE_CONCATENATE'
+      CHANGING
+        program                  = lv_program
+        complete_area            = lv_area
+      EXCEPTIONS
+        not_enough_input         = 1
+        no_function_pool         = 2
+        delimiter_wrong_position = 3
+        OTHERS                   = 4.
+
+    IF lv_area IS INITIAL.
+      SELECT SINGLE master FROM d010inc INTO lv_program
+        WHERE include = iv_prog_name.
+
+      CALL FUNCTION 'FUNCTION_INCLUDE_CONCATENATE'
+        CHANGING
+          program                  = lv_program
+          complete_area            = lv_area
+        EXCEPTIONS
+          not_enough_input         = 1
+          no_function_pool         = 2
+          delimiter_wrong_position = 3
+          OTHERS                   = 4.
+    ENDIF.
+
+    IF lv_area IS NOT INITIAL.
+      rv_package = get_obj_package(
+        iv_obj_type = 'FUGR'
+        iv_obj_name = |{ lv_area }| ).
+      RETURN.
+    ENDIF.
+
+    " TODO more ...
 
   ENDMETHOD.
 
