@@ -56,7 +56,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TEMPLATE IMPLEMENTATION.
 
   METHOD create.
 
-    " TODO: ref to real class (self)
+    " TODO: replace with name of class (self)
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_template.
 
     CREATE OBJECT lo_component.
