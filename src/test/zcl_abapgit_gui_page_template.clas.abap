@@ -12,9 +12,11 @@ CLASS zcl_abapgit_gui_page_template DEFINITION
       zif_abapgit_gui_hotkeys,
       zif_abapgit_gui_menu_provider,
       zif_abapgit_gui_renderable,
+      " TODO: remove table interface if not used on the page
       zif_abapgit_html_table.
 
     CLASS-METHODS create
+      " TODO: page parameters, e.g. ref to repo
 *      IMPORTING
 *        ii_repo TYPE REF TO zif_abapgit_repo
       RETURNING
@@ -33,11 +35,11 @@ CLASS zcl_abapgit_gui_page_template DEFINITION
 
     CONSTANTS:
       BEGIN OF c_action,
-        " List of in-page actions
+        " TODO: List of in-page actions
         refresh TYPE string VALUE 'refresh',
       END OF c_action.
 
-    CONSTANTS c_title TYPE string VALUE 'Page Template'. " Page title
+    CONSTANTS c_title TYPE string VALUE 'Page Template'. " TODO: define page title
 
 ENDCLASS.
 
@@ -54,6 +56,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TEMPLATE IMPLEMENTATION.
 
   METHOD create.
 
+    " TODO: ref to real class (self)
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_template.
 
     CREATE OBJECT lo_component.
@@ -66,8 +69,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TEMPLATE IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     CASE ii_event->mv_action.
+      " TODO: action handling, refresh is just an example
       WHEN c_action-refresh.
-        " ...
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN 'xyz'.
         ASSERT 1 = 1.
@@ -82,6 +85,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TEMPLATE IMPLEMENTATION.
 
     ls_hotkey_action-ui_component = c_title.
 
+    " TODO: define hotkeys
+
     ls_hotkey_action-description = 'Refresh'.
     ls_hotkey_action-action      = c_action-refresh.
     ls_hotkey_action-hotkey      = 'r'.
@@ -92,7 +97,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TEMPLATE IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
-    " Top level menu
+    " TODO: top level menu
 
     ro_toolbar = zcl_abapgit_html_toolbar=>create( )->add(
       iv_txt = 'Refresh'
@@ -110,9 +115,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TEMPLATE IMPLEMENTATION.
 
     register_handlers( ).
 
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html = zcl_abapgit_html=>create( ).
 
-    " Do you rendering
+    " TODO: do your rendering
+
     ri_html->div(
       iv_class   = 'template'
       iv_content = 'Hello!' ).
