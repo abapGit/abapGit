@@ -93,13 +93,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
         iv_group_id    = '' " No need
       )->define_column(
         iv_column_id    = 'dep_package'
-        iv_column_title = 'Pkg'
+        iv_column_title = 'Package'
       )->define_column(
         iv_column_id    = 'dep_obj_type'
         iv_column_title = 'Type'
       )->define_column(
         iv_column_id    = 'dep_obj_name'
-        iv_column_title = 'Obj name'
+        iv_column_title = 'Name'
       )->define_column(
         iv_column_id    = 'dep_used_obj'
         iv_column_title = 'Used obj' ).
@@ -108,13 +108,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
         iv_group_id    = 'where' " Needed for CSS
       )->define_column(
         iv_column_id    = 'package'
-        iv_column_title = 'Pkg'
+        iv_column_title = 'Package'
       )->define_column(
         iv_column_id    = 'obj_type'
         iv_column_title = 'Type'
       )->define_column(
         iv_column_id    = 'obj_name'
-        iv_column_title = 'Obj name' ).
+        iv_column_title = 'Name' ).
 
   ENDMETHOD.
 
