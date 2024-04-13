@@ -15,7 +15,9 @@ CLASS zcl_abapgit_gui_page_whereused DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        iv_package     TYPE devclass
+        iv_package TYPE devclass OPTIONAL
+        ii_repo    TYPE REF TO zif_abapgit_repo OPTIONAL
+        PREFERRED PARAMETER iv_package
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -23,7 +25,8 @@ CLASS zcl_abapgit_gui_page_whereused DEFINITION
 
     METHODS constructor
       IMPORTING
-        iv_package TYPE devclass
+        iv_package TYPE devclass OPTIONAL
+        ii_repo    TYPE REF TO zif_abapgit_repo OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
@@ -36,6 +39,8 @@ CLASS zcl_abapgit_gui_page_whereused DEFINITION
 
     CONSTANTS c_title TYPE string VALUE 'Where Used'.
     DATA mv_package TYPE devclass.
+    DATA mv_ignore_subpackages TYPE abap_bool.
+    DATA mi_repo TYPE REF TO zif_abapgit_repo.
     DATA mi_table TYPE REF TO zcl_abapgit_html_table.
 
     METHODS init_table_component
@@ -45,6 +50,11 @@ CLASS zcl_abapgit_gui_page_whereused DEFINITION
     METHODS render_filter_help_hint
       RETURNING
         VALUE(rv_html) TYPE string.
+    METHODS render_header
+      IMPORTING
+        ii_html TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -55,10 +65,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
-    mv_package = iv_package.
+    IF ii_repo IS BOUND.
+      mv_package = ii_repo->get_package( ).
+      mv_ignore_subpackages = ii_repo->get_local_settings( )-ignore_subpackages.
+    ELSE.
+      mv_package = iv_package.
+    ENDIF.
 
-    IF zcl_abapgit_factory=>get_sap_package( iv_package )->exists( ) = abap_false.
-      zcx_abapgit_exception=>raise( |Package { iv_package } does not exist| ).
+    IF mv_package IS INITIAL OR zcl_abapgit_factory=>get_sap_package( mv_package )->exists( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Package { mv_package } does not exist| ).
     ENDIF.
 
   ENDMETHOD.
@@ -70,6 +85,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
+        ii_repo    = ii_repo
         iv_package = iv_package.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create( lo_component ).
@@ -143,6 +159,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_header.
+
+    DATA lv_sub_hint TYPE string.
+
+    IF mv_ignore_subpackages = abap_false.
+      lv_sub_hint = ' and its subpackages'.
+    ENDIF.
+
+    ii_html->div(
+      iv_class   = 'wu-header'
+      iv_content = |Where used for package {
+        zcl_abapgit_gui_chunk_lib=>render_package_name( mv_package )->render( iv_no_line_breaks = abap_true )
+        }{ lv_sub_hint } in other packages. { render_filter_help_hint( ) }| ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     IF mi_table->process_sorting_request( ii_event->mv_action ) = abap_true.
@@ -195,23 +228,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
     register_handlers( ).
     init_table_component( ).
 
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html = zcl_abapgit_html=>create( ).
 
-    ri_html->div(
-      iv_class   = 'wu-header'
-      iv_content = |Where used for package {
-        zcl_abapgit_gui_chunk_lib=>render_package_name( mv_package )->render( iv_no_line_breaks = abap_true )
-        } and it's subpackages. { render_filter_help_hint( ) }| ).
+    render_header( ri_html ).
 
-    lt_where_used = zcl_abapgit_where_used_tools=>new( )->select_external_usages( mv_package ).
+    lt_where_used = zcl_abapgit_where_used_tools=>new( )->select_external_usages(
+      iv_ignore_subpackages = mv_ignore_subpackages
+      iv_package            = mv_package ).
 
-    ri_html->div(
-      iv_class   = 'wu'
-      ii_content = mi_table->render(
-        iv_wrap_in_div   = 'default-table-container'
-        iv_css_class     = 'default-table'
-        iv_with_cids     = abap_true
-        it_data          = lt_where_used ) ).
+    IF lt_where_used IS INITIAL.
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_success( 'No usages found' ) ).
+    ELSE.
+      ri_html->div(
+        iv_class   = 'wu'
+        ii_content = mi_table->render(
+          iv_wrap_in_div   = 'default-table-container'
+          iv_css_class     = 'default-table'
+          iv_with_cids     = abap_true
+          it_data          = lt_where_used ) ).
+    ENDIF.
 
   ENDMETHOD.
 

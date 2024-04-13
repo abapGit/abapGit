@@ -31,6 +31,7 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
     METHODS select_external_usages
       IMPORTING
         iv_package       TYPE tadir-devclass
+        iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
         ir_package_scope TYPE ty_devc_range OPTIONAL
       RETURNING
         VALUE(rt_objs)   TYPE ty_dependency_tt
@@ -418,7 +419,9 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
     DATA lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA lt_package_scope LIKE ir_package_scope.
 
-    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( iv_package ).
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
+     iv_package            = iv_package
+     iv_ignore_subpackages = iv_ignore_subpackages ).
 
     lt_package_scope = build_package_scope(
       ir_package_scope = ir_package_scope

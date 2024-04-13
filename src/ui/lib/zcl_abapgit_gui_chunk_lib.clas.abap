@@ -19,6 +19,11 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_extra_style TYPE string OPTIONAL
       RETURNING
         VALUE(ri_html)  TYPE REF TO zif_abapgit_html .
+    CLASS-METHODS render_success
+      IMPORTING
+        iv_message TYPE string
+      RETURNING
+        VALUE(ri_html)  TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_repo_top
       IMPORTING
         !io_repo               TYPE REF TO zcl_abapgit_repo
@@ -1121,6 +1126,17 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       WHEN OTHERS. " Including NO_RUN
         RETURN.
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD render_success.
+
+    ri_html = zcl_abapgit_html=>create( ).
+    ri_html->add( '<div class="dummydiv success">' ).
+    ri_html->add_icon( 'check' ).
+    ri_html->add( iv_message ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
