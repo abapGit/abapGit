@@ -1168,6 +1168,7 @@ table ul.repo-labels li {
   z-index: 1;
   border: 1px solid;
   padding: 0.4em 0.6em;
+  text-align: justify;
 }
 .form-field-help-tooltip .form-field-help-tooltip-text p {
   margin: 0px;

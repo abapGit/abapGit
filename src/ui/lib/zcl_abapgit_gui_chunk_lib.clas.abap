@@ -184,6 +184,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
     CLASS-METHODS render_help_hint
       IMPORTING
         iv_text_to_wrap TYPE string
+        iv_add_class TYPE string OPTIONAL
       RETURNING
         VALUE(rv_html)  TYPE string.
 
@@ -553,22 +554,25 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
   METHOD render_help_hint.
 
-    " TODO potentially move to or integrate with zcl_abapgit_html_form
-
-    DATA lt_fragments TYPE string_table.
     DATA li_html TYPE REF TO zif_abapgit_html.
+    DATA lv_add_class TYPE string.
+
     li_html = zcl_abapgit_html=>create( ).
 
-    APPEND `<div class="form-field-help-tooltip">` TO lt_fragments.
-    APPEND li_html->icon(
-      iv_name = 'question-circle-solid'
-      iv_class = 'blue' ) TO lt_fragments.
-    APPEND `<div class="form-field-help-tooltip-text">` TO lt_fragments.
-    APPEND iv_text_to_wrap TO lt_fragments.
-    APPEND `</div>` TO lt_fragments.
-    APPEND `</div>` TO lt_fragments.
+    IF iv_add_class IS NOT INITIAL.
+      lv_add_class = ` ` && iv_add_class.
+    ENDIF.
 
-    rv_html = concat_lines_of( lt_fragments ).
+    li_html->add( |<div class="form-field-help-tooltip{ lv_add_class }">| ).
+    li_html->add_icon(
+      iv_name = 'question-circle-solid'
+      iv_class = 'blue' ).
+    li_html->add( `<div class="form-field-help-tooltip-text">` ).
+    li_html->add( iv_text_to_wrap ).
+    li_html->add( `</div>` ).
+    li_html->add( `</div>` ).
+
+    rv_html = li_html->render( iv_no_line_breaks = abap_true ).
 
   ENDMETHOD.
 

@@ -42,6 +42,10 @@ CLASS zcl_abapgit_gui_page_whereused DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS render_filter_help_hint
+      RETURNING
+        VALUE(rv_html) TYPE string.
+
 ENDCLASS.
 
 
@@ -119,6 +123,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_filter_help_hint.
+
+    DATA li_html TYPE REF TO zif_abapgit_html.
+
+    li_html = zcl_abapgit_html=>create(
+      )->add( `<p>This tool cycles through all objects in the repo `
+      )->add( `and runs the standard where-used function against it. `
+      )->add( `The result is displayed here less the usages `
+      )->add( `inside the repo itself.</p>`
+      )->add( `<p>The tool can be used to detect `
+      )->add( `potential regressions in the code which uses the repo `
+      )->add( `and external to it (e.g. when deploying updates `
+      )->add( `to a library-like repo).</p>` ).
+
+    rv_html = zcl_abapgit_gui_chunk_lib=>render_help_hint(
+      li_html->render( iv_no_line_breaks = abap_true ) ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     IF mi_table->process_sorting_request( ii_event->mv_action ) = abap_true.
@@ -177,7 +201,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
       iv_class   = 'wu-header'
       iv_content = |Where used for package {
         zcl_abapgit_gui_chunk_lib=>render_package_name( mv_package )->render( iv_no_line_breaks = abap_true )
-        } and it's subpackages| ).
+        } and it's subpackages. { render_filter_help_hint( ) }| ).
 
     lt_where_used = zcl_abapgit_where_used_tools=>new( )->select_external_usages( mv_package ).
 
