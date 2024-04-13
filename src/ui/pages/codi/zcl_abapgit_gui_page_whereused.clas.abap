@@ -40,7 +40,6 @@ CLASS zcl_abapgit_gui_page_whereused DEFINITION
     CONSTANTS c_title TYPE string VALUE 'Where Used'.
     DATA mv_package TYPE devclass.
     DATA mv_ignore_subpackages TYPE abap_bool.
-    DATA mi_repo TYPE REF TO zif_abapgit_repo.
     DATA mi_table TYPE REF TO zcl_abapgit_html_table.
 
     METHODS init_table_component
@@ -153,8 +152,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
       )->add( `and external to it (e.g. when deploying updates `
       )->add( `to a library-like repo).</p>` ).
 
-    rv_html = zcl_abapgit_gui_chunk_lib=>render_help_hint(
-      li_html->render( iv_no_line_breaks = abap_true ) ).
+    rv_html = zcl_abapgit_gui_chunk_lib=>render_help_hint( li_html->render( iv_no_line_breaks = abap_true ) ).
 
   ENDMETHOD.
 
