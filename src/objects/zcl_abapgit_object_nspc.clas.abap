@@ -6,6 +6,14 @@ CLASS zcl_abapgit_object_nspc DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_object .
+
+    METHODS constructor
+      IMPORTING
+        is_item         TYPE zif_abapgit_definitions=>ty_item
+        iv_language     TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -26,6 +34,8 @@ CLASS zcl_abapgit_object_nspc DEFINITION
     TYPES:
       ty_nspc_texts TYPE STANDARD TABLE OF ty_nspc_text .
 
+    DATA mv_component TYPE cvers-component.
+
     METHODS serialize_texts
       IMPORTING
         !ii_xml TYPE REF TO zif_abapgit_xml_output
@@ -40,6 +50,16 @@ CLASS zcl_abapgit_object_nspc DEFINITION
     METHODS add_to_transport
       IMPORTING
         !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_sw_component
+      IMPORTING
+        !ii_xml TYPE REF TO zif_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_sw_component
+      IMPORTING
+        !ii_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -62,11 +82,64 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD constructor.
+
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
+
+    mv_component = replace( val  = is_item-obj_name
+                            sub  = '/'
+                            with = ''
+                            occ  = 0 ).
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_sw_component.
+
+    DATA:
+      ls_cvers_old TYPE cvers,
+      ls_cvers_new TYPE cvers,
+      ls_cvers_ref TYPE cvers_ref.
+
+    ii_xml->read( EXPORTING iv_name = 'CVERS'
+                  CHANGING  cg_data = ls_cvers_new ).
+
+    ii_xml->read( EXPORTING iv_name = 'CVERS_REF'
+                  CHANGING  cg_data = ls_cvers_ref ).
+
+    IF ls_cvers_new IS NOT INITIAL.
+      SELECT SINGLE * FROM cvers INTO ls_cvers_old WHERE component = mv_component.
+      IF sy-subrc = 0.
+        IF ls_cvers_old <> ls_cvers_new.
+          zcx_abapgit_exception=>raise( `Update of software component not supported.`
+            && ` Use Software Update Manager (SUM)` ).
+        ENDIF.
+      ELSE.
+        INSERT cvers FROM ls_cvers_new.
+      ENDIF.
+    ENDIF.
+
+    IF ls_cvers_ref IS NOT INITIAL.
+      MODIFY cvers_ref FROM ls_cvers_ref.
+      IF sy-subrc <> 0.
+        INSERT cvers_ref FROM ls_cvers_ref.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD deserialize_texts.
 
     DATA:
       ls_trnspacett TYPE trnspacett,
       lt_i18n_langs TYPE TABLE OF langu,
+      lt_cvers_refs TYPE TABLE OF cvers_ref,
+      ls_cvers_ref  TYPE cvers_ref,
       lt_nspc_texts TYPE ty_nspc_texts.
 
     FIELD-SYMBOLS:
@@ -79,14 +152,18 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
     ii_xml->read( EXPORTING iv_name = 'NSPC_TEXTS'
                   CHANGING  cg_data = lt_nspc_texts ).
 
+    ii_xml->read( EXPORTING iv_name = 'CVERS_REFS'
+                  CHANGING  cg_data = lt_cvers_refs ).
+
     SORT lt_i18n_langs.
     SORT lt_nspc_texts BY spras. " Optimization
+    SORT lt_cvers_refs BY langu. " Optimization
 
     LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
       ls_trnspacett-namespace = iv_namespace.
       READ TABLE lt_nspc_texts ASSIGNING <ls_nspc_text> WITH KEY spras = <lv_lang>.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |NSPC_TEXTS cannot find lang { <lv_lang> } in XML| ).
+        zcx_abapgit_exception=>raise( |Cannot find language { <lv_lang> } in XML| ).
       ENDIF.
       MOVE-CORRESPONDING <ls_nspc_text> TO ls_trnspacett.
 
@@ -97,7 +174,39 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( |Error upserting text for namespace| ).
       ENDIF.
+
+      READ TABLE lt_cvers_refs INTO ls_cvers_ref WITH KEY langu = <lv_lang>.
+      IF sy-subrc = 0.
+        MODIFY cvers_ref FROM ls_cvers_ref.
+        IF sy-subrc <> 0.
+          INSERT cvers_ref FROM ls_cvers_ref.
+        ENDIF.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( |Error upserting text for software component| ).
+        ENDIF.
+      ENDIF.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD serialize_sw_component.
+
+    DATA:
+      ls_cvers     TYPE cvers,
+      ls_cvers_ref TYPE cvers_ref.
+
+    SELECT SINGLE * FROM cvers INTO ls_cvers WHERE component = mv_component.
+    IF sy-subrc = 0.
+      ii_xml->add( iv_name = 'CVERS'
+                   ig_data = ls_cvers ).
+    ENDIF.
+
+    SELECT SINGLE * FROM cvers_ref INTO ls_cvers_ref WHERE component = mv_component AND langu = mv_language.
+    IF sy-subrc = 0.
+      ii_xml->add( iv_name = 'CVERS_REF'
+                   ig_data = ls_cvers_ref ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -107,6 +216,7 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
     DATA:
       ls_trnspacett TYPE trnspacett,
       lt_nspc_texts TYPE ty_nspc_texts,
+      lt_cvers_refs TYPE TABLE OF cvers_ref,
       lt_i18n_langs TYPE TABLE OF langu.
 
     FIELD-SYMBOLS:
@@ -129,10 +239,15 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
         APPEND INITIAL LINE TO lt_nspc_texts ASSIGNING <ls_nspc_text>.
         MOVE-CORRESPONDING ls_trnspacett TO <ls_nspc_text>.
       ENDIF.
+
+      SELECT * FROM cvers_ref APPENDING TABLE lt_cvers_refs
+        WHERE component = mv_component AND langu = <lv_lang>
+        ORDER BY PRIMARY KEY.
     ENDLOOP.
 
     SORT lt_i18n_langs ASCENDING.
     SORT lt_nspc_texts BY spras ASCENDING.
+    SORT lt_cvers_refs.
 
     IF lines( lt_i18n_langs ) > 0.
       ii_xml->add( iv_name = 'I18N_LANGS'
@@ -140,6 +255,9 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
 
       ii_xml->add( iv_name = 'NSPC_TEXTS'
                    ig_data = lt_nspc_texts ).
+
+      ii_xml->add( iv_name = 'CVERS_REFS'
+                   ig_data = lt_cvers_refs ).
     ENDIF.
 
   ENDMETHOD.
@@ -220,6 +338,8 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
 
     deserialize_texts( ii_xml       = io_xml
                        iv_namespace = ls_nspc-namespace ).
+
+    deserialize_sw_component( io_xml ).
 
     " Fill trnspace and trnspacel tables
     CALL FUNCTION 'TR_ACTIVATE_NAMESPACE'
@@ -344,6 +464,8 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
                  ig_data = ls_nspc_text ).
 
     serialize_texts( io_xml ).
+
+    serialize_sw_component( io_xml ).
 
   ENDMETHOD.
 ENDCLASS.
