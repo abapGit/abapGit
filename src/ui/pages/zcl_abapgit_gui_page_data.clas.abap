@@ -123,7 +123,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
       iv_label       = 'Add'
       iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
       iv_action      = c_event-add ).
-    ENDMETHOD.
+  ENDMETHOD.
 
 
   METHOD add_via_transport.
