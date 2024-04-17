@@ -595,7 +595,9 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 * parentcl
 * cli_check
 * intprefx
-    ls_data_sign-dlvunit          = abap_true.
+    IF ls_package_data-dlvunit IS NOT INITIAL.
+      ls_data_sign-dlvunit = abap_true.
+    ENDIF.
     ls_data_sign-ctext            = abap_true.
     ls_data_sign-as4user          = abap_true.
     ls_data_sign-pdevclass        = abap_true.
@@ -869,7 +871,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     CLEAR: ls_package_data-intfprefx,
            ls_package_data-cli_check.
 
-   " If software component is related to add-on and a valid namespace, then keep it
+    " If software component is related to add-on and a valid namespace, then keep it
     adjust_sw_component( CHANGING cv_dlvunit = ls_package_data-dlvunit ).
 
     ASSIGN COMPONENT 'TRANSLATION_DEPTH_TEXT'
