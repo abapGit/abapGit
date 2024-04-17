@@ -215,9 +215,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
     DATA lv_show_used_txt TYPE string.
 
     IF mv_show_used_obj = abap_true.
-      lv_show_used_txt = 'Hide used type'.
+      lv_show_used_txt = 'Hide Used Type'.
     ELSE.
-      lv_show_used_txt = 'Show used type'.
+      lv_show_used_txt = 'Show Used Type'.
     ENDIF.
 
     ro_toolbar = zcl_abapgit_html_toolbar=>create(
