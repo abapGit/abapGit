@@ -206,21 +206,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
-
-    DATA ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
-
-    ls_hotkey_action-ui_component = c_title.
-
-    ls_hotkey_action-description = |Refresh|.
-    ls_hotkey_action-action = c_action-refresh.
-    ls_hotkey_action-hotkey = |r|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-description = |Show used type|.
-    ls_hotkey_action-action = c_action-show_used_obj.
-    ls_hotkey_action-hotkey = |u|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
+    rt_hotkey_actions = zif_abapgit_gui_menu_provider~get_menu( )->get_hotkeys( c_title ).
   ENDMETHOD.
 
 
@@ -236,12 +222,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
     ro_toolbar = zcl_abapgit_html_toolbar=>create(
       )->add(
-        iv_txt   = lv_show_used_txt
-        iv_title = 'Show/Hide used type or object (when available)'
-        iv_act   = c_action-show_used_obj
+        iv_txt    = lv_show_used_txt
+        iv_title  = 'Show/Hide used type or object (when available)'
+        iv_act    = c_action-show_used_obj
+        iv_hotkey = 'u'
       )->add(
-        iv_txt = 'Refresh'
-        iv_act = c_action-refresh ).
+        iv_txt    = 'Refresh'
+        iv_act    = c_action-refresh
+        iv_hotkey = 'r' ).
 
   ENDMETHOD.
 
