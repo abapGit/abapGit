@@ -281,7 +281,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
       WHEN 'dep_obj_name'.
         rs_render-content = <ls_i>-dep_obj_name.
         IF mv_show_used_obj = abap_true.
-           rs_render-content = rs_render-content && |<span class='used-obj'>{ <ls_i>-dep_used_obj }</span>|.
+          rs_render-content = rs_render-content && |<span class='used-obj'>{ <ls_i>-dep_used_obj }</span>|.
         ENDIF.
       WHEN 'obj_type'.
         IF <ls_i>-obj_prog_type IS INITIAL.
