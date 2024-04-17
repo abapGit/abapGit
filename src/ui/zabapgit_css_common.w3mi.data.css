@@ -1194,6 +1194,7 @@ div.default-table-container {
   padding: 6px 0.5em;
   background-color: white;
   border-radius: 6px;
+  overflow-x: hidden;
 }
 
 table.default-table {
@@ -1204,17 +1205,15 @@ table.default-table {
 table.default-table thead tr:last-child {
   border-bottom: #efefef solid 1px;
 }
-/*table.default-table tbody tr {
-  border-bottom: #efefef solid 1px;
-}
-table.default-table tbody tr:last-child {
-  border-bottom: none;
-}*/
 
 table.default-table td,
 table.default-table th {
   padding: 6px 8px;
   text-align: left;
+}
+
+table.default-table th {
+  white-space: nowrap;
 }
 
 table.default-table th span.sort-arrow {
@@ -1652,10 +1651,13 @@ div.wu table thead tr:first-child {
 }
 div.wu table tbody {
   font-size: 90%;
+  vertical-align: baseline; /* for second lines, used type */
 }
-div.wu table td[data-cid="dep_used_obj"] {
+div.wu table td[data-cid="dep_obj_name"] span.used-obj {
+  display: block;
   color: hsl(0, 0%, 70%);
-  font-style: italic;
+  font-size: smaller;
+  text-transform: lowercase;
 }
 div.wu table td[data-gid="where"],
 div.wu table th[data-gid="where"] {

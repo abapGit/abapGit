@@ -35,12 +35,15 @@ CLASS zcl_abapgit_gui_page_whereused DEFINITION
     CONSTANTS:
       BEGIN OF c_action,
         refresh TYPE string VALUE 'refresh',
+        show_used_obj TYPE string VALUE 'show_used_obj',
       END OF c_action.
 
     CONSTANTS c_title TYPE string VALUE 'Where Used'.
     DATA mv_package TYPE devclass.
     DATA mv_ignore_subpackages TYPE abap_bool.
     DATA mi_table TYPE REF TO zcl_abapgit_html_table.
+    DATA mv_show_used_obj TYPE abap_bool.
+    DATA mt_where_used TYPE zcl_abapgit_where_used_tools=>ty_dependency_tt.
 
     METHODS init_table_component
       RAISING
@@ -52,6 +55,9 @@ CLASS zcl_abapgit_gui_page_whereused DEFINITION
     METHODS render_header
       IMPORTING
         ii_html TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+    METHODS run_where_used
       RAISING
         zcx_abapgit_exception.
 
@@ -74,6 +80,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
     IF mv_package IS INITIAL OR zcl_abapgit_factory=>get_sap_package( mv_package )->exists( ) = abap_false.
       zcx_abapgit_exception=>raise( |Package { mv_package } does not exist| ).
     ENDIF.
+
+    run_where_used( ).
 
   ENDMETHOD.
 
@@ -118,10 +126,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
         iv_column_title = 'Type'
       )->define_column(
         iv_column_id    = 'dep_obj_name'
-        iv_column_title = 'Name'
-      )->define_column(
-        iv_column_id    = 'dep_used_obj'
-        iv_column_title = 'Used obj' ).
+        iv_column_title = 'Name' ).
     mi_table->define_column_group(
         iv_group_title = 'Used in'
         iv_group_id    = 'where' " Needed for CSS
@@ -174,6 +179,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD run_where_used.
+    mt_where_used = zcl_abapgit_where_used_tools=>new( )->select_external_usages(
+      iv_ignore_subpackages = mv_ignore_subpackages
+      iv_package            = mv_package ).
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     IF mi_table->process_sorting_request( ii_event->mv_action ) = abap_true.
@@ -183,9 +195,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN c_action-refresh.
+        run_where_used( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN OTHERS.
-        RETURN.
+      WHEN c_action-show_used_obj.
+        mv_show_used_obj = boolc( mv_show_used_obj = abap_false ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.
@@ -202,14 +216,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
     ls_hotkey_action-hotkey = |r|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
+    ls_hotkey_action-description = |Show used type|.
+    ls_hotkey_action-action = c_action-show_used_obj.
+    ls_hotkey_action-hotkey = |u|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
-    ro_toolbar = zcl_abapgit_html_toolbar=>create( )->add(
-      iv_txt = 'Refresh'
-      iv_act = c_action-refresh ).
+    ro_toolbar = zcl_abapgit_html_toolbar=>create(
+      )->add(
+        iv_txt   = 'Show used type'
+        iv_title = 'Show used type or object (when available)'
+        iv_act   = c_action-show_used_obj
+      )->add(
+        iv_txt = 'Refresh'
+        iv_act = c_action-refresh ).
 
   ENDMETHOD.
 
@@ -221,8 +245,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA lt_where_used TYPE zcl_abapgit_where_used_tools=>ty_dependency_tt.
-
     register_handlers( ).
     init_table_component( ).
 
@@ -230,11 +252,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
     render_header( ri_html ).
 
-    lt_where_used = zcl_abapgit_where_used_tools=>new( )->select_external_usages(
-      iv_ignore_subpackages = mv_ignore_subpackages
-      iv_package            = mv_package ).
-
-    IF lt_where_used IS INITIAL.
+    IF mt_where_used IS INITIAL.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_success( 'No usages found' ) ).
     ELSE.
       ri_html->div(
@@ -243,7 +261,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
           iv_wrap_in_div   = 'default-table-container'
           iv_css_class     = 'default-table'
           iv_with_cids     = abap_true
-          it_data          = lt_where_used ) ).
+          it_data          = mt_where_used ) ).
     ENDIF.
 
   ENDMETHOD.
@@ -260,6 +278,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
     ASSIGN is_row TO <ls_i>.
 
     CASE iv_column_id.
+      WHEN 'dep_obj_name'.
+        rs_render-content = <ls_i>-dep_obj_name.
+        IF mv_show_used_obj = abap_true.
+           rs_render-content = rs_render-content && |<span class='used-obj'>{ <ls_i>-dep_used_obj }</span>|.
+        ENDIF.
       WHEN 'obj_type'.
         IF <ls_i>-obj_prog_type IS INITIAL.
           rs_render-content = <ls_i>-obj_type.
