@@ -226,10 +226,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
+    DATA lv_show_used_txt TYPE string.
+
+    IF mv_show_used_obj = abap_true.
+      lv_show_used_txt = 'Hide used type'.
+    ELSE.
+      lv_show_used_txt = 'Show used type'.
+    ENDIF.
+
     ro_toolbar = zcl_abapgit_html_toolbar=>create(
       )->add(
-        iv_txt   = 'Show used type'
-        iv_title = 'Show used type or object (when available)'
+        iv_txt   = lv_show_used_txt
+        iv_title = 'Show/Hide used type or object (when available)'
         iv_act   = c_action-show_used_obj
       )->add(
         iv_txt = 'Refresh'
