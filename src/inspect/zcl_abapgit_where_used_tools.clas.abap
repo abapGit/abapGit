@@ -431,5 +431,12 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
       ir_package_scope = lt_package_scope
       it_tadir         = lt_tadir ).
 
+    SORT rt_objs.
+    DELETE ADJACENT DUPLICATES FROM rt_objs.
+    " Duplicates happen e.g. because where-used is found by method.
+    " However here this functionality aggregates them to the object
+    " These are not true duplicates, so if ever the method name (or any other duplicate cause)
+    " will be extracted, this sort can be removed
+
   ENDMETHOD.
 ENDCLASS.
