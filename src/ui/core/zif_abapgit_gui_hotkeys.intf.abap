@@ -15,6 +15,8 @@ INTERFACE zif_abapgit_gui_hotkeys
 
   METHODS get_hotkey_actions
     RETURNING
-      VALUE(rt_hotkey_actions) TYPE ty_hotkeys_with_descr .
+      VALUE(rt_hotkey_actions) TYPE ty_hotkeys_with_descr
+    RAISING
+      zcx_abapgit_exception.
 
 ENDINTERFACE.
