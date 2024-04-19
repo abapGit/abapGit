@@ -238,6 +238,10 @@ span.transport-box {
   display: inline-block;
 }
 
+span.package-box i.icon {
+  margin-right: 0.15em;
+}
+
 /* MISC AND REFACTOR */
 
 .hidden-submit {
@@ -1164,6 +1168,7 @@ table ul.repo-labels li {
   z-index: 1;
   border: 1px solid;
   padding: 0.4em 0.6em;
+  text-align: justify;
 }
 .form-field-help-tooltip .form-field-help-tooltip-text p {
   margin: 0px;
@@ -1189,6 +1194,7 @@ div.default-table-container {
   padding: 6px 0.5em;
   background-color: white;
   border-radius: 6px;
+  overflow-x: hidden;
 }
 
 table.default-table {
@@ -1196,20 +1202,18 @@ table.default-table {
   width: 100%;
 }
 
-table.default-table thead tr {
+table.default-table thead tr:last-child {
   border-bottom: #efefef solid 1px;
 }
-/*table.default-table tbody tr {
-  border-bottom: #efefef solid 1px;
-}
-table.default-table tbody tr:last-child {
-  border-bottom: none;
-}*/
 
 table.default-table td,
 table.default-table th {
   padding: 6px 8px;
   text-align: left;
+}
+
+table.default-table th {
+  white-space: nowrap;
 }
 
 table.default-table th span.sort-arrow {
@@ -1628,4 +1632,34 @@ table.unit_tests {
 }
 .modal .radio-container label:hover {
   background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* WHERE USED PAGE */
+
+div.wu-header {
+  padding: 8px 0.5em;
+  margin: 0px 0.5em;
+}
+div.wu {
+  padding: 8px 0.5em;
+}
+div.wu table thead tr:first-child {
+  /* TODO: maybe move this to default table style */
+  color: hsl(0, 0%, 80%);
+  text-transform: uppercase;
+  font-size: 90%;
+}
+div.wu table tbody {
+  font-size: 90%;
+  vertical-align: baseline; /* for second lines, used type */
+}
+div.wu table td[data-cid="dep_obj_name"] span.used-obj {
+  display: block;
+  color: hsl(0, 0%, 70%);
+  font-size: smaller;
+  text-transform: lowercase;
+}
+div.wu table td[data-gid="where"],
+div.wu table th[data-gid="where"] {
+  background-color: hsl(0, 0%, 97%);
 }

@@ -115,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
 
   METHOD back.
@@ -412,7 +412,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
     ENDIF.
 
     li_html = mi_cur_page->render( ).
-    lv_html = li_html->render( abap_true ).
+    lv_html = li_html->render( iv_no_indent_jscss = abap_true ).
 
     IF mi_html_processor IS BOUND.
       lv_html = mi_html_processor->process(
