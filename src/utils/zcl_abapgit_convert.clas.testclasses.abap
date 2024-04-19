@@ -365,7 +365,8 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD english.
-    assert_bcp47_to_sap1( from = 'en' to = ltcl_constants=>co_sap1_english ).
+    assert_bcp47_to_sap1( from = 'en' 
+                          to = ltcl_constants=>co_sap1_english ).
   ENDMETHOD.
 
   METHOD english_us.
