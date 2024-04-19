@@ -380,7 +380,8 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD german.
-    assert_bcp47_to_sap1( from = 'de' to = ltcl_constants=>co_sap1_german ).
+    assert_bcp47_to_sap1( from = 'de' 
+                          to = ltcl_constants=>co_sap1_german ).
   ENDMETHOD.
 
   METHOD german_germany.
