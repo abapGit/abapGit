@@ -117,7 +117,7 @@ CLASS lcl_out IMPLEMENTATION.
 ENDCLASS.
 
 CLASS lcl_bcp47_language_table DEFINITION CREATE PRIVATE.
-  		
+
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_language_mapping,
              sap1_code  TYPE sy-langu,
@@ -167,11 +167,17 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD bcp47_to_sap1.
+    DATA language_mapping TYPE ty_language_mapping.
+
     IF language_mappings IS INITIAL OR lines( language_mappings ) = 0.
       fill_language_mappings(  ).
     ENDIF.
 
-    sap1 = language_mappings[ bcp47_code = bcp47 ]-sap1_code.
+    LOOP AT language_mappings INTO language_mapping WHERE bcp47_code = bcp47.
+      IF sap1 IS INITIAL.
+        sap1 = language_mapping-sap1_code.
+      ENDIF.
+    ENDLOOP.
 
     IF sap1 IS INITIAL.
       RAISE no_assignment.
@@ -179,128 +185,608 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD fill_language_mappings.
-    language_mappings = VALUE #(
-      ( bcp47_code = 'af' sap1_code = 'a' )
-      ( bcp47_code = 'sq' sap1_code = '뽑' )
-      ( bcp47_code = 'eu' sap1_code = '먕' )
-      ( bcp47_code = 'bs' sap1_code = '룳' )
-      ( bcp47_code = 'bg' sap1_code = 'W' )
-      ( bcp47_code = 'ca' sap1_code = 'c' )
-      ( bcp47_code = 'zh' sap1_code = '1' )
-      ( bcp47_code = 'zh-Hans' sap1_code = '1' )
-      ( bcp47_code = 'zh-SG' sap1_code = '덃' )
-      ( bcp47_code = 'zh-Hant' sap1_code = 'M' )
-      ( bcp47_code = 'hr' sap1_code = '6' )
-      ( bcp47_code = 'cs' sap1_code = 'C' )
-      ( bcp47_code = 'da' sap1_code = 'K' )
-      ( bcp47_code = 'nl' sap1_code = 'N' )
-      ( bcp47_code = 'nl-NL' sap1_code = 'N' )
-      ( bcp47_code = 'nl-BE' sap1_code = '늄' )
-      ( bcp47_code = 'en' sap1_code = 'E' )
-      ( bcp47_code = 'en-US' sap1_code = 'E' )
-      ( bcp47_code = 'en-GB' sap1_code = '둮' )
-      ( bcp47_code = 'en-AU' sap1_code = '늅' )
-      ( bcp47_code = 'en-BZ' sap1_code = '닥' )
-      ( bcp47_code = 'en-CA' sap1_code = '덅' )
-      ( bcp47_code = 'en-HK' sap1_code = '됅' )
-      ( bcp47_code = 'en-IN' sap1_code = '둥' )
-      ( bcp47_code = 'en-ID' sap1_code = '듅' )
-      ( bcp47_code = 'en-IE' sap1_code = '딥' )
-      ( bcp47_code = 'en-JM' sap1_code = '떅' )
-      ( bcp47_code = 'en-MY' sap1_code = '눥' )
-      ( bcp47_code = 'en-NZ' sap1_code = '늎' )
-      ( bcp47_code = 'en-PH' sap1_code = '닮' )
-      ( bcp47_code = 'en-SG' sap1_code = '덎' )
-      ( bcp47_code = 'en-ZA' sap1_code = '뎮' )
-      ( bcp47_code = 'en-TT' sap1_code = '됎' )
-      ( bcp47_code = 'en-ZW' sap1_code = '듎' )
-      ( bcp47_code = 'et' sap1_code = '9' )
-      ( bcp47_code = 'fi' sap1_code = 'U' )
-      ( bcp47_code = 'fr' sap1_code = 'F' )
-      ( bcp47_code = 'fr-FR' sap1_code = 'F' )
-      ( bcp47_code = 'fr-BE' sap1_code = '늆' )
-      ( bcp47_code = 'fr-CM' sap1_code = '닦' )
-      ( bcp47_code = 'fr-CA' sap1_code = '덆' )
-      ( bcp47_code = 'fr-CG' sap1_code = '뎦' )
-      ( bcp47_code = 'fr-CI' sap1_code = '됆' )
-      ( bcp47_code = 'fr-HT' sap1_code = '둦' )
-      ( bcp47_code = 'fr-LU' sap1_code = '듆' )
-      ( bcp47_code = 'fr-ML' sap1_code = '딦' )
-      ( bcp47_code = 'fr-MC' sap1_code = '떆' )
-      ( bcp47_code = 'fr-MA' sap1_code = '늈' )
-      ( bcp47_code = 'fr-RE' sap1_code = '단' )
-      ( bcp47_code = 'fr-SN' sap1_code = '덈' )
-      ( bcp47_code = 'fr-CH' sap1_code = '뎨' )
-      ( bcp47_code = 'gd' sap1_code = '뫄' )
-      ( bcp47_code = 'gl' sap1_code = '뫌' )
-      ( bcp47_code = 'de' sap1_code = 'D' )
-      ( bcp47_code = 'de-DE' sap1_code = 'D' )
-      ( bcp47_code = 'de-AT' sap1_code = '늇' )
-      ( bcp47_code = 'de-LI' sap1_code = '닧' )
-      ( bcp47_code = 'de-LU' sap1_code = '덇' )
-      ( bcp47_code = 'de-CH' sap1_code = '뎧' )
-      ( bcp47_code = 'el' sap1_code = 'G' )
-      ( bcp47_code = 'he' sap1_code = 'B' )
-      ( bcp47_code = 'hu' sap1_code = 'H' )
-      ( bcp47_code = 'is' sap1_code = 'b' )
-      ( bcp47_code = 'id' sap1_code = 'i' )
-      ( bcp47_code = 'ga' sap1_code = '뫁' )
-      ( bcp47_code = 'it' sap1_code = 'I' )
-      ( bcp47_code = 'it-IT' sap1_code = 'I' )
-      ( bcp47_code = 'it-CH' sap1_code = '늉' )
-      ( bcp47_code = 'ja' sap1_code = 'J' )
-      ( bcp47_code = 'ko' sap1_code = '3' )
-      ( bcp47_code = 'ko-KR' sap1_code = '3' )
-      ( bcp47_code = 'lv' sap1_code = 'Y' )
-      ( bcp47_code = 'lt' sap1_code = 'X' )
-      ( bcp47_code = 'ms' sap1_code = '7' )
-      ( bcp47_code = 'ms-MY' sap1_code = '7' )
-      ( bcp47_code = 'ms-BN' sap1_code = '늍' )
-      ( bcp47_code = 'no' sap1_code = 'O' )
-      ( bcp47_code = 'pl' sap1_code = 'L' )
-      ( bcp47_code = 'pt' sap1_code = 'P' )
-      ( bcp47_code = 'pt-BR' sap1_code = 'P' )
-      ( bcp47_code = 'rm' sap1_code = '뻭' )
-      ( bcp47_code = 'ro' sap1_code = '4' )
-      ( bcp47_code = 'ro-RO' sap1_code = '4' )
-      ( bcp47_code = 'ru-RU' sap1_code = 'R' )
-      ( bcp47_code = 'sr' sap1_code = '0' )
-      ( bcp47_code = 'sr-Cyrl' sap1_code = '0' )
-      ( bcp47_code = 'sr-Latn' sap1_code = 'd' )
-      ( bcp47_code = 'sk' sap1_code = 'Q' )
-      ( bcp47_code = 'sl' sap1_code = '5' )
-      ( bcp47_code = 'wen' sap1_code = '뽂' )
-      ( bcp47_code = 'dsb' sap1_code = '릳' )
-      ( bcp47_code = 'hsb' sap1_code = '묳' )
-      ( bcp47_code = 'es' sap1_code = 'S' )
-      ( bcp47_code = 'es-ES' sap1_code = 'S' )
-      ( bcp47_code = 'es-AR' sap1_code = '늓' )
-      ( bcp47_code = 'es-BO' sap1_code = '닳' )
-      ( bcp47_code = 'es-CL' sap1_code = '덓' )
-      ( bcp47_code = 'es-CO' sap1_code = '눳' )
-      ( bcp47_code = 'es-CR' sap1_code = '뎳' )
-      ( bcp47_code = 'es-DO' sap1_code = '됓' )
-      ( bcp47_code = 'es-EC' sap1_code = '둳' )
-      ( bcp47_code = 'es-SV' sap1_code = '듓' )
-      ( bcp47_code = 'es-GT' sap1_code = '딳' )
-      ( bcp47_code = 'es-HN' sap1_code = '떓' )
-      ( bcp47_code = 'es-MX' sap1_code = '늘' )
-      ( bcp47_code = 'es-NI' sap1_code = '닸' )
-      ( bcp47_code = 'es-PA' sap1_code = '던' )
-      ( bcp47_code = 'es-PY' sap1_code = '뎸' )
-      ( bcp47_code = 'es-PE' sap1_code = '되' )
-      ( bcp47_code = 'es-PR' sap1_code = '둸' )
-      ( bcp47_code = 'es-UY' sap1_code = '듘' )
-      ( bcp47_code = 'es-VE' sap1_code = '딸' )
-      ( bcp47_code = 'sw' sap1_code = '뽗' )
-      ( bcp47_code = 'sv' sap1_code = 'V' )
-      ( bcp47_code = 'tl' sap1_code = '뾬' )
-      ( bcp47_code = 'th' sap1_code = '2' )
-      ( bcp47_code = 'tr' sap1_code = 'T' )
-      ( bcp47_code = 'uk' sap1_code = '8' )
-      ( bcp47_code = 'vi' sap1_code = '쁩' )
-      ( bcp47_code = 'wa' sap1_code = '상' )
-     ).
+    DATA line TYPE ty_language_mapping.
+
+    line-bcp47_code = 'af'.
+    line-sap1_code = 'a'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'sq'.
+    line-sap1_code = '뽑'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'eu'.
+    line-sap1_code = '먕'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'bs'.
+    line-sap1_code = '룳'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'bg'.
+    line-sap1_code = 'W'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'ca'.
+    line-sap1_code = 'c'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'zh'.
+    line-sap1_code = '1'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'zh-Hans'.
+    line-sap1_code = '1'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'zh-SG'.
+    line-sap1_code = '덃'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'zh-Hant'.
+    line-sap1_code = 'M'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'hr'.
+    line-sap1_code = '6'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'cs'.
+    line-sap1_code = 'C'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'da'.
+    line-sap1_code = 'K'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'nl'.
+    line-sap1_code = 'N'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'nl-NL'.
+    line-sap1_code = 'N'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'nl-BE'.
+    line-sap1_code = '늄'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en'.
+    line-sap1_code = 'E'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-US'.
+    line-sap1_code = 'E'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-GB'.
+    line-sap1_code = '둮'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-AU'.
+    line-sap1_code = '늅'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-BZ'.
+    line-sap1_code = '닥'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-CA'.
+    line-sap1_code = '덅'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-HK'.
+    line-sap1_code = '됅'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-IN'.
+    line-sap1_code = '둥'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-ID'.
+    line-sap1_code = '듅'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-IE'.
+    line-sap1_code = '딥'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-JM'.
+    line-sap1_code = '떅'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-MY'.
+    line-sap1_code = '눥'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-NZ'.
+    line-sap1_code = '늎'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-PH'.
+    line-sap1_code = '닮'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-SG'.
+    line-sap1_code = '덎'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-ZA'.
+    line-sap1_code = '뎮'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-TT'.
+    line-sap1_code = '됎'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'en-ZW'.
+    line-sap1_code = '듎'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'et'.
+    line-sap1_code = '9'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fi'.
+    line-sap1_code = 'U'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fr'.
+    line-sap1_code = 'F'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fr-FR'.
+    line-sap1_code = 'F'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fr-BE'.
+    line-sap1_code = '늆'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fr-CM'.
+    line-sap1_code = '닦'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fr-CA'.
+    line-sap1_code = '덆'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fr-CG'.
+    line-sap1_code = '뎦'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fr-CI'.
+    line-sap1_code = '됆'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fr-HT'.
+    line-sap1_code = '둦'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fr-LU'.
+    line-sap1_code = '듆'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fr-ML'.
+    line-sap1_code = '딦'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fr-MC'.
+    line-sap1_code = '떆'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fr-MA'.
+    line-sap1_code = '늈'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fr-RE'.
+    line-sap1_code = '단'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fr-SN'.
+    line-sap1_code = '덈'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'fr-CH'.
+    line-sap1_code = '뎨'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'gd'.
+    line-sap1_code = '뫄'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'gl'.
+    line-sap1_code = '뫌'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'de'.
+    line-sap1_code = 'D'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'de-DE'.
+    line-sap1_code = 'D'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'de-AT'.
+    line-sap1_code = '늇'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'de-LI'.
+    line-sap1_code = '닧'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'de-LU'.
+    line-sap1_code = '덇'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'de-CH'.
+    line-sap1_code = '뎧'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'el'.
+    line-sap1_code = 'G'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'he'.
+    line-sap1_code = 'B'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'hu'.
+    line-sap1_code = 'H'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'is'.
+    line-sap1_code = 'b'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'id'.
+    line-sap1_code = 'i'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'ga'.
+    line-sap1_code = '뫁'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'it'.
+    line-sap1_code = 'I'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'it-IT'.
+    line-sap1_code = 'I'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'it-CH'.
+    line-sap1_code = '늉'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'ja'.
+    line-sap1_code = 'J'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'ko'.
+    line-sap1_code = '3'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'ko-KR'.
+    line-sap1_code = '3'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'lv'.
+    line-sap1_code = 'Y'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'lt'.
+    line-sap1_code = 'X'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'ms'.
+    line-sap1_code = '7'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'ms-MY'.
+    line-sap1_code = '7'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'ms-BN'.
+    line-sap1_code = '늍'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'no'.
+    line-sap1_code = 'O'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'pl'.
+    line-sap1_code = 'L'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'pt'.
+    line-sap1_code = 'P'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'pt-BR'.
+    line-sap1_code = 'P'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'rm'.
+    line-sap1_code = '뻭'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'ro'.
+    line-sap1_code = '4'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'ro-RO'.
+    line-sap1_code = '4'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'ru-RU'.
+    line-sap1_code = 'R'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'sr'.
+    line-sap1_code = '0'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'sr-Cyrl'.
+    line-sap1_code = '0'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'sr-Latn'.
+    line-sap1_code = 'd'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'sk'.
+    line-sap1_code = 'Q'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'sl'.
+    line-sap1_code = '5'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'wen'.
+    line-sap1_code = '뽂'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'dsb'.
+    line-sap1_code = '릳'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'hsb'.
+    line-sap1_code = '묳'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es'.
+    line-sap1_code = 'S'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-ES'.
+    line-sap1_code = 'S'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-AR'.
+    line-sap1_code = '늓'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-BO'.
+    line-sap1_code = '닳'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-CL'.
+    line-sap1_code = '덓'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-CO'.
+    line-sap1_code = '눳'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-CR'.
+    line-sap1_code = '뎳'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-DO'.
+    line-sap1_code = '됓'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-EC'.
+    line-sap1_code = '둳'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-SV'.
+    line-sap1_code = '듓'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-GT'.
+    line-sap1_code = '딳'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-HN'.
+    line-sap1_code = '떓'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-MX'.
+    line-sap1_code = '늘'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-NI'.
+    line-sap1_code = '닸'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-PA'.
+    line-sap1_code = '던'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-PY'.
+    line-sap1_code = '뎸'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-PE'.
+    line-sap1_code = '되'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-PR'.
+    line-sap1_code = '둸'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-UY'.
+    line-sap1_code = '듘'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'es-VE'.
+    line-sap1_code = '딸'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'sw'.
+    line-sap1_code = '뽗'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'sv'.
+    line-sap1_code = 'V'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'tl'.
+    line-sap1_code = '뾬'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'th'.
+    line-sap1_code = '2'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'tr'.
+    line-sap1_code = 'T'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'uk'.
+    line-sap1_code = '8'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'vi'.
+    line-sap1_code = '쁩'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
+    line-bcp47_code = 'wa'.
+    line-sap1_code = '상'.
+    APPEND line TO language_mappings.
+    CLEAR line.
+
   ENDMETHOD.
 
 ENDCLASS.
