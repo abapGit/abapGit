@@ -343,7 +343,8 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
         re_lang_sap1  = result
     ).
 
-    cl_abap_unit_assert=>assert_equals( exp = to act = result ).
+    cl_abap_unit_assert=>assert_equals( exp = to 
+                                        act = result ).
   ENDMETHOD.
 
   METHOD assert_bcp47_to_sap1_fail.
