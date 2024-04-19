@@ -316,6 +316,11 @@ CLASS ltcl_bcp47_to_sap1 DEFINITION FINAL FOR TESTING
     METHODS chinese FOR TESTING RAISING cx_static_check.
     METHODS chinese_singapore FOR TESTING RAISING cx_static_check.
     METHODS chinese_taiwan FOR TESTING RAISING cx_static_check.
+    METHODS no_value FOR TESTING RAISING cx_static_check.
+    METHODS unsupported FOR TESTING RAISING cx_static_check.
+    METHODS unsupported_uppercase FOR TESTING RAISING cx_static_check.
+    METHODS too_many_characters FOR TESTING RAISING cx_static_check.
+    METHODS too_less_characters FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -392,6 +397,26 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
   METHOD chinese_taiwan.
     assert_bcp47_to_sap1( from = 'zh-Hant'
                           to = 'M' ).
+  ENDMETHOD.
+
+  METHOD no_value.
+    assert_bcp47_to_sap1_fail( '' ).
+  ENDMETHOD.
+
+  METHOD unsupported.
+    assert_bcp47_to_sap1_fail( 'xx' ).
+  ENDMETHOD.
+
+  METHOD unsupported_uppercase.
+    assert_bcp47_to_sap1_fail( 'XX' ).
+  ENDMETHOD.
+
+  METHOD too_many_characters.
+    assert_bcp47_to_sap1_fail( 'eng' ).
+  ENDMETHOD.
+
+  METHOD too_less_characters.
+    assert_bcp47_to_sap1_fail( 'e' ).
   ENDMETHOD.
 
 ENDCLASS.
@@ -477,15 +502,15 @@ CLASS ltcl_sap1_to_bcp47 IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD unsupported.
-    assert_sap1_to_bcp47_fail( from = 'x' ).
+    assert_sap1_to_bcp47_fail( 'x' ).
   ENDMETHOD.
 
   METHOD no_value.
-    assert_sap1_to_bcp47_fail( from = ' ' ).
+    assert_sap1_to_bcp47_fail( ' ' ).
   ENDMETHOD.
 
   METHOD empty_value.
-    assert_sap1_to_bcp47_fail( from = '' ).
+    assert_sap1_to_bcp47_fail( '' ).
   ENDMETHOD.
 
 ENDCLASS.
