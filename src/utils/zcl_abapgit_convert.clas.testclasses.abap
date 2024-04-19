@@ -4,19 +4,6 @@
 *
 *----------------------------------------------------------------------*
 
-CLASS ltcl_constants DEFINITION ABSTRACT FINAL FOR TESTING.
-  PUBLIC SECTION.
-    CONSTANTS:
-      co_sap1_english           TYPE sy-langu VALUE 'E',
-      co_sap1_english_gb        TYPE langu VALUE '둮',
-      co_sap1_german            TYPE langu VALUE 'D',
-      co_sap1_german_swiss      TYPE langu VALUE '뎧',
-      co_sap1_spanish           TYPE langu VALUE 'S',
-      co_sap1_chinese           TYPE langu VALUE '1',
-      co_sap1_chinese_taiwan    TYPE langu VALUE 'M',
-      co_sap1_chinese_singapore TYPE langu VALUE '덃'.
-ENDCLASS.
-
 CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
@@ -340,8 +327,7 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
       EXPORTING
         im_lang_bcp47 = from
       RECEIVING
-        re_lang_sap1  = result
-    ).
+        re_lang_sap1  = result ).
 
     cl_abap_unit_assert=>assert_equals( exp = to
                                         act = result ).
@@ -357,8 +343,7 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
         re_lang_sap1  = result
       EXCEPTIONS
         no_assignment = 1
-        OTHERS = 2
-     ).
+        OTHERS = 2 ).
 
     cl_abap_unit_assert=>assert_equals( exp = 1
                                         act = sy-subrc ).
@@ -366,47 +351,47 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
 
   METHOD english.
     assert_bcp47_to_sap1( from = 'en'
-                          to = ltcl_constants=>co_sap1_english ).
+                          to = 'E' ).
   ENDMETHOD.
 
   METHOD english_us.
     assert_bcp47_to_sap1( from = 'en-US'
-                          to = ltcl_constants=>co_sap1_english ).
+                          to = 'E' ).
   ENDMETHOD.
 
   METHOD english_gb.
     assert_bcp47_to_sap1( from = 'en-GB'
-                          to = ltcl_constants=>co_sap1_english_gb ).
+                          to = '둮' ).
   ENDMETHOD.
 
   METHOD german.
     assert_bcp47_to_sap1( from = 'de'
-                          to = ltcl_constants=>co_sap1_german ).
+                          to = 'D' ).
   ENDMETHOD.
 
   METHOD german_germany.
     assert_bcp47_to_sap1( from = 'de-DE'
-                          to = ltcl_constants=>co_sap1_german ).
+                          to = 'D' ).
   ENDMETHOD.
 
   METHOD german_swiss.
     assert_bcp47_to_sap1( from = 'de-CH'
-                          to = ltcl_constants=>co_sap1_german_swiss ).
+                          to = '뎧' ).
   ENDMETHOD.
 
   METHOD chinese.
     assert_bcp47_to_sap1( from = 'zh'
-                          to = ltcl_constants=>co_sap1_chinese ).
+                          to = '1' ).
   ENDMETHOD.
 
   METHOD chinese_singapore.
     assert_bcp47_to_sap1( from = 'zh-SG'
-                          to = ltcl_constants=>co_sap1_chinese_singapore ).
+                          to = '덃' ).
   ENDMETHOD.
 
   METHOD chinese_taiwan.
     assert_bcp47_to_sap1( from = 'zh-Hant'
-                          to = ltcl_constants=>co_sap1_chinese_taiwan ).
+                          to = 'M' ).
   ENDMETHOD.
 
 ENDCLASS.
@@ -444,8 +429,7 @@ CLASS ltcl_sap1_to_bcp47 IMPLEMENTATION.
       EXPORTING
         im_lang_sap1  = from
       RECEIVING
-        re_lang_bcp47 = result
-    ).
+        re_lang_bcp47 = result ).
 
     cl_abap_unit_assert=>assert_equals( exp = to
                                         act = result ).
@@ -461,35 +445,34 @@ CLASS ltcl_sap1_to_bcp47 IMPLEMENTATION.
         re_lang_bcp47 = result
       EXCEPTIONS
         no_assignment = 1
-        OTHERS = 2
-     ).
+        OTHERS = 2 ).
 
     cl_abap_unit_assert=>assert_equals( exp = 1
                                         act = sy-subrc ).
   ENDMETHOD.
 
   METHOD english.
-    assert_sap1_to_bcp47( from = ltcl_constants=>co_sap1_english
+    assert_sap1_to_bcp47( from = 'E'
                           to = 'en' ).
   ENDMETHOD.
 
   METHOD english_gb.
-    assert_sap1_to_bcp47( from = ltcl_constants=>co_sap1_english_gb
+    assert_sap1_to_bcp47( from = '둮'
                           to = 'en-GB' ).
   ENDMETHOD.
 
   METHOD chinese.
-    assert_sap1_to_bcp47( from = ltcl_constants=>co_sap1_chinese
+    assert_sap1_to_bcp47( from = '1'
                           to = 'zh' ).
   ENDMETHOD.
 
   METHOD chinese_singapore.
-    assert_sap1_to_bcp47( from = ltcl_constants=>co_sap1_chinese_singapore
+    assert_sap1_to_bcp47( from = '덃'
                           to = 'zh-SG' ).
   ENDMETHOD.
 
   METHOD chinese_taiwan.
-    assert_sap1_to_bcp47( from = ltcl_constants=>co_sap1_chinese_taiwan
+    assert_sap1_to_bcp47( from = 'M'
                           to = 'zh-Hant' ).
   ENDMETHOD.
 
