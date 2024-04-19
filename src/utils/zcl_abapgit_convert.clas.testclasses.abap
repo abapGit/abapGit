@@ -3,6 +3,20 @@
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
+
+CLASS ltcl_constants DEFINITION ABSTRACT FINAL FOR TESTING.
+  PUBLIC SECTION.
+    CONSTANTS:
+      co_sap1_english           TYPE langu VALUE 'E',
+      co_sap1_english_gb        TYPE langu VALUE '둮',
+      co_sap1_german            TYPE langu VALUE 'D',
+      co_sap1_german_swiss      TYPE langu VALUE '뎧',
+      co_sap1_spanish           TYPE langu VALUE 'S',
+      co_sap1_chinese           TYPE langu VALUE '1',
+      co_sap1_chinese_taiwan    TYPE langu VALUE 'M',
+      co_sap1_chinese_singapore TYPE langu VALUE '덃'.
+ENDCLASS.
+
 CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
@@ -288,6 +302,189 @@ CLASS ltcl_convert IMPLEMENTATION.
                                         act = lt_act
                                         msg = 'Error during string split: LF' ).
 
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_bcp47_to_sap1 DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    METHODS assert_bcp47_to_sap1
+      IMPORTING
+        from TYPE string
+        to   TYPE sy-langu.
+
+    METHODS assert_bcp47_to_sap1_fail
+      IMPORTING
+        from TYPE string.
+
+    METHODS english FOR TESTING RAISING cx_static_check.
+    METHODS english_us FOR TESTING RAISING cx_static_check.
+    METHODS english_gb FOR TESTING RAISING cx_static_check.
+    METHODS german FOR TESTING RAISING cx_static_check.
+    METHODS german_germany FOR TESTING RAISING cx_static_check.
+    METHODS german_swiss FOR TESTING RAISING cx_static_check.
+    METHODS chinese FOR TESTING RAISING cx_static_check.
+    METHODS chinese_singapore FOR TESTING RAISING cx_static_check.
+    METHODS chinese_taiwan FOR TESTING RAISING cx_static_check.
+
+ENDCLASS.
+
+CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
+
+  METHOD assert_bcp47_to_sap1.
+    DATA result TYPE sy-langu.
+    zcl_abapgit_convert=>language_bcp47_to_sap1(
+      EXPORTING
+        im_lang_bcp47 = from
+      RECEIVING
+        re_lang_sap1  = result
+    ).
+
+    cl_abap_unit_assert=>assert_equals( exp = to act = result ).
+  ENDMETHOD.
+
+  METHOD assert_bcp47_to_sap1_fail.
+    DATA result TYPE string.
+
+    zcl_abapgit_convert=>language_bcp47_to_sap1(
+      EXPORTING
+        im_lang_bcp47 = from
+      RECEIVING
+        re_lang_sap1  = result
+      EXCEPTIONS
+        no_assignment = 1
+        OTHERS = 2
+     ).
+
+    cl_abap_unit_assert=>assert_equals( exp = 1 act = sy-subrc ).
+  ENDMETHOD.
+
+  METHOD english.
+    assert_bcp47_to_sap1( from = 'en' to = ltcl_constants=>co_sap1_english ).
+  ENDMETHOD.
+
+  METHOD english_us.
+    assert_bcp47_to_sap1( from = 'en-US' to = ltcl_constants=>co_sap1_english ).
+  ENDMETHOD.
+
+  METHOD english_gb.
+    assert_bcp47_to_sap1( from = 'en-GB' to = ltcl_constants=>co_sap1_english_gb ).
+  ENDMETHOD.
+
+  METHOD german.
+    assert_bcp47_to_sap1( from = 'de' to = ltcl_constants=>co_sap1_german ).
+  ENDMETHOD.
+
+  METHOD german_germany.
+    assert_bcp47_to_sap1( from = 'de-DE' to = ltcl_constants=>co_sap1_german ).
+  ENDMETHOD.
+
+  METHOD german_swiss.
+    assert_bcp47_to_sap1( from = 'de-CH' to = ltcl_constants=>co_sap1_german_swiss ).
+  ENDMETHOD.
+
+  METHOD chinese.
+    assert_bcp47_to_sap1( from = 'zh' to = ltcl_constants=>co_sap1_chinese ).
+  ENDMETHOD.
+
+  METHOD chinese_singapore.
+    assert_bcp47_to_sap1( from = 'zh-SG' to = ltcl_constants=>co_sap1_chinese_singapore ).
+  ENDMETHOD.
+
+  METHOD chinese_taiwan.
+    assert_bcp47_to_sap1( from = 'zh-Hant' to = ltcl_constants=>co_sap1_chinese_taiwan ).
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_sap1_to_bcp47 DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    METHODS assert_sap1_to_bcp47
+      IMPORTING
+        from TYPE sy-langu
+        to   TYPE string.
+
+    METHODS assert_sap1_to_bcp47_fail
+      IMPORTING
+        from TYPE sy-langu.
+
+    METHODS english FOR TESTING RAISING cx_static_check.
+    METHODS english_gb FOR TESTING RAISING cx_static_check.
+    METHODS chinese FOR TESTING RAISING cx_static_check.
+    METHODS chinese_singapore FOR TESTING RAISING cx_static_check.
+    METHODS chinese_taiwan FOR TESTING RAISING cx_static_check.
+    METHODS unsupported FOR TESTING RAISING cx_static_check.
+    METHODS no_value FOR TESTING RAISING cx_static_check.
+    METHODS empty_value FOR TESTING RAISING cx_static_check.
+
+ENDCLASS.
+
+CLASS ltcl_sap1_to_bcp47 IMPLEMENTATION.
+
+  METHOD assert_sap1_to_bcp47.
+    DATA result TYPE string.
+    zcl_abapgit_convert=>language_sap1_to_bcp47(
+      EXPORTING
+        im_lang_sap1  = from
+      RECEIVING
+        re_lang_bcp47 = result
+    ).
+
+    cl_abap_unit_assert=>assert_equals( exp = to act = result ).
+  ENDMETHOD.
+
+  METHOD assert_sap1_to_bcp47_fail.
+    DATA result TYPE string.
+
+    zcl_abapgit_convert=>language_sap1_to_bcp47(
+      EXPORTING
+        im_lang_sap1  = from
+      RECEIVING
+        re_lang_bcp47 = result
+      EXCEPTIONS
+        no_assignment = 1
+        OTHERS = 2
+     ).
+
+    cl_abap_unit_assert=>assert_equals( exp = 1 act = sy-subrc ).
+  ENDMETHOD.
+
+  METHOD english.
+    assert_sap1_to_bcp47( from = ltcl_constants=>co_sap1_english to = 'en' ).
+  ENDMETHOD.
+
+  METHOD english_gb.
+    assert_sap1_to_bcp47( from = ltcl_constants=>co_sap1_english_gb to = 'en-GB' ).
+  ENDMETHOD.
+
+  METHOD chinese.
+    assert_sap1_to_bcp47( from = ltcl_constants=>co_sap1_chinese to = 'zh' ).
+  ENDMETHOD.
+
+  METHOD chinese_singapore.
+    assert_sap1_to_bcp47( from = ltcl_constants=>co_sap1_chinese_singapore to = 'zh-SG' ).
+  ENDMETHOD.
+
+  METHOD chinese_taiwan.
+    assert_sap1_to_bcp47( from = ltcl_constants=>co_sap1_chinese_taiwan to = 'zh-Hant' ).
+  ENDMETHOD.
+
+  METHOD unsupported.
+    assert_sap1_to_bcp47_fail( from = 'x' ).
+  ENDMETHOD.
+
+  METHOD no_value.
+    assert_sap1_to_bcp47_fail( from = ' ' ).
+  ENDMETHOD.
+
+  METHOD empty_value.
+    assert_sap1_to_bcp47_fail( from = '' ).
   ENDMETHOD.
 
 ENDCLASS.

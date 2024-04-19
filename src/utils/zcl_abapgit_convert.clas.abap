@@ -106,6 +106,22 @@ CLASS zcl_abapgit_convert DEFINITION
       EXCEPTIONS
         no_assignment.
 
+    CLASS-METHODS language_sap1_to_bcp47
+      IMPORTING
+        im_lang_sap1         TYPE sy-langu
+      RETURNING
+        VALUE(re_lang_bcp47) TYPE string
+      EXCEPTIONS
+        no_assignment.
+
+    CLASS-METHODS language_bcp47_to_sap1
+      IMPORTING
+        im_lang_bcp47       TYPE string
+      RETURNING
+        VALUE(re_lang_sap1) TYPE sy-langu
+      EXCEPTIONS
+        no_assignment.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS xstring_remove_bom
@@ -183,6 +199,79 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD language_sap1_to_bcp47.
+    TRY.
+        DATA converter_instance TYPE REF TO object.
+
+        DATA converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTER`.
+        CALL METHOD (converter_class_name)=>create_instance
+          RECEIVING
+            result = converter_instance.
+
+        DATA converter_method TYPE string VALUE `IF_AFF_LANGUAGE_CONVERTER~SAP1_TO_BCP47`.
+        CALL METHOD converter_instance->(converter_method)
+          EXPORTING
+            language      = im_lang_sap1
+          RECEIVING
+            result        = re_lang_bcp47
+          EXCEPTIONS
+            no_assignment = 1
+            OTHERS        = 2.
+        IF sy-subrc <> 0.
+          RAISE no_assignment.
+        ENDIF.
+      CATCH cx_sy_dyn_call_error.
+        lcl_bcp47_language_table=>sap1_to_bcp47(
+          EXPORTING
+            sap1          = im_lang_sap1
+          RECEIVING
+            bcp47         = re_lang_bcp47
+          EXCEPTIONS
+            no_assignment = 1
+            OTHERS        = 2
+        ).
+        IF sy-subrc <> 0.
+          RAISE no_assignment.
+        ENDIF.
+    ENDTRY.
+  ENDMETHOD.
+
+  METHOD language_bcp47_to_sap1.
+    TRY.
+        DATA converter_instance TYPE REF TO object.
+
+        DATA converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTER`.
+        CALL METHOD (converter_class_name)=>create_instance
+          RECEIVING
+            result = converter_instance.
+
+        DATA converter_method TYPE string VALUE `IF_AFF_LANGUAGE_CONVERTER~BCP47_TO_SAP1`.
+        CALL METHOD converter_instance->(converter_method)
+          EXPORTING
+            language      = im_lang_bcp47
+          RECEIVING
+            result        = re_lang_sap1
+          EXCEPTIONS
+            no_assignment = 1
+            OTHERS        = 2.
+        IF sy-subrc <> 0.
+          RAISE no_assignment.
+        ENDIF.
+      CATCH cx_sy_dyn_call_error.
+        lcl_bcp47_language_table=>bcp47_to_sap1(
+          EXPORTING
+            bcp47         = im_lang_bcp47
+          RECEIVING
+            sap1          = re_lang_sap1
+          EXCEPTIONS
+            no_assignment = 1
+            OTHERS        = 2
+        ).
+        IF sy-subrc <> 0.
+          RAISE no_assignment.
+        ENDIF.
+    ENDTRY.
+  ENDMETHOD.
 
   METHOD language_sap1_to_sap2.
 
