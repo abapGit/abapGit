@@ -7,7 +7,7 @@
 CLASS ltcl_constants DEFINITION ABSTRACT FINAL FOR TESTING.
   PUBLIC SECTION.
     CONSTANTS:
-      co_sap1_english           TYPE langu VALUE 'E',
+      co_sap1_english           TYPE sy-langu VALUE 'E',
       co_sap1_english_gb        TYPE langu VALUE '둮',
       co_sap1_german            TYPE langu VALUE 'D',
       co_sap1_german_swiss      TYPE langu VALUE '뎧',
