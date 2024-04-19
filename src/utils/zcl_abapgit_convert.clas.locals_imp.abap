@@ -152,7 +152,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     DATA language_mapping TYPE ty_language_mapping.
 
     IF language_mappings IS INITIAL OR lines( language_mappings ) = 0.
-      fill_language_mappings(  ).
+      fill_language_mappings( ).
     ENDIF.
 
     LOOP AT language_mappings INTO language_mapping WHERE sap1_code = sap1.
