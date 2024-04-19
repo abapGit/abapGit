@@ -4,7 +4,8 @@ INTERFACE zif_abapgit_html PUBLIC.
     BEGIN OF ty_data_attr,
       name TYPE string,
       value TYPE string,
-    END OF ty_data_attr.
+    END OF ty_data_attr,
+    ty_data_attrs TYPE STANDARD TABLE OF ty_data_attr WITH KEY name.
 
   CONSTANTS:
     BEGIN OF c_action_type,
@@ -40,7 +41,8 @@ INTERFACE zif_abapgit_html PUBLIC.
 
   METHODS render
     IMPORTING
-      !iv_no_indent_jscss TYPE abap_bool OPTIONAL
+      !iv_no_indent_jscss TYPE abap_bool DEFAULT abap_false
+      !iv_no_line_breaks TYPE abap_bool DEFAULT abap_false
     RETURNING
       VALUE(rv_html)      TYPE string .
 
@@ -111,6 +113,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_hint    TYPE string OPTIONAL
       !iv_format_single_line TYPE abap_bool DEFAULT abap_false
       !is_data_attr TYPE ty_data_attr OPTIONAL
+      !it_data_attrs TYPE ty_data_attrs OPTIONAL
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
 
@@ -123,6 +126,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_hint    TYPE string OPTIONAL
       !iv_format_single_line TYPE abap_bool DEFAULT abap_true
       !is_data_attr TYPE ty_data_attr OPTIONAL
+      !it_data_attrs TYPE ty_data_attrs OPTIONAL
       PREFERRED PARAMETER iv_content
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
@@ -136,6 +140,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_hint    TYPE string OPTIONAL
       !iv_format_single_line TYPE abap_bool DEFAULT abap_true
       !is_data_attr TYPE ty_data_attr OPTIONAL
+      !it_data_attrs TYPE ty_data_attrs OPTIONAL
       PREFERRED PARAMETER iv_content
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
@@ -147,6 +152,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_id      TYPE string OPTIONAL
       !iv_class   TYPE string OPTIONAL
       !is_data_attr TYPE ty_data_attr OPTIONAL
+      !it_data_attrs TYPE ty_data_attrs OPTIONAL
       PREFERRED PARAMETER iv_content
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
