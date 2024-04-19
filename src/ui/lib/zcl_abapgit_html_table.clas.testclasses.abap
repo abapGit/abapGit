@@ -17,6 +17,7 @@ CLASS ltcl_test_simple_table DEFINITION FINAL
     METHODS simple_render FOR TESTING RAISING zcx_abapgit_exception.
     METHODS with_cids FOR TESTING RAISING zcx_abapgit_exception.
     METHODS with_sort FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS with_groups FOR TESTING RAISING zcx_abapgit_exception.
 
     METHODS test_data_set
       RETURNING
@@ -98,7 +99,8 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
       '<th>Col 2</th>' )->add(
       '<th></th>' )->add(
       '</tr>' )->add(
-      '</thead>' )->add(
+      '</thead>' ).
+    li_html_exp->add(
       '<tbody>' )->add(
       '<tr class="r1">' )->add(
       '<td class="cell">Hello</td>' )->add(
@@ -149,7 +151,8 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
       '<th data-cid="col1">Col 1</th>' )->add(
       '<th data-cid="col2">Col 2</th>' )->add(
       '</tr>' )->add(
-      '</thead>' )->add(
+      '</thead>' ).
+    li_html_exp->add(
       '<tbody>' )->add(
       '<tr data-attr="1">' )->add(
       '<td data-cid="col1">Hello</td>' )->add(
@@ -200,12 +203,81 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
       '<table id="with-sort">' )->add(
       '<thead>' )->add(
       '<tr>' )->add(
-      '<th><a href="sapevent:sort_by:col1:dsc">Col 1</a><span class="sort-arrow sort-active">&#x25BE;</span></th>'
-      )->add(
+      '<th><a href="sapevent:sort_by:col1:dsc">Col 1</a>' &&
+        '<span class="sort-arrow sort-active">&#x25BE;</span></th>' )->add(
       '<th><a href="sapevent:sort_by:col2:asc">Col 2</a><span class="sort-arrow">&#x25BE;</span></th>' )->add(
       '<th>Col 3</th>' )->add(
       '</tr>' )->add(
-      '</thead>' )->add(
+      '</thead>' ).
+    li_html_exp->add(
+      '<tbody>' )->add(
+      '<tr>' )->add(
+      '<td>Hello</td>' )->add(
+      '<td>1</td>' )->add(
+      '<td>10</td>' )->add(
+      '</tr>' )->add(
+      '<tr>' )->add(
+      '<td>World</td>' )->add(
+      '<td>2</td>' )->add(
+      '<td>20</td>' )->add(
+      '</tr>' )->add(
+      '</tbody>' )->add(
+      '</table>' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_html_act
+      exp = li_html_exp->render( ) ).
+
+  ENDMETHOD.
+
+  METHOD with_groups.
+
+    DATA lo_tab TYPE REF TO zcl_abapgit_html_table.
+    DATA lv_html_act TYPE string.
+    DATA li_html_exp TYPE REF TO zif_abapgit_html.
+    DATA ls_sort TYPE zif_abapgit_html_table=>ty_sorting_state.
+
+    lo_tab = zcl_abapgit_html_table=>create( me
+      )->define_column_group(
+      )->define_column(
+        iv_column_id    = 'col1'
+        iv_column_title = 'Col 1'
+      )->define_column_group(
+        iv_group_title = 'Group'
+        iv_group_id = ''
+      )->define_column(
+        iv_column_id    = 'col2'
+        iv_column_title = 'Col 2'
+      )->define_column(
+        iv_column_id    = 'col3'
+        iv_column_title = 'Col 3'
+        iv_sortable     = abap_false ).
+
+    ls_sort-column_id = 'col1'.
+
+    lv_html_act = lo_tab->render(
+      is_sorting_state = ls_sort
+      iv_id        = 'with-sort'
+      it_data      = test_data_set( ) )->render( ).
+
+    CREATE OBJECT li_html_exp TYPE zcl_abapgit_html.
+
+    li_html_exp->add(
+      '<table id="with-sort">' )->add(
+      '<thead>' )->add(
+      '<tr>' )->add(
+      '<th></th>' )->add(
+      '<th colspan="2">Group</th>' )->add(
+      '</tr>' ).
+    li_html_exp->add(
+      '<tr>' )->add(
+      '<th><a href="sapevent:sort_by:col1:dsc">Col 1</a>' &&
+        '<span class="sort-arrow sort-active">&#x25BE;</span></th>' )->add(
+      '<th><a href="sapevent:sort_by:col2:asc">Col 2</a><span class="sort-arrow">&#x25BE;</span></th>' )->add(
+      '<th>Col 3</th>' )->add(
+      '</tr>' )->add(
+      '</thead>' ).
+    li_html_exp->add(
       '<tbody>' )->add(
       '<tr>' )->add(
       '<td>Hello</td>' )->add(

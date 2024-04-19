@@ -201,7 +201,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -312,6 +312,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                iv_act = |{ c_actions-go_unit }| ).
     ro_advanced_dropdown->add( iv_txt = 'Run Code Inspector'
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?key={ mv_key }| ).
+    ro_advanced_dropdown->add( iv_txt = 'Where Used'
+                               iv_act = |{ zif_abapgit_definitions=>c_action-where_used }?key={ mv_key }| ).
 
     ro_advanced_dropdown->add( iv_txt = 'Very Advanced'
                                iv_typ = zif_abapgit_html=>c_action_type-separator ).
