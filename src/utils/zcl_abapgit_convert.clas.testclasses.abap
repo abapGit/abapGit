@@ -360,7 +360,8 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
         OTHERS = 2
      ).
 
-    cl_abap_unit_assert=>assert_equals( exp = 1 act = sy-subrc ).
+    cl_abap_unit_assert=>assert_equals( exp = 1 
+                                        act = sy-subrc ).
   ENDMETHOD.
 
   METHOD english.
