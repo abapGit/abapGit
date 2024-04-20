@@ -11,10 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        node-version: '20'
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
     - run: |
         npm install
         npm run eslint
@@ -31,10 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        node-version: '20'
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
     - name: npm install
       run: npm install
     - name: npm run unit
@@ -47,10 +43,8 @@ jobs:
     needs: unit-tests
     timeout-minutes: 10
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        node-version: '20'
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
     - name: npm install
       run: npm install
     - name: start gitea
