@@ -9,11 +9,8 @@ jobs:
   build-merged:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16'
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
     - name: Run npm steps
       run: |
         npm install
@@ -44,12 +41,10 @@ jobs:
     outputs:
       pushedTag: ${{ steps.deploy-release-tag.outputs.pushedTag }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 2
-    - uses: actions/setup-node@v3
-      with:
-        node-version: '16'
+    - uses: actions/setup-node@v4
     - name: deploy-release-tag
       id: deploy-release-tag
       if: github.ref == 'refs/heads/main' && github.repository == 'abapGit/abapGit'
@@ -64,12 +59,12 @@ jobs:
     needs: [build-merged, auto-tag]
     if: github.ref == 'refs/heads/main' && github.repository == 'abapGit/abapGit' && !!needs.auto-tag.outputs.pushedTag
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         repository: abapGit/build
         path: build
         ssh-key: ${{ secrets.DEPLOY_ABAPGIT_BUILD }}
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         path: abapGit
     - name: mirror tag to the artifact
@@ -84,10 +79,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        node-version: '16'
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
     - name: npm run unit
       run: |
         npm install
