@@ -26,6 +26,7 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
         !iv_id         TYPE string OPTIONAL
         !iv_title      TYPE string OPTIONAL
         !iv_class      TYPE string OPTIONAL
+        !iv_hotkey     TYPE string OPTIONAL
         !iv_li_class   TYPE string OPTIONAL
       RETURNING
         VALUE(ro_self) TYPE REF TO zcl_abapgit_html_toolbar .
@@ -47,6 +48,11 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
         !iv_action     TYPE string OPTIONAL
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+    METHODS get_hotkeys
+      IMPORTING
+        iv_component_name TYPE string OPTIONAL
+      RETURNING
+        VALUE(rt_hotkeys) TYPE zif_abapgit_gui_hotkeys=>ty_hotkeys_with_descr.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -65,6 +71,7 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
         title    TYPE string,
         class    TYPE string,
         li_class TYPE string,
+        hotkey   TYPE string,
       END OF ty_item .
     TYPES:
       ty_items TYPE STANDARD TABLE OF ty_item .
@@ -81,7 +88,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
 
 
   METHOD add.
@@ -94,6 +101,8 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
       OR iv_act IS NOT INITIAL AND io_sub IS INITIAL. " Only one supplied
 
     ASSERT NOT ( iv_chk <> abap_undefined AND io_sub IS NOT INITIAL ).
+
+    ASSERT iv_hotkey IS INITIAL OR strlen( iv_hotkey ) = 1.
 
     ls_item-txt   = iv_txt.
     ls_item-act   = iv_act.
@@ -108,6 +117,7 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
     ls_item-title = iv_title.
     ls_item-class = iv_class.
     ls_item-li_class = iv_li_class.
+    ls_item-hotkey   = to_lower( iv_hotkey ).
 
     APPEND ls_item TO mt_items.
 
@@ -120,6 +130,12 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
     mv_id = iv_id.
   ENDMETHOD.
 
+
+  METHOD count_items.
+    rv_count = lines( mt_items ).
+  ENDMETHOD.
+
+
   METHOD create.
     CREATE OBJECT ro_instance
       EXPORTING
@@ -127,8 +143,20 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD count_items.
-    rv_count = lines( mt_items ).
+  METHOD get_hotkeys.
+
+    DATA ls_hotkey_action LIKE LINE OF rt_hotkeys.
+    FIELD-SYMBOLS <ls_i> LIKE LINE OF mt_items.
+
+    ls_hotkey_action-ui_component = iv_component_name.
+
+    LOOP AT mt_items ASSIGNING <ls_i> WHERE hotkey IS NOT INITIAL.
+      ls_hotkey_action-description = <ls_i>-txt.
+      ls_hotkey_action-action      = <ls_i>-act.
+      ls_hotkey_action-hotkey      = <ls_i>-hotkey.
+      INSERT ls_hotkey_action INTO TABLE rt_hotkeys.
+    ENDLOOP.
+
   ENDMETHOD.
 
 
@@ -185,6 +213,8 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
           lv_id          TYPE string,
           lv_check       TYPE string,
           lv_aux         TYPE string,
+          lv_txt         TYPE string,
+          lv_hkidx       TYPE i,
           lv_has_icons   TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_items.
@@ -212,9 +242,29 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
     " Render items
     LOOP AT mt_items ASSIGNING <ls_item>.
       CLEAR: lv_class, lv_class_value, lv_icon.
+      lv_txt = <ls_item>-txt.
+
+      IF <ls_item>-hotkey IS NOT INITIAL.
+        ASSERT strlen( <ls_item>-hotkey ) = 1.
+        lv_hkidx = find(
+          val = lv_txt
+          sub = to_upper( <ls_item>-hotkey ) ).
+        IF lv_hkidx < 0.
+          lv_hkidx = find(
+            val = lv_txt
+            sub = <ls_item>-hotkey ).
+        ENDIF.
+        IF lv_hkidx >= 0.
+          lv_txt = replace(
+            val = lv_txt
+            off = lv_hkidx
+            len = 1
+            with = |<u>{ lv_txt+lv_hkidx(1) }</u>| ).
+        ENDIF.
+      ENDIF.
 
       IF <ls_item>-typ = zif_abapgit_html=>c_action_type-separator.
-        ri_html->add( |<li class="separator">{ <ls_item>-txt }</li>| ).
+        ri_html->add( |<li class="separator">{ lv_txt }</li>| ).
         CONTINUE.
       ENDIF.
 
@@ -250,7 +300,7 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
       ri_html->add( |<li{ lv_class }{ lv_check }{ lv_aux }>| ).
 
       IF <ls_item>-sub IS INITIAL.
-        ri_html->add_a( iv_txt   = lv_icon && <ls_item>-txt
+        ri_html->add_a( iv_txt   = lv_icon && lv_txt
                         iv_typ   = <ls_item>-typ
                         iv_act   = <ls_item>-act
                         iv_id    = <ls_item>-id
@@ -258,7 +308,7 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
                         iv_title = <ls_item>-title
                         iv_class = <ls_item>-class ).
       ELSE.
-        ri_html->add_a( iv_txt   = lv_icon && <ls_item>-txt
+        ri_html->add_a( iv_txt   = lv_icon && lv_txt
                         iv_typ   = zif_abapgit_html=>c_action_type-dummy
                         iv_act   = ''
                         iv_id    = <ls_item>-id
