@@ -8,7 +8,7 @@
     "build": "rm -rf output && abap_transpile test/abap_transpile.json",
     "unit": "npm run build && echo RUNNING && node output/index.mjs",
     "coverage": "npm run unit && c8 node output/index.mjs && c8 report --reporter=html",
-    "integration": "rm -rf output && cp test/abap_transpile.json test/abap_transpile_int.json && sed -i 's/src,deps/test\\\/src,src,deps/g' test/abap_transpile_int.json && abap_transpile test/abap_transpile_int.json && echo RUNNING && node output/index.mjs",
+    "integration": "rm -rf output && cp test/abap_transpile.json test/abap_transpile_int.json && sed -i 's/src,deps/test\\/src,src,deps/g' test/abap_transpile_int.json && abap_transpile test/abap_transpile_int.json && echo RUNNING && node output/index.mjs",
     "abaplint": "abaplint --format codeframe",
     "eslint": "eslint src"
   },
@@ -23,12 +23,13 @@
     ]
   },
   "devDependencies": {
-    "@abaplint/cli": "^2.106.5",
+    "@abaplint/cli": "^2.106.8",
     "@abaplint/database-sqlite": "^2.8.0",
-    "@abaplint/runtime": "^2.8.22",
-    "@abaplint/transpiler-cli": "^2.8.22",
+    "@abaplint/runtime": "^2.8.24",
+    "@abaplint/transpiler-cli": "^2.8.24",
+    "globals": "^15.0.0",
     "abapmerge": "^0.16.0",
     "c8": "^9.1.0",
-    "eslint": "^8.57.0"
+    "eslint": "^9.1.0"
   }
 }
