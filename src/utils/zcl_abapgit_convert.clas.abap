@@ -222,11 +222,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
         ENDIF.
       CATCH cx_sy_dyn_call_error.
         TRY.
-            lcl_bcp47_language_table=>sap1_to_bcp47(
-              EXPORTING
-                im_sap1          = im_lang_sap1
-              RECEIVING
-                re_bcp47         = re_lang_bcp47 ).
+            re_lang_bcp47 = lcl_bcp47_language_table=>sap1_to_bcp47( im_lang_sap1 ).
           CATCH zcx_abapgit_exception.
             RAISE no_assignment.
         ENDTRY.
@@ -262,14 +258,10 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
         ENDIF.
       CATCH cx_sy_dyn_call_error.
         TRY.
-            lcl_bcp47_language_table=>bcp47_to_sap1(
-              EXPORTING
-                im_bcp47         = im_lang_bcp47
-              RECEIVING
-                re_sap1          = re_lang_sap1 ).
+            re_lang_sap1 = lcl_bcp47_language_table=>bcp47_to_sap1( im_lang_bcp47 ).
           CATCH zcx_abapgit_exception.
-            lv_regex = NEW cl_abap_regex( pattern = `[A-Z0-9]{2}`
-                                          ignore_case = abap_false ).
+
+            CREATE OBJECT lv_regex EXPORTING pattern = `[A-Z0-9]{2}`.
             lv_abap_matcher = lv_regex->create_matcher( text = im_lang_bcp47 ).
 
             IF abap_true = lv_abap_matcher->match( ).
