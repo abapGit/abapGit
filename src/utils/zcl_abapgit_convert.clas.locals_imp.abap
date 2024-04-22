@@ -131,15 +131,15 @@ CLASS lcl_bcp47_language_table DEFINITION CREATE PRIVATE.
           im_sap1         TYPE sy-langu
         RETURNING
           VALUE(re_bcp47) TYPE string
-        EXCEPTIONS
-          no_assignment,
+        RAISING
+          zcx_abapgit_exception,
       bcp47_to_sap1
         IMPORTING
           im_bcp47       TYPE string
         RETURNING
           VALUE(re_sap1) TYPE sy-langu
-        EXCEPTIONS
-          no_assignment.
+        RAISING
+          zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS fill_language_mappings.
@@ -162,7 +162,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     ENDLOOP.
 
     IF re_bcp47 IS INITIAL.
-      RAISE no_assignment.
+      zcx_abapgit_exception=>raise( |Could not map SAP1 language code { im_sap1 } to BCP47 language code.| ).
     ENDIF.
   ENDMETHOD.
 
@@ -174,15 +174,13 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     ENDIF.
 
     LOOP AT gv_language_mappings INTO lv_language_mapping.
-      IF to_lower( lv_language_mapping-bcp47_code ) = to_lower( im_bcp47 ).
-        IF re_sap1 IS INITIAL.
-          re_sap1 = lv_language_mapping-sap1_code.
-        ENDIF.
+      IF to_lower( lv_language_mapping-bcp47_code ) = to_lower( im_bcp47 ) AND re_sap1 IS INITIAL.
+        re_sap1 = lv_language_mapping-sap1_code.
       ENDIF.
     ENDLOOP.
 
     IF re_sap1 IS INITIAL.
-      RAISE no_assignment.
+      zcx_abapgit_exception=>raise( |Could not map BCP47 language code { im_bcp47 } to SAP1 language code.| ).
     ENDIF.
   ENDMETHOD.
 

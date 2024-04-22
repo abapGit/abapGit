@@ -221,17 +221,15 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
           RAISE no_assignment.
         ENDIF.
       CATCH cx_sy_dyn_call_error.
-        lcl_bcp47_language_table=>sap1_to_bcp47(
-          EXPORTING
-            im_sap1          = im_lang_sap1
-          RECEIVING
-            re_bcp47         = re_lang_bcp47
-          EXCEPTIONS
-            no_assignment = 1
-            OTHERS        = 2 ).
-        IF sy-subrc <> 0.
-          RAISE no_assignment.
-        ENDIF.
+        TRY.
+            lcl_bcp47_language_table=>sap1_to_bcp47(
+              EXPORTING
+                im_sap1          = im_lang_sap1
+              RECEIVING
+                re_bcp47         = re_lang_bcp47 ).
+          CATCH zcx_abapgit_exception.
+            RAISE no_assignment.
+        ENDTRY.
     ENDTRY.
   ENDMETHOD.
 
@@ -239,7 +237,10 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
     DATA lv_converter_instance TYPE REF TO object.
     DATA lv_converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTER`.
     DATA lv_converter_method TYPE string VALUE `IF_AFF_LANGUAGE_CONVERTER~SAP1_TO_BCP47`.
+
+    DATA lv_regex TYPE REF TO cl_abap_regex.
     DATA lv_abap_matcher TYPE REF TO cl_abap_matcher.
+
     DATA lv_sap1_converter_class TYPE string.
     DATA lv_sap2_lang_code TYPE isola.
 
@@ -260,38 +261,36 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
           RAISE no_assignment.
         ENDIF.
       CATCH cx_sy_dyn_call_error.
-        lcl_bcp47_language_table=>bcp47_to_sap1(
-          EXPORTING
-            im_bcp47         = im_lang_bcp47
-          RECEIVING
-            re_sap1          = re_lang_sap1
-          EXCEPTIONS
-            no_assignment = 1
-            OTHERS        = 2 ).
-        IF ( sy-subrc <> 0 ).
-          lv_sap2_lang_code = im_lang_bcp47.
-          lv_abap_matcher = cl_abap_matcher=>create( pattern     = '[A-Z0-9]{2}'
-                                                     text        = im_lang_bcp47
-                                                     ignore_case = abap_false ).
-
-          IF abap_true = lv_abap_matcher->match( ).
-            "Fallback try to convert from SAP language
-            lv_sap1_converter_class = 'CL_I18N_LANGUAGES'.
-            CALL METHOD (lv_sap1_converter_class)=>sap2_to_sap1
+        TRY.
+            lcl_bcp47_language_table=>bcp47_to_sap1(
               EXPORTING
-                im_lang_sap2  = lv_sap2_lang_code
+                im_bcp47         = im_lang_bcp47
               RECEIVING
-                re_lang_sap1  = re_lang_sap1
-              EXCEPTIONS
-                no_assignment = 1
-                OTHERS        = 2.
-            IF sy-subrc <> 0.
+                re_sap1          = re_lang_sap1 ).
+          CATCH zcx_abapgit_exception.
+            lv_regex = NEW cl_abap_regex( pattern = `[A-Z0-9]{2}`
+                                          ignore_case = abap_false ).
+            lv_abap_matcher = lv_regex->create_matcher( text = im_lang_bcp47 ).
+
+            IF abap_true = lv_abap_matcher->match( ).
+              "Fallback try to convert from SAP language
+              lv_sap1_converter_class = 'CL_I18N_LANGUAGES'.
+              lv_sap2_lang_code = im_lang_bcp47.
+              CALL METHOD (lv_sap1_converter_class)=>sap2_to_sap1
+                EXPORTING
+                  im_lang_sap2  = lv_sap2_lang_code
+                RECEIVING
+                  re_lang_sap1  = re_lang_sap1
+                EXCEPTIONS
+                  no_assignment = 1
+                  OTHERS        = 2.
+              IF sy-subrc <> 0.
+                RAISE no_assignment.
+              ENDIF.
+            ELSE.
               RAISE no_assignment.
             ENDIF.
-          ELSE.
-            RAISE no_assignment.
-          ENDIF.
-        ENDIF.
+        ENDTRY.
     ENDTRY.
   ENDMETHOD.
 
