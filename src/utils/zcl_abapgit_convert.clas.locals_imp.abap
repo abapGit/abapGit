@@ -193,17 +193,17 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     CLEAR line.
 
     line-bcp47_code = 'sq'.
-    line-sap1_code = '뽑'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BF51' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'eu'.
-    line-sap1_code = '먕'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BA15' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'bs'.
-    line-sap1_code = '룳'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B8F3' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
@@ -228,7 +228,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     CLEAR line.
 
     line-bcp47_code = 'zh-SG'.
-    line-sap1_code = '덃'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B343' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
@@ -263,7 +263,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     CLEAR line.
 
     line-bcp47_code = 'nl-BE'.
-    line-sap1_code = '늄'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B284' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
@@ -278,82 +278,82 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     CLEAR line.
 
     line-bcp47_code = 'en-GB'.
-    line-sap1_code = '둮'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B46E' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'en-AU'.
-    line-sap1_code = '늅'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B285' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'en-BZ'.
-    line-sap1_code = '닥'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B2E5' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'en-CA'.
-    line-sap1_code = '덅'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B345' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'en-HK'.
-    line-sap1_code = '됅'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B405' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'en-IN'.
-    line-sap1_code = '둥'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B465' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'en-ID'.
-    line-sap1_code = '듅'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B4C5' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'en-IE'.
-    line-sap1_code = '딥'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B525' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'en-JM'.
-    line-sap1_code = '떅'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B585' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'en-MY'.
-    line-sap1_code = '눥'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B225' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'en-NZ'.
-    line-sap1_code = '늎'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B28E' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'en-PH'.
-    line-sap1_code = '닮'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B2EE' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'en-SG'.
-    line-sap1_code = '덎'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B34E' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'en-ZA'.
-    line-sap1_code = '뎮'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B3AE' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'en-TT'.
-    line-sap1_code = '됎'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B40E' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'en-ZW'.
-    line-sap1_code = '듎'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B4CE' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
@@ -378,77 +378,77 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     CLEAR line.
 
     line-bcp47_code = 'fr-BE'.
-    line-sap1_code = '늆'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B286' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'fr-CM'.
-    line-sap1_code = '닦'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B2E6' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'fr-CA'.
-    line-sap1_code = '덆'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B346' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'fr-CG'.
-    line-sap1_code = '뎦'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B3A6' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'fr-CI'.
-    line-sap1_code = '됆'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B406' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'fr-HT'.
-    line-sap1_code = '둦'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B466' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'fr-LU'.
-    line-sap1_code = '듆'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B4C6' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'fr-ML'.
-    line-sap1_code = '딦'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B526' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'fr-MC'.
-    line-sap1_code = '떆'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B586' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'fr-MA'.
-    line-sap1_code = '늈'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B288' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'fr-RE'.
-    line-sap1_code = '단'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B2E8' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'fr-SN'.
-    line-sap1_code = '덈'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B348' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'fr-CH'.
-    line-sap1_code = '뎨'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B3A8' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'gd'.
-    line-sap1_code = '뫄'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BAC4' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'gl'.
-    line-sap1_code = '뫌'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BACC' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
@@ -463,22 +463,22 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     CLEAR line.
 
     line-bcp47_code = 'de-AT'.
-    line-sap1_code = '늇'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B287' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'de-LI'.
-    line-sap1_code = '닧'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B2E7' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'de-LU'.
-    line-sap1_code = '덇'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B347' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'de-CH'.
-    line-sap1_code = '뎧'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B3A7' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
@@ -508,7 +508,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     CLEAR line.
 
     line-bcp47_code = 'ga'.
-    line-sap1_code = '뫁'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BAC1' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
@@ -523,7 +523,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     CLEAR line.
 
     line-bcp47_code = 'it-CH'.
-    line-sap1_code = '늉'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B289' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
@@ -563,7 +563,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     CLEAR line.
 
     line-bcp47_code = 'ms-BN'.
-    line-sap1_code = '늍'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B28D' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
@@ -588,7 +588,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     CLEAR line.
 
     line-bcp47_code = 'rm'.
-    line-sap1_code = '뻭'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BEED' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
@@ -633,17 +633,17 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     CLEAR line.
 
     line-bcp47_code = 'wen'.
-    line-sap1_code = '뽂'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BF42' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'dsb'.
-    line-sap1_code = '릳'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B9B3' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'hsb'.
-    line-sap1_code = '묳'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BB33' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
@@ -658,97 +658,97 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     CLEAR line.
 
     line-bcp47_code = 'es-AR'.
-    line-sap1_code = '늓'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B293' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-BO'.
-    line-sap1_code = '닳'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B2F3' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-CL'.
-    line-sap1_code = '덓'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B353' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-CO'.
-    line-sap1_code = '눳'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B233' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-CR'.
-    line-sap1_code = '뎳'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B3B3' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-DO'.
-    line-sap1_code = '됓'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B413' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-EC'.
-    line-sap1_code = '둳'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B473' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-SV'.
-    line-sap1_code = '듓'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B4D3' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-GT'.
-    line-sap1_code = '딳'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B533' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-HN'.
-    line-sap1_code = '떓'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B593' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-MX'.
-    line-sap1_code = '늘'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B298' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-NI'.
-    line-sap1_code = '닸'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B2F8' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-PA'.
-    line-sap1_code = '던'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B358' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-PY'.
-    line-sap1_code = '뎸'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B3B8' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-PE'.
-    line-sap1_code = '되'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B418' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-PR'.
-    line-sap1_code = '둸'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B478' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-UY'.
-    line-sap1_code = '듘'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B4D8' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'es-VE'.
-    line-sap1_code = '딸'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B538' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'sw'.
-    line-sap1_code = '뽗'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BF57' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
@@ -758,7 +758,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     CLEAR line.
 
     line-bcp47_code = 'tl'.
-    line-sap1_code = '뾬'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BFAC' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
@@ -778,12 +778,12 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     CLEAR line.
 
     line-bcp47_code = 'vi'.
-    line-sap1_code = '쁩'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'C069' ).
     APPEND line TO language_mappings.
     CLEAR line.
 
     line-bcp47_code = 'wa'.
-    line-sap1_code = '상'.
+    line-sap1_code = cl_abap_conv_in_ce=>uccp( 'C0C1' ).
     APPEND line TO language_mappings.
     CLEAR line.
 

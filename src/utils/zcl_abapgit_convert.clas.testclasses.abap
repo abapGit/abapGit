@@ -365,8 +365,11 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD english_gb.
+    DATA to TYPE sy-langu.
+    to = cl_abap_conv_in_ce=>uccp( 'B46E' ).
+
     assert_bcp47_to_sap1( from = 'en-GB'
-                          to = '둮' ).
+                          to = to ).
   ENDMETHOD.
 
   METHOD german.
@@ -380,8 +383,11 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD german_swiss.
+    DATA to TYPE sy-langu.
+    to = cl_abap_conv_in_ce=>uccp( 'B3A7' ).
+
     assert_bcp47_to_sap1( from = 'de-CH'
-                          to = '뎧' ).
+                          to = to ).
   ENDMETHOD.
 
   METHOD chinese.
@@ -390,8 +396,11 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD chinese_singapore.
+    DATA to TYPE sy-langu.
+    to = cl_abap_conv_in_ce=>uccp( 'B343' ).
+
     assert_bcp47_to_sap1( from = 'zh-SG'
-                          to = '덃' ).
+                          to = to ).
   ENDMETHOD.
 
   METHOD chinese_taiwan.
@@ -482,7 +491,10 @@ CLASS ltcl_sap1_to_bcp47 IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD english_gb.
-    assert_sap1_to_bcp47( from = '둮'
+    DATA from TYPE sy-langu.
+    from = cl_abap_conv_in_ce=>uccp( 'B46E' ).
+
+    assert_sap1_to_bcp47( from = from
                           to = 'en-GB' ).
   ENDMETHOD.
 
@@ -492,7 +504,10 @@ CLASS ltcl_sap1_to_bcp47 IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD chinese_singapore.
-    assert_sap1_to_bcp47( from = '덃'
+    DATA from TYPE sy-langu.
+    from = cl_abap_conv_in_ce=>uccp( 'B343' ).
+
+    assert_sap1_to_bcp47( from = from
                           to = 'zh-SG' ).
   ENDMETHOD.
 
