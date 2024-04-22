@@ -300,12 +300,12 @@ CLASS ltcl_bcp47_to_sap1 DEFINITION FINAL FOR TESTING
   PRIVATE SECTION.
     METHODS assert_bcp47_to_sap1
       IMPORTING
-        from TYPE string
-        to   TYPE sy-langu.
+        im_from TYPE string
+        im_to   TYPE sy-langu.
 
     METHODS assert_bcp47_to_sap1_fail
       IMPORTING
-        from TYPE string.
+        im_from TYPE string.
 
     METHODS english FOR TESTING RAISING cx_static_check.
     METHODS english_us FOR TESTING RAISING cx_static_check.
@@ -321,31 +321,32 @@ CLASS ltcl_bcp47_to_sap1 DEFINITION FINAL FOR TESTING
     METHODS unsupported_uppercase FOR TESTING RAISING cx_static_check.
     METHODS too_many_characters FOR TESTING RAISING cx_static_check.
     METHODS too_less_characters FOR TESTING RAISING cx_static_check.
+    METHODS english_gb_uppercase FOR TESTING RAISING cx_static_check.
+    METHODS english_uppercase FOR TESTING RAISING cx_static_check.
+    METHODS chinese_uppercase FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
 CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
 
   METHOD assert_bcp47_to_sap1.
-    DATA result TYPE sy-langu.
-    zcl_abapgit_convert=>language_bcp47_to_sap1(
+    DATA lv_result TYPE sy-langu.
+    lv_result = zcl_abapgit_convert=>language_bcp47_to_sap1(
       EXPORTING
-        im_lang_bcp47 = from
-      RECEIVING
-        re_lang_sap1  = result ).
+        im_lang_bcp47 = im_from ).
 
-    cl_abap_unit_assert=>assert_equals( exp = to
-                                        act = result ).
+    cl_abap_unit_assert=>assert_equals( exp = im_to
+                                        act = lv_result ).
   ENDMETHOD.
 
   METHOD assert_bcp47_to_sap1_fail.
-    DATA result TYPE string.
+    DATA lv_result TYPE string.
 
     zcl_abapgit_convert=>language_bcp47_to_sap1(
       EXPORTING
-        im_lang_bcp47 = from
+        im_lang_bcp47 = im_from
       RECEIVING
-        re_lang_sap1  = result
+        re_lang_sap1  = lv_result
       EXCEPTIONS
         no_assignment = 1
         OTHERS = 2 ).
@@ -355,57 +356,75 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD english.
-    assert_bcp47_to_sap1( from = 'en'
-                          to = 'E' ).
+    assert_bcp47_to_sap1( im_from = 'en'
+                          im_to = 'E' ).
+  ENDMETHOD.
+
+  METHOD english_uppercase.
+    assert_bcp47_to_sap1( im_from = 'EN'
+                          im_to = 'E' ).
   ENDMETHOD.
 
   METHOD english_us.
-    assert_bcp47_to_sap1( from = 'en-US'
-                          to = 'E' ).
+    assert_bcp47_to_sap1( im_from = 'en-US'
+                          im_to = 'E' ).
   ENDMETHOD.
 
   METHOD english_gb.
-    DATA to TYPE sy-langu.
-    to = cl_abap_conv_in_ce=>uccp( 'B46E' ).
+    DATA lv_to TYPE sy-langu.
+    lv_to = cl_abap_conv_in_ce=>uccp( 'B46E' ).
 
-    assert_bcp47_to_sap1( from = 'en-GB'
-                          to = to ).
+    assert_bcp47_to_sap1( im_from = 'en-GB'
+                          im_to = lv_to ).
+  ENDMETHOD.
+
+  METHOD english_gb_uppercase.
+    DATA lv_to TYPE sy-langu.
+    lv_to = cl_abap_conv_in_ce=>uccp( 'B46E' ).
+
+    assert_bcp47_to_sap1( im_from = '6N'
+                          im_to = lv_to ).
   ENDMETHOD.
 
   METHOD german.
-    assert_bcp47_to_sap1( from = 'de'
-                          to = 'D' ).
+    assert_bcp47_to_sap1( im_from = 'de'
+                          im_to = 'D' ).
   ENDMETHOD.
 
   METHOD german_germany.
-    assert_bcp47_to_sap1( from = 'de-DE'
-                          to = 'D' ).
+    assert_bcp47_to_sap1( im_from = 'de-DE'
+                          im_to = 'D' ).
   ENDMETHOD.
 
   METHOD german_swiss.
-    DATA to TYPE sy-langu.
-    to = cl_abap_conv_in_ce=>uccp( 'B3A7' ).
+    DATA lv_to TYPE sy-langu.
+    lv_to = cl_abap_conv_in_ce=>uccp( 'B3A7' ).
 
-    assert_bcp47_to_sap1( from = 'de-CH'
-                          to = to ).
+    assert_bcp47_to_sap1( im_from = 'de-CH'
+                          im_to = lv_to ).
   ENDMETHOD.
 
   METHOD chinese.
-    assert_bcp47_to_sap1( from = 'zh'
-                          to = '1' ).
+    assert_bcp47_to_sap1( im_from = 'zh'
+                          im_to = '1' ).
+  ENDMETHOD.
+
+  METHOD chinese_uppercase.
+    assert_bcp47_to_sap1( im_from = 'ZH'
+                          im_to = '1' ).
   ENDMETHOD.
 
   METHOD chinese_singapore.
-    DATA to TYPE sy-langu.
-    to = cl_abap_conv_in_ce=>uccp( 'B343' ).
+    DATA lv_to TYPE sy-langu.
+    lv_to = cl_abap_conv_in_ce=>uccp( 'B343' ).
 
-    assert_bcp47_to_sap1( from = 'zh-SG'
-                          to = to ).
+    assert_bcp47_to_sap1( im_from = 'zh-SG'
+                          im_to = lv_to ).
   ENDMETHOD.
 
   METHOD chinese_taiwan.
-    assert_bcp47_to_sap1( from = 'zh-Hant'
-                          to = 'M' ).
+    assert_bcp47_to_sap1( im_from = 'zh-Hant'
+                          im_to = 'M' ).
   ENDMETHOD.
 
   METHOD no_value.
@@ -437,12 +456,12 @@ CLASS ltcl_sap1_to_bcp47 DEFINITION FINAL FOR TESTING
   PRIVATE SECTION.
     METHODS assert_sap1_to_bcp47
       IMPORTING
-        from TYPE sy-langu
-        to   TYPE string.
+        im_from TYPE sy-langu
+        im_to   TYPE string.
 
     METHODS assert_sap1_to_bcp47_fail
       IMPORTING
-        from TYPE sy-langu.
+        im_from TYPE sy-langu.
 
     METHODS english FOR TESTING RAISING cx_static_check.
     METHODS english_gb FOR TESTING RAISING cx_static_check.
@@ -458,25 +477,23 @@ ENDCLASS.
 CLASS ltcl_sap1_to_bcp47 IMPLEMENTATION.
 
   METHOD assert_sap1_to_bcp47.
-    DATA result TYPE string.
-    zcl_abapgit_convert=>language_sap1_to_bcp47(
+    DATA lv_result TYPE string.
+    lv_result = zcl_abapgit_convert=>language_sap1_to_bcp47(
       EXPORTING
-        im_lang_sap1  = from
-      RECEIVING
-        re_lang_bcp47 = result ).
+        im_lang_sap1  = im_from ).
 
-    cl_abap_unit_assert=>assert_equals( exp = to
-                                        act = result ).
+    cl_abap_unit_assert=>assert_equals( exp = im_to
+                                        act = lv_result ).
   ENDMETHOD.
 
   METHOD assert_sap1_to_bcp47_fail.
-    DATA result TYPE string.
+    DATA lv_result TYPE string.
 
     zcl_abapgit_convert=>language_sap1_to_bcp47(
       EXPORTING
-        im_lang_sap1  = from
+        im_lang_sap1  = im_from
       RECEIVING
-        re_lang_bcp47 = result
+        re_lang_bcp47 = lv_result
       EXCEPTIONS
         no_assignment = 1
         OTHERS = 2 ).
@@ -486,34 +503,34 @@ CLASS ltcl_sap1_to_bcp47 IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD english.
-    assert_sap1_to_bcp47( from = 'E'
-                          to = 'en' ).
+    assert_sap1_to_bcp47( im_from = 'E'
+                          im_to = 'en' ).
   ENDMETHOD.
 
   METHOD english_gb.
-    DATA from TYPE sy-langu.
-    from = cl_abap_conv_in_ce=>uccp( 'B46E' ).
+    DATA lv_from TYPE sy-langu.
+    lv_from = cl_abap_conv_in_ce=>uccp( 'B46E' ).
 
-    assert_sap1_to_bcp47( from = from
-                          to = 'en-GB' ).
+    assert_sap1_to_bcp47( im_from = lv_from
+                          im_to = 'en-GB' ).
   ENDMETHOD.
 
   METHOD chinese.
-    assert_sap1_to_bcp47( from = '1'
-                          to = 'zh' ).
+    assert_sap1_to_bcp47( im_from = '1'
+                          im_to = 'zh' ).
   ENDMETHOD.
 
   METHOD chinese_singapore.
-    DATA from TYPE sy-langu.
-    from = cl_abap_conv_in_ce=>uccp( 'B343' ).
+    DATA lv_from TYPE sy-langu.
+    lv_from = cl_abap_conv_in_ce=>uccp( 'B343' ).
 
-    assert_sap1_to_bcp47( from = from
-                          to = 'zh-SG' ).
+    assert_sap1_to_bcp47( im_from = lv_from
+                          im_to = 'zh-SG' ).
   ENDMETHOD.
 
   METHOD chinese_taiwan.
-    assert_sap1_to_bcp47( from = 'M'
-                          to = 'zh-Hant' ).
+    assert_sap1_to_bcp47( im_from = 'M'
+                          im_to = 'zh-Hant' ).
   ENDMETHOD.
 
   METHOD unsupported.
