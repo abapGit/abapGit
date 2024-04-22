@@ -307,23 +307,23 @@ CLASS ltcl_bcp47_to_sap1 DEFINITION FINAL FOR TESTING
       IMPORTING
         im_from TYPE string.
 
-    METHODS english FOR TESTING RAISING cx_static_check.
-    METHODS english_us FOR TESTING RAISING cx_static_check.
-    METHODS english_gb FOR TESTING RAISING cx_static_check.
-    METHODS german FOR TESTING RAISING cx_static_check.
-    METHODS german_germany FOR TESTING RAISING cx_static_check.
-    METHODS german_swiss FOR TESTING RAISING cx_static_check.
-    METHODS chinese FOR TESTING RAISING cx_static_check.
-    METHODS chinese_singapore FOR TESTING RAISING cx_static_check.
-    METHODS chinese_taiwan FOR TESTING RAISING cx_static_check.
-    METHODS no_value FOR TESTING RAISING cx_static_check.
-    METHODS unsupported FOR TESTING RAISING cx_static_check.
-    METHODS unsupported_uppercase FOR TESTING RAISING cx_static_check.
-    METHODS too_many_characters FOR TESTING RAISING cx_static_check.
-    METHODS too_less_characters FOR TESTING RAISING cx_static_check.
-    METHODS english_gb_uppercase FOR TESTING RAISING cx_static_check.
-    METHODS english_uppercase FOR TESTING RAISING cx_static_check.
-    METHODS chinese_uppercase FOR TESTING RAISING cx_static_check.
+    METHODS english FOR TESTING.
+    METHODS english_us FOR TESTING.
+    METHODS english_gb FOR TESTING.
+    METHODS german FOR TESTING.
+    METHODS german_germany FOR TESTING.
+    METHODS german_swiss FOR TESTING.
+    METHODS chinese FOR TESTING.
+    METHODS chinese_singapore FOR TESTING.
+    METHODS chinese_taiwan FOR TESTING.
+    METHODS no_value FOR TESTING.
+    METHODS unsupported FOR TESTING.
+    METHODS unsupported_uppercase FOR TESTING.
+    METHODS too_many_characters FOR TESTING.
+    METHODS too_less_characters FOR TESTING.
+    METHODS english_gb_uppercase FOR TESTING.
+    METHODS english_uppercase FOR TESTING.
+    METHODS chinese_uppercase FOR TESTING.
 
 ENDCLASS.
 
@@ -461,14 +461,14 @@ CLASS ltcl_sap1_to_bcp47 DEFINITION FINAL FOR TESTING
       IMPORTING
         im_from TYPE sy-langu.
 
-    METHODS english FOR TESTING RAISING cx_static_check.
-    METHODS english_gb FOR TESTING RAISING cx_static_check.
-    METHODS chinese FOR TESTING RAISING cx_static_check.
-    METHODS chinese_singapore FOR TESTING RAISING cx_static_check.
-    METHODS chinese_taiwan FOR TESTING RAISING cx_static_check.
-    METHODS unsupported FOR TESTING RAISING cx_static_check.
-    METHODS no_value FOR TESTING RAISING cx_static_check.
-    METHODS empty_value FOR TESTING RAISING cx_static_check.
+    METHODS english FOR TESTING.
+    METHODS english_gb FOR TESTING.
+    METHODS chinese FOR TESTING.
+    METHODS chinese_singapore FOR TESTING.
+    METHODS chinese_taiwan FOR TESTING.
+    METHODS unsupported FOR TESTING.
+    METHODS no_value FOR TESTING.
+    METHODS empty_value FOR TESTING.
 
 ENDCLASS.
 
