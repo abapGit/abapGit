@@ -331,9 +331,7 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
 
   METHOD assert_bcp47_to_sap1.
     DATA lv_result TYPE sy-langu.
-    lv_result = zcl_abapgit_convert=>language_bcp47_to_sap1(
-      EXPORTING
-        im_lang_bcp47 = im_from ).
+    lv_result = zcl_abapgit_convert=>language_bcp47_to_sap1( im_from ).
 
     cl_abap_unit_assert=>assert_equals( exp = im_to
                                         act = lv_result ).

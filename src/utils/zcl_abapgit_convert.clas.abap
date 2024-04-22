@@ -108,7 +108,7 @@ CLASS zcl_abapgit_convert DEFINITION
 
     CLASS-METHODS language_sap1_to_bcp47
       IMPORTING
-        im_lang_sap1  TYPE sy-langu
+        im_lang_sap1         TYPE sy-langu
       RETURNING
         VALUE(re_lang_bcp47) TYPE string
       EXCEPTIONS
@@ -239,6 +239,8 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
     DATA lv_converter_instance TYPE REF TO object.
     DATA lv_converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTER`.
     DATA lv_converter_method TYPE string VALUE `IF_AFF_LANGUAGE_CONVERTER~SAP1_TO_BCP47`.
+    DATA lv_sap1_converter_class TYPE string.
+    DATA lv_sap2_lang_code TYPE isola.
 
     TRY.
         CALL METHOD (lv_converter_class_name)=>create_instance
@@ -266,18 +268,22 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
             no_assignment = 1
             OTHERS        = 2 ).
         IF ( sy-subrc <> 0 ).
-          IF ( matches( val = im_lang_bcp47 pcre = `[A-Z0-9]{2}` ) ).
+          lv_sap2_lang_code = CONV #( im_lang_bcp47 ).
+          DATA(matcher) = cl_abap_matcher=>create( pattern     = '[A-Z0-9]{2}'
+                                                   text        = im_lang_bcp47
+                                                   ignore_case = abap_false ).
+
+          IF abap_true = matcher->match( ).
             "Fallback try to convert from SAP language
-            cl_i18n_languages=>sap2_to_sap1(
+            lv_sap1_converter_class = 'CL_I18N_LANGUAGES'.
+            CALL METHOD (lv_sap1_converter_class)=>sap2_to_sap1
               EXPORTING
-                im_lang_sap2      = CONV #( im_lang_bcp47 )
+                im_lang_sap2  = lv_sap2_lang_code
               RECEIVING
-                re_lang_sap1      = re_lang_sap1
+                re_lang_sap1  = re_lang_sap1
               EXCEPTIONS
-                no_assignment     = 1
-                no_representation = 2
-                OTHERS            = 3
-            ).
+                no_assignment = 1
+                OTHERS        = 2.
             IF sy-subrc <> 0.
               RAISE no_assignment.
             ENDIF.
