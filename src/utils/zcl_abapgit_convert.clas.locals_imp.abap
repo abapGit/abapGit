@@ -143,6 +143,13 @@ CLASS lcl_bcp47_language_table DEFINITION CREATE PRIVATE.
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS fill_language_mappings.
+    CLASS-METHODS fill_language_mappings_1.
+    CLASS-METHODS fill_language_mappings_2.
+    CLASS-METHODS
+      fill_language_mapping
+        IMPORTING
+          im_sap1  TYPE string
+          im_bcp47 TYPE string.
 
 ENDCLASS.
 
@@ -184,609 +191,392 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD fill_language_mappings.
+  METHOD fill_language_mapping.
     DATA lv_line TYPE ty_language_mapping.
+    DATA lv_sap1 TYPE sy-langu.
 
-    lv_line-bcp47_code = 'af'.
-    lv_line-sap1_code = 'a'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    IF strlen( im_sap1 ) = 4.
+      lv_sap1 = cl_abap_conv_in_ce=>uccp( im_sap1 ).
+    ELSEIF strlen( im_sap1 ) = 1.
+      lv_sap1 = im_sap1.
+    ENDIF.
 
-    lv_line-bcp47_code = 'sq'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BF51' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    lv_line-bcp47_code = im_bcp47.
+    lv_line-sap1_code = lv_sap1.
 
-    lv_line-bcp47_code = 'eu'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BA15' ).
     APPEND lv_line TO gv_language_mappings.
     CLEAR lv_line.
+  ENDMETHOD.
 
-    lv_line-bcp47_code = 'bs'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B8F3' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+  METHOD fill_language_mappings.
+    " table is filled with two separate methods to comply
+    " with https://rules.abaplint.org/method_length/
+    fill_language_mappings_1( ).
+    fill_language_mappings_2( ).
+  ENDMETHOD.
 
-    lv_line-bcp47_code = 'bg'.
-    lv_line-sap1_code = 'W'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+  METHOD fill_language_mappings_1.
+    fill_language_mapping( im_sap1  = 'a'
+                           im_bcp47 = 'af' ).
 
-    lv_line-bcp47_code = 'ca'.
-    lv_line-sap1_code = 'c'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'BF51'
+                           im_bcp47 = 'sq' ).
 
-    lv_line-bcp47_code = 'zh'.
-    lv_line-sap1_code = '1'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'BA15'
+                           im_bcp47 = 'eu' ).
 
-    lv_line-bcp47_code = 'zh-Hans'.
-    lv_line-sap1_code = '1'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B8F3'
+                           im_bcp47 = 'bs' ).
 
-    lv_line-bcp47_code = 'zh-SG'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B343' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'W'
+                           im_bcp47 = 'bg' ).
 
-    lv_line-bcp47_code = 'zh-Hant'.
-    lv_line-sap1_code = 'M'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'c'
+                           im_bcp47 = 'ca' ).
 
-    lv_line-bcp47_code = 'hr'.
-    lv_line-sap1_code = '6'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = '1'
+                           im_bcp47 = 'zh' ).
 
-    lv_line-bcp47_code = 'cs'.
-    lv_line-sap1_code = 'C'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = '1'
+                           im_bcp47 = 'zh-Hans' ).
 
-    lv_line-bcp47_code = 'da'.
-    lv_line-sap1_code = 'K'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B343'
+                           im_bcp47 = 'zh-SG' ).
 
-    lv_line-bcp47_code = 'nl'.
-    lv_line-sap1_code = 'N'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'M'
+                           im_bcp47 = 'zh-Hant' ).
 
-    lv_line-bcp47_code = 'nl-NL'.
-    lv_line-sap1_code = 'N'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = '6'
+                           im_bcp47 = 'hr' ).
 
-    lv_line-bcp47_code = 'nl-BE'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B284' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'C'
+                           im_bcp47 = 'cs' ).
 
-    lv_line-bcp47_code = 'en'.
-    lv_line-sap1_code = 'E'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'K'
+                           im_bcp47 = 'da' ).
 
-    lv_line-bcp47_code = 'en-US'.
-    lv_line-sap1_code = 'E'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'N'
+                           im_bcp47 = 'nl' ).
 
-    lv_line-bcp47_code = 'en-GB'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B46E' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'N'
+                           im_bcp47 = 'nl-NL' ).
 
-    lv_line-bcp47_code = 'en-AU'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B285' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B284'
+                           im_bcp47 = 'nl-BE' ).
 
-    lv_line-bcp47_code = 'en-BZ'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B2E5' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'E'
+                           im_bcp47 = 'en' ).
 
-    lv_line-bcp47_code = 'en-CA'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B345' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'E'
+                           im_bcp47 = 'en-US' ).
 
-    lv_line-bcp47_code = 'en-HK'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B405' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B46E'
+                           im_bcp47 = 'en-GB' ).
 
-    lv_line-bcp47_code = 'en-IN'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B465' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B285'
+                           im_bcp47 = 'en-AU' ).
 
-    lv_line-bcp47_code = 'en-ID'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B4C5' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B2E5'
+                           im_bcp47 = 'en-BZ' ).
 
-    lv_line-bcp47_code = 'en-IE'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B525' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B345'
+                           im_bcp47 = 'en-CA' ).
 
-    lv_line-bcp47_code = 'en-JM'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B585' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B405'
+                           im_bcp47 = 'en-HK' ).
 
-    lv_line-bcp47_code = 'en-MY'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B225' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B465'
+                           im_bcp47 = 'en-IN' ).
 
-    lv_line-bcp47_code = 'en-NZ'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B28E' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B4C5'
+                           im_bcp47 = 'en-ID' ).
 
-    lv_line-bcp47_code = 'en-PH'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B2EE' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B525'
+                           im_bcp47 = 'en-IE' ).
 
-    lv_line-bcp47_code = 'en-SG'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B34E' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B585'
+                           im_bcp47 = 'en-JM' ).
 
-    lv_line-bcp47_code = 'en-ZA'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B3AE' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B225'
+                           im_bcp47 = 'en-MY' ).
 
-    lv_line-bcp47_code = 'en-TT'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B40E' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B28E'
+                           im_bcp47 = 'en-NZ' ).
 
-    lv_line-bcp47_code = 'en-ZW'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B4CE' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B2EE'
+                           im_bcp47 = 'en-PH' ).
 
-    lv_line-bcp47_code = 'et'.
-    lv_line-sap1_code = '9'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B34E'
+                           im_bcp47 = 'en-SG' ).
 
-    lv_line-bcp47_code = 'fi'.
-    lv_line-sap1_code = 'U'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B3AE'
+                           im_bcp47 = 'en-ZA' ).
 
-    lv_line-bcp47_code = 'fr'.
-    lv_line-sap1_code = 'F'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B40E'
+                           im_bcp47 = 'en-TT' ).
 
-    lv_line-bcp47_code = 'fr-FR'.
-    lv_line-sap1_code = 'F'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B4CE'
+                           im_bcp47 = 'en-ZW' ).
 
-    lv_line-bcp47_code = 'fr-BE'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B286' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = '9'
+                           im_bcp47 = 'et' ).
 
-    lv_line-bcp47_code = 'fr-CM'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B2E6' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'U'
+                           im_bcp47 = 'fi' ).
 
-    lv_line-bcp47_code = 'fr-CA'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B346' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'F'
+                           im_bcp47 = 'fr' ).
 
-    lv_line-bcp47_code = 'fr-CG'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B3A6' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'F'
+                           im_bcp47 = 'fr-FR' ).
 
-    lv_line-bcp47_code = 'fr-CI'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B406' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B286'
+                           im_bcp47 = 'fr-BE' ).
 
-    lv_line-bcp47_code = 'fr-HT'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B466' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B2E6'
+                           im_bcp47 = 'fr-CM' ).
+  ENDMETHOD.
 
-    lv_line-bcp47_code = 'fr-LU'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B4C6' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+  METHOD fill_language_mappings_2.
+    fill_language_mapping( im_sap1  = 'B346'
+                           im_bcp47 = 'fr-CA' ).
 
-    lv_line-bcp47_code = 'fr-ML'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B526' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B3A6'
+                           im_bcp47 = 'fr-CG' ).
 
-    lv_line-bcp47_code = 'fr-MC'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B586' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B406'
+                           im_bcp47 = 'fr-CI' ).
 
-    lv_line-bcp47_code = 'fr-MA'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B288' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B466'
+                           im_bcp47 = 'fr-HT' ).
 
-    lv_line-bcp47_code = 'fr-RE'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B2E8' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B4C6'
+                           im_bcp47 = 'fr-LU' ).
 
-    lv_line-bcp47_code = 'fr-SN'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B348' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B526'
+                           im_bcp47 = 'fr-ML' ).
 
-    lv_line-bcp47_code = 'fr-CH'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B3A8' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B586'
+                           im_bcp47 = 'fr-MC' ).
 
-    lv_line-bcp47_code = 'gd'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BAC4' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B288'
+                           im_bcp47 = 'fr-MA' ).
 
-    lv_line-bcp47_code = 'gl'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BACC' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B2E8'
+                           im_bcp47 = 'fr-RE' ).
 
-    lv_line-bcp47_code = 'de'.
-    lv_line-sap1_code = 'D'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B348'
+                           im_bcp47 = 'fr-SN' ).
 
-    lv_line-bcp47_code = 'de-DE'.
-    lv_line-sap1_code = 'D'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B3A8'
+                           im_bcp47 = 'fr-CH' ).
 
-    lv_line-bcp47_code = 'de-AT'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B287' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'BAC4'
+                           im_bcp47 = 'gd' ).
 
-    lv_line-bcp47_code = 'de-LI'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B2E7' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'BACC'
+                           im_bcp47 = 'gl' ).
 
-    lv_line-bcp47_code = 'de-LU'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B347' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'D'
+                           im_bcp47 = 'de' ).
 
-    lv_line-bcp47_code = 'de-CH'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B3A7' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'D'
+                           im_bcp47 = 'de-DE' ).
 
-    lv_line-bcp47_code = 'el'.
-    lv_line-sap1_code = 'G'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B287'
+                           im_bcp47 = 'de-AT' ).
 
-    lv_line-bcp47_code = 'he'.
-    lv_line-sap1_code = 'B'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B2E7'
+                           im_bcp47 = 'de-LI' ).
 
-    lv_line-bcp47_code = 'hu'.
-    lv_line-sap1_code = 'H'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B347'
+                           im_bcp47 = 'de-LU' ).
 
-    lv_line-bcp47_code = 'is'.
-    lv_line-sap1_code = 'b'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B3A7'
+                           im_bcp47 = 'de-CH' ).
 
-    lv_line-bcp47_code = 'id'.
-    lv_line-sap1_code = 'i'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'G'
+                           im_bcp47 = 'el' ).
 
-    lv_line-bcp47_code = 'ga'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BAC1' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B'
+                           im_bcp47 = 'he' ).
 
-    lv_line-bcp47_code = 'it'.
-    lv_line-sap1_code = 'I'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'H'
+                           im_bcp47 = 'hu' ).
 
-    lv_line-bcp47_code = 'it-IT'.
-    lv_line-sap1_code = 'I'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'b'
+                           im_bcp47 = 'is' ).
 
-    lv_line-bcp47_code = 'it-CH'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B289' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'i'
+                           im_bcp47 = 'id' ).
 
-    lv_line-bcp47_code = 'ja'.
-    lv_line-sap1_code = 'J'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'BAC1'
+                           im_bcp47 = 'ga' ).
 
-    lv_line-bcp47_code = 'ko'.
-    lv_line-sap1_code = '3'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'I'
+                           im_bcp47 = 'it' ).
 
-    lv_line-bcp47_code = 'ko-KR'.
-    lv_line-sap1_code = '3'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'I'
+                           im_bcp47 = 'it-IT' ).
 
-    lv_line-bcp47_code = 'lv'.
-    lv_line-sap1_code = 'Y'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B289'
+                           im_bcp47 = 'it-CH' ).
 
-    lv_line-bcp47_code = 'lt'.
-    lv_line-sap1_code = 'X'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'J'
+                           im_bcp47 = 'ja' ).
 
-    lv_line-bcp47_code = 'ms'.
-    lv_line-sap1_code = '7'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = '3'
+                           im_bcp47 = 'ko' ).
 
-    lv_line-bcp47_code = 'ms-MY'.
-    lv_line-sap1_code = '7'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = '3'
+                           im_bcp47 = 'ko-KR' ).
 
-    lv_line-bcp47_code = 'ms-BN'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B28D' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'Y'
+                           im_bcp47 = 'lv' ).
 
-    lv_line-bcp47_code = 'no'.
-    lv_line-sap1_code = 'O'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'X'
+                           im_bcp47 = 'lt' ).
 
-    lv_line-bcp47_code = 'pl'.
-    lv_line-sap1_code = 'L'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = '7'
+                           im_bcp47 = 'ms' ).
 
-    lv_line-bcp47_code = 'pt'.
-    lv_line-sap1_code = 'P'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = '7'
+                           im_bcp47 = 'ms-MY' ).
 
-    lv_line-bcp47_code = 'pt-BR'.
-    lv_line-sap1_code = 'P'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B28D'
+                           im_bcp47 = 'ms-BN' ).
 
-    lv_line-bcp47_code = 'rm'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BEED' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'O'
+                           im_bcp47 = 'no' ).
 
-    lv_line-bcp47_code = 'ro'.
-    lv_line-sap1_code = '4'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'L'
+                           im_bcp47 = 'pl' ).
 
-    lv_line-bcp47_code = 'ro-RO'.
-    lv_line-sap1_code = '4'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'P'
+                           im_bcp47 = 'pt' ).
 
-    lv_line-bcp47_code = 'ru-RU'.
-    lv_line-sap1_code = 'R'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'P'
+                           im_bcp47 = 'pt-BR' ).
 
-    lv_line-bcp47_code = 'sr'.
-    lv_line-sap1_code = '0'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'BEED'
+                           im_bcp47 = 'rm' ).
 
-    lv_line-bcp47_code = 'sr-Cyrl'.
-    lv_line-sap1_code = '0'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = '4'
+                           im_bcp47 = 'ro' ).
 
-    lv_line-bcp47_code = 'sr-Latn'.
-    lv_line-sap1_code = 'd'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = '4'
+                           im_bcp47 = 'ro-RO' ).
 
-    lv_line-bcp47_code = 'sk'.
-    lv_line-sap1_code = 'Q'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'R'
+                           im_bcp47 = 'ru-RU' ).
 
-    lv_line-bcp47_code = 'sl'.
-    lv_line-sap1_code = '5'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = '0'
+                           im_bcp47 = 'sr' ).
 
-    lv_line-bcp47_code = 'wen'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BF42' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = '0'
+                           im_bcp47 = 'sr-Cyrl' ).
 
-    lv_line-bcp47_code = 'dsb'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B9B3' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'd'
+                           im_bcp47 = 'sr-Latn' ).
 
-    lv_line-bcp47_code = 'hsb'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BB33' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'Q'
+                           im_bcp47 = 'sk' ).
 
-    lv_line-bcp47_code = 'es'.
-    lv_line-sap1_code = 'S'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = '5'
+                           im_bcp47 = 'sl' ).
 
-    lv_line-bcp47_code = 'es-ES'.
-    lv_line-sap1_code = 'S'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'BF42'
+                           im_bcp47 = 'wen' ).
 
-    lv_line-bcp47_code = 'es-AR'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B293' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B9B3'
+                           im_bcp47 = 'dsb' ).
 
-    lv_line-bcp47_code = 'es-BO'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B2F3' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'BB33'
+                           im_bcp47 = 'hsb' ).
 
-    lv_line-bcp47_code = 'es-CL'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B353' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'S'
+                           im_bcp47 = 'es' ).
 
-    lv_line-bcp47_code = 'es-CO'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B233' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'S'
+                           im_bcp47 = 'es-ES' ).
 
-    lv_line-bcp47_code = 'es-CR'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B3B3' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B293'
+                           im_bcp47 = 'es-AR' ).
 
-    lv_line-bcp47_code = 'es-DO'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B413' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B2F3'
+                           im_bcp47 = 'es-BO' ).
 
-    lv_line-bcp47_code = 'es-EC'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B473' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B353'
+                           im_bcp47 = 'es-CL' ).
 
-    lv_line-bcp47_code = 'es-SV'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B4D3' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B233'
+                           im_bcp47 = 'es-CO' ).
 
-    lv_line-bcp47_code = 'es-GT'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B533' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B3B3'
+                           im_bcp47 = 'es-CR' ).
 
-    lv_line-bcp47_code = 'es-HN'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B593' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B413'
+                           im_bcp47 = 'es-DO' ).
 
-    lv_line-bcp47_code = 'es-MX'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B298' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B473'
+                           im_bcp47 = 'es-EC' ).
 
-    lv_line-bcp47_code = 'es-NI'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B2F8' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B4D3'
+                           im_bcp47 = 'es-SV' ).
 
-    lv_line-bcp47_code = 'es-PA'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B358' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B533'
+                           im_bcp47 = 'es-GT' ).
 
-    lv_line-bcp47_code = 'es-PY'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B3B8' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B593'
+                           im_bcp47 = 'es-HN' ).
 
-    lv_line-bcp47_code = 'es-PE'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B418' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B298'
+                           im_bcp47 = 'es-MX' ).
 
-    lv_line-bcp47_code = 'es-PR'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B478' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B2F8'
+                           im_bcp47 = 'es-NI' ).
 
-    lv_line-bcp47_code = 'es-UY'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B4D8' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B358'
+                           im_bcp47 = 'es-PA' ).
 
-    lv_line-bcp47_code = 'es-VE'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'B538' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B3B8'
+                           im_bcp47 = 'es-PY' ).
 
-    lv_line-bcp47_code = 'sw'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BF57' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B418'
+                           im_bcp47 = 'es-PE' ).
 
-    lv_line-bcp47_code = 'sv'.
-    lv_line-sap1_code = 'V'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B478'
+                           im_bcp47 = 'es-PR' ).
 
-    lv_line-bcp47_code = 'tl'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'BFAC' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B4D8'
+                           im_bcp47 = 'es-UY' ).
 
-    lv_line-bcp47_code = 'th'.
-    lv_line-sap1_code = '2'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'B538'
+                           im_bcp47 = 'es-VE' ).
 
-    lv_line-bcp47_code = 'tr'.
-    lv_line-sap1_code = 'T'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'BF57'
+                           im_bcp47 = 'sw' ).
 
-    lv_line-bcp47_code = 'uk'.
-    lv_line-sap1_code = '8'.
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'V'
+                           im_bcp47 = 'sv' ).
 
-    lv_line-bcp47_code = 'vi'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'C069' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = 'BFAC'
+                           im_bcp47 = 'tl' ).
 
-    lv_line-bcp47_code = 'wa'.
-    lv_line-sap1_code = cl_abap_conv_in_ce=>uccp( 'C0C1' ).
-    APPEND lv_line TO gv_language_mappings.
-    CLEAR lv_line.
+    fill_language_mapping( im_sap1  = '2'
+                           im_bcp47 = 'th' ).
+
+    fill_language_mapping( im_sap1  = 'T'
+                           im_bcp47 = 'tr' ).
+
+    fill_language_mapping( im_sap1  = '8'
+                           im_bcp47 = 'uk' ).
+
+    fill_language_mapping( im_sap1  = 'C069'
+                           im_bcp47 = 'vi' ).
 
+    fill_language_mapping( im_sap1  = 'C0C1'
+                           im_bcp47 = 'wa' ).
   ENDMETHOD.
 
 ENDCLASS.

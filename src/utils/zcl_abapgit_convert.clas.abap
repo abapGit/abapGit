@@ -238,7 +238,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
     DATA lv_abap_matcher TYPE REF TO cl_abap_matcher.
 
     DATA lv_sap1_converter_class TYPE string.
-    DATA lv_sap2_lang_code TYPE isola.
+    DATA lv_sap2_lang_code TYPE laiso.
 
     TRY.
         CALL METHOD (lv_converter_class_name)=>create_instance
