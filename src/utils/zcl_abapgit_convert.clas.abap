@@ -274,8 +274,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
                   re_lang_sap1  = re_lang_sap1
                 EXCEPTIONS
                   no_assignment = 1
-                  OTHERS        = 2
-              ).
+                  OTHERS        = 2 ).
               IF sy-subrc <> 0.
                 RAISE no_assignment.
               ENDIF.
