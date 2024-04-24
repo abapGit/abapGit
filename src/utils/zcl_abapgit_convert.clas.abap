@@ -201,7 +201,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   METHOD language_sap1_to_bcp47.
     DATA lv_converter_instance TYPE REF TO object.
-    DATA lv_converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTER`.
+    DATA lv_converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTERRR`.
     DATA lv_converter_method TYPE string VALUE `IF_AFF_LANGUAGE_CONVERTER~SAP1_TO_BCP47`.
 
     TRY.
@@ -231,7 +231,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   METHOD language_bcp47_to_sap1.
     DATA lv_converter_instance TYPE REF TO object.
-    DATA lv_converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTER`.
+    DATA lv_converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTERRR`.
     DATA lv_converter_method TYPE string VALUE `IF_AFF_LANGUAGE_CONVERTER~SAP1_TO_BCP47`.
 
     DATA lv_regex TYPE REF TO cl_abap_regex.
@@ -266,19 +266,20 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
             IF abap_true = lv_abap_matcher->match( ).
               "Fallback try to convert from SAP language
-              lv_sap1_converter_class = 'CL_I18N_LANGUAGES'.
               lv_sap2_lang_code = im_lang_bcp47.
-              CALL METHOD (lv_sap1_converter_class)=>sap2_to_sap1
+
+              cl_i18n_languages=>sap2_to_sap1(
                 EXPORTING
-                  im_lang_sap2  = lv_sap2_lang_code
+                  im_lang_sap2      = lv_sap2_lang_code
                 RECEIVING
-                  re_lang_sap1  = re_lang_sap1
+                  re_lang_sap1      = re_lang_sap1
                 EXCEPTIONS
-                  no_assignment = 1
-                  OTHERS        = 2.
-              IF sy-subrc <> 0.
+                  no_assignment     = 1
+                  others            = 2 ).
+              IF SY-SUBRC <> 0.
                 RAISE no_assignment.
               ENDIF.
+
             ELSE.
               RAISE no_assignment.
             ENDIF.
