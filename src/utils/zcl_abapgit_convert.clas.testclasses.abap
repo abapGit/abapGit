@@ -3,7 +3,6 @@
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-
 CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
