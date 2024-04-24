@@ -331,7 +331,7 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
 
     ls_intf-vseointerf-unicode = zif_abapgit_aff_types_v1=>co_abap_language_version_src-key_user.
     ls_intf-vseointerf-descript = `abc`.
-    ls_intf-vseointerf-langu = `F`.
+    ls_intf-vseointerf-langu = `d`.
     ls_intf-vseointerf-category = zif_abapgit_aff_intf_v1=>co_category-db_procedure_proxy.
     ls_intf-vseointerf-clsproxy = abap_true.
 
@@ -342,7 +342,7 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
       `  "formatVersion": "1",` && cl_abap_char_utilities=>newline &&
       `  "header": {` && cl_abap_char_utilities=>newline &&
       `    "description": "abc",` && cl_abap_char_utilities=>newline &&
-      `    "originalLanguage": "fr",` && cl_abap_char_utilities=>newline &&
+      `    "originalLanguage": "sr-Latn",` && cl_abap_char_utilities=>newline &&
       `    "abapLanguageVersion": "` && zif_abapgit_dot_abapgit=>c_abap_language_version-key_user && `"`
         && cl_abap_char_utilities=>newline &&
       `  },` && cl_abap_char_utilities=>newline &&
@@ -375,7 +375,7 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
 
     ls_expected-format_version = `1`.
     ls_expected-header-description = 'abc'.
-    ls_expected-header-original_language = 'F'.
+    ls_expected-header-original_language = 'M'. " SAP1 Language Code for Chinese (Taiwan)
     ls_expected-header-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-key_user.
     ls_expected-category = zif_abapgit_aff_intf_v1=>co_category-db_procedure_proxy.
     ls_expected-proxy = abap_true.
@@ -406,7 +406,7 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
       `  "formatVersion": "1",` && cl_abap_char_utilities=>newline &&
       `  "header": {` && cl_abap_char_utilities=>newline &&
       `    "description": "abc",` && cl_abap_char_utilities=>newline &&
-      `    "originalLanguage": "fr",` && cl_abap_char_utilities=>newline &&
+      `    "originalLanguage": "zh-Hant",` && cl_abap_char_utilities=>newline &&
       `    "abapLanguageVersion": "` && zif_abapgit_dot_abapgit=>c_abap_language_version-key_user && `"`
         && cl_abap_char_utilities=>newline &&
       `  },` && cl_abap_char_utilities=>newline &&

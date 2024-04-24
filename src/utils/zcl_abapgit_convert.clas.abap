@@ -106,6 +106,22 @@ CLASS zcl_abapgit_convert DEFINITION
       EXCEPTIONS
         no_assignment.
 
+    CLASS-METHODS language_sap1_to_bcp47
+      IMPORTING
+        im_lang_sap1         TYPE sy-langu
+      RETURNING
+        VALUE(re_lang_bcp47) TYPE string
+      EXCEPTIONS
+        no_assignment.
+
+    CLASS-METHODS language_bcp47_to_sap1
+      IMPORTING
+        im_lang_bcp47       TYPE string
+      RETURNING
+        VALUE(re_lang_sap1) TYPE sy-langu
+      EXCEPTIONS
+        no_assignment.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS xstring_remove_bom
@@ -183,6 +199,92 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD language_sap1_to_bcp47.
+    DATA lv_converter_instance TYPE REF TO object.
+    DATA lv_converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTER`.
+    DATA lv_converter_method TYPE string VALUE `SAP1_TO_BCP47`.
+
+    TRY.
+        CALL METHOD (lv_converter_class_name)=>create_instance
+          RECEIVING
+            result = lv_converter_instance.
+
+        CALL METHOD lv_converter_instance->(lv_converter_method)
+          EXPORTING
+            language      = im_lang_sap1
+          RECEIVING
+            result        = re_lang_bcp47
+          EXCEPTIONS
+            no_assignment = 1
+            OTHERS        = 2.
+        IF sy-subrc <> 0.
+          RAISE no_assignment.
+        ENDIF.
+      CATCH cx_sy_dyn_call_error.
+        TRY.
+            re_lang_bcp47 = lcl_bcp47_language_table=>sap1_to_bcp47( im_lang_sap1 ).
+          CATCH zcx_abapgit_exception.
+            RAISE no_assignment.
+        ENDTRY.
+    ENDTRY.
+  ENDMETHOD.
+
+  METHOD language_bcp47_to_sap1.
+    DATA lv_converter_instance TYPE REF TO object.
+    DATA lv_converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTER`.
+    DATA lv_converter_method TYPE string VALUE `SAP1_TO_BCP47`.
+
+    DATA lv_regex TYPE REF TO cl_abap_regex.
+    DATA lv_abap_matcher TYPE REF TO cl_abap_matcher.
+
+    DATA lv_sap2_lang_code TYPE laiso.
+
+    TRY.
+        CALL METHOD (lv_converter_class_name)=>create_instance
+          RECEIVING
+            result = lv_converter_instance.
+
+        CALL METHOD lv_converter_instance->(lv_converter_method)
+          EXPORTING
+            language      = im_lang_bcp47
+          RECEIVING
+            result        = re_lang_sap1
+          EXCEPTIONS
+            no_assignment = 1
+            OTHERS        = 2.
+        IF sy-subrc <> 0.
+          RAISE no_assignment.
+        ENDIF.
+      CATCH cx_sy_dyn_call_error.
+        TRY.
+            re_lang_sap1 = lcl_bcp47_language_table=>bcp47_to_sap1( im_lang_bcp47 ).
+          CATCH zcx_abapgit_exception.
+
+            CREATE OBJECT lv_regex EXPORTING pattern = `[A-Z0-9]{2}`.
+            lv_abap_matcher = lv_regex->create_matcher( text = im_lang_bcp47 ).
+
+            IF abap_true = lv_abap_matcher->match( ).
+              "Fallback try to convert from SAP language
+              lv_sap2_lang_code = im_lang_bcp47.
+
+              language_sap2_to_sap1(
+                EXPORTING
+                  im_lang_sap2  = lv_sap2_lang_code
+                RECEIVING
+                  re_lang_sap1  = re_lang_sap1
+                EXCEPTIONS
+                  no_assignment = 1
+                  OTHERS        = 2 ).
+              IF sy-subrc <> 0.
+                RAISE no_assignment.
+              ENDIF.
+
+            ELSE.
+              RAISE no_assignment.
+            ENDIF.
+        ENDTRY.
+    ENDTRY.
+  ENDMETHOD.
 
   METHOD language_sap1_to_sap2.
 
