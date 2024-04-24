@@ -237,7 +237,6 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
     DATA lv_regex TYPE REF TO cl_abap_regex.
     DATA lv_abap_matcher TYPE REF TO cl_abap_matcher.
 
-    DATA lv_sap1_converter_class TYPE string.
     DATA lv_sap2_lang_code TYPE laiso.
 
     TRY.
@@ -268,15 +267,16 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
               "Fallback try to convert from SAP language
               lv_sap2_lang_code = im_lang_bcp47.
 
-              cl_i18n_languages=>sap2_to_sap1(
+              language_sap2_to_sap1(
                 EXPORTING
-                  im_lang_sap2      = lv_sap2_lang_code
+                  im_lang_sap2  = lv_sap2_lang_code
                 RECEIVING
-                  re_lang_sap1      = re_lang_sap1
+                  re_lang_sap1  = re_lang_sap1
                 EXCEPTIONS
-                  no_assignment     = 1
-                  others            = 2 ).
-              IF SY-SUBRC <> 0.
+                  no_assignment = 1
+                  OTHERS        = 2
+              ).
+              IF sy-subrc <> 0.
                 RAISE no_assignment.
               ENDIF.
 

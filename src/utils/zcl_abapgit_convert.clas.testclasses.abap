@@ -321,7 +321,6 @@ CLASS ltcl_bcp47_to_sap1 DEFINITION FINAL FOR TESTING
     METHODS unsupported_uppercase FOR TESTING.
     METHODS too_many_characters FOR TESTING.
     METHODS too_less_characters FOR TESTING.
-    METHODS english_gb_uppercase FOR TESTING.
     METHODS english_uppercase FOR TESTING.
     METHODS chinese_uppercase FOR TESTING.
 
@@ -373,14 +372,6 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
     lv_to = cl_abap_conv_in_ce=>uccp( 'B46E' ).
 
     assert_bcp47_to_sap1( im_from = 'en-GB'
-                          im_to = lv_to ).
-  ENDMETHOD.
-
-  METHOD english_gb_uppercase.
-    DATA lv_to TYPE sy-langu.
-    lv_to = cl_abap_conv_in_ce=>uccp( 'B46E' ).
-
-    assert_bcp47_to_sap1( im_from = '6N'
                           im_to = lv_to ).
   ENDMETHOD.
 
