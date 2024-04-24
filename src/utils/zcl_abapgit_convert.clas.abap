@@ -201,8 +201,8 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   METHOD language_sap1_to_bcp47.
     DATA lv_converter_instance TYPE REF TO object.
-    DATA lv_converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTERRR`.
-    DATA lv_converter_method TYPE string VALUE `IF_AFF_LANGUAGE_CONVERTER~SAP1_TO_BCP47`.
+    DATA lv_converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTER`.
+    DATA lv_converter_method TYPE string VALUE `SAP1_TO_BCP47`.
 
     TRY.
         CALL METHOD (lv_converter_class_name)=>create_instance
@@ -231,8 +231,8 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   METHOD language_bcp47_to_sap1.
     DATA lv_converter_instance TYPE REF TO object.
-    DATA lv_converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTERRR`.
-    DATA lv_converter_method TYPE string VALUE `IF_AFF_LANGUAGE_CONVERTER~SAP1_TO_BCP47`.
+    DATA lv_converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTER`.
+    DATA lv_converter_method TYPE string VALUE `SAP1_TO_BCP47`.
 
     DATA lv_regex TYPE REF TO cl_abap_regex.
     DATA lv_abap_matcher TYPE REF TO cl_abap_matcher.
