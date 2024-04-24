@@ -158,17 +158,13 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
   METHOD map2abap_original_language.
     DATA:
-      lv_iso_language      TYPE laiso,
+      lv_bcp47_language    TYPE string,
       lv_original_language TYPE sy-langu.
 
 
-    lv_iso_language = co_ajson->get_string( '/header/original_language' ).
+    lv_bcp47_language = co_ajson->get_string( '/header/original_language' ).
 
-    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
-      EXPORTING
-        input  = lv_iso_language
-      IMPORTING
-        output = lv_original_language.
+    lv_original_language = zcl_abapgit_convert=>language_bcp47_to_sap1( lv_bcp47_language ).
 
     co_ajson->set_string( iv_path = '/header/original_language'
                           iv_val  = lv_original_language ).
@@ -216,17 +212,16 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
   METHOD map2json_original_language.
     DATA:
-      lv_iso_language      TYPE laiso,
+      lv_bcp47_language    TYPE string,
       lv_original_language TYPE sy-langu.
 
 
     lv_original_language = co_ajson->get_string( '/header/originalLanguage' ).
 
-    lv_iso_language = zcl_abapgit_convert=>conversion_exit_isola_output( lv_original_language ).
+    lv_bcp47_language = zcl_abapgit_convert=>language_sap1_to_bcp47( lv_original_language ).
 
-    TRANSLATE lv_iso_language TO LOWER CASE.
     co_ajson->set_string( iv_path = '/header/originalLanguage'
-                          iv_val  = lv_iso_language ).
+                          iv_val  = lv_bcp47_language ).
   ENDMETHOD.
 
 
