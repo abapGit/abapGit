@@ -25,6 +25,14 @@ CLASS zcl_abapgit_password_dialog IMPLEMENTATION.
   METHOD popup.
 
     DATA: lx_error TYPE REF TO cx_sy_dyn_call_illegal_form.
+    DATA(default_git_uname) = zcl_abapgit_persist_factory=>get_settings( )->read( )->get_default_git_uname( ).
+    DATA(default_git_email) = zcl_abapgit_persist_factory=>get_settings( )->read( )->get_default_git_email( ).
+
+    IF default_git_uname IS NOT INITIAL.
+      cv_user = default_git_uname.
+    ELSEIF default_git_email IS NOT INITIAL.
+      cv_user = default_git_email.
+    ENDIF.
 
     IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true.
 
