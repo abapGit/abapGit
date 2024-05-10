@@ -52,5 +52,4 @@ CLASS zcl_abapgit_background_pull IMPLEMENTATION.
     lo_settings->set_activate_wo_popup( lv_activation_setting ).
 
   ENDMETHOD.
-
 ENDCLASS.
