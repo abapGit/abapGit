@@ -33,7 +33,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CDBO IMPLEMENTATION.
 
   method ZIF_ABAPGIT_OBJECT~CHANGED_BY.
 
-      DATA: lv_user  TYPE string,
+    DATA: lv_user  TYPE string,
           lx_error TYPE REF TO cx_root.
 
     TRY.
