@@ -13,7 +13,7 @@ class ZCL_ABAPGIT_OBJECT_CDBO definition
     raising
       ZCX_ABAPGIT_EXCEPTION .
 
-  methods ZIF_ABAPGIT_OBJECT~CHANGED_BY
+    methods ZIF_ABAPGIT_OBJECT~CHANGED_BY
     redefinition .
   PROTECTED SECTION.
   PRIVATE SECTION.
