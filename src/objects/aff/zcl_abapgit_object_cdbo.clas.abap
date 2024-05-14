@@ -43,7 +43,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CDBO IMPLEMENTATION.
         ENDIF.
         rv_user = lv_user.
       CATCH cx_root INTO lx_error.
-       zcx_abapgit_exception=>raise_with_text( lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   endmethod.
