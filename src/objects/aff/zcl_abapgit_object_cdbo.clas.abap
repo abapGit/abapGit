@@ -11,7 +11,7 @@ class ZCL_ABAPGIT_OBJECT_CDBO definition
       !IS_ITEM type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM
       !IV_LANGUAGE type SPRAS .
 
-  methods ZIF_ABAPGIT_OBJECT~CHANGED_BY
+    methods ZIF_ABAPGIT_OBJECT~CHANGED_BY
     redefinition .
 protected section.
 private section.
