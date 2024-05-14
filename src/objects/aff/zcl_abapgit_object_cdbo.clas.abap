@@ -6,12 +6,12 @@ CLASS zcl_abapgit_object_cdbo DEFINITION
 
   PUBLIC SECTION.
 
-    methods CONSTRUCTOR
-    importing
-      !IS_ITEM type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM
-      !IV_LANGUAGE type SPRAS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    METHODS constructor
+    IMPORTING
+      !is_item TYPE zif_abapgit_definitions=>ty_item
+      !iv_language TYPE spras
+    RAISING
+      zcx_abapgit_exception .
 
     methods ZIF_ABAPGIT_OBJECT~CHANGED_BY
     redefinition .
