@@ -13,8 +13,8 @@ CLASS zcl_abapgit_object_cdbo DEFINITION
     RAISING
       zcx_abapgit_exception .
 
-    methods ZIF_ABAPGIT_OBJECT~CHANGED_BY
-    redefinition .
+    METHODS zif_abapgit_object~changed_by
+    REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
