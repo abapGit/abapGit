@@ -6,7 +6,7 @@ class ZCL_ABAPGIT_OBJECT_CDBO definition
 
   public section.
 
-  methods CONSTRUCTOR
+    methods CONSTRUCTOR
     importing
       !IS_ITEM type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM
       !IV_LANGUAGE type SPRAS .
