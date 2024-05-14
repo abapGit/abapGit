@@ -4,7 +4,7 @@ class ZCL_ABAPGIT_OBJECT_CDBO definition
   final
   create public .
 
-public section.
+  public section.
 
   methods CONSTRUCTOR
     importing
