@@ -14,7 +14,7 @@ class ZCL_ABAPGIT_OBJECT_CDBO definition
     methods ZIF_ABAPGIT_OBJECT~CHANGED_BY
     redefinition .
   protected section.
-private section.
+  private section.
 
   constants C_TABLE_NAME type TABNAME value 'CDB_OBJH' ##NO_TEXT.
 ENDCLASS.
