@@ -16,7 +16,7 @@ class ZCL_ABAPGIT_OBJECT_CDBO definition
   protected section.
   private section.
 
-  constants C_TABLE_NAME type TABNAME value 'CDB_OBJH' ##NO_TEXT.
+    constants C_TABLE_NAME type TABNAME value 'CDB_OBJH' ##NO_TEXT.
 ENDCLASS.
 
 
