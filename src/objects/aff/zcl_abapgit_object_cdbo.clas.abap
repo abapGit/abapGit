@@ -4,7 +4,7 @@ CLASS zcl_abapgit_object_cdbo DEFINITION
   FINAL
   CREATE PUBLIC .
 
-  public section.
+  PUBLIC SECTION.
 
     methods CONSTRUCTOR
     importing
