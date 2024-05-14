@@ -1,22 +1,24 @@
-CLASS zcl_abapgit_object_cdbo DEFINITION
-  PUBLIC
-  INHERITING FROM zcl_abapgit_object_common_aff
-  FINAL
-  CREATE PUBLIC .
+class ZCL_ABAPGIT_OBJECT_CDBO definition
+  public
+  inheriting from ZCL_ABAPGIT_OBJECT_COMMON_AFF
+  final
+  create public .
 
-  public section.
+public section.
 
-    methods CONSTRUCTOR
+  methods CONSTRUCTOR
     importing
       !IS_ITEM type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM
-      !IV_LANGUAGE type SPRAS .
+      !IV_LANGUAGE type SPRAS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
 
-    methods ZIF_ABAPGIT_OBJECT~CHANGED_BY
+  methods ZIF_ABAPGIT_OBJECT~CHANGED_BY
     redefinition .
-  protected section.
-  private section.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 
-    constants C_TABLE_NAME type TABNAME value 'CDB_OBJH' ##NO_TEXT.
+    CONSTANTS c_table_name TYPE tabname VALUE 'CDB_OBJH' ##NO_TEXT.
 ENDCLASS.
 
 
@@ -24,14 +26,14 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_OBJECT_CDBO IMPLEMENTATION.
 
 
-  method CONSTRUCTOR.
+  METHOD constructor.
 
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
-  endmethod.
+  ENDMETHOD.
 
 
-  method ZIF_ABAPGIT_OBJECT~CHANGED_BY.
+  METHOD zif_abapgit_object~changed_by.
 
     DATA: lv_user  TYPE string,
           lx_error TYPE REF TO cx_root.
@@ -46,5 +48,5 @@ CLASS ZCL_ABAPGIT_OBJECT_CDBO IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
-  endmethod.
+  ENDMETHOD.
 ENDCLASS.

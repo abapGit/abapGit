@@ -18,6 +18,14 @@
      <DESCRIPT>Table Name</DESCRIPT>
     </SEOCOMPOTX>
    </DESCRIPTIONS>
+   <DESCRIPTIONS_SUB>
+    <SEOSUBCOTX>
+     <CMPNAME>CONSTRUCTOR</CMPNAME>
+     <SCONAME>ZCX_ABAPGIT_EXCEPTION</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>abapGit - Exception</DESCRIPT>
+    </SEOSUBCOTX>
+   </DESCRIPTIONS_SUB>
   </asx:values>
  </asx:abap>
 </abapGit>
