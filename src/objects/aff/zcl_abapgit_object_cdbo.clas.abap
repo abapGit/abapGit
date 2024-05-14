@@ -1,8 +1,8 @@
-class ZCL_ABAPGIT_OBJECT_CDBO definition
-  public
-  inheriting from ZCL_ABAPGIT_OBJECT_COMMON_AFF
-  final
-  create public .
+CLASS zcl_abapgit_object_cdbo DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_object_common_aff
+  FINAL
+  CREATE PUBLIC .
 
   public section.
 
