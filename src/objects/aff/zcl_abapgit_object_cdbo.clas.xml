@@ -5,7 +5,6 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_CDBO</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - CDBO - Customer Data Browser Object</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
