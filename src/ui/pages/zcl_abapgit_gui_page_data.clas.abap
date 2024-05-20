@@ -397,9 +397,9 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( '<div class="repo">' ).
     ri_html->add( render_existing( ) ).
-    mo_form_data->delete('table' ).
-    mo_form_data->delete('skip_initial' ).
-    mo_form_data->delete('where' ).
+    mo_form_data->delete( 'table' ).
+    mo_form_data->delete( 'skip_initial' ).
+    mo_form_data->delete( 'where' ).
     ri_html->add( mo_form->render(
       io_values         = mo_form_data
       io_validation_log = mo_validation_log ) ).
