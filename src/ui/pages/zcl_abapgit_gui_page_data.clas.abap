@@ -70,11 +70,6 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
         !io_map         TYPE REF TO zcl_abapgit_string_map
       RETURNING
         VALUE(rt_where) TYPE string_table .
-    METHODS render_add
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html
-      RAISING
-        zcx_abapgit_exception .
     METHODS render_existing
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
@@ -301,38 +296,6 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_add.
-
-    DATA lo_form TYPE REF TO zcl_abapgit_html_form.
-    DATA lo_form_data TYPE REF TO zcl_abapgit_string_map.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    CREATE OBJECT lo_form_data.
-
-    lo_form = zcl_abapgit_html_form=>create( ).
-    lo_form->text(
-      iv_label    = 'Table'
-      iv_name     = c_id-table
-      iv_required = abap_true ).
-
-    lo_form->checkbox(
-      iv_label = 'Skip Initial Values'
-      iv_name  = c_id-skip_initial ).
-
-    lo_form->textarea(
-      iv_label       = 'Where'
-      iv_placeholder = 'Conditions separated by newline'
-      iv_name        = c_id-where ).
-
-    lo_form->command(
-      iv_label       = 'Add'
-      iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
-      iv_action      = c_event-add ).
-    ri_html->add( lo_form->render( lo_form_data ) ).
-
-  ENDMETHOD.
-
-
   METHOD render_existing.
 
     DATA lo_form TYPE REF TO zcl_abapgit_html_form.
@@ -434,13 +397,12 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( '<div class="repo">' ).
     ri_html->add( render_existing( ) ).
-    IF mo_validation_log->is_empty( ) = abap_false.
-      ri_html->add( mo_form->render(
-        io_values         = mo_form_data
-        io_validation_log = mo_validation_log ) ).
-    ELSE.
-      ri_html->add( render_add( ) ).
-    ENDIF.
+    mo_form_data->delete('table' ).
+    mo_form_data->delete('skip_initial' ).
+    mo_form_data->delete('where' ).
+    ri_html->add( mo_form->render(
+      io_values         = mo_form_data
+      io_validation_log = mo_validation_log ) ).
     ri_html->add( '</div>' ).
 
   ENDMETHOD.
