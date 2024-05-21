@@ -168,6 +168,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PULL IMPLEMENTATION.
     DATA lv_value TYPE string.
 
     FIELD-SYMBOLS <ls_overwrite> LIKE LINE OF ms_checks-overwrite.
+    FIELD-SYMBOLS <ls_warning> LIKE LINE OF ms_checks-warning_package .
 
 
     ms_checks-transport-transport = mo_form_data->get( c_id-transport_request ).
@@ -178,6 +179,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PULL IMPLEMENTATION.
         <ls_overwrite>-decision = zif_abapgit_definitions=>c_yes.
       ELSE.
         <ls_overwrite>-decision = zif_abapgit_definitions=>c_no.
+      ENDIF.
+    ENDLOOP.
+
+    LOOP AT ms_checks-warning_package ASSIGNING <ls_warning>.
+      lv_value = mo_form_data->get( |{ <ls_warning>-obj_type }-{ <ls_warning>-obj_name }| ).
+      IF lv_value = 'on'.
+        <ls_warning>-decision = zif_abapgit_definitions=>c_yes.
+      ELSE.
+        <ls_warning>-decision = zif_abapgit_definitions=>c_no.
       ENDIF.
     ENDLOOP.
 
