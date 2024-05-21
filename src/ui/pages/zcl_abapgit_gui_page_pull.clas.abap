@@ -168,7 +168,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PULL IMPLEMENTATION.
     DATA lv_value TYPE string.
 
     FIELD-SYMBOLS <ls_overwrite> LIKE LINE OF ms_checks-overwrite.
-    FIELD-SYMBOLS <ls_warning> LIKE LINE OF ms_checks-warning_package .
+    FIELD-SYMBOLS <ls_warning> LIKE LINE OF ms_checks-warning_package.
 
 
     ms_checks-transport-transport = mo_form_data->get( c_id-transport_request ).
