@@ -103,7 +103,8 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     ro_form->text(
       iv_label       = 'Table'
       iv_name        = c_id-table
-      iv_required    = abap_true ).
+      iv_required    = abap_true
+      iv_max         = 16 ).
 
     ro_form->checkbox(
       iv_label = 'Skip Initial Values'
@@ -318,7 +319,8 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
       lo_form->text(
         iv_label    = 'Table'
         iv_name     = c_id-table
-        iv_readonly = abap_true ).
+        iv_readonly = abap_true
+        iv_max         = 16 ).
 
       lo_form_data->set(
         iv_key = c_id-skip_initial
