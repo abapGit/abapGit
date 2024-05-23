@@ -239,7 +239,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_HOOK IMPLEMENTATION.
           ls_original_object TYPE enh_hook_admin,
           lt_spaces          TYPE ty_spaces_tt,
           lt_files           TYPE ty_files,
-          ls_trdir           TYPE trdir,
+          ls_progdir         TYPE zif_abapgit_sap_report=>ty_progdir,
           lt_enhancements    TYPE enh_hook_impl_it.
 
     FIELD-SYMBOLS: <ls_enhancement> LIKE LINE OF lt_enhancements.
@@ -259,15 +259,8 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_HOOK IMPLEMENTATION.
 * dont call method lo_hook_impl->get_include_bound( ), it might dump
 * if the PROG does not exists
     IF ls_original_object-org_main_type = 'PROG' OR ls_original_object-org_main_type = 'REPS'.
-      CALL FUNCTION 'READ_TRDIR'
-        EXPORTING
-          i_progname = ls_original_object-org_main_name
-        IMPORTING
-          e_trdir    = ls_trdir
-        EXCEPTIONS
-          not_exists = 1
-          OTHERS     = 2.
-      IF sy-subrc = 0 AND ls_trdir-subc = 'I'.
+      ls_progdir = zcl_abapgit_factory=>get_sap_report( )->read_progdir( ls_original_object-org_main_name ).
+      IF sy-subrc = 0 AND ls_progdir-subc = 'I'.
         ls_original_object-include_bound = abap_true.
       ENDIF.
     ENDIF.
