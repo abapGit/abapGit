@@ -52,7 +52,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_ENHO_HOOK IMPLEMENTATION.
 
 
   METHOD add_sources.
@@ -239,6 +239,7 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
           ls_original_object TYPE enh_hook_admin,
           lt_spaces          TYPE ty_spaces_tt,
           lt_files           TYPE ty_files,
+          ls_trdir           TYPE trdir,
           lt_enhancements    TYPE enh_hook_impl_it.
 
     FIELD-SYMBOLS: <ls_enhancement> LIKE LINE OF lt_enhancements.
@@ -254,7 +255,23 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
         main_type = ls_original_object-org_main_type
         main_name = ls_original_object-org_main_name
         program   = ls_original_object-programname ).
-    ls_original_object-include_bound = lo_hook_impl->get_include_bound( ).
+
+* dont call method lo_hook_impl->get_include_bound( ), it might dump
+* if the PROG does not exists
+    IF ls_original_object-org_main_type = 'PROG' OR ls_original_object-org_main_type = 'REPS'.
+      CALL FUNCTION 'READ_TRDIR'
+        EXPORTING
+          i_progname = ls_original_object-org_main_name
+        IMPORTING
+          e_trdir    = ls_trdir
+        EXCEPTIONS
+          not_exists = 1
+          OTHERS     = 2.
+      IF sy-subrc = 0 AND ls_trdir-subc = 'I'.
+        ls_original_object-include_bound = abap_true.
+      ENDIF.
+    ENDIF.
+
     lt_enhancements = lo_hook_impl->get_hook_impls( ).
 
     LOOP AT lt_enhancements ASSIGNING <ls_enhancement>.
