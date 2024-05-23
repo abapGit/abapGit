@@ -320,7 +320,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
         iv_label    = 'Table'
         iv_name     = c_id-table
         iv_readonly = abap_true
-        iv_max         = 16 ).
+        iv_max      = 16 ).
 
       lo_form_data->set(
         iv_key = c_id-skip_initial
