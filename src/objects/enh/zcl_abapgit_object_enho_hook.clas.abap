@@ -259,10 +259,12 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_HOOK IMPLEMENTATION.
 * dont call method lo_hook_impl->get_include_bound( ), it might dump
 * if the PROG does not exists
     IF ls_original_object-org_main_type = 'PROG' OR ls_original_object-org_main_type = 'REPS'.
-      ls_progdir = zcl_abapgit_factory=>get_sap_report( )->read_progdir( ls_original_object-org_main_name ).
-      IF sy-subrc = 0 AND ls_progdir-subc = 'I'.
-        ls_original_object-include_bound = abap_true.
-      ENDIF.
+      TRY.
+          ls_progdir = zcl_abapgit_factory=>get_sap_report( )->read_progdir( ls_original_object-org_main_name ).
+          ls_original_object-include_bound = boolc( ls_progdir-subc = 'I' ).
+        CATCH zcx_abapgit_exception.
+          ls_original_object-include_bound = abap_false.
+      ENDTRY.
     ENDIF.
 
     lt_enhancements = lo_hook_impl->get_hook_impls( ).
