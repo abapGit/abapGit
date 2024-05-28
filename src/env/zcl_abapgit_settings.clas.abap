@@ -322,7 +322,7 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
         WHEN 'Belize'.
           rv_ui_theme = c_ui_theme-belize.
         WHEN OTHERS.
-          IF lv_frontend_theme CS 'dark'. 
+          IF lv_frontend_theme CS 'dark'.
             rv_ui_theme = c_ui_theme-dark.
           ELSE.
             rv_ui_theme = c_ui_theme-default.
