@@ -123,11 +123,6 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
     lv_starting_folder = io_dot->get_starting_folder( ).
     lv_folder_logic    = io_dot->get_folder_logic( ).
 
-    IF iv_top = iv_package.
-      rv_path = lv_starting_folder.
-      RETURN.
-    ENDIF.
-
     READ TABLE mt_buffer_package_to_path INTO ls_buffer WITH TABLE KEY
       top             = iv_top
       starting_folder = lv_starting_folder
@@ -138,67 +133,71 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_parentcl = get_parent(
+    IF iv_top = iv_package.
+      rv_path = lv_starting_folder.
+    ELSE.
+      lv_parentcl = get_parent(
       iv_top     = iv_top
       iv_package = iv_package ).
 
-    " If the parent package can not be determined, we return an initial path and handle
-    " it outside of this class (in zcl_abapgit_file_status)
-    IF lv_parentcl IS NOT INITIAL.
-      CASE lv_folder_logic.
-        WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.
-          lv_len = 0.
-          IF iv_package(1) = '$'.
-            lv_len = 1.
-          ENDIF.
-        WHEN zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
-          lv_len = strlen( lv_parentcl ).
+      " If the parent package can not be determined, we return an initial path and handle
+      " it outside of this class (in zcl_abapgit_file_status)
+      IF lv_parentcl IS NOT INITIAL.
+        CASE lv_folder_logic.
+          WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.
+            lv_len = 0.
+            IF iv_package(1) = '$'.
+              lv_len = 1.
+            ENDIF.
+          WHEN zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
+            lv_len = strlen( lv_parentcl ).
 
-          IF iv_package(lv_len) <> lv_parentcl.
-            " If abapGit project is installed in package ZZZ, all subpackages should be named
-            " ZZZ_something. This will define the folder name in the zip file to be "something",
-            " similarly with online projects. Alternatively change to FULL folder logic
-            lv_message = |PREFIX: Unexpected package naming |
-                      && |(top: { iv_top }, parent: { lv_parentcl }, child: { iv_package }). |
-                      && |Try using the folder logic FULL|.
-            zcx_abapgit_exception=>raise( lv_message ).
-          ENDIF.
-        WHEN zif_abapgit_dot_abapgit=>c_folder_logic-mixed.
-          lv_len = strlen( iv_top ).
+            IF iv_package(lv_len) <> lv_parentcl.
+              " If abapGit project is installed in package ZZZ, all subpackages should be named
+              " ZZZ_something. This will define the folder name in the zip file to be "something",
+              " similarly with online projects. Alternatively change to FULL folder logic
+              lv_message = |PREFIX: Unexpected package naming |
+                        && |(top: { iv_top }, parent: { lv_parentcl }, child: { iv_package }). |
+                        && |Try using the folder logic FULL|.
+              zcx_abapgit_exception=>raise( lv_message ).
+            ENDIF.
+          WHEN zif_abapgit_dot_abapgit=>c_folder_logic-mixed.
+            lv_len = strlen( iv_top ).
 
-          IF iv_package(lv_len) <> iv_top.
-            lv_message = |MIXED: Unexpected package naming |
-                      && |(top: { iv_top }, parent: { lv_parentcl }, child: { iv_package }). |
-                      && |Try using the folder logic FULL|.
-            zcx_abapgit_exception=>raise( lv_message ).
-          ENDIF.
-        WHEN OTHERS.
-          zcx_abapgit_exception=>raise( |Invalid folder logic: { lv_folder_logic }| ).
-      ENDCASE.
+            IF iv_package(lv_len) <> iv_top.
+              lv_message = |MIXED: Unexpected package naming |
+                        && |(top: { iv_top }, parent: { lv_parentcl }, child: { iv_package }). |
+                        && |Try using the folder logic FULL|.
+              zcx_abapgit_exception=>raise( lv_message ).
+            ENDIF.
+          WHEN OTHERS.
+            zcx_abapgit_exception=>raise( |Invalid folder logic: { lv_folder_logic }| ).
+        ENDCASE.
 
-      lv_path = iv_package+lv_len.
-      IF strlen( lv_path ) = 0.
-        zcx_abapgit_exception=>raise( |Folder logic: length = 0, parent: {
-          lv_parentcl }, child: { iv_package }| ).
+        lv_path = iv_package+lv_len.
+        IF strlen( lv_path ) = 0.
+          zcx_abapgit_exception=>raise( |Folder logic: length = 0, parent: {
+            lv_parentcl }, child: { iv_package }| ).
+        ENDIF.
+
+        IF lv_path(1) = '_'.
+          lv_path = lv_path+1.
+        ENDIF.
+        IF strlen( lv_path ) = 0.
+          zcx_abapgit_exception=>raise( |Folder logic: length = 0, parent: {
+            lv_parentcl }, child: { iv_package }| ).
+        ENDIF.
+
+        TRANSLATE lv_path USING '/#'.
+        TRANSLATE lv_path TO LOWER CASE.
+        CONCATENATE lv_path '/' INTO lv_path.
+
+        rv_path = package_to_path( iv_top     = iv_top
+                                   io_dot     = io_dot
+                                   iv_package = lv_parentcl ).
+
+        CONCATENATE rv_path lv_path INTO rv_path.
       ENDIF.
-
-      IF lv_path(1) = '_'.
-        lv_path = lv_path+1.
-      ENDIF.
-      IF strlen( lv_path ) = 0.
-        zcx_abapgit_exception=>raise( |Folder logic: length = 0, parent: {
-          lv_parentcl }, child: { iv_package }| ).
-      ENDIF.
-
-      TRANSLATE lv_path USING '/#'.
-      TRANSLATE lv_path TO LOWER CASE.
-      CONCATENATE lv_path '/' INTO lv_path.
-
-      rv_path = package_to_path( iv_top     = iv_top
-                                 io_dot     = io_dot
-                                 iv_package = lv_parentcl ).
-
-      CONCATENATE rv_path lv_path INTO rv_path.
     ENDIF.
 
     CLEAR ls_buffer.
