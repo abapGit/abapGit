@@ -137,8 +137,8 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       rv_path = lv_starting_folder.
     ELSE.
       lv_parentcl = get_parent(
-      iv_top     = iv_top
-      iv_package = iv_package ).
+        iv_top     = iv_top
+        iv_package = iv_package ).
 
       " If the parent package can not be determined, we return an initial path and handle
       " it outside of this class (in zcl_abapgit_file_status)
