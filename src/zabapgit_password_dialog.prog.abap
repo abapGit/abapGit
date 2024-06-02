@@ -96,7 +96,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
   METHOD on_screen_init.
     sc_title = 'Login'.
     sc_url   = 'Repo URL'.
-    sc_user  = 'Username or Email'.
+    sc_user  = 'User'.
     sc_pass  = 'Password or Token'.
     sc_cmnt  = 'Note'.
   ENDMETHOD.
