@@ -39,6 +39,9 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
         hide_sapgui_hint       TYPE string VALUE 'hide_sapgui_hint',
         activate_wo_popup      TYPE string VALUE 'activate_wo_popup',
         label_colors           TYPE string VALUE 'label_colors',
+        git_default_values     TYPE string VALUE 'git_default_values',
+        default_git_uname      TYPE string VALUE 'default_git_uname',
+        default_git_email      TYPE string VALUE 'default_git_email',
       END OF c_id.
     CONSTANTS:
       BEGIN OF c_event,
@@ -188,6 +191,15 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
       iv_name          = c_id-parallel_proc_disabled
       iv_label         = 'Disable Parallel Processing'
       iv_hint          = 'If disabled, abapGit will use only a single thread to serialize objects'
+    )->start_group(
+      iv_name          = c_id-git_default_values
+      iv_label         = 'Git Default Values'
+    )->text(
+      iv_name          = c_id-default_git_uname
+      iv_label         = 'Default User'
+    )->text(
+      iv_name          = c_id-default_git_email
+      iv_label         = 'Default Email'
     )->command(
       iv_label         = 'Save Settings'
       iv_cmd_type      = zif_abapgit_html_form=>c_cmd_type-input_main
@@ -247,6 +259,14 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
     ro_form_data->set(
       iv_key = c_id-parallel_proc_disabled
       iv_val = boolc( ms_settings-parallel_proc_disabled = abap_true ) ) ##TYPE.
+
+    " Git Default Values
+    ro_form_data->set(
+      iv_key = c_id-default_git_uname
+      iv_val = |{ ms_settings-default_git_uname }| ).
+    ro_form_data->set(
+      iv_key = c_id-default_git_email
+      iv_val = |{ ms_settings-default_git_email }| ).
 
   ENDMETHOD.
 
@@ -335,6 +355,10 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
 
     " Resources
     ms_settings-parallel_proc_disabled = mo_form_data->get( c_id-parallel_proc_disabled ).
+
+    " Git Default Values
+    ms_settings-default_git_uname = mo_form_data->get( c_id-default_git_uname ).
+    ms_settings-default_git_email = mo_form_data->get( c_id-default_git_email ).
 
     " Store in DB
     mo_settings->set_user_settings( ms_settings ).
