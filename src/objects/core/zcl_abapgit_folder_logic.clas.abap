@@ -47,28 +47,6 @@ CLASS zcl_abapgit_folder_logic DEFINITION
       ty_devclass_info_tt TYPE SORTED TABLE OF ty_devclass_info
         WITH UNIQUE KEY devclass .
 
-    TYPES:
-      BEGIN OF ty_buffer_path_to_package,
-        top             TYPE devclass,
-        starting_folder TYPE string,
-        folder_logic    TYPE string,
-        path            TYPE string,
-        package         TYPE devclass,
-      END OF ty_buffer_path_to_package,
-      BEGIN OF ty_buffer_package_to_path,
-        top             TYPE devclass,
-        starting_folder TYPE string,
-        folder_logic    TYPE string,
-        package         TYPE devclass,
-        path            TYPE string,
-      END OF ty_buffer_package_to_path.
-
-    DATA mt_buffer_path_to_package
-      TYPE HASHED TABLE OF ty_buffer_path_to_package
-      WITH UNIQUE KEY top starting_folder folder_logic path.
-    DATA mt_buffer_package_to_path
-      TYPE HASHED TABLE OF ty_buffer_package_to_path
-      WITH UNIQUE KEY top starting_folder folder_logic package.
     DATA mt_top_subpackages TYPE ty_devclass_info_tt .
     DATA mt_parent TYPE ty_devclass_info_tt .
 ENDCLASS.
@@ -112,29 +90,21 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
 
   METHOD package_to_path.
 
-    DATA: lv_len             TYPE i,
-          lv_path            TYPE string,
-          lv_message         TYPE string,
-          lv_parentcl        TYPE tdevc-parentcl,
-          lv_starting_folder TYPE string,
-          lv_folder_logic    TYPE string,
-          ls_buffer          TYPE ty_buffer_package_to_path.
+    DATA: lv_len      TYPE i,
+          lv_path     TYPE string,
+          lv_message  TYPE string,
+          lv_parentcl TYPE tdevc-parentcl.
 
-    lv_starting_folder = io_dot->get_starting_folder( ).
-    lv_folder_logic    = io_dot->get_folder_logic( ).
-
-    READ TABLE mt_buffer_package_to_path INTO ls_buffer WITH TABLE KEY
-      top             = iv_top
-      starting_folder = lv_starting_folder
-      folder_logic    = lv_folder_logic
-      package         = iv_package.
-    IF sy-subrc = 0.
-      rv_path = ls_buffer-path.
+    rv_path = lcl_package_to_path=>get(
+      iv_top     = iv_top
+      io_dot     = io_dot
+      iv_package = iv_package ).
+    IF rv_path IS NOT INITIAL.
       RETURN.
     ENDIF.
 
     IF iv_top = iv_package.
-      rv_path = lv_starting_folder.
+      rv_path = io_dot->get_starting_folder( ).
     ELSE.
       lv_parentcl = get_parent(
         iv_top     = iv_top
@@ -143,7 +113,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       " If the parent package can not be determined, we return an initial path and handle
       " it outside of this class (in zcl_abapgit_file_status)
       IF lv_parentcl IS NOT INITIAL.
-        CASE lv_folder_logic.
+        CASE io_dot->get_folder_logic( ).
           WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.
             lv_len = 0.
             IF iv_package(1) = '$'.
@@ -171,7 +141,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
               zcx_abapgit_exception=>raise( lv_message ).
             ENDIF.
           WHEN OTHERS.
-            zcx_abapgit_exception=>raise( |Invalid folder logic: { lv_folder_logic }| ).
+            zcx_abapgit_exception=>raise( |Invalid folder logic: { io_dot->get_folder_logic( ) }| ).
         ENDCASE.
 
         lv_path = iv_package+lv_len.
@@ -200,13 +170,11 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    CLEAR ls_buffer.
-    ls_buffer-top             = iv_top.
-    ls_buffer-starting_folder = lv_starting_folder.
-    ls_buffer-folder_logic    = lv_folder_logic.
-    ls_buffer-package         = iv_package.
-    ls_buffer-path            = rv_path.
-    INSERT ls_buffer INTO TABLE mt_buffer_package_to_path.
+    lcl_package_to_path=>add(
+      iv_top     = iv_top
+      io_dot     = io_dot
+      iv_package = iv_package
+      iv_path    = rv_path ).
 
   ENDMETHOD.
 
@@ -219,27 +187,19 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
           lv_new                  TYPE string,
           lv_path                 TYPE string,
           lv_absolute_name        TYPE string,
-          lv_starting_folder      TYPE string,
-          lv_folder_logic         TYPE string,
-          ls_buffer               TYPE ty_buffer_path_to_package,
           lt_unique_package_names TYPE HASHED TABLE OF devclass WITH UNIQUE KEY table_line.
 
-    lv_starting_folder = io_dot->get_starting_folder( ).
-    lv_folder_logic    = io_dot->get_folder_logic( ).
-
-    lv_length = strlen( lv_starting_folder ).
+    lv_length = strlen( io_dot->get_starting_folder( ) ).
     IF lv_length > strlen( iv_path ).
 * treat as not existing locally
       RETURN.
     ENDIF.
 
-    READ TABLE mt_buffer_path_to_package INTO ls_buffer WITH TABLE KEY
-      top             = iv_top
-      starting_folder = lv_starting_folder
-      folder_logic    = lv_folder_logic
-      path            = iv_path.
-    IF sy-subrc = 0.
-      rv_package = ls_buffer-package.
+    rv_package = lcl_path_to_package=>get(
+      iv_top  = iv_top
+      io_dot  = io_dot
+      iv_path = iv_path ).
+    IF rv_package IS NOT INITIAL.
       RETURN.
     ENDIF.
 
@@ -265,7 +225,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
     WHILE lv_path CA '/'.
       SPLIT lv_path AT '/' INTO lv_new lv_path.
 
-      CASE lv_folder_logic.
+      CASE io_dot->get_folder_logic( ).
         WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.
           lv_absolute_name = lv_new.
           TRANSLATE lv_absolute_name USING '#/'.
@@ -277,7 +237,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
         WHEN zif_abapgit_dot_abapgit=>c_folder_logic-mixed.
           CONCATENATE iv_top '_' lv_new INTO lv_absolute_name.
         WHEN OTHERS.
-          zcx_abapgit_exception=>raise( |Invalid folder logic: { lv_folder_logic }| ).
+          zcx_abapgit_exception=>raise( |Invalid folder logic: { io_dot->get_folder_logic( ) }| ).
       ENDCASE.
 
       TRANSLATE lv_absolute_name TO UPPER CASE.
@@ -304,13 +264,11 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       lv_parent = rv_package.
     ENDWHILE.
 
-    CLEAR ls_buffer.
-    ls_buffer-top             = iv_top.
-    ls_buffer-starting_folder = lv_starting_folder.
-    ls_buffer-folder_logic    = lv_folder_logic.
-    ls_buffer-path            = iv_path.
-    ls_buffer-package         = rv_package.
-    INSERT ls_buffer INTO TABLE mt_buffer_path_to_package.
+    lcl_path_to_package=>add(
+      iv_top     = iv_top
+      io_dot     = io_dot
+      iv_path    = iv_path
+      iv_package = rv_package ).
 
   ENDMETHOD.
 ENDCLASS.
