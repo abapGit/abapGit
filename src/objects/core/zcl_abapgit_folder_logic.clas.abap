@@ -46,7 +46,6 @@ CLASS zcl_abapgit_folder_logic DEFINITION
     TYPES:
       ty_devclass_info_tt TYPE SORTED TABLE OF ty_devclass_info
         WITH UNIQUE KEY devclass .
-
     DATA mt_top_subpackages TYPE ty_devclass_info_tt .
     DATA mt_parent TYPE ty_devclass_info_tt .
 ENDCLASS.
@@ -90,10 +89,11 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
 
   METHOD package_to_path.
 
-    DATA: lv_len      TYPE i,
-          lv_path     TYPE string,
-          lv_message  TYPE string,
-          lv_parentcl TYPE tdevc-parentcl.
+    DATA: lv_len          TYPE i,
+          lv_path         TYPE string,
+          lv_message      TYPE string,
+          lv_parentcl     TYPE tdevc-parentcl,
+          lv_folder_logic TYPE string.
 
     rv_path = lcl_package_to_path=>get(
       iv_top     = iv_top
@@ -113,7 +113,8 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       " If the parent package can not be determined, we return an initial path and handle
       " it outside of this class (in zcl_abapgit_file_status)
       IF lv_parentcl IS NOT INITIAL.
-        CASE io_dot->get_folder_logic( ).
+        lv_folder_logic = io_dot->get_folder_logic( ).
+        CASE lv_folder_logic.
           WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.
             lv_len = 0.
             IF iv_package(1) = '$'.
@@ -141,7 +142,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
               zcx_abapgit_exception=>raise( lv_message ).
             ENDIF.
           WHEN OTHERS.
-            zcx_abapgit_exception=>raise( |Invalid folder logic: { io_dot->get_folder_logic( ) }| ).
+            zcx_abapgit_exception=>raise( |Invalid folder logic: { lv_folder_logic }| ).
         ENDCASE.
 
         lv_path = iv_package+lv_len.
@@ -187,6 +188,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
           lv_new                  TYPE string,
           lv_path                 TYPE string,
           lv_absolute_name        TYPE string,
+          lv_folder_logic         TYPE string,
           lt_unique_package_names TYPE HASHED TABLE OF devclass WITH UNIQUE KEY table_line.
 
     lv_length = strlen( io_dot->get_starting_folder( ) ).
@@ -225,7 +227,8 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
     WHILE lv_path CA '/'.
       SPLIT lv_path AT '/' INTO lv_new lv_path.
 
-      CASE io_dot->get_folder_logic( ).
+      lv_folder_logic = io_dot->get_folder_logic( ).
+      CASE lv_folder_logic.
         WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.
           lv_absolute_name = lv_new.
           TRANSLATE lv_absolute_name USING '#/'.
@@ -237,7 +240,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
         WHEN zif_abapgit_dot_abapgit=>c_folder_logic-mixed.
           CONCATENATE iv_top '_' lv_new INTO lv_absolute_name.
         WHEN OTHERS.
-          zcx_abapgit_exception=>raise( |Invalid folder logic: { io_dot->get_folder_logic( ) }| ).
+          zcx_abapgit_exception=>raise( |Invalid folder logic: { lv_folder_logic }| ).
       ENDCASE.
 
       TRANSLATE lv_absolute_name TO UPPER CASE.
