@@ -201,7 +201,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       iv_top  = iv_top
       io_dot  = io_dot
       iv_path = iv_path ).
-    IF rv_package IS NOT INITIAL.
+    IF rv_package IS NOT INITIAL AND iv_create_if_not_exists = abap_false.
       RETURN.
     ENDIF.
 
