@@ -282,8 +282,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
 
     ro_form->textarea(
       iv_name        = c_id-exclude_remote_paths
-      iv_label       = 'Exclude Remote Paths'
-      iv_hint        = 'List of files patterns (CP operator) to exclude from deserialization' ).
+      iv_label       = 'Exclude Paths'
+      iv_hint        = 'List of files patterns (CP operator) to exclude from' &&
+                       ' syncronization (e.g. unwanted parts of the package, examples...)' ).
 
     ro_form->start_group(
       iv_name        = c_id-checks
