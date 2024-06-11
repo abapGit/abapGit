@@ -1488,7 +1488,7 @@ LinkHints.prototype.handleKey = function(event) {
       this.displayHints(false);
       event.preventDefault();
       if (this.yankModeActive) {
-        submitSapeventForm({ clipboard: hint.parent.firstChild.textContent }, "yank_to_clipboard");
+        submitSapeventForm({ clipboard: hint.parent.firstChild.textContent }, "clipboard");
         this.yankModeActive = false;
       } else {
         this.hintActivate(hint);

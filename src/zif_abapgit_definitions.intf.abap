@@ -374,7 +374,6 @@ INTERFACE zif_abapgit_definitions
       toggle_favorites              TYPE string VALUE 'toggle_favorites',
       url                           TYPE string VALUE 'url',
       where_used                    TYPE string VALUE 'where_used',
-      yank_to_clipboard             TYPE string VALUE 'yank_to_clipboard',
       zip_export                    TYPE string VALUE 'zip_export',
       zip_export_transport          TYPE string VALUE 'zip_export_transport',
       zip_import                    TYPE string VALUE 'zip_import',
