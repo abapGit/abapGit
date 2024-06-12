@@ -593,6 +593,13 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>c_action-clipboard.
         lv_clip_content = ii_event->query( )->get( 'CLIPBOARD' ).
+        IF lv_clip_content IS INITIAL.
+          " yank mode sends via form_data
+          lv_clip_content = ii_event->form_data( )->get( 'CLIPBOARD' ).
+        ENDIF.
+        IF lv_clip_content IS INITIAL.
+          zcx_abapgit_exception=>raise( 'Export to clipboard failed, no data' ).
+        ENDIF.
         APPEND lv_clip_content TO lt_clipboard.
         zcl_abapgit_ui_factory=>get_frontend_services( )->clipboard_export( lt_clipboard ).
         MESSAGE 'Successfully exported to clipboard' TYPE 'S'.
