@@ -32,7 +32,7 @@ class zcl_abapgit_object_dsfd implementation.
 
         call method lo_dsfd_handler->('GET_SOURCE_CONTAINER')
           exporting
-            iv_as4local = if_dd_cds_constants=>co_as4local-a
+            iv_as4local = 'A'
           receiving
             ro_result   = lo_dsfd_source_container.
 
