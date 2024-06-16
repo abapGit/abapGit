@@ -105,6 +105,8 @@ CLASS zcl_abapgit_filename_logic DEFINITION
     CLASS-METHODS map_object_to_filename
       IMPORTING
         !is_item    TYPE zif_abapgit_definitions=>ty_item
+        !iv_ext     TYPE string
+        !iv_extra   TYPE clike
       CHANGING
         cv_filename TYPE string
       RAISING
@@ -128,6 +130,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
   METHOD file_to_object.
 
     DATA:
+      li_exit TYPE REF TO zif_abapgit_exit,
       lv_name TYPE string,
       lv_type TYPE string,
       lv_ext  TYPE string.
@@ -267,6 +270,8 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
         CALL METHOD (lv_class)=>('ZIF_ABAPGIT_OBJECT~MAP_OBJECT_TO_FILENAME')
           EXPORTING
             is_item     = is_item
+            iv_ext      = iv_ext
+            iv_extra    = iv_extra
           CHANGING
             cv_filename = cv_filename.
       CATCH cx_sy_dyn_call_illegal_class ##NO_HANDLER.
@@ -320,6 +325,8 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
         map_object_to_filename(
           EXPORTING
             is_item     = is_item
+            iv_ext      = iv_ext
+            iv_extra    = iv_extra
           CHANGING
             cv_filename = rv_filename ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
