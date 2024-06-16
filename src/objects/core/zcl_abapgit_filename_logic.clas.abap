@@ -130,7 +130,6 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
   METHOD file_to_object.
 
     DATA:
-      li_exit TYPE REF TO zif_abapgit_exit,
       lv_name TYPE string,
       lv_type TYPE string,
       lv_ext  TYPE string.
