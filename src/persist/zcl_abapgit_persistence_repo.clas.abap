@@ -41,7 +41,7 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
         zcx_abapgit_exception .
     METHODS get_repo_from_content
       IMPORTING
-        is_content    TYPE zif_abapgit_persistence=>ty_content
+        is_content       TYPE zif_abapgit_persistence=>ty_content
       RETURNING
         VALUE(rs_result) TYPE zif_abapgit_persistence=>ty_repo
       RAISING
@@ -50,7 +50,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -158,10 +158,14 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
     MOVE-CORRESPONDING from_xml( lv_old_blob ) TO ls_repo_meta.
     lv_new_blob = to_xml( ls_repo_meta ).
 
-    mo_db->update(
-      iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-      iv_value = iv_repo_key
-      iv_data  = lv_new_blob ).
+    IF lv_new_blob <> lv_old_blob.
+      mo_db->update(
+        iv_type  = zcl_abapgit_persistence_db=>c_type_repo
+        iv_value = iv_repo_key
+        iv_data  = lv_new_blob ).
+
+      COMMIT WORK.
+    ENDIF.
 
   ENDMETHOD.
 

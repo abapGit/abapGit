@@ -33,6 +33,7 @@ CLASS zcl_abapgit_popups DEFINITION
     CONSTANTS c_answer_cancel      TYPE c LENGTH 1 VALUE 'A' ##NO_TEXT.
 
     DATA ms_position TYPE zif_abapgit_popups=>ty_popup_position.
+    TYPES ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
 
     METHODS add_field
       IMPORTING
@@ -43,7 +44,7 @@ CLASS zcl_abapgit_popups DEFINITION
         !iv_field_attr TYPE sval-field_attr DEFAULT ''
         !iv_obligatory TYPE spo_obl OPTIONAL
       CHANGING
-        !ct_fields     TYPE zif_abapgit_popups=>ty_sval_tt .
+        !ct_fields     TYPE ty_sval_tt .
     METHODS _popup_3_get_values
       IMPORTING
         !iv_popup_title    TYPE string
@@ -62,7 +63,7 @@ CLASS zcl_abapgit_popups DEFINITION
         !iv_branch_name TYPE string
       EXPORTING
         !et_value_tab   TYPE ty_commit_value_tab_tt
-        !et_commits     TYPE zif_abapgit_definitions=>ty_commit_tt
+        !et_commits     TYPE zif_abapgit_git_definitions=>ty_commit_tt
       RAISING
         zcx_abapgit_exception.
 ENDCLASS.
@@ -126,7 +127,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       lv_time_string TYPE c LENGTH 10.
 
     FIELD-SYMBOLS:
-      <ls_commit>    TYPE zif_abapgit_definitions=>ty_commit,
+      <ls_commit>    TYPE zif_abapgit_git_definitions=>ty_commit,
       <ls_value_tab> TYPE ty_commit_value_tab.
 
     CLEAR: et_commits, et_value_tab.
@@ -179,9 +180,9 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
                    <ls_branch> LIKE LINE OF lt_branches.
 
 
-    lo_branches    = zcl_abapgit_git_transport=>branches( iv_url ).
+    lo_branches    = zcl_abapgit_git_factory=>get_git_transport( )->branches( iv_url ).
     lt_branches    = lo_branches->get_branches_only( ).
-    lv_head_suffix = | ({ zif_abapgit_definitions=>c_head_name })|.
+    lv_head_suffix = | ({ zif_abapgit_git_definitions=>c_head_name })|.
     lv_head_symref = lo_branches->get_head_symref( ).
 
     IF iv_hide_branch IS NOT INITIAL.
@@ -189,7 +190,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDIF.
 
     IF iv_hide_head IS NOT INITIAL.
-      DELETE lt_branches WHERE name    = zif_abapgit_definitions=>c_head_name
+      DELETE lt_branches WHERE name    = zif_abapgit_git_definitions=>c_head_name
                             OR is_head = abap_true.
     ENDIF.
 
@@ -197,7 +198,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       IF iv_hide_head IS NOT INITIAL.
         lv_text = 'main'.
       ENDIF.
-      IF iv_hide_branch IS NOT INITIAL AND iv_hide_branch <> zif_abapgit_definitions=>c_git_branch-main.
+      IF iv_hide_branch IS NOT INITIAL AND iv_hide_branch <> zif_abapgit_git_definitions=>c_git_branch-main.
         IF lv_text IS INITIAL.
           lv_text = iv_hide_branch && ' is'.
         ELSE.
@@ -219,7 +220,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
       IF <ls_branch>-is_head = abap_true.
 
-        IF <ls_branch>-name = zif_abapgit_definitions=>c_head_name. " HEAD
+        IF <ls_branch>-name = zif_abapgit_git_definitions=>c_head_name. " HEAD
           IF <ls_branch>-name <> lv_head_symref AND lv_head_symref IS NOT INITIAL.
             " HEAD but other HEAD symref exists - ignore
             CONTINUE.
@@ -336,59 +337,10 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_popups~choose_pr_popup.
-
-    DATA lv_answer    TYPE c LENGTH 1.
-    DATA lt_selection TYPE TABLE OF spopli.
-    FIELD-SYMBOLS <ls_sel>  LIKE LINE OF lt_selection.
-    FIELD-SYMBOLS <ls_pull> LIKE LINE OF it_pulls.
-
-    IF lines( it_pulls ) = 0.
-      zcx_abapgit_exception=>raise( 'No pull requests to select from' ).
-    ENDIF.
-
-    LOOP AT it_pulls ASSIGNING <ls_pull>.
-      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
-      <ls_sel>-varoption = |{ <ls_pull>-number } - { <ls_pull>-title } @{ <ls_pull>-user }|.
-    ENDLOOP.
-
-    ms_position = center(
-      iv_width  = 74
-      iv_height = lines( lt_selection ) ).
-
-    CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
-      EXPORTING
-        textline1 = 'Select pull request'
-        titel     = 'Select pull request'
-        start_col = ms_position-start_column
-        start_row = ms_position-start_row
-      IMPORTING
-        answer    = lv_answer
-      TABLES
-        t_spopli  = lt_selection
-      EXCEPTIONS
-        OTHERS    = 1.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
-    ENDIF.
-
-    IF lv_answer = c_answer_cancel.
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
-    ASSERT sy-subrc = 0.
-
-    READ TABLE it_pulls INTO rs_pull INDEX sy-tabix.
-    ASSERT sy-subrc = 0.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_popups~commit_list_popup.
 
     DATA:
-      lt_commits         TYPE zif_abapgit_definitions=>ty_commit_tt,
+      lt_commits         TYPE zif_abapgit_git_definitions=>ty_commit_tt,
       lt_value_tab       TYPE ty_commit_value_tab_tt,
       lt_selected_values TYPE ty_commit_value_tab_tt,
       lt_columns         TYPE zif_abapgit_popups=>ty_alv_column_tt.
@@ -640,6 +592,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
         icon_button_2         = iv_icon_button_2
         default_button        = iv_default_button
         display_cancel_button = iv_display_cancel_button
+        popup_type            = iv_popup_type
         start_column          = ms_position-start_column
         start_row             = ms_position-start_row
       IMPORTING
@@ -655,13 +608,12 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD zif_abapgit_popups~popup_to_create_package.
-    CALL FUNCTION 'FUNCTION_EXISTS'
-      EXPORTING
-        funcname           = 'PB_POPUP_PACKAGE_CREATE'
-      EXCEPTIONS
-        function_not_exist = 1
-        OTHERS             = 2.
-    IF sy-subrc = 1.
+
+    DATA ls_data TYPE scompkdtln.
+
+    MOVE-CORRESPONDING is_package_data TO ls_data.
+
+    IF zcl_abapgit_factory=>get_function_module( )->function_exists( 'PB_POPUP_PACKAGE_CREATE' ) = abap_false.
 * looks like the function module used does not exist on all
 * versions since 702, so show an error
       zcx_abapgit_exception=>raise( 'Your system does not support automatic creation of packages.' &&
@@ -670,37 +622,26 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     CALL FUNCTION 'PB_POPUP_PACKAGE_CREATE'
       CHANGING
-        p_object_data    = es_package_data
+        p_object_data    = ls_data
       EXCEPTIONS
         action_cancelled = 1.
     ev_create = boolc( sy-subrc = 0 ).
+    MOVE-CORRESPONDING ls_data TO es_package_data.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_popups~popup_to_create_transp_branch.
     DATA: lt_fields             TYPE TABLE OF sval,
           lv_transports_as_text TYPE string,
-          lv_desc_as_text       TYPE string,
-          ls_transport_header   LIKE LINE OF it_transport_headers.
+          lv_desc_as_text       TYPE string.
     DATA: lv_branch_name        TYPE spo_value.
     DATA: lv_commit_text        TYPE spo_value.
 
     CLEAR: rs_transport_branch-branch_name, rs_transport_branch-commit_text.
 
-    " If we only have one transport selected set branch name to Transport
-    " name and commit description to transport description.
-    IF lines( it_transport_headers ) = 1.
-      READ TABLE it_transport_headers INDEX 1 INTO ls_transport_header.
-      lv_transports_as_text = ls_transport_header-trkorr.
-      lv_desc_as_text = zcl_abapgit_factory=>get_cts_api( )->read_description( ls_transport_header-trkorr ).
-    ELSE.   " Else set branch name and commit message to 'Transport(s)_TRXXXXXX_TRXXXXX'
-      lv_transports_as_text = 'Transport(s)'.
-      LOOP AT it_transport_headers INTO ls_transport_header.
-        CONCATENATE lv_transports_as_text '_' ls_transport_header-trkorr INTO lv_transports_as_text.
-      ENDLOOP.
-      lv_desc_as_text = lv_transports_as_text.
+    lv_transports_as_text = iv_trkorr.
+    lv_desc_as_text = zcl_abapgit_factory=>get_cts_api( )->read_description( iv_trkorr ).
 
-    ENDIF.
     add_field( EXPORTING iv_tabname   = 'TEXTL'
                          iv_fieldname = 'LINE'
                          iv_fieldtext = 'Branch name'
@@ -726,7 +667,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   METHOD zif_abapgit_popups~popup_to_select_from_list.
 
-    DATA lo_popup TYPE REF TO lcl_object_descision_list.
+    DATA lo_popup TYPE REF TO lcl_object_decision_list.
 
     CLEAR et_list.
 
@@ -834,22 +775,11 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_popups~popup_to_select_transports.
-
-* todo, method to be renamed, it only returns one transport
-
-    DATA: lv_trkorr TYPE e070-trkorr,
-          ls_trkorr LIKE LINE OF rt_trkorr.
-
+  METHOD zif_abapgit_popups~popup_to_select_transport.
 
     CALL FUNCTION 'TR_F4_REQUESTS'
       IMPORTING
-        ev_selected_request = lv_trkorr.
-
-    IF NOT lv_trkorr IS INITIAL.
-      ls_trkorr-trkorr = lv_trkorr.
-      APPEND ls_trkorr TO rt_trkorr.
-    ENDIF.
+        ev_selected_request = rv_trkorr.
 
   ENDMETHOD.
 
@@ -859,15 +789,15 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     DATA: lt_e071    TYPE STANDARD TABLE OF e071,
           lt_e071k   TYPE STANDARD TABLE OF e071k,
           lv_order   TYPE trkorr,
-          ls_e070use TYPE e070use.
+          ls_default TYPE zif_abapgit_default_transport=>ty_get.
     DATA lv_category TYPE e070-korrdev.
 
     " If default transport is set and its type matches, then use it as default for the popup
-    ls_e070use = zcl_abapgit_default_transport=>get_instance( )->get( ).
+    ls_default = zcl_abapgit_factory=>get_default_transport( )->get( ).
 
-    IF ( ls_e070use-trfunction = is_transport_type-request OR ls_e070use-trfunction IS INITIAL )
+    IF ( ls_default-trfunction = is_transport_type-request OR ls_default-trfunction IS INITIAL )
       AND iv_use_default_transport = abap_true.
-      lv_order = ls_e070use-ordernum.
+      lv_order = ls_default-ordernum.
     ENDIF.
 
     " Differentiate between customizing and WB requests
@@ -919,10 +849,10 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
                    <ls_tag> LIKE LINE OF lt_tags.
 
 
-    lo_branches = zcl_abapgit_git_transport=>branches( iv_url ).
+    lo_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( iv_url ).
     lt_tags     = lo_branches->get_tags_only( ).
 
-    LOOP AT lt_tags ASSIGNING <ls_tag> WHERE name NP '*' && zif_abapgit_definitions=>c_git_branch-peel.
+    LOOP AT lt_tags ASSIGNING <ls_tag> WHERE name NP '*' && zif_abapgit_git_definitions=>c_git_branch-peel.
 
       APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
       <ls_sel>-varoption = zcl_abapgit_git_tag=>remove_tag_prefix( <ls_tag>-name ).

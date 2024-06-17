@@ -1,12 +1,9 @@
-CLASS ltcl_data_utils_test DEFINITION FINAL
-  FOR TESTING
-  RISK LEVEL HARMLESS
-  DURATION SHORT.
+CLASS ltcl_data_utils_test DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
 
   PRIVATE SECTION.
-
-    METHODS build_data_filename FOR TESTING.
-    METHODS build_config_filename FOR TESTING.
+    METHODS build_data_filename FOR TESTING RAISING cx_static_check.
+    METHODS build_config_filename FOR TESTING RAISING cx_static_check.
+    METHODS build_table_itab FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -49,6 +46,25 @@ CLASS ltcl_data_utils_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_data_utils=>build_config_filename( ls_config )
       exp = '#nspc#t200.conf.json' ).
+
+  ENDMETHOD.
+
+  METHOD build_table_itab.
+
+    DATA lr_data TYPE REF TO data.
+    DATA ls_row  TYPE t100.
+    FIELD-SYMBOLS <lt_tab> TYPE ANY TABLE.
+    FIELD-SYMBOLS <ls_row> TYPE any.
+
+    lr_data = zcl_abapgit_data_utils=>build_table_itab( 'T100' ).
+    ASSIGN lr_data->* TO <lt_tab>.
+
+* test that the table works with basic itab operations,
+    INSERT ls_row INTO TABLE <lt_tab>.
+    cl_abap_unit_assert=>assert_subrc( ).
+
+    READ TABLE <lt_tab> ASSIGNING <ls_row> FROM ls_row.
+    cl_abap_unit_assert=>assert_subrc( ).
 
   ENDMETHOD.
 

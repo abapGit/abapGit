@@ -15,6 +15,11 @@ CLASS zcl_abapgit_utils DEFINITION
         iv_email        TYPE string
       RETURNING
         VALUE(rv_valid) TYPE abap_bool.
+    CLASS-METHODS check_eol
+      IMPORTING
+        !iv_data TYPE string
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -24,12 +29,25 @@ ENDCLASS.
 CLASS zcl_abapgit_utils IMPLEMENTATION.
 
 
+  METHOD check_eol.
+
+    " Check if data is using CRLF as EOL separator. If only LF is used, data was likely
+    " edited by external tools
+    IF iv_data IS NOT INITIAL AND
+       iv_data CS cl_abap_char_utilities=>newline AND
+       iv_data NS cl_abap_char_utilities=>cr_lf.
+      zcx_abapgit_exception=>raise( 'Incorrect source format: Requires CRLF instead of LF' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD is_binary.
 
     " Previously we did a simple char range test described here
     " stackoverflow.com/questions/277521/how-to-identify-the-file-content-as-ascii-or-binary
-    " but this is insufficient if the data contains german umlauts and other special characters.
-    " Therefore we adopted another algorithm, which is similarily used by AL11
+    " but this is insufficient if the data contains German umlauts and other special characters.
+    " Therefore we adopted another algorithm, which is similarly used by AL11
     " RSWATCH0 / GUESS_FILE_TYPE
     " We count non-printable characters if there are more than XX% it's binary.
 

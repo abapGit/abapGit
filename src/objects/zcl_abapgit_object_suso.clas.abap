@@ -3,11 +3,15 @@ CLASS zcl_abapgit_object_suso DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
-    METHODS:
-      constructor
-        IMPORTING
-          is_item     TYPE zif_abapgit_definitions=>ty_item
-          iv_language TYPE spras.
+    METHODS constructor
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS c_longtext_id_suso TYPE dokil-id VALUE 'UO'.
@@ -35,8 +39,11 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     mv_objectname = ms_item-obj_name.
 
@@ -54,7 +61,7 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
     SELECT SINGLE langu
            FROM dokil INTO lv_dummy
            WHERE id   = 'UO'                            "#EC CI_GENBUFF
-           AND object = lv_docu_obj.
+           AND object = lv_docu_obj.                    "#EC CI_NOORDER
 
     IF sy-subrc = 0.
 
@@ -111,7 +118,7 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
 
     IF sy-subrc = 0.
 
-      " so these check are not executed in 702
+      " so these checks are not executed in 702
 
       CREATE OBJECT lo_suso
         TYPE
@@ -178,7 +185,11 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
+    SELECT SINGLE modifier FROM tobjvor INTO rv_user
+      WHERE objct = mv_objectname.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -274,6 +285,7 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
 
     SELECT SINGLE objct FROM tobj INTO lv_objct
       WHERE objct = ms_item-obj_name.
+
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -353,7 +365,7 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
       WHERE object = ms_item-obj_name
       AND langu = mv_language.                          "#EC CI_GENBUFF
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'TOBJT no english description'
+      zcx_abapgit_exception=>raise( 'TOBJT no English description'
         && ' for object (' && ms_item-obj_name && ')' ).
     ENDIF.
 

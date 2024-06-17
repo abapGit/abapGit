@@ -81,7 +81,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     FIELD-SYMBOLS: <lv_data> TYPE any.
 
     io_xml->read( EXPORTING iv_name = 'CONFIG_ID'
-                  CHANGING  cg_data = ls_orig_config-config_id  ).
+                  CHANGING  cg_data = ls_orig_config-config_id ).
 
     io_xml->read( EXPORTING iv_name = 'CONFIG_TYPE'
                   CHANGING  cg_data = ls_orig_config-config_type ).
@@ -118,7 +118,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'WDA_COMPONENT'
                   CHANGING  cg_data = ls_orig_config-component ).
 
-    lv_xml_string = zif_abapgit_object~mo_files->read_string(
+    lv_xml_string = mo_files->read_string(
       iv_extra = 'comp_config'
       iv_ext   = 'xml' ).
 
@@ -136,7 +136,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
       WITH '<?xml version="1.0"?>'.
     ASSERT sy-subrc = 0.
 
-    lv_xml_xstring = zcl_abapgit_convert=>string_to_xstring( iv_str = lv_xml_string ).
+    lv_xml_xstring = zcl_abapgit_convert=>string_to_xstring( lv_xml_string ).
     ls_orig_config-xcontent = lv_xml_xstring.
 
     ASSIGN COMPONENT 'PARENT' OF STRUCTURE ls_orig_config TO <lv_data>.
@@ -342,7 +342,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     FIELD-SYMBOLS: <lv_data> TYPE any.
 
     io_xml->add( iv_name = 'OBJECT_NAME'
-                 ig_data =  ms_item-obj_name ).
+                 ig_data = ms_item-obj_name ).
 
     ls_config_key-config_id = ms_item-obj_name+0(32).
     ls_config_key-config_type = ms_item-obj_name+32(2).
@@ -365,45 +365,45 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     ENDTRY.
 
     io_xml->add( iv_name = 'CONFIG_ID'
-                 ig_data =  ls_orig_config-config_id ).
+                 ig_data = ls_orig_config-config_id ).
 
     io_xml->add( iv_name = 'CONFIG_TYPE'
-                 ig_data =  ls_orig_config-config_type ).
+                 ig_data = ls_orig_config-config_type ).
 
     io_xml->add( iv_name = 'CONFIG_VAR'
-                 ig_data =  ls_orig_config-config_var ).
+                 ig_data = ls_orig_config-config_var ).
 
     io_xml->add( iv_name = 'WDA_COMPONENT'
-                 ig_data =  ls_orig_config-component ).
+                 ig_data = ls_orig_config-component ).
 
     ASSIGN COMPONENT 'CONFIG_IDPAR' OF STRUCTURE ls_orig_config TO <lv_data>.
     IF sy-subrc = 0.
       io_xml->add( iv_name = 'CONFIG_IDPAR'
-                   ig_data =  <lv_data> ).
+                   ig_data = <lv_data> ).
     ENDIF.
 
     ASSIGN COMPONENT 'CONFIG_TYPEPAR' OF STRUCTURE ls_orig_config TO <lv_data>.
     IF sy-subrc = 0.
       io_xml->add( iv_name = 'CONFIG_TYPEPAR'
-                   ig_data =  <lv_data> ).
+                   ig_data = <lv_data> ).
     ENDIF.
 
     ASSIGN COMPONENT 'CONFIG_VARPAR' OF STRUCTURE ls_orig_config TO <lv_data>.
     IF sy-subrc = 0.
       io_xml->add( iv_name = 'CONFIG_VARPAR'
-                   ig_data =  <lv_data> ).
+                   ig_data = <lv_data> ).
     ENDIF.
 
     ASSIGN COMPONENT 'PARENT' OF STRUCTURE ls_orig_config TO <lv_data>.
     IF sy-subrc = 0.
       io_xml->add( iv_name = 'PARENT'
-                   ig_data =  <lv_data> ).
+                   ig_data = <lv_data> ).
     ENDIF.
 
     io_xml->add( iv_name = 'RELID'
-                 ig_data =  ls_orig_config-relid ).
+                 ig_data = ls_orig_config-relid ).
 
-    lv_xml_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data = lv_xml_xstring ).
+    lv_xml_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xml_xstring ).
     IF lv_xml_string IS NOT INITIAL.
       TRY.
           lv_xml_string = zcl_abapgit_xml_pretty=>print(
@@ -420,7 +420,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
       ASSERT sy-subrc = 0.
     ENDIF.
 
-    zif_abapgit_object~mo_files->add_string(
+    mo_files->add_string(
       iv_extra  = 'comp_config'
       iv_ext    = 'xml'
       iv_string = lv_xml_string ).

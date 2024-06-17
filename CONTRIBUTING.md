@@ -1,6 +1,6 @@
 ## General advice
 
-* If you're new and want to help out, try one of [these](https://github.com/larshp/abapGit/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22). They should not be complicated to implement but require you to get the project up and running. Or pick something that annoys you. Fix a typo. Improve an error message. Correct some [coding conventions](https://docs.abapgit.org/development/guidelines.html). Or try something unusual just to see if it works and if it doesn't, open an issue.
+* If you're new and want to help out, try one of [these](https://github.com/larshp/abapGit/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22). They should not be complicated to implement but require you to get the project up and running. Or pick something that annoys you. Fix a typo. Improve an error message. Correct some [coding conventions](https://docs.abapgit.org/development-guide/). Or try something unusual just to see if it works and if it doesn't, open an issue.
 
 * Before starting any significant development, open an issue and propose your solution first. A discussion can save a lot of unnecessary work. It also helps others know that this is being worked on.
 
@@ -26,8 +26,8 @@ A good bug report should not leave others needing to chase you up for more infor
 
 ## Development Guidelines
 
-http://docs.abapgit.org/development/guidelines.html
+https://docs.abapgit.org/development-guide/
 
 ## Building/Creating a PR
 
-http://docs.abapgit.org/development/contributing.html
+https://docs.abapgit.org/development-guide/read-first/contributing.html

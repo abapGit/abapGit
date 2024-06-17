@@ -1,14 +1,17 @@
 CLASS zcl_abapgit_object_cmpt DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super FINAL.
 
   PUBLIC SECTION.
-    METHODS:
-      constructor
-        IMPORTING
-          is_item     TYPE zif_abapgit_definitions=>ty_item
-          iv_language TYPE spras.
+
+    METHODS constructor
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
 
     INTERFACES zif_abapgit_object.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mo_cmp_db TYPE REF TO object,
@@ -23,8 +26,11 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     TRY.
         CALL METHOD ('CL_CMP_TEMPLATE')=>('S_GET_DB_ACCESS')
@@ -84,7 +90,7 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error deleting CMPT { ms_item-obj_name }| ).
     ENDIF.
 
-    tadir_delete( ).
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
@@ -92,7 +98,9 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: lr_template TYPE REF TO data.
-    FIELD-SYMBOLS: <lg_template> TYPE any.
+    FIELD-SYMBOLS: <lg_template> TYPE any,
+                   <lg_header>   TYPE any,
+                   <lg_field>    TYPE any.
 
     TRY.
         CREATE DATA lr_template TYPE ('IF_CMP_TEMPLATE_DB=>TYP_TEMPLATE').
@@ -103,6 +111,18 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
             iv_name = 'CMPT'
           CHANGING
             cg_data = <lg_template> ).
+
+        ASSIGN COMPONENT 'STR_HEADER' OF STRUCTURE <lg_template> TO <lg_header>.
+        IF sy-subrc = 0.
+          ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_header> TO <lg_field>.
+          IF sy-subrc = 0.
+            <lg_field> = ms_item-obj_name.
+          ENDIF.
+          ASSIGN COMPONENT 'VERSION' OF STRUCTURE <lg_header> TO <lg_field>.
+          IF sy-subrc = 0.
+            <lg_field> = 'A'.
+          ENDIF.
+        ENDIF.
 
         CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~SAVE_TEMPLATE')
           EXPORTING
@@ -193,7 +213,9 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: lr_template TYPE REF TO data.
-    FIELD-SYMBOLS: <lg_template> TYPE any.
+    FIELD-SYMBOLS: <lg_template> TYPE any,
+                   <lg_header>   TYPE any,
+                   <lg_field>    TYPE any.
 
     TRY.
         CREATE DATA lr_template TYPE ('IF_CMP_TEMPLATE_DB=>TYP_TEMPLATE').
@@ -205,6 +227,30 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
             i_version  = 'A'
           RECEIVING
             r_template = <lg_template>.
+
+        ASSIGN COMPONENT 'STR_HEADER' OF STRUCTURE <lg_template> TO <lg_header>.
+        IF sy-subrc = 0.
+          ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_header> TO <lg_field>.
+          IF sy-subrc = 0.
+            CLEAR <lg_field>.
+          ENDIF.
+          ASSIGN COMPONENT 'VERSION' OF STRUCTURE <lg_header> TO <lg_field>.
+          IF sy-subrc = 0.
+            CLEAR <lg_field>.
+          ENDIF.
+          ASSIGN COMPONENT 'CHANGED_ON' OF STRUCTURE <lg_header> TO <lg_field>.
+          IF sy-subrc = 0.
+            CLEAR <lg_field>.
+          ENDIF.
+          ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <lg_header> TO <lg_field>.
+          IF sy-subrc = 0.
+            CLEAR <lg_field>.
+          ENDIF.
+          ASSIGN COMPONENT 'CHANGED_TS' OF STRUCTURE <lg_header> TO <lg_field>.
+          IF sy-subrc = 0.
+            CLEAR <lg_field>.
+          ENDIF.
+        ENDIF.
 
         io_xml->add( iv_name = 'CMPT'
                      ig_data = <lg_template> ).

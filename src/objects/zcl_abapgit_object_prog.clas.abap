@@ -17,8 +17,9 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS deserialize_with_ext
       IMPORTING
-        !is_progdir TYPE ty_progdir
+        !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
         !it_source  TYPE abaptxt255_tab
+        !iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_texts
@@ -72,26 +73,19 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     " https://help.sap.com/doc/abapdocu_755_index_htm/7.55/en-US/index.htm?file=abapinsert_report_internal.htm
     " This e.g. occurs in case of transportable Code Inspector variants (ending with ===VC)
 
-    INSERT REPORT is_progdir-name
-      FROM it_source
-      STATE 'I'
-      EXTENSION TYPE is_progdir-name+30
-      PROGRAM TYPE is_progdir-subc.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from INSERT REPORT .. EXTENSION TYPE' ).
-    ENDIF.
+    zcl_abapgit_factory=>get_sap_report( )->insert_report(
+      iv_name           = is_progdir-name
+      iv_package        = iv_package
+      it_source         = it_source
+      iv_state          = 'I'
+      iv_version        = is_progdir-uccheck
+      iv_program_type   = is_progdir-subc
+      iv_extension_type = is_progdir-name+30 ).
 
-    CALL FUNCTION 'UPDATE_PROGDIR'
-      EXPORTING
-        i_progdir    = is_progdir
-        i_progname   = is_progdir-name
-        i_state      = 'I'
-      EXCEPTIONS
-        not_executed = 1
-        OTHERS       = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error updating program directory' ).
-    ENDIF.
+    zcl_abapgit_factory=>get_sap_report( )->update_progdir(
+      is_progdir = is_progdir
+      iv_state   = 'I'
+      iv_package = iv_package ).
 
     zcl_abapgit_objects_activation=>add(
       iv_type = 'REPS'
@@ -116,18 +110,14 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       RETURN.
     ENDIF.
 
     " Table d010tinf stores info. on languages in which program is maintained
     " Select all active translations of program texts
     " Skip main language - it was already serialized
-    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
-
-    zcl_abapgit_lxe_texts=>add_iso_langs_to_lang_filter(
-      EXPORTING it_iso_filter      = ii_xml->i18n_params( )-translation_languages
-      CHANGING  ct_language_filter = lt_language_filter ).
+    lt_language_filter = mo_i18n_params->build_language_filter( ).
 
     SELECT DISTINCT language
       INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
@@ -135,7 +125,8 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
       WHERE r3state = 'A'
       AND prog = ms_item-obj_name
       AND language <> mv_language
-      AND language IN lt_language_filter ##TOO_MANY_ITAB_FIELDS.
+      AND language IN lt_language_filter
+      ORDER BY language ##TOO_MANY_ITAB_FIELDS.
 
     SORT lt_tpool_i18n BY language ASCENDING.
     LOOP AT lt_tpool_i18n ASSIGNING <ls_tpool>.
@@ -187,7 +178,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
         OTHERS                     = 5.
     IF sy-subrc = 2.
       " Drop also any inactive code that is left in REPOSRC
-      DELETE REPORT lv_program ##SUBRC_OK.
+      zcl_abapgit_factory=>get_sap_report( )->delete_report( lv_program ).
 
       " Remove inactive objects from work area
       lv_obj_name = lv_program.
@@ -216,8 +207,8 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lv_program_name TYPE programm,
-          ls_progdir      TYPE ty_progdir,
+    DATA: lv_program_name TYPE syrepid,
+          ls_progdir      TYPE zif_abapgit_sap_report=>ty_progdir,
           lt_tpool        TYPE textpool_table,
           lt_dynpros      TYPE ty_dynpro_tt,
           lt_tpool_ext    TYPE zif_abapgit_definitions=>ty_tpool_tt,
@@ -229,7 +220,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     lv_program_name = ms_item-obj_name.
 
-    lt_source = zif_abapgit_object~mo_files->read_abap( ).
+    lt_source = mo_files->read_abap( ).
 
     io_xml->read( EXPORTING iv_name = 'TPOOL'
                   CHANGING cg_data = lt_tpool_ext ).
@@ -238,10 +229,13 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'PROGDIR'
                   CHANGING cg_data  = ls_progdir ).
 
+    set_abap_language_version( CHANGING cv_abap_language_version = ls_progdir-uccheck ).
+
     IF strlen( lv_program_name ) > 30.
 
       " Objects with extension for example transportable Code Inspector variants (ending with ===VC)
       deserialize_with_ext( is_progdir = ls_progdir
+                            iv_package = iv_package
                             it_source  = lt_source ).
 
     ELSE.
@@ -265,8 +259,9 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                             it_tpool   = lt_tpool ).
 
       " Texts deserializing (translations)
-      deserialize_texts( io_xml ).
-      deserialize_lxe_texts( io_xml ).
+      IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
+        deserialize_texts( io_xml ).
+      ENDIF.
 
       deserialize_longtexts( ii_xml         = io_xml
                              iv_longtext_id = c_longtext_id_prog ).
@@ -348,13 +343,11 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     serialize_program( io_xml   = io_xml
                        is_item  = ms_item
-                       io_files = zif_abapgit_object~mo_files ).
+                       io_files = mo_files ).
 
     " Texts serializing (translations)
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts( io_xml ).
-    ELSE.
-      serialize_lxe_texts( io_xml ).
     ENDIF.
 
     serialize_longtexts( ii_xml         = io_xml

@@ -24,16 +24,14 @@ CLASS zcl_abapgit_apack_helper DEFINITION
         VALUE(rs_file) TYPE zif_abapgit_git_definitions=>ty_file
       RAISING
         zcx_abapgit_exception .
+
+    CLASS-METHODS get_manifest_implementations
+      RETURNING
+        VALUE(rt_manifest_implementations) TYPE zif_abapgit_apack_definitions=>ty_manifest_declarations.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    TYPES:
-      BEGIN OF ty_manifest_declaration,
-        clsname  TYPE seometarel-clsname,
-        devclass TYPE devclass,
-      END OF ty_manifest_declaration .
-    TYPES:
-      ty_manifest_declarations TYPE STANDARD TABLE OF ty_manifest_declaration WITH NON-UNIQUE DEFAULT KEY .
     TYPES:
       BEGIN OF ty_dependency_status,
         met TYPE zif_abapgit_definitions=>ty_yes_no_partial.
@@ -80,7 +78,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
+CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
 
   METHOD are_dependencies_met.
@@ -109,11 +107,20 @@ CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
 
   METHOD dependencies_popup.
 
-    DATA: lt_met_status TYPE ty_dependency_statuses.
+    DATA: lt_met_status TYPE ty_dependency_statuses,
+          lv_answer     TYPE c LENGTH 1.
 
     lt_met_status = get_dependencies_met_status( it_dependencies ).
 
     show_dependencies_popup( lt_met_status ).
+
+    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+      iv_titlebar      = 'Warning'
+      iv_text_question = 'The project has unmet dependencies. Do you want to continue?' ).
+
+    IF lv_answer <> '1'.
+      zcx_abapgit_exception=>raise( 'Cancelling because of unmet dependencies.' ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -226,19 +233,12 @@ CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
   METHOD get_installed_packages.
 
     DATA: lo_apack_reader            TYPE REF TO zcl_abapgit_apack_reader,
-          lt_manifest_implementation TYPE ty_manifest_declarations,
-          ls_manifest_implementation TYPE ty_manifest_declaration,
+          lt_manifest_implementation TYPE zif_abapgit_apack_definitions=>ty_manifest_declarations,
+          ls_manifest_implementation TYPE zif_abapgit_apack_definitions=>ty_manifest_declaration,
           lo_manifest_provider       TYPE REF TO object,
           ls_descriptor              TYPE zif_abapgit_apack_definitions=>ty_descriptor.
 
-    SELECT seometarel~clsname tadir~devclass FROM seometarel "#EC CI_NOORDER
-       INNER JOIN tadir ON seometarel~clsname = tadir~obj_name "#EC CI_BUFFJOIN
-       INTO TABLE lt_manifest_implementation
-       WHERE tadir~pgmid = 'R3TR'
-         AND tadir~object = 'CLAS'
-         AND seometarel~version = '1'
-         AND ( seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_cust
-            OR seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_sap ).
+    lt_manifest_implementation = get_manifest_implementations( ).
 
     LOOP AT lt_manifest_implementation INTO ls_manifest_implementation.
       CLEAR: lo_manifest_provider, lo_apack_reader.
@@ -262,6 +262,39 @@ CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
       ENDIF.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD get_manifest_implementations.
+
+    DATA lt_refclsname TYPE RANGE OF abap_classname.
+    DATA ls_refclsname LIKE LINE OF lt_refclsname.
+
+    ls_refclsname-sign   = 'I'.
+    ls_refclsname-option = 'EQ'.
+    ls_refclsname-low    = zif_abapgit_apack_definitions=>c_apack_interface_cust.
+    INSERT ls_refclsname INTO TABLE lt_refclsname.
+
+    ls_refclsname-sign   = 'I'.
+    ls_refclsname-option = 'EQ'.
+    ls_refclsname-low    = zif_abapgit_apack_definitions=>c_apack_interface_sap.
+    INSERT ls_refclsname INTO TABLE lt_refclsname.
+
+    ls_refclsname-sign   = 'I'.
+    ls_refclsname-option = 'CP'.
+    ls_refclsname-low    = zif_abapgit_apack_definitions=>c_apack_interface_nspc.
+    INSERT ls_refclsname INTO TABLE lt_refclsname.
+
+    " Find all classes that implement customer or SAP version of APACK interface
+    SELECT seometarel~clsname tadir~devclass FROM seometarel "#EC CI_NOORDER
+      INNER JOIN tadir ON seometarel~clsname = tadir~obj_name "#EC CI_BUFFJOIN
+      INTO TABLE rt_manifest_implementations
+      WHERE tadir~pgmid           = 'R3TR'
+        AND tadir~object          = 'CLAS'
+        AND seometarel~version    = '1'
+        AND seometarel~refclsname IN lt_refclsname
+       ORDER BY clsname devclass ##SUBRC_OK.
 
   ENDMETHOD.
 

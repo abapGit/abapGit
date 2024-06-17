@@ -29,8 +29,15 @@ CLASS zcl_abapgit_html DEFINITION
         iv_checked     TYPE abap_bool OPTIONAL
       RETURNING
         VALUE(rv_html) TYPE string .
+    CLASS-METHODS parse_data_attr
+      IMPORTING
+        iv_str         TYPE string OPTIONAL
+      RETURNING
+        VALUE(rs_data_attr) TYPE zif_abapgit_html=>ty_data_attr .
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    CONSTANTS c_max_indent TYPE i VALUE 200.
 
     TYPES:
       BEGIN OF ty_indent_context,
@@ -107,7 +114,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     gv_spaces = repeat(
       val = ` `
-      occ = 200 ).
+      occ = c_max_indent ).
 
     GET PARAMETER ID 'DBT' FIELD lv_mode.
     gv_debug_mode = boolc( lv_mode = 'HREF' ).
@@ -148,6 +155,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       lv_color = | { lv_color }|.
     ENDIF.
 
+    " Automatic icon scaling (could be overwritten by personal setting)
+    " see zcl_abapgit_gui_page->html_head
     lv_xpixel = cl_gui_cfw=>compute_pixel_from_metric( x_or_y = 'X'
                                                        in = 1 ).
     IF lv_xpixel >= 2.
@@ -187,7 +196,11 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
         OR ls_study-tag_close = abap_true )
         AND cs_context-indent > 0.
       lv_spaces = ( cs_context-indent - 1 ) * c_indent_size.
-      cv_line  = gv_spaces(lv_spaces) && cv_line.
+      IF lv_spaces <= c_max_indent.
+        cv_line  = gv_spaces(lv_spaces) && cv_line.
+      ELSE.
+        cv_line = gv_spaces && cv_line.
+      ENDIF.
     ELSE.
       cv_line = cs_context-indent_str && cv_line.
     ENDIF.
@@ -214,7 +227,21 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
         cs_context-indent = cs_context-indent - 1.
       ENDIF.
       lv_spaces = cs_context-indent * c_indent_size.
-      cs_context-indent_str = gv_spaces(lv_spaces).
+      IF lv_spaces <= c_max_indent.
+        cs_context-indent_str = gv_spaces(lv_spaces).
+      ELSE.
+        cv_line = gv_spaces && cv_line.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD parse_data_attr.
+
+    SPLIT iv_str AT '=' INTO rs_data_attr-name rs_data_attr-value.
+    IF rs_data_attr-name IS INITIAL.
+      CLEAR rs_data_attr.
     ENDIF.
 
   ENDMETHOD.
@@ -369,10 +396,10 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
   METHOD zif_abapgit_html~add.
 
-    DATA: lv_type TYPE c,
+    DATA: lv_type       TYPE c,
           li_renderable TYPE REF TO zif_abapgit_gui_renderable,
-          lx_error TYPE REF TO zcx_abapgit_exception,
-          lo_html TYPE REF TO zcl_abapgit_html.
+          lx_error      TYPE REF TO zcx_abapgit_exception,
+          lo_html       TYPE REF TO zcl_abapgit_html.
 
     FIELD-SYMBOLS: <lt_tab> TYPE string_table.
 
@@ -450,6 +477,19 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_html~div.
+    zif_abapgit_html~wrap(
+      iv_tag   = 'div'
+      iv_content = iv_content
+      ii_content = ii_content
+      is_data_attr  = is_data_attr
+      it_data_attrs = it_data_attrs
+      iv_id    = iv_id
+      iv_class = iv_class ).
+    ri_self = me.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_html~icon.
 
     rv_str = icon(
@@ -474,14 +514,18 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     FIELD-SYMBOLS: <lv_line>   LIKE LINE OF lt_temp,
                    <lv_line_c> LIKE LINE OF lt_temp.
 
-    ls_context-no_indent_jscss = iv_no_indent_jscss.
+    IF iv_no_line_breaks = abap_true.
+      CONCATENATE LINES OF mt_buffer INTO rv_html.
+    ELSE.
+      ls_context-no_indent_jscss = iv_no_indent_jscss.
 
-    LOOP AT mt_buffer ASSIGNING <lv_line>.
-      APPEND <lv_line> TO lt_temp ASSIGNING <lv_line_c>.
-      indent_line( CHANGING cs_context = ls_context cv_line = <lv_line_c> ).
-    ENDLOOP.
+      LOOP AT mt_buffer ASSIGNING <lv_line>.
+        APPEND <lv_line> TO lt_temp ASSIGNING <lv_line_c>.
+        indent_line( CHANGING cs_context = ls_context cv_line = <lv_line_c> ).
+      ENDLOOP.
 
-    CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY cl_abap_char_utilities=>newline.
+      CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY cl_abap_char_utilities=>newline.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -500,6 +544,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       ii_content = ii_content
       iv_id    = iv_id
       iv_class = iv_class
+      is_data_attr  = is_data_attr
+      it_data_attrs = it_data_attrs
       iv_hint  = iv_hint ).
     ri_self = me.
   ENDMETHOD.
@@ -513,6 +559,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       ii_content = ii_content
       iv_id    = iv_id
       iv_class = iv_class
+      is_data_attr  = is_data_attr
+      it_data_attrs = it_data_attrs
       iv_hint  = iv_hint ).
     ri_self = me.
   ENDMETHOD.
@@ -522,9 +570,11 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     DATA lv_open_tag TYPE string.
     DATA lv_close_tag TYPE string.
+    DATA ls_data_attr LIKE LINE OF it_data_attrs.
 
     DATA: lv_class TYPE string,
           lv_id    TYPE string,
+          lv_data_attr TYPE string,
           lv_title TYPE string.
 
     IF iv_id IS NOT INITIAL.
@@ -539,7 +589,15 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       lv_title = | title="{ iv_hint }"|.
     ENDIF.
 
-    lv_open_tag = |<{ iv_tag }{ lv_id }{ lv_class }{ lv_title }>|.
+    IF is_data_attr IS NOT INITIAL.
+      lv_data_attr = | data-{ is_data_attr-name }="{ is_data_attr-value }"|.
+    ENDIF.
+
+    LOOP AT it_data_attrs INTO ls_data_attr.
+      lv_data_attr = lv_data_attr && | data-{ ls_data_attr-name }="{ ls_data_attr-value }"|.
+    ENDLOOP.
+
+    lv_open_tag = |<{ iv_tag }{ lv_id }{ lv_class }{ lv_data_attr }{ lv_title }>|.
     lv_close_tag = |</{ iv_tag }>|.
 
     IF ii_content IS NOT BOUND AND iv_content IS INITIAL.

@@ -66,7 +66,7 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
             cx_pak_not_authorized
             cx_pak_invalid_state
             cx_pak_wb_object_locked.
-          zcx_abapgit_exception=>raise( |OTGR { lv_name }: could not aquire lock| ).
+          zcx_abapgit_exception=>raise( |OTGR { lv_name }: could not acquire lock| ).
       ENDTRY.
     ENDIF.
   ENDMETHOD.
@@ -142,7 +142,7 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
 
     IF <lt_parents> IS ASSIGNED.
       io_xml->read( EXPORTING iv_name = 'PARENTS'
-                    CHANGING  cg_data = <lt_parents>  ).
+                    CHANGING  cg_data = <lt_parents> ).
 
       LOOP AT <lt_parents> ASSIGNING <ls_parent>.
         ASSIGN COMPONENT 'ACTIVATION_STATE' OF STRUCTURE <ls_parent> TO <lv_field>.
@@ -182,7 +182,7 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
         IF sy-subrc = 0.
           lo_otgr->set_description( <ls_groupt>-text ).
           " ELSE.
-          "   Do we want to clear the main language description if not present in the XML conent?
+          "   Do we want to clear the main language description if not present in the XML content?
           "   Main language is non-deterministic - it depends on sy-langu, so rather don't touch
           "   description if the main language is not present
           "   Perhaps, we can display some sort of a message but how?

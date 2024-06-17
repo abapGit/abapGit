@@ -27,6 +27,14 @@ CLASS zcl_abapgit_http_client DEFINITION PUBLIC CREATE PUBLIC.
                   iv_service TYPE string
         RAISING   zcx_abapgit_exception.
 
+    METHODS set_header
+      IMPORTING
+        iv_key   TYPE string
+        iv_value TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mi_client TYPE REF TO if_http_client,
           mo_digest TYPE REF TO zcl_abapgit_http_digest.
@@ -63,6 +71,12 @@ CLASS zcl_abapgit_http_client IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'Unsupported media type (HTTP 415)' ).
       WHEN 422.
         zcx_abapgit_exception=>raise( 'Unprocessable entity (HTTP 422). Check, if URL has to end with ".git"' ).
+      WHEN 426.
+        zcx_abapgit_exception=>raise(
+            iv_text     = 'Upgrade Required (HTTP 426)'
+            iv_longtext = |The git server requires a different HTTP-protocol than which is sent. |
+                       && |abapGit uses HTTP/1.1 as default. |
+                       && |See more details in the abapGit online documentation.| ).
       WHEN OTHERS.
         lv_text = mi_client->response->get_cdata( ).
         zcx_abapgit_exception=>raise( |(HTTP { lv_code }) { lv_text }| ).
@@ -144,7 +158,7 @@ CLASS zcl_abapgit_http_client IMPLEMENTATION.
           code    = lv_code
           message = lv_message ).
 
-      lv_text = |HTTP error { lv_code } occured: { lv_message }|.
+      lv_text = |HTTP error { lv_code } occurred: { lv_message }|.
 
       zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.
@@ -166,6 +180,13 @@ CLASS zcl_abapgit_http_client IMPLEMENTATION.
 
   METHOD set_digest.
     mo_digest = io_digest.
+  ENDMETHOD.
+
+
+  METHOD set_header.
+    mi_client->request->set_header_field(
+      name  = iv_key
+      value = iv_value ).
   ENDMETHOD.
 
 

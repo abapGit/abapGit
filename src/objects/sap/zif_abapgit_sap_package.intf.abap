@@ -5,12 +5,22 @@ INTERFACE zif_abapgit_sap_package
   TYPES:
     ty_devclass_tt TYPE STANDARD TABLE OF devclass WITH DEFAULT KEY .
 
+  TYPES: BEGIN OF ty_create,
+           devclass  TYPE devclass,
+           dlvunit   TYPE tdevc-dlvunit,
+           component TYPE c LENGTH 20,
+           ctext     TYPE c LENGTH 60,
+           parentcl  TYPE devclass,
+           pdevclass TYPE c LENGTH 4,
+           as4user   TYPE usnam,
+         END OF ty_create.
+
   METHODS validate_name
     RAISING
       zcx_abapgit_exception .
   METHODS create
     IMPORTING
-      !is_package TYPE scompkdtln
+      !is_package TYPE ty_create
     RAISING
       zcx_abapgit_exception .
   METHODS create_local
@@ -26,7 +36,7 @@ INTERFACE zif_abapgit_sap_package
       zcx_abapgit_exception .
   METHODS read_parent
     RETURNING
-      VALUE(rv_parentcl) TYPE tdevc-parentcl
+      VALUE(rv_parentcl) TYPE devclass
     RAISING
       zcx_abapgit_exception .
   METHODS read_description
@@ -55,11 +65,6 @@ INTERFACE zif_abapgit_sap_package
   METHODS get_transport_type
     RETURNING
       VALUE(rs_transport_type) TYPE zif_abapgit_definitions=>ty_transport_type
-    RAISING
-      zcx_abapgit_exception .
-  METHODS get_transport_layer
-    RETURNING
-      VALUE(rv_transport_layer) TYPE devlayer
     RAISING
       zcx_abapgit_exception .
 ENDINTERFACE.

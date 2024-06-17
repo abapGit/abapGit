@@ -2,9 +2,7 @@ INTERFACE zif_abapgit_popups
   PUBLIC .
 
 
-  TYPES:
-    ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY,
-    ty_rows    TYPE SORTED TABLE OF i WITH UNIQUE KEY table_line.
+  TYPES ty_rows TYPE SORTED TABLE OF i WITH UNIQUE KEY table_line.
 
   TYPES:
     BEGIN OF ty_alv_column,
@@ -69,7 +67,7 @@ INTERFACE zif_abapgit_popups
       !iv_repo_url     TYPE string
       !iv_branch_name  TYPE string OPTIONAL
     RETURNING
-      VALUE(rs_commit) TYPE zif_abapgit_definitions=>ty_commit
+      VALUE(rs_commit) TYPE zif_abapgit_git_definitions=>ty_commit
     RAISING
       zcx_abapgit_exception .
   TYPES ty_char1 TYPE c LENGTH 1.
@@ -84,26 +82,29 @@ INTERFACE zif_abapgit_popups
       !iv_icon_button_2         TYPE ty_icon DEFAULT space
       !iv_default_button        TYPE ty_char1 DEFAULT '1'
       !iv_display_cancel_button TYPE ty_char1 DEFAULT abap_true
+      !iv_popup_type            TYPE clike DEFAULT 'ICON_MESSAGE_QUESTION'
     RETURNING
       VALUE(rv_answer)          TYPE ty_char1
     RAISING
       zcx_abapgit_exception .
   METHODS popup_to_create_package
+    IMPORTING
+      is_package_data  TYPE zif_abapgit_sap_package=>ty_create OPTIONAL
     EXPORTING
-      !es_package_data TYPE scompkdtln
+      !es_package_data TYPE zif_abapgit_sap_package=>ty_create
       !ev_create       TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
   METHODS popup_to_create_transp_branch
     IMPORTING
-      !it_transport_headers      TYPE trwbo_request_headers
+      !iv_trkorr                 TYPE trkorr
     RETURNING
       VALUE(rs_transport_branch) TYPE zif_abapgit_definitions=>ty_transport_to_branch
     RAISING
       zcx_abapgit_exception .
-  METHODS popup_to_select_transports
+  METHODS popup_to_select_transport
     RETURNING
-      VALUE(rt_trkorr) TYPE trwbo_request_headers .
+      VALUE(rv_trkorr) TYPE trkorr .
   METHODS popup_to_select_from_list
     IMPORTING
       !it_list               TYPE STANDARD TABLE
@@ -130,13 +131,6 @@ INTERFACE zif_abapgit_popups
       PREFERRED PARAMETER is_transport_type
     RETURNING
       VALUE(rv_transport)       TYPE trkorr
-    RAISING
-      zcx_abapgit_exception .
-  METHODS choose_pr_popup
-    IMPORTING
-      !it_pulls      TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests
-    RETURNING
-      VALUE(rs_pull) TYPE zif_abapgit_pr_enum_provider=>ty_pull_request
     RAISING
       zcx_abapgit_exception .
   METHODS popup_select_tr_requests

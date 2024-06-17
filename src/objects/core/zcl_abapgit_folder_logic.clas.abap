@@ -95,6 +95,14 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
           lv_parentcl     TYPE tdevc-parentcl,
           lv_folder_logic TYPE string.
 
+    rv_path = lcl_package_to_path=>get(
+      iv_top     = iv_top
+      io_dot     = io_dot
+      iv_package = iv_package ).
+    IF rv_path IS NOT INITIAL.
+      RETURN.
+    ENDIF.
+
     IF iv_top = iv_package.
       rv_path = io_dot->get_starting_folder( ).
     ELSE.
@@ -116,19 +124,21 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
             lv_len = strlen( lv_parentcl ).
 
             IF iv_package(lv_len) <> lv_parentcl.
-* if abapGit project is installed in package ZZZ, all subpackages should be named
-* ZZZ_something. This will define the folder name in the zip file to be "something",
-* similarily with online projects. Alternatively change to FULL folder logic
-              lv_message = 'PREFIX: Unexpected package naming (' && iv_package && ')'
-                           && 'you might switch the folder logic'.
+              " If abapGit project is installed in package ZZZ, all subpackages should be named
+              " ZZZ_something. This will define the folder name in the zip file to be "something",
+              " similarly with online projects. Alternatively change to FULL folder logic
+              lv_message = |PREFIX: Unexpected package naming |
+                        && |(top: { iv_top }, parent: { lv_parentcl }, child: { iv_package }). |
+                        && |Try using the folder logic FULL|.
               zcx_abapgit_exception=>raise( lv_message ).
             ENDIF.
           WHEN zif_abapgit_dot_abapgit=>c_folder_logic-mixed.
             lv_len = strlen( iv_top ).
 
             IF iv_package(lv_len) <> iv_top.
-              lv_message = 'MIXED: Unexpected package naming (' && iv_package && ')'
-                           && 'you might switch the folder logic'.
+              lv_message = |MIXED: Unexpected package naming |
+                        && |(top: { iv_top }, parent: { lv_parentcl }, child: { iv_package }). |
+                        && |Try using the folder logic FULL|.
               zcx_abapgit_exception=>raise( lv_message ).
             ENDIF.
           WHEN OTHERS.
@@ -161,6 +171,12 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+    lcl_package_to_path=>add(
+      iv_top     = iv_top
+      io_dot     = io_dot
+      iv_package = iv_package
+      iv_path    = rv_path ).
+
   ENDMETHOD.
 
 
@@ -168,18 +184,27 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
 
     DATA: lv_length               TYPE i,
           lv_parent               TYPE devclass,
-          ls_package              TYPE scompkdtln,
+          ls_package              TYPE zif_abapgit_sap_package=>ty_create,
           lv_new                  TYPE string,
           lv_path                 TYPE string,
           lv_absolute_name        TYPE string,
           lv_folder_logic         TYPE string,
           lt_unique_package_names TYPE HASHED TABLE OF devclass WITH UNIQUE KEY table_line.
 
-    lv_length  = strlen( io_dot->get_starting_folder( ) ).
+    lv_length = strlen( io_dot->get_starting_folder( ) ).
     IF lv_length > strlen( iv_path ).
 * treat as not existing locally
       RETURN.
     ENDIF.
+
+    rv_package = lcl_path_to_package=>get(
+      iv_top  = iv_top
+      io_dot  = io_dot
+      iv_path = iv_path ).
+    IF rv_package IS NOT INITIAL AND iv_create_if_not_exists = abap_false.
+      RETURN.
+    ENDIF.
+
     lv_path    = iv_path+lv_length.
     lv_parent  = iv_top.
     rv_package = iv_top.
@@ -241,6 +266,12 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
 
       lv_parent = rv_package.
     ENDWHILE.
+
+    lcl_path_to_package=>add(
+      iv_top     = iv_top
+      io_dot     = io_dot
+      iv_path    = iv_path
+      iv_package = rv_package ).
 
   ENDMETHOD.
 ENDCLASS.

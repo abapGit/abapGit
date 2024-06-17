@@ -28,6 +28,8 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
       dot_abapgit FOR TESTING RAISING zcx_abapgit_exception,
       file_to_object FOR TESTING RAISING zcx_abapgit_exception,
       object_to_file FOR TESTING RAISING zcx_abapgit_exception,
+      i18n_file_to_object FOR TESTING RAISING zcx_abapgit_exception,
+      object_to_i18n_file FOR TESTING RAISING zcx_abapgit_exception,
       file_to_object_package FOR TESTING RAISING zcx_abapgit_exception,
       object_to_file_package FOR TESTING RAISING zcx_abapgit_exception.
 
@@ -171,6 +173,9 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 'ZTEST=========================VC'
       act = ls_item-obj_name ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_false
+      act = lv_is_xml ).
 
     zcl_abapgit_filename_logic=>file_to_object(
      EXPORTING
@@ -188,10 +193,13 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 'ZMIME_<>_?'
       act = ls_item-obj_name ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_false
+      act = lv_is_xml ).
 
     zcl_abapgit_filename_logic=>file_to_object(
      EXPORTING
-       iv_filename = 'ztest(name).w3mi.data,json'
+       iv_filename = 'ztest(name).w3mi.data.json'
        iv_path     = '/src/'
        iv_devclass = '$PACK'
        io_dot      = mo_dot
@@ -205,6 +213,9 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 'ZTEST(NAME)'
       act = ls_item-obj_name ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_false
+      act = lv_is_xml ).
 
     " AFF file
     zcl_abapgit_filename_logic=>file_to_object(
@@ -227,7 +238,6 @@ CLASS ltcl_run_checks IMPLEMENTATION.
       exp = abap_true
       act = lv_is_json ).
 
-
     " AFF file with namespace
     zcl_abapgit_filename_logic=>file_to_object(
       EXPORTING
@@ -248,6 +258,39 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = abap_true
       act = lv_is_json ).
+
+    " Data TABU
+    zcl_abapgit_filename_logic=>file_to_object(
+      EXPORTING
+        iv_filename = 'zdata.tabu.json'
+        iv_path     = '/src/'
+        iv_devclass = '$PACK'
+        io_dot      = mo_dot
+      IMPORTING
+        es_item     = ls_item ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'TABU'
+      act = ls_item-obj_type ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'ZDATA'
+      act = ls_item-obj_name ).
+
+    zcl_abapgit_filename_logic=>file_to_object(
+      EXPORTING
+        iv_filename = 'zdata.conf.json'
+        iv_path     = '/src/'
+        iv_devclass = '$PACK'
+        io_dot      = mo_dot
+      IMPORTING
+        es_item     = ls_item ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'TABU'
+      act = ls_item-obj_type ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'ZDATA'
+      act = ls_item-obj_name ).
 
   ENDMETHOD.
 
@@ -336,6 +379,90 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       exp = '(test)ztest.chko.json'
+      act = lv_filename ).
+
+  ENDMETHOD.
+
+  METHOD i18n_file_to_object.
+
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_lang TYPE laiso.
+    DATA lv_ext TYPE string.
+
+    " PO file
+    zcl_abapgit_filename_logic=>i18n_file_to_object(
+      EXPORTING
+        iv_filename = 'zprogram.prog.i18n.de.po'
+        iv_path     = '/src/'
+      IMPORTING
+        es_item     = ls_item
+        ev_lang     = lv_lang
+        ev_ext      = lv_ext ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'PROG'
+      act = ls_item-obj_type ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'ZPROGRAM'
+      act = ls_item-obj_name ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'de'
+      act = lv_lang ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'po'
+      act = lv_ext ).
+
+    " Properties file
+    zcl_abapgit_filename_logic=>i18n_file_to_object(
+      EXPORTING
+        iv_filename = 'zprogram.prog.i18n.en.properties'
+        iv_path     = '/src/'
+      IMPORTING
+        es_item     = ls_item
+        ev_lang     = lv_lang
+        ev_ext      = lv_ext ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'PROG'
+      act = ls_item-obj_type ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'ZPROGRAM'
+      act = ls_item-obj_name ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'en'
+      act = lv_lang ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'properties'
+      act = lv_ext ).
+
+  ENDMETHOD.
+
+  METHOD object_to_i18n_file.
+
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_filename TYPE string.
+
+    ls_item-obj_type = 'PROG'.
+    ls_item-obj_name = 'ZPROGRAM'.
+
+    " PO file
+    lv_filename = zcl_abapgit_filename_logic=>object_to_i18n_file(
+      is_item = ls_item
+      iv_lang = 'de'
+      iv_ext  = 'po' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'zprogram.prog.i18n.de.po'
+      act = lv_filename ).
+
+    " Properties files
+    lv_filename = zcl_abapgit_filename_logic=>object_to_i18n_file(
+      is_item = ls_item
+      iv_lang = 'en'
+      iv_ext  = 'properties' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'zprogram.prog.i18n.en.properties'
       act = lv_filename ).
 
   ENDMETHOD.

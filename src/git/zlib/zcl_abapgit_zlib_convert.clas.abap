@@ -16,12 +16,8 @@ CLASS zcl_abapgit_zlib_convert DEFINITION
       RETURNING
         VALUE(rv_int) TYPE i.
 
-    CLASS-METHODS int_to_hex
-      IMPORTING
-        !iv_int       TYPE i
-      RETURNING
-        VALUE(rv_hex) TYPE xstring.
-
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -31,17 +27,14 @@ CLASS ZCL_ABAPGIT_ZLIB_CONVERT IMPLEMENTATION.
 
   METHOD bits_to_int.
 
-    DATA: lv_c    TYPE c LENGTH 1,
-          lv_bits TYPE string.
+    DATA lv_i      TYPE i.
+    DATA lv_offset TYPE i.
 
-    lv_bits = iv_bits.
-
-    WHILE NOT lv_bits IS INITIAL.
-      lv_c = lv_bits.
-      rv_int = rv_int * 2.
-      rv_int = rv_int + lv_c.
-      lv_bits = lv_bits+1.
-    ENDWHILE.
+    DO strlen( iv_bits ) TIMES.
+      lv_i = iv_bits+lv_offset(1).
+      rv_int = rv_int * 2 + lv_i.
+      lv_offset = lv_offset + 1.
+    ENDDO.
 
   ENDMETHOD.
 
@@ -64,17 +57,6 @@ CLASS ZCL_ABAPGIT_ZLIB_CONVERT IMPLEMENTATION.
       ENDDO.
       lv_hex = lv_hex+1.
     ENDWHILE.
-
-  ENDMETHOD.
-
-
-  METHOD int_to_hex.
-
-    DATA: lv_x TYPE x.
-
-
-    lv_x = iv_int.
-    rv_hex = lv_x.
 
   ENDMETHOD.
 ENDCLASS.

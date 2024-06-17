@@ -5,8 +5,12 @@ CLASS zcl_abapgit_object_cus0 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS constructor
       IMPORTING
-        is_item     TYPE zif_abapgit_definitions=>ty_item
-        iv_language TYPE spras.
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: ty_img_activity_texts TYPE STANDARD TABLE OF cus_imgact
@@ -26,8 +30,11 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item = is_item
-                        iv_language = iv_language ).
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     mv_img_activity = ms_item-obj_name.
 
@@ -35,7 +42,17 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+
+    DATA ls_header TYPE ty_img_activity-header.
+
+    CALL FUNCTION 'S_CUS_IMG_ACTIVITY_READ'
+      EXPORTING
+        img_activity        = mv_img_activity
+      IMPORTING
+        img_activity_header = ls_header.
+
+    rv_user = ls_header-luser.
+
   ENDMETHOD.
 
 
@@ -175,7 +192,7 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
            ls_img_activity-header-ldate,
            ls_img_activity-header-ltime.
 
-    IF io_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       DELETE ls_img_activity-texts WHERE spras <> mv_language.
     ENDIF.
 

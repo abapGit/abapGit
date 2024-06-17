@@ -21,7 +21,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_WDYA IMPLEMENTATION.
 
 
   METHOD read.
@@ -266,6 +266,7 @@ CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
       iv_pgmid    = 'R3TR'
       iv_object   = ms_item-obj_type
       iv_obj_name = ms_item-obj_name
+      io_i18n_params = mo_i18n_params
       io_xml      = io_xml ).
 
     serialize_longtexts( ii_xml         = io_xml

@@ -23,13 +23,13 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
 
     METHODS constructor RAISING zcx_abapgit_exception.
 
-  PROTECTED SECTION.
-
     CONSTANTS:
       BEGIN OF c_page_layout,
         centered   TYPE string VALUE `centered`,
         full_width TYPE string VALUE `full_width`,
       END OF c_page_layout.
+
+  PROTECTED SECTION.
 
     DATA ms_control TYPE ty_control .
 
@@ -105,11 +105,14 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
     METHODS get_version_details
       RETURNING
         VALUE(rv_version) TYPE string.
+    METHODS is_edge_control_warning_needed
+      RETURNING
+        VALUE(rv_result) TYPE abap_bool.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -234,7 +237,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     header_stylesheet_links( ri_html ).
     header_script_links( ri_html ).
 
-    CASE mo_settings->get_icon_scaling( ). " Enforce icon scaling
+    " Overwrite the automatic icon scaling done in zcl_abapgit_html=>icon
+    CASE mo_settings->get_icon_scaling( ).
       WHEN mo_settings->c_icon_scaling-large.
         ri_html->add( '<style>.icon { font-size: 200% }</style>' ).
       WHEN mo_settings->c_icon_scaling-small.
@@ -242,6 +246,40 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ENDCASE.
 
     ri_html->add( '</head>' ).
+
+  ENDMETHOD.
+
+
+  METHOD is_edge_control_warning_needed.
+
+    DATA:
+      lv_gui_release       TYPE zif_abapgit_frontend_services=>ty_gui_release,
+      lv_gui_sp            TYPE zif_abapgit_frontend_services=>ty_gui_sp,
+      lv_gui_patch         TYPE zif_abapgit_frontend_services=>ty_gui_patch,
+      li_frontend_services TYPE REF TO zif_abapgit_frontend_services.
+
+    " With SAP GUI 8.00 PL3 and 7.70 PL13 Edge browser control is basically working.
+    " For lower releases we render the browser control warning
+    " and toggle it via JS function toggleBrowserControlWarning.
+
+    rv_result = abap_true.
+
+    TRY.
+        li_frontend_services = zcl_abapgit_ui_factory=>get_frontend_services( ).
+        li_frontend_services->get_gui_version(
+          IMPORTING
+            ev_gui_release        = lv_gui_release
+            ev_gui_sp             = lv_gui_sp
+            ev_gui_patch          = lv_gui_patch ).
+
+      CATCH zcx_abapgit_exception.
+        RETURN.
+    ENDTRY.
+
+    IF lv_gui_release >= '7700' AND lv_gui_sp >= '1' AND lv_gui_patch >= '13'
+    OR lv_gui_release >= '8000' AND lv_gui_sp >= '1' AND lv_gui_patch >= '3'.
+      rv_result = abap_false.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -255,7 +293,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     li_documentation_link->add_a(
         iv_txt = 'Documentation'
         iv_typ = zif_abapgit_html=>c_action_type-url
-        iv_act =  'https://docs.abapgit.org/guide-sapgui.html#sap-gui-for-windows' ).
+        iv_act = 'https://docs.abapgit.org/guide-sapgui.html#sap-gui-for-windows' ).
 
     ii_html->add( '<div id="browser-control-warning" class="browser-control-warning">' ).
     ii_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
@@ -271,7 +309,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     ii_html->add( 'var gCommandPalette = new CommandPalette(enumerateUiActions, {' ).
     ii_html->add( '  toggleKey: "F1",' ).
-    ii_html->add( '  hotkeyDescription: "Command ..."' ).
+    ii_html->add( '  hotkeyDescription: "Command Palette"' ).
     ii_html->add( '});' ).
 
   ENDMETHOD.
@@ -398,7 +436,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
       ri_html->add( '</div>' ).
     ENDIF.
 
-    render_browser_control_warning( ri_html ).
+    IF is_edge_control_warning_needed( ) = abap_true.
+      render_browser_control_warning( ri_html ).
+    ENDIF.
 
     ri_html->add( '</div>' ).
 

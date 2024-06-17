@@ -84,7 +84,7 @@ CLASS zcl_abapgit_object_scvi IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    corr_insert( iv_package = iv_package ).
+    corr_insert( iv_package ).
 
 *   Populate user details
     ls_screen_variant-shdsvci-crdate = sy-datum.

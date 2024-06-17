@@ -6,6 +6,7 @@ FUNCTION z_abapgit_serialize_parallel.
 *"     VALUE(IV_OBJ_NAME) TYPE  TADIR-OBJ_NAME
 *"     VALUE(IV_DEVCLASS) TYPE  TADIR-DEVCLASS
 *"     VALUE(IV_SRCSYSTEM) TYPE  TADIR-SRCSYSTEM
+*"     VALUE(IV_ABAP_LANGUAGE_VERS) TYPE  UCCHECK
 *"     VALUE(IV_LANGUAGE) TYPE  SY-LANGU
 *"     VALUE(IV_PATH) TYPE  STRING
 *"     VALUE(IV_MAIN_LANGUAGE_ONLY) TYPE  CHAR1
@@ -21,21 +22,22 @@ FUNCTION z_abapgit_serialize_parallel.
   DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item,
         lx_error TYPE REF TO zcx_abapgit_exception,
         lv_text  TYPE c LENGTH 200,
-        ls_files TYPE zcl_abapgit_objects=>ty_serialization.
+        ls_files TYPE zif_abapgit_objects=>ty_serialization.
 
   TRY.
       ls_item-obj_type  = iv_obj_type.
       ls_item-obj_name  = iv_obj_name.
       ls_item-devclass  = iv_devclass.
       ls_item-srcsystem = iv_srcsystem.
-      ls_item-origlang  = iv_language.
+      ls_item-abap_language_version = iv_abap_language_vers.
 
       ls_files = zcl_abapgit_objects=>serialize(
-        is_item               = ls_item
-        iv_main_language_only = iv_main_language_only
-        iv_use_lxe            = iv_use_lxe
-        iv_language           = iv_language
-        it_translation_langs  = it_translation_langs ).
+        is_item        = ls_item
+        io_i18n_params = zcl_abapgit_i18n_params=>new(
+          iv_main_language      = iv_language
+          iv_main_language_only = iv_main_language_only
+          iv_use_lxe            = iv_use_lxe
+          it_translation_langs  = it_translation_langs ) ).
 
       EXPORT data = ls_files TO DATA BUFFER ev_result.
       ev_path = iv_path.

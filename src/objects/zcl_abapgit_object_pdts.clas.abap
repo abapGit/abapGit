@@ -6,9 +6,14 @@ CLASS zcl_abapgit_object_pdts DEFINITION
 
   PUBLIC SECTION.
 
-    METHODS constructor IMPORTING is_item     TYPE zif_abapgit_definitions=>ty_item
-                                  iv_language TYPE spras
-                        RAISING   zcx_abapgit_exception.
+    METHODS constructor
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS zif_abapgit_object~serialize REDEFINITION.
     METHODS zif_abapgit_object~deserialize REDEFINITION.
@@ -35,8 +40,11 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     ms_objkey-otype = 'TS'.
     ms_objkey-objid = ms_item-obj_name.
@@ -108,7 +116,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
     check_subrc_for( `TO_XML` ).
 
     ri_first_element ?= li_xml_dom->get_first_child( ).
-    li_elements = ri_first_element->get_elements_by_tag_name( name = 'ELEMENTS' ).
+    li_elements = ri_first_element->get_elements_by_tag_name( 'ELEMENTS' ).
     li_iterator = li_elements->create_iterator( ).
 
     DO.
@@ -131,14 +139,14 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         "Remove system container elements - causing too much trouble
         "Todo: This is a bad hack, but obsolete if we can fix todo above
         li_attributes = li_element->get_attributes( ).
-        lv_name = li_attributes->get_named_item( name  = 'NAME' )->get_value( ).
+        lv_name = li_attributes->get_named_item( 'NAME' )->get_value( ).
         IF lv_name(1) = '_'.
           li_element->remove_node( ).
           li_child_iterator->reset( ).
           CONTINUE.
         ENDIF.
 
-        li_attributes->remove_named_item( name = 'CHGDTA' ).
+        li_attributes->remove_named_item( 'CHGDTA' ).
 
       ENDDO.
 

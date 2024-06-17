@@ -40,7 +40,8 @@ CLASS zcl_abapgit_data_supporter IMPLEMENTATION.
         AND dd09l~tabart = 'APPL2'
         AND dd09l~as4user <> 'SAP'
         AND dd09l~as4local = 'A' "Only active tables
-        AND dd02l~contflag = 'C'. "Only customizing tables
+        AND dd02l~contflag = 'C' "Only customizing tables
+      ORDER BY dd02l~tabname.
 
     LOOP AT lt_tables INTO lv_tabname.
       ls_object-type = zif_abapgit_data_config=>c_data_type-tabu.
@@ -51,7 +52,7 @@ CLASS zcl_abapgit_data_supporter IMPLEMENTATION.
     " The list of supported objects can be enhanced using an exit
     " Name patterns are allowed. For example, TABU T009*
     li_exit = zcl_abapgit_exit=>get_instance( ).
-    li_exit->change_supported_data_objects( CHANGING ct_objects =  mt_supported_objects ).
+    li_exit->change_supported_data_objects( CHANGING ct_objects = mt_supported_objects ).
 
   ENDMETHOD.
 

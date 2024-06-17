@@ -24,6 +24,8 @@ CLASS zcl_abapgit_ui_factory DEFINITION
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS get_frontend_services
+      IMPORTING
+        !iv_disable_gui   TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ri_fe_serv) TYPE REF TO zif_abapgit_frontend_services .
     CLASS-METHODS get_html_viewer
@@ -32,9 +34,6 @@ CLASS zcl_abapgit_ui_factory DEFINITION
         !iv_disable_query_table TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(ri_viewer)        TYPE REF TO zif_abapgit_html_viewer .
-    CLASS-METHODS get_gui_jumper
-      RETURNING
-        VALUE(ri_gui_jumper) TYPE REF TO zif_abapgit_gui_jumper .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -43,7 +42,6 @@ CLASS zcl_abapgit_ui_factory DEFINITION
     CLASS-DATA go_gui TYPE REF TO zcl_abapgit_gui .
     CLASS-DATA gi_fe_services TYPE REF TO zif_abapgit_frontend_services .
     CLASS-DATA gi_gui_services TYPE REF TO zif_abapgit_gui_services .
-    CLASS-DATA gi_gui_jumper TYPE REF TO zif_abapgit_gui_jumper .
 ENDCLASS.
 
 
@@ -71,7 +69,7 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
     li_asset_man->register_asset(
       iv_url       = 'css/theme-default.css'
       iv_type      = 'text/css'
-      iv_cachable  = abap_false
+      iv_cacheable = abap_false
       iv_mime_name = 'ZABAPGIT_CSS_THEME_DEFAULT'
       iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
 
@@ -79,7 +77,7 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
     li_asset_man->register_asset(
       iv_url       = 'css/theme-dark.css'
       iv_type      = 'text/css'
-      iv_cachable  = abap_false
+      iv_cacheable = abap_false
       iv_mime_name = 'ZABAPGIT_CSS_THEME_DARK'
       iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
 
@@ -87,7 +85,7 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
     li_asset_man->register_asset(
       iv_url       = 'css/theme-belize-blue.css'
       iv_type      = 'text/css'
-      iv_cachable  = abap_false
+      iv_cacheable = abap_false
       iv_mime_name = 'ZABAPGIT_CSS_THEME_BELIZE_BLUE'
       iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
 
@@ -120,7 +118,11 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
   METHOD get_frontend_services.
 
     IF gi_fe_services IS INITIAL.
-      CREATE OBJECT gi_fe_services TYPE zcl_abapgit_frontend_services.
+      IF iv_disable_gui IS INITIAL.
+        CREATE OBJECT gi_fe_services TYPE zcl_abapgit_frontend_services.
+      ELSE.
+        CREATE OBJECT gi_fe_services TYPE zcl_abapgit_frontend_no_gui.
+      ENDIF.
     ENDIF.
 
     ri_fe_serv = gi_fe_services.
@@ -155,17 +157,6 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
           ii_asset_man      = li_asset_man.
     ENDIF.
     ro_gui = go_gui.
-
-  ENDMETHOD.
-
-
-  METHOD get_gui_jumper.
-
-    IF gi_gui_jumper IS INITIAL.
-      CREATE OBJECT gi_gui_jumper TYPE zcl_abapgit_gui_jumper.
-    ENDIF.
-
-    ri_gui_jumper = gi_gui_jumper.
 
   ENDMETHOD.
 

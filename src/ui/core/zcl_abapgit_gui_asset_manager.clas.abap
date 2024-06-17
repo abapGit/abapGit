@@ -162,7 +162,7 @@ CLASS zcl_abapgit_gui_asset_manager IMPLEMENTATION.
     SPLIT iv_type AT '/' INTO ls_asset-type ls_asset-subtype.
     ls_asset-url          = iv_url.
     ls_asset-mime_name    = iv_mime_name.
-    ls_asset-is_cacheable = iv_cachable.
+    ls_asset-is_cacheable = iv_cacheable.
     IF iv_base64 IS NOT INITIAL.
       ls_asset-content = zcl_abapgit_convert=>base64_to_xstring( iv_base64 ).
     ELSEIF iv_inline IS NOT INITIAL.
@@ -170,7 +170,7 @@ CLASS zcl_abapgit_gui_asset_manager IMPLEMENTATION.
     ENDIF.
 
     DELETE mt_asset_register WHERE url = iv_url.
-    " TODO: Maybe forbid averwriting cachable assets as they were probably already cached ... agrueable
+    " TODO: Maybe forbid overwriting cacheable assets as they were probably already cached ... arguable
     APPEND ls_asset TO mt_asset_register.
 
   ENDMETHOD.

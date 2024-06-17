@@ -79,6 +79,13 @@ CLASS zcl_abapgit_gui_router DEFINITION
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
+    METHODS get_page_patch
+      IMPORTING
+        !ii_event      TYPE REF TO zif_abapgit_gui_event
+      RETURNING
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+      RAISING
+        zcx_abapgit_exception .
     METHODS get_page_stage
       IMPORTING
         !ii_event      TYPE REF TO zif_abapgit_gui_event
@@ -89,9 +96,13 @@ CLASS zcl_abapgit_gui_router DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS jump_object
       IMPORTING
-        !iv_obj_type TYPE string
-        !iv_obj_name TYPE string
-        !iv_filename TYPE string
+        !iv_obj_type   TYPE string
+        !iv_obj_name   TYPE string
+        !iv_filename   TYPE string
+        !iv_sub_type   TYPE string OPTIONAL
+        !iv_sub_name   TYPE string OPTIONAL
+        !iv_line       TYPE string OPTIONAL
+        !iv_new_window TYPE string DEFAULT 'X'
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS jump_display_transport
@@ -107,6 +118,11 @@ CLASS zcl_abapgit_gui_router DEFINITION
     METHODS call_browser
       IMPORTING
         !iv_url TYPE csequence
+      RAISING
+        zcx_abapgit_exception .
+    METHODS call_transaction
+      IMPORTING
+        !iv_tcode TYPE csequence
       RAISING
         zcx_abapgit_exception .
     METHODS get_state_settings
@@ -133,7 +149,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     IF ii_event->mv_action = zif_abapgit_definitions=>c_action-abapgit_home.
       rs_handled-page  = zcl_abapgit_gui_page_repo_over=>create( ).
-      rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+      rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
     ENDIF.
 
   ENDMETHOD.
@@ -142,6 +158,30 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
   METHOD call_browser.
 
     zcl_abapgit_ui_factory=>get_frontend_services( )->execute( iv_document = |{ iv_url }| ).
+
+  ENDMETHOD.
+
+
+  METHOD call_transaction.
+
+    DATA lv_msg TYPE c LENGTH 200.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      DESTINATION 'NONE'
+      STARTING NEW TASK 'ABAPGIT'
+      EXPORTING
+        tcode                 = iv_tcode
+      EXCEPTIONS
+        communication_failure = 1 MESSAGE lv_msg
+        system_failure        = 2 MESSAGE lv_msg
+        OTHERS                = 3.
+    IF sy-subrc <> 0.
+      lv_msg = |Error starting transaction { iv_tcode }: { lv_msg }|.
+      MESSAGE lv_msg TYPE 'I'.
+    ELSE.
+      lv_msg = |Transaction { iv_tcode } opened in a new window|.
+      MESSAGE lv_msg TYPE 'S'.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -178,7 +218,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     lv_package = iv_package.
     TRANSLATE lv_package USING '/#'.
-    CONCATENATE lv_package '_' sy-datlo '_' sy-timlo INTO lv_default.
+    CONCATENATE lv_package '_' sy-datlo '_' sy-timlo '.zip' INTO lv_default.
 
     li_fe_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
 
@@ -205,7 +245,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     lv_key = ii_event->query( )->get( 'KEY' ).
 
     CASE ii_event->mv_action.
-      WHEN zif_abapgit_definitions=>c_action-go_home.
+      WHEN zif_abapgit_definitions=>c_action-go_home.                        " Go Home
         lv_last_repo_key = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
 
         IF lv_last_repo_key IS NOT INITIAL.
@@ -215,6 +255,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           rs_handled-page = main_page( ).
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
         ENDIF.
+      WHEN zif_abapgit_definitions=>c_action-go_back.                        " Go Back
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
       WHEN zif_abapgit_definitions=>c_action-go_db.                          " Go DB util page
         rs_handled-page  = zcl_abapgit_gui_page_db=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
@@ -230,9 +272,12 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-go_background_run.              " Go background run page
         rs_handled-page  = zcl_abapgit_gui_page_run_bckg=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-go_repo_diff                         " Go Diff page
+      WHEN zif_abapgit_definitions=>c_action-go_repo_diff                    " Go Diff page
         OR zif_abapgit_definitions=>c_action-go_file_diff.
         rs_handled-page  = get_page_diff( ii_event ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
+      WHEN zif_abapgit_definitions=>c_action-go_patch.                       " Go Patch page
+        rs_handled-page  = get_page_patch( ii_event ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
       WHEN zif_abapgit_definitions=>c_action-go_stage.                        " Go Staging page
         rs_handled-page  = get_page_stage( ii_event ).
@@ -282,7 +327,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     DATA: ls_file   TYPE zif_abapgit_git_definitions=>ty_file,
           ls_object TYPE zif_abapgit_definitions=>ty_item,
-          lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
           lv_key    TYPE zif_abapgit_persistence=>ty_repo-key.
 
     lv_key             = ii_event->query( )->get( 'KEY' ).
@@ -291,107 +335,78 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     ls_object-obj_type = ii_event->query( )->get( 'OBJ_TYPE' ).
     ls_object-obj_name = ii_event->query( )->get( 'OBJ_NAME' ). " unescape ?
 
-    CREATE OBJECT lo_page
-      EXPORTING
-        iv_key    = lv_key
-        is_file   = ls_file
-        is_object = ls_object.
+    ri_page = zcl_abapgit_gui_page_diff=>create(
+      iv_key    = lv_key
+      is_file   = ls_file
+      is_object = ls_object ).
 
-    ri_page = lo_page.
+  ENDMETHOD.
+
+
+  METHOD get_page_patch.
+
+    DATA: ls_file   TYPE zif_abapgit_git_definitions=>ty_file,
+          ls_object TYPE zif_abapgit_definitions=>ty_item,
+          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key.
+
+    lv_key             = ii_event->query( )->get( 'KEY' ).
+    ls_file-path       = ii_event->query( )->get( 'PATH' ).
+    ls_file-filename   = ii_event->query( )->get( 'FILENAME' ). " unescape ?
+    ls_object-obj_type = ii_event->query( )->get( 'OBJ_TYPE' ).
+    ls_object-obj_name = ii_event->query( )->get( 'OBJ_NAME' ). " unescape ?
+
+    ri_page = zcl_abapgit_gui_page_patch=>create(
+      iv_key    = lv_key
+      is_file   = ls_file
+      is_object = ls_object ).
 
   ENDMETHOD.
 
 
   METHOD get_page_stage.
 
-    DATA: lo_repo                     TYPE REF TO zcl_abapgit_repo_online,
-          lv_key                      TYPE zif_abapgit_persistence=>ty_repo-key,
-          lv_seed                     TYPE string,
-          lo_stage_page               TYPE REF TO zcl_abapgit_gui_page_stage,
-          lo_code_inspector_page      TYPE REF TO zcl_abapgit_gui_page_code_insp,
-          lv_answer                   TYPE c LENGTH 1,
-          lv_question_text            TYPE string,
-          lv_question_title           TYPE string,
-          lv_show_create_branch_popup TYPE c LENGTH 1,
-          lx_error                    TYPE REF TO cx_sy_move_cast_error.
+    DATA: lo_repo       TYPE REF TO zcl_abapgit_repo_online,
+          lv_key        TYPE zif_abapgit_persistence=>ty_repo-key,
+          lv_seed       TYPE string,
+          lv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result,
+          lx_error      TYPE REF TO cx_sy_move_cast_error.
 
     lv_key   = ii_event->query( )->get( 'KEY' ).
     lv_seed  = ii_event->query( )->get( 'SEED' ).
+
+    lv_sci_result = zif_abapgit_definitions=>c_sci_result-no_run.
+
     TRY.
         lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
       CATCH cx_sy_move_cast_error INTO lx_error.
         zcx_abapgit_exception=>raise( `Staging is only possible for online repositories.` ).
     ENDTRY.
 
+    IF lo_repo->get_selected_branch( ) CP zif_abapgit_git_definitions=>c_git_branch-tags.
+      zcx_abapgit_exception=>raise( |You are working on a tag, must be on branch| ).
+    ELSEIF lo_repo->get_selected_commit( ) IS NOT INITIAL.
+      zcx_abapgit_exception=>raise( |You are working on a commit, must be on branch| ).
+    ENDIF.
+
     IF lo_repo->get_local_settings( )-code_inspector_check_variant IS NOT INITIAL.
 
-      CREATE OBJECT lo_code_inspector_page
-        EXPORTING
-          io_repo = lo_repo.
+      TRY.
+          ri_page = zcl_abapgit_gui_page_code_insp=>create(
+            io_repo                  = lo_repo
+            iv_raise_when_no_results = abap_true ).
 
-      IF lo_code_inspector_page->is_nothing_to_display( ) = abap_true.
-        " force refresh on stage, to make sure the latest local and remote files are used
-        lo_repo->refresh( ).
-        CREATE OBJECT lo_stage_page
-          EXPORTING
-            io_repo       = lo_repo
-            iv_seed       = lv_seed
-            iv_sci_result = zif_abapgit_definitions=>c_sci_result-passed
-            ii_obj_filter = ii_obj_filter.
-
-        ri_page = lo_stage_page.
-      ELSE.
-        ri_page = lo_code_inspector_page.
-      ENDIF.
-
-    ELSEIF lo_repo->get_selected_branch( ) CP zif_abapgit_definitions=>c_git_branch-tags.
-      lv_show_create_branch_popup = abap_true.
-      lv_question_title = 'Staging on a tag'.
-      lv_question_text = 'You are currently working on a tag.'.
-      lv_question_text = |{ lv_question_text } You must be on a branch to stage.|.
-      lv_question_text = |{ lv_question_text } Create new branch?|.
-    ELSEIF lo_repo->get_selected_commit( ) IS NOT INITIAL.
-      lv_show_create_branch_popup = abap_true.
-      lv_question_title = 'Staging on a checked out commit'.
-      lv_question_text = 'You are currently checked out in a commit.'.
-      lv_question_text = |{ lv_question_text } You must be on a branch to stage.|.
-      lv_question_text = |{ lv_question_text } Create new branch?|.
-    ELSE.
-
-      " force refresh on stage, to make sure the latest local and remote files are used
-      lo_repo->refresh( ).
-
-      CREATE OBJECT lo_stage_page
-        EXPORTING
-          io_repo       = lo_repo
-          iv_seed       = lv_seed
-          ii_obj_filter = ii_obj_filter.
-
-      ri_page = lo_stage_page.
+        CATCH zcx_abapgit_exception.
+          lv_sci_result = zif_abapgit_definitions=>c_sci_result-passed.
+      ENDTRY.
 
     ENDIF.
 
-    IF lv_show_create_branch_popup = abap_true.
-
-      lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-        iv_titlebar              = lv_question_title
-        iv_text_question         = lv_question_text
-        iv_text_button_1         = 'New branch' "Ideally the button name would be Create branch, but it did not fit
-        iv_icon_button_1         = 'ICON_OKAY'
-        iv_text_button_2         = 'Cancel'
-        iv_icon_button_2         = 'ICON_CANCEL'
-        iv_default_button        = '2'
-        iv_display_cancel_button = abap_false ).
-      IF lv_answer = '1'.
-        TRY.
-            zcl_abapgit_services_git=>create_branch( iv_key = lo_repo->get_key( ) ).
-          CATCH zcx_abapgit_cancel.
-            "Continue processing so we can return to the correct page
-        ENDTRY.
-      ENDIF.
-
-      ri_page = zcl_abapgit_gui_page_repo_view=>create( lo_repo->get_key( ) ).
-
+    IF ri_page IS INITIAL.
+      ri_page = zcl_abapgit_gui_page_stage=>create(
+        io_repo       = lo_repo
+        iv_seed       = lv_seed
+        iv_sci_result = lv_sci_result
+        ii_obj_filter = ii_obj_filter ).
     ENDIF.
 
   ENDMETHOD.
@@ -504,12 +519,21 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     DATA:
       ls_item        TYPE zif_abapgit_definitions=>ty_item,
-      lv_extra       TYPE string,
+      ls_sub_item    TYPE zif_abapgit_definitions=>ty_item,
       lx_error       TYPE REF TO zcx_abapgit_exception,
+      lv_line_number TYPE i,
+      lv_new_window  TYPE abap_bool,
       li_html_viewer TYPE REF TO zif_abapgit_html_viewer.
 
     ls_item-obj_type = cl_http_utility=>unescape_url( |{ iv_obj_type }| ).
     ls_item-obj_name = cl_http_utility=>unescape_url( |{ iv_obj_name }| ).
+    ls_sub_item-obj_type = cl_http_utility=>unescape_url( |{ iv_sub_type }| ).
+    ls_sub_item-obj_name = cl_http_utility=>unescape_url( |{ iv_sub_name }| ).
+
+    IF iv_line CO '0123456789'.
+      lv_line_number = iv_line.
+    ENDIF.
+    lv_new_window = boolc( iv_new_window IS NOT INITIAL ).
 
     TRY.
         li_html_viewer = zcl_abapgit_ui_factory=>get_html_viewer( ).
@@ -519,10 +543,18 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
         IF ls_item-obj_type = zif_abapgit_data_config=>c_data_type-tabu.
           zcl_abapgit_data_utils=>jump( ls_item ).
+        ELSEIF lv_line_number IS INITIAL OR ls_sub_item IS INITIAL.
+          zcl_abapgit_objects=>jump(
+            is_item       = ls_item
+            iv_filename   = iv_filename
+            iv_new_window = lv_new_window ).
         ELSE.
           zcl_abapgit_objects=>jump(
-            is_item     = ls_item
-            iv_filename = iv_filename ).
+            is_item        = ls_item
+            is_sub_item    = ls_sub_item
+            iv_filename    = iv_filename
+            iv_line_number = lv_line_number
+            iv_new_window  = lv_new_window ).
         ENDIF.
 
         li_html_viewer->set_visiblity( abap_true ).
@@ -557,19 +589,20 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-ie_devtools.
-        zcl_abapgit_services_basis=>open_ie_devtools( ).
+        zcl_abapgit_ui_factory=>get_frontend_services( )->open_ie_devtools( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>c_action-clipboard.
         lv_clip_content = ii_event->query( )->get( 'CLIPBOARD' ).
+        IF lv_clip_content IS INITIAL.
+          " yank mode sends via form_data
+          lv_clip_content = ii_event->form_data( )->get( 'CLIPBOARD' ).
+        ENDIF.
+        IF lv_clip_content IS INITIAL.
+          zcx_abapgit_exception=>raise( 'Export to clipboard failed, no data' ).
+        ENDIF.
         APPEND lv_clip_content TO lt_clipboard.
         zcl_abapgit_ui_factory=>get_frontend_services( )->clipboard_export( lt_clipboard ).
-        MESSAGE 'Successfully exported URL to Clipboard.' TYPE 'S'.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
-      WHEN zif_abapgit_definitions=>c_action-yank_to_clipboard.
-        lv_clip_content = ii_event->form_data( )->get( 'CLIPBOARD' ).
-        APPEND lv_clip_content TO lt_clipboard.
-        zcl_abapgit_ui_factory=>get_frontend_services( )->clipboard_export( lt_clipboard ).
-        MESSAGE 'Successfully exported to Clipboard.' TYPE 'S'.
+        MESSAGE 'Successfully exported to clipboard' TYPE 'S'.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
     ENDCASE.
 
@@ -598,20 +631,21 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-repo_refresh.                    " Repo refresh
         zcl_abapgit_services_repo=>refresh( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-repo_syntax_check.
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_syntax " Syntax check
-          EXPORTING
-            io_repo = lo_repo.
+      WHEN zif_abapgit_definitions=>c_action-repo_syntax_check.               " Syntax check
+        rs_handled-page  = zcl_abapgit_gui_page_syntax=>create( lo_repo ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_code_inspector.             " Code inspector
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_code_insp
-          EXPORTING
-            io_repo = lo_repo.
+        rs_handled-page  = zcl_abapgit_gui_page_code_insp=>create( lo_repo ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-repo_purge.                      " Repo purge all objects (uninstall)
+      WHEN zif_abapgit_definitions=>c_action-repo_purge.                      " Purge all objects and repo (uninstall)
         zcl_abapgit_services_repo=>purge( lv_key ).
         rs_handled-page  = zcl_abapgit_gui_page_repo_over=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
+      WHEN zif_abapgit_definitions=>c_action-repo_delete_objects.             " Purge all objects (uninstall)
+        zcl_abapgit_services_repo=>purge(
+          iv_key       = lv_key
+          iv_keep_repo = abap_true ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_remove.                     " Repo remove
         zcl_abapgit_services_repo=>remove( lv_key ).
         rs_handled-page  = zcl_abapgit_gui_page_repo_over=>create( ).
@@ -619,8 +653,11 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-repo_activate_objects.           " Repo activate objects
         zcl_abapgit_services_repo=>activate_objects( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-repo_newonline.                  " New offline repo
+      WHEN zif_abapgit_definitions=>c_action-repo_newonline.                  " New online repo
         rs_handled-page  = zcl_abapgit_gui_page_addonline=>create( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-flow.                            " Flow page
+        rs_handled-page  = zcl_abapgit_gui_page_flow=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_refresh_checksums.          " Rebuild local checksums
         zcl_abapgit_services_repo=>refresh_local_checksums( lv_key ).
@@ -660,10 +697,18 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-jump.                          " Open object editor
         jump_object(
-          iv_obj_type = ii_event->query( )->get( 'TYPE' )
-          iv_obj_name = ii_event->query( )->get( 'NAME' )
-          iv_filename = ii_event->query( )->get( 'FILE' ) ).
+          iv_obj_type   = ii_event->query( )->get( 'TYPE' )
+          iv_obj_name   = ii_event->query( )->get( 'NAME' )
+          iv_filename   = ii_event->query( )->get( 'FILE' )
+          iv_sub_type   = ii_event->query( )->get( 'SUBTYPE' )
+          iv_sub_name   = ii_event->query( )->get( 'SUBNAME' )
+          iv_line       = ii_event->query( )->get( 'LINE' )
+          iv_new_window = ii_event->query( )->get( 'NEW_WINDOW' ) ).
 
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN zif_abapgit_definitions=>c_action-jump_transaction.
+        call_transaction( |{ ii_event->query( )->get( 'TRANSACTION' ) }| ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN zif_abapgit_definitions=>c_action-jump_transport.
@@ -684,8 +729,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
-
-    rs_handled = zcl_abapgit_exit=>get_instance( )->on_event( ii_event ).
 
     IF rs_handled-state IS INITIAL.
       rs_handled = general_page_routing( ii_event ).
@@ -809,7 +852,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         lo_obj_filter_trans->set_filter_values( iv_package  = lo_repo->get_package( )
                                                 it_r_trkorr = lt_r_trkorr ).
 
-        lv_xstr = zcl_abapgit_zip=>encode_files( lo_repo->get_files_local( ii_obj_filter = lo_obj_filter_trans ) ).
+        lv_xstr = zcl_abapgit_zip=>encode_files( lo_repo->get_files_local_filtered( lo_obj_filter_trans ) ).
         lo_repo->refresh( ).
         file_download( iv_package = lo_repo->get_package( )
                        iv_xstr    = lv_xstr ).
@@ -822,6 +865,10 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>c_action-zip_object.                      " Export object as ZIP
         rs_handled-page  = zcl_abapgit_gui_page_ex_object=>create( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-where_used.
+        lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        rs_handled-page  = zcl_abapgit_gui_page_whereused=>create( ii_repo = lo_repo ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
     ENDCASE.
 

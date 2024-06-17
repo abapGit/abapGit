@@ -76,6 +76,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_label      TYPE csequence
         !iv_name       TYPE csequence
         !iv_hint       TYPE csequence OPTIONAL
+        !iv_readonly   TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
     METHODS radio
@@ -137,6 +138,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         autofocus   TYPE string,
       END OF ty_attr .
 
+    DATA mv_webgui TYPE abap_bool.
     DATA mt_fields TYPE zif_abapgit_html_form=>ty_fields .
     DATA:
       mt_commands TYPE STANDARD TABLE OF zif_abapgit_html_form=>ty_command .
@@ -180,6 +182,10 @@ CLASS zcl_abapgit_html_form DEFINITION
       IMPORTING
         !ii_html TYPE REF TO zif_abapgit_html
         !is_cmd  TYPE zif_abapgit_html_form=>ty_command .
+    METHODS render_command_link
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html
+        !is_cmd  TYPE zif_abapgit_html_form=>ty_command .
     METHODS render_field_hidden
       IMPORTING
         !ii_html  TYPE REF TO zif_abapgit_html
@@ -189,17 +195,18 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
+CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
 
   METHOD checkbox.
 
     DATA ls_field LIKE LINE OF mt_fields.
 
-    ls_field-type  = zif_abapgit_html_form=>c_field_type-checkbox.
-    ls_field-name  = iv_name.
-    ls_field-label = iv_label.
-    ls_field-hint  = iv_hint.
+    ls_field-type     = zif_abapgit_html_form=>c_field_type-checkbox.
+    ls_field-name     = iv_name.
+    ls_field-label    = iv_label.
+    ls_field-hint     = iv_hint.
+    ls_field-readonly = iv_readonly.
 
     APPEND ls_field TO mt_fields.
 
@@ -261,6 +268,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
       GET TIME STAMP FIELD lv_ts.
       ro_form->mv_form_id = |form_{ lv_ts }|.
     ENDIF.
+
+    ro_form->mv_webgui = zcl_abapgit_ui_factory=>get_frontend_services( )->is_webgui( ).
 
   ENDMETHOD.
 
@@ -451,13 +460,20 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
   METHOD render_command.
 
+    " HTML GUI supports only links for submitting forms
+    IF mv_webgui = abap_true.
+      render_command_link(
+        is_cmd  = is_cmd
+        ii_html = ii_html ).
+      RETURN.
+    ENDIF.
+
     CASE is_cmd-cmd_type.
       WHEN zif_abapgit_html_form=>c_cmd_type-link.
 
-        ii_html->add_a(
-          iv_txt   = is_cmd-label
-          iv_act   = is_cmd-action
-          iv_class = 'dialog-commands' ).
+        render_command_link(
+          is_cmd  = is_cmd
+          ii_html = ii_html ).
 
       WHEN zif_abapgit_html_form=>c_cmd_type-button.
 
@@ -476,6 +492,22 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
         ASSERT 0 = 1.
 
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD render_command_link.
+
+    DATA lv_class TYPE string VALUE 'dialog-commands'.
+
+    IF is_cmd-cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main.
+      lv_class = lv_class && ' main'.
+    ENDIF.
+
+    ii_html->add_a(
+      iv_txt   = is_cmd-label
+      iv_act   = is_cmd-action
+      iv_class = lv_class ).
 
   ENDMETHOD.
 
@@ -602,7 +634,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
   METHOD render_field_checkbox.
 
-    DATA lv_checked TYPE string.
+    DATA lv_checked  TYPE string.
+    DATA lv_disabled TYPE string.
 
     IF is_attr-error IS NOT INITIAL.
       ii_html->add( is_attr-error ).
@@ -613,8 +646,12 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
       lv_checked = ' checked'.
     ENDIF.
 
+    IF is_attr-readonly IS NOT INITIAL.
+      lv_disabled = ' disabled'.
+    ENDIF.
+
     ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }"| &&
-                  |{ lv_checked }{ is_attr-readonly }{ is_attr-autofocus }>| ).
+                  |{ lv_checked }{ lv_disabled }{ is_attr-autofocus }>| ).
     ii_html->add( |<label for="{ is_field-name }"{ is_attr-hint }>{ is_field-label }</label>| ).
 
   ENDMETHOD.
@@ -646,6 +683,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     ii_html->add( |<div class="radio-container">| ).
 
     LOOP AT is_field-subitems ASSIGNING <ls_opt>.
+
+      lv_opt_id = |{ is_field-name }{ sy-tabix }|.
       lv_opt_value = escape( val    = <ls_opt>-value
                              format = cl_abap_format=>e_html_attr ).
 
@@ -654,13 +693,18 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
         lv_checked = ' checked'.
       ENDIF.
 
-      CLEAR lv_onclick.
+      " With edge browser control radio buttons aren't checked automatically when
+      " activated with link hints. Therefore we need to check them manually.
       IF is_field-click IS NOT INITIAL.
-        lv_onclick = |onclick="document.getElementById('{ mv_form_id }').action = 'sapevent:|
-                  && |{ is_field-click }'; document.getElementById('{ mv_form_id }').submit()"|.
+        lv_onclick = |onclick="|
+                  && |var form = document.getElementById('{ mv_form_id }');|
+                  && |document.getElementById('{ lv_opt_id }').checked = true;|
+                  && |form.action = 'sapevent:{ is_field-click }';|
+                  && |form.submit();"|.
+      ELSE.
+        lv_onclick = |onclick="document.getElementById('{ lv_opt_id }').checked = true;"|.
       ENDIF.
 
-      lv_opt_id = |{ is_field-name }{ sy-tabix }|.
       IF is_field-condense = abap_true.
         ii_html->add( '<div>' ).
       ENDIF.

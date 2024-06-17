@@ -201,7 +201,7 @@ CLASS zcl_abapgit_ecatt_script_downl IMPLEMENTATION.
           free_text     = lv_errmsg ).
     ENDIF.
 
-    lv_rc = li_artmp_node->set_value( value = lv_text ).
+    lv_rc = li_artmp_node->set_value( lv_text ).
     IF lv_rc <> 0.
       raise_download_exception(
             textid        = cx_ecatt_apl_util=>download_processing
@@ -237,7 +237,7 @@ CLASS zcl_abapgit_ecatt_script_downl IMPLEMENTATION.
       IMPORTING
         ex_xml_blob   = lv_text ).
 
-    lv_rc = li_blob_node->set_value( value = lv_text ).
+    lv_rc = li_blob_node->set_value( lv_text ).
     IF lv_rc <> 0.
       raise_download_exception(
             textid        = cx_ecatt_apl_util=>download_processing
@@ -351,7 +351,7 @@ CLASS zcl_abapgit_ecatt_script_downl IMPLEMENTATION.
           ASSIGN lt_svars TO <lt_tab>.
       ENDCASE.
 
-      CALL FUNCTION 'SDIXML_DATA_TO_DOM'       "Ast generieren lassen
+      CALL FUNCTION 'SDIXML_DATA_TO_DOM'       "Generate branch
         EXPORTING
           name         = lv_name
           dataobject   = <lt_tab>
@@ -367,8 +367,8 @@ CLASS zcl_abapgit_ecatt_script_downl IMPLEMENTATION.
               previous = ex_ecatt ).
       ENDIF.
 
-* Ast in Hauptbaum haengen
-      lv_rc = li_deep_tcd->append_child( new_child = li_element ).
+* Hang a branch in the main tree
+      lv_rc = li_deep_tcd->append_child( li_element ).
 
       IF lv_rc <> 0.
         raise_download_exception(

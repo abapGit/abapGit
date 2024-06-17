@@ -350,9 +350,8 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     ii_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
                   CHANGING  cg_data = lt_tpool_i18n ).
 
-    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+    mo_i18n_params->trim_saplang_keyed_table(
       EXPORTING
-        it_iso_filter = ii_xml->i18n_params( )-translation_languages
         iv_lang_field_name = 'SPRSL'
       CHANGING
         ct_tab = lt_tpool_i18n ).
@@ -402,7 +401,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     DATA lt_tpool_i18n TYPE TABLE OF tstct.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       RETURN.
     ENDIF.
 
@@ -412,11 +411,11 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
       FROM tstct
       WHERE sprsl <> mv_language
-      AND   tcode = ms_item-obj_name ##TOO_MANY_ITAB_FIELDS. "#EC CI_GENBUFF
+      AND   tcode = ms_item-obj_name
+      ORDER BY sprsl ##TOO_MANY_ITAB_FIELDS.            "#EC CI_GENBUFF
 
-    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+    mo_i18n_params->trim_saplang_keyed_table(
       EXPORTING
-        it_iso_filter = ii_xml->i18n_params( )-translation_languages
         iv_lang_field_name = 'SPRSL'
       CHANGING
         ct_tab = lt_tpool_i18n ).
@@ -525,7 +524,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     CLEAR cs_rsstcd-s_vari.
 
-    IF cs_tstcp-param(1) = '\'.             " OO-Transaktion ohne FR
+    IF cs_tstcp-param(1) = '\'.             " OO-Transaction without FR
       split_parameters_comp( EXPORTING ig_type = c_oo_program
                                        ig_param = cs_tstcp-param
                              CHANGING  cg_value = cs_tstc-pgmna ).
@@ -540,7 +539,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
         cs_rsstcd-s_local = c_true.
       ENDIF.
       RETURN.
-    ELSEIF cs_tstcp-param(1) = '@'.         " Transaktionsvariante
+    ELSEIF cs_tstcp-param(1) = '@'.         " Transaction variant
       cs_rsstcd-s_vari = c_true.
       IF cs_tstcp-param(2) = '@@'.
         cs_rsstcd-s_ind_vari = c_true.
@@ -636,8 +635,20 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-* looks like "changed by user" is not stored in the database
-    rv_user = c_user_unknown.
+    " Changed-by-user is not stored in transaction metadata
+    " Instead, use owner of last transport or object directory
+
+    DATA lv_transport TYPE trkorr.
+
+    lv_transport = zcl_abapgit_factory=>get_cts_api( )->get_transport_for_object( ms_item ).
+
+    IF lv_transport IS NOT INITIAL.
+      SELECT SINGLE as4user FROM e070 INTO rv_user WHERE trkorr = lv_transport.
+    ELSE.
+      SELECT SINGLE author FROM tadir INTO rv_user
+        WHERE pgmid = 'R3TR' AND object = ms_item-obj_type AND obj_name = ms_item-obj_name.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -700,7 +711,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     lv_dynpro = ls_tstc-dypno.
 
-    IF     ls_tstc-cinfo O lc_hex_rep.
+    IF ls_tstc-cinfo O lc_hex_rep.
       lv_type = c_variant_type-report.
     ELSEIF ls_tstc-cinfo O lc_hex_obj.
       lv_type = c_variant_type-object.
@@ -778,10 +789,8 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
                            it_authorizations = lt_tstca ).
     ENDIF.
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       deserialize_texts( io_xml ).
-    ELSE.
-      deserialize_lxe_texts( io_xml ).
     ENDIF.
 
   ENDMETHOD.
@@ -825,17 +834,9 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
-
-    DATA: lv_object TYPE eqegraarg.
-
-    lv_object = |TN{ ms_item-obj_name }|.
-    OVERLAY lv_object WITH '                                          '.
-    lv_object = lv_object && '*'.
-
     rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
-                                            iv_argument    = lv_object ).
-
-
+                                            iv_argument    = ms_item-obj_name
+                                            iv_prefix      = 'TN' ).
   ENDMETHOD.
 
 
@@ -859,7 +860,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     <ls_bdcdata>-fnam = 'TSTC-TCODE'.
     <ls_bdcdata>-fval = ms_item-obj_name.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode      = 'SE93'
       it_bdcdata    = lt_bdcdata ).
 
@@ -905,7 +906,8 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       WHERE tcode = lv_transaction.       "#EC CI_SUBRC "#EC CI_GENBUFF
 
     SELECT * FROM tstca INTO TABLE lt_tstca
-      WHERE tcode = lv_transaction.
+      WHERE tcode = lv_transaction
+      ORDER BY PRIMARY KEY.
     IF sy-subrc <> 0.
       CLEAR: lt_tstca.
     ENDIF.
@@ -923,10 +925,8 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     io_xml->add( iv_name = 'AUTHORIZATIONS'
                  ig_data = lt_tstca ).
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts( io_xml ).
-    ELSE.
-      serialize_lxe_texts( io_xml ).
     ENDIF.
 
   ENDMETHOD.

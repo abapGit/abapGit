@@ -37,8 +37,6 @@ CLASS zcl_abapgit_repo_online DEFINITION
         REDEFINITION .
     METHODS zif_abapgit_repo~get_name
         REDEFINITION .
-    METHODS has_remote_source
-        REDEFINITION .
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -148,18 +146,13 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD has_remote_source.
-    rv_yes = abap_true.
-  ENDMETHOD.
-
-
   METHOD raise_error_if_branch_exists.
 
     DATA:
       lt_branches     TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
       lv_display_name TYPE string.
 
-    lt_branches = zcl_abapgit_git_transport=>branches( get_url( ) )->get_branches_only( ).
+    lt_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( get_url( ) )->get_branches_only( ).
 
     READ TABLE lt_branches WITH TABLE KEY name_key
                            COMPONENTS name = iv_name
@@ -181,6 +174,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     DATA:
       lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list,
+      lx_error       TYPE REF TO zcx_abapgit_exception,
       lv_branch      TYPE string,
       lv_head        TYPE string,
       lv_msg         TYPE string.
@@ -188,20 +182,14 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     lv_branch = get_selected_branch( ).
 
     IF lv_branch IS NOT INITIAL.
-      lo_branch_list = zcl_abapgit_git_transport=>branches( get_url( ) ).
+      lo_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( get_url( ) ).
 
       TRY.
           lo_branch_list->find_by_name( lv_branch ).
-        CATCH zcx_abapgit_exception.
+        CATCH zcx_abapgit_exception INTO lx_error.
           " branch does not exist, fallback to head
           lv_head = lo_branch_list->get_head_symref( ).
-          IF lo_branch_list->get_type( lv_branch ) = zif_abapgit_definitions=>c_git_branch_type-branch.
-            lv_msg = 'Branch'.
-          ELSE.
-            lv_msg = 'Tag'.
-          ENDIF.
-          lv_msg = |{ lv_msg } { lo_branch_list->get_display_name( lv_branch ) } does not exist.|
-                && | Switched to { lo_branch_list->get_display_name( lv_head ) }|.
+          lv_msg = |{ lx_error->get_text( ) }. Switched to { lo_branch_list->get_display_name( lv_head ) }|.
           MESSAGE lv_msg TYPE 'S'.
           select_branch( lv_head ).
       ENDTRY.
@@ -214,7 +202,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     DATA: lv_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
 
-    ASSERT iv_name CP zif_abapgit_definitions=>c_git_branch-heads.
+    ASSERT iv_name CP zif_abapgit_git_definitions=>c_git_branch-heads.
 
     IF iv_from IS INITIAL.
       lv_sha1 = get_current_remote( ).
@@ -270,7 +258,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
           lv_parent TYPE zif_abapgit_git_definitions=>ty_sha1.
 
 
-    IF ms_data-branch_name CP zif_abapgit_definitions=>c_git_branch-tags.
+    IF ms_data-branch_name CP zif_abapgit_git_definitions=>c_git_branch-tags.
       lv_text = |You're working on a tag. Currently it's not |
              && |possible to push on tags. Consider creating a branch instead|.
       zcx_abapgit_exception=>raise( lv_text ).
@@ -310,8 +298,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     mv_current_commit = ls_push-branch.
 
     zif_abapgit_repo~checksums( )->update( ls_push-updated_files ).
-
-    reset_status( ).
 
   ENDMETHOD.
 

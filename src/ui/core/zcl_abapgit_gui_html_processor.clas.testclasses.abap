@@ -129,7 +129,7 @@ CLASS ltcl_html_processor_test IMPLEMENTATION.
         `    <!--<link rel="stylesheet" type="text/css" href="css/style2.css">-->\n` &&
         `    <!--<link rel="stylesheet" type="text/css" href="css/style3.css">-->\n` &&
         `    <script type="text/javascript" src="js/common.js"></script>\n` &&
-        `    <!-- abapgit HTML preprocessor -->\n` &&
+        `    <!-- abapGit HTML preprocessor -->\n` &&
         `    <link rel="stylesheet" type="text/css" href="css/bundle.css">\n` &&
         `  </head>\n` &&
         `  <body>hello</body>\n` &&
@@ -168,7 +168,7 @@ CLASS ltcl_html_processor_test IMPLEMENTATION.
         `    <link rel="stylesheet" type="text/css" href="css/style2.css">\n` && " Preserved
         `    <!--<link rel="stylesheet" type="text/css" href="css/style3.css">-->\n` &&
         `    <script type="text/javascript" src="js/common.js"></script>\n` &&
-        `    <!-- abapgit HTML preprocessor -->\n` &&
+        `    <!-- abapGit HTML preprocessor -->\n` &&
         `    <link rel="stylesheet" type="text/css" href="css/bundle.css">\n` &&
         `  </head>\n` &&
         `  <body>hello</body>\n` &&
@@ -217,7 +217,7 @@ CLASS ltcl_html_processor_test IMPLEMENTATION.
 
     "when
     TRY.
-        lv_head_end = mo_cut->find_head_offset( iv_html = lv_html ).
+        lv_head_end = mo_cut->find_head_offset( lv_html ).
       CATCH zcx_abapgit_exception.
         cl_abap_unit_assert=>fail( msg = 'HEAD closing tag could not be found' ).
     ENDTRY.

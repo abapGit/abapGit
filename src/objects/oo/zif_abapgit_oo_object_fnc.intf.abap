@@ -9,7 +9,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
     END OF c_parts.
 
   TYPES: BEGIN OF ty_includes,
-           programm TYPE programm,
+           programm TYPE syrepid,
          END OF ty_includes,
          ty_includes_tt TYPE STANDARD TABLE OF ty_includes WITH DEFAULT KEY.
 
@@ -18,12 +18,23 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
   TYPES:
     ty_seosubcotx_tt TYPE STANDARD TABLE OF seosubcotx WITH DEFAULT KEY .
 
+  TYPES:
+    BEGIN OF ty_obj_attribute,
+      cmpname   TYPE seocmpname,
+      attkeyfld TYPE seokeyfld,
+      attbusobj TYPE seobusobj,
+      exposure  TYPE seoexpose,
+    END OF ty_obj_attribute .
+  TYPES:
+    ty_obj_attribute_tt TYPE STANDARD TABLE OF ty_obj_attribute WITH DEFAULT KEY
+                             WITH NON-UNIQUE SORTED KEY cmpname COMPONENTS cmpname .
+
   METHODS:
     create
       IMPORTING
         iv_check      TYPE abap_bool
         iv_package    TYPE devclass
-        it_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt OPTIONAL
+        it_attributes TYPE ty_obj_attribute_tt OPTIONAL
       CHANGING
         cg_properties TYPE any
       RAISING
@@ -35,12 +46,16 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         it_local_implementations TYPE seop_source_string OPTIONAL
         it_local_macros          TYPE seop_source_string OPTIONAL
         it_local_test_classes    TYPE seop_source_string OPTIONAL
+        iv_package               TYPE devclass
+        iv_version               TYPE uccheck
       RAISING
         zcx_abapgit_exception,
     deserialize_source
       IMPORTING
-        is_key    TYPE seoclskey
-        it_source TYPE zif_abapgit_definitions=>ty_string_tt
+        is_key     TYPE seoclskey
+        it_source  TYPE zif_abapgit_definitions=>ty_string_tt
+        iv_package TYPE devclass
+        iv_version TYPE uccheck
       RAISING
         zcx_abapgit_exception
         cx_sy_dyn_call_error,
@@ -143,6 +158,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
       IMPORTING
         iv_object_name TYPE sobj_name
         ii_xml         TYPE REF TO zif_abapgit_xml_output
+        io_i18n_params TYPE REF TO zcl_abapgit_i18n_params
       RAISING
         zcx_abapgit_exception,
     read_descriptions
@@ -171,5 +187,10 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
       IMPORTING
         iv_object_name       TYPE seoclsname
       RETURNING
-        VALUE(rt_attributes) TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
+        VALUE(rt_attributes) TYPE ty_obj_attribute_tt,
+    syntax_check
+      IMPORTING
+        iv_object_name                TYPE seoclsname
+      RAISING
+        zcx_abapgit_exception.
 ENDINTERFACE.

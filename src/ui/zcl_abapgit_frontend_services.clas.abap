@@ -2,17 +2,42 @@ CLASS zcl_abapgit_frontend_services DEFINITION
   PUBLIC
   CREATE PRIVATE
   GLOBAL FRIENDS zcl_abapgit_ui_factory.
-
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_frontend_services.
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    CLASS-DATA gv_initial_folder TYPE string.
+
+    METHODS get_path_from_fullname
+      IMPORTING
+        iv_fullname    TYPE string
+      RETURNING
+        VALUE(rv_path) TYPE string.
+
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
+
+
+  METHOD get_path_from_fullname.
+
+    DATA lv_len TYPE i.
+
+    FIND FIRST OCCURRENCE OF REGEX '^/(.*/)?' IN iv_fullname MATCH LENGTH lv_len.
+    IF sy-subrc = 0.
+      rv_path = iv_fullname(lv_len).
+    ELSE.
+      FIND FIRST OCCURRENCE OF REGEX '^(.*\\)?' IN iv_fullname MATCH LENGTH lv_len.
+      IF sy-subrc = 0.
+        rv_path = iv_fullname(lv_len).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_frontend_services~clipboard_export.
@@ -63,10 +88,14 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
 
   METHOD zif_abapgit_frontend_services~directory_browse.
 
+    IF iv_initial_folder IS NOT INITIAL.
+      gv_initial_folder = iv_initial_folder.
+    ENDIF.
+
     cl_gui_frontend_services=>directory_browse(
       EXPORTING
         window_title         = iv_window_title
-        initial_folder       = iv_initial_folder
+        initial_folder       = gv_initial_folder
       CHANGING
         selected_folder      = cv_selected_folder
       EXCEPTIONS
@@ -77,6 +106,8 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
+    gv_initial_folder = cv_selected_folder.
 
   ENDMETHOD.
 
@@ -268,10 +299,15 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
 
   METHOD zif_abapgit_frontend_services~get_gui_version.
 
+    DATA:
+      lt_version_table TYPE filetable,
+      lv_rc            TYPE i,
+      ls_version       LIKE LINE OF lt_version_table.
+
     cl_gui_frontend_services=>get_gui_version(
       CHANGING
-        version_table            = ct_version_table
-        rc                       = cv_rc
+        version_table            = lt_version_table
+        rc                       = lv_rc
       EXCEPTIONS
         get_gui_version_failed   = 1
         cant_write_version_table = 2
@@ -283,6 +319,15 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
+    READ TABLE lt_version_table INTO ls_version INDEX 1. " gui release
+    ev_gui_release = ls_version-filename.
+    READ TABLE lt_version_table INTO ls_version INDEX 2. " gui sp
+    ev_gui_sp = ls_version-filename.
+    READ TABLE lt_version_table INTO ls_version INDEX 3. " gui patch
+    ev_gui_patch = ls_version-filename.
+
+    ev_gui_version_string = |{ ev_gui_release }.{ condense( ev_gui_sp ) }.{ condense( ev_gui_patch ) }|.
 
   ENDMETHOD.
 
@@ -340,6 +385,26 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_frontend_services~open_ie_devtools.
+
+    DATA: lv_system_directory TYPE string,
+          lv_exe_full_path    TYPE string.
+
+    IF zif_abapgit_frontend_services~is_sapgui_for_windows( ) = abap_false.
+      zcx_abapgit_exception=>raise( |IE DevTools not supported on frontend OS| ).
+    ENDIF.
+
+    zif_abapgit_frontend_services~get_system_directory( CHANGING cv_system_directory = lv_system_directory ).
+
+    cl_gui_cfw=>flush( ).
+
+    lv_exe_full_path = lv_system_directory && `\F12\IEChooser.exe`.
+
+    zif_abapgit_frontend_services~execute( iv_application = lv_exe_full_path ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_frontend_services~show_file_open_dialog.
 
     DATA:
@@ -358,6 +423,7 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
         window_title            = iv_title
         default_filename        = iv_default_filename
         file_filter             = lv_filter
+        initial_directory       = gv_initial_folder
       CHANGING
         file_table              = lt_file_table
         rc                      = lv_rc
@@ -378,6 +444,8 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
     READ TABLE lt_file_table INDEX 1 INTO ls_file_table.
     ASSERT sy-subrc = 0.
     rv_path = ls_file_table-filename.
+
+    gv_initial_folder = get_path_from_fullname( rv_path ).
 
   ENDMETHOD.
 
@@ -400,6 +468,7 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
         default_extension    = iv_extension
         default_file_name    = iv_default_filename
         file_filter          = lv_filter
+        initial_directory    = gv_initial_folder
       CHANGING
         filename             = lv_filename
         path                 = lv_path
@@ -416,6 +485,8 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
     IF lv_action = cl_gui_frontend_services=>action_cancel.
       zcx_abapgit_exception=>raise( 'Cancelled' ).
     ENDIF.
+
+    gv_initial_folder = lv_path.
 
   ENDMETHOD.
 ENDCLASS.

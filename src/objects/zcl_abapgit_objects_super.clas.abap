@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_objects_super DEFINITION
   PUBLIC
   ABSTRACT
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -9,12 +9,21 @@ CLASS zcl_abapgit_objects_super DEFINITION
 
     METHODS constructor
       IMPORTING
-        !is_item     TYPE zif_abapgit_definitions=>ty_item
-        !iv_language TYPE spras .
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL.
+
+    METHODS get_accessed_files
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt.
   PROTECTED SECTION.
 
-    DATA ms_item TYPE zif_abapgit_definitions=>ty_item .
-    DATA mv_language TYPE spras .
+    DATA:
+      ms_item        TYPE zif_abapgit_definitions=>ty_item,
+      mv_language    TYPE spras,
+      mo_files       TYPE REF TO zcl_abapgit_objects_files,
+      mo_i18n_params TYPE REF TO zcl_abapgit_i18n_params.
 
     METHODS get_metadata
       RETURNING
@@ -36,7 +45,8 @@ CLASS zcl_abapgit_objects_super DEFINITION
     METHODS exists_a_lock_entry_for
       IMPORTING
         !iv_lock_object               TYPE string
-        !iv_argument                  TYPE seqg3-garg OPTIONAL
+        !iv_argument                  TYPE csequence OPTIONAL
+        !iv_prefix                    TYPE csequence OPTIONAL
       RETURNING
         VALUE(rv_exists_a_lock_entry) TYPE abap_bool
       RAISING
@@ -74,19 +84,19 @@ CLASS zcl_abapgit_objects_super DEFINITION
         zcx_abapgit_exception .
     METHODS delete_ddic
       IMPORTING
-        VALUE(iv_objtype)              TYPE string
-        VALUE(iv_no_ask)               TYPE abap_bool DEFAULT abap_true
-        VALUE(iv_no_ask_delete_append) TYPE abap_bool DEFAULT abap_false
+        !iv_objtype              TYPE string
+        !iv_no_ask               TYPE abap_bool DEFAULT abap_true
+        !iv_no_ask_delete_append TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
-    METHODS serialize_lxe_texts
-      IMPORTING
-        !ii_xml TYPE REF TO zif_abapgit_xml_output
+    METHODS set_abap_language_version
+      CHANGING
+        !cv_abap_language_version TYPE uccheck
       RAISING
         zcx_abapgit_exception .
-    METHODS deserialize_lxe_texts
-      IMPORTING
-        !ii_xml TYPE REF TO zif_abapgit_xml_input
+    METHODS clear_abap_language_version
+      CHANGING
+        !cv_abap_language_version TYPE uccheck
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -97,11 +107,40 @@ ENDCLASS.
 CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
 
+  METHOD clear_abap_language_version.
+
+    " Used during serializing of objects
+    IF ms_item-abap_language_version = zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
+      " Ignore ABAP language version
+      CLEAR cv_abap_language_version.
+    ELSEIF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version.
+      " Check if ABAP language version matches repository setting
+      zcl_abapgit_abap_language_vers=>check_abap_language_version(
+        iv_abap_language_version = cv_abap_language_version
+        is_item                  = ms_item ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD constructor.
     ms_item = is_item.
     ASSERT NOT ms_item IS INITIAL.
     mv_language = iv_language.
     ASSERT NOT mv_language IS INITIAL.
+
+    IF io_files IS NOT INITIAL.
+      mo_files = io_files.
+    ELSE.
+      mo_files = zcl_abapgit_objects_files=>new( is_item ). " New file collection
+    ENDIF.
+
+    IF io_i18n_params IS NOT INITIAL.
+      mo_i18n_params = io_i18n_params.
+    ELSE.
+      mo_i18n_params = zcl_abapgit_i18n_params=>new( ). " All defaults
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -199,8 +238,8 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   METHOD delete_longtexts.
 
     zcl_abapgit_factory=>get_longtexts( )->delete(
-        iv_longtext_id = iv_longtext_id
-        iv_object_name = ms_item-obj_name  ).
+      iv_longtext_id = iv_longtext_id
+      iv_object_name = ms_item-obj_name ).
 
   ENDMETHOD.
 
@@ -217,24 +256,23 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD deserialize_lxe_texts.
-
-    zcl_abapgit_factory=>get_lxe_texts( )->deserialize(
-      iv_object_type = ms_item-obj_type
-      iv_object_name = ms_item-obj_name
-      ii_xml         = ii_xml ).
-
-  ENDMETHOD.
-
-
   METHOD exists_a_lock_entry_for.
 
     DATA: lt_lock_entries TYPE STANDARD TABLE OF seqg3.
+    DATA: lv_argument TYPE seqg3-garg.
+
+    IF iv_prefix IS INITIAL.
+      lv_argument = iv_argument.
+    ELSE.
+      lv_argument = |{ iv_prefix  }{ iv_argument }|.
+      OVERLAY lv_argument WITH '                                          '.
+      lv_argument = lv_argument && '*'.
+    ENDIF.
 
     CALL FUNCTION 'ENQUEUE_READ'
       EXPORTING
         guname                = '*'
-        garg                  = iv_argument
+        garg                  = lv_argument
       TABLES
         enq                   = lt_lock_entries
       EXCEPTIONS
@@ -252,6 +290,11 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
       rv_exists_a_lock_entry = abap_true.
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD get_accessed_files.
+    rt_files = mo_files->get_accessed_files( ).
   ENDMETHOD.
 
 
@@ -279,27 +322,28 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   METHOD serialize_longtexts.
 
     zcl_abapgit_factory=>get_longtexts( )->serialize(
-        iv_object_name   = ms_item-obj_name
-        iv_longtext_name = iv_longtext_name
-        iv_longtext_id   = iv_longtext_id
-        it_dokil         = it_dokil
-        ii_xml           = ii_xml  ).
+      iv_object_name   = ms_item-obj_name
+      iv_longtext_name = iv_longtext_name
+      iv_longtext_id   = iv_longtext_id
+      it_dokil         = it_dokil
+      io_i18n_params   = mo_i18n_params
+      ii_xml           = ii_xml ).
 
   ENDMETHOD.
 
 
-  METHOD serialize_lxe_texts.
+  METHOD set_abap_language_version.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true OR
-       ii_xml->i18n_params( )-use_lxe = abap_false OR
-       ii_xml->i18n_params( )-translation_languages IS INITIAL.
-      RETURN.
+    " Used during deserializing of objects
+    IF ms_item-abap_language_version = zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
+      " ABAP language version is derived from object type and target package (see zcl_abapgit_objects->deserialize)
+      cv_abap_language_version = ms_item-abap_language_version.
+    ELSEIF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version.
+      " Check if ABAP language version matches repository setting
+      zcl_abapgit_abap_language_vers=>check_abap_language_version(
+        iv_abap_language_version = cv_abap_language_version
+        is_item                  = ms_item ).
     ENDIF.
-
-    zcl_abapgit_factory=>get_lxe_texts( )->serialize(
-      iv_object_type = ms_item-obj_type
-      iv_object_name = ms_item-obj_name
-      ii_xml         = ii_xml ).
 
   ENDMETHOD.
 

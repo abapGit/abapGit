@@ -3,13 +3,15 @@ CLASS zcl_abapgit_object_ftgl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
-    METHODS:
-      constructor
-        IMPORTING
-          is_item     TYPE zif_abapgit_definitions=>ty_item
-          iv_language TYPE spras
-        RAISING
-          zcx_abapgit_exception.
+    METHODS constructor
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA:
@@ -48,8 +50,10 @@ CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor(
-      is_item     = is_item
-      iv_language = iv_language ).
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     mv_toggle_id = ms_item-obj_name.
 
@@ -63,7 +67,13 @@ CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+
+    SELECT SINGLE changedby FROM ('FTGL_ID') INTO rv_user
+      WHERE feature_id = ms_item-obj_name AND version = 'A'.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -80,7 +90,7 @@ CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
 
     IF lv_return_code <> 0.
       zcx_abapgit_exception=>raise( |Cannot delete feature toggle { mv_toggle_id }. |
-                                 && |Error {  sy-subrc } from cl_feature_toggle_object=>delete| ).
+                                 && |Error { sy-subrc } from cl_feature_toggle_object=>delete| ).
     ENDIF.
 
     corr_insert( iv_package ).

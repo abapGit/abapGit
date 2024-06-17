@@ -52,7 +52,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_ENHO_HOOK IMPLEMENTATION.
 
 
   METHOD add_sources.
@@ -239,6 +239,7 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
           ls_original_object TYPE enh_hook_admin,
           lt_spaces          TYPE ty_spaces_tt,
           lt_files           TYPE ty_files,
+          ls_progdir         TYPE zif_abapgit_sap_report=>ty_progdir,
           lt_enhancements    TYPE enh_hook_impl_it.
 
     FIELD-SYMBOLS: <ls_enhancement> LIKE LINE OF lt_enhancements.
@@ -254,7 +255,18 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
         main_type = ls_original_object-org_main_type
         main_name = ls_original_object-org_main_name
         program   = ls_original_object-programname ).
-    ls_original_object-include_bound = lo_hook_impl->get_include_bound( ).
+
+* dont call method lo_hook_impl->get_include_bound( ), it might dump
+* if the PROG does not exists
+    IF ls_original_object-org_main_type = 'PROG' OR ls_original_object-org_main_type = 'REPS'.
+      TRY.
+          ls_progdir = zcl_abapgit_factory=>get_sap_report( )->read_progdir( ls_original_object-org_main_name ).
+          ls_original_object-include_bound = boolc( ls_progdir-subc = 'I' ).
+        CATCH zcx_abapgit_exception.
+          ls_original_object-include_bound = abap_false.
+      ENDTRY.
+    ENDIF.
+
     lt_enhancements = lo_hook_impl->get_hook_impls( ).
 
     LOOP AT lt_enhancements ASSIGNING <ls_enhancement>.

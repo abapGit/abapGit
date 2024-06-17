@@ -5,8 +5,12 @@ CLASS zcl_abapgit_object_sfsw DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS constructor
       IMPORTING
-        !is_item     TYPE zif_abapgit_definitions=>ty_item
-        !iv_language TYPE spras.
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -16,6 +20,7 @@ CLASS zcl_abapgit_object_sfsw DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     DATA mv_switch TYPE sfw_switch_id.
 
     METHODS:
+      unlock,
       activate
         RAISING zcx_abapgit_exception,
       create
@@ -61,8 +66,10 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor(
-      is_item     = is_item
-      iv_language = iv_language ).
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     mv_switch = is_item-obj_name.
 
@@ -93,6 +100,19 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
         zcx_abapgit_exception=>raise( 'Error from CL_SFW_SW=>GET_SWITCH' ).
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD unlock.
+
+    CALL FUNCTION 'DEQUEUE_EEUDB'
+      EXPORTING
+        relid     = 'SW'
+        name      = ms_item-obj_name
+        _synchron = 'X'
+        _scope    = '1'
+        mode_eudb = abap_true.
 
   ENDMETHOD.
 
@@ -190,6 +210,8 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error in CL_SFW_SW->SAVE_ALL' ).
     ENDIF.
 
+    unlock( ).
+
     deserialize_longtexts( ii_xml         = io_xml
                            iv_longtext_id = c_longtext_id_sfsw ).
 
@@ -246,7 +268,9 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
-    rv_is_locked = abap_false.
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
+                                            iv_argument    = ms_item-obj_name
+                                            iv_prefix      = 'SW' ).
   ENDMETHOD.
 
 

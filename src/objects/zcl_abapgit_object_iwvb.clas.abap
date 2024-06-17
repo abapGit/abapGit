@@ -63,7 +63,8 @@ CLASS zcl_abapgit_object_iwvb IMPLEMENTATION.
 
     " Get entry with highest version
     SELECT created_by changed_by INTO (lv_created, lv_changed) FROM ('/IWBEP/I_MGW_VAH')
-      WHERE technical_name = ms_item-obj_name.
+      WHERE technical_name = ms_item-obj_name
+      ORDER BY PRIMARY KEY.
       rv_user = lv_changed.
       IF lv_changed IS INITIAL.
         rv_user = lv_created.

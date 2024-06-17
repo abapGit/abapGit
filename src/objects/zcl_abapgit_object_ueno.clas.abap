@@ -10,8 +10,13 @@ CLASS zcl_abapgit_object_ueno DEFINITION
 
     METHODS constructor
       IMPORTING
-        !is_item     TYPE zif_abapgit_definitions=>ty_item
-        !iv_language TYPE spras.
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
 
 
@@ -34,7 +39,7 @@ CLASS zcl_abapgit_object_ueno DEFINITION
 
 
     METHODS build_text_name
-      IMPORTING VALUE(iv_id)     TYPE tdid
+      IMPORTING iv_id            TYPE tdid
       RETURNING VALUE(rv_result) TYPE doku_obj.
 
     METHODS is_name_permitted
@@ -85,7 +90,7 @@ CLASS zcl_abapgit_object_ueno DEFINITION
         zcx_abapgit_exception.
 
     METHODS serialize_docu_xxxx
-      IMPORTING VALUE(iv_id)     TYPE tdid
+      IMPORTING iv_id            TYPE tdid
       RETURNING VALUE(rt_result) TYPE ty_docu_lines.
 
     METHODS serialize_docu_usp
@@ -137,8 +142,11 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item  =  is_item
-                        iv_language = iv_language ).
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     mv_entity_id = is_item-obj_name.
 
@@ -153,7 +161,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     SELECT *
       FROM dm02l
       INTO TABLE lt_dm02l
-      WHERE entid = mv_entity_id.
+      WHERE entid = mv_entity_id
+      ORDER BY PRIMARY KEY.
 
     LOOP AT lt_dm02l INTO ls_dm02l.
 
@@ -200,7 +209,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     SELECT *
       FROM dm42s
       INTO TABLE lt_dm42s
-      WHERE entidto = mv_entity_id.
+      WHERE entidto = mv_entity_id
+      ORDER BY PRIMARY KEY.
 
     LOOP AT lt_dm42s INTO ls_dm42s.
 
@@ -251,7 +261,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     SELECT *
       FROM dm45l
       INTO TABLE lt_dm45l
-      WHERE entid = ms_item-obj_name.
+      WHERE entid = ms_item-obj_name
+      ORDER BY PRIMARY KEY.
 
     LOOP AT lt_dm45l INTO ls_dm45l.
 
@@ -534,13 +545,14 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     DATA lv_objname         TYPE lxeobjname.
 
 
-    ls_dokvl-object = build_text_name( iv_id = iv_id ).
+    ls_dokvl-object = build_text_name( iv_id ).
 
     SELECT id object langu
       FROM dokvl
       INTO CORRESPONDING FIELDS OF TABLE lt_dokvl
       WHERE id = c_text_object_type
-      AND   object LIKE ls_dokvl-object ##TOO_MANY_ITAB_FIELDS.
+      AND   object LIKE ls_dokvl-object
+      ORDER BY id object langu ##TOO_MANY_ITAB_FIELDS.
 
     LOOP AT lt_dokvl INTO ls_dokvl.
 
@@ -696,7 +708,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     <ls_bdcdata>-fnam = 'RSUD3-OBJ_KEY'.
     <ls_bdcdata>-fval = ms_item-obj_name.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = 'SD11'
       it_bdcdata = lt_bdcdata ).
 

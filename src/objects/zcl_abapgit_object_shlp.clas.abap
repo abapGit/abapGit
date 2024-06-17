@@ -33,18 +33,11 @@ CLASS zcl_abapgit_object_shlp IMPLEMENTATION.
 
     CONSTANTS lc_standard_exit TYPE dd30v-selmexit VALUE 'RS_DD_SELMEXIT'.
 
-    IF cv_exit IS NOT INITIAL.
+    IF cv_exit IS NOT INITIAL
+    AND zcl_abapgit_factory=>get_function_module( )->function_exists( cv_exit ) = abap_false.
       " If exit function does not exist, replace it with standard SAP function
       " which exists in 7.02 and higher
-      CALL FUNCTION 'FUNCTION_EXISTS'
-        EXPORTING
-          funcname           = cv_exit
-        EXCEPTIONS
-          function_not_exist = 1
-          OTHERS             = 2.
-      IF sy-subrc <> 0.
-        cv_exit = lc_standard_exit.
-      ENDIF.
+      cv_exit = lc_standard_exit.
     ENDIF.
 
   ENDMETHOD.

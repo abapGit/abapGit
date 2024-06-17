@@ -21,7 +21,7 @@ CLASS zcl_abapgit_sots_handler DEFINITION
         !iv_object   TYPE trobjtype
         !iv_obj_name TYPE csequence
         !io_xml      TYPE REF TO zif_abapgit_xml_output OPTIONAL
-        !iv_language TYPE spras OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params
       EXPORTING
         !et_sots     TYPE ty_sots_tt
         !et_sots_use TYPE ty_sots_use_tt
@@ -73,7 +73,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_sots_handler IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SOTS_HANDLER IMPLEMENTATION.
 
 
   METHOD create_sots.
@@ -142,10 +142,10 @@ CLASS zcl_abapgit_sots_handler IMPLEMENTATION.
       lv_concept = <ls_sots>-header-concept.
 
       PERFORM btfr_create IN PROGRAM saplsotr_db_string
-        USING    lv_object
-                 sy-langu
-                 abap_false
-                 abap_true
+        USING lv_object
+              sy-langu
+              abap_false
+              abap_true
         CHANGING lt_text_tab
                  lt_string_tab
                  ls_header
@@ -187,9 +187,7 @@ CLASS zcl_abapgit_sots_handler IMPLEMENTATION.
 
   METHOD delete_sots.
 
-    DATA:
-      ls_sots     TYPE ty_sots,
-      lt_sots_use TYPE ty_sots_use_tt.
+    DATA lt_sots_use TYPE ty_sots_use_tt.
 
     FIELD-SYMBOLS <ls_sots_use> LIKE LINE OF lt_sots_use.
 
@@ -301,7 +299,7 @@ CLASS zcl_abapgit_sots_handler IMPLEMENTATION.
 
     " OTR long text (string) usage: see TABLE BTFR_OBJ_IDS
     " LIMU: CPUB, WAPP
-    " R3TR: SICF, SMIF, XSLT
+    " R3TR: ENHO, ENHS, SICF, SMIF, WEBI, XSLT
 
     et_sots_use = get_sots_usage( iv_pgmid    = iv_pgmid
                                   iv_object   = iv_object
@@ -310,10 +308,8 @@ CLASS zcl_abapgit_sots_handler IMPLEMENTATION.
     LOOP AT et_sots_use ASSIGNING <ls_sots_use> WHERE concept IS NOT INITIAL.
       ls_sots = get_sots_4_concept( <ls_sots_use>-concept ).
 
-      IF io_xml IS BOUND AND
-         io_xml->i18n_params( )-main_language_only = abap_true AND
-         iv_language IS SUPPLIED.
-        DELETE ls_sots-entries WHERE langu <> iv_language.
+      IF io_i18n_params->ms_params-main_language_only = abap_true.
+        DELETE ls_sots-entries WHERE langu <> io_i18n_params->ms_params-main_language.
         CHECK ls_sots-entries IS NOT INITIAL.
       ENDIF.
 

@@ -1,7 +1,8 @@
 CLASS zcl_abapgit_oo_class DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_oo_base
-  CREATE PUBLIC .
+  CREATE PUBLIC
+  GLOBAL FRIENDS zcl_abapgit_oo_factory.
 
   PUBLIC SECTION.
 
@@ -27,6 +28,8 @@ CLASS zcl_abapgit_oo_class DEFINITION
         REDEFINITION .
     METHODS zif_abapgit_oo_object_fnc~exists
         REDEFINITION .
+    METHODS zif_abapgit_oo_object_fnc~syntax_check
+        REDEFINITION .
   PROTECTED SECTION.
 
     TYPES:
@@ -41,8 +44,10 @@ CLASS zcl_abapgit_oo_class DEFINITION
         !io_scanner TYPE REF TO cl_oo_source_scanner_class .
     CLASS-METHODS update_report
       IMPORTING
-        !iv_program       TYPE programm
+        !iv_program       TYPE syrepid
         !it_source        TYPE string_table
+        !iv_package       TYPE devclass
+        !iv_version       TYPE uccheck
       RETURNING
         VALUE(rv_updated) TYPE abap_bool
       RAISING
@@ -64,7 +69,7 @@ CLASS zcl_abapgit_oo_class DEFINITION
         !iv_name          TYPE seoclsname
         !iv_method        TYPE seocpdname
       RETURNING
-        VALUE(rv_program) TYPE programm
+        VALUE(rv_program) TYPE syrepid
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS init_scanner
@@ -79,21 +84,31 @@ CLASS zcl_abapgit_oo_class DEFINITION
       IMPORTING
         !iv_classname TYPE seoclsname
         !it_source    TYPE string_table
-        !it_methods   TYPE cl_oo_source_scanner_class=>type_method_implementations .
+        !it_methods   TYPE cl_oo_source_scanner_class=>type_method_implementations
+        !iv_package   TYPE devclass
+        !iv_version   TYPE uccheck
+      RAISING
+        zcx_abapgit_exception.
     CLASS-METHODS create_report
       IMPORTING
-        !iv_program      TYPE programm
+        !iv_program      TYPE syrepid
         !it_source       TYPE string_table
         !iv_extension    TYPE ty_char2
         !iv_program_type TYPE ty_char1
-        !iv_version      TYPE r3state .
+        !iv_state        TYPE r3state
+        !iv_package      TYPE devclass
+        !iv_version      TYPE uccheck
+      RAISING
+        zcx_abapgit_exception.
     CLASS-METHODS update_cs_number_of_methods
       IMPORTING
         !iv_classname              TYPE seoclsname
         !iv_number_of_impl_methods TYPE i .
     CLASS-METHODS delete_report
       IMPORTING
-        !iv_program TYPE programm .
+        !iv_program TYPE syrepid
+      RAISING
+        zcx_abapgit_exception.
     CLASS-METHODS get_method_includes
       IMPORTING
         !iv_classname      TYPE seoclsname
@@ -117,13 +132,19 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
   METHOD create_report.
-    INSERT REPORT iv_program FROM it_source EXTENSION TYPE iv_extension STATE iv_version PROGRAM TYPE iv_program_type.
-    ASSERT sy-subrc = 0.
+    zcl_abapgit_factory=>get_sap_report( )->insert_report(
+      iv_name           = iv_program
+      iv_package        = iv_package
+      it_source         = it_source
+      iv_state          = iv_state
+      iv_version        = iv_version
+      iv_program_type   = iv_program_type
+      iv_extension_type = iv_extension ).
   ENDMETHOD.
 
 
   METHOD delete_report.
-    DELETE REPORT iv_program ##SUBRC_OK.
+    zcl_abapgit_factory=>get_sap_report( )->delete_report( iv_program ).
   ENDMETHOD.
 
 
@@ -402,10 +423,12 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
     create_report( iv_program      = cl_oo_classname_service=>get_cs_name( iv_classname )
+                   iv_package      = iv_package
                    it_source       = it_source
                    iv_extension    = lc_class_source_extension
                    iv_program_type = lc_include_program_type
-                   iv_version      = lc_active_version ).
+                   iv_state        = lc_active_version
+                   iv_version      = iv_version ).
 
     " Assuming that all methods that were scanned are implemented
     update_cs_number_of_methods( iv_classname              = iv_classname
@@ -490,22 +513,20 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
   METHOD update_report.
+    DATA lv_type TYPE c LENGTH 1.
 
-    DATA: lt_old TYPE string_table.
+    lv_type = zcl_abapgit_oo_base=>c_include_program_type.
 
-    READ REPORT iv_program INTO lt_old.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Fatal error. Include { iv_program } should have been created previously!| ).
+    IF iv_program+30 = srext_ext_class_pool.
+      lv_type = zcl_abapgit_oo_base=>c_cp_program_type.
     ENDIF.
 
-    IF lt_old <> it_source.
-      INSERT REPORT iv_program FROM it_source.
-      ASSERT sy-subrc = 0.
-      rv_updated = abap_true.
-    ELSE.
-      rv_updated = abap_false.
-    ENDIF.
-
+    rv_updated = zcl_abapgit_factory=>get_sap_report( )->update_report(
+      iv_name         = iv_program
+      iv_package      = iv_package
+      iv_version      = iv_version
+      it_source       = it_source
+      iv_program_type = lv_type ).
   ENDMETHOD.
 
 
@@ -546,7 +567,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
       lt_vseoattrib TYPE seoo_attributes_r,
       ls_class_key  TYPE seoclskey,
       ls_properties TYPE vseoclass,
-      lt_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
+      lt_attributes TYPE zif_abapgit_oo_object_fnc=>ty_obj_attribute_tt.
 
     FIELD-SYMBOLS: <lv_clsname> TYPE seoclsname.
 
@@ -688,6 +709,8 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
     IF lt_public IS NOT INITIAL.
       lv_program = cl_oo_classname_service=>get_pubsec_name( is_key-clsname ).
       lv_updated = update_report( iv_program = lv_program
+                                  iv_package = iv_package
+                                  iv_version = iv_version
                                   it_source  = lt_public ).
       IF lv_updated = abap_true.
         update_meta( iv_name     = is_key-clsname
@@ -701,6 +724,8 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
     IF lt_source IS NOT INITIAL.
       lv_program = cl_oo_classname_service=>get_prosec_name( is_key-clsname ).
       lv_updated = update_report( iv_program = lv_program
+                                  iv_package = iv_package
+                                  iv_version = iv_version
                                   it_source  = lt_source ).
       IF lv_updated = abap_true.
         update_meta( iv_name     = is_key-clsname
@@ -714,6 +739,8 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
     IF lt_source IS NOT INITIAL.
       lv_program = cl_oo_classname_service=>get_prisec_name( is_key-clsname ).
       lv_updated = update_report( iv_program = lv_program
+                                  iv_package = iv_package
+                                  iv_version = iv_version
                                   it_source  = lt_source ).
       IF lv_updated = abap_true.
         update_meta( iv_name     = is_key-clsname
@@ -739,6 +766,8 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
       update_report(
         iv_program = lv_program
+        iv_package = iv_package
+        iv_version = iv_version
         it_source  = lt_source ).
 
       " If method was implemented before, remove from list
@@ -747,6 +776,8 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 * full class include
     update_full_class_include( iv_classname = is_key-clsname
+                               iv_package   = iv_package
+                               iv_version   = iv_version
                                it_source    = it_source
                                it_methods   = lt_methods ).
 
@@ -781,29 +812,37 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~generate_locals.
 
-    DATA: lv_program TYPE programm.
+    DATA: lv_program TYPE syrepid.
 
     IF lines( it_local_definitions ) > 0.
       lv_program = cl_oo_classname_service=>get_ccdef_name( is_key-clsname ).
       update_report( iv_program = lv_program
+                     iv_package = iv_package
+                     iv_version = iv_version
                      it_source  = it_local_definitions ).
     ENDIF.
 
     IF lines( it_local_implementations ) > 0.
       lv_program = cl_oo_classname_service=>get_ccimp_name( is_key-clsname ).
       update_report( iv_program = lv_program
+                     iv_package = iv_package
+                     iv_version = iv_version
                      it_source  = it_local_implementations ).
     ENDIF.
 
     IF lines( it_local_macros ) > 0.
       lv_program = cl_oo_classname_service=>get_ccmac_name( is_key-clsname ).
       update_report( iv_program = lv_program
+                     iv_package = iv_package
+                     iv_version = iv_version
                      it_source  = it_local_macros ).
     ENDIF.
 
     lv_program = cl_oo_classname_service=>get_ccau_name( is_key-clsname ).
     IF lines( it_local_test_classes ) > 0.
       update_report( iv_program = lv_program
+                     iv_package = iv_package
+                     iv_version = iv_version
                      it_source  = it_local_test_classes ).
     ELSE.
       " Drop the include to remove left-over test classes
@@ -915,11 +954,13 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
       iv_pgmid    = 'LIMU'
       iv_object   = 'CPUB'
       iv_obj_name = iv_object_name
+      io_i18n_params = io_i18n_params
       io_xml      = ii_xml ).
     zcl_abapgit_sots_handler=>read_sots(
       iv_pgmid    = 'LIMU'
       iv_object   = 'CPUB'
       iv_obj_name = iv_object_name
+      io_i18n_params = io_i18n_params
       io_xml      = ii_xml ).
   ENDMETHOD.
 
@@ -930,4 +971,32 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
     lv_cp = cl_oo_classname_service=>get_classpool_name( iv_class_name ).
     READ TEXTPOOL lv_cp INTO rt_text_pool LANGUAGE iv_language. "#EC CI_READ_REP
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~syntax_check.
+    DATA:
+      ls_clskey      TYPE seoclskey,
+      lv_syntaxerror TYPE abap_bool.
+
+    ls_clskey-clsname = to_upper( iv_object_name ).
+
+    CALL FUNCTION 'SEO_CLASS_CHECK_CLASSPOOL'
+      EXPORTING
+        clskey                       = ls_clskey
+        suppress_error_popup         = abap_true
+      IMPORTING
+        syntaxerror                  = lv_syntaxerror
+      EXCEPTIONS
+        _internal_class_not_existing = 1
+        error_message                = 2 " suppress S-message
+        OTHERS                       = 3.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    IF lv_syntaxerror = abap_true.
+      zcx_abapgit_exception=>raise( |Class { ls_clskey-clsname } has syntax errors | ).
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.

@@ -38,8 +38,7 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
     " We can't use FM RS_PARAMETER_DELETE because of the popup to confirm
     "Therefore we have to reimplement most of the FMs logic
 
-    DATA: lv_paramid   TYPE tpara-paramid,
-          ls_transpkey TYPE trkey.
+    DATA lv_paramid TYPE tpara-paramid.
 
     lv_paramid = ms_item-obj_name.
 
@@ -147,10 +146,6 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
     MODIFY tparat FROM ls_tparat.                         "#EC CI_SUBRC
     ASSERT sy-subrc = 0.
 
-    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
-      deserialize_lxe_texts( io_xml ).
-    ENDIF.
-
   ENDMETHOD.
 
 
@@ -192,16 +187,9 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
-
-    DATA: lv_argument TYPE seqg3-garg.
-
-    lv_argument = |PA{ ms_item-obj_name }|.
-    OVERLAY lv_argument WITH '                                          '.
-    lv_argument = lv_argument && '*'.
-
     rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
-                                            iv_argument    = lv_argument ).
-
+                                            iv_argument    = ms_item-obj_name
+                                            iv_prefix      = 'PA' ).
   ENDMETHOD.
 
 
@@ -243,10 +231,6 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
       ig_data = ls_tparat ).
     " Here only the original language is serialized,
     " so it should be present for the moment. LXEs are just translations
-
-    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
-      serialize_lxe_texts( io_xml ).
-    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

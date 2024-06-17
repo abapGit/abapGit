@@ -111,10 +111,16 @@ function debugOutput(text, dstID) {
 function submitSapeventForm(params, action, method, form) {
 
   function getSapeventPrefix() {
+    // Depending on the used browser control and its version, different URL schemes
+    // are used which we distinguish here
     if (document.querySelector('a[href*="file:///SAPEVENT:"]')) {
-      return "file:///"; //Prefix for chromium based browser control
+      // Prefix for old (SAPGUI <= 8.00 PL3) chromium based browser control
+      return "file:///";
+    } else if (document.querySelector('a[href^="sap-cust"]')) {
+      // Prefix for new (SAPGUI >= 8.00 PL3 Hotfix 1) chromium based browser control
+      return "sap-cust://sap-place-holder/";
     } else {
-      return "";
+      return ""; // No prefix for old IE control
     }
   }
 
@@ -153,7 +159,7 @@ function setInitialFocus(id) {
   document.getElementById(id).focus();
 }
 
-// Set focus to a element with query selector
+// Set focus to an element with query selector
 function setInitialFocusWithQuerySelector(sSelector, bFocusParent) {
   var oSelected = document.querySelector(sSelector);
 
@@ -178,7 +184,7 @@ function errorStub(event) {
   alert("JS Error, please log an issue (@" + targetName + ")");
 }
 
-// Confirm JS initilization
+// Confirm JS initialization
 function confirmInitialized() {
   var errorBanner = document.getElementById("js-error-banner");
   if (errorBanner) {
@@ -796,7 +802,7 @@ StageHelper.prototype.collectData = function() {
 
 StageHelper.prototype.markVisiblesAsAdded = function() {
   this.iterateStageTab(false, function(row) {
-    // TODO refacotr, unify updateRow logic
+    // TODO refactor, unify updateRow logic
     if (row.style.display === "" && row.className === "local") { // visible
       this.updateRow(row, this.STATUS.add);
     } else {
@@ -1055,7 +1061,7 @@ DiffHelper.prototype.iterateDiffList = function(cb /*, ...*/) {
   }
 };
 
-// Highlight filter button if filter is activate
+// Highlight filter button if filter is activated
 DiffHelper.prototype.highlightButton = function(state) {
   this.counter += state ? -1 : 1;
   if (this.counter > 0) {
@@ -1355,7 +1361,7 @@ KeyNavigation.prototype.getHandler = function() {
   return this.onkeydown.bind(this);
 };
 
-// this functions enables the navigation with arrows through list items (li)
+// this function enables the navigation with arrows through list items (li)
 // e.g. in dropdown menus
 function enableArrowListNavigation() {
   document.addEventListener("keydown", new KeyNavigation().getHandler());
@@ -1482,7 +1488,7 @@ LinkHints.prototype.handleKey = function(event) {
       this.displayHints(false);
       event.preventDefault();
       if (this.yankModeActive) {
-        submitSapeventForm({ clipboard: hint.parent.firstChild.textContent }, "yank_to_clipboard");
+        submitSapeventForm({ clipboard: hint.parent.firstChild.textContent }, "clipboard");
         this.yankModeActive = false;
       } else {
         this.hintActivate(hint);
@@ -1522,7 +1528,7 @@ LinkHints.prototype.displayHints = function(isActivate) {
 LinkHints.prototype.hintActivate = function(hint) {
   if (hint.parent.nodeName === "A"
     // hint.parent.href doesn`t have a # at the end while accessing dropdowns the first time.
-    // Seems like a idiosyncrasy of SAPGUI`s IE. So let`s ignore the last character.
+    // Seems like a idiosyncrasy of SAP GUI`s IE. So let`s ignore the last character.
     && (hint.parent.href.substr(0, hint.parent.href.length - 1) === document.location.href)// href is #
     && !hint.parent.onclick // no handler
     && hint.parent.parentElement && hint.parent.parentElement.nodeName === "LI") {
@@ -1637,7 +1643,7 @@ function Hotkeys(oKeyMap) {
         return;
       }
 
-      // Or a SAP event input
+      // Or an SAP event input
       var sUiSapEventInputAction = this.getSapEventInputAction(action);
       if (sUiSapEventInputAction) {
         submitSapeventForm({}, sUiSapEventInputAction, "post");
@@ -1645,7 +1651,7 @@ function Hotkeys(oKeyMap) {
         return;
       }
 
-      // Or a SAP event main form
+      // Or an SAP event main form
       var elForm = this.getSapEventForm(action);
       if (elForm) {
         elForm.submit();
@@ -1666,14 +1672,22 @@ Hotkeys.prototype.showHotkeys = function() {
   }
 };
 
-Hotkeys.prototype.getAllSapEventsForSapEventName = function(sSapEvent) {
-  return [].slice.call(
-    document.querySelectorAll('a[href*="sapevent:' + sSapEvent + '"],'
-      + 'a[href*="SAPEVENT:' + sSapEvent + '"],'
-      + 'input[formaction*="sapevent:' + sSapEvent + '"],'
-      + 'input[formaction*="SAPEVENT:' + sSapEvent + '"],'
-      + 'form[action*="sapevent:' + sSapEvent + '"] input[type="submit"].main,'
-      + 'form[action*="SAPEVENT:' + sSapEvent + '"] input[type="submit"].main'));
+Hotkeys.prototype.getAllSapEventsForSapEventName = function (sSapEvent) {
+  if (/^#+$/.test(sSapEvent)){
+    // sSapEvent contains only #. Nothing sensible can be done here
+    return [];
+  }
+
+  var includesSapEvent = function(text){
+    return (text.includes("sapevent") || text.includes("SAPEVENT"));
+  };
+
+  return [].slice
+    .call(document.querySelectorAll("a[href*="+ sSapEvent +"], input[formaction*="+ sSapEvent+"]"))
+    .filter(function (elem) {
+      return (elem.nodeName === "A" && includesSapEvent(elem.href)
+          || (elem.nodeName === "INPUT" && includesSapEvent(elem.formAction)));
+    });
 };
 
 Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
@@ -2041,7 +2055,7 @@ function registerStagePatch() {
 }
 
 /**********************************************************
- * Command Palette (Ctrl + P)
+ * Command Palette (F1)
  **********************************************************/
 
 // fuzzy match helper
@@ -2334,7 +2348,7 @@ function enumerateUiActions() {
   }
 
   // toolbars
-  [].slice.call(document.querySelectorAll("[id*=toolbar]"))
+  [].slice.call(document.querySelectorAll(".nav-container > ul[id*=toolbar]"))
     .filter(function(toolbar) {
       return (toolbar && toolbar.nodeName === "UL");
     }).forEach(function(toolbar) {
@@ -2363,13 +2377,13 @@ function enumerateUiActions() {
     .forEach(function(input) {
       items.push({
         action: function() {
-          if (input.form.action.includes(input.formAction)) {
+          if (input.form.action.includes(input.formAction) || input.classList.contains("main")) {
             input.form.submit();
           } else {
             submitSapeventForm({}, input.formAction, "post", input.form);
           }
         },
-        title: input.value + " " + input.title.replace(/\[.*\]/, "")
+        title: (input.value === "Submit Query" ? input.title : input.value + " " + input.title.replace(/\[.*\]/, ""))
       });
     });
 
@@ -2389,7 +2403,7 @@ function enumerateUiActions() {
   // - label links
   // - command links
   // - other header links
-  [].slice.call(document.querySelectorAll("form a, a.command, #header ul:not([id*='toolbar']) a"))
+  [].slice.call(document.querySelectorAll("form a, a.command:not(.unlisted), #header ul:not([id*='toolbar']) a"))
     .filter(function(anchor) {
       return !!anchor.title || !!anchor.text;
     }).forEach(function(anchor) {
@@ -2402,7 +2416,7 @@ function enumerateUiActions() {
           if (anchor.href.includes("label")) {
             result = "Label: " + result;
           }
-          return result;
+          return result.trim();
         })()
       });
     });
@@ -2433,7 +2447,7 @@ function enumerateJumpAllFiles() {
 function saveScrollPosition() {
   // Not supported by Java GUI
   try { if (!window.sessionStorage) { return } }
-  catch (err) { return }
+  catch (err) { return err }
 
   window.sessionStorage.setItem("scrollTop", document.querySelector("html").scrollTop);
 }
@@ -2441,7 +2455,7 @@ function saveScrollPosition() {
 function restoreScrollPosition() {
   // Not supported by Java GUI
   try { if (!window.sessionStorage) { return } }
-  catch (err) { return }
+  catch (err) { return err }
 
   var scrollTop = window.sessionStorage.getItem("scrollTop");
   if (scrollTop) {
@@ -2494,7 +2508,10 @@ function toggleSticky() {
 // Todo: Remove once https://github.com/abapGit/abapGit/issues/4841 is fixed
 function toggleBrowserControlWarning(){
   if (!navigator.userAgent.includes("Edg")){
-    document.getElementById("browser-control-warning").style.display = "none";
+    var elBrowserControlWarning = document.getElementById("browser-control-warning");
+    if (elBrowserControlWarning) {
+      elBrowserControlWarning.style.display = "none";
+    }
   }
 }
 

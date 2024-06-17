@@ -3,7 +3,7 @@ CLASS zcl_abapgit_data_utils DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
-
+    TYPES ty_names TYPE STANDARD TABLE OF abap_compname WITH DEFAULT KEY .
     CLASS-METHODS build_table_itab
       IMPORTING
         !iv_name       TYPE tadir-obj_name
@@ -24,8 +24,6 @@ CLASS zcl_abapgit_data_utils DEFINITION
     CLASS-METHODS jump
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_item
-      RETURNING
-        VALUE(rv_exit) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS does_table_exist
@@ -38,9 +36,6 @@ CLASS zcl_abapgit_data_utils DEFINITION
         !iv_name              TYPE tadir-obj_name
       RETURNING
         VALUE(rv_customizing) TYPE abap_bool.
-  PROTECTED SECTION.
-  PRIVATE SECTION.
-    TYPES ty_names TYPE STANDARD TABLE OF abap_compname WITH DEFAULT KEY .
     CLASS-METHODS list_key_fields
       IMPORTING
         !iv_name        TYPE tadir-obj_name
@@ -48,11 +43,13 @@ CLASS zcl_abapgit_data_utils DEFINITION
         VALUE(rt_names) TYPE ty_names
       RAISING
         zcx_abapgit_exception.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_data_utils IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DATA_UTILS IMPLEMENTATION.
 
 
   METHOD build_config_filename.
@@ -106,7 +103,7 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
           lt_names = list_key_fields( iv_name ).
 
           APPEND INITIAL LINE TO lt_keys ASSIGNING <ls_key>.
-          <ls_key>-access_kind = cl_abap_tabledescr=>tablekind_sorted.
+          <ls_key>-access_kind = cl_abap_tabledescr=>tablekind_hashed.
           <ls_key>-key_kind    = cl_abap_tabledescr=>keydefkind_user.
           <ls_key>-is_primary  = abap_true.
           <ls_key>-is_unique   = abap_true.
@@ -169,7 +166,10 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
             ro_delivery_class = lo_delivery_class.
         ASSIGN lo_delivery_class->('VALUE') TO <ls_any>.
         lv_contflag = <ls_any>.
-      CATCH cx_sy_dyn_call_illegal_class.
+      CATCH cx_sy_dyn_call_illegal_class cx_no_check.
+        " Catching SAP standard exception CX_NO_CHECK,
+        " because of the expected exception CX_XCO_RUNTIME_EXCEPTION
+        " could not be used here directly to keep the indirect usage approach.
         SELECT SINGLE contflag FROM ('DD02L') INTO lv_contflag WHERE tabname = iv_name.
     ENDTRY.
 

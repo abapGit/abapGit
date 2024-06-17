@@ -26,7 +26,7 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
       RETURNING
         VALUE(rs_file) TYPE zif_abapgit_git_definitions=>ty_file
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS get_data
       RETURNING
         VALUE(rs_data) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit .
@@ -66,9 +66,16 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
         zcx_abapgit_exception .
     METHODS set_i18n_languages
       IMPORTING
-        VALUE(it_languages) TYPE zif_abapgit_definitions=>ty_languages
+        it_languages TYPE zif_abapgit_definitions=>ty_languages
       RAISING
         zcx_abapgit_exception .
+    METHODS determine_i18n_parameters
+      IMPORTING
+        !iv_main_language_only TYPE abap_bool
+      RETURNING
+        VALUE(rs_i18n_params)  TYPE zif_abapgit_definitions=>ty_i18n_params
+      RAISING
+        zcx_abapgit_exception.
     METHODS get_signature
       RETURNING
         VALUE(rs_signature) TYPE zif_abapgit_git_definitions=>ty_file_signature
@@ -76,37 +83,62 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
         zcx_abapgit_exception .
     METHODS use_lxe
       IMPORTING
-        iv_yes TYPE abap_bool DEFAULT abap_undefined
+        !iv_yes       TYPE abap_bool DEFAULT abap_undefined
       RETURNING
-        VALUE(rv_yes) TYPE abap_bool.
+        VALUE(rv_yes) TYPE abap_bool .
     METHODS get_requirements
       RETURNING
         VALUE(rt_requirements) TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt .
     METHODS set_requirements
       IMPORTING
         !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt .
+    METHODS get_name
+      RETURNING
+        VALUE(rv_name) TYPE string.
+    METHODS set_name
+      IMPORTING
+        !iv_name TYPE csequence.
     METHODS get_version_constant
-      RETURNING VALUE(rv_version_constant) TYPE string.
+      RETURNING
+        VALUE(rv_version_constant) TYPE string .
     METHODS set_version_constant
-      IMPORTING iv_version_constant TYPE csequence.
+      IMPORTING
+        !iv_version_constant TYPE csequence .
+    METHODS get_abap_language_version
+      RETURNING
+        VALUE(rv_abap_language_version) TYPE string .
+    METHODS set_abap_language_version
+      IMPORTING
+        !iv_abap_language_version TYPE string .
+    METHODS get_original_system
+      RETURNING
+        VALUE(rv_original_system) TYPE string .
+    METHODS set_original_system
+      IMPORTING
+        !iv_original_system TYPE csequence .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA: ms_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
-    CLASS-METHODS:
-      to_xml
-        IMPORTING is_data       TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit
-        RETURNING VALUE(rv_xml) TYPE string
-        RAISING   zcx_abapgit_exception,
-      from_xml
-        IMPORTING iv_xml         TYPE string
-        RETURNING VALUE(rs_data) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
+    DATA ms_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit .
 
+    CLASS-METHODS to_xml
+      IMPORTING
+        !is_data      TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit
+      RETURNING
+        VALUE(rv_xml) TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS from_xml
+      IMPORTING
+        !iv_xml        TYPE string
+      RETURNING
+        VALUE(rs_data) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
+CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
 
   METHOD add_ignore.
@@ -167,6 +199,18 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD determine_i18n_parameters.
+
+    rs_i18n_params-main_language         = get_main_language( ).
+    rs_i18n_params-use_lxe               = use_lxe( ).
+    rs_i18n_params-main_language_only    = iv_main_language_only.
+    rs_i18n_params-translation_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
+      iv_main_language  = get_main_language( )
+      it_i18n_languages = get_i18n_languages( ) ).
+
+  ENDMETHOD.
+
+
   METHOD from_xml.
 
     DATA: lv_xml TYPE string.
@@ -183,6 +227,11 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
       rs_data-folder_logic = zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD get_abap_language_version.
+    rv_abap_language_version = ms_data-abap_language_version.
   ENDMETHOD.
 
 
@@ -203,6 +252,19 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD get_main_language.
     rv_language = ms_data-master_language.
+    IF rv_language IS INITIAL.
+      rv_language = sy-langu.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD get_name.
+    rv_name = ms_data-name.
+  ENDMETHOD.
+
+
+  METHOD get_original_system.
+    rv_original_system = ms_data-original_system.
   ENDMETHOD.
 
 
@@ -295,6 +357,11 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_abap_language_version.
+    ms_data-abap_language_version = iv_abap_language_version.
+  ENDMETHOD.
+
+
   METHOD set_folder_logic.
     ms_data-folder_logic = iv_logic.
   ENDMETHOD.
@@ -302,6 +369,16 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD set_i18n_languages.
     ms_data-i18n_languages = it_languages.
+  ENDMETHOD.
+
+
+  METHOD set_name.
+    ms_data-name = iv_name.
+  ENDMETHOD.
+
+
+  METHOD set_original_system.
+    ms_data-original_system = iv_original_system.
   ENDMETHOD.
 
 

@@ -75,19 +75,21 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING
         !it_functions TYPE ty_function_tt
         !ii_log       TYPE REF TO zif_abapgit_log
+        !iv_version   TYPE uccheck
+        !iv_package   TYPE devclass
         !iv_transport TYPE trkorr
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_function_docs
       IMPORTING
-        !iv_prog_name TYPE programm
+        !iv_prog_name TYPE syrepid
         !it_functions TYPE ty_function_tt
         !ii_xml       TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_function_docs
       IMPORTING
-        !iv_prog_name TYPE programm
+        !iv_prog_name TYPE syrepid
         !it_functions TYPE ty_function_tt
         !ii_xml       TYPE REF TO zif_abapgit_xml_input
       RAISING
@@ -100,6 +102,7 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS deserialize_xml
       IMPORTING
         !ii_xml       TYPE REF TO zif_abapgit_xml_input
+        !iv_version   TYPE uccheck
         !iv_package   TYPE devclass
         !iv_transport TYPE trkorr
       RAISING
@@ -142,13 +145,13 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !iv_short_text TYPE tftit-stext .
     METHODS serialize_texts
       IMPORTING
-        !iv_prog_name TYPE programm
+        !iv_prog_name TYPE syrepid
         !ii_xml       TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_texts
       IMPORTING
-        !iv_prog_name TYPE programm
+        !iv_prog_name TYPE syrepid
         !ii_xml       TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
@@ -224,7 +227,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     LOOP AT it_functions ASSIGNING <ls_func>.
 
-      lt_source = zif_abapgit_object~mo_files->read_abap( iv_extra = <ls_func>-funcname ).
+      lt_source = mo_files->read_abap( iv_extra = <ls_func>-funcname ).
 
       lv_area = ms_item-obj_name.
 
@@ -244,16 +247,9 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         CONTINUE. "with next function module
       ENDIF.
 
-      CALL FUNCTION 'FUNCTION_EXISTS'
-        EXPORTING
-          funcname           = <ls_func>-funcname
-        IMPORTING
-          include            = lv_include
-        EXCEPTIONS
-          function_not_exist = 1.
-      IF sy-subrc = 0.
+      IF zcl_abapgit_factory=>get_function_module( )->function_exists( <ls_func>-funcname ) = abap_true.
 * delete the function module to make sure the parameters are updated
-* havent found a nice way to update the paramters
+* haven't found a nice way to update the parameters
         CALL FUNCTION 'FUNCTION_DELETE'
           EXPORTING
             funcname                 = <ls_func>-funcname
@@ -318,7 +314,12 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         CONTINUE.  "with next function module
       ENDIF.
 
-      INSERT REPORT lv_include FROM lt_source.
+      zcl_abapgit_factory=>get_sap_report( )->insert_report(
+        iv_name    = lv_include
+        iv_package = iv_package
+        iv_version = iv_version
+        it_source  = lt_source ).
+
       ii_log->add_success( iv_msg = |Function module { <ls_func>-funcname } imported|
                            is_item = ms_item ).
     ENDLOOP.
@@ -357,7 +358,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
   METHOD deserialize_includes.
 
     DATA: lo_xml       TYPE REF TO zif_abapgit_xml_input,
-          ls_progdir   TYPE ty_progdir,
+          ls_progdir   TYPE zif_abapgit_sap_report=>ty_progdir,
           lt_includes  TYPE ty_sobj_name_tt,
           lt_tpool     TYPE textpool_table,
           lt_tpool_ext TYPE zif_abapgit_definitions=>ty_tpool_tt,
@@ -382,12 +383,14 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       ENDIF.
 
       TRY.
-          lt_source = zif_abapgit_object~mo_files->read_abap( iv_extra = <lv_include> ).
+          lt_source = mo_files->read_abap( iv_extra = <lv_include> ).
 
-          lo_xml = zif_abapgit_object~mo_files->read_xml( <lv_include> ).
+          lo_xml = mo_files->read_xml( <lv_include> ).
 
           lo_xml->read( EXPORTING iv_name = 'PROGDIR'
                         CHANGING cg_data = ls_progdir ).
+
+          set_abap_language_version( CHANGING cv_abap_language_version = ls_progdir-uccheck ).
 
           lo_xml->read( EXPORTING iv_name = 'TPOOL'
                         CHANGING cg_data = lt_tpool_ext ).
@@ -435,14 +438,12 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   METHOD deserialize_xml.
 
-    DATA: lv_complete     TYPE rs38l-area,
-          lv_namespace    TYPE rs38l-namespace,
-          lv_areat        TYPE tlibt-areat,
-          lv_stext        TYPE tftit-stext,
-          lv_group        TYPE rs38l-area,
-          lv_abap_version TYPE trdir-uccheck.
+    DATA: lv_complete  TYPE rs38l-area,
+          lv_namespace TYPE rs38l-namespace,
+          lv_areat     TYPE tlibt-areat,
+          lv_stext     TYPE tftit-stext,
+          lv_group     TYPE rs38l-area.
 
-    lv_abap_version = get_abap_version( ii_xml ).
     lv_complete = ms_item-obj_name.
 
     CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
@@ -478,7 +479,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         short_text              = lv_stext
         namespace               = lv_namespace
         devclass                = iv_package
-        unicode_checks          = lv_abap_version
+        unicode_checks          = iv_version
         corrnum                 = iv_transport
         suppress_corr_check     = abap_false
       EXCEPTIONS
@@ -543,7 +544,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
   METHOD get_abap_version.
 
     DATA: lt_includes TYPE ty_sobj_name_tt,
-          ls_progdir  TYPE ty_progdir,
+          ls_progdir  TYPE zif_abapgit_sap_report=>ty_progdir,
           lo_xml      TYPE REF TO zif_abapgit_xml_input.
 
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.
@@ -553,7 +554,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     LOOP AT lt_includes ASSIGNING <lv_include>.
 
-      lo_xml = zif_abapgit_object~mo_files->read_xml( <lv_include> ).
+      lo_xml = mo_files->read_xml( <lv_include> ).
 
       lo_xml->read( EXPORTING iv_name = 'PROGDIR'
                     CHANGING cg_data = ls_progdir ).
@@ -570,7 +571,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     ENDLOOP.
 
     IF rv_abap_version IS INITIAL.
-      rv_abap_version = 'X'.
+      set_abap_language_version( CHANGING cv_abap_language_version = rv_abap_version ).
     ENDIF.
 
   ENDMETHOD.
@@ -754,16 +755,9 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 
   METHOD is_function_group_locked.
-
-    DATA: lv_object TYPE eqegraarg.
-
-    lv_object = |FG{ ms_item-obj_name }|.
-    OVERLAY lv_object WITH '                                          '.
-    lv_object = lv_object && '*'.
-
     rv_is_functions_group_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
-                                                            iv_argument    = lv_object ).
-
+                                                            iv_argument    = ms_item-obj_name
+                                                            iv_prefix      = 'FG' ).
   ENDMETHOD.
 
 
@@ -772,7 +766,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     " like in LSEAPFAP Form TADIR_MAINTENANCE
     DATA ls_tadir TYPE tadir.
     DATA lv_namespace TYPE rs38l-namespace.
-    DATA lv_area TYPE rs38l-area.
+    DATA lv_function_group TYPE rs38l-area.
     DATA lv_include TYPE rs38l-include.
 
     rv_belongs_to_other_fugr = abap_false.
@@ -783,17 +777,18 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
         IMPORTING
           namespace = lv_namespace
-          group     = lv_area
+          group     = lv_function_group
         CHANGING
           include   = lv_include
         EXCEPTIONS
           OTHERS    = 1.
-      IF lv_area(1) = 'X'.    " "EXIT"-function-module
+      IF lv_function_group(1) = 'X'.    " "EXIT"-function-module
         ls_tadir-object = 'FUGS'.
       ENDIF.
       IF sy-subrc = 0.
-        CONCATENATE lv_namespace lv_area INTO ls_tadir-obj_name.
-        IF ls_tadir-obj_name <> ms_item-obj_name.
+        CONCATENATE lv_namespace lv_function_group INTO ls_tadir-obj_name.
+        " compare complete tadir key to distinguish between regular and exit function groups
+        IF ls_tadir-obj_name <> ms_item-obj_name OR ls_tadir-object <> ms_item-obj_type.
           rv_belongs_to_other_fugr = abap_true.
         ENDIF.
       ENDIF.
@@ -901,12 +896,12 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
       IF NOT lt_new_source IS INITIAL.
         strip_generation_comments( CHANGING ct_source = lt_new_source ).
-        zif_abapgit_object~mo_files->add_abap(
+        mo_files->add_abap(
           iv_extra = <ls_func>-funcname
           it_abap  = lt_new_source ).
       ELSE.
         strip_generation_comments( CHANGING ct_source = lt_source ).
-        zif_abapgit_object~mo_files->add_abap(
+        mo_files->add_abap(
           iv_extra = <ls_func>-funcname
           it_abap  = lt_source ).
       ENDIF.
@@ -923,6 +918,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     zcl_abapgit_factory=>get_longtexts( )->serialize(
       iv_longtext_id = c_longtext_id_prog
       iv_object_name = iv_prog_name
+      io_i18n_params = mo_i18n_params
       ii_xml         = ii_xml ).
 
     LOOP AT it_functions ASSIGNING <ls_func>.
@@ -930,11 +926,13 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         iv_longtext_name = |LONGTEXTS_{ <ls_func>-funcname }|
         iv_longtext_id   = c_longtext_id_func
         iv_object_name   = <ls_func>-funcname
+        io_i18n_params   = mo_i18n_params
         ii_xml           = ii_xml ).
       zcl_abapgit_factory=>get_longtexts( )->serialize(
         iv_longtext_name = |LONGTEXTS_{ <ls_func>-funcname }___EXC|
         iv_longtext_id   = c_longtext_id_func_exc
         iv_object_name   = <ls_func>-funcname
+        io_i18n_params   = mo_i18n_params
         ii_xml           = ii_xml ).
     ENDLOOP.
 
@@ -954,7 +952,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 * todo, filename is not correct, a include can be used in several programs
       serialize_program( is_item    = ms_item
-                         io_files   = zif_abapgit_object~mo_files
+                         io_files   = mo_files
                          iv_program = <lv_include>
                          iv_extra   = <lv_include> ).
 
@@ -969,7 +967,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       RETURN.
     ENDIF.
 
@@ -981,11 +979,11 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       FROM d010tinf
       WHERE r3state = 'A'
       AND prog = iv_prog_name
-      AND language <> mv_language ##TOO_MANY_ITAB_FIELDS.
+      AND language <> mv_language
+      ORDER BY language ##TOO_MANY_ITAB_FIELDS.
 
-    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+    mo_i18n_params->trim_saplang_keyed_table(
       EXPORTING
-        it_iso_filter = ii_xml->i18n_params( )-translation_languages
         iv_lang_field_name = 'LANGUAGE'
       CHANGING
         ct_tab = lt_tpool_i18n ).
@@ -1034,8 +1032,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     "   FORM GROUP_CHANGE
 
     UPDATE tlibt SET areat = iv_short_text
-                 WHERE spras = mv_language
-                 AND   area  = iv_group.
+      WHERE spras = mv_language AND area = iv_group.
 
   ENDMETHOD.
 
@@ -1118,26 +1115,29 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     SELECT unam AS user udat AS date utime AS time FROM reposrc
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE progname = lv_program
-      AND   r3state = 'A'.                                "#EC CI_SUBRC
+      AND r3state = 'A'
+      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
 
     IF mt_includes_all IS NOT INITIAL AND lv_found = abap_false.
       SELECT unam AS user udat AS date utime AS time FROM reposrc
         APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
         FOR ALL ENTRIES IN mt_includes_all
         WHERE progname = mt_includes_all-table_line
-        AND   r3state = 'A'.                              "#EC CI_SUBRC
+        AND r3state = 'A'.                                "#EC CI_SUBRC
     ENDIF.
 
     SELECT unam AS user udat AS date utime AS time FROM repotext " Program text pool
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE progname = lv_program
-      AND   r3state = 'A'.                                "#EC CI_SUBRC
+      AND r3state = 'A'
+      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
 
     SELECT vautor AS user vdatum AS date vzeit AS time FROM eudb         " GUI
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE relid = 'CU'
-      AND   name  = lv_program
-      AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.
+      AND name = lv_program
+      AND srtf2 = 0
+      ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS.
 
 * Screens: username not stored in D020S database table
 
@@ -1196,13 +1196,17 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lv_program_name TYPE programm,
+    DATA: lv_program_name TYPE syrepid,
+          lv_abap_version TYPE trdir-uccheck,
           lt_functions    TYPE ty_function_tt,
           lt_dynpros      TYPE ty_dynpro_tt,
           ls_cua          TYPE ty_cua.
 
+    lv_abap_version = get_abap_version( io_xml ).
+
     deserialize_xml(
       ii_xml       = io_xml
+      iv_version   = lv_abap_version
       iv_package   = iv_package
       iv_transport = iv_transport ).
 
@@ -1212,6 +1216,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     deserialize_functions(
       it_functions = lt_functions
       ii_log       = ii_log
+      iv_version   = lv_abap_version
+      iv_package   = iv_package
       iv_transport = iv_transport ).
 
     deserialize_includes(
@@ -1221,10 +1227,10 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     lv_program_name = main_name( ).
 
-    deserialize_texts( iv_prog_name = lv_program_name
-                       ii_xml       = io_xml ).
-
-    deserialize_lxe_texts( io_xml ).
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
+      deserialize_texts( iv_prog_name = lv_program_name
+                         ii_xml       = io_xml ).
+    ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'DYNPROS'
                   CHANGING cg_data = lt_dynpros ).
@@ -1324,7 +1330,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     LOOP AT lt_functions ASSIGNING <ls_function> WHERE funcname = ls_item-obj_name.
       ls_item-obj_name = <ls_function>-include.
-      rv_exit = zcl_abapgit_ui_factory=>get_gui_jumper( )->jump( ls_item ).
+      rv_exit = zcl_abapgit_objects_factory=>get_gui_jumper( )->jump( ls_item ).
       IF rv_exit = abap_true.
         RETURN.
       ENDIF.
@@ -1333,7 +1339,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     lt_includes = includes( ).
 
     LOOP AT lt_includes ASSIGNING <lv_include> WHERE table_line = ls_item-obj_name.
-      rv_exit = zcl_abapgit_ui_factory=>get_gui_jumper( )->jump( ls_item ).
+      rv_exit = zcl_abapgit_objects_factory=>get_gui_jumper( )->jump( ls_item ).
       IF rv_exit = abap_true.
         RETURN.
       ENDIF.
@@ -1361,8 +1367,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 * function group SUNI
 
     DATA: lt_functions    TYPE ty_function_tt,
-          ls_progdir      TYPE ty_progdir,
-          lv_program_name TYPE programm,
+          ls_progdir      TYPE zif_abapgit_sap_report=>ty_progdir,
+          lv_program_name TYPE syrepid,
           lt_dynpros      TYPE ty_dynpro_tt,
           ls_cua          TYPE ty_cua.
 
@@ -1380,14 +1386,13 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     serialize_includes( ).
 
     lv_program_name = main_name( ).
-    ls_progdir = read_progdir( lv_program_name ).
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    ls_progdir = zcl_abapgit_factory=>get_sap_report( )->read_progdir( lv_program_name ).
+
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts(
         iv_prog_name = lv_program_name
         ii_xml       = io_xml ).
-    ELSE.
-      serialize_lxe_texts( io_xml ).
     ENDIF.
 
     IF ls_progdir-subc = 'F'.

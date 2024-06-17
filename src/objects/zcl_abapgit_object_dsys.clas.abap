@@ -6,8 +6,12 @@ CLASS zcl_abapgit_object_dsys DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS constructor
       IMPORTING
-        is_item     TYPE zif_abapgit_definitions=>ty_item
-        iv_language TYPE spras.
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
 
@@ -46,17 +50,26 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
     DATA: lv_prefix    TYPE namespace,
           lv_bare_name TYPE progname.
 
-    super->constructor( is_item = is_item
-                        iv_language = iv_language ).
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
-    CALL FUNCTION 'RS_NAME_SPLIT_NAMESPACE'
-      EXPORTING
-        name_with_namespace    = ms_item-obj_name
-      IMPORTING
-        namespace              = lv_prefix
-        name_without_namespace = lv_bare_name.
+    IF ms_item-obj_name(1) = '/'.
 
-    mv_doc_object = |{ lv_bare_name+0(4) }{ lv_prefix }{ lv_bare_name+4(*) }|.
+      CALL FUNCTION 'RS_NAME_SPLIT_NAMESPACE'
+        EXPORTING
+          name_with_namespace    = ms_item-obj_name
+        IMPORTING
+          namespace              = lv_prefix
+          name_without_namespace = lv_bare_name.
+
+      mv_doc_object = |{ lv_bare_name+0(4) }{ lv_prefix }{ lv_bare_name+4(*) }|.
+    ELSE.
+
+      mv_doc_object = ms_item-obj_name.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -100,7 +113,7 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
     SELECT SINGLE langu FROM dokil INTO rv_language
       WHERE id = c_id
       AND object = mv_doc_object
-      AND masterlang = abap_true.
+      AND masterlang = abap_true.                       "#EC CI_NOORDER
 
     IF sy-subrc <> 0.
       rv_language = mv_language.
@@ -165,7 +178,7 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
 
     SELECT SINGLE COUNT( * ) FROM dokil INTO lv_count
            WHERE id   = c_id
-           AND object = mv_doc_object.                  "#EC CI_GENBUFF
+           AND object = mv_doc_object.  "#EC CI_GENBUFF "#EC CI_NOORDER
 
     rv_bool = boolc( lv_count > 0 ).
 
@@ -239,6 +252,7 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
     zcl_abapgit_factory=>get_longtexts( )->serialize(
       iv_object_name = mv_doc_object
       iv_longtext_id = c_id
+      io_i18n_params = mo_i18n_params
       ii_xml         = io_xml ).
 
   ENDMETHOD.

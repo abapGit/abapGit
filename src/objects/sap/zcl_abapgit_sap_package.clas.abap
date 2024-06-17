@@ -14,6 +14,12 @@ CLASS zcl_abapgit_sap_package DEFINITION
   PRIVATE SECTION.
     DATA: mv_package TYPE devclass.
 
+    METHODS get_transport_layer
+      RETURNING
+        VALUE(rv_transport_layer) TYPE devlayer
+      RAISING
+        zcx_abapgit_exception .
+
 ENDCLASS.
 
 
@@ -48,7 +54,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
         rv_are_changes_rec_in_tr_req = li_package->wbo_korr_flag.
       WHEN 1.
         " For new packages, derive from package name
-        rv_are_changes_rec_in_tr_req = boolc( mv_package(1) <> '$' ).
+        rv_are_changes_rec_in_tr_req = boolc( mv_package(1) <> '$' AND mv_package(1) <> 'T' ).
       WHEN OTHERS.
         zcx_abapgit_exception=>raise_t100( ).
     ENDCASE.
@@ -60,7 +66,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
     DATA: lv_err     TYPE string,
           li_package TYPE REF TO if_package,
-          ls_package LIKE is_package.
+          ls_package TYPE scompkdtln.
 
 
     ASSERT NOT is_package-devclass IS INITIAL.
@@ -80,7 +86,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    ls_package = is_package.
+    MOVE-CORRESPONDING is_package TO ls_package.
 
     " Set software component to 'HOME' if none is set at this point.
     " Otherwise SOFTWARE_COMPONENT_INVALID will be raised.
@@ -90,7 +96,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
     " For transportable packages, get default transport and layer
     IF ls_package-devclass(1) <> '$' AND ls_package-pdevclass IS INITIAL.
-      ls_package-pdevclass = zif_abapgit_sap_package~get_transport_layer( ).
+      ls_package-pdevclass = get_transport_layer( ).
     ENDIF.
 
     cl_package_factory=>create_new_package(
@@ -167,7 +173,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   METHOD zif_abapgit_sap_package~create_child.
 
     DATA: li_parent TYPE REF TO if_package,
-          ls_child  TYPE scompkdtln.
+          ls_child  TYPE zif_abapgit_sap_package=>ty_create.
 
 
     cl_package_factory=>load_package(
@@ -200,7 +206,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_package~create_local.
 
-    DATA: ls_package TYPE scompkdtln.
+    DATA: ls_package TYPE zif_abapgit_sap_package=>ty_create.
 
 
     ls_package-devclass  = mv_package.
@@ -230,7 +236,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_sap_package~get_transport_layer.
+  METHOD get_transport_layer.
 
     " Get default transport layer
     CALL FUNCTION 'TR_GET_TRANSPORT_TARGET'
@@ -299,7 +305,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
           " Namespace with repair license requires repair task
           rs_transport_type-task = 'R'.
         ELSE.
-          " Otherweise use correction task
+          " Otherwise use correction task
           rs_transport_type-task = 'S'.
         ENDIF.
       WHEN OTHERS.

@@ -55,6 +55,36 @@ CLASS ltcl_object_types IMPLEMENTATION.
 
 ENDCLASS.
 
+
+CLASS lcl_settings_with_features DEFINITION.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_persist_settings.
+    METHODS: constructor
+      IMPORTING iv_features TYPE string.
+  PRIVATE SECTION.
+    DATA mv_features TYPE string.
+ENDCLASS.
+
+CLASS lcl_settings_with_features IMPLEMENTATION.
+
+  METHOD zif_abapgit_persist_settings~modify.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_settings~read.
+
+    CREATE OBJECT ro_settings.
+    ro_settings->set_experimental_features( mv_features ).
+
+  ENDMETHOD.
+
+  METHOD constructor.
+    mv_features = iv_features.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
 *----------------------------------------------------------------------*
 *       CLASS ltcl_serialize DEFINITION
 *----------------------------------------------------------------------*
@@ -66,7 +96,7 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
 
     METHODS:
       check
-        IMPORTING VALUE(is_item) TYPE zif_abapgit_definitions=>ty_item
+        IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
         RAISING   zcx_abapgit_exception,
       serialize_tabl FOR TESTING RAISING zcx_abapgit_exception,
       serialize_shlp FOR TESTING RAISING zcx_abapgit_exception,
@@ -80,7 +110,8 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
       serialize_msag FOR TESTING RAISING zcx_abapgit_exception,
       serialize_prog FOR TESTING RAISING zcx_abapgit_exception,
       serialize_tran FOR TESTING RAISING zcx_abapgit_exception,
-      serialize_ttyp FOR TESTING RAISING zcx_abapgit_exception.
+      serialize_ttyp FOR TESTING RAISING zcx_abapgit_exception,
+      serialize_intf_aff_translate FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -159,6 +190,48 @@ CLASS ltcl_serialize IMPLEMENTATION.
     ls_item-obj_name = 'IF_BADI_TADIR_CHANGED'.
 
     check( ls_item ).
+
+  ENDMETHOD.
+
+
+  METHOD serialize_intf_aff_translate.
+
+    DATA: ls_item           TYPE zif_abapgit_definitions=>ty_item,
+          lo_settings       TYPE REF TO lcl_settings_with_features,
+          ls_act            TYPE zif_abapgit_objects=>ty_serialization,
+          ls_translation_de TYPE zif_abapgit_git_definitions=>ty_file,
+          lt_target_langu   TYPE zif_abapgit_definitions=>ty_languages,
+          lo_i18n_params    TYPE REF TO zcl_abapgit_i18n_params,
+          lv_features       TYPE string,
+          lv_filename       TYPE string.
+
+    ls_item-obj_type = 'INTF'.
+    ls_item-obj_name = 'IF_BADI_TADIR_CHANGED'.
+
+    lv_features = |{ zcl_abapgit_aff_registry=>c_aff_feature }, { zcl_abapgit_properties_file=>c_properties_feature }|.
+    CREATE OBJECT lo_settings
+      EXPORTING
+        iv_features = lv_features.
+
+    zcl_abapgit_persist_injector=>set_settings( lo_settings ).
+
+    APPEND `DE` TO lt_target_langu.
+    lo_i18n_params = zcl_abapgit_i18n_params=>new( iv_main_language     = zif_abapgit_definitions=>c_english
+                                                   it_translation_langs = lt_target_langu
+                                                   iv_use_lxe           = abap_true ).
+    ls_act = zcl_abapgit_objects=>serialize(
+      is_item        = ls_item
+      io_i18n_params = lo_i18n_params ).
+
+    cl_abap_unit_assert=>assert_not_initial( ls_act-files ).
+    cl_abap_unit_assert=>assert_equals( act = ls_act-item
+                                        exp = ls_item ).
+
+
+    lv_filename = 'if_badi_tadir_changed.intf.i18n.de.properties'.
+    READ TABLE ls_act-files WITH KEY file COMPONENTS filename = lv_filename INTO ls_translation_de.
+
+    cl_abap_unit_assert=>assert_not_initial( ls_translation_de ).
 
   ENDMETHOD.
 
@@ -248,10 +321,11 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD check.
 
-    DATA: ls_files_item TYPE zcl_abapgit_objects=>ty_serialization.
+    DATA: ls_files_item TYPE zif_abapgit_objects=>ty_serialization.
 
-    ls_files_item = zcl_abapgit_objects=>serialize( is_item     = is_item
-                                                    iv_language = zif_abapgit_definitions=>c_english ).
+    ls_files_item = zcl_abapgit_objects=>serialize(
+      is_item        = is_item
+      io_i18n_params = zcl_abapgit_i18n_params=>new( iv_main_language = zif_abapgit_definitions=>c_english ) ).
 
     cl_abap_unit_assert=>assert_not_initial( ls_files_item-files ).
     cl_abap_unit_assert=>assert_equals( act = ls_files_item-item
@@ -261,42 +335,23 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS ltcl_object_ddls_mock DEFINITION FOR TESTING.
+CLASS ltcl_object_tabl_mock DEFINITION INHERITING FROM zcl_abapgit_objects_super FOR TESTING.
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    METHODS:
-      constructor
-        IMPORTING
-          is_item     TYPE zif_abapgit_definitions=>ty_item
-          iv_language TYPE spras.
-
-  PRIVATE SECTION.
-    DATA ms_item TYPE zif_abapgit_definitions=>ty_item.
 
 ENDCLASS.
 
-CLASS ltcl_object_ddls_mock IMPLEMENTATION.
-
-  METHOD constructor.
-
-    ms_item = is_item.
-
-* dummy use of variable
-    IF iv_language = 'E'.
-      RETURN.
-    ENDIF.
-
-  ENDMETHOD.
+CLASS ltcl_object_tabl_mock IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_locked.
 
     CASE ms_item-obj_name.
-      WHEN 'Z_TEST_DDLS'.
+      WHEN 'Z_TEST_TABL'.
 
         rv_is_locked = abap_true.
 
-      WHEN 'Z_TEST_DDLS2'.
+      WHEN 'Z_TEST_TABL_2'.
 
         rv_is_locked = abap_false.
 
@@ -403,7 +458,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
 
   METHOD given_locked_object.
 
-    given_object( 'Z_TEST_DDLS' ).
+    given_object( 'Z_TEST_TABL' ).
 
   ENDMETHOD.
 
@@ -413,9 +468,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
     DATA: lx_error TYPE REF TO zcx_abapgit_exception.
 
     TRY.
-        zcl_abapgit_objects=>check_objects_locked( iv_language = 'E'
-                                                   it_items    = mt_given_items ).
-
+        zcl_abapgit_objects=>check_objects_locked( mt_given_items ).
       CATCH zcx_abapgit_exception INTO lx_error.
         mv_exception_text = lx_error->get_text( ).
     ENDTRY.
@@ -426,7 +479,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
   METHOD then_exception_shd_be_raised.
 
     cl_abap_unit_assert=>assert_equals(
-      exp = |Object DDLS Z_TEST_DDLS is locked. Action not possible.|
+      exp = |Object TABL Z_TEST_TABL is locked. Action not possible.|
       act = mv_exception_text ).
 
   ENDMETHOD.
@@ -434,7 +487,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
 
   METHOD given_not_locked_object.
 
-    given_object( 'Z_TEST_DDLS2' ).
+    given_object( 'Z_TEST_TABL_2' ).
 
   ENDMETHOD.
 
@@ -449,7 +502,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
   METHOD given_object.
 
     CONSTANTS:
-      lc_obj_type TYPE string VALUE 'DDLS'.
+      lc_obj_type TYPE string VALUE 'TABL'.
 
     DATA:
       ls_item               LIKE LINE OF mt_given_items,
@@ -461,7 +514,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
 
     ls_obj_serializer_map-item-obj_type = lc_obj_type.
     ls_obj_serializer_map-item-obj_name = iv_object_name.
-    ls_obj_serializer_map-metadata-class = '\CLASS-POOL=ZCL_ABAPGIT_OBJECTS\CLASS=LTCL_OBJECT_DDLS_MOCK'.
+    ls_obj_serializer_map-metadata-class = '\CLASS-POOL=ZCL_ABAPGIT_OBJECTS\CLASS=LTCL_OBJECT_TABL_MOCK'.
     INSERT ls_obj_serializer_map INTO TABLE zcl_abapgit_objects=>gt_obj_serializer_map.
 
   ENDMETHOD.

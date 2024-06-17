@@ -15,7 +15,7 @@ CLASS zcl_abapgit_html_form_utils DEFINITION
         !io_form_data    TYPE REF TO zcl_abapgit_string_map
         !io_compare_with TYPE REF TO zcl_abapgit_string_map
       RETURNING
-        VALUE(rv_dirty) TYPE abap_bool .
+        VALUE(rv_dirty)  TYPE abap_bool .
 
     METHODS constructor
       IMPORTING
@@ -46,10 +46,10 @@ CLASS zcl_abapgit_html_form_utils DEFINITION
         !io_form_data TYPE REF TO zcl_abapgit_string_map .
     METHODS exit
       IMPORTING
-        !io_form_data            TYPE REF TO zcl_abapgit_string_map
-        !io_check_changes_versus TYPE REF TO zcl_abapgit_string_map OPTIONAL
+        !io_form_data    TYPE REF TO zcl_abapgit_string_map
+        !io_compare_with TYPE REF TO zcl_abapgit_string_map
       RETURNING
-        VALUE(rv_state)          TYPE i
+        VALUE(rv_state)  TYPE i
       RAISING
         zcx_abapgit_exception .
 
@@ -63,7 +63,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML_FORM_UTILS IMPLEMENTATION.
+CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -81,18 +81,12 @@ CLASS ZCL_ABAPGIT_HTML_FORM_UTILS IMPLEMENTATION.
   METHOD exit.
 
     DATA lv_answer TYPE c LENGTH 1.
-    DATA lo_compare_with LIKE io_check_changes_versus.
-
-    lo_compare_with = io_check_changes_versus.
-    IF lo_compare_with IS NOT BOUND.
-      " TODO: remove this if and make io_check_changes_versus mandatory once all forms are converted
-      lo_compare_with = mo_form_data.
-    ENDIF.
 
     IF is_dirty(
       io_form_data    = io_form_data
-      io_compare_with = lo_compare_with ) = abap_true.
+      io_compare_with = io_compare_with ) = abap_true.
       lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+        iv_display_cancel_button = abap_false
         iv_titlebar       = 'abapGit - Unsaved Changes'
         iv_text_question  = 'There are unsaved changes. Do you want to exit the form?'
         iv_default_button = '2' ).
@@ -253,7 +247,7 @@ CLASS ZCL_ABAPGIT_HTML_FORM_UTILS IMPLEMENTATION.
     DATA:
       lt_fields TYPE zif_abapgit_html_form=>ty_fields,
       lv_value  TYPE string,
-      lv_number TYPE i.
+      lv_number TYPE p LENGTH 16 DECIMALS 0.
 
     FIELD-SYMBOLS <ls_field> LIKE LINE OF lt_fields.
 
@@ -273,15 +267,21 @@ CLASS ZCL_ABAPGIT_HTML_FORM_UTILS IMPLEMENTATION.
       ENDIF.
       CASE <ls_field>-type.
         WHEN zif_abapgit_html_form=>c_field_type-text.
-          IF <ls_field>-min <> cl_abap_math=>min_int4 AND strlen( lv_value ) < <ls_field>-min.
+          IF <ls_field>-min = <ls_field>-max AND strlen( lv_value ) <> <ls_field>-min.
             ro_validation_log->set(
               iv_key = <ls_field>-name
-              iv_val = |{ <ls_field>-label } must not be shorter than { <ls_field>-min } characters| ).
-          ENDIF.
-          IF <ls_field>-max <> cl_abap_math=>max_int4 AND strlen( lv_value ) > <ls_field>-max.
-            ro_validation_log->set(
-              iv_key = <ls_field>-name
-              iv_val = |{ <ls_field>-label } must not be longer than { <ls_field>-max } characters| ).
+              iv_val = |{ <ls_field>-label } must be exactly { <ls_field>-min } characters long| ).
+          ELSE.
+            IF <ls_field>-min <> cl_abap_math=>min_int4 AND strlen( lv_value ) < <ls_field>-min.
+              ro_validation_log->set(
+                iv_key = <ls_field>-name
+                iv_val = |{ <ls_field>-label } must not be shorter than { <ls_field>-min } characters| ).
+            ENDIF.
+            IF <ls_field>-max <> cl_abap_math=>max_int4 AND strlen( lv_value ) > <ls_field>-max.
+              ro_validation_log->set(
+                iv_key = <ls_field>-name
+                iv_val = |{ <ls_field>-label } must not be longer than { <ls_field>-max } characters| ).
+            ENDIF.
           ENDIF.
         WHEN zif_abapgit_html_form=>c_field_type-number.
           TRY.

@@ -1,4 +1,4 @@
-CLASS lcl_object_descision_list DEFINITION FINAL.
+CLASS lcl_object_decision_list DEFINITION FINAL.
   PUBLIC SECTION.
 
     CONSTANTS c_default_column     TYPE abap_componentdescr-name VALUE 'DEFAULT_COLUMN'.
@@ -105,7 +105,7 @@ CLASS lcl_object_descision_list DEFINITION FINAL.
 
 ENDCLASS.
 
-CLASS lcl_object_descision_list IMPLEMENTATION.
+CLASS lcl_object_decision_list IMPLEMENTATION.
 
   METHOD display.
 
@@ -677,8 +677,8 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
 
       lo_column ?= ls_column-r_column.
 
-      IF    iv_selection_mode    = if_salv_c_selection_mode=>multiple
-        AND ls_column-columnname = c_fieldname_selected.
+      IF iv_selection_mode    = if_salv_c_selection_mode=>multiple AND
+         ls_column-columnname = c_fieldname_selected.
         lo_column->set_cell_type( if_salv_c_cell_type=>checkbox_hotspot ).
         lo_column->set_output_length( 20 ).
         lo_column->set_short_text( |{ iv_select_column_text }| ).
@@ -765,7 +765,8 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
     lt_func_list = lo_functions->get_functions( ).
     LOOP AT lt_func_list INTO ls_func.
       lv_fn = ls_func-r_function->get_name( ).
-      IF lv_fn = 'OK' OR lv_fn = 'CANCEL'.
+      IF lv_fn = 'OK'   OR lv_fn = 'CANCEL'
+      OR lv_fn = 'O.K.' OR lv_fn = 'EABR'.
         ls_func-r_function->set_visible( abap_true ).
       ELSEIF iv_object_list = abap_true.
         ls_func-r_function->set_visible( abap_true ).

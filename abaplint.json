@@ -1,147 +1,157 @@
 {
   "global": {
-    "files": "/{test,src}/**/*.*",
+    "files": "/{test/src,src}/**/*.*",
+    "skipGeneratedFunctionGroups": true,
     "skipGeneratedGatewayClasses": true,
-    "skipGeneratedPersistentClasses": true,
-    "skipGeneratedFunctionGroups": true
+    "skipGeneratedPersistentClasses": true
   },
   "dependencies": [
     {
-      "folder": "/deps",
-      "files": "/**/*.*"
+      "files": "/**/*.*",
+      "folder": "/deps"
     },
     {
-      "url": "https://github.com/abaplint/deps",
+      "files": "/src/**/*.*",
       "folder": "/lint_deps",
-      "files": "/src/**/*.*"
+      "url": "https://github.com/abaplint/deps"
     }
   ],
-  "syntax": {
-    "version": "v702",
-    "errorNamespace": "^(Z|Y|LT?CL_|TY_|LIF_|.*ABAPGIT)",
-    "globalConstants": [
-      "abap_func_exporting",
-      "abap_func_tables",
-      "cssf_formtype_text",
-      "seok_access_free",
-      "seok_access_modify",
-      "seok_pgmid_r3tr",
-      "sews_c_vif_version",
-      "skwfc_obtype_folder",
-      "skwfc_obtype_loio",
-      "so2_controller",
-      "ststc_c_type_dialog",
-      "ststc_c_type_object",
-      "ststc_c_type_parameters",
-      "ststc_c_type_report",
-      "swbm_c_op_delete_no_dialog",
-      "swbm_c_type_ddic_db_tabxinx",
-      "swbm_c_type_wdy_application",
-      "swbm_version_active",
-      "swbm_version_inactive",
-      "swfco_org_standard_task",
-      "swfco_org_workflow_template",
-      "wbmr_c_skwf_folder_class",
-      "wdyn_limu_component_controller",
-      "wdyn_limu_component_definition",
-      "wdyn_limu_component_view"
-    ],
-    "globalMacros": []
-  },
   "rules": {
-    "select_single_full_key": false,
-    "strict_sql": false,
-    "cds_comment_style": true,
-    "change_if_to_case": false,
-    "expand_macros": true,
-    "unnecessary_return": false,
-    "fully_type_itabs": false,
-    "cds_legacy_view": true,
-    "superfluous_value": true,
-    "classic_exceptions_overlap": true,
-    "local_testclass_consistency": true,
-    "no_external_form_calls": false,
-    "no_inline_in_optional_branches": true,
-    "pragma_style": true,
-    "slow_parameter_passing": false,
-    "unnecessary_pragma": false,
+    "7bit_ascii": {
+      "exclude": [
+        "zcl_abapgit_git_commit.clas.testclasses.abap",
+        "zcl_abapgit_gui_event.clas.testclasses.abap",
+        "zcl_abapgit_html_action_utils.clas.testclasses.abap"
+      ]
+    },
+    "abapdoc": false,
     "align_parameters": false,
+    "allowed_object_naming": true,
+    "allowed_object_types": {
+      "exclude": ["test/src/"],
+      "allowed": [
+        "CLAS",
+        "DEVC",
+        "FUGR",
+        "INTF",
+        "PROG",
+        "TRAN",
+        "W3MI"
+      ]
+    },
+    "ambiguous_statement": true,
+    "avoid_use": {
+      "break": true,
+      "defaultKey": false,
+      "define": true,
+      "describeLines": true,
+      "exportToDatabase": true,
+      "exportToMemory": false,
+      "statics": true,
+      "testSeams": true
+    },
+    "begin_end_names": true,
+    "begin_single_include": true,
+    "call_transaction_authority_check": true,
+    "cds_comment_style": true,
+    "cds_legacy_view": true,
     "cds_parser_error": true,
-    "constant_classes": true,
-    "no_aliases": {
+    "chain_mainly_declarations": {
+      "check": true,
+      "clear": true,
+      "definitions": true,
+      "free": true,
+      "hide": true,
+      "include": true,
+      "move": true,
+      "refresh": true,
+      "sort": true,
+      "unassign": true,
+      "write": true
+    },
+    "change_if_to_case": false,
+    "check_abstract": true,
+    "check_comments": false,
+    "check_ddic": true,
+    "check_include": true,
+    "check_subrc": false,
+    "check_syntax": true,
+    "check_text_elements": true,
+    "check_transformation_exists": true,
+    "class_attribute_names": {
+      "constants": "^C_.*$",
       "exclude": [
         "/json/",
-        "zcl_abapgit_repo.clas.abap",
-        "zcl_abapgit_repo_online.clas.abap"
-      ]
+        "zif_abapgit_objects"
+      ],
+      "ignoreExceptions": true,
+      "ignoreInterfaces": false,
+      "ignoreLocal": false,
+      "instance": "^M._.*$",
+      "statics": "^G._.*$"
     },
-    "nrob_consistency": true,
-    "omit_preceding_zeros": true,
-    "prefer_corresponding": true,
-    "static_call_via_instance": false,
-    "unnecessary_chaining": false,
-    "unsecure_fae": false,
-    "identical_descriptions": false,
-    "modify_only_own_db_tables": false,
-    "no_yoda_conditions": false,
-    "no_chained_assignment": true,
-    "select_add_order_by": false,
-    "dangerous_statement": false,
-    "db_operation_in_loop": false,
-    "select_performance": false,
-    "max_one_method_parameter_per_line": true,
-    "unused_ddic": true,
-    "prefer_raise_exception_new": true,
-    "use_class_based_exceptions": true,
-    "uncaught_exception": true,
-    "intf_referencing_clas": false,
-    "method_implemented_twice": true,
-    "parser_702_chaining": true,
-    "sy_modification": {
+    "classic_exceptions_overlap": true,
+    "cloud_types": true,
+    "colon_missing_space": true,
+    "commented_code": {
+      "allowIncludeInFugr": false,
       "exclude": [
-        "zcl_abapgit_objects_program.clas.abap"
+        "intf",
+        "otgr"
       ]
     },
-    "call_transaction_authority_check": true,
-    "function_module_recommendations": false,
-    "method_overwrites_builtin": {
-      "exclude": [
-        "zcl_abapgit_stage.clas.abap",
-        "zif_abapgit_log.intf.abap"
-      ]
-    },
-    "omit_parameter_name": false,
-    "omit_receiving": true,
-    "unused_methods": true,
-    "identical_contents": false,
-    "many_parentheses": true,
-    "prefer_xsdbool": true,
-    "prefer_is_not": false,
-    "use_bool_expression": true,
-    "check_subrc": false,
+    "constant_classes": true,
+    "constructor_visibility_public": true,
+    "contains_tab": true,
+    "cyclic_oo": false,
     "cyclomatic_complexity": {
       "max": 25
     },
-    "identical_conditions": true,
-    "use_line_exists": true,
-    "line_break_style": true,
+    "dangerous_statement": false,
+    "db_operation_in_loop": false,
+    "definitions_top": {
+      "exclude": [
+        "/json/"
+      ]
+    },
+    "description_empty": {
+      "exclude": [
+        "/test/"
+      ]
+    },
+    "double_space": true,
+    "downport": false,
+    "dynpro_checks": false,
+    "easy_to_find_messages": true,
+    "empty_line_in_statement": {
+      "allowChained": true
+    },
+    "empty_statement": true,
+    "empty_structure": {
+      "at": true,
+      "case": true,
+      "do": true,
+      "if": false,
+      "loop": true,
+      "select": true,
+      "try": true,
+      "when": false,
+      "while": true
+    },
+    "exit_or_check": true,
+    "expand_macros": true,
+    "exporting": true,
+    "forbidden_identifier": true,
     "forbidden_pseudo_and_pragma": {
       "ignoreGlobalClassDefinition": true,
       "ignoreGlobalInterface": true,
-      "pragmas": ["##NO_TEXT"],
-      "pseudo": ["#EC NOTEXT"]
+      "pragmas": [
+        "##NO_TEXT"
+      ],
+      "pseudo": [
+        "#EC NOTEXT"
+      ]
     },
-    "unused_types": {
-      "exclude": ["/aff_types/"]
-    },
-    "begin_single_include": true,
-    "names_no_dash": true,
-    "parser_missing_space": true,
-    "prefer_inline": false,
-    "reduce_string_templates": true,
-    "downport": false,
-    "line_break_multiple_parameters": true,
-    "unknown_types": true,
     "forbidden_void_type": {
       "check": [
         "^boole_d$",
@@ -165,6 +175,7 @@
         "^cl_srvd_wb_object_data$",
         "^cl_wb_object_operator_factory$",
         "^cl_wer_const$",
+        "^cl_xco_",
         "^cx_aff_",
         "^cx_wb_object_operation_error$",
         "^cx_xco_",
@@ -172,167 +183,74 @@
         "^i18_a_langiso2$",
         "^if_adt_lock_handle$",
         "^if_aff_",
-        "^if_saunit_internal_result_type$",
+        "^if_satc_ci_variant_access$",
         "^if_saunit_internal_result$",
+        "^if_saunit_internal_result_type$",
         "^if_srvd_types$",
         "^if_wb_adt_plugin_resource_co$",
         "^if_wb_object_data_selection_co$",
         "^if_wb_object_operator$",
+        "^if_xco_",
         "^int4$",
         "^numc2$",
         "^sabp_t_tadir_keys$",
         "^sap_bool$",
+        "^srcsystem$",
         "^stringtab$",
         "^sychar01$",
         "^sychar10$",
         "^sychar70$",
         "^sydatum$",
         "^sylangu$",
-        "^syrepid$",
         "^syst_title$",
         "^syuzeit$",
         "^xubname$"
       ]
     },
-    "forbidden_identifier": true,
-    "try_without_catch": true,
-    "unused_variables": false,
-    "prefix_is_current_class": true,
-    "allowed_object_naming": true,
-    "check_comments": false,
-    "cyclic_oo": false,
+    "form_tables_obsolete": true,
     "fully_type_constants": true,
-    "keep_single_parameter_on_one_line": true,
-    "prefer_returning_to_exporting": {
-      "exclude": ["/json/"]
-    },
-    "selection_screen_naming": true,
-    "sicf_consistency": true,
-    "sql_escape_host_variables": true,
-    "xml_consistency": true,
-    "newline_between_methods": false,
-    "chain_mainly_declarations": {
-      "definitions": true,
-      "write": true,
-      "move": true,
-      "refresh": true,
-      "unassign": true,
-      "sort": true,
-      "clear": true,
-      "hide": true,
-      "free": true,
-      "include": true,
-      "check": true
-    },
-    "check_abstract": true,
-    "check_text_elements": true,
-    "types_naming": {
-      "pattern": "^TY_.+$",
-      "exclude": ["/json/"]
-    },
-    "7bit_ascii": {
-      "exclude": [
-        "zcl_abapgit_git_commit.clas.testclasses.abap",
-        "zcl_abapgit_html_action_utils.clas.testclasses.abap"
-      ]
-    },
-    "abapdoc": false,
-    "check_ddic": true,
-    "check_include": true,
-    "allowed_object_types": {
-      "allowed": [
-        "PROG",
-        "CLAS",
-        "INTF",
-        "FUGR",
-        "DEVC",
-        "TRAN",
-        "W3MI"
-      ]
-    },
-    "ambiguous_statement": true,
-    "avoid_use": {
-      "define": true,
-      "testSeams": true,
-      "defaultKey": false,
-      "describeLines": true,
-      "break": true,
-      "statics": true
-    },
-    "begin_end_names": true,
-    "check_transformation_exists": true,
-    "check_syntax": true,
-    "class_attribute_names": {
-      "ignoreExceptions": true,
-      "ignoreInterfaces": false,
-      "statics": "^G._.*$",
-      "ignoreLocal": false,
-      "constants": "",
-      "instance": "^M._.*$"
-    },
-    "cloud_types": true,
-    "colon_missing_space": true,
-    "commented_code": {
-      "allowIncludeInFugr": false,
-      "exclude": ["otgr", "intf"]
-    },
-    "constructor_visibility_public": true,
-    "contains_tab": true,
-    "definitions_top": {
-      "exclude": ["/json/"]
-    },
-    "description_empty": {
-      "exclude": ["/test/"]
-    },
-    "double_space": false,
-    "empty_line_in_statement": {
-      "allowChained": true
-    },
-    "empty_statement": true,
-    "empty_structure": {
-      "loop": true,
-      "if": false,
-      "try": true,
-      "while": true,
-      "case": true,
-      "select": true,
-      "when": false,
-      "do": true,
-      "at": true
-    },
-    "exit_or_check": true,
-    "exporting": true,
-    "form_tables_obsolete": false,
+    "fully_type_itabs": false,
+    "function_module_recommendations": false,
     "functional_writing": {
       "ignoreExceptions": true
     },
     "global_class": true,
+    "identical_conditions": true,
+    "identical_contents": false,
+    "identical_descriptions": false,
     "identical_form_names": true,
     "if_in_if": true,
     "implement_methods": true,
     "in_statement_indentation": false,
     "indentation": {
-      "ignoreExceptions": true,
       "alignTryCatch": false,
-      "selectionScreenBlockIndentation": false,
       "globalClassSkipFirst": false,
+      "ignoreExceptions": true,
       "ignoreGlobalClassDefinition": false,
-      "ignoreGlobalInterface": false
+      "ignoreGlobalInterface": false,
+      "selectionScreenBlockIndentation": false
     },
     "inline_data_old_versions": true,
+    "intf_referencing_clas": false,
+    "keep_single_parameter_on_one_line": true,
     "keyword_case": {
-      "style": "upper",
       "ignoreExceptions": true,
-      "ignoreLowerClassImplmentationStatement": true,
+      "ignoreFunctionModuleName": false,
+      "ignoreGlobalClassBoundaries": false,
       "ignoreGlobalClassDefinition": false,
       "ignoreGlobalInterface": false,
       "ignoreKeywords": [],
-      "ignoreGlobalClassBoundaries": false,
-      "ignoreFunctionModuleName": false
+      "ignoreLowerClassImplmentationStatement": true,
+      "style": "upper"
     },
+    "line_break_multiple_parameters": true,
+    "line_break_style": true,
     "line_length": {
-      "length": 120,
-      "exclude": ["zcl_abapgit_object_pdts.clas.testclasses.abap", "/json/"]
+      "exclude": [
+        "/json/",
+        "zcl_abapgit_object_pdts.clas.testclasses.abap"
+      ],
+      "length": 120
     },
     "line_only_punc": {
       "ignoreExceptions": true
@@ -342,100 +260,236 @@
       "local": "^LCL_.*$",
       "test": "^LT.+$"
     },
+    "local_testclass_consistency": true,
     "local_variable_names": {
-      "expectedData": "^L._.*$",
+      "exclude": [
+        "/json/"
+      ],
       "expectedConstant": "^LC_.*$",
-      "expectedFS": "^<L._.*>$",
-      "exclude": ["/json/"]
+      "expectedData": "^L._.*$",
+      "expectedFS": "^<L._.*>$"
     },
     "main_file_contents": true,
+    "many_parentheses": true,
+    "max_one_method_parameter_per_line": true,
     "max_one_statement": true,
-    "message_exists": false,
+    "message_exists": true,
+    "method_implemented_twice": true,
     "method_length": {
-      "statements": 105,
       "checkForms": true,
+      "errorWhenEmpty": false,
       "ignoreTestClasses": false,
-      "errorWhenEmpty": false
+      "statements": 110
+    },
+    "method_overwrites_builtin": {
+      "exclude": [
+        "zcl_abapgit_stage.clas.abap",
+        "zif_abapgit_log.intf.abap"
+      ]
     },
     "method_parameter_names": {
-      "ignoreExceptions": true,
-      "importing": "^I._.*$",
-      "returning": "^R._.*$",
       "changing": "^C._.*$",
+      "exclude": [
+        "/json/"
+      ],
       "exporting": "^E._.*$",
+      "ignoreExceptions": true,
       "ignoreNames": [
         "P_TASK"
       ],
-      "exclude": ["/json/"]
+      "importing": "^I._.*$",
+      "returning": "^R._.*$"
     },
     "mix_returning": true,
+    "modify_only_own_db_tables": false,
     "msag_consistency": true,
+    "names_no_dash": true,
     "nesting": {
       "depth": 6
     },
+    "newline_between_methods": false,
+    "no_aliases": {
+      "exclude": [
+        "/json/",
+        "zcl_abapgit_repo.clas.abap",
+        "zcl_abapgit_repo_online.clas.abap"
+      ]
+    },
+    "no_chained_assignment": true,
+    "no_external_form_calls": false,
+    "no_inline_in_optional_branches": true,
     "no_public_attributes": false,
+    "no_yoda_conditions": false,
+    "nrob_consistency": true,
     "object_naming": {
-      "clas": "^ZC(L|X)\\_ABAPGIT\\_",
-      "intf": "^ZIF\\_ABAPGIT\\_",
-      "prog": "^ZABAPGIT",
-      "fugr": "^ZABAPGIT",
-      "tabl": "^Z",
-      "ttyp": "^Z",
-      "dtel": "^Z",
-      "doma": "^Z",
-      "msag": "^Z",
-      "tran": "^Z",
-      "enqu": "^EZ",
       "auth": "^Z",
-      "pinf": "^Z",
+      "clas": "^ZC(L|X)\\_ABAPGIT\\_",
+      "doma": "^Z",
+      "dtel": "^Z",
+      "enqu": "^EZ",
+      "fugr": "^ZABAPGIT",
       "idoc": "^Z",
+      "intf": "^ZIF\\_ABAPGIT\\_",
+      "msag": "^Z",
+      "pinf": "^Z",
+      "prog": "^ZABAPGIT",
+      "shlp": "^Z",
       "ssfo": "^Z",
       "ssst": "^Z",
-      "shlp": "^Z",
+      "tabl": "^Z",
+      "tran": "^Z",
+      "ttyp": "^Z",
       "xslt": "^Z"
     },
     "obsolete_statement": true,
-    "parser_error": true,
-    "preferred_compare_operator": {
-      "badOperators": [
-        "EQ",
-        "><",
-        "NE",
-        "GE",
-        "GT",
-        "LT",
-        "LE"
+    "omit_parameter_name": {
+      "exclude": [
+        "/json/"
       ]
     },
+    "omit_preceding_zeros": true,
+    "omit_receiving": true,
+    "parser_702_chaining": true,
+    "parser_error": true,
+    "parser_missing_space": true,
+    "pragma_style": true,
+    "prefer_corresponding": true,
+    "prefer_inline": false,
+    "prefer_is_not": false,
+    "prefer_pragmas": false,
+    "prefer_raise_exception_new": true,
+    "prefer_returning_to_exporting": {
+      "exclude": [
+        "/json/"
+      ]
+    },
+    "prefer_xsdbool": true,
+    "preferred_compare_operator": {
+      "badOperators": [
+        "><",
+        "EQ",
+        "GE",
+        "GT",
+        "LE",
+        "LT",
+        "NE"
+      ]
+    },
+    "prefix_is_current_class": true,
+    "reduce_string_templates": true,
     "release_idoc": true,
     "remove_descriptions": {
-      "ignoreWorkflow": false,
+      "exclude": [
+        "/json/"
+      ],
       "ignoreExceptions": false,
-      "exclude": ["/json/"]
+      "ignoreWorkflow": false
     },
     "rfc_error_handling": false,
+    "select_add_order_by": {
+      "skipForAllEntries": true
+    },
+    "select_performance": false,
+    "select_single_full_key": true,
+    "selection_screen_naming": true,
     "sequential_blank": {
       "lines": 4
     },
     "short_case": {
-      "length": 1,
       "allow": [
         "iv_action",
         "sy"
-      ]
+      ],
+      "length": 1
     },
+    "sicf_consistency": true,
+    "slow_parameter_passing": true,
+    "smim_consistency": true,
     "space_before_colon": true,
     "space_before_dot": {
-      "ignoreGlobalDefinition": true,
-      "ignoreExceptions": true
+      "ignoreExceptions": true,
+      "ignoreGlobalDefinition": true
     },
+    "sql_escape_host_variables": true,
+    "sql_value_conversion": true,
     "start_at_tab": true,
+    "static_call_via_instance": false,
+    "strict_sql": false,
     "superclass_final": true,
+    "superfluous_value": true,
+    "sy_modification": {
+      "exclude": [
+        "zcl_abapgit_objects_program.clas.abap"
+      ]
+    },
     "tabl_enhancement_category": true,
+    "try_without_catch": true,
     "type_form_parameters": true,
+    "types_naming": {
+      "exclude": [
+        "/json/"
+      ],
+      "pattern": "^TY_.+$"
+    },
+    "uncaught_exception": true,
+    "unknown_types": true,
+    "unnecessary_chaining": false,
+    "unnecessary_pragma": {
+      "allowNoTextGlobal": true
+    },
+    "unnecessary_return": false,
     "unreachable_code": true,
+    "unsecure_fae": false,
+    "unused_ddic": true,
+    "unused_methods": true,
+    "unused_types": {
+      "exclude": [
+        "/aff_types/"
+      ]
+    },
+    "unused_variables": true,
+    "use_bool_expression": true,
+    "use_class_based_exceptions": {
+      "exclude": [
+        "zcl_abapgit_convert.clas.abap"
+      ]
+    },
+    "use_line_exists": true,
     "use_new": true,
     "when_others_last": true,
-    "whitespace_end": true
+    "whitespace_end": true,
+    "xml_consistency": true
+  },
+  "syntax": {
+    "errorNamespace": "^(Z|Y|LT?CL_|TY_|LIF_|C_|.*ABAPGIT)",
+    "globalConstants": [
+      "abap_func_exporting",
+      "abap_func_tables",
+      "cssf_formtype_text",
+      "seok_access_free",
+      "seok_access_modify",
+      "sews_c_vif_version",
+      "skwfc_obtype_folder",
+      "skwfc_obtype_loio",
+      "so2_controller",
+      "srext_ext_class_pool",
+      "srext_ext_interface_pool",
+      "ststc_c_type_dialog",
+      "ststc_c_type_object",
+      "ststc_c_type_parameters",
+      "ststc_c_type_report",
+      "swbm_c_op_delete_no_dialog",
+      "swbm_c_type_ddic_db_tabxinx",
+      "swbm_c_type_wdy_application",
+      "swbm_version_active",
+      "swbm_version_inactive",
+      "swfco_org_standard_task",
+      "swfco_org_workflow_template",
+      "wbmr_c_skwf_folder_class",
+      "wdyn_limu_component_controller",
+      "wdyn_limu_component_definition",
+      "wdyn_limu_component_view"
+    ],
+    "version": "v702"
   }
 }

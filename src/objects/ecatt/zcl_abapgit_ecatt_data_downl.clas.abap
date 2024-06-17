@@ -23,7 +23,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_data_downl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ECATT_DATA_DOWNL IMPLEMENTATION.
 
 
   METHOD download.
@@ -88,5 +88,4 @@ CLASS zcl_abapgit_ecatt_data_downl IMPLEMENTATION.
     rv_xml_stream = mv_xml_stream.
 
   ENDMETHOD.
-
 ENDCLASS.

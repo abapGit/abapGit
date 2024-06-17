@@ -60,7 +60,7 @@ CLASS ltcl_abapgit_popups_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~popup_to_select_transports.
+  METHOD zif_abapgit_popups~popup_to_select_transport.
 
   ENDMETHOD.
 
@@ -69,10 +69,6 @@ CLASS ltcl_abapgit_popups_mock IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_popups~popup_search_help.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_popups~choose_pr_popup.
 
   ENDMETHOD.
 

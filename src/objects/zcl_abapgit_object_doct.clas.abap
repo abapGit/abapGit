@@ -3,11 +3,15 @@ CLASS zcl_abapgit_object_doct DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
-    METHODS:
-      constructor
-        IMPORTING
-          is_item     TYPE zif_abapgit_definitions=>ty_item
-          iv_language TYPE spras.
+    METHODS constructor
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -24,8 +28,10 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor(
-        is_item     = is_item
-        iv_language = iv_language ).
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     mi_longtexts = zcl_abapgit_factory=>get_longtexts( ).
 
@@ -82,7 +88,7 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
 
     SELECT SINGLE id FROM dokil INTO lv_id
       WHERE id         = c_id
-        AND object     = lv_object.                     "#EC CI_GENBUFF
+        AND object     = lv_object.     "#EC CI_GENBUFF "#EC CI_NOORDER
 
     rv_bool = boolc( sy-subrc = 0 ).
 
@@ -150,7 +156,7 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
     ls_bcdata-fval = '=SHOW'.
     APPEND ls_bcdata TO lt_bcdata.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = 'SE61'
       it_bdcdata = lt_bcdata ).
 
@@ -175,6 +181,7 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
         iv_longtext_name = c_name
         iv_object_name = ms_item-obj_name
         iv_longtext_id = c_id
+        io_i18n_params = mo_i18n_params
         ii_xml         = io_xml ).
 
   ENDMETHOD.

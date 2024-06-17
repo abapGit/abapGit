@@ -51,7 +51,7 @@ CLASS zcl_abapgit_json_handler DEFINITION
     "! @parameter ev_data | data of the xstring
     METHODS deserialize
       IMPORTING
-        !iv_content       TYPE xstring
+        !iv_content       TYPE string
         !iv_defaults      TYPE ty_skip_paths OPTIONAL
         !iv_enum_mappings TYPE ty_enum_mappings OPTIONAL
       EXPORTING
@@ -95,18 +95,15 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
+CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
 
   METHOD deserialize.
-    DATA lv_json    TYPE string.
-    DATA lo_ajson   TYPE REF TO zif_abapgit_ajson.
+    DATA lo_ajson TYPE REF TO zif_abapgit_ajson.
 
     CLEAR ev_data.
 
-    lv_json = zcl_abapgit_convert=>xstring_to_string_utf8( iv_content ).
-
-    lo_ajson = zcl_abapgit_ajson=>parse( iv_json = lv_json
+    lo_ajson = zcl_abapgit_ajson=>parse( iv_content
       )->map( zcl_abapgit_ajson_mapping=>create_to_snake_case( ) ).
 
     map2abap_original_language( CHANGING co_ajson = lo_ajson ).
@@ -114,7 +111,7 @@ CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
                   CHANGING  co_ajson    = lo_ajson ).
     map2abap_abap_language_version( CHANGING co_ajson = lo_ajson ).
     map2abap_custom_enum( EXPORTING it_enum_mappings = iv_enum_mappings
-                          CHANGING co_ajson          = lo_ajson  ).
+                          CHANGING co_ajson          = lo_ajson ).
 
     lo_ajson->to_abap( IMPORTING ev_container = ev_data ).
 
@@ -128,11 +125,11 @@ CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
 
 
     lv_enum_json = co_ajson->get_string( '/header/abap_language_version' ).
-    IF lv_enum_json = 'standard'.
+    IF lv_enum_json = zif_abapgit_dot_abapgit=>c_abap_language_version-standard.
       lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
-    ELSEIF lv_enum_json = 'cloudDevelopment'.
+    ELSEIF lv_enum_json = zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development.
       lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development.
-    ELSEIF lv_enum_json = 'keyUser'.
+    ELSEIF lv_enum_json = zif_abapgit_dot_abapgit=>c_abap_language_version-key_user.
       lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-key_user.
     ENDIF.
 
@@ -161,17 +158,13 @@ CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
 
   METHOD map2abap_original_language.
     DATA:
-      lv_iso_language      TYPE laiso,
+      lv_bcp47_language    TYPE string,
       lv_original_language TYPE sy-langu.
 
 
-    lv_iso_language = co_ajson->get_string( '/header/original_language' ).
+    lv_bcp47_language = co_ajson->get_string( '/header/original_language' ).
 
-    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
-      EXPORTING
-        input  = lv_iso_language
-      IMPORTING
-        output = lv_original_language.
+    lv_original_language = zcl_abapgit_convert=>language_bcp47_to_sap1( lv_bcp47_language ).
 
     co_ajson->set_string( iv_path = '/header/original_language'
                           iv_val  = lv_original_language ).
@@ -187,11 +180,11 @@ CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
     lv_enum_abap = co_ajson->get_string( '/header/abapLanguageVersion' ).
     IF lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard
       OR lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
-      lv_enum_json = 'standard'.
+      lv_enum_json = zif_abapgit_dot_abapgit=>c_abap_language_version-standard.
     ELSEIF lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development.
-      lv_enum_json = 'cloudDevelopment'.
+      lv_enum_json = zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development.
     ELSEIF lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-key_user.
-      lv_enum_json = 'keyUser'.
+      lv_enum_json = zif_abapgit_dot_abapgit=>c_abap_language_version-key_user.
     ENDIF.
 
     co_ajson->set_string( iv_path = '/header/abapLanguageVersion'
@@ -219,21 +212,16 @@ CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
 
   METHOD map2json_original_language.
     DATA:
-      lv_iso_language      TYPE laiso,
+      lv_bcp47_language    TYPE string,
       lv_original_language TYPE sy-langu.
 
 
     lv_original_language = co_ajson->get_string( '/header/originalLanguage' ).
 
-    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
-      EXPORTING
-        input  = lv_original_language
-      IMPORTING
-        output = lv_iso_language.
+    lv_bcp47_language = zcl_abapgit_convert=>language_sap1_to_bcp47( lv_original_language ).
 
-    TRANSLATE lv_iso_language TO LOWER CASE.
     co_ajson->set_string( iv_path = '/header/originalLanguage'
-                          iv_val  = lv_iso_language ).
+                          iv_val  = lv_bcp47_language ).
   ENDMETHOD.
 
 

@@ -5,8 +5,13 @@ CLASS zcl_abapgit_object_form DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS constructor
       IMPORTING
-        is_item     TYPE zif_abapgit_definitions=>ty_item
-        iv_language TYPE spras.
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: c_objectname_form    TYPE thead-tdobject VALUE 'FORM' ##NO_TEXT.
@@ -106,13 +111,9 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
 
   METHOD build_extra_from_header.
 
-    DATA: lv_tdspras TYPE laiso.
+    DATA lv_tdspras TYPE laiso.
 
-    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
-      EXPORTING
-        input  = is_header-tdspras
-      IMPORTING
-        output = lv_tdspras.
+    lv_tdspras = zcl_abapgit_convert=>conversion_exit_isola_output( is_header-tdspras ).
 
     rv_result = c_objectname_tdlines && '_' && lv_tdspras.
 
@@ -134,7 +135,7 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
                  ig_data = it_lines ).
     lv_string = li_xml->render( ).
     IF lv_string IS NOT INITIAL.
-      zif_abapgit_object~mo_files->add_string( iv_extra  =
+      mo_files->add_string( iv_extra  =
                     build_extra_from_header( is_form_data-form_header )
                             iv_ext    = c_extension_xml
                             iv_string = lv_string ).
@@ -145,8 +146,11 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     mv_form_name = ms_item-obj_name.
 
@@ -159,12 +163,12 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
     DATA li_xml TYPE REF TO zif_abapgit_xml_input.
 
     TRY.
-        lv_string = zif_abapgit_object~mo_files->read_string( iv_extra =
+        lv_string = mo_files->read_string( iv_extra =
                                    build_extra_from_header( is_form_data-form_header )
                                            iv_ext   = c_extension_xml ).
       CATCH zcx_abapgit_exception.
 
-        lv_string = zif_abapgit_object~mo_files->read_string( iv_extra =
+        lv_string = mo_files->read_string( iv_extra =
                                build_extra_from_header_old( is_form_data-form_header )
                                            iv_ext   = c_extension_xml ).
 
@@ -313,12 +317,19 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
+    DATA lv_lang TYPE sy-langu.
+
+* this will try to read the FORM in language EN
+* if it exists in other language, then "found" will be set to abap_false
+* so check the "olanguage" to see if the FORM exists
     CALL FUNCTION 'READ_FORM'
       EXPORTING
         form             = mv_form_name
         read_only_header = abap_true
       IMPORTING
-        found            = rv_bool.
+        olanguage        = lv_lang.
+
+    rv_bool = boolc( lv_lang IS NOT INITIAL ).
 
   ENDMETHOD.
 
@@ -384,7 +395,7 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
     <ls_bdcdata>-fnam = 'RSSCF-TDFORM'.
     <ls_bdcdata>-fval = ms_item-obj_name.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = 'SE71'
       it_bdcdata = lt_bdcdata ).
 

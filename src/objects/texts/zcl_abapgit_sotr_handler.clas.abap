@@ -21,7 +21,7 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
         !iv_object   TYPE trobjtype
         !iv_obj_name TYPE csequence
         !io_xml      TYPE REF TO zif_abapgit_xml_output OPTIONAL
-        !iv_language TYPE spras OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params
       EXPORTING
         !et_sotr     TYPE ty_sotr_tt
         !et_sotr_use TYPE ty_sotr_use_tt
@@ -210,7 +210,7 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_sotr_head> LIKE LINE OF lt_sotr_head.
 
-    SELECT * FROM sotr_head INTO TABLE lt_sotr_head WHERE paket = iv_package.
+    SELECT * FROM sotr_head INTO TABLE lt_sotr_head WHERE paket = iv_package ORDER BY PRIMARY KEY.
 
     LOOP AT lt_sotr_head ASSIGNING <ls_sotr_head> WHERE concept IS NOT INITIAL.
 
@@ -233,7 +233,7 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
     ENDLOOP.
 
     " Nothing left, then delete SOTR from TADIR
-    SELECT * FROM sotr_head INTO TABLE lt_sotr_head WHERE paket = iv_package.
+    SELECT * FROM sotr_head INTO TABLE lt_sotr_head WHERE paket = iv_package ORDER BY PRIMARY KEY.
     IF sy-subrc <> 0.
       SELECT SINGLE obj_name FROM tadir INTO lv_obj_name
         WHERE pgmid = 'R3TR' AND object = 'SOTR' AND obj_name = iv_package.
@@ -363,14 +363,13 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
     LOOP AT et_sotr_use ASSIGNING <ls_sotr_use> WHERE concept IS NOT INITIAL.
       lv_sotr = get_sotr_4_concept( <ls_sotr_use>-concept ).
 
-      IF io_xml IS BOUND AND
-         io_xml->i18n_params( )-main_language_only = abap_true AND
-         iv_language IS SUPPLIED.
-        DELETE lv_sotr-entries WHERE langu <> iv_language.
+      IF io_xml IS BOUND AND io_i18n_params->ms_params-main_language_only = abap_true.
+        DELETE lv_sotr-entries WHERE langu <> io_i18n_params->ms_params-main_language.
         CHECK lv_sotr-entries IS NOT INITIAL.
       ENDIF.
-      lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
-      DELETE lv_sotr-entries WHERE NOT langu IN lt_language_filter.
+      lt_language_filter = io_i18n_params->build_language_filter( ).
+      DELETE lv_sotr-entries WHERE NOT langu IN lt_language_filter
+        AND langu <> io_i18n_params->ms_params-main_language.
       CHECK lv_sotr-entries IS NOT INITIAL.
 
       INSERT lv_sotr INTO TABLE et_sotr.

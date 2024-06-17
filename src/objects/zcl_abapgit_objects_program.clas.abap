@@ -6,39 +6,6 @@ CLASS zcl_abapgit_objects_program DEFINITION
   PUBLIC SECTION.
 
     TYPES:
-      BEGIN OF ty_progdir,
-        name    TYPE progdir-name,
-        state   TYPE progdir-state,
-        sqlx    TYPE progdir-sqlx,
-        edtx    TYPE progdir-edtx,
-        varcl   TYPE progdir-varcl,
-        dbapl   TYPE progdir-dbapl,
-        dbna    TYPE progdir-dbna,
-        clas    TYPE progdir-clas,
-        type    TYPE progdir-type,
-        occurs  TYPE progdir-occurs,
-        subc    TYPE progdir-subc,
-        appl    TYPE progdir-appl,
-        secu    TYPE progdir-secu,
-        cnam    TYPE progdir-cnam,
-        cdat    TYPE progdir-cdat,
-        unam    TYPE progdir-unam,
-        udat    TYPE progdir-udat,
-        vern    TYPE progdir-vern,
-        levl    TYPE progdir-levl,
-        rstat   TYPE progdir-rstat,
-        rmand   TYPE progdir-rmand,
-        rload   TYPE progdir-rload,
-        fixpt   TYPE progdir-fixpt,
-        sset    TYPE progdir-sset,
-        sdate   TYPE progdir-sdate,
-        stime   TYPE progdir-stime,
-        idate   TYPE progdir-idate,
-        itime   TYPE progdir-itime,
-        ldbname TYPE progdir-ldbname,
-        uccheck TYPE progdir-uccheck,
-      END OF ty_progdir.
-    TYPES:
       BEGIN OF ty_cua,
         adm TYPE rsmpe_adm,
         sta TYPE STANDARD TABLE OF rsmpe_stat WITH DEFAULT KEY,
@@ -59,18 +26,13 @@ CLASS zcl_abapgit_objects_program DEFINITION
         !io_xml     TYPE REF TO zif_abapgit_xml_output OPTIONAL
         !is_item    TYPE zif_abapgit_definitions=>ty_item
         !io_files   TYPE REF TO zcl_abapgit_objects_files
-        !iv_program TYPE programm OPTIONAL
+        !iv_program TYPE syrepid OPTIONAL
         !iv_extra   TYPE clike OPTIONAL
       RAISING
         zcx_abapgit_exception.
-    METHODS read_progdir
-      IMPORTING
-        !iv_program       TYPE programm
-      RETURNING
-        VALUE(rs_progdir) TYPE ty_progdir.
     METHODS deserialize_program
       IMPORTING
-        !is_progdir TYPE ty_progdir
+        !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
         !it_source  TYPE abaptxt255_tab
         !it_tpool   TYPE textpool_table
         !iv_package TYPE devclass
@@ -96,14 +58,14 @@ CLASS zcl_abapgit_objects_program DEFINITION
         ct_source TYPE STANDARD TABLE. " tab of string or charX
     METHODS serialize_dynpros
       IMPORTING
-        !iv_program_name TYPE programm
+        !iv_program_name TYPE syrepid
       RETURNING
         VALUE(rt_dynpro) TYPE ty_dynpro_tt
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_cua
       IMPORTING
-        !iv_program_name TYPE programm
+        !iv_program_name TYPE syrepid
       RETURNING
         VALUE(rs_cua)    TYPE ty_cua
       RAISING
@@ -115,7 +77,7 @@ CLASS zcl_abapgit_objects_program DEFINITION
         zcx_abapgit_exception .
     METHODS deserialize_textpool
       IMPORTING
-        !iv_program    TYPE programm
+        !iv_program    TYPE syrepid
         !it_tpool      TYPE textpool_table
         !iv_language   TYPE sy-langu OPTIONAL
         !iv_is_include TYPE abap_bool DEFAULT abap_false
@@ -123,27 +85,27 @@ CLASS zcl_abapgit_objects_program DEFINITION
         zcx_abapgit_exception .
     METHODS deserialize_cua
       IMPORTING
-        !iv_program_name TYPE programm
+        !iv_program_name TYPE syrepid
         !is_cua          TYPE ty_cua
       RAISING
         zcx_abapgit_exception .
     METHODS is_any_dynpro_locked
       IMPORTING
-        !iv_program                    TYPE programm
+        !iv_program                    TYPE syrepid
       RETURNING
         VALUE(rv_is_any_dynpro_locked) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
     METHODS is_cua_locked
       IMPORTING
-        !iv_program             TYPE programm
+        !iv_program             TYPE syrepid
       RETURNING
         VALUE(rv_is_cua_locked) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
     METHODS is_text_locked
       IMPORTING
-        !iv_program              TYPE programm
+        !iv_program              TYPE syrepid
       RETURNING
         VALUE(rv_is_text_locked) TYPE abap_bool
       RAISING
@@ -159,6 +121,13 @@ CLASS zcl_abapgit_objects_program DEFINITION
       RETURNING
         VALUE(rt_tpool) TYPE zif_abapgit_definitions=>ty_tpool_tt .
   PRIVATE SECTION.
+
+    CONSTANTS:
+      BEGIN OF c_state,
+        active   TYPE r3state VALUE 'A',
+        inactive TYPE r3state VALUE 'I',
+      END OF c_state.
+
     METHODS:
       uncondense_flow
         IMPORTING it_flow        TYPE swydyflow
@@ -178,7 +147,7 @@ CLASS zcl_abapgit_objects_program DEFINITION
         VALUE(rv_title) TYPE repti .
     METHODS insert_program
       IMPORTING
-        !is_progdir TYPE ty_progdir
+        !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
         !it_source  TYPE abaptxt255_tab
         !iv_title   TYPE repti
         !iv_package TYPE devclass
@@ -186,14 +155,9 @@ CLASS zcl_abapgit_objects_program DEFINITION
         zcx_abapgit_exception .
     METHODS update_program
       IMPORTING
-        !is_progdir TYPE ty_progdir
+        !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
         !it_source  TYPE abaptxt255_tab
         !iv_title   TYPE repti
-      RAISING
-        zcx_abapgit_exception .
-    METHODS update_progdir
-      IMPORTING
-        !is_progdir TYPE ty_progdir
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -305,7 +269,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         language  = mv_language
         tr_key    = ls_tr_key
         adm       = ls_adm
-        state     = 'I'
+        state     = c_state-inactive
       TABLES
         sta       = is_cua-sta
         fun       = is_cua-fun
@@ -411,6 +375,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         EXPORTING
           header                 = ls_dynpro-header
           suppress_exist_checks  = abap_true
+          suppress_generate      = ls_dynpro-header-no_execute
         TABLES
           containers             = ls_dynpro-containers
           fields_to_containers   = ls_dynpro-fields
@@ -482,7 +447,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     " Check if program already exists
     SELECT SINGLE progname FROM reposrc INTO lv_progname
       WHERE progname = is_progdir-name
-      AND r3state = 'A'.
+      AND r3state = c_state-active.
 
     IF sy-subrc = 0.
       update_program(
@@ -497,7 +462,9 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         iv_package = iv_package ).
     ENDIF.
 
-    update_progdir( is_progdir ).
+    zcl_abapgit_factory=>get_sap_report( )->update_progdir(
+      is_progdir = is_progdir
+      iv_package = iv_package ).
 
     zcl_abapgit_objects_activation=>add(
       iv_type = 'REPS'
@@ -519,13 +486,13 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     ENDIF.
 
     IF lv_language = mv_language.
-      lv_state = 'I'. "Textpool in main language needs to be activated
+      lv_state = c_state-inactive. "Textpool in main language needs to be activated
     ELSE.
-      lv_state = 'A'. "Translations are always active
+      lv_state = c_state-active. "Translations are always active
     ENDIF.
 
     IF it_tpool IS INITIAL.
-      IF iv_is_include = abap_false OR lv_state = 'A'.
+      IF iv_is_include = abap_false OR lv_state = c_state-active.
         DELETE TEXTPOOL iv_program "Remove initial description from textpool if
           LANGUAGE lv_language     "original program does not have a textpool
           STATE lv_state.
@@ -534,7 +501,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       ELSE.
         INSERT TEXTPOOL iv_program "In case of includes: Deletion of textpool in
           FROM it_tpool            "main language cannot be activated because
-          LANGUAGE lv_language     "this woul activate the deletion of the textpool
+          LANGUAGE lv_language     "this would activate the deletion of the textpool
           STATE lv_state.          "of the mail program -> insert empty textpool
       ENDIF.
     ELSE.
@@ -547,7 +514,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    IF lv_state = 'I'. "Textpool in main language needs to be activated
+    IF lv_state = c_state-inactive. "Textpool in main language needs to be activated
       zcl_abapgit_objects_activation=>add(
         iv_type   = 'REPT'
         iv_name   = iv_program
@@ -579,38 +546,62 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD insert_program.
 
-    CALL FUNCTION 'RPY_PROGRAM_INSERT'
-      EXPORTING
-        development_class = iv_package
-        program_name      = is_progdir-name
-        program_type      = is_progdir-subc
-        title_string      = iv_title
-        save_inactive     = 'I'
-        suppress_dialog   = abap_true
-      TABLES
-        source_extended   = it_source
-      EXCEPTIONS
-        already_exists    = 1
-        cancelled         = 2
-        name_not_allowed  = 3
-        permission_error  = 4
-        OTHERS            = 5.
+    TRY.
+        CALL FUNCTION 'RPY_PROGRAM_INSERT'
+          EXPORTING
+            development_class = iv_package
+            program_name      = is_progdir-name
+            program_type      = is_progdir-subc
+            title_string      = iv_title
+            save_inactive     = c_state-inactive
+            suppress_dialog   = abap_true
+            uccheck           = is_progdir-uccheck " does not exist on lower releases
+          TABLES
+            source_extended   = it_source
+          EXCEPTIONS
+            already_exists    = 1
+            cancelled         = 2
+            name_not_allowed  = 3
+            permission_error  = 4
+            OTHERS            = 5.
+      CATCH cx_sy_dyn_call_param_not_found.
+        CALL FUNCTION 'RPY_PROGRAM_INSERT'
+          EXPORTING
+            development_class = iv_package
+            program_name      = is_progdir-name
+            program_type      = is_progdir-subc
+            title_string      = iv_title
+            save_inactive     = c_state-inactive
+            suppress_dialog   = abap_true
+          TABLES
+            source_extended   = it_source
+          EXCEPTIONS
+            already_exists    = 1
+            cancelled         = 2
+            name_not_allowed  = 3
+            permission_error  = 4
+            OTHERS            = 5.
+    ENDTRY.
     IF sy-subrc = 3.
 
       " For cases that standard function does not handle (like FUGR),
       " we save active and inactive version of source with the given PROGRAM TYPE.
       " Without the active version, the code will not be visible in case of activation errors.
-      INSERT REPORT is_progdir-name
-        FROM it_source
-        STATE 'A'
-        PROGRAM TYPE is_progdir-subc.
-      INSERT REPORT is_progdir-name
-        FROM it_source
-        STATE 'I'
-        PROGRAM TYPE is_progdir-subc.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'Error from INSERT REPORT .. PROGRAM TYPE' ).
-      ENDIF.
+      zcl_abapgit_factory=>get_sap_report( )->insert_report(
+        iv_name         = is_progdir-name
+        iv_package      = iv_package
+        it_source       = it_source
+        iv_state        = c_state-active
+        iv_version      = is_progdir-uccheck
+        iv_program_type = is_progdir-subc ).
+
+      zcl_abapgit_factory=>get_sap_report( )->insert_report(
+        iv_name         = is_progdir-name
+        iv_package      = iv_package
+        it_source       = it_source
+        iv_state        = c_state-inactive
+        iv_version      = is_progdir-uccheck
+        iv_program_type = is_progdir-subc ).
 
     ELSEIF sy-subrc > 0.
       zcx_abapgit_exception=>raise_t100( ).
@@ -669,37 +660,6 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD read_progdir.
-
-    DATA: ls_sapdir TYPE progdir.
-
-
-    CALL FUNCTION 'READ_PROGDIR'
-      EXPORTING
-        i_progname = iv_program
-        i_state    = 'A'
-      IMPORTING
-        e_progdir  = ls_sapdir.
-    MOVE-CORRESPONDING ls_sapdir TO rs_progdir.
-
-    CLEAR: rs_progdir-edtx,
-           rs_progdir-cnam,
-           rs_progdir-cdat,
-           rs_progdir-unam,
-           rs_progdir-udat,
-           rs_progdir-levl,
-           rs_progdir-vern,
-           rs_progdir-rmand,
-           rs_progdir-sdate,
-           rs_progdir-stime,
-           rs_progdir-idate,
-           rs_progdir-itime,
-           rs_progdir-varcl,
-           rs_progdir-state.
-
-  ENDMETHOD.
-
-
   METHOD read_tpool.
 
     FIELD-SYMBOLS: <ls_tpool_in>  LIKE LINE OF it_tpool,
@@ -725,7 +685,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       EXPORTING
         program         = iv_program_name
         language        = mv_language
-        state           = 'A'
+        state           = c_state-active
       IMPORTING
         adm             = rs_cua-adm
       TABLES
@@ -876,10 +836,11 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD serialize_program.
 
-    DATA: ls_progdir      TYPE ty_progdir,
-          lv_program_name TYPE programm,
+    DATA: ls_progdir      TYPE zif_abapgit_sap_report=>ty_progdir,
+          lv_program_name TYPE syrepid,
           lt_dynpros      TYPE ty_dynpro_tt,
           ls_cua          TYPE ty_cua,
+          li_report       TYPE REF TO zif_abapgit_sap_report,
           lt_source       TYPE TABLE OF abaptxt255,
           lt_tpool        TYPE textpool_table,
           ls_tpool        LIKE LINE OF lt_tpool,
@@ -917,7 +878,27 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     zcl_abapgit_language=>restore_login_language( ).
 
-    ls_progdir = read_progdir( lv_program_name ).
+    " If inactive version exists, then RPY_PROGRAM_READ does not return the active code
+    li_report = zcl_abapgit_factory=>get_sap_report( ).
+
+    TRY.
+        " Raises exception if inactive version does not exist
+        ls_progdir = li_report->read_progdir(
+          iv_name  = lv_program_name
+          iv_state = c_state-inactive ).
+
+        " Explicitly request active source code
+        lt_source = li_report->read_report(
+          iv_name  = lv_program_name
+          iv_state = c_state-active ).
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+    ENDTRY.
+
+    ls_progdir = li_report->read_progdir(
+      iv_name  = lv_program_name
+      iv_state = c_state-active ).
+
+    clear_abap_language_version( CHANGING cv_abap_language_version = ls_progdir-uccheck ).
 
     IF io_xml IS BOUND.
       li_xml = io_xml.
@@ -1037,61 +1018,6 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD update_progdir.
-
-    DATA ls_progdir_new TYPE progdir.
-
-    CALL FUNCTION 'READ_PROGDIR'
-      EXPORTING
-        i_progname = is_progdir-name
-        i_state    = 'I'
-      IMPORTING
-        e_progdir  = ls_progdir_new
-      EXCEPTIONS
-        not_exists = 1
-        OTHERS     = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error reading program directory' ).
-    ENDIF.
-
-    ls_progdir_new-ldbname = is_progdir-ldbname.
-    ls_progdir_new-dbna    = is_progdir-dbna.
-    ls_progdir_new-dbapl   = is_progdir-dbapl.
-    ls_progdir_new-rload   = is_progdir-rload.
-    ls_progdir_new-fixpt   = is_progdir-fixpt.
-    ls_progdir_new-varcl   = is_progdir-varcl.
-    ls_progdir_new-appl    = is_progdir-appl.
-    ls_progdir_new-rstat   = is_progdir-rstat.
-    ls_progdir_new-sqlx    = is_progdir-sqlx.
-    ls_progdir_new-uccheck = is_progdir-uccheck.
-    ls_progdir_new-clas    = is_progdir-clas.
-    ls_progdir_new-secu    = is_progdir-secu.
-
-    CALL FUNCTION 'UPDATE_PROGDIR'
-      EXPORTING
-        i_progdir    = ls_progdir_new
-        i_progname   = ls_progdir_new-name
-        i_state      = ls_progdir_new-state
-      EXCEPTIONS
-        not_executed = 1
-        OTHERS       = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error updating program directory' ).
-    ENDIF.
-
-    " function UPDATE_PROGDIR does not update VARCL, so we do it here
-    SELECT SINGLE * FROM progdir INTO ls_progdir_new
-      WHERE name  = ls_progdir_new-name
-        AND state = ls_progdir_new-state.
-    IF sy-subrc = 0 AND is_progdir-varcl <> ls_progdir_new-varcl.
-      UPDATE progdir SET varcl = is_progdir-varcl
-        WHERE name  = ls_progdir_new-name
-          AND state = ls_progdir_new-state.               "#EC CI_SUBRC
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD update_program.
 
     zcl_abapgit_language=>set_current_language( mv_language ).
@@ -1100,7 +1026,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       EXPORTING
         program_name     = is_progdir-name
         title_string     = iv_title
-        save_inactive    = 'I'
+        save_inactive    = c_state-inactive
       TABLES
         source_extended  = it_source
       EXCEPTIONS

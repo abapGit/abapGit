@@ -114,7 +114,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
 
   METHOD branch_name_to_internal.
@@ -289,20 +289,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
   METHOD get_form_schema.
 
-    DATA: lv_commitmsg_comment_length TYPE i.
+    DATA lv_commitmsg_comment_length TYPE i.
+    CONSTANTS lc_commitmsg_comment_min_len TYPE i VALUE 1.
+    CONSTANTS lc_commitmsg_comment_max_len TYPE i VALUE 255.
 
     ro_form = zcl_abapgit_html_form=>create(
       iv_form_id   = 'commit-form'
       iv_help_page = 'https://docs.abapgit.org/guide-stage-commit.html' ).
 
-    lv_commitmsg_comment_length =  mo_settings->get_commitmsg_comment_length( ).
+    lv_commitmsg_comment_length = mo_settings->get_commitmsg_comment_length( ).
 
     ro_form->text(
       iv_name        = c_id-comment
       iv_label       = 'Comment'
       iv_required    = abap_true
+      iv_min         = lc_commitmsg_comment_min_len
       iv_max         = lv_commitmsg_comment_length
-      iv_placeholder = |Add a mandatory comment with max { lv_commitmsg_comment_length } characters|
+      iv_placeholder = |Add a mandatory comment with max { lc_commitmsg_comment_max_len } characters|
     )->textarea(
       iv_name        = c_id-body
       iv_label       = 'Body'
@@ -449,7 +452,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     lv_new_branch_name = io_form_data->get( c_id-new_branch_name ).
     IF lv_new_branch_name IS NOT INITIAL.
       " check if branch already exists
-      lt_branches = zcl_abapgit_git_transport=>branches( mo_repo->get_url( ) )->get_branches_only( ).
+      lt_branches = zcl_abapgit_git_factory=>get_git_transport(
+                                          )->branches( mo_repo->get_url( )
+                                          )->get_branches_only( ).
       READ TABLE lt_branches TRANSPORTING NO FIELDS WITH TABLE KEY name_key
         COMPONENTS name = branch_name_to_internal( lv_new_branch_name ).
       IF sy-subrc = 0.
@@ -468,9 +473,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
-      WHEN zif_abapgit_definitions=>c_action-go_back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
-
       WHEN c_event-commit.
         " Validate form entries before committing
         mo_validation_log = validate_form( mo_form_data ).
@@ -507,6 +509,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
         ELSE.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ENDIF.
+      WHEN OTHERS.
+        ASSERT 1 = 1.
     ENDCASE.
 
   ENDMETHOD.

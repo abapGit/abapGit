@@ -14,19 +14,16 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
-    METHODS constructor
-      RAISING
-        zcx_abapgit_exception .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS c_exit_standalone TYPE c LENGTH 30 VALUE 'ZABAPGIT_USER_EXIT' ##NO_TEXT.
+    CONSTANTS c_exit_standalone TYPE syrepid VALUE 'ZABAPGIT_USER_EXIT' ##NO_TEXT.
     CONSTANTS c_exit_class TYPE c LENGTH 30 VALUE 'ZCL_ABAPGIT_USER_EXIT' ##NO_TEXT.
     CONSTANTS c_exit_interface TYPE c LENGTH 30 VALUE 'ZIF_ABAPGIT_EXIT' ##NO_TEXT.
     CONSTANTS:
       BEGIN OF c_action,
         save TYPE string VALUE 'save',
-        back TYPE string VALUE 'back',
       END OF c_action.
     DATA mv_html TYPE string .
 
@@ -46,6 +43,7 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
     METHODS render_exit_info_methods
       IMPORTING
         !it_source     TYPE string_table
+        !iv_clsname    TYPE seoclsname OPTIONAL
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -68,7 +66,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
 
   METHOD build_toolbar.
@@ -80,13 +78,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
       iv_act = c_action-save ).
     ro_menu->add(
       iv_txt = 'Back'
-      iv_act = c_action-back ).
+      iv_act = zif_abapgit_definitions=>c_action-go_back ).
 
-  ENDMETHOD.
-
-
-  METHOD constructor.
-    super->constructor( ).
   ENDMETHOD.
 
 
@@ -123,27 +116,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
   METHOD render_debug_info.
 
-    DATA: lt_ver_tab       TYPE filetable,
-          lv_rc            TYPE i,
-          ls_release       TYPE zif_abapgit_environment=>ty_release_sp,
+    DATA: ls_release       TYPE zif_abapgit_environment=>ty_release_sp,
           lv_gui_version   TYPE string,
-          ls_version       LIKE LINE OF lt_ver_tab,
           lv_devclass      TYPE devclass,
           lo_frontend_serv TYPE REF TO zif_abapgit_frontend_services.
 
     lo_frontend_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
     TRY.
-        lo_frontend_serv->get_gui_version( CHANGING ct_version_table = lt_ver_tab cv_rc = lv_rc ).
+        lo_frontend_serv->get_gui_version( IMPORTING ev_gui_version_string = lv_gui_version ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
         " Continue rendering even if this fails
     ENDTRY.
-
-    READ TABLE lt_ver_tab INTO ls_version INDEX 1. " gui release
-    lv_gui_version = ls_version-filename.
-    READ TABLE lt_ver_tab INTO ls_version INDEX 2. " gui sp
-    lv_gui_version = |{ lv_gui_version }.{ ls_version-filename }|.
-    READ TABLE lt_ver_tab INTO ls_version INDEX 3. " gui patch
-    lv_gui_version = |{ lv_gui_version }.{ ls_version-filename }|.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -155,7 +138,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
         iv_act = 'https://github.com/abapGit/abapGit'
         iv_typ = zif_abapgit_html=>c_action_type-url ) }).</div>| ).
     ELSE.
-      lv_devclass = zcl_abapgit_services_abapgit=>is_installed( ).
+      lv_devclass = zcl_abapgit_factory=>get_tadir( )->get_object_package(
+        iv_object   = 'CLAS'
+        iv_obj_name = 'ZCX_ABAPGIT_EXCEPTION' ).
       ri_html->add( '<h2>abapGit - Developer Version</h2>' ).
       ri_html->add( |<div>abapGit is installed in package { lv_devclass }</div>| ).
     ENDIF.
@@ -163,8 +148,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
     ri_html->add( '<br><div>' ).
     ri_html->add_a(
       iv_txt = 'Contribution guidelines for abapGit'
-      iv_act = 'https://github.com/abapGit/abapGit/blob/main/CONTRIBUTING.md'
-      iv_typ = zif_abapgit_html=>c_action_type-url ).
+      iv_act = |{ zif_abapgit_definitions=>c_action-url
+        }?url=https://github.com/abapGit/abapGit/blob/main/CONTRIBUTING.md|
+        iv_class = |url| ).
     ri_html->add( '</div>' ).
 
     ls_release = zcl_abapgit_factory=>get_environment( )->get_basis_release( ).
@@ -191,6 +177,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
     DATA lt_source TYPE string_table.
     DATA ls_class_key TYPE seoclskey.
     DATA lo_oo_serializer TYPE REF TO zcl_abapgit_oo_serializer.
+    DATA lo_class TYPE REF TO cl_oo_class.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -198,7 +185,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
       " Standalone version
-      READ REPORT c_exit_standalone INTO lt_source.
+      lt_source = zcl_abapgit_factory=>get_sap_report( )->read_report( c_exit_standalone ).
       IF sy-subrc = 0.
         ri_html->add( |<div>User exits are active (include { get_jump_object(
           iv_obj_type = 'PROG'
@@ -211,11 +198,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
       " Developer version
       TRY.
           ls_class_key-clsname = c_exit_class.
-          CREATE OBJECT lo_oo_serializer.
-          lt_source = lo_oo_serializer->serialize_abap_clif_source( ls_class_key ).
+          DO.
+            CREATE OBJECT lo_oo_serializer.
+            lt_source = lo_oo_serializer->serialize_abap_clif_source( ls_class_key ).
 
-          ri_html->add( |<div>User exits are active (class { get_jump_object( c_exit_class ) } found)</div><br>| ).
-          ri_html->add( render_exit_info_methods( lt_source ) ).
+            ri_html->add( '<div>' ).
+            ri_html->add( |User exits are active (class { get_jump_object( ls_class_key-clsname ) } found)| ).
+            ri_html->add( '</div><br>' ).
+            ri_html->add( render_exit_info_methods(
+                            it_source  = lt_source
+                            iv_clsname = ls_class_key-clsname ) ).
+
+            " Is there a super class of exit?
+            CREATE OBJECT lo_class EXPORTING clsname = ls_class_key-clsname.
+            ls_class_key-clsname = lo_class->get_superclass( ).
+            IF ls_class_key-clsname IS INITIAL.
+              EXIT.
+            ENDIF.
+            ri_html->add( '<br>' ).
+          ENDDO.
         CATCH cx_root.
           ri_html->add( |<div>No user exits implemented (class { c_exit_class } not found)</div><br>| ).
       ENDTRY.
@@ -232,6 +233,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
       lt_methods TYPE cl_oo_source_scanner_class=>type_method_implementations,
       lv_method  LIKE LINE OF lt_methods,
       lt_source  TYPE seop_source_string,
+      lv_count   TYPE i,
       lv_source  TYPE string,
       lv_rest    TYPE string.
 
@@ -243,7 +245,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
     TRY.
         lo_scanner = cl_oo_source_scanner_class=>create_class_scanner(
-          clif_name = c_exit_class
+          clif_name = iv_clsname
           source    = it_source ).
         lo_scanner->scan( ).
 
@@ -258,14 +260,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
             val = lv_source
             del = ` ` ) ).
           SPLIT lv_method AT '~' INTO lv_rest lv_method.
-          ri_html->add( |<tr><td>{ lv_method }</td><td class="center">|  ).
+          ri_html->add( |<tr><td>{ lv_method }</td><td class="center">| ).
           IF lv_source IS INITIAL OR lv_source = 'RETURN.' OR lv_source = 'EXIT.'.
             ri_html->add( 'No' ).
           ELSE.
             ri_html->add( '<strong>Yes</strong>' ).
           ENDIF.
           ri_html->add( |</td></tr>| ).
+          lv_count = lv_count + 1.
         ENDLOOP.
+
+        IF lv_count = 0.
+          ri_html->add( |<tr><td colspan="2">No exit methods implemented</td></tr>| ).
+        ENDIF.
 
       CATCH cx_root INTO lx_exc.
         ri_html->add( |<tr><td colspan="2">{ lx_exc->get_text( ) }</td></tr>| ).
@@ -315,8 +322,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
     rv_html = rv_html && li_html->a(
       iv_txt = 'Complete list of object types supported by abapGit'
-      iv_act = 'https://docs.abapgit.org/ref-supported.html'
-      iv_typ = zif_abapgit_html=>c_action_type-url ).
+      iv_act = |{ zif_abapgit_definitions=>c_action-url }?url=https://docs.abapgit.org/ref-supported.html|
+      iv_class = |url| ).
 
     rv_html = rv_html && |<br><br>Supported object types in <strong>this</strong> system:<br><br>|.
 
@@ -351,12 +358,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
           rv_html = rv_html && |<td>{ get_jump_object( lv_class ) }</td>|.
 
-        CATCH cx_sy_create_object_error.
+        CATCH cx_sy_create_object_error zcx_abapgit_exception.
           TRY. " 2nd step, try looking for plugins
               CREATE OBJECT li_object TYPE zcl_abapgit_objects_bridge
                 EXPORTING
                   is_item = ls_item.
-            CATCH cx_sy_create_object_error.
+            CATCH cx_sy_create_object_error zcx_abapgit_exception.
               rv_html = rv_html && |<td class="error" colspan="5">{ lv_class } - error instantiating class</td>|.
               CONTINUE.
           ENDTRY.
@@ -429,8 +436,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
         MESSAGE 'abapGit Debug Info successfully saved' TYPE 'S'.
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN c_action-back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+
+      WHEN OTHERS.
+        ASSERT 1 = 1.
     ENDCASE.
 
   ENDMETHOD.

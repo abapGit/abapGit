@@ -63,7 +63,7 @@ CLASS zcl_abapgit_object_iwsg IMPLEMENTATION.
     SELECT SINGLE changed_by FROM ('/IWFND/I_MED_SRH') INTO rv_user
       WHERE srv_identifier = ms_item-obj_name.
     IF sy-subrc <> 0.
-      rv_user = zcl_abapgit_objects_super=>c_user_unknown.
+      rv_user = c_user_unknown.
     ENDIF.
 
   ENDMETHOD.

@@ -47,6 +47,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         deserialized_at     TYPE string,
         deserialized_at_raw TYPE timestampl,
         write_protected     TYPE abap_bool,
+        flow                TYPE abap_bool,
       END OF ty_overview,
       ty_overviews TYPE STANDARD TABLE OF ty_overview
                    WITH NON-UNIQUE DEFAULT KEY.
@@ -392,6 +393,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ls_overview-branch          = <ls_repo>->ms_data-branch_name.
       ls_overview-created_by      = <ls_repo>->ms_data-created_by.
       ls_overview-write_protected = <ls_repo>->ms_data-local_settings-write_protected.
+      ls_overview-flow            = <ls_repo>->ms_data-local_settings-flow.
       ls_overview-created_at_raw  = <ls_repo>->ms_data-created_at.
 
       IF <ls_repo>->ms_data-created_at IS NOT INITIAL.
@@ -489,7 +491,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar->add(
-      iv_txt      = |Settings|
+      iv_txt      = |Repo Settings|
       iv_act      = |{ zif_abapgit_definitions=>c_action-repo_settings }{ lc_dummy_key }|
       iv_class    = |{ lc_action_class }|
       iv_li_class = |{ lc_action_class }| ).
@@ -513,7 +515,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_typ = zif_abapgit_html=>c_action_type-separator ).
 
     lo_toolbar_more_sub->add(
-      iv_txt   = |Remove|
+      iv_txt   = |Remove Repository|
       iv_title = |Remove abapGit's records of the repository (the system's |
               && |development objects will remain unaffected)|
       iv_act   = |{ zif_abapgit_definitions=>c_action-repo_remove }{ lc_dummy_key }|
@@ -521,9 +523,17 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar_more_sub->add(
+      iv_txt      = |Remove Objects|
+      iv_title    = |Delete all development objects belonging to this package |
+                 && |(and subpackages) from the system, but keep repository in abapGit|
+      iv_act      = |{ zif_abapgit_definitions=>c_action-repo_delete_objects }{ lc_dummy_key }|
+      iv_class    = |{ lc_action_class }|
+      iv_li_class = |{ lc_action_class }| ).
+
+    lo_toolbar_more_sub->add(
       iv_txt      = |Uninstall|
       iv_title    = |Delete all development objects belonging to this package |
-                 && |(and subpackages) from the system|
+                 && |(and subpackages) from the system, and remove the repository from abapGit|
       iv_act      = |{ zif_abapgit_definitions=>c_action-repo_purge }{ lc_dummy_key }|
       iv_class    = |{ lc_action_class }|
       iv_li_class = |{ lc_action_class }| ).
@@ -550,7 +560,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_name      = |filter|
       iv_label     = |Filter: { render_filter_help_hint( ) }|
       iv_value     = ms_list_settings-filter ) ).
-    ri_html->add( |<input type="submit" class="hidden-submit">| ).
+    ri_html->add( |<input type="submit" class="hidden-submit" title="Filter">| ).
     ri_html->add( |</form>| ).
 
     IF ms_list_settings-only_favorites = abap_true.
@@ -661,16 +671,14 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD render_table_footer.
 
+    DATA lv_action TYPE string.
+
     IF ms_list_settings-only_favorites = abap_true.
-      ii_html->add( `<tfoot>` ).
-      ii_html->add( `<tr><td colspan="100%">` ).
-      ii_html->add( |(Only favorites are shown. {
-        ii_html->a(
-          iv_txt   = |Show All|
-          iv_act   = |{ zif_abapgit_definitions=>c_action-toggle_favorites }?force_state={ abap_false }| )
-      })| ).
-      ii_html->add( `</td></tr>` ).
-      ii_html->add( `</tfoot>` ).
+      lv_action = ii_html->a(
+        iv_txt = 'Show All'
+        iv_act = |{ zif_abapgit_definitions=>c_action-toggle_favorites }?force_state={ abap_false }| ).
+
+      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_table_footer( |(Only favorites are shown. { lv_action })| ) ).
     ENDIF.
 
   ENDMETHOD.
@@ -678,16 +686,10 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD render_table_header.
 
-    ii_html->add( |<thead>| ).
-    ii_html->add( |<tr>| ).
-
-    ii_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_header_cells(
+    ii_html->add( zcl_abapgit_gui_chunk_lib=>render_table_header(
       it_col_spec         = build_table_scheme( )
       iv_order_by         = ms_list_settings-order_by
       iv_order_descending = ms_list_settings-order_descending ) ).
-
-    ii_html->add( '</tr>' ).
-    ii_html->add( '</thead>' ).
 
   ENDMETHOD.
 
@@ -699,7 +701,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       lv_repo_type_icon TYPE string,
       lv_favorite_icon  TYPE string,
       lv_fav_tr_class   TYPE string,
-      lv_lock           TYPE string.
+      lv_lock           TYPE string,
+      lv_flow           TYPE string.
 
     lv_is_online_repo = boolc( is_repo-type = abap_false ).
 
@@ -742,18 +745,26 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         iv_class = 'm-em5-sides'
         iv_hint  = 'Locked from pulls' ).
     ENDIF.
+    IF is_repo-flow = abap_true.
+      lv_flow = ii_html->icon(
+        iv_name  = 'flow/grey70'
+        iv_class = 'm-em5-sides'
+        iv_hint  = 'Flow' ).
+    ENDIF.
 
     ii_html->td(
       ii_html->a(
         iv_txt = is_repo-name
-        iv_act = |{ c_action-select }?key={ is_repo-key }| ) && lv_lock ).
+        iv_act = |{ c_action-select }?key={ is_repo-key }| ) && lv_lock && lv_flow ).
 
     " Labels
     IF mt_all_labels IS NOT INITIAL.
       ii_html->td(
         iv_content = zcl_abapgit_gui_chunk_lib=>render_label_list(
-          it_labels = is_repo-labels
-          io_label_colors = mo_label_colors )
+          it_labels           = is_repo-labels
+          io_label_colors     = mo_label_colors
+          iv_unlisted         = abap_true
+          iv_clickable_action = c_action-label_filter )
         iv_class   = 'labels' ).
     ENDIF.
 
@@ -913,13 +924,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         save_settings( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
-      WHEN zif_abapgit_definitions=>c_action-go_patch.
-
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_patch
-          EXPORTING
-            iv_key = lv_key.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-
     ENDCASE.
 
   ENDMETHOD.
@@ -941,7 +945,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ls_hotkey_action-hotkey = |o|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description   = |abapGit Settings|.
+    ls_hotkey_action-description   = |Global Settings|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_settings.
     ls_hotkey_action-hotkey = |x|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
@@ -1000,6 +1004,10 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-main'.
 
     ro_toolbar->add(
+      iv_txt = zcl_abapgit_gui_buttons=>flow( )
+      iv_act = zif_abapgit_definitions=>c_action-flow ).
+
+    ro_toolbar->add(
       iv_txt = zcl_abapgit_gui_buttons=>new_online( )
       iv_act = zif_abapgit_definitions=>c_action-repo_newonline
     )->add(
@@ -1010,19 +1018,12 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_act = zif_abapgit_definitions=>c_action-go_settings
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>advanced( )
-      iv_title = 'Utilities'
-      io_sub = zcl_abapgit_gui_chunk_lib=>advanced_submenu( )
+      io_sub = zcl_abapgit_gui_menus=>advanced( )
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>help( )
-      iv_title = 'Help'
-      io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
+      io_sub = zcl_abapgit_gui_menus=>help( ) ).
 
-    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
-      ro_toolbar->add(
-        iv_txt   = zcl_abapgit_gui_buttons=>experimental( )
-        iv_title = 'Experimental Features are Enabled'
-        iv_act   = zif_abapgit_definitions=>c_action-go_settings ).
-    ENDIF.
+    zcl_abapgit_gui_menus=>experimental( ro_toolbar ).
 
   ENDMETHOD.
 

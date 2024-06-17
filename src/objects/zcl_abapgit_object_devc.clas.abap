@@ -6,9 +6,15 @@ CLASS zcl_abapgit_object_devc DEFINITION PUBLIC
     INTERFACES:
       zif_abapgit_object.
 
-    METHODS:
-      constructor IMPORTING is_item     TYPE zif_abapgit_definitions=>ty_item
-                            iv_language TYPE spras.
+    METHODS constructor
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -58,6 +64,9 @@ CLASS zcl_abapgit_object_devc DEFINITION PUBLIC
     METHODS remove_obsolete_tadir
       IMPORTING
         !iv_package_name TYPE devclass .
+    METHODS adjust_sw_component
+      CHANGING
+        cv_dlvunit TYPE dlvunit.
 ENDCLASS.
 
 
@@ -65,14 +74,42 @@ ENDCLASS.
 CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
 
+  METHOD adjust_sw_component.
+
+    DATA:
+      lv_namespace TYPE namespace,
+      lv_comp_type TYPE c LENGTH 1.
+
+    " Keep software component of a package for ABAP add-ons (customer and partner developments)...
+    SELECT SINGLE comp_type FROM cvers INTO lv_comp_type WHERE component = cv_dlvunit.
+    IF sy-subrc = 0 AND lv_comp_type = 'A'.
+      " ... with a matching namespace (typical Add-on Assembly Kit scenario)
+      lv_namespace = |/{ cv_dlvunit }/|.
+      SELECT SINGLE namespace FROM trnspace INTO lv_namespace WHERE namespace = lv_namespace.
+      IF sy-subrc <> 0.
+        CLEAR cv_dlvunit.
+      ENDIF.
+    ELSE.
+      CLEAR cv_dlvunit.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD constructor.
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
+
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
+
     IF is_item-devclass IS NOT INITIAL.
       mv_local_devclass = is_item-devclass.
     ELSE.
       mv_local_devclass = is_item-obj_name.
     ENDIF.
+
   ENDMETHOD.
 
 
@@ -159,7 +196,9 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     ENDIF.
 
     " Clean-up sub packages first
-    SELECT devclass FROM tdevc INTO TABLE lt_pack WHERE parentcl = iv_package_name.
+    SELECT devclass FROM tdevc INTO TABLE lt_pack
+      WHERE parentcl = iv_package_name
+      ORDER BY PRIMARY KEY.
 
     LOOP AT lt_pack INTO lv_pack.
       remove_obsolete_tadir( lv_pack ).
@@ -167,7 +206,8 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
     " Remove TADIR entries for objects that do not exist anymore
     SELECT * FROM tadir INTO CORRESPONDING FIELDS OF TABLE lt_tadir
-      WHERE devclass = iv_package_name ##TOO_MANY_ITAB_FIELDS.
+      WHERE devclass = iv_package_name
+      ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS.
 
     LOOP AT lt_tadir INTO ls_tadir.
       ls_item-obj_type = ls_tadir-object.
@@ -495,6 +535,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
+
     DATA: li_package      TYPE REF TO if_package,
           ls_package_data TYPE scompkdtln,
           ls_data_sign    TYPE scompksign,
@@ -502,7 +543,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
           ls_save_sign    TYPE paksavsign.
 
     FIELD-SYMBOLS: <ls_usage_data> TYPE scomppdtln.
-
+    FIELD-SYMBOLS: <lg_field> TYPE any.
 
     mv_local_devclass = iv_package.
 
@@ -540,12 +581,23 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     " the hierarchy before.
     CLEAR ls_package_data-parentcl.
 
+    ASSIGN COMPONENT 'PACKKIND' OF STRUCTURE ls_package_data TO <lg_field>.
+    IF sy-subrc = 0.
+      set_abap_language_version( CHANGING cv_abap_language_version = <lg_field> ).
+    ENDIF.
+    ASSIGN COMPONENT 'PACKKIND' OF STRUCTURE ls_data_sign TO <lg_field>.
+    IF sy-subrc = 0.
+      <lg_field> = abap_true.
+    ENDIF.
+
 * Fields not set:
 * korrflag
-* dlvunit
 * parentcl
 * cli_check
 * intprefx
+    IF ls_package_data-dlvunit IS NOT INITIAL.
+      ls_data_sign-dlvunit = abap_true.
+    ENDIF.
     ls_data_sign-ctext            = abap_true.
     ls_data_sign-as4user          = abap_true.
     ls_data_sign-pdevclass        = abap_true.
@@ -656,10 +708,11 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     update_pinf_usages( ii_package    = li_package
                         it_usage_data = lt_usage_data ).
 
-    ls_save_sign-pack = abap_true.
+    ls_save_sign-pack   = abap_true.
     ls_save_sign-permis = abap_true.
-    ls_save_sign-elems = abap_true.
+    ls_save_sign-elems  = abap_true.
     ls_save_sign-interf = abap_true.
+
     li_package->save_generic(
       EXPORTING
         i_save_sign           = ls_save_sign
@@ -727,16 +780,9 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
-
-    DATA: lv_object TYPE eqegraarg.
-
-    lv_object = |DV{ ms_item-obj_name }|.
-    OVERLAY lv_object WITH '                                          '.
-    lv_object = lv_object && '*'.
-
     rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
-                                            iv_argument    = lv_object ).
-
+                                            iv_argument    = ms_item-obj_name
+                                            iv_prefix      = 'DV' ).
   ENDMETHOD.
 
 
@@ -825,6 +871,9 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     CLEAR: ls_package_data-intfprefx,
            ls_package_data-cli_check.
 
+    " If software component is related to add-on and a valid namespace, then keep it
+    adjust_sw_component( CHANGING cv_dlvunit = ls_package_data-dlvunit ).
+
     ASSIGN COMPONENT 'TRANSLATION_DEPTH_TEXT'
            OF STRUCTURE ls_package_data
            TO <lg_field>.
@@ -861,6 +910,11 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     ENDIF.
 
     CLEAR: ls_package_data-korrflag.
+
+    ASSIGN COMPONENT 'PACKKIND' OF STRUCTURE ls_package_data TO <lg_field>.
+    IF sy-subrc = 0.
+      clear_abap_language_version( CHANGING cv_abap_language_version = <lg_field> ).
+    ENDIF.
 
     io_xml->add( iv_name = 'DEVC'
                  ig_data = ls_package_data ).

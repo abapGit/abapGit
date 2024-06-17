@@ -17,12 +17,9 @@ CLASS zcl_abapgit_gui DEFINITION
         go_back_to_bookmark TYPE i VALUE 6,
         new_page_replacing  TYPE i VALUE 7,
       END OF c_event_state .
-    CONSTANTS:
-      BEGIN OF c_action,
-        go_home TYPE string VALUE zif_abapgit_definitions=>c_action-go_home,
-        go_db   TYPE string VALUE zif_abapgit_definitions=>c_action-go_db,
-      END OF c_action .
     METHODS go_home
+      IMPORTING
+        iv_action TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS back
@@ -250,20 +247,13 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD go_home.
 
-    DATA: ls_stack LIKE LINE OF mt_stack,
-          lv_mode  TYPE tabname.
+    DATA ls_stack LIKE LINE OF mt_stack.
 
     IF mi_router IS BOUND.
       CLEAR: mt_stack, mt_event_handlers.
       APPEND mi_router TO mt_event_handlers.
-      " on_event doesn't accept strings directly
-      GET PARAMETER ID 'DBT' FIELD lv_mode.
-      CASE lv_mode.
-        WHEN 'ZABAPGIT'.
-          on_event( action = |{ c_action-go_db }| ).
-        WHEN OTHERS.
-          on_event( action = |{ c_action-go_home }| ).
-      ENDCASE.
+
+      on_event( action = |{ iv_action }| ).
     ELSE.
       IF lines( mt_stack ) > 0.
         READ TABLE mt_stack INTO ls_stack INDEX 1.
@@ -291,12 +281,16 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         it_postdata     = it_postdata.
 
     TRY.
-        LOOP AT mt_event_handlers INTO li_handler.
-          ls_handled = li_handler->on_event( li_event ).
-          IF ls_handled-state IS NOT INITIAL AND ls_handled-state <> c_event_state-not_handled. " is handled
-            EXIT.
-          ENDIF.
-        ENDLOOP.
+        ls_handled = zcl_abapgit_exit=>get_instance( )->on_event( li_event ).
+
+        IF ls_handled-state = c_event_state-not_handled.
+          LOOP AT mt_event_handlers INTO li_handler.
+            ls_handled = li_handler->on_event( li_event ).
+            IF ls_handled-state IS NOT INITIAL AND ls_handled-state <> c_event_state-not_handled. " is handled
+              EXIT.
+            ENDIF.
+          ENDLOOP.
+        ENDIF.
 
         IF is_page_modal( mi_cur_page ) = abap_true AND NOT (
           ls_handled-state = c_event_state-re_render OR
@@ -330,7 +324,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         ENDCASE.
 
       CATCH zcx_abapgit_cancel ##NO_HANDLER.
-        " Do nothing = gc_event_state-no_more_act
+        " Do nothing = c_event_state-no_more_act
       CATCH zcx_abapgit_exception INTO lx_exception.
         handle_error( lx_exception ).
     ENDTRY.
@@ -459,7 +453,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    ls_event-eventid    = mi_html_viewer->m_id_sapevent.
+    ls_event-eventid    = mi_html_viewer->c_id_sapevent.
     ls_event-appl_event = abap_true.
     APPEND ls_event TO lt_events.
 
@@ -572,15 +566,15 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_services~register_page_asset.
 
-    " Maybe forbid registering cachable existing assets, maybe this is the right place (see also asset_man commments)
+    " Maybe forbid registering cacheable existing assets, maybe this is the right place (see also asset_man comments)
 
     mi_asset_man->register_asset(
       iv_url = iv_url
       iv_type = iv_type
       iv_mime_name = iv_mime_name
       iv_inline = iv_inline
-      " This registering will happen after initialization so all cachable already cached
-      iv_cachable = abap_false ).
+      " This registering will happen after initialization so all cacheable already cached
+      iv_cacheable = abap_false ).
 
   ENDMETHOD.
 ENDCLASS.

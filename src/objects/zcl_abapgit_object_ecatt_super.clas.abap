@@ -8,11 +8,15 @@ CLASS zcl_abapgit_object_ecatt_super DEFINITION
 
     INTERFACES zif_abapgit_object .
 
-    METHODS:
-      constructor
-        IMPORTING
-          !is_item     TYPE zif_abapgit_definitions=>ty_item
-          !iv_language TYPE spras .
+    METHODS constructor
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
     METHODS:
       get_object_type ABSTRACT
@@ -39,11 +43,11 @@ CLASS zcl_abapgit_object_ecatt_super DEFINITION
       END OF ty_last_changed.
 
     CONSTANTS:
-      BEGIN OF co_name,
+      BEGIN OF c_name,
         version  TYPE string VALUE 'VERSION' ##NO_TEXT,
         versions TYPE string VALUE 'VERSIONS' ##NO_TEXT,
-      END OF co_name,
-      co_default_version TYPE etobj_ver VALUE '1' ##NO_TEXT.
+      END OF c_name,
+      c_default_version TYPE etobj_ver VALUE '1' ##NO_TEXT.
 
     CLASS-METHODS:
       is_change_more_recent_than
@@ -115,6 +119,12 @@ CLASS zcl_abapgit_object_ecatt_super DEFINITION
           zcx_abapgit_exception,
 
       clear_element
+        IMPORTING
+          iv_name     TYPE csequence
+        CHANGING
+          ci_document TYPE REF TO if_ixml_document,
+
+      clear_element_collection
         IMPORTING
           iv_name     TYPE csequence
         CHANGING
@@ -193,13 +203,40 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
     clear_element( EXPORTING iv_name     = |ETVAR_EXT|
                    CHANGING  ci_document = ci_document ).
 
+    " SORTLNR is part of ETPAR_VARI and causing diffs
+    " We can clear it since it's automatically filled during deserialize
+    clear_element_collection( EXPORTING iv_name     = |SORTLNR|
+                              CHANGING  ci_document = ci_document ).
+
+  ENDMETHOD.
+
+
+  METHOD clear_element_collection.
+
+    DATA:
+      lo_node_collection TYPE REF TO if_ixml_node_collection,
+      lo_node            TYPE REF TO if_ixml_node,
+      lv_index           TYPE i.
+
+    lo_node_collection = ci_document->get_elements_by_tag_name( iv_name ).
+
+    lv_index = 0.
+    WHILE lv_index < lo_node_collection->get_length( ).
+      lo_node = lo_node_collection->get_item( lv_index ).
+      lo_node->set_value( '' ).
+      lv_index = lv_index + 1.
+    ENDWHILE.
+
   ENDMETHOD.
 
 
   METHOD constructor.
 
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     mv_object_name = ms_item-obj_name.
 
@@ -362,7 +399,7 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
 
     clear_elements( CHANGING ci_document = li_document ).
 
-    li_node = li_document->create_element( co_name-version ).
+    li_node = li_document->create_element( c_name-version ).
     li_node->append_child( li_document->get_root_element( ) ).
 
     ci_node->append_child( li_node ).
@@ -375,7 +412,7 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
     DATA: li_versions_node TYPE REF TO if_ixml_element.
     FIELD-SYMBOLS: <ls_version_info> LIKE LINE OF it_version_info.
 
-    li_versions_node = ci_document->create_element( co_name-versions ).
+    li_versions_node = ci_document->create_element( c_name-versions ).
 
     IF lines( it_version_info ) > 0.
 
@@ -393,7 +430,7 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
 
       serialize_version(
         EXPORTING
-          iv_version = co_default_version
+          iv_version = c_default_version
         CHANGING
           ci_node    = li_versions_node ).
 
@@ -463,7 +500,7 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
                                             im_name                = mv_object_name
                                             " we have to supply a version, so let's use the default version
                                             " and delete them all
-                                            im_version             = co_default_version
+                                            im_version             = c_default_version
                                             im_delete_all_versions = abap_true ).
 
       CATCH cx_ecatt_apl INTO lx_error.
@@ -484,7 +521,7 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
     li_document = io_xml->get_raw( ).
 
     li_versions = li_document->get_elements_by_tag_name( depth = 0
-                                                         name  = co_name-version ).
+                                                         name  = c_name-version ).
 
     li_version_iterator = li_versions->create_iterator( ).
 
@@ -511,7 +548,7 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
 
     TRY.
         rv_bool = cl_apl_ecatt_object=>existence_check_object( im_name               = mv_object_name
-                                                               im_version            = co_default_version
+                                                               im_version            = c_default_version
                                                                im_obj_type           = lv_object_type
                                                                im_exists_any_version = abap_true ).
 
@@ -594,6 +631,8 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
             im_obj_type     = lv_object_type
           IMPORTING
             ex_version_info = lt_version_info ).
+
+        SORT lt_version_info BY version.
 
         li_document = cl_ixml=>create( )->create_document( ).
 

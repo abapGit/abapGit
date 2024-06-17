@@ -229,6 +229,8 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
     DATA lv_save_sy_langu TYPE sy-langu.
     DATA lv_subrc         TYPE syst-subrc.
     DATA lv_tcode         TYPE tcode.
+    DATA lv_langu_text    TYPE string.
+    DATA lv_msg           TYPE c LENGTH 200.
 
     " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
 
@@ -245,25 +247,37 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
       DESTINATION 'NONE'
       STARTING NEW TASK 'ABAPGIT'
       EXPORTING
-        tcode                   = lv_tcode
+        tcode                 = lv_tcode
       TABLES
-        spagpa_tab              = lt_spagpa
+        spagpa_tab            = lt_spagpa
       EXCEPTIONS
-        call_transaction_denied = 1
-        tcode_invalid           = 2
-        communication_failure   = 3
-        system_failure          = 4
-        OTHERS                  = 5.
+        communication_failure = 1 MESSAGE lv_msg
+        system_failure        = 2 MESSAGE lv_msg
+        OTHERS                = 3.
 
     lv_subrc = sy-subrc.
 
     SET LOCALE LANGUAGE lv_save_sy_langu.
 
-    IF lv_subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from ABAP4_CALL_TRANSACTION. Subrc = { lv_subrc }| ).
-    ENDIF.
+    CASE lv_subrc.
+      WHEN 1.
+        lv_msg = |Communication error { lv_msg }|.
+      WHEN 2.
+        SELECT SINGLE sptxt FROM t002t INTO lv_langu_text WHERE spras = sy-langu AND sprsl = iv_language.
+        IF sy-subrc <> 0.
+          lv_langu_text = iv_language.
+        ENDIF.
+        lv_msg = |Language { lv_langu_text } ({ zcl_abapgit_convert=>language_sap1_to_sap2( iv_language ) })|
+              && | is not installed|.
+      WHEN 3.
+        lv_msg = |{ lv_subrc }|.
+    ENDCASE.
 
-    MESSAGE 'Repository opened in a new window' TYPE 'S'.
+    IF lv_msg IS INITIAL.
+      MESSAGE 'Repository opened in a new window' TYPE 'S'.
+    ELSE.
+      zcx_abapgit_exception=>raise( |Error starting transaction { lv_tcode }: { lv_msg }| ).
+    ENDIF.
 
   ENDMETHOD.
 

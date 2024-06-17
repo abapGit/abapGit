@@ -7,7 +7,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_ENSC IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -55,7 +55,7 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
         ENDIF.
         li_spot_ref->if_enh_object~unlock( ).
       CATCH cx_enh_root INTO lx_root.
-        lv_message = `Error occured while deleting ENSC: `
+        lv_message = `Error occurred while deleting ENSC: `
           && lx_root->get_text( ).
         zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
@@ -124,7 +124,7 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
           io_xml     = io_xml ).
 
       CATCH cx_enh_root INTO lx_root.
-        lv_message = `Error occured while deserializing ENSC: `
+        lv_message = `Error occurred while deserializing ENSC: `
           && lx_root->get_text( ).
         zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
@@ -238,10 +238,11 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
           iv_pgmid    = 'R3TR'
           iv_object   = ms_item-obj_type
           iv_obj_name = ms_item-obj_name
+          io_i18n_params = mo_i18n_params
           io_xml      = io_xml ).
 
       CATCH cx_enh_root INTO lx_root.
-        lv_message = `Error occured while serializing ENSC: `
+        lv_message = `Error occurred while serializing ENSC: `
           && lx_root->get_text( ).
         zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.

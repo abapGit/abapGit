@@ -5,8 +5,13 @@ CLASS zcl_abapgit_object_cus1 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS constructor
       IMPORTING
-        is_item     TYPE zif_abapgit_definitions=>ty_item
-        iv_language TYPE spras.
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: ty_activity_titles TYPE STANDARD TABLE OF cus_actt
@@ -37,8 +42,11 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item = is_item
-                        iv_language = iv_language ).
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     mv_customizing_activity = ms_item-obj_name.
 
@@ -46,7 +54,17 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+
+    DATA ls_header TYPE ty_customzing_activity-activity_header.
+
+    CALL FUNCTION 'S_CUS_ACTIVITY_READ'
+      EXPORTING
+        activity        = mv_customizing_activity
+      IMPORTING
+        activity_header = ls_header.
+
+    rv_user = ls_header-luser.
+
   ENDMETHOD.
 
 
@@ -163,7 +181,7 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
     <ls_bdc_data>-fnam = 'BDC_OKCODE'.
     <ls_bdc_data>-fval = '=ACT_DISP'.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = 'S_CUS_ACTIVITY'
       it_bdcdata = lt_bdc_data ).
 
@@ -202,7 +220,7 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
            ls_customzing_activity-activity_header-ldatetime,
            ls_customzing_activity-activity_header-luser.
 
-    IF io_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       DELETE ls_customzing_activity-activity_title WHERE spras <> mv_language.
     ENDIF.
 

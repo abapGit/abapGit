@@ -11,6 +11,8 @@ CLASS zcl_abapgit_cts_api DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    DATA mv_confirm_transp_msgs_called TYPE abap_bool.
+
     "! Returns the transport request / task the object is currently locked in
     "! @parameter iv_program_id | Program ID
     "! @parameter iv_object_type | Object type
@@ -211,6 +213,132 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_cts_api~change_transport_type.
+
+    DATA:
+      ls_request_header  TYPE trwbo_request_header,
+      lt_request_headers TYPE trwbo_request_headers.
+
+    CALL FUNCTION 'ENQUEUE_E_TRKORR'
+      EXPORTING
+        trkorr         = iv_transport_request
+      EXCEPTIONS
+        foreign_lock   = 1
+        system_failure = 2
+        OTHERS         = 3.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    CALL FUNCTION 'TR_READ_REQUEST_WITH_TASKS'
+      EXPORTING
+        iv_trkorr          = iv_transport_request
+      IMPORTING
+        et_request_headers = lt_request_headers
+      EXCEPTIONS
+        invalid_input      = 1
+        OTHERS             = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    LOOP AT lt_request_headers INTO ls_request_header WHERE trfunction = iv_transport_type_from.
+
+      CALL FUNCTION 'TRINT_READ_REQUEST_HEADER'
+        EXPORTING
+          iv_read_e070   = abap_true
+          iv_read_e070c  = abap_true
+        CHANGING
+          cs_request     = ls_request_header
+        EXCEPTIONS
+          empty_trkorr   = 1
+          not_exist_e070 = 2
+          OTHERS         = 3.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+      CALL FUNCTION 'TRINT_CHANGE_TRFUNCTION'
+        EXPORTING
+          iv_new_trfunction      = iv_transport_type_to
+        CHANGING
+          cs_request_header      = ls_request_header
+        EXCEPTIONS
+          action_aborted_by_user = 1
+          change_not_allowed     = 2
+          db_access_error        = 3
+          OTHERS                 = 4.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+    ENDLOOP.
+
+    CALL FUNCTION 'DEQUEUE_E_TRKORR'
+      EXPORTING
+        trkorr = iv_transport_request.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~confirm_transport_messages.
+
+    TYPES: BEGIN OF ty_s_message,
+             id TYPE symsgid,
+             ty TYPE symsgty,
+             no TYPE symsgno,
+             v1 TYPE symsgv,
+             v2 TYPE symsgv,
+             v3 TYPE symsgv,
+             v4 TYPE symsgv,
+           END OF ty_s_message.
+
+    DATA ls_message TYPE ty_s_message.
+
+    FIELD-SYMBOLS: <lt_confirmed_messages> TYPE STANDARD TABLE.
+
+    IF mv_confirm_transp_msgs_called = abap_true.
+      RETURN.
+    ENDIF.
+
+    " remember the call to avoid duplicates in GT_CONFIRMED_MESSAGES
+    mv_confirm_transp_msgs_called = abap_true.
+
+
+    " Auto-confirm certain messages (requires SAP Note 1609940)
+    PERFORM dummy IN PROGRAM saplstrd IF FOUND.  "load function group STRD once into memory
+
+    ASSIGN ('(SAPLSTRD)GT_CONFIRMED_MESSAGES') TO <lt_confirmed_messages>.
+
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    " Object can only be created in package of namespace
+    ls_message-id = 'TR'.
+    ls_message-no = '007'.
+    INSERT ls_message INTO TABLE <lt_confirmed_messages>.
+
+    " Original system set to "SAP"
+    ls_message-id = 'TR'.
+    ls_message-no = '013'.
+    INSERT ls_message INTO TABLE <lt_confirmed_messages>.
+
+    " Make repairs in foreign namespaces only if they are urgent
+    ls_message-id = 'TR'.
+    ls_message-no = '852'.
+    INSERT ls_message INTO TABLE <lt_confirmed_messages>.
+
+    " Make repairs in foreign namespaces only if they are urgent
+    ls_message-id = 'TK'.
+    ls_message-no = '016'.
+    INSERT ls_message INTO TABLE <lt_confirmed_messages>.
+
+    rv_messages_confirmed = abap_true.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_cts_api~create_transport_entries.
 
     DATA lt_tables      TYPE tredt_objects.
@@ -264,6 +392,13 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
     CLEAR ev_object.
     CLEAR ev_obj_name.
+
+    IF iv_object = 'MESS'.
+      ev_object = 'MSAG'.
+      ev_obj_name = substring( val = iv_obj_name
+                               len = strlen( iv_obj_name ) - 3 ).
+      RETURN.
+    ENDIF.
 
     CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
       EXPORTING
@@ -319,9 +454,9 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
       IF lv_type_check_result = 'L'.
         LOOP AT lt_tlock ASSIGNING <ls_tlock>
-            WHERE object =  ls_lock_key-obj
-            AND   hikey  >= ls_lock_key-low
-            AND   lokey  <= ls_lock_key-hi.               "#EC PORTABLE
+            WHERE object = ls_lock_key-obj
+            AND hikey >= ls_lock_key-low
+            AND lokey <= ls_lock_key-hi.                  "#EC PORTABLE
           lv_request = <ls_tlock>-trkorr.
           EXIT.
         ENDLOOP.
@@ -399,6 +534,131 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_cts_api~list_open_requests_by_user.
+
+    TYPES: BEGIN OF ty_e070,
+             trkorr     TYPE e070-trkorr,
+             trfunction TYPE e070-trfunction,
+             strkorr    TYPE e070-strkorr,
+           END OF ty_e070.
+    DATA lt_e070 TYPE STANDARD TABLE OF ty_e070 WITH DEFAULT KEY.
+
+* find all tasks first
+    SELECT trkorr trfunction strkorr
+      FROM e070 INTO TABLE lt_e070
+      WHERE as4user = sy-uname
+      AND trstatus = zif_abapgit_cts_api=>c_transport_status-modifiable
+      AND strkorr <> ''
+      ORDER BY PRIMARY KEY.
+
+    IF lines( lt_e070 ) > 0.
+      SELECT trkorr FROM e070
+        INTO TABLE rt_trkorr
+        FOR ALL ENTRIES IN lt_e070
+        WHERE trkorr = lt_e070-strkorr
+        AND trfunction = zif_abapgit_cts_api=>c_transport_type-wb_request.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~list_r3tr_by_request.
+
+    TYPES: BEGIN OF ty_contents,
+             trkorr   TYPE e071-trkorr,
+             as4pos   TYPE e071-as4pos,
+             pgmid    TYPE e071-pgmid,
+             object   TYPE e071-object,
+             obj_name TYPE e071-obj_name,
+           END OF ty_contents.
+
+    DATA lt_tasks    TYPE STANDARD TABLE OF trkorr WITH DEFAULT KEY.
+    DATA lt_contents TYPE STANDARD TABLE OF ty_contents WITH DEFAULT KEY.
+    DATA ls_contents LIKE LINE OF lt_contents.
+    DATA ls_list     LIKE LINE OF rt_list.
+
+
+    SELECT trkorr FROM e070 INTO TABLE lt_tasks
+      WHERE strkorr = iv_request
+      ORDER BY PRIMARY KEY.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    SELECT trkorr as4pos pgmid object obj_name FROM e071
+      INTO TABLE lt_contents
+      FOR ALL ENTRIES IN lt_tasks
+      WHERE trkorr = lt_tasks-table_line
+      ORDER BY PRIMARY KEY.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    LOOP AT lt_contents INTO ls_contents.
+      CASE ls_contents-pgmid.
+        WHEN 'R3TR'.
+          ls_list-object = ls_contents-object.
+          ls_list-obj_name = ls_contents-obj_name.
+          INSERT ls_list INTO TABLE rt_list.
+        WHEN 'LIMU'.
+          TRY.
+              zif_abapgit_cts_api~get_r3tr_obj_for_limu_obj(
+                EXPORTING
+                  iv_object   = ls_contents-object
+                  iv_obj_name = ls_contents-obj_name
+                IMPORTING
+                  ev_object   = ls_list-object
+                  ev_obj_name = ls_list-obj_name ).
+              INSERT ls_list INTO TABLE rt_list.
+            CATCH zcx_abapgit_exception.
+          ENDTRY.
+      ENDCASE.
+    ENDLOOP.
+
+    SORT rt_list BY object obj_name.
+    DELETE ADJACENT DUPLICATES FROM rt_list COMPARING object obj_name.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~read.
+
+    DATA ls_request TYPE trwbo_request.
+    DATA ls_key     LIKE LINE OF ls_request-keys.
+
+    FIELD-SYMBOLS <ls_key> LIKE LINE OF rs_request-keys.
+
+
+    ls_request-h-trkorr = iv_trkorr.
+
+    CALL FUNCTION 'TRINT_READ_REQUEST'
+      EXPORTING
+        iv_read_e070       = abap_true
+        iv_read_e07t       = abap_true
+        iv_read_e070c      = abap_true
+        iv_read_e070m      = abap_true
+        iv_read_objs_keys  = abap_true
+        iv_read_objs       = abap_true
+        iv_read_attributes = abap_true
+      CHANGING
+        cs_request         = ls_request
+      EXCEPTIONS
+        error_occured      = 1
+        OTHERS             = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+* move to output structure
+    rs_request-trstatus = ls_request-h-trstatus.
+    LOOP AT ls_request-keys INTO ls_key.
+      APPEND INITIAL LINE TO rs_request-keys ASSIGNING <ls_key>.
+      MOVE-CORRESPONDING ls_key TO <ls_key>.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_cts_api~read_description.
 
     SELECT SINGLE as4text FROM e07t
@@ -413,6 +673,28 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
     SELECT SINGLE as4user FROM e070 INTO rv_uname
       WHERE trkorr = iv_trkorr ##SUBRC_OK.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~validate_transport_request.
+
+    CONSTANTS:
+      BEGIN OF c_tr_status,
+        modifiable           TYPE trstatus VALUE 'D',
+        modifiable_protected TYPE trstatus VALUE 'L',
+      END OF c_tr_status.
+
+    DATA ls_request TYPE zif_abapgit_cts_api=>ty_transport_data.
+
+    ls_request = zif_abapgit_cts_api~read( iv_transport_request ).
+
+    IF ls_request-trstatus <> c_tr_status-modifiable
+        AND ls_request-trstatus <> c_tr_status-modifiable_protected.
+      " Task/request &1 has already been released
+      MESSAGE e064(tk) WITH iv_transport_request INTO zcx_abapgit_exception=>null.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

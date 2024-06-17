@@ -61,6 +61,8 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
 
   METHOD constructor.
 
+    DATA lv_search TYPE string.
+
     mv_repo_url   = |https://api.github.com/repos/{ iv_user_and_repo }|.
     mi_http_agent = ii_http_agent.
     mi_http_agent->global_headers( )->set(
@@ -71,6 +73,16 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
       mi_http_agent->global_headers( )->set(
         iv_key = 'Authorization'
         iv_val = zcl_abapgit_login_manager=>get( mv_repo_url ) ).
+    ELSE.
+* fallback, try searching for the git credentials
+      lv_search = mv_repo_url.
+      REPLACE FIRST OCCURRENCE OF 'api.github.com/repos' IN lv_search WITH 'github.com'.
+      IF zcl_abapgit_login_manager=>get( lv_search ) IS NOT INITIAL.
+        mi_http_agent->global_headers( )->set(
+          iv_key = 'Authorization'
+          iv_val = zcl_abapgit_login_manager=>get( lv_search ) ).
+      ENDIF.
+
     ENDIF.
 
   ENDMETHOD.
@@ -93,6 +105,8 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
       <ls_p>-head_url        = ii_json->get( |/{ lv_i }/head/repo/clone_url| ).
       <ls_p>-head_branch     = ii_json->get( |/{ lv_i }/head/ref| ).
       <ls_p>-created_at      = ii_json->get( |/{ lv_i }/created_at| ).
+      <ls_p>-draft           = ii_json->get_boolean( |/{ lv_i }/draft| ).
+      <ls_p>-html_url        = ii_json->get( |/{ lv_i }/html_url| ).
     ENDLOOP.
 
   ENDMETHOD.

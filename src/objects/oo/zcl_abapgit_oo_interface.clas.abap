@@ -1,7 +1,8 @@
 CLASS zcl_abapgit_oo_interface DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_oo_base
-  CREATE PUBLIC .
+  CREATE PUBLIC
+  GLOBAL FRIENDS zcl_abapgit_oo_factory.
 
   PUBLIC SECTION.
 
@@ -17,13 +18,17 @@ CLASS zcl_abapgit_oo_interface DEFINITION
         REDEFINITION .
     METHODS zif_abapgit_oo_object_fnc~exists
         REDEFINITION .
+    METHODS zif_abapgit_oo_object_fnc~syntax_check
+        REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-METHODS update_report
       IMPORTING
-        !iv_program       TYPE programm
+        !iv_program       TYPE syrepid
         !it_source        TYPE string_table
+        !iv_package       TYPE devclass
+        !iv_version       TYPE uccheck
       RETURNING
         VALUE(rv_updated) TYPE abap_bool
       RAISING
@@ -142,22 +147,20 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
 
 
   METHOD update_report.
+    DATA lv_type TYPE c LENGTH 1.
 
-    DATA: lt_old TYPE string_table.
+    lv_type = zcl_abapgit_oo_base=>c_include_program_type.
 
-    READ REPORT iv_program INTO lt_old.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Fatal error. Include { iv_program } should have been created previously!| ).
+    IF iv_program+30 = srext_ext_interface_pool.
+      lv_type = zcl_abapgit_oo_base=>c_ip_program_type.
     ENDIF.
 
-    IF lt_old <> it_source.
-      INSERT REPORT iv_program FROM it_source.
-      ASSERT sy-subrc = 0.
-      rv_updated = abap_true.
-    ELSE.
-      rv_updated = abap_false.
-    ENDIF.
-
+    rv_updated = zcl_abapgit_factory=>get_sap_report( )->update_report(
+      iv_name         = iv_program
+      iv_package      = iv_package
+      iv_version      = iv_version
+      it_source       = it_source
+      iv_program_type = lv_type ).
   ENDMETHOD.
 
 
@@ -275,6 +278,8 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
     IF lt_public IS NOT INITIAL.
       lv_program = cl_oo_classname_service=>get_intfsec_name( is_key-clsname ).
       lv_updated = update_report( iv_program = lv_program
+                                  iv_package = iv_package
+                                  iv_version = iv_version
                                   it_source  = lt_public ).
       IF lv_updated = abap_true.
         update_meta( iv_name   = is_key-clsname
@@ -337,4 +342,31 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
       rs_interface_properties-r3release,
       rs_interface_properties-version.
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~syntax_check.
+    DATA:
+      ls_intkey      TYPE seoclskey,
+      lv_syntaxerror TYPE abap_bool.
+
+    ls_intkey-clsname = to_upper( iv_object_name ).
+
+    CALL FUNCTION 'SEO_INTERFACE_CHECK_POOL'
+      EXPORTING
+        intkey               = ls_intkey
+        suppress_error_popup = abap_true
+      IMPORTING
+        syntaxerror          = lv_syntaxerror
+      EXCEPTIONS
+        error_message        = 1 " suppress S-message
+        OTHERS               = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    IF lv_syntaxerror = abap_true.
+      zcx_abapgit_exception=>raise( |Interface { ls_intkey-clsname } has syntax errors | ).
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.

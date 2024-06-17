@@ -74,6 +74,7 @@ span.separator {
 .w40          { width: 40%; }
 .float-right  { float: right; }
 .pad-right    { padding-right: 6px; }
+.no-pad       { padding: 0px !important; }
 .inline       { display: inline; }
 .hidden       { visibility: hidden; }
 .nodisplay    { display: none }
@@ -235,6 +236,10 @@ span.transport-box {
   border: 1px solid;
   border-radius: 4px;
   display: inline-block;
+}
+
+span.package-box i.icon {
+  margin-right: 0.15em;
 }
 
 /* MISC AND REFACTOR */
@@ -642,7 +647,7 @@ div.tutorial h2 { font-size: 14pt;}
 /* MENU */
 
 /* Special credits to example at https://codepen.io/philhoyt/pen/ujHzd */
-/* container div, aligned left, but with .float-right modifier alignes right */
+/* container div, aligned left, but with .float-right modifier aligns right */
 
 .nav-container ul {
   list-style: none;
@@ -1123,7 +1128,7 @@ table ul.repo-labels li {
   background-color: hsl(49, 100%, 64%);
   border-color: hsl(49, 100%, 49%);
 }
-.rl-orrange {
+.rl-orange {
   color: hsl(0, 0%, 100%);
   background-color: hsl(19, 100%, 61%);
   border-color: hsl(19, 100%, 50%);
@@ -1163,6 +1168,7 @@ table ul.repo-labels li {
   z-index: 1;
   border: 1px solid;
   padding: 0.4em 0.6em;
+  text-align: justify;
 }
 .form-field-help-tooltip .form-field-help-tooltip-text p {
   margin: 0px;
@@ -1182,23 +1188,99 @@ table ul.repo-labels li {
   word-wrap: break-word;
 }
 
+/* TABLE COMPONENT DEFAULT STYLE */
+
+div.default-table-container {
+  padding: 6px 0.5em;
+  background-color: white;
+  border-radius: 6px;
+  overflow-x: hidden;
+}
+
+table.default-table {
+  line-height: 1.5;
+  width: 100%;
+}
+
+table.default-table thead tr:last-child {
+  border-bottom: #efefef solid 1px;
+}
+
+table.default-table td,
+table.default-table th {
+  padding: 6px 8px;
+  text-align: left;
+}
+
+table.default-table th {
+  white-space: nowrap;
+}
+
+table.default-table th span.sort-arrow {
+  display: inline-block;
+  color: hsla(0, 0%, 0%, 0.15);
+  width: 1em; /*for constant width*/
+  text-align: right;
+}
+
+table.default-table th span.sort-active {
+  color: #4078c0;
+}
+
+table.default-table th {
+  padding-bottom: 10px;
+}
+
 /* CODE INSPECTOR */
 
-.ci-head { padding: 0.5em 1em; }
-.ci-head .package-name span { margin-left: 0.3em; }
-.ci-variant { font-weight: bold; }
-.ci-result {
-  padding: 6px;
-  margin-top: 4px;
+div.ci {
+  margin-top: 1px;
+  margin-bottom: 1px;
 }
-.ci-result li {
-  list-style-type: none;
-  padding: 0.3em 0.8em;
-  margin-top: 6px;
-  border-left: 4px solid;
+
+div.ci-msg {
+  padding: 0.7em 1em 0.5em;
 }
-.ci-result li:first-child { margin-top: 0px; }
-.ci-result li > span { display: block; }
+div.ci-msg span.ci-variant {
+  font-weight: bold;
+}
+
+div.ci-stats {
+  padding: 0.5em 1em;
+}
+div.ci-stats span.count {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid;
+}
+
+div.ci-detail {
+  padding: 6px 0.5em;
+}
+
+div.ci-detail table td,
+div.ci-detail table th {
+  vertical-align: text-top;
+}
+
+div.ci-detail table th[data-cid="kind"],
+div.ci-detail table th[data-cid="obj_type"] {
+  white-space: nowrap
+}
+
+div.ci-detail table td[data-cid="kind"] span {
+  display: inline-block;
+  border-radius: 3px;
+  width: 1em;
+  height: 1em;
+  vertical-align: inherit;
+  color: transparent;
+}
+
+div.ci-detail table td[data-cid="text"] {
+  font-size: smaller;
+}
 
 /* FLOATING BUTTONS */
 
@@ -1323,7 +1405,6 @@ table.unit_tests {
   text-decoration: none;
   padding: 6px 12px;
   border-radius: 3px;
-  font-size: smaller;
 }
 .dialog li.dialog-commands input[type="button"],
 .dialog li.dialog-commands input[type="submit"] {
@@ -1332,6 +1413,7 @@ table.unit_tests {
   border-radius: 3px;
   cursor: pointer;
 }
+.dialog li.dialog-commands a.main,
 .dialog li.dialog-commands input[type="submit"].main {
   border: 1px solid transparent;
 }
@@ -1550,4 +1632,34 @@ table.unit_tests {
 }
 .modal .radio-container label:hover {
   background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* WHERE USED PAGE */
+
+div.wu-header {
+  padding: 8px 0.5em;
+  margin: 0px 0.5em;
+}
+div.wu {
+  padding: 8px 0.5em;
+}
+div.wu table thead tr:first-child {
+  /* TODO: maybe move this to default table style */
+  color: hsl(0, 0%, 80%);
+  text-transform: uppercase;
+  font-size: 90%;
+}
+div.wu table tbody {
+  font-size: 90%;
+  vertical-align: baseline; /* for second lines, used type */
+}
+div.wu table td[data-cid="dep_obj_name"] span.used-obj {
+  display: block;
+  color: hsl(0, 0%, 70%);
+  font-size: smaller;
+  text-transform: lowercase;
+}
+div.wu table td[data-gid="where"],
+div.wu table th[data-gid="where"] {
+  background-color: hsl(0, 0%, 97%);
 }

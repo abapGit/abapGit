@@ -46,7 +46,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     TYPES:
       ty_char32 TYPE c LENGTH 32 .
 
-    CLASS-DATA gv_max_threads TYPE i .
+    CLASS-DATA gv_max_processes TYPE i .
     DATA mt_files TYPE zif_abapgit_definitions=>ty_files_item_tt .
     DATA mv_free TYPE i .
     DATA mi_log TYPE REF TO zif_abapgit_log .
@@ -54,6 +54,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     DATA mo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit.
     DATA ms_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings.
     DATA ms_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
+    DATA mo_abap_language_version TYPE REF TO zcl_abapgit_abap_language_vers.
 
     METHODS add_apack
       IMPORTING
@@ -98,11 +99,12 @@ CLASS zcl_abapgit_serialize DEFINITION
         VALUE(ct_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS determine_max_threads
+    METHODS determine_max_processes
       IMPORTING
         !iv_force_sequential TYPE abap_bool DEFAULT abap_false
+        iv_package           TYPE devclass
       RETURNING
-        VALUE(rv_threads)    TYPE i
+        VALUE(rv_processes)  TYPE i
       RAISING
         zcx_abapgit_exception .
     METHODS filter_unsupported_objects
@@ -116,14 +118,10 @@ CLASS zcl_abapgit_serialize DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
-    CLASS-METHODS determine_i18n_params
-      IMPORTING
-        !io_dot TYPE REF TO zcl_abapgit_dot_abapgit
-        !iv_main_language_only TYPE abap_bool
+
+    METHODS is_parallelization_possible
       RETURNING
-        VALUE(rs_i18n_params) TYPE zif_abapgit_definitions=>ty_i18n_params
-      RAISING
-        zcx_abapgit_exception.
+        VALUE(rv_result) TYPE abap_bool.
 
 ENDCLASS.
 
@@ -216,7 +214,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       iv_ignore_subpackages = ms_local_settings-ignore_subpackages
       iv_only_local_objects = ms_local_settings-only_local_objects
       io_dot                = mo_dot_abapgit
-      ii_log                = ii_log ).
+      ii_log                = ii_log
+      it_filter             = it_filter ).
 
     CREATE OBJECT lo_filter.
 
@@ -256,103 +255,69 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA lo_settings TYPE REF TO zcl_abapgit_settings.
-
-    lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
-
-    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true
-        OR lo_settings->get_parallel_proc_disabled( ) = abap_true.
-      gv_max_threads = 1.
-    ENDIF.
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
 
     mv_group = 'parallel_generators'.
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->change_rfc_server_group( CHANGING cv_group = mv_group ).
 
     mo_dot_abapgit = io_dot_abapgit.
     ms_local_settings = is_local_settings.
 
-    ms_i18n_params = determine_i18n_params(
-      io_dot = io_dot_abapgit
-      iv_main_language_only = is_local_settings-main_language_only ).
+    IF io_dot_abapgit IS BOUND.
+      ms_i18n_params = io_dot_abapgit->determine_i18n_parameters( is_local_settings-main_language_only ).
+    ELSE.
+      ms_i18n_params-main_language      = sy-langu.
+      ms_i18n_params-main_language_only = is_local_settings-main_language_only.
+    ENDIF.
+
+    CREATE OBJECT mo_abap_language_version
+      EXPORTING
+        io_dot_abapgit = mo_dot_abapgit.
 
   ENDMETHOD.
 
 
-  METHOD determine_i18n_params.
-
-    " TODO: unify with ZCL_ABAPGIT_OBJECTS=>DETERMINE_I18N_PARAMS, same code
-
-    IF io_dot IS BOUND.
-      rs_i18n_params-main_language         = io_dot->get_main_language( ).
-      rs_i18n_params-use_lxe               = io_dot->use_lxe( ).
-      rs_i18n_params-main_language_only    = iv_main_language_only.
-      rs_i18n_params-translation_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
-        iv_main_language  = io_dot->get_main_language( )
-        it_i18n_languages = io_dot->get_i18n_languages( ) ).
-    ENDIF.
-
-    IF rs_i18n_params-main_language IS INITIAL.
-      rs_i18n_params-main_language = sy-langu.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD determine_max_threads.
+  METHOD determine_max_processes.
+    DATA: li_exit TYPE REF TO zif_abapgit_exit.
 
     IF iv_force_sequential = abap_true.
-      rv_threads = 1.
+      rv_processes = 1.
       RETURN.
     ENDIF.
 
-    IF gv_max_threads >= 1.
-* SPBT_INITIALIZE gives error PBT_ENV_ALREADY_INITIALIZED if called
-* multiple times in same session
-      rv_threads = gv_max_threads.
-      RETURN.
-    ENDIF.
+    IF gv_max_processes IS INITIAL AND is_parallelization_possible( ) = abap_true.
 
-    CALL FUNCTION 'FUNCTION_EXISTS'
-      EXPORTING
-        funcname           = 'Z_ABAPGIT_SERIALIZE_PARALLEL'
-      EXCEPTIONS
-        function_not_exist = 1
-        OTHERS             = 2.
-    IF sy-subrc <> 0.
-      gv_max_threads = 1.
-    ELSE.
-* todo, add possibility to set group name in user exit
-      CALL FUNCTION 'SPBT_INITIALIZE'
-        EXPORTING
-          group_name                     = mv_group
-        IMPORTING
-          free_pbt_wps                   = gv_max_threads
-        EXCEPTIONS
-          invalid_group_name             = 1
-          internal_error                 = 2
-          pbt_env_already_initialized    = 3
-          currently_no_resources_avail   = 4
-          no_pbt_resources_found         = 5
-          cant_init_different_pbt_groups = 6
-          OTHERS                         = 7.
-      IF sy-subrc <> 0.
-*   fallback to running sequentially. If SPBT_INITIALIZE fails, check transactions
-*   RZ12, SM50, SM21, SARFC
-        gv_max_threads = 1.
+      gv_max_processes = zcl_abapgit_factory=>get_environment( )->init_parallel_processing( mv_group ).
+
+      IF gv_max_processes > 1.
+        gv_max_processes = gv_max_processes - 1.
       ENDIF.
+
+      IF gv_max_processes > 32.
+        " https://en.wikipedia.org/wiki/Amdahl%27s_law
+        gv_max_processes = 32.
+      ENDIF.
+
     ENDIF.
 
-    IF gv_max_threads > 1.
-      gv_max_threads = gv_max_threads - 1.
+    IF gv_max_processes IS INITIAL.
+      " fallback to running sequentially.
+      gv_max_processes = 1.
     ENDIF.
 
-    ASSERT gv_max_threads >= 1.
+    rv_processes = gv_max_processes.
 
-    IF gv_max_threads > 32.
-* https://en.wikipedia.org/wiki/Amdahl%27s_law
-      gv_max_threads = 32.
-    ENDIF.
+    ASSERT rv_processes >= 1.
 
-    rv_threads = gv_max_threads.
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->change_max_parallel_processes(
+      EXPORTING
+        iv_package       = iv_package
+      CHANGING
+        cv_max_processes = rv_processes ).
+
+    ASSERT rv_processes >= 1. " check exit above
 
   ENDMETHOD.
 
@@ -442,7 +407,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         CLEAR: <ls_ignored_count>-obj_name.
         <ls_ignored_count>-count = <ls_ignored_count>-count + 1.
       ENDIF.
-      " init object so we can remove these entries afterwards
+      " init object so we can remove these entries afterward
       CLEAR <ls_tadir>-object.
     ENDLOOP.
     IF lt_ignored_count IS INITIAL.
@@ -454,11 +419,10 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     LOOP AT lt_ignored_count ASSIGNING <ls_ignored_count>.
       IF <ls_ignored_count>-count = 1.
-        mi_log->add_warning( iv_msg  = |Object { <ls_ignored_count>-obj_type } {
-                                       <ls_ignored_count>-obj_name } ignored| ).
+        mi_log->add_warning( |Object { <ls_ignored_count>-obj_type } { <ls_ignored_count>-obj_name } ignored| ).
       ELSE.
-        mi_log->add_warning( iv_msg  = |Object type { <ls_ignored_count>-obj_type } with {
-                                       <ls_ignored_count>-count } objects ignored| ).
+        mi_log->add_warning( |Object type { <ls_ignored_count>-obj_type } with | &&
+                             |{ <ls_ignored_count>-count } objects ignored| ).
       ENDIF.
     ENDLOOP.
 
@@ -503,14 +467,28 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     IF mi_log IS BOUND.
       LOOP AT lt_unsupported_count ASSIGNING <ls_unsupported_count>.
         IF <ls_unsupported_count>-count = 1.
-          mi_log->add_error( iv_msg  = |Object type { <ls_unsupported_count>-obj_type } not supported, {
-                                       <ls_unsupported_count>-obj_name } ignored| ).
+          mi_log->add_error( |Object type { <ls_unsupported_count>-obj_type } not supported, | &&
+                             |{ <ls_unsupported_count>-obj_name } ignored| ).
         ELSE.
-          mi_log->add_error( iv_msg  = |Object type { <ls_unsupported_count>-obj_type } not supported, {
-                                       <ls_unsupported_count>-count } objects ignored| ).
+          mi_log->add_error( |Object type { <ls_unsupported_count>-obj_type } not supported, | &&
+                             |{ <ls_unsupported_count>-count } objects ignored| ).
         ENDIF.
       ENDLOOP.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD is_parallelization_possible.
+
+    rv_result = boolc( zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false
+                   AND zcl_abapgit_persist_factory=>get_settings( )->read( )->get_parallel_proc_disabled( ) = abap_false
+                   AND mv_group IS NOT INITIAL
+                   " The function module below should always exist here as is_merged evaluated to false above.
+                   " It does however not exist in the transpiled version which then causes unit tests to fail.
+                   " Therefore the check needs to stay.
+                   AND zcl_abapgit_factory=>get_function_module(
+                                         )->function_exists( 'Z_ABAPGIT_SERIALIZE_PARALLEL' ) = abap_true ).
 
   ENDMETHOD.
 
@@ -559,9 +537,11 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     DATA: lv_msg  TYPE c LENGTH 100,
           lv_task TYPE c LENGTH 32,
           lv_free LIKE mv_free.
-
+    DATA lv_abap_language_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
 
     ASSERT mv_free > 0.
+
+    lv_abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
 
     DO.
       lv_task = |{ iv_task }-{ sy-index }|.
@@ -574,6 +554,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           iv_obj_name           = is_tadir-obj_name
           iv_devclass           = is_tadir-devclass
           iv_path               = is_tadir-path
+          iv_srcsystem          = is_tadir-srcsystem
+          iv_abap_language_vers = lv_abap_language_version
           iv_language           = ms_i18n_params-main_language
           iv_main_language_only = ms_i18n_params-main_language_only
           it_translation_langs  = ms_i18n_params-translation_languages
@@ -603,20 +585,16 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     DATA: lx_error     TYPE REF TO zcx_abapgit_exception,
           ls_file_item TYPE zif_abapgit_objects=>ty_serialization.
 
-
     ls_file_item-item-obj_type  = is_tadir-object.
     ls_file_item-item-obj_name  = is_tadir-obj_name.
     ls_file_item-item-devclass  = is_tadir-devclass.
     ls_file_item-item-srcsystem = is_tadir-srcsystem.
-    ls_file_item-item-origlang  = is_tadir-masterlang.
+    ls_file_item-item-abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
 
     TRY.
         ls_file_item = zcl_abapgit_objects=>serialize(
-          is_item               = ls_file_item-item
-          iv_language           = ms_i18n_params-main_language
-          iv_main_language_only = ms_i18n_params-main_language_only
-          iv_use_lxe            = ms_i18n_params-use_lxe
-          it_translation_langs  = ms_i18n_params-translation_languages ).
+          is_item        = ls_file_item-item
+          io_i18n_params = zcl_abapgit_i18n_params=>new( is_params = ms_i18n_params ) ).
 
         add_to_return( is_file_item = ls_file_item
                        iv_path      = is_tadir-path ).
@@ -647,7 +625,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     CLEAR mt_files.
 
-    lv_max = determine_max_threads( iv_force_sequential ).
+    lv_max = determine_max_processes( iv_force_sequential = iv_force_sequential
+                                      iv_package          = iv_package ).
     mv_free = lv_max.
     mi_log = ii_log.
 
@@ -669,14 +648,15 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       iv_count = lv_count )->start( ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-
-      li_progress->show(
-        iv_current = sy-tabix
-        iv_text    = |Serialize { <ls_tadir>-obj_name }, { lv_max } threads| ).
-
       IF lv_max = 1.
+        li_progress->show(
+          iv_current = sy-tabix
+          iv_text    = |Serialize { <ls_tadir>-obj_name }, { lv_max } thread| ).
         run_sequential( <ls_tadir> ).
       ELSE.
+        li_progress->show(
+          iv_current = sy-tabix
+          iv_text    = |Serialize { <ls_tadir>-obj_name }, { lv_max } threads| ).
         run_parallel(
           is_tadir = <ls_tadir>
           iv_task  = |{ sy-tabix }| ).

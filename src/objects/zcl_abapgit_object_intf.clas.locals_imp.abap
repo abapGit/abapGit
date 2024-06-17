@@ -28,8 +28,8 @@ CLASS lcl_aff_helper DEFINITION.
         descript TYPE seodescr,
         scotype  TYPE seoscotype,
       END OF ty_sub_component,
-      ty_compontents     TYPE STANDARD TABLE OF ty_component,
-      ty_sub_compontents TYPE STANDARD TABLE OF ty_sub_component.
+      ty_compontents     TYPE SORTED TABLE OF ty_component WITH UNIQUE DEFAULT KEY,
+      ty_sub_compontents TYPE SORTED TABLE OF ty_sub_component WITH UNIQUE DEFAULT KEY.
 
     CLASS-METHODS:
       get_attributes
@@ -88,9 +88,9 @@ CLASS lcl_aff_helper IMPLEMENTATION.
     SELECT sub_component~cmpname sub_component~sconame sub_component_text~descript sub_component~scotype
       INTO TABLE lt_sub_components
       FROM seosubco AS sub_component JOIN seosubcotx AS sub_component_text
-      ON  sub_component~clsname = sub_component_text~clsname
-          AND sub_component~cmpname = sub_component_text~cmpname
-          AND sub_component~sconame = sub_component_text~sconame
+      ON sub_component~clsname = sub_component_text~clsname AND
+         sub_component~cmpname = sub_component_text~cmpname AND
+         sub_component~sconame = sub_component_text~sconame
       INNER JOIN seocompodf AS df
       ON sub_component~clsname = df~clsname AND
          sub_component~cmpname = df~cmpname
@@ -102,9 +102,9 @@ CLASS lcl_aff_helper IMPLEMENTATION.
 
 
     rs_properties-attributes = get_attributes( lt_components ).
-    rs_properties-methods = get_methods( is_components = lt_components
+    rs_properties-methods = get_methods( is_components     = lt_components
                                          is_sub_components = lt_sub_components ).
-    rs_properties-events = get_events( is_components = lt_components
+    rs_properties-events = get_events( is_components     = lt_components
                                        is_sub_components = lt_sub_components ).
     rs_properties-types = get_types( lt_components ).
   ENDMETHOD.
@@ -129,10 +129,11 @@ CLASS lcl_aff_helper IMPLEMENTATION.
     SELECT component~cmpname component_text~descript component~cmptype
       INTO TABLE lt_components
       FROM seocompo AS component
-     LEFT OUTER JOIN seocompotx AS component_text
+      LEFT OUTER JOIN seocompotx AS component_text
       ON component~cmpname = component_text~cmpname AND component~clsname    = component_text~clsname
                                                     AND component_text~langu = iv_language
-      WHERE component~clsname = iv_clif_name.          "#EC CI_BUFFJOIN
+      WHERE component~clsname = iv_clif_name
+      ORDER BY component~cmpname.                      "#EC CI_BUFFJOIN
 
     SELECT sub_component~cmpname sub_component~sconame sub_component_text~descript sub_component~scotype
       INTO TABLE lt_sub_components
@@ -151,9 +152,9 @@ CLASS lcl_aff_helper IMPLEMENTATION.
     ENDLOOP.
 
     rs_properties-attributes = get_attributes( lt_components_exp ).
-    rs_properties-methods = get_methods( is_components = lt_components_exp
+    rs_properties-methods = get_methods( is_components     = lt_components_exp
                                          is_sub_components = lt_sub_components ).
-    rs_properties-events = get_events( is_components = lt_components_exp
+    rs_properties-events = get_events( is_components     = lt_components_exp
                                        is_sub_components = lt_sub_components ).
     rs_properties-types = get_types( lt_components_exp ).
 
@@ -338,17 +339,17 @@ CLASS lcl_aff_helper IMPLEMENTATION.
 
   METHOD set_descriptions_compo_subco.
     set_attributes( is_properties = is_properties
-                    iv_clif_name = iv_clif_name
-                    iv_language = iv_language ).
+                    iv_clif_name  = iv_clif_name
+                    iv_language   = iv_language ).
     set_methods( is_properties = is_properties
-                 iv_clif_name = iv_clif_name
-                 iv_language = iv_language ).
+                 iv_clif_name  = iv_clif_name
+                 iv_language   = iv_language ).
     set_events( is_properties = is_properties
-                iv_clif_name = iv_clif_name
-                iv_language = iv_language ).
+                iv_clif_name  = iv_clif_name
+                iv_language   = iv_language ).
     set_types( is_properties = is_properties
-               iv_clif_name = iv_clif_name
-               iv_language = iv_language ).
+               iv_clif_name  = iv_clif_name
+               iv_language   = iv_language ).
   ENDMETHOD.
 
 ENDCLASS.
@@ -386,8 +387,8 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
 
     " get descriptions
     ls_data_aff-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
-                              iv_language  = ls_data_aff-header-original_language
-                              iv_clif_name = ls_data_abapgit-vseointerf-clsname ).
+      iv_language  = ls_data_aff-header-original_language
+      iv_clif_name = ls_data_abapgit-vseointerf-clsname ).
 
     es_data = ls_data_aff.
   ENDMETHOD.
@@ -401,14 +402,14 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
 
     ls_data_aff = iv_data.
 
-    lv_classname = iv_object_name.
+    lv_classname = to_upper( iv_object_name ).
 
     set_abapgit_descriptions( EXPORTING is_clsname          = lv_classname
                                         is_intf_aff         = ls_data_aff
                               IMPORTING et_descriptions     = ls_data_abapgit-description
                                         et_descriptions_sub = ls_data_abapgit-description_sub ).
 
-    ls_data_abapgit-vseointerf-clsname = iv_object_name.
+    ls_data_abapgit-vseointerf-clsname  = lv_classname.
     ls_data_abapgit-vseointerf-descript = ls_data_aff-header-description.
     ls_data_abapgit-vseointerf-category = ls_data_aff-category.
     ls_data_abapgit-vseointerf-unicode  = ls_data_aff-header-abap_language_version.
@@ -501,9 +502,20 @@ CLASS lcl_aff_metadata_handler DEFINITION.
       IMPORTING is_intf          TYPE zcl_abapgit_object_intf=>ty_intf
       RETURNING VALUE(rv_result) TYPE xstring
       RAISING   zcx_abapgit_exception.
+    CLASS-METHODS serialize_translations
+      IMPORTING is_intf          TYPE zcl_abapgit_object_intf=>ty_intf
+                it_language      TYPE zif_abapgit_definitions=>ty_languages
+      RETURNING VALUE(rt_result) TYPE zif_abapgit_i18n_file=>ty_table_of
+      RAISING   zcx_abapgit_exception.
     CLASS-METHODS deserialize
-      IMPORTING iv_data          TYPE xstring
+      IMPORTING iv_data          TYPE string
       RETURNING VALUE(rv_result) TYPE zif_abapgit_aff_intf_v1=>ty_main
+      RAISING   zcx_abapgit_exception.
+    CLASS-METHODS deserialize_translation
+      IMPORTING io_files           TYPE REF TO zcl_abapgit_objects_files
+                is_item            TYPE zif_abapgit_definitions=>ty_item
+      EXPORTING et_description     TYPE zcl_abapgit_object_intf=>ty_intf-description
+                et_description_sub TYPE zcl_abapgit_object_intf=>ty_intf-description_sub
       RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
     CLASS-METHODS:
@@ -514,7 +526,11 @@ CLASS lcl_aff_metadata_handler DEFINITION.
       "! For serialization
       "! @parameter rt_result | Paths that will not be serialized (depending on value)
       get_paths_to_skip
-        RETURNING VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_skip_paths.
+        RETURNING VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_skip_paths,
+      fill_translation
+        IMPORTING iv_name          TYPE seoclsname
+                  iv_language      TYPE laiso
+        RETURNING VALUE(rt_result) TYPE zif_abapgit_aff_intf_v1=>ty_main.
 ENDCLASS.
 
 CLASS lcl_aff_metadata_handler IMPLEMENTATION.
@@ -599,7 +615,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     lt_values_for_initial = get_paths_to_skip( ).
 
     lt_default_abap_langu_version-path  = '/header/abap_language_version'.
-    lt_default_abap_langu_version-value = 'standard'.
+    lt_default_abap_langu_version-value = zif_abapgit_dot_abapgit=>c_abap_language_version-standard.
     APPEND lt_default_abap_langu_version TO lt_values_for_initial.
 
     lt_enum_mappings = get_mappings( ).
@@ -608,16 +624,111 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     CREATE OBJECT lo_ajson.
     TRY.
         lo_ajson->deserialize(
-           EXPORTING
-             iv_content = iv_data
-             iv_defaults = lt_values_for_initial
-             iv_enum_mappings = lt_enum_mappings
-           IMPORTING
-             ev_data    = rv_result ).
+          EXPORTING
+            iv_content       = iv_data
+            iv_defaults      = lt_values_for_initial
+            iv_enum_mappings = lt_enum_mappings
+          IMPORTING
+            ev_data          = rv_result ).
       CATCH cx_static_check INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
 
   ENDMETHOD.
 
+  METHOD serialize_translations.
+    DATA: ls_data        TYPE zif_abapgit_aff_intf_v1=>ty_main,
+          lv_langu       TYPE laiso,
+          lv_json        TYPE string,
+          lo_ajson       TYPE REF TO zif_abapgit_ajson,
+          lo_json_path   TYPE REF TO zcl_abapgit_json_path,
+          lt_translation TYPE string_table,
+          lx_exception   TYPE REF TO zcx_abapgit_ajson_error,
+          lo_trans_file  TYPE REF TO zcl_abapgit_properties_file.
+
+
+    LOOP AT it_language INTO lv_langu.
+
+      ls_data = fill_translation( iv_name  = is_intf-vseointerf-clsname
+                                  iv_language = lv_langu ).
+
+      " convert AFF type to JSON
+      TRY.
+          lo_ajson = zcl_abapgit_ajson=>new( iv_keep_item_order = abap_true
+            )->set( iv_path = '/'
+                    iv_val  = ls_data
+            )->map( zcl_abapgit_ajson_mapping=>create_to_camel_case( )
+            )->filter( zcl_abapgit_ajson_filter_lib=>create_empty_filter( ) ).
+          " remove manually the non-primitive types that are initial or not relevant for translation
+          lo_ajson->delete( '/category/' ).
+          lo_ajson->delete( '/proxy/' ).
+          lv_json = lo_ajson->stringify( ).
+        CATCH zcx_abapgit_ajson_error INTO lx_exception.
+          zcx_abapgit_exception=>raise_with_text( lx_exception ).
+      ENDTRY.
+
+
+      CREATE OBJECT lo_json_path.
+      lt_translation = lo_json_path->serialize( lv_json ).
+
+      CREATE OBJECT lo_trans_file
+        EXPORTING iv_lang = lv_langu.
+
+      lo_trans_file->push_text_pairs( lt_translation ).
+
+      APPEND lo_trans_file TO rt_result.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD fill_translation.
+    DATA: lv_langu_sap1 TYPE sy-langu.
+
+    lv_langu_sap1 = zcl_abapgit_convert=>language_sap2_to_sap1( iv_language ).
+
+    rt_result-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
+      iv_clif_name = iv_name
+      iv_language  = lv_langu_sap1 ).
+
+    SELECT SINGLE descript FROM seoclasstx INTO rt_result-header-description
+    WHERE clsname = iv_name AND
+          langu   = lv_langu_sap1.
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_translation.
+    DATA: lo_properties_file  TYPE REF TO zcl_abapgit_properties_file,
+          lt_translation_file TYPE zif_abapgit_i18n_file=>ty_table_of,
+          li_translation_file LIKE LINE OF lt_translation_file,
+          ls_aff_data         TYPE zif_abapgit_aff_intf_v1=>ty_main,
+          lo_type_mapper      TYPE REF TO zif_abapgit_aff_type_mapping,
+          ls_ag_data          TYPE zcl_abapgit_object_intf=>ty_intf.
+
+    lt_translation_file = io_files->read_i18n_files( ).
+
+    LOOP AT lt_translation_file INTO li_translation_file.
+
+      CLEAR ls_ag_data.
+
+      lo_properties_file ?= li_translation_file.
+      lo_properties_file->get_translations( IMPORTING ev_data = ls_aff_data ).
+
+      ls_aff_data-header-original_language = to_upper( li_translation_file->lang( ) ). " is target language
+
+      CREATE OBJECT lo_type_mapper TYPE lcl_aff_type_mapping.
+      lo_type_mapper->to_abapgit(
+        EXPORTING
+          iv_data        = ls_aff_data
+          iv_object_name = is_item-obj_name
+        IMPORTING
+          es_data        = ls_ag_data ).
+
+      APPEND LINES OF ls_ag_data-description TO et_description.
+      APPEND LINES OF ls_ag_data-description_sub TO et_description_sub.
+
+    ENDLOOP.
+
+  ENDMETHOD.
 ENDCLASS.

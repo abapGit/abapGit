@@ -381,7 +381,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
     io_checklist->get_error_messages( IMPORTING p_error_tab = lt_message ).
 
     LOOP AT lt_message ASSIGNING <ls_message> WHERE mtype = 'E'.
-      " When activting without popup, includes used in multiple main programs cause error
+      " When activating without popup, includes used in multiple main programs cause error
       " Run again WITH activation popup (see abapGit, Personal Settings)
       IF <ls_message>-message-msgid = 'EU' AND <ls_message>-message-msgno = '404'.
         rv_try_again = abap_true.
@@ -392,6 +392,8 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
         ls_item-obj_name = <ls_message>-object_text+5(*).
       ELSE.
         ls_item-obj_name = <ls_message>-show_req->object_name.
+        SELECT SINGLE tadir FROM euobjedit INTO ls_item-obj_type
+          WHERE type = <ls_message>-show_req->object_type.
       ENDIF.
       LOOP AT <ls_message>-mtext ASSIGNING <lv_msg>.
         ii_log->add_error(
@@ -428,7 +430,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    " Only error messsages
+    " Only error messages
     DELETE lt_lines WHERE severity <> 'E'
                       AND severity <> 'W'.
     " Remove "Return code..." message
@@ -591,7 +593,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
           ls_item    TYPE zif_abapgit_definitions=>ty_item,
           lv_msg     TYPE string,
           lv_error   TYPE c LENGTH 1,
-          lv_include TYPE programm.
+          lv_include TYPE syrepid.
 
     LOOP AT gt_classes INTO ls_class.
       CASE ls_class-object.
@@ -624,13 +626,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
   METHOD use_new_activation_logic.
 
-    CALL FUNCTION 'FUNCTION_EXISTS'
-      EXPORTING
-        funcname           = 'DD_MASS_ACT_C3'
-      EXCEPTIONS
-        function_not_exist = 1
-        OTHERS             = 2.
-    IF sy-subrc = 0.
+    IF zcl_abapgit_factory=>get_function_module( )->function_exists( 'DD_MASS_ACT_C3' ) = abap_true.
       rv_use_new_activation_logic = abap_true.
     ENDIF.
 

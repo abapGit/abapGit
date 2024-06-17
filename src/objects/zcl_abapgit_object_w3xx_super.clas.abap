@@ -22,13 +22,16 @@ CLASS zcl_abapgit_object_w3xx_super DEFINITION
 
     METHODS constructor
       IMPORTING
-        !is_item     TYPE zif_abapgit_definitions=>ty_item
-        !iv_language TYPE spras .
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
     TYPES ty_bdcdata TYPE STANDARD TABLE OF bdcdata
                            WITH NON-UNIQUE DEFAULT KEY.
-
-    METHODS get_metadata REDEFINITION.
 
     METHODS change_bdc_jump_data ABSTRACT
       CHANGING
@@ -66,10 +69,16 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
 
 
   METHOD constructor.
-    super->constructor( is_item = is_item
-                        iv_language = iv_language ).
+
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
+
     ms_key-relid = ms_item-obj_type+2(2).
     ms_key-objid = ms_item-obj_name.
+
   ENDMETHOD.
 
 
@@ -94,12 +103,6 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
                          iv_name = c_param_names-fileext ).
     SHIFT rv_ext LEFT DELETING LEADING '.'.
 
-  ENDMETHOD.
-
-
-  METHOD get_metadata.
-    rs_metadata         = super->get_metadata( ).
-    rs_metadata-version = 'v2.0.0'. " Serialization v2, separate data file
   ENDMETHOD.
 
 
@@ -216,8 +219,8 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
                       CHANGING  cg_data = lv_base64str ).
         lv_xstring = cl_http_utility=>decode_x_base64( lv_base64str ).
       WHEN 'v2.0.0'.
-        lv_xstring = zif_abapgit_object~mo_files->read_raw( iv_extra = 'data'
-                                                    iv_ext   = get_ext( lt_w3params ) ).
+        lv_xstring = mo_files->read_raw( iv_extra = 'data'
+                                         iv_ext   = get_ext( lt_w3params ) ).
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( 'W3xx: Unknown serializer version' ).
     ENDCASE.
@@ -332,7 +335,8 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
+    rs_metadata         = get_metadata( ).
+    rs_metadata-version = 'v2.0.0'. " Serialization v2, separate data file
   ENDMETHOD.
 
 
@@ -387,7 +391,7 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
     ls_bdcdata-fval = '=ONLI'.
     APPEND ls_bdcdata TO lt_bdcdata.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = 'SMW0'
       it_bdcdata = lt_bdcdata ).
 
@@ -494,10 +498,10 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
     io_xml->add( iv_name = 'PARAMS'
                  ig_data = lt_w3params ).
 
-    " Seriazation v2, separate data file. 'extra' added to prevent conflict with .xml
-    zif_abapgit_object~mo_files->add_raw( iv_data  = lv_xstring
-                                  iv_extra = 'data'
-                                  iv_ext   = get_ext( lt_w3params ) ).
+    " Serialization v2, separate data file. 'extra' added to prevent conflict with .xml
+    mo_files->add_raw( iv_data  = lv_xstring
+                       iv_extra = 'data'
+                       iv_ext   = get_ext( lt_w3params ) ).
 
   ENDMETHOD.
 ENDCLASS.

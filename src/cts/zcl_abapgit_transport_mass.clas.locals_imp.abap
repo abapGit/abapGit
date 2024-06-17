@@ -13,10 +13,6 @@ CLASS lcl_gui DEFINITION FINAL.
     CLASS-METHODS select_tr_requests
       RETURNING
         VALUE(rt_trkorr) TYPE trwbo_request_headers.
-
-  PRIVATE SECTION.
-    CLASS-DATA gv_last_folder TYPE string.
-
 ENDCLASS.
 
 CLASS lcl_gui IMPLEMENTATION.
@@ -32,12 +28,8 @@ CLASS lcl_gui IMPLEMENTATION.
     lo_fe_serv->directory_browse(
       EXPORTING
          iv_window_title   = lv_title
-         iv_initial_folder = gv_last_folder
       CHANGING
         cv_selected_folder = rv_folder ).
-
-    "Store the last directory for user friendly UI
-    gv_last_folder = rv_folder.
 
   ENDMETHOD.
 
@@ -71,7 +63,7 @@ CLASS lcl_gui IMPLEMENTATION.
         iv_via_selscreen       = 'X'
         is_selection           = ls_selection
         iv_complete_projects   = space
-        iv_title               = 'ABAPGit Transport Mass Downloader'
+        iv_title               = 'abapGit Transport Mass Downloader'
         is_popup               = ls_popup
       IMPORTING
         et_requests            = rt_trkorr
@@ -165,7 +157,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD does_folder_exist.
-    rv_folder_exist = zcl_abapgit_ui_factory=>get_frontend_services( )->directory_exist( iv_directory = iv_folder ).
+    rv_folder_exist = zcl_abapgit_ui_factory=>get_frontend_services( )->directory_exist( iv_folder ).
   ENDMETHOD.
 
   METHOD get_full_folder.

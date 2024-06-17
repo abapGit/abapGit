@@ -3,13 +3,15 @@ CLASS zcl_abapgit_object_dtdc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
-    METHODS:
-      constructor
-        IMPORTING
-          is_item     TYPE zif_abapgit_definitions=>ty_item
-          iv_language TYPE spras
-        RAISING
-          zcx_abapgit_exception.
+    METHODS constructor
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
@@ -132,8 +134,10 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor(
-        is_item     = is_item
-        iv_language = iv_language ).
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     mv_dynamic_cache_key = ms_item-obj_name.
     mv_has_own_wb_data_class = has_own_wb_data_class( ).
@@ -324,7 +328,7 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
                TO <lv_source>.
         ASSERT sy-subrc = 0.
 
-        <lv_source> = zif_abapgit_object~mo_files->read_string( 'asdtdc' ).
+        <lv_source> = mo_files->read_string( 'asdtdc' ).
 
         tadir_insert( iv_package ).
 
@@ -474,7 +478,7 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
         iv_name = 'DTDC'
         ig_data = <ls_dynamic_cache> ).
 
-    zif_abapgit_object~mo_files->add_string(
+    mo_files->add_string(
         iv_ext    = 'asdtdc'
         iv_string = lv_source ).
 

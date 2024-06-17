@@ -69,7 +69,7 @@ CLASS zcl_abapgit_object_aqbg IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
     SELECT SINGLE bgunam FROM aqgdbbg INTO rv_user WHERE num = ms_item-obj_name.
     IF sy-subrc <> 0.
-      rv_user = zcl_abapgit_objects_super=>c_user_unknown.
+      rv_user = c_user_unknown.
     ENDIF.
   ENDMETHOD.
 
@@ -144,7 +144,7 @@ CLASS zcl_abapgit_object_aqbg IMPLEMENTATION.
     <ls_bdcdata>-fnam = 'RS38S-BGNUM'.
     <ls_bdcdata>-fval = ms_item-obj_name.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode      = 'SQ03'
       it_bdcdata    = lt_bdcdata ).
 

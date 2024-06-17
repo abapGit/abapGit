@@ -7,3 +7,10 @@ output
 ci/*.abap
 allure-report
 coverage
+Heap.*
+list.txt
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+.DS_Store

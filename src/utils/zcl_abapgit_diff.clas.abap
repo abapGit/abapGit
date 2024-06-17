@@ -3,7 +3,7 @@ CLASS zcl_abapgit_diff DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
-    CONSTANTS co_starting_beacon TYPE i VALUE 1.
+    CONSTANTS c_starting_beacon TYPE i VALUE 1.
 
 * assumes data is UTF8 based with newlines
     METHODS constructor
@@ -352,7 +352,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
   METHOD map_beacons.
 
-    DATA: lv_beacon_idx  TYPE i VALUE co_starting_beacon,
+    DATA: lv_beacon_idx  TYPE i VALUE c_starting_beacon,
           lv_offs        TYPE i,
           lv_beacon_str  TYPE string,
           lv_beacon_2lev TYPE string,
@@ -415,9 +415,9 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
     LOOP AT mt_diff ASSIGNING <ls_diff>
                     USING KEY new_num
                     WHERE old     = is_diff_old-old
-                    AND   new     = is_diff_old-new
-                    AND   new_num = is_diff_old-new_num
-                    AND   old_num = is_diff_old-old_num.
+                      AND new     = is_diff_old-new
+                      AND new_num = is_diff_old-new_num
+                      AND old_num = is_diff_old-old_num.
 
       <ls_diff>-patch_flag = iv_patch_flag.
       EXIT.
@@ -513,7 +513,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
     lv_old = zcl_abapgit_convert=>xstring_to_string_utf8( iv_old ).
 
     " Check if one value contains a final newline but the other not
-    " If yes, add a special characters that's visible in diff render
+    " If yes, add a special character that's visible in diff render
     IF lv_new IS NOT INITIAL.
       lv_new_last = substring(
         val = lv_new

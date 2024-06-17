@@ -1,10 +1,16 @@
 CLASS zcl_abapgit_gui_page_stage DEFINITION
   PUBLIC
+  INHERITING FROM zcl_abapgit_gui_component
   FINAL
-  CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_gui_hotkeys.
+
+    INTERFACES:
+      zif_abapgit_gui_event_handler,
+      zif_abapgit_gui_hotkeys,
+      zif_abapgit_gui_menu_provider,
+      zif_abapgit_gui_renderable.
 
     CONSTANTS: BEGIN OF c_action,
                  stage_refresh TYPE string VALUE 'stage_refresh',
@@ -13,20 +19,29 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
                  stage_filter  TYPE string VALUE 'stage_filter',
                END OF c_action.
 
+    CLASS-METHODS create
+      IMPORTING
+        io_repo        TYPE REF TO zcl_abapgit_repo_online
+        iv_seed        TYPE string OPTIONAL
+        iv_sci_result  TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
+        ii_obj_filter  TYPE REF TO zif_abapgit_object_filter OPTIONAL
+        ii_force_refresh TYPE abap_bool DEFAULT abap_true
+      RETURNING
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+      RAISING
+        zcx_abapgit_exception.
+
     METHODS constructor
       IMPORTING
         io_repo       TYPE REF TO zcl_abapgit_repo_online
         iv_seed       TYPE string OPTIONAL
         iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
         ii_obj_filter TYPE REF TO zif_abapgit_object_filter OPTIONAL
+        ii_force_refresh TYPE abap_bool DEFAULT abap_true
       RAISING
         zcx_abapgit_exception.
 
-    METHODS zif_abapgit_gui_event_handler~on_event REDEFINITION.
-
   PROTECTED SECTION.
-    METHODS:
-      render_content REDEFINITION.
 
   PRIVATE SECTION.
 
@@ -94,9 +109,6 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         VALUE(ro_stage) TYPE REF TO zcl_abapgit_stage
       RAISING
         zcx_abapgit_exception .
-    METHODS build_menu
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS get_page_patch
       IMPORTING
         !io_stage      TYPE REF TO zcl_abapgit_stage
@@ -125,29 +137,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
-
-
-  METHOD build_menu.
-
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
-
-    IF lines( ms_files-local ) > 0
-    OR lines( ms_files-remote ) > 0.
-      ro_menu->add(
-        iv_txt = 'Refresh'
-        iv_act = |{ c_action-stage_refresh }|
-        iv_opt = zif_abapgit_html=>c_html_opt-strong
-      )->add(
-        iv_txt = |Diff|
-        iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mo_repo->get_key( ) }|
-      )->add(
-        iv_txt = |Patch|
-        iv_typ = zif_abapgit_html=>c_action_type-onclick
-        iv_id  = |patchBtn| ).
-    ENDIF.
-
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
 
   METHOD check_selected.
@@ -196,7 +186,11 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     super->constructor( ).
 
-    ms_control-page_title = 'Stage'.
+    " force refresh on stage, to make sure the latest local and remote files are used
+    IF ii_force_refresh = abap_true.
+      io_repo->refresh( ).
+    ENDIF.
+
     mo_repo               = io_repo.
     mv_seed               = iv_seed.
     mv_sci_result         = iv_sci_result.
@@ -208,7 +202,6 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ENDIF.
 
     init_files( ).
-    ms_control-page_menu = build_menu( ).
 
   ENDMETHOD.
 
@@ -232,6 +225,26 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         rv_count = rv_count + 1.
       ENDIF.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD create.
+
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_stage.
+
+    CREATE OBJECT lo_component
+      EXPORTING
+        io_repo       = io_repo
+        iv_seed       = iv_seed
+        iv_sci_result = iv_sci_result
+        ii_force_refresh = ii_force_refresh
+        ii_obj_filter = ii_obj_filter.
+
+    ri_page = zcl_abapgit_gui_page_hoc=>create(
+      iv_page_title         = 'Stage'
+      ii_page_menu_provider = lo_component
+      ii_child_component    = lo_component ).
 
   ENDMETHOD.
 
@@ -343,22 +356,18 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
   METHOD get_page_patch.
 
-    DATA: lo_page  TYPE REF TO zcl_abapgit_gui_page_patch,
-          lv_key   TYPE zif_abapgit_persistence=>ty_repo-key,
+    DATA: lv_key   TYPE zif_abapgit_persistence=>ty_repo-key,
           lt_files TYPE zif_abapgit_definitions=>ty_stage_tt.
 
     lv_key = mo_repo->get_key( ).
     lt_files = io_stage->get_all( ).
 
     DELETE lt_files WHERE method <> zif_abapgit_definitions=>c_method-add
-                    AND   method <> zif_abapgit_definitions=>c_method-rm.
+                      AND method <> zif_abapgit_definitions=>c_method-rm.
 
-    CREATE OBJECT lo_page
-      EXPORTING
-        iv_key   = lv_key
-        it_files = lt_files.
-
-    ri_page = lo_page.
+    ri_page  = zcl_abapgit_gui_page_patch=>create(
+      iv_key   = lv_key
+      it_files = lt_files ).
 
   ENDMETHOD.
 
@@ -424,33 +433,6 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_content.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    ri_html->add( '<div class="repo">' ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-      io_repo = mo_repo
-      iv_interactive_branch = abap_true ) ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
-    ri_html->add( render_main_language_warning( ) ).
-
-    ri_html->add( '<div class="stage-container">' ).
-    ri_html->add( render_actions( ) ).
-    ri_html->add( render_list( ) ).
-    ri_html->add( '</div>' ).
-
-    ri_html->add( '</div>' ).
-
-    register_handlers( ).
-    gui_services( )->get_html_parts( )->add_part(
-      iv_collection = zcl_abapgit_gui_component=>c_html_parts-hidden_forms
-      ii_part       = render_deferred_hidden_events( ) ).
-    register_deferred_script( render_scripts( ) ).
-
-  ENDMETHOD.
-
-
   METHOD render_deferred_hidden_events.
 
     DATA ls_event TYPE zcl_abapgit_gui_chunk_lib=>ty_event_signature.
@@ -499,7 +481,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ENDCASE.
 
     ri_html->add( '<td class="user">' ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name( iv_changed_by  ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name( iv_changed_by ) ).
     ri_html->add( '</td>' ).
 
     ri_html->add( '<td class="transport">' ).
@@ -620,7 +602,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
             item     = ls_item_remote
             filename = <ls_remote>-filename.
           IF sy-subrc <> 0.
-            READ TABLE lt_changed_by INTO ls_changed_by WITH KEY item = <ls_local>-item.
+            READ TABLE lt_changed_by INTO ls_changed_by WITH KEY item = ls_item_remote.
           ENDIF.
         CATCH zcx_abapgit_exception.
           CLEAR ls_transport.
@@ -769,7 +751,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
           filename = ls_file-filename.
       IF sy-subrc <> 0.
 * see https://github.com/abapGit/abapGit/issues/3073
-        zcx_abapgit_exception=>raise( iv_text =
+        zcx_abapgit_exception=>raise(
           |Unable to stage { ls_file-filename }. If the filename contains spaces, this is a known issue.| &&
           | Consider ignoring or staging the file at a later time.| ).
       ENDIF.
@@ -852,8 +834,6 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         mo_repo->refresh( abap_true ).
         init_files( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN OTHERS.
-        rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
     ENDCASE.
 
   ENDMETHOD.
@@ -884,6 +864,56 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ls_hotkey_action-action = `#`.
     ls_hotkey_action-hotkey = |f|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_menu_provider~get_menu.
+
+    CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-main'.
+
+    IF lines( ms_files-local ) > 0
+    OR lines( ms_files-remote ) > 0.
+      ro_toolbar->add(
+        iv_txt = 'Refresh'
+        iv_act = |{ c_action-stage_refresh }|
+        iv_opt = zif_abapgit_html=>c_html_opt-strong
+      )->add(
+        iv_txt = |Diff|
+        iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mo_repo->get_key( ) }|
+      )->add(
+        iv_txt = |Patch|
+        iv_typ = zif_abapgit_html=>c_action_type-onclick
+        iv_id  = |patchBtn| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~render.
+
+    register_handlers( ).
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<div class="repo">' ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
+      io_repo = mo_repo
+      iv_interactive_branch = abap_true ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
+    ri_html->add( render_main_language_warning( ) ).
+
+    ri_html->add( '<div class="stage-container">' ).
+    ri_html->add( render_actions( ) ).
+    ri_html->add( render_list( ) ).
+    ri_html->add( '</div>' ).
+
+    ri_html->add( '</div>' ).
+
+    gui_services( )->get_html_parts( )->add_part(
+      iv_collection = zcl_abapgit_gui_component=>c_html_parts-hidden_forms
+      ii_part       = render_deferred_hidden_events( ) ).
+    register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
 ENDCLASS.

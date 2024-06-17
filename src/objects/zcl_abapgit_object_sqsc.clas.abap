@@ -7,13 +7,14 @@ CLASS zcl_abapgit_object_sqsc DEFINITION
     INTERFACES:
       zif_abapgit_object.
 
-    METHODS:
-      constructor
-        IMPORTING
-          is_item     TYPE zif_abapgit_definitions=>ty_item
-          iv_language TYPE spras
-        RAISING
-          zcx_abapgit_exception.
+    METHODS constructor
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -118,8 +119,11 @@ CLASS zcl_abapgit_object_sqsc IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lv_dbproxyname> TYPE ty_abap_name.
 
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     TRY.
         CREATE OBJECT mo_proxy
@@ -154,8 +158,10 @@ CLASS zcl_abapgit_object_sqsc IMPLEMENTATION.
 
       CREATE OBJECT lo_interface
         EXPORTING
-          is_item     = ls_item
-          iv_language = mv_language.
+          is_item        = ls_item
+          iv_language    = mv_language
+          io_files       = mo_files
+          io_i18n_params = mo_i18n_params.
 
       lo_interface->zif_abapgit_object~delete( iv_package   = iv_package
                                                iv_transport = iv_transport ).
@@ -166,7 +172,20 @@ CLASS zcl_abapgit_object_sqsc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+
+    DATA lx_error TYPE REF TO cx_root.
+
+    TRY.
+        CALL METHOD mo_proxy->('IF_DBPROC_PROXY_UI~READ_FROM_SOURCE')
+          EXPORTING
+            if_version     = 'A'
+          IMPORTING
+            ef_change_user = rv_user.
+
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
+
   ENDMETHOD.
 
 

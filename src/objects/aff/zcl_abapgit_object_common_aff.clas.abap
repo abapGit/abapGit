@@ -1,3 +1,17 @@
+"! Provides common functionality for the abapGit integration of objects based on ABAP File Formats (AFF).
+"! It inherits from {@link ZCL_ABAPGIT_OBJECTS_SUPER} and implements the interface {@link ZIF_ABAPGIT_OBJECT}.
+"! <br/><br/>
+"! Each subclass must implement at least the abstract method ZIF_ABAPGIT_OBJECT~CHANGED_BY.
+"! In case you deal with a DDIC object, the methods GET_METADATA and ZIF_ABAPGIT_OBJECT~GET_DESERIALIZE_STEPS
+"! have to be redefined in the subclass.
+"! <br/><br/>
+"! In case the object has an additional file to the json file, the subclass needs
+"! to redefine the method GET_ADDITIONAL_EXTENSIONS.
+"! <br/><br/>
+"! This common class fully relies on the implementation of the object-specific AFF handler
+"! (it inherits from {@link CL_AFF_OBJECT_HANDLER}).
+"! Precisely, for the existence check-, serialization-, deserialization- or deletion-functionality, the corresponding
+"! AFF object handler method is called.
 CLASS zcl_abapgit_object_common_aff DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_objects_super
@@ -8,15 +22,40 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
 
     INTERFACES zif_abapgit_object
       ABSTRACT METHODS changed_by .
+
+    METHODS constructor
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
     TYPES: BEGIN OF ty_extension_mapper_pair,
+             "! file extension
              extension        TYPE string,
+             "! instance of {@link CL_AFF_FILE_NAME_MAPPER} providing file names for file extensions
              file_name_mapper TYPE REF TO object,
            END OF ty_extension_mapper_pair,
            ty_extension_mapper_pairs TYPE STANDARD TABLE OF ty_extension_mapper_pair WITH DEFAULT KEY.
 
+    "! Delivers other file extensions than json to be considered at serialize or deserialize of an object
     METHODS get_additional_extensions
-      RETURNING VALUE(rv_additional_extensions) TYPE ty_extension_mapper_pairs.
+      RETURNING VALUE(rv_additional_extensions) TYPE ty_extension_mapper_pairs ##NEEDED.
+
+    "! Delivers an instance of AFF object handler ({@link IF_AFF_OBJECT_HANDLER})
+    METHODS get_object_handler
+      RETURNING
+        VALUE(ro_object_handler) TYPE REF TO object
+      RAISING
+        zcx_abapgit_exception.
+
+
+    METHODS create_aff_setting_deserialize FINAL
+      RETURNING
+        VALUE(ro_settings_deserialize) TYPE REF TO object.
 
   PRIVATE SECTION.
     METHODS is_file_empty
@@ -25,6 +64,14 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
       RETURNING
         VALUE(rv_is_empty)  TYPE abap_bool.
 
+    CLASS-METHODS remove_abap_language_version
+      IMPORTING
+        iv_json_as_xstring               TYPE xstring
+      RETURNING
+        VALUE(rv_json_as_xstring_wo_alv) TYPE xstring
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -32,8 +79,54 @@ ENDCLASS.
 CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
 
+  METHOD constructor.
+
+    DATA:
+      lv_is_supported TYPE abap_bool,
+      li_aff_registry TYPE REF TO zif_abapgit_aff_registry,
+      lo_handler      TYPE REF TO object.
+
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
+
+    " Check if AFF handler exists and if object type is registered and supported
+    TRY.
+        lo_handler = get_object_handler( ).
+
+        CREATE OBJECT li_aff_registry TYPE zcl_abapgit_aff_registry.
+
+        lv_is_supported = li_aff_registry->is_supported_object_type( is_item-obj_type ).
+      CATCH cx_root.
+        lv_is_supported = abap_false.
+    ENDTRY.
+
+    IF lv_is_supported IS INITIAL.
+      zcx_abapgit_exception=>raise( |Object type { is_item-obj_type } is not supported by this system| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD get_additional_extensions.
     RETURN.
+  ENDMETHOD.
+
+
+  METHOD get_object_handler.
+
+    DATA lo_handler_factory TYPE REF TO object.
+
+    CREATE OBJECT lo_handler_factory TYPE ('CL_AFF_OBJECT_HANDLER_FACTORY').
+
+    CALL METHOD lo_handler_factory->('IF_AFF_OBJECT_HANDLER_FACTORY~GET_OBJECT_HANDLER')
+      EXPORTING
+        object_type = ms_item-obj_type
+      RECEIVING
+        result      = ro_object_handler.
+
   ENDMETHOD.
 
 
@@ -46,18 +139,39 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD remove_abap_language_version.
+    DATA lv_json TYPE string.
+    DATA lv_json_wo_alv TYPE string.
+    DATA li_json TYPE REF TO zif_abapgit_ajson.
+
+    lv_json = zcl_abapgit_convert=>xstring_to_string_utf8( iv_json_as_xstring ).
+
+    TRY.
+        li_json = zcl_abapgit_ajson=>parse( iv_json            = lv_json
+                                            iv_keep_item_order = abap_true ).
+        li_json->delete( '/header/abapLanguageVersion' ).
+        lv_json_wo_alv = li_json->stringify( 2 ).
+
+        rv_json_as_xstring_wo_alv = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json_wo_alv ).
+
+      CATCH zcx_abapgit_ajson_error.
+        rv_json_as_xstring_wo_alv = iv_json_as_xstring.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~delete.
 
-    DATA: lr_intf_aff_obj    TYPE REF TO data,
-          lr_intf_aff_log    TYPE REF TO data,
-          lr_messages        TYPE REF TO data,
-          lo_handler_factory TYPE REF TO object,
-          lo_object_handler  TYPE REF TO object,
-          lo_object_aff      TYPE REF TO object,
-          lo_aff_factory     TYPE REF TO object,
-          lv_name            TYPE c LENGTH 120,
-          lx_error           TYPE REF TO cx_root,
-          lo_aff_log         TYPE REF TO object.
+    DATA: lr_intf_aff_obj   TYPE REF TO data,
+          lr_intf_aff_log   TYPE REF TO data,
+          lr_messages       TYPE REF TO data,
+          lo_object_handler TYPE REF TO object,
+          lo_object_aff     TYPE REF TO object,
+          lo_aff_factory    TYPE REF TO object,
+          lv_name           TYPE c LENGTH 120,
+          lx_error          TYPE REF TO cx_root,
+          lo_aff_log        TYPE REF TO object.
 
     FIELD-SYMBOLS: <ls_intf_aff_obj> TYPE any,
                    <ls_intf_aff_log> TYPE any,
@@ -68,12 +182,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     TRY.
-        CREATE OBJECT lo_handler_factory TYPE ('CL_AFF_OBJECT_HANDLER_FACTORY').
-        CALL METHOD lo_handler_factory->('IF_AFF_OBJECT_HANDLER_FACTORY~GET_OBJECT_HANDLER')
-          EXPORTING
-            object_type = ms_item-obj_type
-          RECEIVING
-            result      = lo_object_handler.
+        lo_object_handler = get_object_handler( ).
 
         CREATE OBJECT lo_object_aff TYPE ('CL_AFF_OBJ')
            EXPORTING
@@ -91,7 +200,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
             result = lo_aff_log.
 
         CREATE DATA lr_intf_aff_log TYPE REF TO ('IF_AFF_LOG').
-        ASSIGN lr_intf_aff_log->* TO  <ls_intf_aff_log>.
+        ASSIGN lr_intf_aff_log->* TO <ls_intf_aff_log>.
         <ls_intf_aff_log> ?= lo_aff_log.
 
         CALL METHOD lo_object_handler->('IF_AFF_OBJECT_HANDLER~DELETE')
@@ -119,19 +228,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           ENDIF.
         ENDLOOP.
 
-        CALL FUNCTION 'TR_TADIR_INTERFACE'
-          EXPORTING
-            wi_delete_tadir_entry = abap_true
-            wi_tadir_pgmid        = 'R3TR'
-            wi_tadir_object       = ms_item-obj_type
-            wi_tadir_obj_name     = ms_item-obj_name
-            wi_tadir_devclass     = ms_item-devclass
-            wi_test_modus         = abap_false
-          EXCEPTIONS
-            OTHERS                = 1.
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise_t100( ).
-        ENDIF.
+        tadir_delete( ).
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
@@ -146,7 +243,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           lr_intf_files_container  TYPE REF TO data,
           lr_intf_aff_log          TYPE REF TO data,
           lr_intf_aff_settings     TYPE REF TO data,
-          lo_handler_factory       TYPE REF TO object,
           lo_object_handler        TYPE REF TO object,
           lo_object_aff            TYPE REF TO object,
           lo_object_json_file      TYPE REF TO object,
@@ -176,18 +272,12 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
                    <ls_msg>                   TYPE symsg,
                    <ls_extension_mapper_pair> LIKE LINE OF ls_additional_extensions.
 
-    lv_json_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
+    lv_json_as_xstring = mo_files->read_raw( 'json' ).
     lv_name = ms_item-obj_name.
 
     " beyond here there will be dragons....
     TRY.
-        CREATE OBJECT lo_handler_factory TYPE ('CL_AFF_OBJECT_HANDLER_FACTORY').
-
-        CALL METHOD lo_handler_factory->('IF_AFF_OBJECT_HANDLER_FACTORY~GET_OBJECT_HANDLER')
-          EXPORTING
-            object_type = ms_item-obj_type
-          RECEIVING
-            result      = lo_object_handler.
+        lo_object_handler = get_object_handler( ).
 
         CREATE OBJECT lo_object_aff TYPE ('CL_AFF_OBJ')
           EXPORTING
@@ -213,12 +303,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           RECEIVING
             result = lv_file_name.
 
-
-        CREATE OBJECT lo_settings TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
-          EXPORTING
-            version  = 'A'
-            language = mv_language
-            user     = sy-uname.
+        lo_settings = create_aff_setting_deserialize( ).
 
         CREATE OBJECT lo_object_json_file TYPE ('CL_AFF_FILE')
           EXPORTING
@@ -237,7 +322,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
         LOOP AT ls_additional_extensions ASSIGNING <ls_extension_mapper_pair>.
 
-          lv_file_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = <ls_extension_mapper_pair>-extension ).
+          lv_file_as_xstring = mo_files->read_raw( <ls_extension_mapper_pair>-extension ).
 
           CALL METHOD <ls_extension_mapper_pair>-file_name_mapper->('IF_AFF_FILE_NAME_MAPPER~GET_FILE_NAME_FROM_OBJECT')
             EXPORTING
@@ -270,7 +355,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
         <ls_intf_files_container> ?= lo_files_container.
 
         CREATE DATA lr_intf_aff_log TYPE REF TO ('IF_AFF_LOG').
-        ASSIGN lr_intf_aff_log->* TO  <ls_intf_aff_log>.
+        ASSIGN lr_intf_aff_log->* TO <ls_intf_aff_log>.
         <ls_intf_aff_log> ?= lo_aff_log.
 
         CREATE DATA lr_intf_aff_settings TYPE REF TO ('IF_AFF_SETTINGS_DESERIALIZE').
@@ -327,26 +412,38 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD create_aff_setting_deserialize.
+    IF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version AND
+       ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
+      CREATE OBJECT ro_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
+        EXPORTING
+          version               = 'A'
+          language              = mv_language
+          user                  = sy-uname
+          abap_language_version = ms_item-abap_language_version.
+    ELSE.
+      CREATE OBJECT ro_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
+        EXPORTING
+          version               = 'A'
+          language              = mv_language
+          user                  = sy-uname.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~exists.
-    DATA: lr_intf_aff_obj    TYPE REF TO data,
-          lo_handler_factory TYPE REF TO object,
-          lo_object_handler  TYPE REF TO object,
-          lo_object_aff      TYPE REF TO object,
-          lv_name            TYPE c LENGTH 120,
-          lx_error           TYPE REF TO cx_root.
+    DATA: lr_intf_aff_obj   TYPE REF TO data,
+          lo_object_handler TYPE REF TO object,
+          lo_object_aff     TYPE REF TO object,
+          lv_name           TYPE c LENGTH 120,
+          lx_error          TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <ls_intf_aff_obj> TYPE any.
 
     lv_name = ms_item-obj_name.
 
     TRY.
-        CREATE OBJECT lo_handler_factory TYPE ('CL_AFF_OBJECT_HANDLER_FACTORY').
-
-        CALL METHOD lo_handler_factory->('IF_AFF_OBJECT_HANDLER_FACTORY~GET_OBJECT_HANDLER')
-          EXPORTING
-            object_type = ms_item-obj_type
-          RECEIVING
-            result      = lo_object_handler.
+        lo_object_handler = get_object_handler( ).
 
         CREATE OBJECT lo_object_aff TYPE ('CL_AFF_OBJ')
            EXPORTING
@@ -426,27 +523,26 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~serialize.
-
-    DATA: lr_intf_aff_obj          TYPE REF TO data,
-          lr_intf_aff_log          TYPE REF TO data,
-          lr_intf_aff_settings     TYPE REF TO data,
-          lr_messages              TYPE REF TO data,
-          lo_handler_factory       TYPE REF TO object,
-          lo_object_handler        TYPE REF TO object,
-          lo_object_aff            TYPE REF TO object,
-          lo_object_json_file      TYPE REF TO object,
-          lo_files_container       TYPE REF TO object,
-          lo_settings              TYPE REF TO object,
-          lo_aff_log               TYPE REF TO object,
-          lo_aff_factory           TYPE REF TO object,
-          lo_object_file           TYPE REF TO object,
-          lv_json_as_xstring       TYPE xstring,
-          lx_exception             TYPE REF TO cx_root,
-          lv_name                  TYPE c LENGTH 120,
-          lv_file_name             TYPE string,
-          lo_file_name_mapper      TYPE REF TO object,
-          ls_additional_extensions TYPE ty_extension_mapper_pairs,
-          lv_file_as_xstring       TYPE xstring.
+    DATA: lr_intf_aff_obj           TYPE REF TO data,
+          lr_intf_aff_log           TYPE REF TO data,
+          lr_intf_aff_settings      TYPE REF TO data,
+          lr_messages               TYPE REF TO data,
+          lo_object_handler         TYPE REF TO object,
+          lo_object_aff             TYPE REF TO object,
+          lo_object_json_file       TYPE REF TO object,
+          lo_files_container        TYPE REF TO object,
+          lo_settings               TYPE REF TO object,
+          lo_aff_log                TYPE REF TO object,
+          lo_aff_factory            TYPE REF TO object,
+          lo_object_file            TYPE REF TO object,
+          lv_json_as_xstring        TYPE xstring,
+          lv_json_as_xstring_wo_alv TYPE xstring,
+          lx_exception              TYPE REF TO cx_root,
+          lv_name                   TYPE c LENGTH 120,
+          lv_file_name              TYPE string,
+          lo_file_name_mapper       TYPE REF TO object,
+          ls_additional_extensions  TYPE ty_extension_mapper_pairs,
+          lv_file_as_xstring        TYPE xstring.
 
     FIELD-SYMBOLS: <ls_intf_aff_obj>          TYPE any,
                    <ls_intf_aff_log>          TYPE any,
@@ -459,13 +555,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     TRY.
-        CREATE OBJECT lo_handler_factory TYPE ('CL_AFF_OBJECT_HANDLER_FACTORY').
-
-        CALL METHOD lo_handler_factory->('IF_AFF_OBJECT_HANDLER_FACTORY~GET_OBJECT_HANDLER')
-          EXPORTING
-            object_type = ms_item-obj_type
-          RECEIVING
-            result      = lo_object_handler.
+        lo_object_handler = get_object_handler( ).
 
         CREATE OBJECT lo_object_aff TYPE ('CL_AFF_OBJ')
            EXPORTING
@@ -549,9 +639,17 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           RECEIVING
             result = lv_json_as_xstring.
 
-        zif_abapgit_object~mo_files->add_raw(
-          iv_ext  = 'json'
-          iv_data = lv_json_as_xstring ).
+        " Only remove ABAP language version if repository is set to ignore it
+        IF ms_item-abap_language_version = zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
+          lv_json_as_xstring_wo_alv = remove_abap_language_version( lv_json_as_xstring ).
+          mo_files->add_raw(
+            iv_ext  = 'json'
+            iv_data = lv_json_as_xstring_wo_alv ).
+        ELSE.
+          mo_files->add_raw(
+            iv_ext  = 'json'
+            iv_data = lv_json_as_xstring ).
+        ENDIF.
 
         ls_additional_extensions = get_additional_extensions( ).
 
@@ -573,7 +671,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
             RECEIVING
               result = lv_file_as_xstring.
 
-          zif_abapgit_object~mo_files->add_raw(
+          mo_files->add_raw(
             iv_ext  = <ls_extension_mapper_pair>-extension
             iv_data = lv_file_as_xstring ).
 
@@ -582,6 +680,5 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
-
   ENDMETHOD.
 ENDCLASS.

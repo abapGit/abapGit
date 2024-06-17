@@ -130,15 +130,13 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     ii_xml->read( EXPORTING iv_name = 'T100T'
                   CHANGING  cg_data = lt_t100t ).
 
-    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+    mo_i18n_params->trim_saplang_keyed_table(
       EXPORTING
-        it_iso_filter = ii_xml->i18n_params( )-translation_languages
         iv_lang_field_name = 'SPRSL'
       CHANGING
         ct_tab = lt_t100_texts ).
-    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+    mo_i18n_params->trim_saplang_keyed_table(
       EXPORTING
-        it_iso_filter = ii_xml->i18n_params( )-translation_languages
         iv_lang_field_name = 'SPRSL'
       CHANGING
         ct_tab = lt_t100t ).
@@ -193,7 +191,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
     ENDLOOP.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       SELECT * FROM dokil
         INTO TABLE lt_dokil
         FOR ALL ENTRIES IN lt_doku_object_names
@@ -202,7 +200,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         AND masterlang = abap_true
         ORDER BY PRIMARY KEY.
     ELSE.
-      lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+      lt_language_filter = mo_i18n_params->build_language_filter( ).
       SELECT * FROM dokil
         INTO TABLE lt_dokil
         FOR ALL ENTRIES IN lt_doku_object_names
@@ -233,23 +231,20 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
     lv_msg_id = ms_item-obj_name.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       RETURN. " skip
     ENDIF.
 
     " Collect additional languages
     " Skip main lang - it has been already serialized and also technical languages
-    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
-
-    zcl_abapgit_lxe_texts=>add_iso_langs_to_lang_filter(
-      EXPORTING it_iso_filter      = ii_xml->i18n_params( )-translation_languages
-      CHANGING  ct_language_filter = lt_language_filter ).
+    lt_language_filter = mo_i18n_params->build_language_filter( ).
 
     SELECT DISTINCT sprsl AS langu INTO TABLE lt_i18n_langs
       FROM t100t
       WHERE arbgb = lv_msg_id
       AND sprsl IN lt_language_filter
-      AND sprsl <> mv_language.          "#EC CI_BYPASS "#EC CI_GENBUFF
+      AND sprsl <> mv_language
+      ORDER BY langu.                    "#EC CI_BYPASS "#EC CI_GENBUFF
 
     SORT lt_i18n_langs ASCENDING.
 
@@ -258,7 +253,8 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
       SELECT * FROM t100t INTO CORRESPONDING FIELDS OF TABLE lt_t100t
         WHERE sprsl IN lt_language_filter
         AND sprsl <> mv_language
-        AND arbgb = lv_msg_id.                          "#EC CI_GENBUFF
+        AND arbgb = lv_msg_id
+        ORDER BY PRIMARY KEY.                           "#EC CI_GENBUFF
 
       SELECT * FROM t100 INTO CORRESPONDING FIELDS OF TABLE lt_t100_texts
         WHERE sprsl IN lt_language_filter
@@ -295,11 +291,11 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~delete.
-    DATA: ls_t100a          TYPE t100a,
-          lv_frozen         TYPE abap_bool,
-          lv_message_id     TYPE arbgb.
+    DATA: ls_t100a      TYPE t100a,
+          lv_frozen     TYPE abap_bool,
+          lv_message_id TYPE arbgb.
 
-* parameter SUPPRESS_DIALOG doesnt exist in all versions of FM RS_DELETE_MESSAGE_ID
+* parameter SUPPRESS_DIALOG doesn't exist in all versions of FM RS_DELETE_MESSAGE_ID
 * replaced with a copy
     lv_message_id = ms_item-obj_name.
     IF ms_item-obj_name = space.
@@ -410,10 +406,8 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     deserialize_longtexts( ii_xml         = io_xml
                            iv_longtext_id = c_longtext_id_msag ).
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       deserialize_texts( io_xml ).
-    ELSE.
-      deserialize_lxe_texts( io_xml ).
     ENDIF.
 
   ENDMETHOD.
@@ -518,10 +512,8 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     serialize_longtexts_msag( it_t100 = lt_source
                               ii_xml  = io_xml ).
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts( io_xml ).
-    ELSE.
-      serialize_lxe_texts( io_xml ).
     ENDIF.
 
   ENDMETHOD.

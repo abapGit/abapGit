@@ -27,16 +27,15 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~create.
-    mv_create_package = iv_package.
+    mv_create_package    = iv_package.
     ms_create_vseointerf = cg_properties.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~create_documentation.
-    mt_docu_lines = it_lines.
-    mv_docu_id = iv_id.
+    mt_docu_lines       = it_lines.
+    mv_docu_id          = iv_id.
     mv_docu_object_name = iv_object_name.
-    mv_docu_langu =   iv_language.
-
+    mv_docu_langu       = iv_language.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~create_sotr.
@@ -48,7 +47,7 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~deserialize_source.
-    ms_deserialize_key = is_key.
+    ms_deserialize_key    = is_key.
     mt_deserialize_source = it_source.
   ENDMETHOD.
 
@@ -99,10 +98,13 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~update_descriptions.
     ms_descriptions_key = is_key.
-    mt_descriptions = it_descriptions.
+    mt_descriptions     = it_descriptions.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~update_descriptions_sub.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_oo_object_fnc~syntax_check.
   ENDMETHOD.
 
 ENDCLASS.
@@ -113,12 +115,13 @@ CLASS ltcl_unit_test DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARM
   PRIVATE SECTION.
     DATA:
       mo_cut        TYPE REF TO zif_abapgit_object,
+      mo_files      TYPE REF TO zcl_abapgit_objects_files,
       mo_log        TYPE REF TO zcl_abapgit_log,
       mo_object_fnc TYPE REF TO lth_oo_object_fnc,
       ms_item       TYPE zif_abapgit_definitions=>ty_item.
 
     METHODS:
-      setup,
+      setup RAISING zcx_abapgit_exception,
 
       get_xml
         RETURNING VALUE(rv_xml) TYPE string,
@@ -135,15 +138,15 @@ CLASS ltcl_unit_test IMPLEMENTATION.
 
     ms_item-obj_name = 'ZIF_ABAPGIT_TEST_INTF'.
     ms_item-obj_type = 'INTF'.
+    ms_item-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
+
+    mo_files = zcl_abapgit_objects_files=>new( ms_item ).
 
     CREATE OBJECT lo_cut
       EXPORTING
         is_item     = ms_item
-        iv_language = 'E'.
-
-    CREATE OBJECT lo_cut->zif_abapgit_object~mo_files
-      EXPORTING
-        is_item = ms_item.
+        iv_language = 'E'
+        io_files    = mo_files.
 
     CREATE OBJECT mo_log.
 
@@ -167,7 +170,7 @@ CLASS ltcl_unit_test IMPLEMENTATION.
       EXPORTING
         iv_xml = get_xml( ).
 
-    mo_cut->mo_files->add_abap( get_source( ) ).
+    mo_files->add_abap( get_source( ) ).
 
     mo_cut->deserialize(
       iv_package   = 'MY_PACKAGE'
@@ -185,13 +188,11 @@ CLASS ltcl_unit_test IMPLEMENTATION.
     ls_expected_vseointerf-descript = 'Test interface for abap git'.
     ls_expected_vseointerf-exposure = '2'.
     ls_expected_vseointerf-state = '1'.
-    ls_expected_vseointerf-unicode = 'X'.
+    ls_expected_vseointerf-unicode = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
     cl_abap_unit_assert=>assert_equals( exp = ls_expected_vseointerf
                                         act = mo_object_fnc->ms_create_vseointerf ).
 
     ls_expected_clskey-clsname = 'ZIF_ABAPGIT_TEST_INTF'.
-    cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
-                                        act = mo_object_fnc->ms_deserialize_key ).
     cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
                                         act = mo_object_fnc->ms_deserialize_key ).
 
@@ -234,7 +235,7 @@ CLASS ltcl_unit_test IMPLEMENTATION.
     '        <DESCRIPT>Test interface for abap git</DESCRIPT>' &&
     '        <EXPOSURE>2</EXPOSURE>' &&
     '        <STATE>1</STATE>' &&
-    '        <UNICODE>X</UNICODE>' &&
+    '        <UNICODE>' && zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard && '</UNICODE>' &&
     '      </VSEOINTERF>' &&
     '      <DESCRIPTIONS>' &&
     '        <SEOCOMPOTX>' &&
@@ -330,7 +331,7 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
 
     ls_intf-vseointerf-unicode = zif_abapgit_aff_types_v1=>co_abap_language_version_src-key_user.
     ls_intf-vseointerf-descript = `abc`.
-    ls_intf-vseointerf-langu = `F`.
+    ls_intf-vseointerf-langu = `d`.
     ls_intf-vseointerf-category = zif_abapgit_aff_intf_v1=>co_category-db_procedure_proxy.
     ls_intf-vseointerf-clsproxy = abap_true.
 
@@ -341,8 +342,9 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
       `  "formatVersion": "1",` && cl_abap_char_utilities=>newline &&
       `  "header": {` && cl_abap_char_utilities=>newline &&
       `    "description": "abc",` && cl_abap_char_utilities=>newline &&
-      `    "originalLanguage": "fr",` && cl_abap_char_utilities=>newline &&
-      `    "abapLanguageVersion": "keyUser"` && cl_abap_char_utilities=>newline &&
+      `    "originalLanguage": "sr-Latn",` && cl_abap_char_utilities=>newline &&
+      `    "abapLanguageVersion": "` && zif_abapgit_dot_abapgit=>c_abap_language_version-key_user && `"`
+        && cl_abap_char_utilities=>newline &&
       `  },` && cl_abap_char_utilities=>newline &&
       `  "category": "dbProcedureProxy",` && cl_abap_char_utilities=>newline &&
       `  "proxy": true` && cl_abap_char_utilities=>newline &&
@@ -361,7 +363,6 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
   METHOD deserialize_non_defaults.
     DATA:
       lv_source                  TYPE string,
-      lv_source_xstring          TYPE xstring,
       ls_description_type        TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description,
       ls_description_attr        TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description,
       ls_description_meth_param  TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description,
@@ -374,7 +375,7 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
 
     ls_expected-format_version = `1`.
     ls_expected-header-description = 'abc'.
-    ls_expected-header-original_language = 'F'.
+    ls_expected-header-original_language = 'M'. " SAP1 Language Code for Chinese (Taiwan)
     ls_expected-header-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-key_user.
     ls_expected-category = zif_abapgit_aff_intf_v1=>co_category-db_procedure_proxy.
     ls_expected-proxy = abap_true.
@@ -405,8 +406,9 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
       `  "formatVersion": "1",` && cl_abap_char_utilities=>newline &&
       `  "header": {` && cl_abap_char_utilities=>newline &&
       `    "description": "abc",` && cl_abap_char_utilities=>newline &&
-      `    "originalLanguage": "fr",` && cl_abap_char_utilities=>newline &&
-      `    "abapLanguageVersion": "keyUser"` && cl_abap_char_utilities=>newline &&
+      `    "originalLanguage": "zh-Hant",` && cl_abap_char_utilities=>newline &&
+      `    "abapLanguageVersion": "` && zif_abapgit_dot_abapgit=>c_abap_language_version-key_user && `"`
+        && cl_abap_char_utilities=>newline &&
       `  },` && cl_abap_char_utilities=>newline &&
       `  "category": "dbProcedureProxy",` && cl_abap_char_utilities=>newline &&
       `  "proxy": true,` && cl_abap_char_utilities=>newline &&
@@ -444,10 +446,8 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
       `  }` && cl_abap_char_utilities=>newline &&
       `}` && cl_abap_char_utilities=>newline.
 
-    lv_source_xstring = cl_abap_codepage=>convert_to( lv_source ).
-
     " cut
-    ls_actual = lcl_aff_metadata_handler=>deserialize( lv_source_xstring ).
+    ls_actual = lcl_aff_metadata_handler=>deserialize( lv_source ).
 
     cl_abap_unit_assert=>assert_equals( act = ls_actual
                                         exp = ls_expected ).
@@ -456,7 +456,6 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
   METHOD deserialize_defaults.
     DATA:
       lv_source         TYPE string,
-      lv_source_xstring TYPE xstring,
       ls_actual         TYPE zif_abapgit_aff_intf_v1=>ty_main,
       ls_expected       TYPE zif_abapgit_aff_intf_v1=>ty_main.
 
@@ -477,10 +476,8 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
       `  }` && cl_abap_char_utilities=>newline &&
       `}` && cl_abap_char_utilities=>newline.
 
-    lv_source_xstring = cl_abap_codepage=>convert_to( lv_source ).
-
     " cut
-    ls_actual = lcl_aff_metadata_handler=>deserialize( lv_source_xstring ).
+    ls_actual = lcl_aff_metadata_handler=>deserialize( lv_source ).
 
     cl_abap_unit_assert=>assert_equals( act = ls_actual
                                         exp = ls_expected ).

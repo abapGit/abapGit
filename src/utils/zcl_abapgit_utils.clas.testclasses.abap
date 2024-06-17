@@ -147,7 +147,7 @@ CLASS ltcl_is_binary IMPLEMENTATION.
 
     CONSTANTS lc_umlaut_ue TYPE xstring VALUE `C3BC`.
 
-    given_file(     `@EndUserText.label: `
+    given_file( `@EndUserText.label: `
                  && zcl_abapgit_convert=>xstring_to_string_utf8( lc_umlaut_ue )
                  && `bernahmekandidat'`
      && gv_cr_lf && `@AbapCatalog.sqlViewName: 'ZTESTDDLSBUG2'`

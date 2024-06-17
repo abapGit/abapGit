@@ -51,7 +51,6 @@ CLASS zcl_abapgit_gui_page_tags DEFINITION
 
     DATA mo_form TYPE REF TO zcl_abapgit_html_form.
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
-    DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online.
     DATA mo_settings TYPE REF TO zcl_abapgit_settings.
@@ -91,7 +90,7 @@ CLASS zcl_abapgit_gui_page_tags DEFINITION
 
     METHODS choose_commit
       RETURNING
-        VALUE(rv_commit) TYPE zif_abapgit_definitions=>ty_commit-sha1
+        VALUE(rv_commit) TYPE zif_abapgit_git_definitions=>ty_commit-sha1
       RAISING
         zcx_abapgit_exception.
 
@@ -99,7 +98,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_TAGS IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
 
 
   METHOD choose_commit.
@@ -126,7 +125,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAGS IMPLEMENTATION.
     mo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
 
     mo_form = get_form_schema( ).
-    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
 
     initialize_form_data( ).
 
@@ -150,13 +148,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAGS IMPLEMENTATION.
 
   METHOD get_form_schema.
 
-    DATA lv_commitmsg_comment_length TYPE i.
+    CONSTANTS lc_commitmsg_comment_min_len TYPE i VALUE 1.
+    CONSTANTS lc_commitmsg_comment_max_len TYPE i VALUE 255.
 
     IF io_form_data IS BOUND AND io_form_data->is_empty( ) = abap_false.
       ms_tag-type = io_form_data->get( c_id-tag_type ).
     ENDIF.
-
-    lv_commitmsg_comment_length =  mo_settings->get_commitmsg_comment_length( ).
 
     ro_form = zcl_abapgit_html_form=>create(
                 iv_form_id   = 'create-tag-form'
@@ -171,10 +168,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAGS IMPLEMENTATION.
       iv_action = c_event-change_type
     )->option(
       iv_label = 'Lightweight'
-      iv_value = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag
+      iv_value = zif_abapgit_git_definitions=>c_git_branch_type-lightweight_tag
     )->option(
       iv_label = 'Annotated'
-      iv_value = zif_abapgit_definitions=>c_git_branch_type-annotated_tag
+      iv_value = zif_abapgit_git_definitions=>c_git_branch_type-annotated_tag
     )->text(
       iv_name        = c_id-name
       iv_label       = 'Tag Name'
@@ -188,15 +185,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAGS IMPLEMENTATION.
       iv_required    = abap_true
       iv_side_action = c_event-choose_commit ).
 
-    IF ms_tag-type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
+    IF ms_tag-type = zif_abapgit_git_definitions=>c_git_branch_type-annotated_tag.
       ro_form->start_group(
         iv_name        = c_id-anno_group
         iv_label       = 'Annotation'
       )->text(
         iv_name        = c_id-message
         iv_label       = 'Comment'
-        iv_max         = lv_commitmsg_comment_length
-        iv_placeholder = |Add a mandatory comment with max { lv_commitmsg_comment_length } characters|
+        iv_min         = lc_commitmsg_comment_min_len
+        iv_max         = lc_commitmsg_comment_max_len
+        iv_placeholder = |Add a mandatory comment with max { lc_commitmsg_comment_max_len } characters|
       )->textarea(
         iv_name        = c_id-body
         iv_label       = 'Body'
@@ -265,7 +263,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAGS IMPLEMENTATION.
 
   METHOD initialize_form_data.
 
-    ms_tag-type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
+    ms_tag-type = zif_abapgit_git_definitions=>c_git_branch_type-lightweight_tag.
 
     mo_form_data->set(
       iv_key = c_id-tag_type
@@ -281,9 +279,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAGS IMPLEMENTATION.
       iv_key = c_id-tagger_email
       iv_val = ms_tag-tagger_email ).
 
-    " Set for is_dirty check
-    mo_form_util->set_data( mo_form_data ).
-
   ENDMETHOD.
 
 
@@ -293,7 +288,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAGS IMPLEMENTATION.
       lt_tags         TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
       lv_new_tag_name TYPE string.
 
-    ro_validation_log = mo_form_util->validate( io_form_data ).
+    ro_validation_log = zcl_abapgit_html_form_utils=>create( mo_form )->validate( io_form_data ).
 
     IF zcl_abapgit_utils=>is_valid_email( io_form_data->get( c_id-tagger_email ) ) = abap_false.
       ro_validation_log->set(
@@ -305,7 +300,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAGS IMPLEMENTATION.
 
     IF lv_new_tag_name IS NOT INITIAL.
       " Check if tag already exists
-      lt_tags = zcl_abapgit_git_transport=>branches( mo_repo->get_url( ) )->get_tags_only( ).
+      lt_tags = zcl_abapgit_git_factory=>get_git_transport( )->branches( mo_repo->get_url( ) )->get_tags_only( ).
 
       READ TABLE lt_tags TRANSPORTING NO FIELDS WITH TABLE KEY name_key
         COMPONENTS name = zcl_abapgit_git_tag=>add_tag_prefix( lv_new_tag_name ).
@@ -326,11 +321,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAGS IMPLEMENTATION.
       lv_commit TYPE zif_abapgit_git_definitions=>ty_sha1,
       lv_text   TYPE string.
 
-    mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
+    mo_form_data->merge( zcl_abapgit_html_form_utils=>create( mo_form )->normalize( ii_event->form_data( ) ) ).
 
     CASE ii_event->mv_action.
-      WHEN zif_abapgit_definitions=>c_action-go_back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
 
       WHEN c_event-choose_commit.
         lv_commit = choose_commit( ).
@@ -363,7 +356,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAGS IMPLEMENTATION.
             WITH cl_abap_char_utilities=>newline.
 
           ms_tag-name = zcl_abapgit_git_tag=>add_tag_prefix( ms_tag-name ).
-          ASSERT ms_tag-name CP zif_abapgit_definitions=>c_git_branch-tags.
+          ASSERT ms_tag-name CP zif_abapgit_git_definitions=>c_git_branch-tags.
 
           TRY.
               zcl_abapgit_git_porcelain=>create_tag(
@@ -386,9 +379,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAGS IMPLEMENTATION.
     " If staying on form, initialize it with current settings
     IF rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       mo_form = get_form_schema( mo_form_data ).
-      CREATE OBJECT mo_form_util
-        EXPORTING
-          io_form = mo_form.
     ENDIF.
 
   ENDMETHOD.

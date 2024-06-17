@@ -25,6 +25,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
     CLASS-METHODS purge
       IMPORTING
         !iv_key       TYPE zif_abapgit_persistence=>ty_repo-key
+        !iv_keep_repo TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log
       RAISING
@@ -56,15 +57,34 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !io_repo TYPE REF TO zcl_abapgit_repo
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS real_deserialize
+      IMPORTING
+        !io_repo   TYPE REF TO zcl_abapgit_repo
+        !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS activate_objects
       IMPORTING
         !iv_key       TYPE zif_abapgit_persistence=>ty_repo-key
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+    CLASS-METHODS create_package
+      IMPORTING
+        !iv_prefill_package TYPE devclass OPTIONAL
+      RETURNING
+        VALUE(rv_package)   TYPE devclass
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CLASS-METHODS check_package_exists
+      IMPORTING
+        !iv_package TYPE devclass
+        !it_remote  TYPE zif_abapgit_git_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception.
 
     CLASS-METHODS delete_unnecessary_objects
       IMPORTING
@@ -81,7 +101,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
       RAISING
         zcx_abapgit_cancel
         zcx_abapgit_exception .
-    CLASS-METHODS popup_overwrite
+    CLASS-METHODS popup_objects_overwrite
       CHANGING
         !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
@@ -96,6 +116,14 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !is_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS raise_error_if_package_exists
+      IMPORTING
+        iv_devclass TYPE devclass
+      RAISING
+        zcx_abapgit_exception.
+    CLASS-METHODS check_for_restart
+      IMPORTING
+        !io_repo TYPE REF TO zif_abapgit_repo.
 ENDCLASS.
 
 
@@ -158,6 +186,37 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD check_for_restart.
+
+    CONSTANTS:
+      lc_abapgit_prog TYPE progname VALUE `ZABAPGIT`.
+
+    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
+
+    IF io_repo->is_offline( ) = abap_true.
+      RETURN.
+    ENDIF.
+
+    lo_repo_online ?= io_repo.
+
+    " If abapGit was used to update itself, then restart to avoid LOAD_PROGRAM_&_MISMATCH dumps
+    " because abapGit code was changed at runtime
+    IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true AND
+       zcl_abapgit_url=>is_abapgit_repo( lo_repo_online->get_url( ) ) = abap_true AND
+       sy-batch = abap_false AND
+       sy-cprog = lc_abapgit_prog.
+
+      IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_show_default_repo( ) = abap_false.
+        MESSAGE 'abapGit was updated and will restart itself' TYPE 'I'.
+      ENDIF.
+
+      SUBMIT (sy-cprog).
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD check_package.
 
     DATA:
@@ -178,6 +237,52 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     IF li_repo IS BOUND.
       zcx_abapgit_exception=>raise( lv_reason ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD check_package_exists.
+
+    IF zcl_abapgit_factory=>get_sap_package( iv_package )->exists( ) = abap_false.
+      " Check if any package is included in remote
+      READ TABLE it_remote TRANSPORTING NO FIELDS
+        WITH KEY file
+        COMPONENTS filename = zcl_abapgit_filename_logic=>c_package_file.
+      IF sy-subrc <> 0.
+        " If not, give error
+        zcx_abapgit_exception=>raise(
+          iv_text     = |Package { iv_package } does not exist and there's no package included in the repository|
+          iv_longtext = 'Either select an existing package, create a new one, or add a package to the repository' ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD create_package.
+
+    DATA ls_package_data TYPE zif_abapgit_sap_package=>ty_create.
+    DATA lv_create       TYPE abap_bool.
+    DATA li_popup        TYPE REF TO zif_abapgit_popups.
+
+    ls_package_data-devclass = condense( to_upper( iv_prefill_package ) ).
+
+    raise_error_if_package_exists( ls_package_data-devclass ).
+
+    li_popup = zcl_abapgit_ui_factory=>get_popups( ).
+
+    li_popup->popup_to_create_package(
+      EXPORTING
+        is_package_data = ls_package_data
+      IMPORTING
+        es_package_data = ls_package_data
+        ev_create       = lv_create ).
+
+    IF lv_create = abap_true.
+      zcl_abapgit_factory=>get_sap_package( ls_package_data-devclass )->create( ls_package_data ).
+      rv_package = ls_package_data-devclass.
+      COMMIT WORK AND WAIT.
     ENDIF.
 
   ENDMETHOD.
@@ -224,10 +329,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD gui_deserialize.
 
-    DATA:
-      lv_msg    TYPE string,
-      ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks,
-      li_log    TYPE REF TO zif_abapgit_log.
+    DATA ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
 
     " find troublesome objects
     ls_checks = io_repo->deserialize_checks( ).
@@ -249,42 +351,41 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    li_log = io_repo->create_new_log( 'Pull Log' ).
-
-    " pass decisions to delete
-    delete_unnecessary_objects(
+    real_deserialize(
       io_repo   = io_repo
-      is_checks = ls_checks
-      ii_log    = li_log ).
-
-    " pass decisions to deserialize
-    io_repo->deserialize(
-      is_checks = ls_checks
-      ii_log    = li_log ).
-
-    IF li_log->get_status( ) = zif_abapgit_log=>c_status-ok.
-      lv_msg = |Repository { io_repo->get_name( ) } successfully pulled for package { io_repo->get_package( ) }|.
-      MESSAGE lv_msg TYPE 'S'.
-    ENDIF.
+      is_checks = ls_checks ).
 
   ENDMETHOD.
 
 
   METHOD new_offline.
 
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
     check_package( is_repo_params ).
 
     " create new repo and add to favorites
     ro_repo ?= zcl_abapgit_repo_srv=>get_instance( )->new_offline(
-      iv_url            = is_repo_params-url
+      iv_name           = is_repo_params-name
       iv_package        = is_repo_params-package
       iv_folder_logic   = is_repo_params-folder_logic
       iv_labels         = is_repo_params-labels
-      iv_main_lang_only = is_repo_params-main_lang_only ).
+      iv_ign_subpkg     = is_repo_params-ignore_subpackages
+      iv_main_lang_only = is_repo_params-main_lang_only
+      iv_abap_lang_vers = is_repo_params-abap_lang_vers ).
+
+    TRY.
+        check_package_exists(
+          iv_package = is_repo_params-package
+          it_remote  = ro_repo->get_files_remote( ) ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        zcl_abapgit_repo_srv=>get_instance( )->delete( ro_repo ).
+        COMMIT WORK.
+        RAISE EXCEPTION lx_error.
+    ENDTRY.
 
     " Make sure there're no leftovers from previous repos
     ro_repo->zif_abapgit_repo~checksums( )->rebuild( ).
-    ro_repo->reset_status( ). " TODO refactor later
 
     toggle_favorite( ro_repo->get_key( ) ).
 
@@ -299,21 +400,34 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD new_online.
 
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
     check_package( is_repo_params ).
 
     ro_repo ?= zcl_abapgit_repo_srv=>get_instance( )->new_online(
       iv_url            = is_repo_params-url
       iv_branch_name    = is_repo_params-branch_name
+      iv_name           = is_repo_params-name
       iv_package        = is_repo_params-package
       iv_display_name   = is_repo_params-display_name
       iv_folder_logic   = is_repo_params-folder_logic
       iv_labels         = is_repo_params-labels
       iv_ign_subpkg     = is_repo_params-ignore_subpackages
-      iv_main_lang_only = is_repo_params-main_lang_only ).
+      iv_main_lang_only = is_repo_params-main_lang_only
+      iv_abap_lang_vers = is_repo_params-abap_lang_vers ).
+
+    TRY.
+        check_package_exists(
+          iv_package = is_repo_params-package
+          it_remote  = ro_repo->get_files_remote( ) ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        zcl_abapgit_repo_srv=>get_instance( )->delete( ro_repo ).
+        COMMIT WORK.
+        RAISE EXCEPTION lx_error.
+    ENDTRY.
 
     " Make sure there're no leftovers from previous repos
     ro_repo->zif_abapgit_repo~checksums( )->rebuild( ).
-    ro_repo->reset_status( ). " TODO refactor later
 
     toggle_favorite( ro_repo->get_key( ) ).
 
@@ -350,24 +464,24 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ENDIF.
 
     " Ask user what to do
-    popup_overwrite( CHANGING ct_overwrite = lt_decision ).
-    popup_package_overwrite( CHANGING ct_overwrite = cs_checks-warning_package ).
-
     IF cs_checks-requirements-met = zif_abapgit_definitions=>c_no.
       lt_requirements = io_repo->get_dot_abapgit( )->get_data( )-requirements.
-      zcl_abapgit_requirement_helper=>requirements_popup( lt_requirements ).
+      zcl_abapgit_repo_requirements=>requirements_popup( lt_requirements ).
       cs_checks-requirements-decision = zif_abapgit_definitions=>c_yes.
     ENDIF.
 
     IF cs_checks-dependencies-met = zif_abapgit_definitions=>c_no.
       lt_dependencies = io_repo->get_dot_apack( )->get_manifest_descriptor( )-dependencies.
       zcl_abapgit_apack_helper=>dependencies_popup( lt_dependencies ).
+      cs_checks-dependencies-decision = zif_abapgit_definitions=>c_yes.
     ENDIF.
 
-    IF  cs_checks-transport-required = abap_true
-    AND cs_checks-transport-transport IS INITIAL.
-      cs_checks-transport-transport = zcl_abapgit_ui_factory=>get_popups( )->popup_transport_request(
-        is_transport_type = cs_checks-transport-type ).
+    popup_objects_overwrite( CHANGING ct_overwrite = lt_decision ).
+    popup_package_overwrite( CHANGING ct_overwrite = cs_checks-warning_package ).
+
+    IF cs_checks-transport-required = abap_true AND cs_checks-transport-transport IS INITIAL.
+      cs_checks-transport-transport =
+        zcl_abapgit_ui_factory=>get_popups( )->popup_transport_request( cs_checks-transport-type ).
     ENDIF.
 
     " Update decisions
@@ -382,7 +496,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD popup_overwrite.
+  METHOD popup_objects_overwrite.
 
     DATA: lt_columns  TYPE zif_abapgit_popups=>ty_alv_column_tt,
           lt_selected LIKE ct_overwrite,
@@ -513,7 +627,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
           lv_answer    TYPE c LENGTH 1,
           lo_repo      TYPE REF TO zcl_abapgit_repo,
           lv_package   TYPE devclass,
-          lv_question  TYPE c LENGTH 100,
+          lv_title     TYPE c LENGTH 20,
+          lv_question  TYPE c LENGTH 150,
           ls_checks    TYPE zif_abapgit_definitions=>ty_delete_checks,
           lv_repo_name TYPE string,
           lv_message   TYPE string.
@@ -523,21 +638,30 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     lv_repo_name = lo_repo->get_name( ).
 
     lv_package = lo_repo->get_package( ).
-    lt_tadir   = zcl_abapgit_factory=>get_tadir( )->read( lv_package ).
+    lt_tadir   = lo_repo->get_tadir_objects( ).
 
     IF lines( lt_tadir ) > 0.
 
       lv_question = |This will DELETE all objects in package { lv_package
         } including subpackages ({ lines( lt_tadir ) } objects) from the system|.
 
+      IF iv_keep_repo = abap_true.
+        lv_title = 'Remove Objects'.
+        lv_question = lv_question && ', but keep the reference to the repository'.
+      ELSE.
+        lv_title = 'Uninstall'.
+        lv_question = lv_question && ' and remove the reference to the repository'.
+      ENDIF.
+
       lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-        iv_titlebar              = 'Uninstall'
+        iv_titlebar              = lv_title
         iv_text_question         = lv_question
         iv_text_button_1         = 'Delete'
         iv_icon_button_1         = 'ICON_DELETE'
         iv_text_button_2         = 'Cancel'
         iv_icon_button_2         = 'ICON_CANCEL'
         iv_default_button        = '2'
+        iv_popup_type            = 'ICON_MESSAGE_WARNING'
         iv_display_cancel_button = abap_false ).
 
       IF lv_answer = '2'.
@@ -553,8 +677,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ENDIF.
 
     ri_log = zcl_abapgit_repo_srv=>get_instance( )->purge(
-      ii_repo   = lo_repo
-      is_checks = ls_checks ).
+      ii_repo      = lo_repo
+      is_checks    = ls_checks
+      iv_keep_repo = iv_keep_repo ).
 
     COMMIT WORK.
 
@@ -565,6 +690,47 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     lv_message = |Repository { lv_repo_name } successfully uninstalled from Package { lv_package }. |.
     MESSAGE lv_message TYPE 'S'.
+
+  ENDMETHOD.
+
+
+  METHOD raise_error_if_package_exists.
+
+    IF iv_devclass IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    IF zcl_abapgit_factory=>get_sap_package( iv_devclass )->exists( ) = abap_true.
+      zcx_abapgit_exception=>raise( |Package { iv_devclass } already exists| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD real_deserialize.
+
+    DATA li_log TYPE REF TO zif_abapgit_log.
+    DATA lv_msg TYPE string.
+
+    li_log = io_repo->create_new_log( 'Pull Log' ).
+
+    " pass decisions to delete
+    delete_unnecessary_objects(
+      io_repo   = io_repo
+      is_checks = is_checks
+      ii_log    = li_log ).
+
+    " pass decisions to deserialize
+    io_repo->deserialize(
+      is_checks = is_checks
+      ii_log    = li_log ).
+
+    IF li_log->get_status( ) = zif_abapgit_log=>c_status-ok.
+      lv_msg = |Repository { io_repo->get_name( ) } successfully pulled for package { io_repo->get_package( ) }|.
+      MESSAGE lv_msg TYPE 'S'.
+    ENDIF.
+
+    check_for_restart( io_repo ).
 
   ENDMETHOD.
 
@@ -615,7 +781,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ENDIF.
 
     lo_repo->zif_abapgit_repo~checksums( )->rebuild( ).
-    lo_repo->reset_status( ). " TODO refactor later
 
     COMMIT WORK AND WAIT.
 
@@ -639,7 +804,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       }. All objects will safely remain in the system.|.
 
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-      iv_titlebar              = 'Remove'
+      iv_titlebar              = 'Remove Repository'
       iv_text_question         = lv_question
       iv_text_button_1         = 'Remove'
       iv_icon_button_1         = 'ICON_WF_UNLINK'
@@ -674,8 +839,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     DATA:
       lo_repository          TYPE REF TO zcl_abapgit_repo_online,
       lo_transport_to_branch TYPE REF TO zcl_abapgit_transport_2_branch,
-      lt_transport_headers   TYPE trwbo_request_headers,
       lt_transport_objects   TYPE zif_abapgit_definitions=>ty_tadir_tt,
+      lv_trkorr              TYPE trkorr,
       ls_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch.
 
 
@@ -685,17 +850,16 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     lo_repository ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
 
-    lt_transport_headers = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
+    lv_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transport( ).
     " Also include deleted objects that are included in transport
     lt_transport_objects = zcl_abapgit_transport=>to_tadir(
-      it_transport_headers = lt_transport_headers
-      iv_deleted_objects   = abap_true ).
+      iv_trkorr          = lv_trkorr
+      iv_deleted_objects = abap_true ).
     IF lt_transport_objects IS INITIAL.
       zcx_abapgit_exception=>raise( 'Canceled or List of objects is empty ' ).
     ENDIF.
 
-    ls_transport_to_branch = zcl_abapgit_ui_factory=>get_popups( )->popup_to_create_transp_branch(
-      lt_transport_headers ).
+    ls_transport_to_branch = zcl_abapgit_ui_factory=>get_popups( )->popup_to_create_transp_branch( lv_trkorr ).
 
     CREATE OBJECT lo_transport_to_branch.
     lo_transport_to_branch->create(

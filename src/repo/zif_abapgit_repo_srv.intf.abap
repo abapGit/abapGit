@@ -33,23 +33,28 @@ INTERFACE zif_abapgit_repo_srv
     RAISING
       zcx_abapgit_exception .
   METHODS list
+    IMPORTING
+      !iv_offline    TYPE abap_bool DEFAULT abap_undefined
     RETURNING
       VALUE(rt_list) TYPE ty_repo_list
     RAISING
       zcx_abapgit_exception .
   METHODS list_favorites
+    IMPORTING
+      !iv_offline    TYPE abap_bool DEFAULT abap_undefined
     RETURNING
       VALUE(rt_list) TYPE ty_repo_list
     RAISING
       zcx_abapgit_exception .
   METHODS new_offline
     IMPORTING
-      !iv_url            TYPE string
+      !iv_name           TYPE string
       !iv_package        TYPE devclass
       !iv_folder_logic   TYPE string DEFAULT zif_abapgit_dot_abapgit=>c_folder_logic-full
       !iv_labels         TYPE string OPTIONAL
       !iv_ign_subpkg     TYPE abap_bool DEFAULT abap_false
       !iv_main_lang_only TYPE abap_bool DEFAULT abap_false
+      !iv_abap_lang_vers TYPE string OPTIONAL
     RETURNING
       VALUE(ri_repo)     TYPE REF TO zif_abapgit_repo
     RAISING
@@ -59,11 +64,13 @@ INTERFACE zif_abapgit_repo_srv
       !iv_url            TYPE string
       !iv_branch_name    TYPE string OPTIONAL
       !iv_display_name   TYPE string OPTIONAL
+      !iv_name           TYPE string OPTIONAL
       !iv_package        TYPE devclass
       !iv_folder_logic   TYPE string DEFAULT zif_abapgit_dot_abapgit=>c_folder_logic-prefix
       !iv_labels         TYPE string OPTIONAL
       !iv_ign_subpkg     TYPE abap_bool DEFAULT abap_false
       !iv_main_lang_only TYPE abap_bool DEFAULT abap_false
+      !iv_abap_lang_vers TYPE string OPTIONAL
     RETURNING
       VALUE(ri_repo)     TYPE REF TO zif_abapgit_repo
     RAISING
@@ -72,6 +79,7 @@ INTERFACE zif_abapgit_repo_srv
     IMPORTING
       !ii_repo      TYPE REF TO zif_abapgit_repo
       !is_checks    TYPE zif_abapgit_definitions=>ty_delete_checks
+      !iv_keep_repo TYPE abap_bool DEFAULT abap_false
     RETURNING
       VALUE(ri_log) TYPE REF TO zif_abapgit_log
     RAISING

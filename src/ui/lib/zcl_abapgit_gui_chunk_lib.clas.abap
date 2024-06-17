@@ -19,6 +19,11 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_extra_style TYPE string OPTIONAL
       RETURNING
         VALUE(ri_html)  TYPE REF TO zif_abapgit_html .
+    CLASS-METHODS render_success
+      IMPORTING
+        iv_message TYPE string
+      RETURNING
+        VALUE(ri_html)  TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_repo_top
       IMPORTING
         !io_repo               TYPE REF TO zcl_abapgit_repo
@@ -27,7 +32,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_show_commit        TYPE abap_bool DEFAULT abap_true
         !iv_show_edit          TYPE abap_bool DEFAULT abap_false
         !iv_interactive_branch TYPE abap_bool DEFAULT abap_false
-        !io_news               TYPE REF TO zcl_abapgit_news OPTIONAL
+        !io_news               TYPE REF TO zcl_abapgit_repo_news OPTIONAL
       RETURNING
         VALUE(ri_html)         TYPE REF TO zif_abapgit_html
       RAISING
@@ -45,15 +50,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS render_news
       IMPORTING
-        !io_news       TYPE REF TO zcl_abapgit_news
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS render_commit_popup
-      IMPORTING
-        !iv_content    TYPE csequence
-        !iv_id         TYPE csequence
+        !io_news       TYPE REF TO zcl_abapgit_repo_news
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -63,13 +60,18 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !ix_error      TYPE REF TO zcx_abapgit_exception
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
-    CLASS-METHODS render_order_by_header_cells
+    CLASS-METHODS render_table_header
       IMPORTING
         !it_col_spec         TYPE zif_abapgit_definitions=>ty_col_spec_tt
         !iv_order_by         TYPE string
         !iv_order_descending TYPE abap_bool
       RETURNING
         VALUE(ri_html)       TYPE REF TO zif_abapgit_html .
+    CLASS-METHODS render_table_footer
+      IMPORTING
+        !iv_message    TYPE string
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_warning_banner
       IMPORTING
         !iv_text       TYPE string
@@ -99,26 +101,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS advanced_submenu
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
-    CLASS-METHODS help_submenu
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
-    CLASS-METHODS back_toolbar
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
-    CLASS-METHODS settings_toolbar
-      IMPORTING
-        !iv_act        TYPE string
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
-    CLASS-METHODS settings_repo_toolbar
-      IMPORTING
-        !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
-        !iv_act        TYPE string
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     CLASS-METHODS render_branch_name
       IMPORTING
         !iv_branch      TYPE string OPTIONAL
@@ -195,24 +177,19 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html.
 
-    CLASS-METHODS shorten_repo_url
-      IMPORTING
-        iv_full_url         TYPE string
-        iv_max_length       TYPE i DEFAULT 60
-      RETURNING
-        VALUE(rv_shortened) TYPE string.
-
     CLASS-METHODS render_label_list
       IMPORTING
         it_labels           TYPE string_table
         io_label_colors     TYPE REF TO zcl_abapgit_string_map
         iv_clickable_action TYPE string OPTIONAL
+        iv_unlisted         TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rv_html)      TYPE string.
 
     CLASS-METHODS render_help_hint
       IMPORTING
         iv_text_to_wrap TYPE string
+        iv_add_class TYPE string OPTIONAL
       RETURNING
         VALUE(rv_html)  TYPE string.
 
@@ -224,7 +201,10 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
 
     CLASS-METHODS get_item_link
       IMPORTING
-        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
+        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item OPTIONAL
+        !iv_obj_type   TYPE zif_abapgit_definitions=>ty_repo_item-obj_type OPTIONAL
+        !iv_obj_name   TYPE zif_abapgit_definitions=>ty_repo_item-obj_name OPTIONAL
+        PREFERRED PARAMETER is_item
       RETURNING
         VALUE(rv_html) TYPE string.
 
@@ -252,55 +232,18 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       RETURNING
         VALUE(rv_normalized_program_name) TYPE string .
 
+    CLASS-METHODS shorten_repo_url
+      IMPORTING
+        iv_full_url         TYPE string
+        iv_max_length       TYPE i DEFAULT 60
+      RETURNING
+        VALUE(rv_shortened) TYPE string.
+
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
-
-
-  METHOD advanced_submenu.
-
-    DATA lv_supports_ie_devtools TYPE abap_bool.
-
-    lv_supports_ie_devtools = zcl_abapgit_ui_factory=>get_frontend_services( )->is_sapgui_for_windows( ).
-
-    CREATE OBJECT ro_menu.
-
-    ro_menu->add(
-      iv_txt = 'Database Utility'
-      iv_act = zif_abapgit_definitions=>c_action-go_db
-    )->add(
-      iv_txt = 'Package to ZIP'
-      iv_act = zif_abapgit_definitions=>c_action-zip_package
-    )->add(
-      iv_txt = 'Transport to ZIP'
-      iv_act = zif_abapgit_definitions=>c_action-zip_transport
-    )->add(
-      iv_txt = 'Object to Files'
-      iv_act = zif_abapgit_definitions=>c_action-zip_object
-    )->add(
-      iv_txt = 'Debug Info'
-      iv_act = zif_abapgit_definitions=>c_action-go_debuginfo ).
-
-    IF lv_supports_ie_devtools = abap_true.
-      ro_menu->add(
-        iv_txt = 'Open IE DevTools'
-        iv_act = zif_abapgit_definitions=>c_action-ie_devtools ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD back_toolbar.
-
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-back'.
-
-    ro_menu->add(
-      iv_txt = 'Back'
-      iv_act = zif_abapgit_definitions=>c_action-go_back ).
-
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
 
   METHOD class_constructor.
@@ -354,15 +297,23 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     DATA lv_encode TYPE string.
     DATA li_html TYPE REF TO zif_abapgit_html.
+    DATA ls_item LIKE is_item.
+
+    IF is_item IS INITIAL.
+      ls_item-obj_type = iv_obj_type.
+      ls_item-obj_name = iv_obj_name.
+    ELSE.
+      ls_item = is_item.
+    ENDIF.
 
     CREATE OBJECT li_html TYPE zcl_abapgit_html.
 
     lv_encode = zcl_abapgit_html_action_utils=>jump_encode(
-      iv_obj_type = is_item-obj_type
-      iv_obj_name = is_item-obj_name ).
+      iv_obj_type = ls_item-obj_type
+      iv_obj_name = ls_item-obj_name ).
 
     rv_html = li_html->a(
-      iv_txt = |{ is_item-obj_name }|
+      iv_txt = |{ ls_item-obj_name }|
       iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
 
   ENDMETHOD.
@@ -376,29 +327,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     IF rv_text CO ' 0123456789&'.
       CLEAR rv_text.
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD help_submenu.
-
-    CREATE OBJECT ro_menu.
-
-    ro_menu->add(
-      iv_txt = 'Tutorial'
-      iv_act = zif_abapgit_definitions=>c_action-go_tutorial
-    )->add(
-      iv_txt = 'Documentation'
-      iv_act = zif_abapgit_definitions=>c_action-documentation
-    )->add(
-      iv_txt = 'Explore'
-      iv_act = zif_abapgit_definitions=>c_action-go_explore
-    )->add(
-      iv_txt = 'Changelog'
-      iv_act = zif_abapgit_definitions=>c_action-changelog
-    )->add(
-      iv_txt = 'Hotkeys'
-      iv_act = zif_abapgit_definitions=>c_action-show_hotkeys ).
 
   ENDMETHOD.
 
@@ -450,12 +378,12 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ENDIF.
 
     CASE zcl_abapgit_git_branch_list=>get_type( lv_branch ).
-      WHEN zif_abapgit_definitions=>c_git_branch_type-branch.
+      WHEN zif_abapgit_git_definitions=>c_git_branch_type-branch.
         lv_class = 'branch branch_branch'.
         lv_icon  = 'code-branch/grey70'.
         lv_hint  = 'Current branch'.
-      WHEN zif_abapgit_definitions=>c_git_branch_type-annotated_tag
-        OR zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
+      WHEN zif_abapgit_git_definitions=>c_git_branch_type-annotated_tag
+        OR zif_abapgit_git_definitions=>c_git_branch_type-lightweight_tag.
         lv_class = 'branch'.
         lv_icon  = 'tag-solid/grey70'.
         lv_hint  = 'Current tag'.
@@ -476,24 +404,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       ri_html->add( lv_text ).
     ENDIF.
     ri_html->add( '</span>' ).
-
-  ENDMETHOD.
-
-
-  METHOD render_commit_popup.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    ri_html->add( '<ul class="hotkeys">' ).
-    ri_html->add( |<li>| && |<span>{ iv_content }</span>| && |</li>| ).
-    ri_html->add( '</ul>' ).
-
-    ri_html = render_infopanel(
-      iv_div_id     = |{ iv_id }|
-      iv_title      = 'Commit details'
-      iv_hide       = abap_true
-      iv_scrollable = abap_false
-      io_content    = ri_html ).
 
   ENDMETHOD.
 
@@ -575,6 +485,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
         lv_longtext = |{ lv_longtext }<p>{ <lv_longtext_paragraph> }</p>{ cl_abap_char_utilities=>newline }|.
       ENDLOOP.
+
+      lv_longtext = |{ lv_longtext }<br>|.
     ENDIF.
 
     ri_html->add( |<div id="message" class="message-panel">| ).
@@ -598,7 +510,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
         iv_msgno = ix_error->if_t100_message~t100key-msgno ).
 
       IF lv_title IS NOT INITIAL.
-        lv_text = |Message ({ ix_error->if_t100_message~t100key-msgid }/{ ix_error->if_t100_message~t100key-msgno })|.
+        lv_text = |Message E{ ix_error->if_t100_message~t100key-msgno }({ ix_error->if_t100_message~t100key-msgid })|.
 
         ri_html->add_a(
           iv_txt   = lv_text
@@ -647,22 +559,25 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   METHOD render_help_hint.
 
-    " TODO potentially move to or integrate with zcl_abapgit_html_form
-
-    DATA lt_fragments TYPE string_table.
     DATA li_html TYPE REF TO zif_abapgit_html.
+    DATA lv_add_class TYPE string.
+
     li_html = zcl_abapgit_html=>create( ).
 
-    APPEND `<div class="form-field-help-tooltip">` TO lt_fragments.
-    APPEND li_html->icon(
-      iv_name = 'question-circle-solid'
-      iv_class = 'blue' ) TO lt_fragments.
-    APPEND `<div class="form-field-help-tooltip-text">` TO lt_fragments.
-    APPEND iv_text_to_wrap TO lt_fragments.
-    APPEND `</div>` TO lt_fragments.
-    APPEND `</div>` TO lt_fragments.
+    IF iv_add_class IS NOT INITIAL.
+      lv_add_class = ` ` && iv_add_class.
+    ENDIF.
 
-    rv_html = concat_lines_of( table = lt_fragments ).
+    li_html->add( |<div class="form-field-help-tooltip{ lv_add_class }">| ).
+    li_html->add_icon(
+      iv_name = 'question-circle-solid'
+      iv_class = 'blue' ).
+    li_html->add( `<div class="form-field-help-tooltip-text">` ).
+    li_html->add( iv_text_to_wrap ).
+    li_html->add( `</div>` ).
+    li_html->add( `</div>` ).
+
+    rv_html = li_html->render( iv_no_line_breaks = abap_true ).
 
   ENDMETHOD.
 
@@ -767,12 +682,18 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     DATA lt_fragments TYPE string_table.
     DATA lv_l TYPE string.
     DATA lv_class TYPE string.
+    DATA lv_class_cmd TYPE string.
     DATA lv_style TYPE string.
     DATA ls_parsed_color TYPE zcl_abapgit_repo_labels=>ty_color.
     DATA li_html TYPE REF TO zif_abapgit_html.
 
     IF it_labels IS INITIAL.
       RETURN.
+    ENDIF.
+
+    lv_class_cmd = 'command'.
+    IF iv_unlisted = abap_true.
+      lv_class_cmd = lv_class_cmd && ' unlisted'.
     ENDIF.
 
     li_html = zcl_abapgit_html=>create( ).
@@ -792,16 +713,20 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
         ENDIF.
         IF ls_parsed_color-bg IS NOT INITIAL.
           lv_style = lv_style && |background-color:#{ ls_parsed_color-bg };|.
-          lv_style = lv_style && |border-color:#{ ls_parsed_color-bg };|.
+          IF ls_parsed_color-border IS INITIAL.
+            lv_style = lv_style && |border-color:#{ ls_parsed_color-bg };|.
+          ELSE.
+            lv_style = lv_style && |border-color:#{ ls_parsed_color-border };|.
+          ENDIF.
         ENDIF.
         lv_style = lv_style && `"`.
       ENDIF.
 
       IF iv_clickable_action IS NOT INITIAL.
         lv_l = li_html->a(
-          iv_txt = lv_l
-          iv_act = |{ iv_clickable_action }|
-          iv_class = 'command'
+          iv_txt   = lv_l
+          iv_act   = |{ iv_clickable_action }|
+          iv_class = lv_class_cmd
           iv_query = lv_l ).
       ENDIF.
       lv_l = |<li{ lv_class }{ lv_style }>{ lv_l }</li>|.
@@ -810,7 +735,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     APPEND `</ul>` TO lt_fragments.
 
-    rv_html = concat_lines_of( table = lt_fragments ).
+    rv_html = concat_lines_of( lt_fragments ).
 
   ENDMETHOD.
 
@@ -820,7 +745,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     DATA: lv_text TYPE string,
           lv_hint TYPE string,
           lv_ul   TYPE abap_bool,
-          lt_log  TYPE zcl_abapgit_news=>ty_logs.
+          lt_log  TYPE zcl_abapgit_repo_news=>ty_logs.
 
     FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_log.
 
@@ -869,66 +794,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       iv_hint    = lv_hint
       iv_hide    = boolc( io_news->has_unseen( ) = abap_false )
       io_content = ri_html ).
-
-  ENDMETHOD.
-
-
-  METHOD render_order_by_header_cells.
-
-    DATA:
-      lv_tmp       TYPE string,
-      lv_disp_name TYPE string.
-
-    FIELD-SYMBOLS <ls_col> LIKE LINE OF it_col_spec.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    LOOP AT it_col_spec ASSIGNING <ls_col>.
-      " e.g. <th class="ro-detail">Created at [{ gv_time_zone }]</th>
-      lv_tmp = '<th'.
-      IF <ls_col>-css_class IS NOT INITIAL.
-        lv_tmp = lv_tmp && | class="{ <ls_col>-css_class }"|.
-      ENDIF.
-      lv_tmp = lv_tmp && '>'.
-
-      IF <ls_col>-display_name IS NOT INITIAL.
-        lv_disp_name = <ls_col>-display_name.
-        IF <ls_col>-add_tz = abap_true.
-          lv_disp_name = lv_disp_name && | [{ gv_time_zone }]|.
-        ENDIF.
-        IF <ls_col>-tech_name = iv_order_by.
-          IF iv_order_descending = abap_true.
-            lv_tmp = lv_tmp && ri_html->a(
-              iv_txt   = lv_disp_name
-              iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }|
-              iv_title = <ls_col>-title ).
-          ELSE.
-            lv_tmp = lv_tmp && ri_html->a(
-              iv_txt   = lv_disp_name
-              iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=DESCENDING|
-              iv_title = <ls_col>-title ).
-          ENDIF.
-        ELSEIF <ls_col>-allow_order_by = abap_true.
-          lv_tmp = lv_tmp && ri_html->a(
-            iv_txt   = lv_disp_name
-            iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }?orderBy={ <ls_col>-tech_name }|
-            iv_title = <ls_col>-title ).
-        ELSE.
-          lv_tmp = lv_tmp && lv_disp_name.
-        ENDIF.
-      ENDIF.
-      IF <ls_col>-tech_name = iv_order_by
-      AND iv_order_by IS NOT INITIAL.
-        IF iv_order_descending = abap_true.
-          lv_tmp = lv_tmp && | &#x25BE;|. " arrow down
-        ELSE.
-          lv_tmp = lv_tmp && | &#x25B4;|. " arrow up
-        ENDIF.
-      ENDIF.
-
-      lv_tmp = lv_tmp && '</th>'.
-      ri_html->add( lv_tmp ).
-    ENDLOOP.
 
   ENDMETHOD.
 
@@ -1043,7 +908,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     LOOP AT lt_repo_list ASSIGNING <ls_repo>.
       lv_repo_json = |\{ key: "{ <ls_repo>-key
         }", isOffline: "{ <ls_repo>-offline
-        }", displayName: "{ <ls_repo>-local_settings-display_name }"  \}|.
+        }", displayName: "{ escape( val = <ls_repo>-local_settings-display_name
+                                    format = cl_abap_format=>e_html_js ) }"  \}|.
       IF sy-tabix < lv_size.
         lv_repo_json = lv_repo_json && ','.
       ENDIF.
@@ -1090,10 +956,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
 
-      ri_html->add_a( iv_txt   = lo_repo_online->get_url( )
-                      iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url=|
-                              && |{ lo_repo_online->get_url( ) }|
-                      iv_class = |url| ).
+      ri_html->add( render_repo_url( lo_repo_online->get_url( ) ) ).
     ENDIF.
 
     IF iv_show_edit = abap_true.
@@ -1168,6 +1031,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       ri_html->add_icon( iv_name = 'lock/grey70'
                          iv_hint = 'Locked from Pulls' ).
     ENDIF.
+    IF io_repo->get_local_settings( )-flow = abap_true.
+      ri_html->add_icon( iv_name = 'flow/grey70'
+                         iv_hint = 'Flow' ).
+    ENDIF.
 
     " Branch
     IF io_repo->is_offline( ) = abap_false.
@@ -1225,7 +1092,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ri_html = zcl_abapgit_html=>create( )->add_a(
       iv_txt   = shorten_repo_url( iv_url )
       iv_title = iv_url
-      iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ iv_url }| ).
+      iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ iv_url }|
+      iv_class = 'url' ).
 
     IF iv_render_remote_edit_for_key IS NOT INITIAL.
       ri_html->add_a(
@@ -1262,6 +1130,100 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_success.
+
+    ri_html = zcl_abapgit_html=>create( ).
+    ri_html->add( '<div class="dummydiv success">' ).
+    ri_html->add_icon( 'check' ).
+    ri_html->add( iv_message ).
+    ri_html->add( '</div>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_table_footer.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<tfoot>' ).
+    ri_html->add( '<tr>' ).
+    ri_html->add( '<td colspan="100%">' ).
+
+    ri_html->add( iv_message ).
+
+    ri_html->add( '</td>' ).
+    ri_html->add( '</tr>' ).
+    ri_html->add( '</tfoot>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_table_header.
+
+    DATA:
+      lv_tmp       TYPE string,
+      lv_disp_name TYPE string.
+
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF it_col_spec.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<thead>' ).
+    ri_html->add( '<tr>' ).
+
+    LOOP AT it_col_spec ASSIGNING <ls_col>.
+      " e.g. <th class="ro-detail">Created at [{ gv_time_zone }]</th>
+      lv_tmp = '<th'.
+      IF <ls_col>-css_class IS NOT INITIAL.
+        lv_tmp = lv_tmp && | class="{ <ls_col>-css_class }"|.
+      ENDIF.
+      lv_tmp = lv_tmp && '>'.
+
+      IF <ls_col>-display_name IS NOT INITIAL.
+        lv_disp_name = <ls_col>-display_name.
+        IF <ls_col>-add_tz = abap_true.
+          lv_disp_name = lv_disp_name && | [{ gv_time_zone }]|.
+        ENDIF.
+        IF <ls_col>-tech_name = iv_order_by.
+          IF iv_order_descending = abap_true.
+            lv_tmp = lv_tmp && ri_html->a(
+              iv_txt   = lv_disp_name
+              iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }|
+              iv_title = <ls_col>-title ).
+          ELSE.
+            lv_tmp = lv_tmp && ri_html->a(
+              iv_txt   = lv_disp_name
+              iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=DESCENDING|
+              iv_title = <ls_col>-title ).
+          ENDIF.
+        ELSEIF <ls_col>-allow_order_by = abap_true.
+          lv_tmp = lv_tmp && ri_html->a(
+            iv_txt   = lv_disp_name
+            iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }?orderBy={ <ls_col>-tech_name }|
+            iv_title = <ls_col>-title ).
+        ELSE.
+          lv_tmp = lv_tmp && lv_disp_name.
+        ENDIF.
+      ENDIF.
+      IF <ls_col>-tech_name = iv_order_by
+      AND iv_order_by IS NOT INITIAL.
+        IF iv_order_descending = abap_true.
+          lv_tmp = lv_tmp && | &#x25BE;|. " arrow down
+        ELSE.
+          lv_tmp = lv_tmp && | &#x25B4;|. " arrow up
+        ENDIF.
+      ENDIF.
+
+      lv_tmp = lv_tmp && '</th>'.
+      ri_html->add( lv_tmp ).
+    ENDLOOP.
+
+    ri_html->add( '</tr>' ).
+    ri_html->add( '</thead>' ).
+
+  ENDMETHOD.
+
+
   METHOD render_text_input.
 
     DATA lv_attrs TYPE string.
@@ -1294,7 +1256,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     CONVERT TIME STAMP iv_timestamp
       TIME ZONE gv_time_zone
       INTO DATE lv_date
-      TIME      lv_time.
+      TIME lv_time.
 
     rv_rendered = |{ lv_date DATE = USER } { lv_time TIME = USER }|.
 
@@ -1387,55 +1349,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ri_html->add( '<div class="dummydiv warning">' ).
     ri_html->add( |{ ri_html->icon( 'exclamation-triangle/yellow' ) } { iv_text }| ).
     ri_html->add( '</div>' ).
-
-  ENDMETHOD.
-
-
-  METHOD settings_repo_toolbar.
-
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-repo-settings'.
-
-    ro_menu->add(
-      iv_txt = 'Repository'
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ iv_key }|
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_settings )
-    )->add(
-      iv_txt = 'Local'
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_local_settings }?key={ iv_key }|
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_local_settings )
-    )->add(
-      iv_txt = 'Remote'
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_settings }?key={ iv_key }|
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_remote_settings )
-    )->add(
-      iv_txt = 'Background'
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_background }?key={ iv_key }|
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_background )
-    )->add(
-      iv_txt = 'Stats'
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_infos }?key={ iv_key }|
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_infos ) ).
-
-    zcl_abapgit_exit=>get_instance(  )->enhance_repo_toolbar(
-       io_menu = ro_menu
-       iv_key  = iv_key
-       iv_act  = iv_act ).
-
-  ENDMETHOD.
-
-
-  METHOD settings_toolbar.
-
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-settings'.
-
-    ro_menu->add(
-      iv_txt = 'Global'
-      iv_act = zif_abapgit_definitions=>c_action-go_settings
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings )
-    )->add(
-      iv_txt = 'Personal'
-      iv_act = zif_abapgit_definitions=>c_action-go_settings_personal
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings_personal ) ).
 
   ENDMETHOD.
 

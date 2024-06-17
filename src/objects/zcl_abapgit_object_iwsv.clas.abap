@@ -63,7 +63,8 @@ CLASS zcl_abapgit_object_iwsv IMPLEMENTATION.
 
     " Get entry with highest version
     SELECT created_by changed_by INTO (lv_created, lv_changed) FROM ('/IWBEP/I_MGW_SRH')
-      WHERE technical_name = ms_item-obj_name.
+      WHERE technical_name = ms_item-obj_name
+      ORDER BY PRIMARY KEY.
       rv_user = lv_changed.
       IF lv_changed IS INITIAL.
         rv_user = lv_created.
@@ -150,7 +151,7 @@ CLASS zcl_abapgit_object_iwsv IMPLEMENTATION.
     <ls_bdcdata>-fnam = 'GS_SCREEN_100-VERSION'.
     <ls_bdcdata>-fval = lv_version.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = '/IWBEP/REG_SERVICE'
       it_bdcdata = lt_bdcdata ).
 

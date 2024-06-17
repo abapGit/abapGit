@@ -27,13 +27,21 @@ INTERFACE zif_abapgit_apack_definitions PUBLIC .
     BEGIN OF ty_descriptor.
       INCLUDE TYPE ty_descriptor_wo_dependencies.
   TYPES:
-    dependencies TYPE ty_dependencies,
+      dependencies TYPE ty_dependencies,
     END OF ty_descriptor,
 
     ty_descriptors TYPE STANDARD TABLE OF ty_descriptor WITH NON-UNIQUE DEFAULT KEY.
+
+  TYPES:
+    BEGIN OF ty_manifest_declaration,
+      clsname  TYPE seoclsname,
+      devclass TYPE devclass,
+    END OF ty_manifest_declaration,
+    ty_manifest_declarations TYPE STANDARD TABLE OF ty_manifest_declaration WITH DEFAULT KEY.
 
   CONSTANTS c_dot_apack_manifest TYPE string VALUE '.apack-manifest.xml' ##NO_TEXT.
   CONSTANTS c_repository_type_abapgit TYPE ty_repository_type VALUE 'abapGit' ##NO_TEXT.
   CONSTANTS c_apack_interface_sap TYPE seoclsname VALUE 'IF_APACK_MANIFEST' ##NO_TEXT.
   CONSTANTS c_apack_interface_cust TYPE seoclsname VALUE 'ZIF_APACK_MANIFEST' ##NO_TEXT.
+  CONSTANTS c_apack_interface_nspc TYPE seoclsname VALUE '/*/IF_APACK_MANIFEST' ##NO_TEXT.
 ENDINTERFACE.

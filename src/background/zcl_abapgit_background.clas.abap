@@ -14,15 +14,47 @@ CLASS zcl_abapgit_background DEFINITION
     CLASS-METHODS run
       RAISING
         zcx_abapgit_exception .
+
     CLASS-METHODS list_methods
       RETURNING VALUE(rt_methods) TYPE ty_methods.
+
+    CLASS-METHODS enqueue
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS dequeue.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CONSTANTS c_enq_type TYPE c LENGTH 12 VALUE 'BACKGROUND'.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
+CLASS zcl_abapgit_background IMPLEMENTATION.
+
+
+  METHOD dequeue.
+    CALL FUNCTION 'DEQUEUE_EZABAPGIT'
+      EXPORTING
+        type = c_enq_type.
+  ENDMETHOD.
+
+
+  METHOD enqueue.
+    CALL FUNCTION 'ENQUEUE_EZABAPGIT'
+      EXPORTING
+        mode_zabapgit  = 'E'
+        type           = c_enq_type
+        _scope         = '3'
+      EXCEPTIONS
+        foreign_lock   = 1
+        system_failure = 2
+        OTHERS         = 3.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+  ENDMETHOD.
 
 
   METHOD list_methods.
@@ -69,8 +101,6 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
 
   METHOD run.
 
-    CONSTANTS: lc_enq_type TYPE c LENGTH 12 VALUE 'BACKGROUND'.
-
     DATA: lo_per        TYPE REF TO zcl_abapgit_persist_background,
           lo_repo       TYPE REF TO zcl_abapgit_repo_online,
           lt_list       TYPE zcl_abapgit_persist_background=>ty_background_keys,
@@ -81,20 +111,12 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
 
-
-    CALL FUNCTION 'ENQUEUE_EZABAPGIT'
-      EXPORTING
-        mode_zabapgit  = 'E'
-        type           = lc_enq_type
-        _scope         = '3'
-      EXCEPTIONS
-        foreign_lock   = 1
-        system_failure = 2
-        OTHERS         = 3.
-    IF sy-subrc <> 0.
-      WRITE: / 'Another intance of the program is already running'.
-      RETURN.
-    ENDIF.
+    TRY.
+        enqueue( ).
+      CATCH zcx_abapgit_exception.
+        WRITE: / 'Another instance of the program is already running'.
+        RETURN.
+    ENDTRY.
 
     CREATE OBJECT lo_per.
     lt_list = lo_per->list( ).
@@ -102,6 +124,8 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
     WRITE: / 'Background mode'.
 
     LOOP AT lt_list ASSIGNING <ls_list>.
+      CREATE OBJECT li_log TYPE zcl_abapgit_log.
+
       TRY.
           lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( <ls_list>-key ).
           lv_repo_name = lo_repo->get_name( ).
@@ -112,7 +136,6 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
             iv_username = <ls_list>-username
             iv_password = <ls_list>-password ).
 
-          CREATE OBJECT li_log TYPE zcl_abapgit_log.
           CREATE OBJECT li_background TYPE (<ls_list>-method).
 
           li_background->run(
@@ -120,12 +143,16 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
             ii_log      = li_log
             it_settings = <ls_list>-settings ).
 
-          " Clear auth buffer to allow different user/password per repository in background mode
-          zcl_abapgit_login_manager=>clear( ).
-
+          " Decrease memory usage for repository already processed (but keep log)
+          lo_repo->refresh(
+            iv_drop_cache = abap_true
+            iv_drop_log   = abap_false ).
         CATCH zcx_abapgit_exception INTO lx_error.
           li_log->add_exception( lx_error ).
       ENDTRY.
+
+      " Clear auth buffer to allow different user/password per repository in background mode
+      zcl_abapgit_login_manager=>clear( ).
 
       zcl_abapgit_log_viewer=>write_log( li_log ).
     ENDLOOP.
@@ -134,9 +161,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
       WRITE: / 'Nothing configured'.
     ENDIF.
 
-    CALL FUNCTION 'DEQUEUE_EZABAPGIT'
-      EXPORTING
-        type = lc_enq_type.
+    dequeue( ).
 
   ENDMETHOD.
 ENDCLASS.

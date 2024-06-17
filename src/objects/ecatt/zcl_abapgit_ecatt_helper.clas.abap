@@ -32,7 +32,7 @@ CLASS zcl_abapgit_ecatt_helper DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
-      co_xml TYPE i VALUE 1. " downport of if_apl_ecatt_xml=>co_xml
+      c_xml TYPE i VALUE 1. " downport of if_apl_ecatt_xml=>co_xml
 
 ENDCLASS.
 
@@ -85,7 +85,7 @@ CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
     TRY.
         CALL METHOD cl_apl_ecatt_xml=>('CREATE') " doesn't exist in 702
           EXPORTING
-            im_type = co_xml
+            im_type = c_xml
           RECEIVING
             re_xml  = lo_xml.
 
@@ -114,7 +114,7 @@ CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
 
     CALL METHOD cl_apl_ecatt_xml=>('CREATE') " doesn't exist in 702
       EXPORTING
-        im_type = co_xml
+        im_type = c_xml
       RECEIVING
         re_xml  = lo_xml.
 

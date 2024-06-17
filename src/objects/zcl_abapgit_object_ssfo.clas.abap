@@ -1,6 +1,11 @@
-CLASS zcl_abapgit_object_ssfo DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super FINAL.
+CLASS zcl_abapgit_object_ssfo DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
+
     INTERFACES zif_abapgit_object.
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -9,11 +14,16 @@ CLASS zcl_abapgit_object_ssfo DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       ty_string_range TYPE RANGE OF string .
 
     CLASS-DATA gt_range_node_codes TYPE ty_string_range .
-    CONSTANTS attrib_abapgit_leadig_spaces TYPE string VALUE 'abapgit-leadig-spaces' ##NO_TEXT.
+    CONSTANTS c_attrib_abapgit_leadig_spaces TYPE string VALUE 'abapgit-leadig-spaces' ##NO_TEXT.
 
     METHODS fix_ids
       IMPORTING
         !ii_xml_doc TYPE REF TO if_ixml_document .
+    METHODS sort_texts
+      IMPORTING
+        !ii_xml_doc TYPE REF TO if_ixml_document
+      RAISING
+        zcx_abapgit_exception .
     METHODS handle_attrib_leading_spaces
       IMPORTING
         !iv_name                TYPE string
@@ -175,7 +185,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
                                     CHANGING  cv_within_code_section = cv_within_code_section ).
 
 * for downwards compatibility, this code can be removed sometime in the future
-        lv_leading_spaces = li_element->get_attribute_ns( name = attrib_abapgit_leadig_spaces ).
+        lv_leading_spaces = li_element->get_attribute_ns( c_attrib_abapgit_leadig_spaces ).
 
         lv_coding_line = li_element->get_value( ).
         IF strlen( lv_coding_line ) >= 1 AND lv_coding_line(1) <> | |.
@@ -184,6 +194,76 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
         ENDIF.
       CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD sort_texts.
+
+    DATA: li_node      TYPE REF TO if_ixml_node,
+          li_item      TYPE REF TO if_ixml_node,
+          li_field     TYPE REF TO if_ixml_node,
+          li_item_list TYPE REF TO if_ixml_node_list,
+          li_iterator  TYPE REF TO if_ixml_node_iterator,
+          li_items     TYPE REF TO if_ixml_node_iterator,
+          lv_index     TYPE i,
+          lv_field     TYPE fieldname,
+          ls_item      TYPE stxfobjt,
+          lt_items     TYPE STANDARD TABLE OF stxfobjt.
+
+    FIELD-SYMBOLS <lv_field> TYPE any.
+
+    li_iterator = ii_xml_doc->create_iterator( ).
+    li_node = li_iterator->get_next( ).
+    WHILE NOT li_node IS INITIAL.
+      IF li_node->get_name( ) = 'T_CAPTION'.
+
+        " Read all records for T_CAPTION
+        CLEAR lt_items.
+        li_item_list = li_node->get_children( ).
+        li_items = li_item_list->create_iterator( ).
+        DO.
+          li_item = li_items->get_next( ).
+          IF li_item IS INITIAL.
+            EXIT.
+          ENDIF.
+          CLEAR ls_item.
+          li_field = li_item->get_first_child( ).
+          WHILE NOT li_field IS INITIAL.
+            lv_field = li_field->get_name( ).
+            ASSIGN COMPONENT lv_field OF STRUCTURE ls_item TO <lv_field>.
+            ASSERT sy-subrc = 0.
+            <lv_field> = li_field->get_value( ).
+            li_field = li_field->get_next( ).
+          ENDWHILE.
+          INSERT ls_item INTO TABLE lt_items.
+        ENDDO.
+
+        SORT lt_items.
+
+        " Write all records back after sorting
+        lv_index = 1.
+        li_items = li_item_list->create_iterator( ).
+        DO.
+          li_item = li_items->get_next( ).
+          IF li_item IS INITIAL.
+            EXIT.
+          ENDIF.
+          READ TABLE lt_items INTO ls_item INDEX lv_index.
+          li_field = li_item->get_first_child( ).
+          WHILE NOT li_field IS INITIAL.
+            lv_field = li_field->get_name( ).
+            ASSIGN COMPONENT lv_field OF STRUCTURE ls_item TO <lv_field>.
+            ASSERT sy-subrc = 0.
+            li_field->set_value( |{ <lv_field> }| ).
+            li_field = li_field->get_next( ).
+          ENDWHILE.
+          lv_index = lv_index + 1.
+        ENDDO.
+
+      ENDIF.
+      li_node = li_iterator->get_next( ).
+    ENDWHILE.
 
   ENDMETHOD.
 
@@ -389,7 +469,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
     <ls_bdcdata>-fnam = 'BDC_OKCODE'.
     <ls_bdcdata>-fval = '=DISPLAY'.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = 'SMARTFORMS'
       it_bdcdata = lt_bdcdata ).
 
@@ -429,7 +509,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
         lo_sf->load( im_formname = lv_formname
                      im_language = '' ).
       CATCH cx_ssf_fb.
-* the smartform is not present in system, or other error occured
+* the smartform is not present in system, or other error occurred
         RETURN.
     ENDTRY.
 
@@ -454,6 +534,8 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
     ENDWHILE.
 
     fix_ids( li_xml_doc ).
+
+    sort_texts( li_xml_doc ).
 
     li_element = li_xml_doc->get_root_element( ).
     li_element->set_attribute(

@@ -125,7 +125,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
     DATA: ls_pagekey TYPE o2pagkey.
     FIELD-SYMBOLS: <ls_local_page> LIKE LINE OF it_local_pages.
 
-    " delete local pages which doesn't exists remotely
+    " delete local pages which doesn't exist remotely
     LOOP AT it_local_pages ASSIGNING <ls_local_page>.
 
       READ TABLE it_remote_pages WITH KEY attributes-pagekey = <ls_local_page>-pagekey
@@ -234,7 +234,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       REPLACE ALL OCCURRENCES OF '/' IN lv_ext WITH '_-'.
       REPLACE ALL OCCURRENCES OF '/' IN lv_extra WITH '_-'.
       IF iv_no_files_add = abap_false.
-        zif_abapgit_object~mo_files->add_raw(
+        mo_files->add_raw(
           iv_extra = lv_extra
           iv_ext   = lv_ext
           iv_data  = lv_content ).
@@ -489,8 +489,8 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       REPLACE ALL OCCURRENCES OF '/' IN lv_extra WITH '_-'.
       REPLACE ALL OCCURRENCES OF '/' IN lv_ext WITH '_-'.
 
-      lt_remote_content = to_page_content( zif_abapgit_object~mo_files->read_raw( iv_extra = lv_extra
-                                                                                  iv_ext   = lv_ext ) ).
+      lt_remote_content = to_page_content( mo_files->read_raw( iv_extra = lv_extra
+                                                               iv_ext   = lv_ext ) ).
       lt_local_content = to_page_content( get_page_content( lo_page ) ).
 
       IF ls_local_page = <ls_remote_page> AND lt_local_content = lt_remote_content.
@@ -664,6 +664,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       iv_pgmid    = 'LIMU'
       iv_object   = 'WAPP'
       iv_obj_name = ms_item-obj_name
+      io_i18n_params = mo_i18n_params
       io_xml      = io_xml ).
 
   ENDMETHOD.

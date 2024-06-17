@@ -23,7 +23,6 @@ CLASS zcl_abapgit_tadir DEFINITION
         !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
         !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
         !iv_only_local_objects TYPE abap_bool DEFAULT abap_false
-        !ii_log                TYPE REF TO zif_abapgit_log OPTIONAL
       RETURNING
         VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
@@ -54,10 +53,11 @@ CLASS zcl_abapgit_tadir DEFINITION
         zcx_abapgit_exception .
     METHODS add_namespace
       IMPORTING
-        !iv_package TYPE devclass
-        !iv_object  TYPE csequence
+        !iv_package    TYPE devclass
+        !iv_object     TYPE csequence
       CHANGING
-        !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !ct_tadir      TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !ct_tadir_nspc TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
     METHODS determine_path
@@ -68,11 +68,6 @@ CLASS zcl_abapgit_tadir DEFINITION
         !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS is_sots_excluded
-      IMPORTING
-        !it_packages      TYPE zif_abapgit_sap_package=>ty_devclass_tt
-      RETURNING
-        VALUE(rv_exclude) TYPE abap_bool.
 ENDCLASS.
 
 
@@ -106,35 +101,29 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
   METHOD add_namespace.
 
-    DATA:
-      lv_name      TYPE progname,
-      lv_namespace TYPE namespace.
+    DATA ls_tadir TYPE zif_abapgit_definitions=>ty_tadir.
+    DATA ls_obj_with_namespace TYPE zif_abapgit_definitions=>ty_obj_namespace.
 
-    FIELD-SYMBOLS <ls_tadir> LIKE LINE OF ct_tadir.
+    TRY.
+        ls_obj_with_namespace = zcl_abapgit_factory=>get_sap_namespace( )->split_by_name( iv_object ).
+      CATCH zcx_abapgit_exception.
+        "Ignore the exception like before the replacement of the FM RS_NAME_SPLIT_NAMESPACE
+        RETURN.
+    ENDTRY.
 
-    lv_name = iv_object.
+    IF ls_obj_with_namespace-namespace IS NOT INITIAL.
 
-    CALL FUNCTION 'RS_NAME_SPLIT_NAMESPACE'
-      EXPORTING
-        name_with_namespace = lv_name
-      IMPORTING
-        namespace           = lv_namespace
-      EXCEPTIONS
-        delimiter_error     = 1
-        OTHERS              = 2.
-
-    IF sy-subrc = 0 AND lv_namespace IS NOT INITIAL.
-
-      READ TABLE ct_tadir TRANSPORTING NO FIELDS
-        WITH KEY pgmid = 'R3TR' object = 'NSPC' obj_name = lv_namespace.
+      READ TABLE ct_tadir_nspc TRANSPORTING NO FIELDS
+        WITH KEY pgmid = 'R3TR' object = 'NSPC' obj_name = ls_obj_with_namespace-namespace.
       IF sy-subrc <> 0.
-        APPEND INITIAL LINE TO ct_tadir ASSIGNING <ls_tadir>.
-        <ls_tadir>-pgmid      = 'R3TR'.
-        <ls_tadir>-object     = 'NSPC'.
-        <ls_tadir>-obj_name   = lv_namespace.
-        <ls_tadir>-devclass   = iv_package.
-        <ls_tadir>-srcsystem  = sy-sysid.
-        <ls_tadir>-masterlang = sy-langu.
+        ls_tadir-pgmid      = 'R3TR'.
+        ls_tadir-object     = 'NSPC'.
+        ls_tadir-obj_name   = ls_obj_with_namespace-namespace.
+        ls_tadir-devclass   = iv_package.
+        ls_tadir-srcsystem  = sy-sysid.
+        ls_tadir-masterlang = sy-langu.
+        INSERT ls_tadir INTO TABLE ct_tadir.
+        INSERT ls_tadir INTO TABLE ct_tadir_nspc.
       ENDIF.
 
     ENDIF.
@@ -144,26 +133,30 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
   METHOD add_namespaces.
 
+    DATA lt_tadir_nspc TYPE zif_abapgit_definitions=>ty_tadir_tt.
+
     FIELD-SYMBOLS <ls_tadir> LIKE LINE OF ct_tadir.
 
     " Namespaces are not in TADIR, but are necessary for creating objects in transportable packages
     LOOP AT ct_tadir ASSIGNING <ls_tadir> WHERE obj_name(1) = '/'.
       add_namespace(
         EXPORTING
-          iv_package = iv_package
-          iv_object  = <ls_tadir>-obj_name
+          iv_package    = iv_package
+          iv_object     = <ls_tadir>-obj_name
         CHANGING
-          ct_tadir   = ct_tadir ).
+          ct_tadir      = ct_tadir
+          ct_tadir_nspc = lt_tadir_nspc ).
     ENDLOOP.
 
     " Root package of repo might not exist yet but needs to be considered, too
     IF iv_package CP '/*'.
       add_namespace(
         EXPORTING
-          iv_package = iv_package
-          iv_object  = iv_package
+          iv_package    = iv_package
+          iv_object     = iv_package
         CHANGING
-          ct_tadir   = ct_tadir ).
+          ct_tadir      = ct_tadir
+          ct_tadir_nspc = lt_tadir_nspc ).
     ENDIF.
 
   ENDMETHOD.
@@ -269,41 +262,6 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_sots_excluded.
-
-    " Todo: once all OTR longtexts are handled by object-specific class,
-    " we can exclude SOTS completely (just like SOTR)
-    " Until then, we need an object-type specific check here
-
-    DATA:
-      lt_concepts TYPE STANDARD TABLE OF sotr_headu-concept,
-      lv_count    TYPE i.
-
-    ASSERT it_packages IS NOT INITIAL.
-
-    rv_exclude = abap_false.
-
-    " Get all OTR longtexts
-    SELECT concept FROM sotr_headu INTO TABLE lt_concepts
-      FOR ALL ENTRIES IN it_packages WHERE paket = it_packages-table_line.
-    IF lines( lt_concepts ) > 0.
-      " Check if there are any texts related to objects that do not serialize these texts (yet)
-      " If yes, we need to keep processing SOTS
-      SELECT COUNT(*) FROM sotr_useu INTO lv_count
-        FOR ALL ENTRIES IN lt_concepts WHERE concept = lt_concepts-table_line
-        AND NOT ( pgmid = 'R3TR' AND object = 'SICF' )
-        AND NOT ( pgmid = 'LIMU' AND object = 'CPUB' ).
-      IF lv_count > 0.
-        RETURN.
-      ENDIF.
-    ENDIF.
-
-    " If no, SOTS can be excluded from the TADIR selection
-    rv_exclude = abap_true.
-
-  ENDMETHOD.
-
-
   METHOD select_objects.
 
     DATA:
@@ -323,17 +281,14 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
     ls_exclude-option = 'EQ'.
     ls_exclude-low    = 'SOTR'. " automatically created for SAP packages (DEVC)
     APPEND ls_exclude TO lt_excludes.
+    ls_exclude-low    = 'SOTS'. " automatically created for SAP packages (DEVC)
+    APPEND ls_exclude TO lt_excludes.
     ls_exclude-low    = 'SFB1'. " covered by business function sets (SFBS)
     APPEND ls_exclude TO lt_excludes.
     ls_exclude-low    = 'SFB2'. " covered by business functions (SFBF)
     APPEND ls_exclude TO lt_excludes.
     ls_exclude-low    = 'STOB'. " auto generated by core data services (DDLS)
     APPEND ls_exclude TO lt_excludes.
-
-    IF is_sots_excluded( et_packages ) = abap_true.
-      ls_exclude-low = 'SOTS'.
-      APPEND ls_exclude TO lt_excludes.
-    ENDIF.
 
     " Limit to objects belonging to this system
     IF iv_only_local_objects = abap_true.
@@ -388,7 +343,12 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
   METHOD zif_abapgit_tadir~read.
 
-    DATA: li_exit TYPE REF TO zif_abapgit_exit.
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
+    DATA lr_tadir TYPE REF TO zif_abapgit_definitions=>ty_tadir.
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA ls_dot_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
+
+    ASSERT iv_package IS NOT INITIAL.
 
     " Start recursion
     " hmm, some problems here, should TADIR also build path?
@@ -396,18 +356,43 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       iv_package            = iv_package
       io_dot                = io_dot
       iv_ignore_subpackages = iv_ignore_subpackages
-      iv_only_local_objects = iv_only_local_objects
-      ii_log                = ii_log ).
+      iv_only_local_objects = iv_only_local_objects ).
+
+    IF io_dot IS NOT INITIAL.
+      ls_dot_data = io_dot->get_data( ).
+    ENDIF.
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->change_tadir(
       EXPORTING
-        iv_package = iv_package
-        ii_log     = ii_log
+        iv_package            = iv_package
+        ii_log                = ii_log
+        is_dot_abapgit        = ls_dot_data
+        iv_ignore_subpackages = iv_ignore_subpackages
+        iv_only_local_objects = iv_only_local_objects
       CHANGING
-        ct_tadir   = rt_tadir ).
+        ct_tadir              = rt_tadir ).
 
-    rt_tadir = check_exists( rt_tadir ).
+    IF it_filter IS NOT INITIAL.
+      "Apply filter manually instead of calling zcl_abapgit_repo_filter->apply,
+      "so that we can execute a unit test. The method applies addition filtering
+      "and does therefore additional selects
+      lt_filter = it_filter.
+      SORT lt_filter BY object obj_name.
+      LOOP AT rt_tadir REFERENCE INTO lr_tadir.
+        READ TABLE lt_filter TRANSPORTING NO FIELDS
+                 WITH KEY object = lr_tadir->object
+                          obj_name = lr_tadir->obj_name
+                          BINARY SEARCH.
+        IF sy-subrc <> 0.
+          DELETE rt_tadir.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
+
+    IF iv_check_exists = abap_true.
+      rt_tadir = check_exists( rt_tadir ).
+    ENDIF.
 
   ENDMETHOD.
 

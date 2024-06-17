@@ -38,9 +38,6 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
   METHOD zif_abapgit_popups~branch_list_popup.
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~choose_pr_popup.
-  ENDMETHOD.
-
   METHOD zif_abapgit_popups~commit_list_popup.
   ENDMETHOD.
 
@@ -77,7 +74,7 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
   METHOD zif_abapgit_popups~popup_to_select_from_list.
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~popup_to_select_transports.
+  METHOD zif_abapgit_popups~popup_to_select_transport.
   ENDMETHOD.
 
   METHOD zif_abapgit_popups~popup_transport_request.
@@ -116,12 +113,14 @@ CLASS ltcl_test_form DEFINITION
 
   PRIVATE SECTION.
     DATA:
-      mo_popups_mock TYPE REF TO ltcl_popups_mock.
+      mo_popups_mock TYPE REF TO ltcl_popups_mock,
+      mo_sapgui_mock TYPE REF TO zif_abapgit_frontend_services.
 
     METHODS setup.
     METHODS validate1 FOR TESTING RAISING zcx_abapgit_exception.
     METHODS validate2 FOR TESTING RAISING zcx_abapgit_exception.
     METHODS validate3 FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS validate4 FOR TESTING RAISING zcx_abapgit_exception.
     METHODS normalize FOR TESTING RAISING zcx_abapgit_exception.
     METHODS is_empty FOR TESTING RAISING zcx_abapgit_exception.
     METHODS exit_clean FOR TESTING RAISING zcx_abapgit_exception.
@@ -136,6 +135,9 @@ CLASS ltcl_test_form IMPLEMENTATION.
 
     CREATE OBJECT mo_popups_mock TYPE ltcl_popups_mock.
     zcl_abapgit_ui_injector=>set_popups( mo_popups_mock ).
+
+    " Disable GUI
+    mo_sapgui_mock = zcl_abapgit_ui_factory=>get_frontend_services( abap_true ).
 
   ENDMETHOD.
 
@@ -320,6 +322,50 @@ CLASS ltcl_test_form IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD validate4.
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_html_form_utils.
+    DATA lo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA lo_form_data TYPE REF TO zcl_abapgit_string_map.
+    DATA lo_log TYPE REF TO zcl_abapgit_string_map.
+
+    " New form
+    lo_form = zcl_abapgit_html_form=>create( ).
+    lo_form_data = zcl_abapgit_string_map=>create( ).
+
+    lo_form->text(
+      iv_name  = 'field5'
+      iv_min   = 5
+      iv_max   = 5
+      iv_label = 'Field name 5' ).
+
+    lo_cut = zcl_abapgit_html_form_utils=>create( lo_form ).
+
+    lo_form_data->set(
+      iv_key = 'field5'
+      iv_val = 'xy' ).
+
+    lo_log = lo_cut->validate( lo_form_data ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_log->size( )
+      exp = 1 ).
+    cl_abap_unit_assert=>assert_char_cp(
+      act = lo_log->get( 'field5' )
+      exp = '*must be exactly*' ).
+
+    lo_form_data->set(
+      iv_key = 'field5'
+      iv_val = 'abcde' ).
+
+    lo_log = lo_cut->validate( lo_form_data ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_log->size( )
+      exp = 0 ).
+
+  ENDMETHOD.
+
   METHOD normalize.
 
     DATA lo_cut TYPE REF TO zcl_abapgit_html_form_utils.
@@ -329,7 +375,7 @@ CLASS ltcl_test_form IMPLEMENTATION.
     DATA lo_normalized_exp TYPE REF TO zcl_abapgit_string_map.
 
     lo_form           = zcl_abapgit_html_form=>create( ).
-    lo_form_data      = zcl_abapgit_string_map=>create( iv_case_insensitive = abap_true ).
+    lo_form_data      = zcl_abapgit_string_map=>create( abap_true ).
     lo_normalized_exp = zcl_abapgit_string_map=>create( ).
 
     lo_form->text(
@@ -567,7 +613,9 @@ CLASS ltcl_test_form IMPLEMENTATION.
       iv_val = 'val' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lo_cut->exit( lo_form_data )
+      act = lo_cut->exit(
+              io_form_data    = lo_form_orig
+              io_compare_with = lo_form_data )
       exp = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark ).
 
     cl_abap_unit_assert=>assert_equals(
@@ -605,7 +653,9 @@ CLASS ltcl_test_form IMPLEMENTATION.
     mo_popups_mock->set_user_decision( ltcl_popups_mock=>c_user_decision-confirm ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lo_cut->exit( lo_form_data )
+      act = lo_cut->exit(
+              io_form_data    = lo_form_orig
+              io_compare_with = lo_form_data )
       exp = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark ).
 
     cl_abap_unit_assert=>assert_equals(
@@ -643,7 +693,9 @@ CLASS ltcl_test_form IMPLEMENTATION.
     mo_popups_mock->set_user_decision( ltcl_popups_mock=>c_user_decision-cancel ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lo_cut->exit( lo_form_data )
+      act = lo_cut->exit(
+              io_form_data    = lo_form_orig
+              io_compare_with = lo_form_data )
       exp = zcl_abapgit_gui=>c_event_state-no_more_act ).
 
     cl_abap_unit_assert=>assert_equals(

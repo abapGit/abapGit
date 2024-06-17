@@ -9,8 +9,13 @@ CLASS zcl_abapgit_object_chdo DEFINITION
 
     METHODS constructor
       IMPORTING
-        is_item     TYPE zif_abapgit_definitions=>ty_item
-        iv_language TYPE spras.
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
 
     METHODS after_import
@@ -48,7 +53,7 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
           ls_cts_object_entry LIKE LINE OF lt_cts_object_entry,
           lt_errormsg         TYPE STANDARD TABLE OF sprot_u WITH DEFAULT KEY.
 
-    ls_cts_object_entry-pgmid    = seok_pgmid_r3tr.
+    ls_cts_object_entry-pgmid    = 'R3TR'.
     ls_cts_object_entry-object   = ms_item-obj_type.
     ls_cts_object_entry-obj_name = ms_item-obj_name.
     INSERT ls_cts_object_entry INTO TABLE lt_cts_object_entry.
@@ -74,8 +79,11 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     mv_object = is_item-obj_name.
 
@@ -352,7 +360,7 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
     ls_bdcdata-fval = '=DISP'.
     APPEND ls_bdcdata TO lt_bdcdata.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = 'SCDO'
       it_bdcdata = lt_bdcdata ).
 

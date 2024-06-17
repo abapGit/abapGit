@@ -64,16 +64,16 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
     ls_name = ms_item-obj_name.
 
-    li_template = w3_api_load( is_name = ls_name ).
+    li_template = w3_api_load( ls_name ).
 
-    es_attr = w3_api_get_attributes( ii_template = li_template ).
+    es_attr = w3_api_get_attributes( li_template ).
 
     CLEAR: es_attr-chname,
            es_attr-tdate,
            es_attr-ttime,
            es_attr-devclass.
 
-    lt_source = w3_api_get_source( ii_template = li_template ).
+    lt_source = w3_api_get_source( li_template ).
 
     CONCATENATE LINES OF lt_source INTO ev_source RESPECTING BLANKS.
 
@@ -87,7 +87,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
           li_template TYPE REF TO if_w3_api_template.
 
 
-    li_template = w3_api_create_new( is_template_data = is_attr ).
+    li_template = w3_api_create_new( is_attr ).
 
     w3_api_set_attributes( ii_template = li_template
                            is_attr     = is_attr ).
@@ -302,7 +302,13 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
+
+    DATA ls_attributes TYPE w3tempattr.
+
+    read( IMPORTING es_attr = ls_attributes ).
+
+    rv_user = ls_attributes-chname.
+
   ENDMETHOD.
 
 
@@ -314,14 +320,14 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
     ls_name = ms_item-obj_name.
 
-    li_template = w3_api_load( is_name = ls_name ).
+    li_template = w3_api_load( ls_name ).
 
     w3_api_set_changeable( ii_template   = li_template
                            iv_changeable = abap_true ).
 
-    w3_api_delete( ii_template = li_template ).
+    w3_api_delete( li_template ).
 
-    w3_api_save( ii_template = li_template ).
+    w3_api_save( li_template ).
 
   ENDMETHOD.
 
@@ -335,7 +341,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'ATTR'
                   CHANGING cg_data = ls_attr ).
 
-    lv_source = zif_abapgit_object~mo_files->read_string( 'html' ).
+    lv_source = mo_files->read_string( 'html' ).
 
     ls_attr-devclass = iv_package.
     save( is_attr   = ls_attr
@@ -418,7 +424,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
     io_xml->add( iv_name = 'ATTR'
                  ig_data = ls_attr ).
 
-    zif_abapgit_object~mo_files->add_string(
+    mo_files->add_string(
       iv_ext    = 'html'
       iv_string = lv_source ).
 

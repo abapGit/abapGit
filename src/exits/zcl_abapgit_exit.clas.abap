@@ -1,18 +1,26 @@
 CLASS zcl_abapgit_exit DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PUBLIC
+  GLOBAL FRIENDS zcl_abapgit_injector.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_exit .
+    INTERFACES zif_abapgit_exit.
 
     CLASS-METHODS get_instance
       RETURNING
-        VALUE(ri_exit) TYPE REF TO zif_abapgit_exit .
+        VALUE(ri_exit) TYPE REF TO zif_abapgit_exit.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CLASS-DATA gi_exit TYPE REF TO zif_abapgit_exit .
+    CLASS-DATA gi_global_exit TYPE REF TO zif_abapgit_exit.
+    CLASS-DATA gi_exit TYPE REF TO zif_abapgit_exit.
+
+    CLASS-METHODS is_running_in_test_context
+      RETURNING
+        VALUE(rv_running_in_test_context) TYPE abap_bool.
+
 ENDCLASS.
 
 
@@ -24,6 +32,11 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
 
     DATA lv_class_name TYPE string.
 
+    IF gi_global_exit IS NOT INITIAL.
+      ri_exit = gi_global_exit.
+      RETURN.
+    ENDIF.
+
     lv_class_name = 'ZCL_ABAPGIT_USER_EXIT'.
 
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
@@ -31,14 +44,39 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
       lv_class_name = |\\PROGRAM={ sy-repid }\\CLASS={ lv_class_name }|.
     ENDIF.
 
-    IF gi_exit IS INITIAL.
+    " Prevent non-mocked exit calls in unit tests
+    IF is_running_in_test_context( ) = abap_false.
       TRY.
           CREATE OBJECT gi_exit TYPE (lv_class_name).
         CATCH cx_sy_create_object_error ##NO_HANDLER.
       ENDTRY.
     ENDIF.
 
-    CREATE OBJECT ri_exit TYPE zcl_abapgit_exit.
+    CREATE OBJECT gi_global_exit TYPE zcl_abapgit_exit. " this class
+
+    ri_exit = gi_global_exit.
+
+  ENDMETHOD.
+
+
+  METHOD is_running_in_test_context.
+
+    IF sy-sysid = 'ABC'.
+      " always run on open-abap
+      rv_running_in_test_context = abap_true.
+      RETURN.
+    ENDIF.
+
+    " Check if the local test class can be accessed by RTTI. If so the current process is running in a unit test.
+    " Note this approach only works for the developer version. The standalone version will always report not running in
+    " test context which should be fine as there are no unit tests delivered in it.
+    cl_abap_typedescr=>describe_by_name(
+      EXPORTING
+        p_name         = |\\PROGRAM={ sy-repid }\\CLASS=LTCL_TEST|
+      EXCEPTIONS
+        type_not_found = 1
+        OTHERS         = 2 ).
+    rv_running_in_test_context = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -66,7 +104,9 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
 
     IF gi_exit IS NOT INITIAL.
       TRY.
-          rv_filename = gi_exit->adjust_display_filename( iv_filename ).
+          rv_filename = gi_exit->adjust_display_filename(
+            is_repo_meta = is_repo_meta
+            iv_filename  = iv_filename ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
@@ -95,6 +135,22 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
     IF gi_exit IS NOT INITIAL.
       TRY.
           gi_exit->change_local_host( CHANGING ct_hosts = ct_hosts ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~change_max_parallel_processes.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->change_max_parallel_processes(
+            EXPORTING
+              iv_package       = iv_package
+            CHANGING
+              cv_max_processes = cv_max_processes ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
@@ -150,6 +206,18 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_exit~change_rfc_server_group.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->change_rfc_server_group( CHANGING cv_group = cv_group ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_exit~change_supported_data_objects.
 
     IF gi_exit IS NOT INITIAL.
@@ -180,10 +248,13 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
       TRY.
           gi_exit->change_tadir(
             EXPORTING
-              iv_package = iv_package
-              ii_log     = ii_log
+              iv_package            = iv_package
+              ii_log                = ii_log
+              is_dot_abapgit        = is_dot_abapgit
+              iv_ignore_subpackages = iv_ignore_subpackages
+              iv_only_local_objects = iv_only_local_objects
             CHANGING
-              ct_tadir   = ct_tadir ).
+              ct_tadir              = ct_tadir ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
@@ -250,6 +321,21 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
               iv_transport_type    = iv_transport_type
             CHANGING
               cv_transport_request = cv_transport_request ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~enhance_repo_toolbar.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->enhance_repo_toolbar(
+            io_menu = io_menu
+            iv_key  = iv_key
+            iv_act  = iv_act ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
@@ -387,16 +473,5 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
       ENDTRY.
     ENDIF.
 
-  ENDMETHOD.
-  METHOD zif_abapgit_exit~enhance_repo_toolbar.
-    IF gi_exit IS NOT INITIAL.
-      TRY.
-          gi_exit->enhance_repo_toolbar(
-            io_menu = io_menu
-            iv_key  = iv_key
-            iv_act  = iv_act ).
-        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
-      ENDTRY.
-    ENDIF.
   ENDMETHOD.
 ENDCLASS.

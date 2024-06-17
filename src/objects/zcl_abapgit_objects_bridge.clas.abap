@@ -2,16 +2,21 @@ CLASS zcl_abapgit_objects_bridge DEFINITION PUBLIC FINAL CREATE PUBLIC INHERITIN
 
   PUBLIC SECTION.
 
-    CLASS-METHODS class_constructor.
-
     METHODS constructor
-      IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
-      RAISING   cx_sy_create_object_error.
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        cx_sy_create_object_error
+        zcx_abapgit_exception.
 
     INTERFACES zif_abapgit_object.
   PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA: mo_plugin TYPE REF TO object.
+    DATA mo_plugin TYPE REF TO object.
+
+    CLASS-METHODS initialize.
 
     " Metadata flags (late_deser, delete_tadir, and ddic) are not required by abapGit anymore
     " We keep them to stay compatible with old bridge implementation
@@ -30,6 +35,7 @@ CLASS zcl_abapgit_objects_bridge DEFINITION PUBLIC FINAL CREATE PUBLIC INHERITIN
            END OF ty_s_objtype_map,
            ty_t_objtype_map TYPE SORTED TABLE OF ty_s_objtype_map WITH UNIQUE KEY obj_typ.
 
+    CLASS-DATA gv_init TYPE abap_bool.
     CLASS-DATA gt_objtype_map TYPE ty_t_objtype_map.
 
 ENDCLASS.
@@ -39,7 +45,37 @@ ENDCLASS.
 CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
 
 
-  METHOD class_constructor.
+  METHOD constructor.
+
+    DATA ls_objtype_map LIKE LINE OF gt_objtype_map.
+
+    super->constructor(
+      is_item        = is_item
+      iv_language    = zif_abapgit_definitions=>c_english
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
+
+    initialize( ).
+
+*    determine the responsible plugin
+    READ TABLE gt_objtype_map INTO ls_objtype_map
+      WITH TABLE KEY obj_typ = is_item-obj_type.
+    IF sy-subrc = 0.
+      CREATE OBJECT mo_plugin TYPE (ls_objtype_map-plugin_class).
+
+      CALL METHOD mo_plugin->('SET_ITEM')
+        EXPORTING
+          iv_obj_type = is_item-obj_type
+          iv_obj_name = is_item-obj_name.
+    ELSE.
+      RAISE EXCEPTION TYPE cx_sy_create_object_error
+        EXPORTING
+          classname = 'LCL_OBJECTS_BRIDGE'.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD initialize.
 
     DATA lt_plugin_class    TYPE STANDARD TABLE OF seoclsname WITH DEFAULT KEY.
     DATA lv_plugin_class    LIKE LINE OF lt_plugin_class.
@@ -47,6 +83,10 @@ CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
     DATA lt_plugin_obj_type TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY.
     DATA ls_objtype_map     LIKE LINE OF gt_objtype_map.
 
+    IF gv_init = abap_true.
+      RETURN.
+    ENDIF.
+    gv_init = abap_true.
 
     SELECT clsname
       FROM seometarel
@@ -73,7 +113,7 @@ CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
       LOOP AT lt_plugin_obj_type INTO ls_objtype_map-obj_typ.
         INSERT ls_objtype_map INTO TABLE gt_objtype_map.
         IF sy-subrc <> 0.
-* No exception in class-contructor possible.
+* No exception in class-constructor possible.
 * Anyway, a shortdump is more appropriate in this case
           ASSERT 'There must not be' =
             |multiple abapGit-Plugins for the same object type {
@@ -98,31 +138,6 @@ CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP. "at plugins
 
-  ENDMETHOD.
-
-
-  METHOD constructor.
-
-    DATA ls_objtype_map LIKE LINE OF gt_objtype_map.
-
-    super->constructor( is_item = is_item
-                        iv_language = zif_abapgit_definitions=>c_english ).
-
-*    determine the responsible plugin
-    READ TABLE gt_objtype_map INTO ls_objtype_map
-      WITH TABLE KEY obj_typ = is_item-obj_type.
-    IF sy-subrc = 0.
-      CREATE OBJECT mo_plugin TYPE (ls_objtype_map-plugin_class).
-
-      CALL METHOD mo_plugin->('SET_ITEM')
-        EXPORTING
-          iv_obj_type = is_item-obj_type
-          iv_obj_name = is_item-obj_name.
-    ELSE.
-      RAISE EXCEPTION TYPE cx_sy_create_object_error
-        EXPORTING
-          classname = 'LCL_OBJECTS_BRIDGE'.
-    ENDIF.
   ENDMETHOD.
 
 

@@ -5,11 +5,15 @@ CLASS zcl_abapgit_object_enhc DEFINITION
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
-    METHODS:
-      constructor
-        IMPORTING
-          is_item     TYPE zif_abapgit_definitions=>ty_item
-          iv_language TYPE spras.
+    METHODS constructor
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA:
@@ -24,8 +28,11 @@ CLASS zcl_abapgit_object_enhc IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     mv_composite_id = ms_item-obj_name.
 
@@ -94,18 +101,7 @@ CLASS zcl_abapgit_object_enhc IMPLEMENTATION.
     IF sy-subrc = 0.
       " If object exists already, then set TADIR entry to deleted
       " otherwise create_enhancement_composite will fail
-      CALL FUNCTION 'TR_TADIR_INTERFACE'
-        EXPORTING
-          wi_test_modus     = abap_false
-          wi_tadir_pgmid    = 'R3TR'
-          wi_tadir_object   = ms_item-obj_type
-          wi_tadir_obj_name = ms_item-obj_name
-          iv_delflag        = abap_true
-        EXCEPTIONS
-          OTHERS            = 1.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
+      tadir_delete( ).
     ENDIF.
 
     TRY.

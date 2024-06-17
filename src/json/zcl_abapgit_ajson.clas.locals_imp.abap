@@ -189,6 +189,7 @@ CLASS lcl_json_parser DEFINITION FINAL.
     METHODS parse
       IMPORTING
         iv_json TYPE string
+        iv_keep_item_order TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_json_tree) TYPE zif_abapgit_ajson_types=>ty_nodes_tt
       RAISING
@@ -201,6 +202,7 @@ CLASS lcl_json_parser DEFINITION FINAL.
 
     DATA mt_stack TYPE ty_stack_tt.
     DATA mv_stack_path TYPE string.
+    DATA mv_keep_item_order TYPE abap_bool.
 
     METHODS raise
       IMPORTING
@@ -231,6 +233,9 @@ CLASS lcl_json_parser IMPLEMENTATION.
     DATA lx_sxml_parse TYPE REF TO cx_sxml_parse_error.
     DATA lx_sxml TYPE REF TO cx_dynamic_check.
     DATA lv_location TYPE string.
+
+    mv_keep_item_order = iv_keep_item_order.
+
     TRY.
       " TODO sane JSON check:
       " JSON can be true,false,null,(-)digits
@@ -248,6 +253,7 @@ CLASS lcl_json_parser IMPLEMENTATION.
         iv_msg      = |Json parsing error (SXML): { lx_sxml->get_text( ) }|
         iv_location = '@PARSER' ).
     ENDTRY.
+
   ENDMETHOD.
 
   METHOD _get_location.
@@ -337,6 +343,9 @@ CLASS lcl_json_parser IMPLEMENTATION.
                   <item>-name = lo_attr->get_value( ).
                 ENDIF.
               ENDLOOP.
+              IF mv_keep_item_order = abap_true.
+                <item>-order = lr_stack_top->children.
+              ENDIF.
             ENDIF.
             IF <item>-name IS INITIAL.
               raise( 'Node without name (maybe not JSON)' ).
@@ -663,6 +672,14 @@ CLASS lcl_json_to_abap DEFINITION FINAL.
       RAISING
         zcx_abapgit_ajson_error.
 
+    METHODS to_time
+      IMPORTING
+        iv_value         TYPE zif_abapgit_ajson_types=>ty_node-value
+      RETURNING
+        VALUE(rv_result) TYPE t
+      RAISING
+        zcx_abapgit_ajson_error.
+
   PRIVATE SECTION.
 
     TYPES:
@@ -794,7 +811,7 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
           zcx_abapgit_ajson_error=>raise( |Unexpected parent type| ).
       ENDCASE.
 
-      rs_node_type-type_kind         = rs_node_type-dd->type_kind. " for caching and cleaner unintialized access
+      rs_node_type-type_kind         = rs_node_type-dd->type_kind. " for caching and cleaner uninitialized access
       IF rs_node_type-type_kind = lif_kind=>table.
         lo_tdescr ?= rs_node_type-dd.
         IF lo_tdescr->table_kind <> cl_abap_tabledescr=>tablekind_std.
@@ -975,10 +992,19 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
 
       WHEN zif_abapgit_ajson_types=>node_type-string.
         " TODO: check type ?
-        IF is_node_type-type_kind = lif_kind=>date AND is_node-value IS NOT INITIAL.
-          <container> = to_date( is_node-value ).
-        ELSEIF is_node_type-type_kind = lif_kind=>packed AND is_node-value IS NOT INITIAL.
-          <container> = to_timestamp( is_node-value ).
+        IF is_node-value IS NOT INITIAL.
+          IF is_node_type-type_kind = lif_kind=>date.
+            <container> = to_date( is_node-value ).
+          ELSEIF is_node_type-type_kind = lif_kind=>time.
+            <container> = to_time( is_node-value ).
+          ELSEIF is_node_type-dd->absolute_name = '\TYPE=TIMESTAMP'
+            OR is_node_type-dd->absolute_name = '\TYPE=TIMESTAMPL'.
+            <container> = to_timestamp( is_node-value ).
+          ELSEIF is_node_type-type_kind = lif_kind=>packed. " Number as a string, but not a timestamp
+            <container> = is_node-value.
+          ELSE.
+            <container> = is_node-value.
+          ENDIF.
         ELSE.
           <container> = is_node-value.
         ENDIF.
@@ -1086,6 +1112,22 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD to_time.
+
+    DATA lv_h TYPE c LENGTH 2.
+    DATA lv_m TYPE c LENGTH 2.
+    DATA lv_s TYPE c LENGTH 2.
+
+    FIND FIRST OCCURRENCE OF REGEX '^(\d{2}):(\d{2}):(\d{2})(T|$)'
+      IN iv_value
+      SUBMATCHES lv_h lv_m lv_s.
+    IF sy-subrc <> 0.
+      zcx_abapgit_ajson_error=>raise( 'Unexpected time format' ).
+    ENDIF.
+    CONCATENATE lv_h lv_m lv_s INTO rv_result.
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 **********************************************************************
@@ -1164,6 +1206,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         io_json TYPE REF TO zif_abapgit_ajson
         is_prefix TYPE zif_abapgit_ajson_types=>ty_path_name
         iv_index TYPE i DEFAULT 0
+        iv_item_order TYPE i DEFAULT 0
       CHANGING
         ct_nodes TYPE zif_abapgit_ajson_types=>ty_nodes_tt
       RAISING
@@ -1201,7 +1244,6 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         iv_item_order TYPE i DEFAULT 0
       CHANGING
         ct_nodes TYPE zif_abapgit_ajson_types=>ty_nodes_tt
-        cs_root  TYPE zif_abapgit_ajson_types=>ty_node OPTIONAL
       RAISING
         zcx_abapgit_ajson_error.
 
@@ -1324,6 +1366,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
               io_json   = iv_data
               is_prefix = is_prefix
               iv_index  = iv_index
+              iv_item_order = iv_item_order
             CHANGING
               ct_nodes = ct_nodes ).
         ELSE.
@@ -1351,6 +1394,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
         <dst>-path  = is_prefix-path.
         <dst>-name  = is_prefix-name.
         <dst>-index = iv_index.
+        <dst>-order = iv_item_order.
       ELSE.
         <dst>-path = is_prefix-path && is_prefix-name && <dst>-path.
       ENDIF.
@@ -1485,7 +1529,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
   METHOD convert_struc.
 
     DATA lo_struc TYPE REF TO cl_abap_structdescr.
-    DATA lt_comps TYPE cl_abap_structdescr=>component_table.
+    DATA lt_comps TYPE cl_abap_structdescr=>included_view.
     DATA ls_next_prefix LIKE is_prefix.
     DATA lv_mapping_prefix_name LIKE is_prefix-name.
     DATA lv_item_order TYPE i.
@@ -1497,34 +1541,30 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
 
     " Object root
 
-    IF cs_root IS SUPPLIED. " call for include structure
-      ASSIGN cs_root TO <root>.
-    ELSE. " First call
-      ls_root-path  = is_prefix-path.
-      ls_root-name  = is_prefix-name.
-      ls_root-type  = zif_abapgit_ajson_types=>node_type-object.
-      ls_root-index = iv_index.
+    ls_root-path  = is_prefix-path.
+    ls_root-name  = is_prefix-name.
+    ls_root-type  = zif_abapgit_ajson_types=>node_type-object.
+    ls_root-index = iv_index.
 
-      IF mi_custom_mapping IS BOUND.
-        ls_root-name = mi_custom_mapping->to_json(
-          iv_path = is_prefix-path
-          iv_name = is_prefix-name ).
-      ENDIF.
-
-      IF ls_root-name IS INITIAL.
-        ls_root-name  = is_prefix-name.
-      ENDIF.
-
-      ls_root-order = iv_item_order.
-
-      APPEND ls_root TO ct_nodes ASSIGNING <root>.
-
+    IF mi_custom_mapping IS BOUND.
+      ls_root-name = mi_custom_mapping->to_json(
+        iv_path = is_prefix-path
+        iv_name = is_prefix-name ).
     ENDIF.
+
+    IF ls_root-name IS INITIAL.
+      ls_root-name  = is_prefix-name.
+    ENDIF.
+
+    ls_root-order = iv_item_order.
+
+    APPEND ls_root TO ct_nodes ASSIGNING <root>.
 
     " Object attributes
 
     lo_struc ?= io_type.
-    lt_comps = lo_struc->get_components( ).
+    lt_comps = lo_struc->get_included_view( ).
+    " replaced call to get_components() with get_included_view() to avoid problems with suffixes in includes.
     " get_components is potentially much slower than lo_struc->components
     " but ! we still need it to identify booleans
     " and rtti seems to cache type descriptions really well (https://github.com/sbcgua/benchmarks.git)
@@ -1535,47 +1575,32 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     LOOP AT lt_comps ASSIGNING <c>.
       CLEAR lv_mapping_prefix_name.
 
-      IF <c>-as_include = abap_true.
+      <root>-children = <root>-children + 1.
+      ls_next_prefix-name = to_lower( <c>-name ).
+      ASSIGN COMPONENT <c>-name OF STRUCTURE iv_data TO <val>.
+      ASSERT sy-subrc = 0.
 
-        convert_struc(
-          EXPORTING
-            iv_data   = iv_data
-            io_type   = <c>-type
-            is_prefix = is_prefix
-          CHANGING
-            cs_root  = <root>
-            ct_nodes = ct_nodes ).
-
-      ELSE.
-
-        <root>-children = <root>-children + 1.
-        ls_next_prefix-name = to_lower( <c>-name ).
-        ASSIGN COMPONENT <c>-name OF STRUCTURE iv_data TO <val>.
-        ASSERT sy-subrc = 0.
-
-        IF mi_custom_mapping IS BOUND AND <c>-type->kind = cl_abap_typedescr=>kind_elem.
-          lv_mapping_prefix_name = mi_custom_mapping->to_json( iv_path = ls_next_prefix-path
-                                                               iv_name = ls_next_prefix-name ).
-        ENDIF.
-
-        IF lv_mapping_prefix_name IS NOT INITIAL.
-          ls_next_prefix-name = lv_mapping_prefix_name.
-        ENDIF.
-
-        IF mv_keep_item_order = abap_true.
-          lv_item_order = <root>-children.
-        ENDIF.
-
-        convert_any(
-          EXPORTING
-            iv_data   = <val>
-            io_type   = <c>-type
-            is_prefix = ls_next_prefix
-            iv_item_order = lv_item_order
-          CHANGING
-            ct_nodes = ct_nodes ).
-
+      IF mi_custom_mapping IS BOUND AND <c>-type->kind = cl_abap_typedescr=>kind_elem.
+        lv_mapping_prefix_name = mi_custom_mapping->to_json( iv_path = ls_next_prefix-path
+                                                             iv_name = ls_next_prefix-name ).
       ENDIF.
+
+      IF lv_mapping_prefix_name IS NOT INITIAL.
+        ls_next_prefix-name = lv_mapping_prefix_name.
+      ENDIF.
+
+      IF mv_keep_item_order = abap_true.
+        lv_item_order = <root>-children.
+      ENDIF.
+
+      convert_any(
+        EXPORTING
+          iv_data   = <val>
+          io_type   = <c>-type
+          is_prefix = ls_next_prefix
+          iv_item_order = lv_item_order
+        CHANGING
+          ct_nodes = ct_nodes ).
 
     ENDLOOP.
 

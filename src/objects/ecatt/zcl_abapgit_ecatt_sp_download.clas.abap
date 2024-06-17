@@ -103,7 +103,7 @@ CLASS ZCL_ABAPGIT_ECATT_SP_DOWNLOAD IMPLEMENTATION.
         document = li_dom.
 
     li_element = li_dom->get_root_element( ).
-    li_start_profile_data_node->append_child( new_child = li_element ).
+    li_start_profile_data_node->append_child( li_element ).
 
   ENDMETHOD.
 
@@ -113,5 +113,4 @@ CLASS ZCL_ABAPGIT_ECATT_SP_DOWNLOAD IMPLEMENTATION.
     rv_xml_stream = mv_xml_stream.
 
   ENDMETHOD.
-
 ENDCLASS.

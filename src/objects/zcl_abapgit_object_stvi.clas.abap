@@ -83,7 +83,7 @@ CLASS zcl_abapgit_object_stvi IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    corr_insert( iv_package = iv_package ).
+    corr_insert( iv_package ).
 
 *   Populate user details
     ls_transaction_variant-shdtvciu-crdate = sy-datum.

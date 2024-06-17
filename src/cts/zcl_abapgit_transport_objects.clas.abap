@@ -45,8 +45,9 @@ CLASS zcl_abapgit_transport_objects IMPLEMENTATION.
         CASE ls_object_status-lstate.
           WHEN zif_abapgit_definitions=>c_state-added OR zif_abapgit_definitions=>c_state-modified.
             IF ls_transport_object-delflag = abap_true.
-              zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
-                } should be added/modified, but has deletion flag in transport| ).
+              zcx_abapgit_exception=>raise( |Object { ls_transport_object-object }|
+                && | { ls_transport_object-obj_name } should be added/modified,|
+                && | but has deletion flag in transport| ).
             ENDIF.
 
             READ TABLE is_stage_objects-local
@@ -55,8 +56,8 @@ CLASS zcl_abapgit_transport_objects IMPLEMENTATION.
                        item-obj_type = ls_transport_object-object
                        file-filename = ls_object_status-filename.
             IF sy-subrc <> 0.
-              zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
-                } not found in the local repository files| ).
+              zcx_abapgit_exception=>raise( |Object { ls_transport_object-object }|
+                && | { ls_transport_object-obj_name } not found in the local repository files| ).
             ELSE.
               io_stage->add(
                 iv_path     = ls_local_file-file-path
@@ -64,16 +65,6 @@ CLASS zcl_abapgit_transport_objects IMPLEMENTATION.
                 iv_data     = ls_local_file-file-data ).
             ENDIF.
           WHEN zif_abapgit_definitions=>c_state-deleted.
-* SUSC, see https://github.com/abapGit/abapGit/issues/2772
-            IF ls_transport_object-delflag = abap_false
-                AND ls_transport_object-object <> 'SUSC'
-                AND ls_transport_object-object <> 'IWOM'
-                AND ls_transport_object-object <> 'IWMO'
-                AND ls_transport_object-object <> 'IWSG'
-                AND ls_transport_object-object <> 'IWSV'.
-              zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
-                } should be removed, but has NO deletion flag in transport| ).
-            ENDIF.
             io_stage->rm(
               iv_path     = ls_object_status-path
               iv_filename = ls_object_status-filename ).
@@ -83,7 +74,7 @@ CLASS zcl_abapgit_transport_objects IMPLEMENTATION.
       ENDLOOP.
       IF sy-subrc <> 0.
         " Since not all objects in a transport might be in the local repo
-        " i.e generated SADL objects, we don't add these objects to
+        " i.e. generated SADL objects, we don't add these objects to
         " the stage.
       ENDIF.
     ENDLOOP.

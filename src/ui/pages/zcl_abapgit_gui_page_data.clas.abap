@@ -1,19 +1,30 @@
 CLASS zcl_abapgit_gui_page_data DEFINITION
   PUBLIC
-  INHERITING FROM zcl_abapgit_gui_page
+  INHERITING FROM zcl_abapgit_gui_component
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
+
+    INTERFACES:
+      zif_abapgit_gui_event_handler,
+      zif_abapgit_gui_menu_provider,
+      zif_abapgit_gui_renderable.
+
+    CLASS-METHODS create
+      IMPORTING
+        !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
+      RETURNING
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS constructor
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
-    METHODS zif_abapgit_gui_event_handler~on_event
-        REDEFINITION .
   PROTECTED SECTION.
 
     CONSTANTS:
@@ -22,45 +33,43 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
         update            TYPE string VALUE 'update',
         remove            TYPE string VALUE 'remove',
         add_via_transport TYPE string VALUE 'add_via_transport',
-      END OF c_event .
-
+      END OF c_event.
     CONSTANTS:
       BEGIN OF c_id,
         table        TYPE string VALUE 'table',
         where        TYPE string VALUE 'where',
         skip_initial TYPE string VALUE 'skip_initial',
-      END OF c_id .
+      END OF c_id.
+    DATA mi_config TYPE REF TO zif_abapgit_data_config.
 
-    DATA mi_config TYPE REF TO zif_abapgit_data_config .
-
-    METHODS render_content
-        REDEFINITION .
   PRIVATE SECTION.
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo.
+
+    DATA mo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
+    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
+    DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
 
     CLASS-METHODS concatenated_key_to_where
       IMPORTING
         !iv_table       TYPE tabname
         !iv_tabkey      TYPE clike
       RETURNING
-        VALUE(rv_where) TYPE string .
+        VALUE(rv_where) TYPE string
+      RAISING
+        zcx_abapgit_exception.
+    METHODS get_form_schema
+      RETURNING
+        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
     METHODS add_via_transport
       RAISING
         zcx_abapgit_exception .
-    METHODS build_menu
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS build_where
       IMPORTING
         !io_map         TYPE REF TO zcl_abapgit_string_map
       RETURNING
         VALUE(rt_where) TYPE string_table .
-    METHODS render_add
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html
-      RAISING
-        zcx_abapgit_exception .
     METHODS render_existing
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
@@ -88,25 +97,46 @@ ENDCLASS.
 CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
 
+  METHOD get_form_schema.
+    ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'data-config' ).
+
+    ro_form->text(
+      iv_label       = 'Table'
+      iv_name        = c_id-table
+      iv_required    = abap_true
+      iv_max         = 16 ).
+
+    ro_form->checkbox(
+      iv_label = 'Skip Initial Values'
+      iv_name  = c_id-skip_initial ).
+
+    ro_form->textarea(
+      iv_label       = 'Where'
+      iv_placeholder = 'Conditions separated by newline'
+      iv_name        = c_id-where ).
+
+    ro_form->command(
+      iv_label       = 'Add'
+      iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
+      iv_action      = c_event-add ).
+  ENDMETHOD.
+
+
   METHOD add_via_transport.
 
-    DATA lt_trkorr  TYPE trwbo_request_headers.
-    DATA ls_trkorr  LIKE LINE OF lt_trkorr.
-    DATA ls_request TYPE trwbo_request.
+    DATA lv_trkorr  TYPE trkorr.
+    DATA ls_request TYPE zif_abapgit_cts_api=>ty_transport_data.
     DATA ls_key     LIKE LINE OF ls_request-keys.
     DATA lv_where   TYPE string.
     DATA ls_config  TYPE zif_abapgit_data_config=>ty_config.
 
 
-    lt_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
-    IF lines( lt_trkorr ) <> 1.
+    lv_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transport( ).
+    IF lv_trkorr IS INITIAL.
       RETURN.
     ENDIF.
 
-    READ TABLE lt_trkorr INDEX 1 INTO ls_trkorr.
-    ASSERT sy-subrc = 0.
-
-    ls_request = zcl_abapgit_transport=>read( ls_trkorr ).
+    ls_request = zcl_abapgit_factory=>get_cts_api( )->read( lv_trkorr ).
 
     IF lines( ls_request-keys ) = 0.
       zcx_abapgit_exception=>raise( |No keys found, select task| ).
@@ -125,18 +155,6 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
       APPEND lv_where TO ls_config-where.
       mi_config->add_config( ls_config ).
     ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD build_menu.
-
-    CREATE OBJECT ro_menu.
-
-    ro_menu->add( iv_txt = 'Add Via Transport'
-                  iv_act = c_event-add_via_transport ).
-    ro_menu->add( iv_txt = 'Back'
-                  iv_act = zif_abapgit_definitions=>c_action-go_back ).
 
   ENDMETHOD.
 
@@ -161,28 +179,38 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
   METHOD concatenated_key_to_where.
 
     DATA lo_structdescr TYPE REF TO cl_abap_structdescr.
-    DATA lt_fields      TYPE ddfields.
-    DATA ls_field       LIKE LINE OF lt_fields.
+    DATA lo_typedescr   TYPE REF TO cl_abap_typedescr.
+    DATA lt_fields      TYPE zcl_abapgit_data_utils=>ty_names.
+    DATA lv_field       LIKE LINE OF lt_fields.
+    DATA lv_table       TYPE tadir-obj_name.
+    DATA lv_length      TYPE i.
+    DATA lv_tabix       TYPE i.
     DATA lv_key         TYPE c LENGTH 900.
 
     lv_key = iv_tabkey.
     lo_structdescr ?= cl_abap_typedescr=>describe_by_name( iv_table ).
 
-    lt_fields = lo_structdescr->get_ddic_field_list( ).
+    lv_table = iv_table.
+    lt_fields = zcl_abapgit_data_utils=>list_key_fields( lv_table ).
 
-    LOOP AT lt_fields INTO ls_field WHERE keyflag = abap_true.
-      IF ls_field-position = '0001' AND ls_field-datatype = 'CLNT'.
-        lv_key = lv_key+ls_field-leng.
+    LOOP AT lt_fields INTO lv_field.
+      lv_tabix = sy-tabix.
+      lo_typedescr = cl_abap_typedescr=>describe_by_name( |{ iv_table }-{ lv_field }| ).
+      lv_length = lo_typedescr->length / cl_abap_char_utilities=>charsize.
+
+      IF lv_tabix = 1 AND lo_typedescr->get_relative_name( ) = 'MANDT'.
+        lv_key = lv_key+lv_length.
         CONTINUE.
       ENDIF.
+
       IF lv_key = |*|.
         EXIT. " current loop
       ENDIF.
       IF NOT rv_where IS INITIAL.
         rv_where = |{ rv_where } AND |.
       ENDIF.
-      rv_where = |{ rv_where }{ to_lower( ls_field-fieldname ) } = '{ lv_key(ls_field-leng) }'|.
-      lv_key = lv_key+ls_field-leng.
+      rv_where = |{ rv_where }{ to_lower( lv_field ) } = '{ lv_key(lv_length) }'|.
+      lv_key = lv_key+lv_length.
     ENDLOOP.
 
   ENDMETHOD.
@@ -192,11 +220,30 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
     super->constructor( ).
 
-    ms_control-page_title = 'Data'.
-    ms_control-page_menu = build_menu( ).
+    CREATE OBJECT mo_validation_log.
+    CREATE OBJECT mo_form_data.
+
+    mo_form = get_form_schema( ).
+    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
 
     mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     mi_config = mo_repo->get_data_config( ).
+
+  ENDMETHOD.
+
+
+  METHOD create.
+
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_data.
+
+    CREATE OBJECT lo_component
+      EXPORTING
+        iv_key = iv_key.
+
+    ri_page = zcl_abapgit_gui_page_hoc=>create(
+      iv_page_title         = 'Data Config'
+      ii_page_menu_provider = lo_component
+      ii_child_component    = lo_component ).
 
   ENDMETHOD.
 
@@ -250,49 +297,6 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_add.
-
-    DATA lo_form TYPE REF TO zcl_abapgit_html_form.
-    DATA lo_form_data TYPE REF TO zcl_abapgit_string_map.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    CREATE OBJECT lo_form_data.
-
-    lo_form = zcl_abapgit_html_form=>create( ).
-    lo_form->text(
-      iv_label    = 'Table'
-      iv_name     = c_id-table
-      iv_required = abap_true ).
-
-    lo_form->checkbox(
-      iv_label = 'Skip Initial Values'
-      iv_name  = c_id-skip_initial ).
-
-    lo_form->textarea(
-      iv_label       = 'Where'
-      iv_placeholder = 'Conditions separated by newline'
-      iv_name        = c_id-where ).
-
-    lo_form->command(
-      iv_label       = 'Add'
-      iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
-      iv_action      = c_event-add ).
-    ri_html->add( lo_form->render( lo_form_data ) ).
-
-  ENDMETHOD.
-
-
-  METHOD render_content.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    ri_html->add( '<div class="repo">' ).
-    ri_html->add( render_existing( ) ).
-    ri_html->add( render_add( ) ).
-    ri_html->add( '</div>' ).
-
-  ENDMETHOD.
-
-
   METHOD render_existing.
 
     DATA lo_form TYPE REF TO zcl_abapgit_html_form.
@@ -306,7 +310,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     lt_configs = mi_config->get_configs( ).
 
     LOOP AT lt_configs INTO ls_config.
-      lo_form = zcl_abapgit_html_form=>create(  ).
+      lo_form = zcl_abapgit_html_form=>create( ).
       CREATE OBJECT lo_form_data.
 
       lo_form_data->set(
@@ -315,7 +319,8 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
       lo_form->text(
         iv_label    = 'Table'
         iv_name     = c_id-table
-        iv_readonly = abap_true ).
+        iv_readonly = abap_true
+        iv_max      = 16 ).
 
       lo_form_data->set(
         iv_key = c_id-skip_initial
@@ -346,12 +351,18 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
+    mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
       WHEN c_event-add.
-        event_add( ii_event ).
-        mo_repo->refresh( ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        mo_validation_log = mo_form_util->validate( mo_form_data ).
+        IF mo_validation_log->is_empty( ) = abap_false.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        ELSE.
+          event_add( ii_event ).
+          mo_repo->refresh( ).
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        ENDIF.
       WHEN c_event-update.
         event_update( ii_event ).
         mo_repo->refresh( ).
@@ -365,6 +376,36 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
         mo_repo->refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_menu_provider~get_menu.
+
+    CREATE OBJECT ro_toolbar.
+
+    ro_toolbar->add( iv_txt = 'Add Via Transport'
+                     iv_act = c_event-add_via_transport ).
+    ro_toolbar->add( iv_txt = 'Back'
+                     iv_act = zif_abapgit_definitions=>c_action-go_back ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~render.
+
+    register_handlers( ).
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( '<div class="repo">' ).
+    ri_html->add( render_existing( ) ).
+    mo_form_data->delete( 'table' ).
+    mo_form_data->delete( 'skip_initial' ).
+    mo_form_data->delete( 'where' ).
+    ri_html->add( mo_form->render(
+      io_values         = mo_form_data
+      io_validation_log = mo_validation_log ) ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 ENDCLASS.

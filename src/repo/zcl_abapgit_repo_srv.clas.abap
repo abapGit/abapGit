@@ -100,13 +100,13 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     rv_name = iv_name.
     IF rv_name IS INITIAL.
       ASSERT NOT iv_url IS INITIAL.
-      lo_branch_list = zcl_abapgit_git_transport=>branches( iv_url ).
+      lo_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( iv_url ).
       rv_name = lo_branch_list->get_head_symref( ).
     ELSEIF -1 = find(
         val = rv_name
-        sub = zif_abapgit_definitions=>c_git_branch-heads_prefix ).
+        sub = zif_abapgit_git_definitions=>c_git_branch-heads_prefix ).
       " Assume short branch name was received
-      rv_name = zif_abapgit_definitions=>c_git_branch-heads_prefix && rv_name.
+      rv_name = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && rv_name.
     ENDIF.
 
   ENDMETHOD.
@@ -309,6 +309,8 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     FIELD-SYMBOLS: <li_repo> LIKE LINE OF mt_list.
 
+    ASSERT iv_key IS NOT INITIAL.
+
     IF mv_init = abap_false.
       refresh_all( ).
     ENDIF.
@@ -475,11 +477,17 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_srv~list.
 
+    DATA li_repo TYPE REF TO zif_abapgit_repo.
+
     IF mv_init = abap_false OR mv_only_favorites = abap_true.
       refresh_all( ).
     ENDIF.
 
-    rt_list = mt_list.
+    LOOP AT mt_list INTO li_repo.
+      IF iv_offline = abap_undefined OR li_repo->is_offline( ) = iv_offline.
+        INSERT li_repo INTO TABLE rt_list.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -500,7 +508,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       READ TABLE lt_user_favorites
         TRANSPORTING NO FIELDS
         WITH KEY table_line = li_repo->get_key( ).
-      IF sy-subrc = 0.
+      IF sy-subrc = 0 AND ( iv_offline = abap_undefined OR li_repo->is_offline( ) = iv_offline ).
         APPEND li_repo TO rt_list.
       ENDIF.
     ENDLOOP.
@@ -524,16 +532,17 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       iv_package    = iv_package
       iv_ign_subpkg = iv_ign_subpkg ).
 
-    IF iv_url IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Missing display name for repo' ).
+    IF iv_name IS INITIAL.
+      zcx_abapgit_exception=>raise( 'Missing name for repository' ).
     ENDIF.
 
+    " Repo Settings
     lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
     lo_dot_abapgit->set_folder_logic( iv_folder_logic ).
+    lo_dot_abapgit->set_name( iv_name ).
+    lo_dot_abapgit->set_abap_language_version( iv_abap_lang_vers ).
 
     lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
-      iv_url          = iv_url
-      iv_branch_name  = ''
       iv_package      = iv_package
       iv_offline      = abap_true
       is_dot_abapgit  = lo_dot_abapgit->get_data( ) ).
@@ -546,6 +555,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     lo_repo ?= instantiate_and_add( ls_repo ).
 
+    " Local Settings
     IF ls_repo-local_settings-ignore_subpackages <> iv_ign_subpkg.
       ls_repo-local_settings-ignore_subpackages = iv_ign_subpkg.
     ENDIF.
@@ -553,7 +563,6 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ls_repo-local_settings-labels = iv_labels.
 
     lo_repo->set_local_settings( ls_repo-local_settings ).
-    lo_repo->check_and_create_package( iv_package ).
 
     ri_repo = lo_repo.
 
@@ -566,7 +575,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
           lo_repo        TYPE REF TO zcl_abapgit_repo_online,
           lv_branch_name LIKE iv_branch_name,
           lv_key         TYPE zif_abapgit_persistence=>ty_repo-key,
-          ls_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
+          lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
           lv_url         TYPE string.
 
 
@@ -589,8 +598,11 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       iv_name = iv_branch_name
       iv_url  = lv_url ).
 
-    ls_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ).
-    ls_dot_abapgit-folder_logic = iv_folder_logic.
+    " Repo Settings
+    lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
+    lo_dot_abapgit->set_folder_logic( iv_folder_logic ).
+    lo_dot_abapgit->set_name( iv_name ).
+    lo_dot_abapgit->set_abap_language_version( iv_abap_lang_vers ).
 
     lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
       iv_url          = lv_url
@@ -598,7 +610,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       iv_display_name = iv_display_name
       iv_package      = iv_package
       iv_offline      = abap_false
-      is_dot_abapgit  = ls_dot_abapgit ).
+      is_dot_abapgit  = lo_dot_abapgit->get_data( ) ).
 
     TRY.
         ls_repo = zcl_abapgit_persist_factory=>get_repo( )->read( lv_key ).
@@ -608,6 +620,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     lo_repo ?= instantiate_and_add( ls_repo ).
 
+    " Local Settings
     IF ls_repo-local_settings-ignore_subpackages <> iv_ign_subpkg.
       ls_repo-local_settings-ignore_subpackages = iv_ign_subpkg.
     ENDIF.
@@ -615,9 +628,9 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ls_repo-local_settings-labels = iv_labels.
 
     lo_repo->set_local_settings( ls_repo-local_settings ).
+
     lo_repo->refresh( ).
     lo_repo->find_remote_dot_abapgit( ).
-    lo_repo->check_and_create_package( iv_package ).
 
     ri_repo = lo_repo.
 
@@ -643,7 +656,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Not authorized' ).
     ENDIF.
 
-    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( ii_repo->get_package( ) ).
+    lt_tadir = lo_repo->get_tadir_objects( ).
 
     TRY.
         zcl_abapgit_objects=>delete( it_tadir  = lt_tadir
@@ -655,14 +668,19 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
-    zif_abapgit_repo_srv~delete( ii_repo ).
+    IF iv_keep_repo = abap_true.
+      ii_repo->refresh( ).
+      ii_repo->checksums( )->rebuild( ).
+    ELSE.
+      zif_abapgit_repo_srv~delete( ii_repo ).
+    ENDIF.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_repo_srv~validate_package.
 
-    DATA: lv_as4user TYPE tdevc-as4user,
+    DATA: lv_as4user TYPE usnam,
           li_repo    TYPE REF TO zif_abapgit_repo,
           lv_reason  TYPE string.
 

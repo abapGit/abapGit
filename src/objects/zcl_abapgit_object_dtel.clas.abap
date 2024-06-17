@@ -57,9 +57,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     ii_xml->read( EXPORTING iv_name = 'DD04_TEXTS'
                   CHANGING  cg_data = lt_dd04_texts ).
 
-    zcl_abapgit_lxe_texts=>trim_saplangu_by_iso(
-      EXPORTING it_iso_filter = ii_xml->i18n_params( )-translation_languages
-      CHANGING ct_sap_langs   = lt_i18n_langs ).
+    mo_i18n_params->trim_saplang_list( CHANGING ct_sap_langs = lt_i18n_langs ).
 
     SORT lt_i18n_langs.
     SORT lt_dd04_texts BY ddlanguage. " Optimization
@@ -104,24 +102,21 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
                    <ls_dd04_text> LIKE LINE OF lt_dd04_texts.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       RETURN.
     ENDIF.
 
     lv_name = ms_item-obj_name.
 
     " Collect additional languages, skip main lang - it was serialized already
-    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
-
-    zcl_abapgit_lxe_texts=>add_iso_langs_to_lang_filter(
-      EXPORTING it_iso_filter      = ii_xml->i18n_params( )-translation_languages
-      CHANGING  ct_language_filter = lt_language_filter ).
+    lt_language_filter = mo_i18n_params->build_language_filter( ).
 
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd04v
       WHERE rollname = lv_name
       AND ddlanguage IN lt_language_filter
-      AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
+      AND ddlanguage <> mv_language
+      ORDER BY langu.                                     "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
       lv_index = sy-tabix.
@@ -213,12 +208,10 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       deserialize_texts(
         ii_xml   = io_xml
         is_dd04v = ls_dd04v ).
-    ELSE.
-      deserialize_lxe_texts( io_xml ).
     ENDIF.
 
     deserialize_longtexts( ii_xml         = io_xml
@@ -345,7 +338,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     ENDIF.
 
     IF ls_dd04v-routputlen = ''.
-* numeric field, make sure it is initial or XML serilization will dump
+* numeric field, make sure it is initial or XML serialization will dump
       CLEAR ls_dd04v-routputlen.
     ENDIF.
     IF ls_dd04v-authclass = ''.
@@ -355,10 +348,8 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     io_xml->add( iv_name = 'DD04V'
                  ig_data = ls_dd04v ).
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts( io_xml ).
-    ELSE.
-      serialize_lxe_texts( io_xml ).
     ENDIF.
 
     serialize_longtexts( ii_xml         = io_xml

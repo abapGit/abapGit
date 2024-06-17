@@ -68,7 +68,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_CHECK IMPLEMENTATION.
+CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
 
   METHOD checks_adjust.
@@ -134,7 +134,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_CHECK IMPLEMENTATION.
           li_package TYPE REF TO zif_abapgit_sap_package.
 
     " get unfiltered status to evaluate properly which warnings are required
-    lt_results = zcl_abapgit_file_status=>status( io_repo ).
+    lt_results = zcl_abapgit_repo_status=>calculate( io_repo ).
 
     check_multiple_files( lt_results ).
 
@@ -211,6 +211,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_CHECK IMPLEMENTATION.
   METHOD warning_overwrite_find.
 
     DATA:
+      ls_item    TYPE zif_abapgit_definitions=>ty_item,
       lv_status  TYPE c LENGTH 2,
       lt_changes TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_overwrite WITH DEFAULT KEY.
 
@@ -224,11 +225,17 @@ CLASS ZCL_ABAPGIT_OBJECTS_CHECK IMPLEMENTATION.
       APPEND INITIAL LINE TO lt_changes ASSIGNING <ls_changes>.
       MOVE-CORRESPONDING <ls_result> TO <ls_changes>.
       <ls_changes>-devclass = <ls_result>-package.
+      MOVE-CORRESPONDING <ls_changes> TO ls_item.
 
       IF <ls_result>-packmove = abap_true.
         <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-packmove.
         <ls_changes>-icon   = icon_package_standard.
         <ls_changes>-text   = 'Change package assignment'.
+      ELSEIF zcl_abapgit_objects=>is_supported( ls_item ) = abap_false
+        AND ls_item-obj_type <> zif_abapgit_data_config=>c_data_type-tabu.
+        <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-no_support.
+        <ls_changes>-icon   = icon_no_status.
+        <ls_changes>-text   = 'Object type not supported'.
       ELSE.
         CONCATENATE <ls_result>-lstate <ls_result>-rstate INTO lv_status RESPECTING BLANKS.
         <ls_changes>-state = lv_status.

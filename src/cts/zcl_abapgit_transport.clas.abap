@@ -16,10 +16,10 @@ CLASS zcl_abapgit_transport DEFINITION
 
     CLASS-METHODS to_tadir
       IMPORTING
-        !it_transport_headers TYPE trwbo_request_headers
-        !iv_deleted_objects   TYPE abap_bool DEFAULT abap_false
+        !iv_trkorr          TYPE trkorr
+        !iv_deleted_objects TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rt_tadir)       TYPE zif_abapgit_definitions=>ty_tadir_tt
+        VALUE(rt_tadir)     TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
 
@@ -29,25 +29,13 @@ CLASS zcl_abapgit_transport DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    CLASS-METHODS read
-      IMPORTING
-        !is_trkorr        TYPE trwbo_request_header OPTIONAL
-      RETURNING
-        VALUE(rs_request) TYPE trwbo_request
-      RAISING
-        zcx_abapgit_exception .
-
-    CLASS-METHODS validate_transport_request
-      IMPORTING
-        iv_transport_request TYPE trkorr
-      RAISING
-        zcx_abapgit_exception.
-
   PROTECTED SECTION.
+
+    TYPES ty_trkorr_tt TYPE STANDARD TABLE OF trkorr.
 
     CLASS-METHODS read_requests
       IMPORTING
-        !it_trkorr         TYPE trwbo_request_headers
+        !it_trkorr         TYPE ty_trkorr_tt
       RETURNING
         VALUE(rt_requests) TYPE trwbo_requests
       RAISING
@@ -83,7 +71,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_transport IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
 
 
   METHOD add_all_objects_to_trans_req.
@@ -115,7 +103,7 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
     " We used TR_REQUEST_CHOICE before, but it issues its error log with
     " write lists which are not compatible with abapGit.
     " There we user TRINT_REQUEST_CHOICE which returns the error log
-    " and display the log ourselve.
+    " and display the log ourselves.
     CALL FUNCTION 'TRINT_REQUEST_CHOICE'
       EXPORTING
         iv_request_types     = 'FTCOK'
@@ -242,39 +230,14 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD read.
-
-    rs_request-h-trkorr = is_trkorr-trkorr.
-
-    CALL FUNCTION 'TRINT_READ_REQUEST'
-      EXPORTING
-        iv_read_e070       = abap_true
-        iv_read_e07t       = abap_true
-        iv_read_e070c      = abap_true
-        iv_read_e070m      = abap_true
-        iv_read_objs_keys  = abap_true
-        iv_read_objs       = abap_true
-        iv_read_attributes = abap_true
-      CHANGING
-        cs_request         = rs_request
-      EXCEPTIONS
-        error_occured      = 1
-        OTHERS             = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD read_requests.
     DATA lt_requests LIKE rt_requests.
-    FIELD-SYMBOLS <ls_trkorr> LIKE LINE OF it_trkorr.
+    FIELD-SYMBOLS <lv_trkorr> LIKE LINE OF it_trkorr.
 
-    LOOP AT it_trkorr ASSIGNING <ls_trkorr>.
+    LOOP AT it_trkorr ASSIGNING <lv_trkorr>.
       CALL FUNCTION 'TR_READ_REQUEST_WITH_TASKS'
         EXPORTING
-          iv_trkorr     = <ls_trkorr>-trkorr
+          iv_trkorr     = <lv_trkorr>
         IMPORTING
           et_requests   = lt_requests
         EXCEPTIONS
@@ -364,46 +327,20 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
 
 
   METHOD to_tadir.
-    DATA: lt_requests TYPE trwbo_requests.
+    DATA lt_requests TYPE trwbo_requests.
+    DATA lt_trkorr   TYPE ty_trkorr_tt.
 
 
-    IF lines( it_transport_headers ) = 0.
+    IF iv_trkorr IS INITIAL.
       RETURN.
     ENDIF.
 
-    lt_requests = read_requests( it_transport_headers ).
+    INSERT iv_trkorr INTO TABLE lt_trkorr.
+
+    lt_requests = read_requests( lt_trkorr ).
     rt_tadir = resolve(
       it_requests        = lt_requests
       iv_deleted_objects = iv_deleted_objects ).
-
-  ENDMETHOD.
-
-
-  METHOD validate_transport_request.
-
-    CONSTANTS:
-      BEGIN OF c_tr_status,
-        modifiable                   TYPE trstatus VALUE 'D',
-        modifiable_protected         TYPE trstatus VALUE 'L',
-        release_started              TYPE trstatus VALUE 'O',
-        released                     TYPE trstatus VALUE 'R',
-        released_with_import_protect TYPE trstatus VALUE 'N', " Released (with Import Protection for Repaired Objects)
-      END OF c_tr_status.
-
-    DATA:
-      ls_trkorr  TYPE trwbo_request_header,
-      ls_request TYPE trwbo_request.
-
-    ls_trkorr-trkorr = iv_transport_request.
-
-    ls_request = read( ls_trkorr ).
-
-    IF  ls_request-h-trstatus <> c_tr_status-modifiable
-    AND ls_request-h-trstatus <> c_tr_status-modifiable_protected.
-      " Task/request &1 has already been released
-      MESSAGE e064(tk) WITH iv_transport_request INTO zcx_abapgit_exception=>null.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
 
   ENDMETHOD.
 
@@ -415,13 +352,17 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
           lv_package        TYPE devclass,
           lo_dot_abapgit    TYPE REF TO zcl_abapgit_dot_abapgit,
           ls_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings,
-          lt_trkorr         TYPE trwbo_request_headers.
+          lt_trkorr         TYPE ty_trkorr_tt,
+          lv_trkorr         TYPE trkorr.
 
 
     IF is_trkorr IS SUPPLIED.
-      APPEND is_trkorr TO lt_trkorr.
+      APPEND is_trkorr-trkorr TO lt_trkorr.
     ELSE.
-      lt_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
+      lv_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transport( ).
+      IF lv_trkorr IS NOT INITIAL.
+        APPEND lv_trkorr TO lt_trkorr.
+      ENDIF.
     ENDIF.
 
     IF lines( lt_trkorr ) = 0.

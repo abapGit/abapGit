@@ -22,7 +22,7 @@ CLASS ltcl_git_porcelain DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHO
       sub FOR TESTING
         RAISING zcx_abapgit_exception.
 
-    DATA: mt_expanded TYPE zif_abapgit_definitions=>ty_expanded_tt,
+    DATA: mt_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt,
           mt_trees    TYPE zcl_abapgit_git_porcelain=>ty_trees_tt.
 
 ENDCLASS.
@@ -43,7 +43,7 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
     <ls_expanded>-path  = iv_path.
     <ls_expanded>-name  = iv_name.
     <ls_expanded>-sha1  = 'a'.
-    <ls_expanded>-chmod = zif_abapgit_definitions=>c_chmod-file.
+    <ls_expanded>-chmod = zif_abapgit_git_definitions=>c_chmod-file.
 
   ENDMETHOD.
 

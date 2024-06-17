@@ -168,8 +168,8 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
     SELECT * FROM dokil
       INTO TABLE lt_dokil
-      WHERE id     = iv_longtext_id
-      AND   object LIKE lv_object ESCAPE '#'.
+      WHERE id = iv_longtext_id AND object LIKE lv_object ESCAPE '#'
+      ORDER BY PRIMARY KEY.
 
     LOOP AT lt_dokil ASSIGNING <ls_dokil>.
 
@@ -232,8 +232,8 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
     " If not, delete the texts
     SELECT * FROM dokil
       INTO TABLE lt_dokil
-      WHERE id     = iv_longtext_id
-      AND   object LIKE lv_object ESCAPE '#'.
+      WHERE id = iv_longtext_id AND object LIKE lv_object ESCAPE '#'
+      ORDER BY PRIMARY KEY.
 
     LOOP AT lt_dokil ASSIGNING <ls_dokil>.
 
@@ -268,7 +268,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
     rt_longtexts = read( iv_object_name    = iv_object_name
                          iv_longtext_id    = iv_longtext_id
                          it_dokil          = it_dokil
-                         iv_main_lang_only = ii_xml->i18n_params( )-main_language_only ).
+                         iv_main_lang_only = io_i18n_params->ms_params-main_language_only ).
 
     IF rt_longtexts IS SUPPLIED.
       RETURN.

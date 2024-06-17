@@ -10,8 +10,13 @@ CLASS zcl_abapgit_object_udmo DEFINITION
 
     METHODS constructor
       IMPORTING
-        !is_item     TYPE zif_abapgit_definitions=>ty_item
-        !iv_language TYPE spras .
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
 
     METHODS corr_insert
@@ -169,9 +174,11 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item  =  is_item
-                        iv_language = iv_language ).
-
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     " Conversion to Data model
     mv_data_model = is_item-obj_name.
@@ -261,8 +268,8 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
       INTO ls_header-tdversion
       FROM dokhl
       WHERE id = c_lxe_text_type
-      AND   object = mv_text_object
-      AND   langu = ls_udmo_long_text-language.
+      AND object = mv_text_object
+      AND langu  = ls_udmo_long_text-language.
 
       " Increment the version
       ls_header-tdversion = ls_header-tdversion + 1.
@@ -335,9 +342,9 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
       SELECT SINGLE *
         FROM dm40t
         INTO ls_dm40t
-        WHERE sprache  = ls_udmo_text-sprache
-        AND   dmoid    = ls_udmo_text-dmoid
-        AND   as4local = mv_activation_state.
+        WHERE sprache = ls_udmo_text-sprache
+        AND dmoid     = ls_udmo_text-dmoid
+        AND as4local  = mv_activation_state.
 
       IF sy-subrc = 0.
         " There is already an active description for this language
@@ -377,7 +384,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
   METHOD is_name_permitted.
 
-    " It is unlikely that a serialised data model will have a name that is not permitted. However
+    " It is unlikely that a serialized data model will have a name that is not permitted. However
     " there may be reservations in TRESE which could prohibit the data model name.
     " So to be safe, we check. Tx SD11 does this check.
 
@@ -408,7 +415,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
       ORDER BY PRIMARY KEY.
 
     LOOP AT lt_udmo_entities ASSIGNING <ls_udmo_entity>.
-      " You are reminded that administrative information, such as last changed by user, date, time is not serialised.
+      " You are reminded that administrative information, such as last changed by user, date, time is not serialized.
       CLEAR <ls_udmo_entity>-lstuser.
       CLEAR <ls_udmo_entity>-lstdate.
       CLEAR <ls_udmo_entity>-lsttime.
@@ -454,7 +461,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
       FROM dm40t
       INTO TABLE lt_udmo_languages
       WHERE dmoid    = mv_data_model
-      AND   as4local = mv_activation_state
+      AND as4local = mv_activation_state
       ORDER BY sprache ASCENDING.                       "#EC CI_NOFIRST
 
     " For every language for which a short text is maintained,
@@ -478,7 +485,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
       CHECK lv_error_status = 'S'. "Success
 
-      " Administrative information is not serialised
+      " Administrative information is not serialized
       CLEAR ls_udmo_long_text-header-tdfuser.
       CLEAR ls_udmo_long_text-header-tdfdate.
       CLEAR ls_udmo_long_text-header-tdftime.
@@ -510,14 +517,14 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
     FROM dm40l
     INTO ls_dm40l
     WHERE dmoid    = mv_data_model
-    AND   as4local = mv_activation_state.
+    AND as4local = mv_activation_state.
 
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from UDMO - model serialisation' ).
     ENDIF.
 
-    " You are reminded that administrative data is not serialised.
+    " You are reminded that administrative data is not serialized.
     CLEAR ls_dm40l-lstdate.
     CLEAR ls_dm40l-lsttime.
     CLEAR ls_dm40l-lstuser.
@@ -534,15 +541,15 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
   METHOD serialize_short_texts.
 
     DATA lt_udmo_texts TYPE STANDARD TABLE OF ty_udmo_text_type WITH DEFAULT KEY.
-    " You are reminded that administrative information, such as last changed by user, date, time is not serialised.
+    " You are reminded that administrative information, such as last changed by user, date, time is not serialized.
 
-    " You are reminded that active short texts of all (existent) languages are serialised.
+    " You are reminded that active short texts of all (existent) languages are serialized.
 
     SELECT sprache dmoid as4local langbez
       FROM dm40t
       INTO CORRESPONDING FIELDS OF TABLE lt_udmo_texts
       WHERE dmoid    = mv_data_model
-      AND   as4local = mv_activation_state
+      AND as4local = mv_activation_state
       ORDER BY sprache ASCENDING.                       "#EC CI_NOFIRST
 
     " You are reminded that descriptions in other languages do not have to be in existence.
@@ -641,7 +648,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
         access_free( ).
 
-        zcx_abapgit_exception=>raise( 'Error in deserialisation of UDMO' ).
+        zcx_abapgit_exception=>raise( 'Error in deserialization of UDMO' ).
 
 
     ENDTRY.
@@ -656,9 +663,8 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
     "  See Function Module SDU_MODEL_EXISTS
 
-    SELECT COUNT( * ) FROM  dm40l
-           WHERE  dmoid     = mv_data_model
-           AND    as4local  = mv_activation_state.
+    SELECT COUNT( * ) FROM dm40l
+      WHERE dmoid = mv_data_model AND as4local = mv_activation_state.
 
     rv_bool = boolc( sy-subrc = 0 ).
 
@@ -728,7 +734,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
     <ls_bdcdata>-fnam = 'RSUD3-OBJ_KEY'.
     <ls_bdcdata>-fval = ms_item-obj_name.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = 'SD11'
       it_bdcdata = lt_bdcdata ).
 

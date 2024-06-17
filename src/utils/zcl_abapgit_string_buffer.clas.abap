@@ -30,7 +30,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_string_buffer IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_STRING_BUFFER IMPLEMENTATION.
 
 
   METHOD add.
@@ -40,7 +40,7 @@ CLASS zcl_abapgit_string_buffer IMPLEMENTATION.
 
 
   METHOD join_and_flush.
-    rv_str = concat_lines_of( table = mt_buffer ).
+    rv_str = concat_lines_of( mt_buffer ).
     CLEAR mt_buffer.
   ENDMETHOD.
 

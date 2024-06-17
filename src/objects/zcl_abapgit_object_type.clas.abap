@@ -52,7 +52,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
     ENDIF.
 
     CONCATENATE c_prefix lv_typegroup INTO lv_progname.
-    UPDATE progdir SET uccheck = abap_true
+    UPDATE progdir SET uccheck = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard
       WHERE name = lv_progname.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error setting uccheck' ).
@@ -131,7 +131,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DDTEXT'
                   CHANGING cg_data = lv_ddtext ).
 
-    lt_source = zif_abapgit_object~mo_files->read_abap( ).
+    lt_source = mo_files->read_abap( ).
 
     IF zif_abapgit_object~exists( ) = abap_false.
       create( iv_ddtext   = lv_ddtext
@@ -139,7 +139,12 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
               iv_devclass = iv_package ).
     ELSE.
       CONCATENATE c_prefix lv_typegroup INTO lv_progname.
-      INSERT REPORT lv_progname FROM lt_source STATE 'I'.
+
+      zcl_abapgit_factory=>get_sap_report( )->insert_report(
+        iv_name    = lv_progname
+        iv_package = iv_package
+        iv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard
+        it_source  = lt_source ).
     ENDIF.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -156,7 +161,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
     SELECT SINGLE state
       FROM progdir
       INTO lv_state
-      WHERE name = lv_progname.
+      WHERE name = lv_progname.                         "#EC CI_NOORDER
     IF lv_state IS NOT INITIAL.
       rv_bool = abap_true.
     ENDIF.
@@ -225,7 +230,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
     io_xml->add( iv_name = 'DDTEXT'
                  ig_data = lv_ddtext ).
 
-    zif_abapgit_object~mo_files->add_abap( lt_source ).
+    mo_files->add_abap( lt_source ).
 
   ENDMETHOD.
 ENDCLASS.
