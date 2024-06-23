@@ -15,7 +15,6 @@ CLASS zcl_abapgit_object_sxsd DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA mv_is_read TYPE abap_bool.
     DATA ms_badi_attr TYPE sxc_attr.
 
 
