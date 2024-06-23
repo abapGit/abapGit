@@ -31,8 +31,7 @@ CLASS zcl_abapgit_object_sxsd IMPLEMENTATION.
       is_item        = is_item
       iv_language    = iv_language
       io_files       = io_files
-      io_i18n_params = io_i18n_params
-    ).
+      io_i18n_params = io_i18n_params ).
 
     SELECT SINGLE * FROM sxc_attr INTO ms_badi_attr WHERE imp_name = ms_item-obj_name.
 
