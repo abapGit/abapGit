@@ -84,7 +84,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -983,6 +983,14 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
              <ls_dd12v>-as4date,
              <ls_dd12v>-as4time,
              <ls_dd12v>-dbindex.
+      IF <ls_dd12v>-dbstate is initial or <ls_dd12v>-dbstate = 'O'.
+        CLEAR:
+          <ls_dd12v>-dbinclexcl,
+          <ls_dd12v>-dbsyssel1,
+          <ls_dd12v>-dbsyssel2,
+          <ls_dd12v>-dbsyssel3,
+          <ls_dd12v>-dbsyssel4.
+      ENDIF.
     ENDLOOP.
 
     clear_dd03p_fields( CHANGING ct_dd03p = ls_internal-dd03p ).
