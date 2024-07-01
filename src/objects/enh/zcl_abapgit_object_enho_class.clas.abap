@@ -1,15 +1,20 @@
-CLASS zcl_abapgit_object_enho_class DEFINITION PUBLIC.
+CLASS zcl_abapgit_object_enho_class DEFINITION
+  PUBLIC
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
-    METHODS:
-      constructor
-        IMPORTING
-          is_item  TYPE zif_abapgit_definitions=>ty_item
-          io_files TYPE REF TO zcl_abapgit_objects_files.
-    INTERFACES: zif_abapgit_object_enho.
 
+    INTERFACES zif_abapgit_object_enho.
+
+    METHODS constructor
+      IMPORTING
+        !is_item  TYPE zif_abapgit_definitions=>ty_item
+        !io_files TYPE REF TO zcl_abapgit_objects_files.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CLASS-METHODS adjust_generated_comments
+      CHANGING
+        ct_source TYPE rswsourcet.
     METHODS:
       serialize_includes
         IMPORTING
@@ -31,6 +36,24 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
+
+
+  METHOD adjust_generated_comments.
+
+    FIELD-SYMBOLS <lv_source> LIKE LINE OF ct_source.
+
+    " Enhancements contain comments that end in '.' or ' .' depending on release
+    " This routine replaces the space-dot with just dot
+    LOOP AT ct_source ASSIGNING <lv_source>.
+      IF strlen( <lv_source> ) > 2.
+        <lv_source> = replace(
+          val   = <lv_source>
+          regex = '^(\*".*) \.$'
+          with  = '$1.' ).
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -230,6 +253,8 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
                  ig_data = lt_pre ).
     ii_xml->add( iv_name = 'POST_METHODS'
                  ig_data = lt_post ).
+
+    adjust_generated_comments( CHANGING ct_source = lt_source ).
 
     mo_files->add_abap( lt_source ).
 
