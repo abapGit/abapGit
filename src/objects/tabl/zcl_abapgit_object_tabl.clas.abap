@@ -984,7 +984,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
              <ls_dd12v>-as4time,
              <ls_dd12v>-dbindex.
       IF <ls_dd12v>-dbstate IS INITIAL OR <ls_dd12v>-dbstate = 'O'.
-        " These settings are only relevant if database-specific indexes are defined (dbstate = 'D') 
+        " These settings are only relevant if database-specific indexes are defined (dbstate = 'D')
         CLEAR:
           <ls_dd12v>-dbinclexcl,
           <ls_dd12v>-dbsyssel1,
