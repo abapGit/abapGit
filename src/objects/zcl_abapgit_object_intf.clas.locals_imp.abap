@@ -726,7 +726,8 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
         IMPORTING
           es_data        = ls_ag_data ).
 
-      APPEND LINES OF ls_ag_data-description TO et_description.
+      APPEND LINES OF ls_ag_data-description_int TO et_description_int.
+      APPEND LINES OF ls_ag_data-description     TO et_description.
       APPEND LINES OF ls_ag_data-description_sub TO et_description_sub.
 
     ENDLOOP.

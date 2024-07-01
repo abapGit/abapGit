@@ -284,12 +284,8 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~update_descriptions_class.
     DATA lt_descriptions LIKE it_descriptions.
-    DATA lt_components   TYPE STANDARD TABLE OF vseoclass.
-    DATA ls_description  LIKE LINE OF it_descriptions.
-    DATA lv_lang         TYPE tadir-masterlang.
 
     FIELD-SYMBOLS <ls_description> LIKE LINE OF it_descriptions.
-    FIELD-SYMBOLS <ls_component> TYPE vseoclass.
 
     IF it_descriptions IS INITIAL.
       RETURN.
@@ -297,7 +293,8 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
     " Make sure we keep main language
     SELECT * FROM seoclasstx INTO TABLE lt_descriptions
-      WHERE clsname = is_key-clsname AND langu = iv_language.
+      WHERE clsname = is_key-clsname AND langu = iv_language
+      ORDER BY PRIMARY KEY.
 
     LOOP AT it_descriptions ASSIGNING <ls_description> WHERE langu <> iv_language.
       <ls_description>-clsname = is_key-clsname.
