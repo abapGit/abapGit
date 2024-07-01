@@ -24,6 +24,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_sxsd IMPLEMENTATION.
 
+
   METHOD constructor.
 
     super->constructor(
@@ -36,6 +37,7 @@ CLASS zcl_abapgit_object_sxsd IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object~changed_by.
 
     IF ms_badi_attr-uname IS NOT INITIAL.
@@ -46,10 +48,12 @@ CLASS zcl_abapgit_object_sxsd IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object~delete.
     "Not allowed, SAP Object
     RETURN.
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~deserialize.
     " Not allowed, SAP Object
@@ -60,35 +64,43 @@ CLASS zcl_abapgit_object_sxsd IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object~exists.
-    rv_bool = boolc( ms_badi_attr IS INITIAL ).
+    rv_bool = boolc( ms_badi_attr IS NOT INITIAL ).
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~get_comparator.
     RETURN.
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object~get_deserialize_order.
     RETURN.
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     "Not allowed, SAP Object
     RETURN.
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~is_active.
     rv_active = is_active( ).
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object~is_locked.
     "Serialize only, irrelevant
     rv_is_locked = abap_false.
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~jump.
 
@@ -116,13 +128,16 @@ CLASS zcl_abapgit_object_sxsd IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object~map_filename_to_object.
     RETURN.
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object~map_object_to_filename.
     RETURN.
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~serialize.
 
@@ -174,6 +189,4 @@ CLASS zcl_abapgit_object_sxsd IMPLEMENTATION.
       ig_data = ls_badi_definition ).
 
   ENDMETHOD.
-
-
 ENDCLASS.
