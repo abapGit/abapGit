@@ -514,7 +514,8 @@ CLASS lcl_aff_metadata_handler DEFINITION.
     CLASS-METHODS deserialize_translation
       IMPORTING io_files           TYPE REF TO zcl_abapgit_objects_files
                 is_item            TYPE zif_abapgit_definitions=>ty_item
-      EXPORTING et_description     TYPE zcl_abapgit_object_intf=>ty_intf-description
+      EXPORTING et_description_int TYPE zcl_abapgit_object_intf=>ty_intf-description_int
+                et_description     TYPE zcl_abapgit_object_intf=>ty_intf-description
                 et_description_sub TYPE zcl_abapgit_object_intf=>ty_intf-description_sub
       RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
