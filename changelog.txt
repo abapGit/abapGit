@@ -8,6 +8,35 @@ Legend
 + : added
 - : removed
 
+2024-07-01 v1.129.0
+-------------------
+
++ DEVC,NSPC: Serialize software component for add-ons (#6891)
++ Where-used page (#6897)
++ CDBO: Customer Data Browser Object (#6930)
++ VIEW: Add authorization group to serialize and deserialize (#6918)
++ Exclude files from remote (#6942)
++ Read-only support for SXSD - Classic BAdI definition (#6958)
+* Change message if local packages got lost (#6905)
+* SOTS: Remove from TADIR selection (#6906)
+* Fix bug in "Object to Files" Page. (#6908)
+* DEVC: Fix "Package must be assigned to the software component LOCAL" (#6912)
+* Improve error message for SUSH objects not being supported. (#6916)
+* Use bcp47 language code for AFF (#6915)
+* Suppress popup when using background API (#6926)
+* Fix Issue Encountered on "Data Config" Page. (#6913)
+* Bugfix, new pull page: decide package warnings (#6932)
+* Set Character Limit for "Table" Field in Data Config page (#6934)
+* ENHO: workaround dump during serialization (#6935)
+* HOOK: catch exception (#6937)
+* Sync UI theme in dark mode (#6940)
+* Set Default Git User Details  (#6920)
+* Small performance improvement in folder logic (#6941)
+* Fix folder logic buffer (#6945)
+* Fix yank mode - copy to clipboad (#6946)
+* Data serializer: fix carriage return problem (#6957)
+* TABL: Clear DBINCLEXCL and DBSYSSELx fields (#6960)
+
 2024-04-05 v1.128.0
 -------------------
 
