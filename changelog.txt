@@ -8,7 +8,7 @@ Legend
 + : added
 - : removed
 
-2024-06-xx v1.129.0
+2024-07-01 v1.129.0
 -------------------
 
 + DEVC,NSPC: Serialize software component for add-ons (#6891)
@@ -16,9 +16,7 @@ Legend
 + CDBO: Customer Data Browser Object (#6930)
 + VIEW: Add authorization group to serialize and deserialize (#6918)
 + Exclude files from remote (#6942)
-+ DSFD: CDS Scalar Function Definition (#6951)
-+ DSFI: CDS Scalar Function Implementation (#6952)
-+ DRAS: CDS Aspect (#6953)
++ Read-only support for SXSD - Classic BAdI definition (#6958)
 * Change message if local packages got lost (#6905)
 * SOTS: Remove from TADIR selection (#6906)
 * Fix bug in "Object to Files" Page. (#6908)
@@ -36,6 +34,8 @@ Legend
 * Small performance improvement in folder logic (#6941)
 * Fix folder logic buffer (#6945)
 * Fix yank mode - copy to clipboad (#6946)
+* Data serializer: fix carriage return problem (#6957)
+* TABL: Clear DBINCLEXCL and DBSYSSELx fields (#6960)
 
 2024-04-05 v1.128.0
 -------------------
