@@ -150,7 +150,23 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_oo_object_fnc~read_descriptions.
+  METHOD zif_abapgit_oo_object_fnc~read_descriptions_class.
+    FIELD-SYMBOLS <ls_description> LIKE LINE OF rt_descriptions.
+
+    " Only translations i.e. not the main language
+    SELECT * FROM seoclasstx INTO TABLE rt_descriptions
+            WHERE clsname   = iv_object_name
+              AND langu    <> iv_language
+              AND descript <> ''
+            ORDER BY PRIMARY KEY.                         "#EC CI_SUBRC
+
+    LOOP AT rt_descriptions ASSIGNING <ls_description>.
+      CLEAR <ls_description>-clsname.
+    ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~read_descriptions_compo.
     FIELD-SYMBOLS <ls_description> LIKE LINE OF rt_descriptions.
 
     IF iv_language IS INITIAL.
@@ -174,7 +190,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_oo_object_fnc~read_descriptions_sub.
+  METHOD zif_abapgit_oo_object_fnc~read_descriptions_subco.
     FIELD-SYMBOLS <ls_description> LIKE LINE OF rt_descriptions.
 
     IF iv_language IS INITIAL.
@@ -199,8 +215,8 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~read_documentation.
-    DATA: lv_state  TYPE dokstate,
-          lt_lines  TYPE tlinetab.
+    DATA: lv_state TYPE dokstate,
+          lt_lines TYPE tlinetab.
 
     CALL FUNCTION 'DOCU_GET'
       EXPORTING
@@ -261,7 +277,35 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_oo_object_fnc~update_descriptions.
+  METHOD zif_abapgit_oo_object_fnc~syntax_check.
+    ASSERT 0 = 1. "Subclass responsibility
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~update_descriptions_class.
+    DATA lt_descriptions LIKE it_descriptions.
+    DATA ls_description LIKE LINE OF it_descriptions.
+
+    IF it_descriptions IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    " Make sure we keep main language
+    SELECT * FROM seoclasstx INTO TABLE lt_descriptions
+      WHERE clsname = is_key-clsname AND langu = iv_language
+      ORDER BY PRIMARY KEY.
+
+    LOOP AT it_descriptions INTO ls_description WHERE langu <> iv_language.
+      ls_description-clsname = is_key-clsname.
+      INSERT ls_description INTO TABLE lt_descriptions.
+    ENDLOOP.
+
+    DELETE FROM seoclasstx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
+    INSERT seoclasstx FROM TABLE lt_descriptions.         "#EC CI_SUBRC
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~update_descriptions_compo.
     DATA lt_descriptions LIKE it_descriptions.
     DATA lt_components   TYPE seo_components.
     DATA ls_description  LIKE LINE OF it_descriptions.
@@ -285,7 +329,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     IF lt_components IS NOT INITIAL.
       SELECT SINGLE masterlang FROM tadir INTO lv_lang
         WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' )
-          AND obj_name = is_key-clsname.                  "#EC CI_GENBUFF
+          AND obj_name = is_key-clsname.                "#EC CI_GENBUFF
       IF sy-subrc <> 0.
         lv_lang = sy-langu.
       ENDIF.
@@ -304,12 +348,12 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    DELETE FROM seocompotx WHERE clsname = is_key-clsname."#EC CI_SUBRC
+    DELETE FROM seocompotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
     INSERT seocompotx FROM TABLE lt_descriptions.         "#EC CI_SUBRC
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_oo_object_fnc~update_descriptions_sub.
+  METHOD zif_abapgit_oo_object_fnc~update_descriptions_subco.
     DATA lt_descriptions  LIKE it_descriptions.
     DATA lt_subcomponents TYPE seo_subcomponents.
     DATA ls_description   LIKE LINE OF it_descriptions.
@@ -331,7 +375,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     IF lt_subcomponents IS NOT INITIAL.
       SELECT SINGLE masterlang FROM tadir INTO lv_lang
         WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' )
-          AND obj_name = is_key-clsname.                   "#EC CI_GENBUFF
+          AND obj_name = is_key-clsname.                "#EC CI_GENBUFF
       IF sy-subrc <> 0.
         lv_lang = sy-langu.
       ENDIF.
@@ -352,13 +396,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    DELETE FROM seosubcotx WHERE clsname = is_key-clsname."#EC CI_SUBRC
+    DELETE FROM seosubcotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
     INSERT seosubcotx FROM TABLE lt_descriptions.         "#EC CI_SUBRC
   ENDMETHOD.
-
-
-  METHOD zif_abapgit_oo_object_fnc~syntax_check.
-    ASSERT 0 = 1. "Subclass responsibility
-  ENDMETHOD.
-
 ENDCLASS.

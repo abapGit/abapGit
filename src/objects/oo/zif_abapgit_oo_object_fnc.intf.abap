@@ -14,6 +14,8 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
          ty_includes_tt TYPE STANDARD TABLE OF ty_includes WITH DEFAULT KEY.
 
   TYPES:
+    ty_seoclasstx_tt TYPE STANDARD TABLE OF seoclasstx WITH DEFAULT KEY .
+  TYPES:
     ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY .
   TYPES:
     ty_seosubcotx_tt TYPE STANDARD TABLE OF seosubcotx WITH DEFAULT KEY .
@@ -67,11 +69,16 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         iv_state      TYPE c DEFAULT 'I'
       RAISING
         zcx_abapgit_exception,
-    update_descriptions
+    update_descriptions_class
+      IMPORTING
+        is_key          TYPE seoclskey
+        iv_language     TYPE spras
+        it_descriptions TYPE ty_seoclasstx_tt,
+    update_descriptions_compo
       IMPORTING
         is_key          TYPE seoclskey
         it_descriptions TYPE ty_seocompotx_tt,
-    update_descriptions_sub
+    update_descriptions_subco
       IMPORTING
         is_key          TYPE seoclskey
         it_descriptions TYPE ty_seosubcotx_tt,
@@ -161,13 +168,19 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         io_i18n_params TYPE REF TO zcl_abapgit_i18n_params
       RAISING
         zcx_abapgit_exception,
-    read_descriptions
+    read_descriptions_class
+      IMPORTING
+        iv_object_name         TYPE seoclsname
+        iv_language            TYPE spras OPTIONAL
+      RETURNING
+        VALUE(rt_descriptions) TYPE ty_seoclasstx_tt,
+    read_descriptions_compo
       IMPORTING
         iv_object_name         TYPE seoclsname
         iv_language            TYPE spras OPTIONAL
       RETURNING
         VALUE(rt_descriptions) TYPE ty_seocompotx_tt,
-    read_descriptions_sub
+    read_descriptions_subco
       IMPORTING
         iv_object_name         TYPE seoclsname
         iv_language            TYPE spras OPTIONAL
@@ -190,7 +203,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         VALUE(rt_attributes) TYPE ty_obj_attribute_tt,
     syntax_check
       IMPORTING
-        iv_object_name                TYPE seoclsname
+        iv_object_name TYPE seoclsname
       RAISING
         zcx_abapgit_exception.
 ENDINTERFACE.
