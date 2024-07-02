@@ -156,6 +156,18 @@ CLASS zcl_abapgit_settings DEFINITION
     METHODS set_activate_wo_popup
       IMPORTING
         !iv_act_wo_popup TYPE zif_abapgit_definitions=>ty_s_user_settings-activate_wo_popup .
+    METHODS set_default_git_uname
+      IMPORTING
+        !iv_default_git_uname TYPE string.
+    METHODS get_default_git_uname
+      RETURNING
+        VALUE(rv_default_git_uname) TYPE string.
+    METHODS set_default_git_email
+      IMPORTING
+        !iv_default_git_email TYPE string.
+    METHODS get_default_git_email
+      RETURNING
+        VALUE(rv_default_git_email) TYPE string.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_s_settings,
@@ -322,7 +334,11 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
         WHEN 'Belize'.
           rv_ui_theme = c_ui_theme-belize.
         WHEN OTHERS.
-          rv_ui_theme = c_ui_theme-default.
+          IF lv_frontend_theme CS 'dark'.
+            rv_ui_theme = c_ui_theme-dark.
+          ELSE.
+            rv_ui_theme = c_ui_theme-default.
+          ENDIF.
       ENDCASE.
     ENDIF.
   ENDMETHOD.
@@ -486,5 +502,25 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
       CHANGING
         cg_data = ms_settings ).
 
+  ENDMETHOD.
+
+
+  METHOD get_default_git_uname.
+    rv_default_git_uname = ms_user_settings-default_git_uname.
+  ENDMETHOD.
+
+
+  METHOD set_default_git_uname.
+    ms_user_settings-default_git_uname = iv_default_git_uname.
+  ENDMETHOD.
+
+
+  METHOD get_default_git_email.
+    rv_default_git_email = ms_user_settings-default_git_email.
+  ENDMETHOD.
+
+
+  METHOD set_default_git_email.
+    ms_user_settings-default_git_email = iv_default_git_email.
   ENDMETHOD.
 ENDCLASS.

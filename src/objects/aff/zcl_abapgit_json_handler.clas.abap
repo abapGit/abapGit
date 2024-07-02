@@ -51,7 +51,7 @@ CLASS zcl_abapgit_json_handler DEFINITION
     "! @parameter ev_data | data of the xstring
     METHODS deserialize
       IMPORTING
-        !iv_content       TYPE xstring
+        !iv_content       TYPE string
         !iv_defaults      TYPE ty_skip_paths OPTIONAL
         !iv_enum_mappings TYPE ty_enum_mappings OPTIONAL
       EXPORTING
@@ -99,14 +99,11 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
 
   METHOD deserialize.
-    DATA lv_json    TYPE string.
-    DATA lo_ajson   TYPE REF TO zif_abapgit_ajson.
+    DATA lo_ajson TYPE REF TO zif_abapgit_ajson.
 
     CLEAR ev_data.
 
-    lv_json = zcl_abapgit_convert=>xstring_to_string_utf8( iv_content ).
-
-    lo_ajson = zcl_abapgit_ajson=>parse( lv_json
+    lo_ajson = zcl_abapgit_ajson=>parse( iv_content
       )->map( zcl_abapgit_ajson_mapping=>create_to_snake_case( ) ).
 
     map2abap_original_language( CHANGING co_ajson = lo_ajson ).
@@ -161,17 +158,13 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
   METHOD map2abap_original_language.
     DATA:
-      lv_iso_language      TYPE laiso,
+      lv_bcp47_language    TYPE string,
       lv_original_language TYPE sy-langu.
 
 
-    lv_iso_language = co_ajson->get_string( '/header/original_language' ).
+    lv_bcp47_language = co_ajson->get_string( '/header/original_language' ).
 
-    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
-      EXPORTING
-        input  = lv_iso_language
-      IMPORTING
-        output = lv_original_language.
+    lv_original_language = zcl_abapgit_convert=>language_bcp47_to_sap1( lv_bcp47_language ).
 
     co_ajson->set_string( iv_path = '/header/original_language'
                           iv_val  = lv_original_language ).
@@ -219,17 +212,16 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
   METHOD map2json_original_language.
     DATA:
-      lv_iso_language      TYPE laiso,
+      lv_bcp47_language    TYPE string,
       lv_original_language TYPE sy-langu.
 
 
     lv_original_language = co_ajson->get_string( '/header/originalLanguage' ).
 
-    lv_iso_language = zcl_abapgit_convert=>conversion_exit_isola_output( lv_original_language ).
+    lv_bcp47_language = zcl_abapgit_convert=>language_sap1_to_bcp47( lv_original_language ).
 
-    TRANSLATE lv_iso_language TO LOWER CASE.
     co_ajson->set_string( iv_path = '/header/originalLanguage'
-                          iv_val  = lv_iso_language ).
+                          iv_val  = lv_bcp47_language ).
   ENDMETHOD.
 
 

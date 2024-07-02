@@ -95,6 +95,14 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
           lv_parentcl     TYPE tdevc-parentcl,
           lv_folder_logic TYPE string.
 
+    rv_path = lcl_package_to_path=>get(
+      iv_top     = iv_top
+      io_dot     = io_dot
+      iv_package = iv_package ).
+    IF rv_path IS NOT INITIAL.
+      RETURN.
+    ENDIF.
+
     IF iv_top = iv_package.
       rv_path = io_dot->get_starting_folder( ).
     ELSE.
@@ -163,6 +171,12 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+    lcl_package_to_path=>add(
+      iv_top     = iv_top
+      io_dot     = io_dot
+      iv_package = iv_package
+      iv_path    = rv_path ).
+
   ENDMETHOD.
 
 
@@ -180,6 +194,14 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
     lv_length = strlen( io_dot->get_starting_folder( ) ).
     IF lv_length > strlen( iv_path ).
 * treat as not existing locally
+      RETURN.
+    ENDIF.
+
+    rv_package = lcl_path_to_package=>get(
+      iv_top  = iv_top
+      io_dot  = io_dot
+      iv_path = iv_path ).
+    IF rv_package IS NOT INITIAL AND iv_create_if_not_exists = abap_false.
       RETURN.
     ENDIF.
 
@@ -244,6 +266,12 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
 
       lv_parent = rv_package.
     ENDWHILE.
+
+    lcl_path_to_package=>add(
+      iv_top     = iv_top
+      io_dot     = io_dot
+      iv_path    = iv_path
+      iv_package = rv_package ).
 
   ENDMETHOD.
 ENDCLASS.

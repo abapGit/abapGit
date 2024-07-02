@@ -46,6 +46,17 @@ CLASS zcl_abapgit_filename_logic DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+    CLASS-METHODS i18n_file_to_object
+      IMPORTING
+        !iv_filename TYPE string
+        !iv_path     TYPE string
+      EXPORTING
+        !es_item     TYPE zif_abapgit_definitions=>ty_item
+        !ev_lang     TYPE laiso
+        !ev_ext      TYPE string
+      RAISING
+        zcx_abapgit_exception .
+
     CLASS-METHODS object_to_file
       IMPORTING
         !is_item           TYPE zif_abapgit_definitions=>ty_item
@@ -53,6 +64,14 @@ CLASS zcl_abapgit_filename_logic DEFINITION
         !iv_extra          TYPE clike OPTIONAL
       RETURNING
         VALUE(rv_filename) TYPE string .
+
+    CLASS-METHODS object_to_i18n_file
+      IMPORTING
+        !is_item           TYPE zif_abapgit_definitions=>ty_item
+        !iv_lang           TYPE laiso
+        !iv_ext            TYPE string
+      RETURNING
+        VALUE(rv_filename) TYPE string.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -86,6 +105,8 @@ CLASS zcl_abapgit_filename_logic DEFINITION
     CLASS-METHODS map_object_to_filename
       IMPORTING
         !is_item    TYPE zif_abapgit_definitions=>ty_item
+        !iv_ext     TYPE string
+        !iv_extra   TYPE clike
       CHANGING
         cv_filename TYPE string
       RAISING
@@ -122,7 +143,9 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
 
     " Assume AFF namespace convention
-    CREATE OBJECT go_aff_registry TYPE zcl_abapgit_aff_registry.
+    IF go_aff_registry IS INITIAL.
+      CREATE OBJECT go_aff_registry TYPE zcl_abapgit_aff_registry.
+    ENDIF.
 
     IF go_aff_registry->is_supported_object_type( |{ lv_type }| ) = abap_true.
       REPLACE ALL OCCURRENCES OF '(' IN lv_name WITH '/'.
@@ -153,6 +176,26 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
       IMPORTING
         ev_is_xml  = ev_is_xml
         ev_is_json = ev_is_json ).
+
+  ENDMETHOD.
+
+
+  METHOD i18n_file_to_object.
+
+    DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
+
+    lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
+
+    file_to_object(
+      EXPORTING
+        iv_filename = iv_filename
+        iv_path     = iv_path
+        io_dot      = lo_dot
+      IMPORTING
+        es_item     = es_item ).
+
+    FIND FIRST OCCURRENCE OF REGEX 'i18n\.([^.]{2})\.([^.]+)$' IN iv_filename
+      SUBMATCHES ev_lang ev_ext ##SUBRC_OK.
 
   ENDMETHOD.
 
@@ -226,6 +269,8 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
         CALL METHOD (lv_class)=>('ZIF_ABAPGIT_OBJECT~MAP_OBJECT_TO_FILENAME')
           EXPORTING
             is_item     = is_item
+            iv_ext      = iv_ext
+            iv_extra    = iv_extra
           CHANGING
             cv_filename = cv_filename.
       CATCH cx_sy_dyn_call_illegal_class ##NO_HANDLER.
@@ -279,6 +324,8 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
         map_object_to_filename(
           EXPORTING
             is_item     = is_item
+            iv_ext      = iv_ext
+            iv_extra    = iv_extra
           CHANGING
             cv_filename = rv_filename ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
@@ -298,6 +345,16 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     ENDIF.
 
     TRANSLATE rv_filename TO LOWER CASE.
+
+  ENDMETHOD.
+
+
+  METHOD object_to_i18n_file.
+
+    rv_filename = object_to_file(
+      is_item  = is_item
+      iv_extra = |i18n.{ iv_lang }|
+      iv_ext   = iv_ext ).
 
   ENDMETHOD.
 ENDCLASS.

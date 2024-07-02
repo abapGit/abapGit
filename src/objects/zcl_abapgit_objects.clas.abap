@@ -205,14 +205,6 @@ CLASS zcl_abapgit_objects DEFINITION
       IMPORTING
         !is_item TYPE zif_abapgit_definitions=>ty_item
         !ii_log  TYPE REF TO zif_abapgit_log .
-    CLASS-METHODS determine_i18n_params
-      IMPORTING
-        !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
-        !iv_main_language_only TYPE abap_bool
-      RETURNING
-        VALUE(rs_i18n_params)  TYPE zif_abapgit_definitions=>ty_i18n_params
-      RAISING
-        zcx_abapgit_exception.
     CLASS-METHODS get_extra_from_filename
       IMPORTING
         !iv_filename    TYPE string
@@ -660,6 +652,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   METHOD deserialize.
 
     DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
+          lo_dot      TYPE REF TO zcl_abapgit_dot_abapgit,
           li_obj      TYPE REF TO zif_abapgit_object,
           lt_remote   TYPE zif_abapgit_git_definitions=>ty_files_tt,
           lv_package  TYPE devclass,
@@ -686,6 +679,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     lt_steps = get_deserialize_steps( ).
 
     lv_package = io_repo->get_package( ).
+    lo_dot     = io_repo->get_dot_abapgit( ).
 
     IF is_checks-transport-required = abap_true.
       zcl_abapgit_factory=>get_default_transport( )->set( is_checks-transport-transport ).
@@ -728,9 +722,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       ii_log   = ii_log
       io_dot   = io_repo->get_dot_abapgit( ) ).
 
-    lo_i18n_params = zcl_abapgit_i18n_params=>new( is_params = determine_i18n_params(
-      io_dot                = io_repo->get_dot_abapgit( )
-      iv_main_language_only = io_repo->get_local_settings( )-main_language_only ) ).
+    lo_i18n_params = zcl_abapgit_i18n_params=>new( is_params =
+      lo_dot->determine_i18n_parameters( io_repo->get_local_settings( )-main_language_only ) ).
 
     IF lines( lt_items ) = 1.
       ii_log->add_info( |>>> Deserializing 1 object| ).
@@ -740,7 +733,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     CREATE OBJECT lo_abap_language_vers
       EXPORTING
-        io_dot_abapgit = io_repo->get_dot_abapgit( ).
+        io_dot_abapgit = lo_dot.
 
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
     LOOP AT lt_results ASSIGNING <ls_result>.
@@ -759,7 +752,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             " If package does not exist yet, it will be created with this call
             lv_package = lo_folder_logic->path_to_package(
               iv_top  = io_repo->get_package( )
-              io_dot  = io_repo->get_dot_abapgit( )
+              io_dot  = lo_dot
               iv_path = <ls_result>-path ).
 
             check_main_package(
@@ -872,7 +865,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     update_original_system(
       it_items     = lt_items
       ii_log       = ii_log
-      io_dot       = io_repo->get_dot_abapgit( )
+      io_dot       = lo_dot
       iv_transport = is_checks-transport-transport ).
 
     zcl_abapgit_factory=>get_default_transport( )->reset( ).
@@ -982,26 +975,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     SORT ct_files BY path ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM ct_files. " Just in case
-
-  ENDMETHOD.
-
-
-  METHOD determine_i18n_params.
-
-    " TODO: unify with ZCL_ABAPGIT_SERIALIZE=>DETERMINE_I18N_PARAMS, same code
-
-    IF io_dot IS BOUND.
-      rs_i18n_params-main_language         = io_dot->get_main_language( ).
-      rs_i18n_params-use_lxe               = io_dot->use_lxe( ).
-      rs_i18n_params-main_language_only    = iv_main_language_only.
-      rs_i18n_params-translation_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
-        iv_main_language  = io_dot->get_main_language( )
-        it_i18n_languages = io_dot->get_i18n_languages( ) ).
-    ENDIF.
-
-    IF rs_i18n_params-main_language IS INITIAL.
-      rs_i18n_params-main_language = sy-langu.
-    ENDIF.
 
   ENDMETHOD.
 
@@ -1337,15 +1310,28 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD update_original_system.
 
-    DATA lv_srcsystem TYPE tadir-srcsystem.
-    DATA lv_errors TYPE abap_bool.
-    DATA lv_msg TYPE string.
+    DATA:
+      lv_srcsystem           TYPE tadir-srcsystem,
+      lv_transport_type_from TYPE trfunction,
+      lv_transport_type_to   TYPE trfunction,
+      lv_errors              TYPE abap_bool,
+      lv_msg                 TYPE string.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF it_items.
 
     lv_srcsystem = io_dot->get_original_system( ).
+
     IF lv_srcsystem IS INITIAL.
       RETURN.
+    ELSEIF lv_srcsystem = 'SID'.
+      " Change objects to local system and switch repairs to development requests
+      lv_srcsystem           = sy-sysid.
+      lv_transport_type_from = zif_abapgit_cts_api=>c_transport_type-wb_repair.
+      lv_transport_type_to   = zif_abapgit_cts_api=>c_transport_type-wb_task.
+    ELSE.
+      " Change objects to external system and switch development requests to repairs
+      lv_transport_type_from = zif_abapgit_cts_api=>c_transport_type-wb_task.
+      lv_transport_type_to   = zif_abapgit_cts_api=>c_transport_type-wb_repair.
     ENDIF.
 
     ii_log->add_info( |>> Setting original system| ).
@@ -1401,10 +1387,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
     IF lv_errors IS INITIAL.
-      " Since original system has changed, the type of transport request needs to be switched to "Repair"
+      " Since original system has changed, the type of transport request needs to be adjusted
       zcl_abapgit_factory=>get_cts_api( )->change_transport_type(
-        iv_transport_request = iv_transport
-        iv_transport_type    = zif_abapgit_cts_api=>c_transport_type-wb_repair ).
+        iv_transport_request   = iv_transport
+        iv_transport_type_from = lv_transport_type_from
+        iv_transport_type_to   = lv_transport_type_to ).
     ENDIF.
 
   ENDMETHOD.

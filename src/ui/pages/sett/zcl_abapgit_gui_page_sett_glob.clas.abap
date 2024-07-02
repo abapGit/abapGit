@@ -110,6 +110,8 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
 
 
   METHOD get_form_schema.
+    CONSTANTS lc_commitmsg_comment_min_len TYPE i VALUE 1.
+    CONSTANTS lc_commitmsg_comment_max_len TYPE i VALUE 255.
 
     ro_form = zcl_abapgit_html_form=>create(
       iv_form_id   = 'global-setting-form'
@@ -144,8 +146,9 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
       iv_name        = c_id-commitmsg_comment_length
       iv_required    = abap_true
       iv_label       = 'Maximum Length of Comment'
-      iv_hint        = |At most { zcl_abapgit_settings=>c_commitmsg_comment_length_dft } characters|
-      iv_min         = zcl_abapgit_settings=>c_commitmsg_comment_length_dft
+      iv_hint        = |At most { lc_commitmsg_comment_max_len } characters|
+      iv_min         = lc_commitmsg_comment_min_len
+      iv_max         = lc_commitmsg_comment_max_len
     )->text(
       iv_name        = c_id-commitmsg_comment_deflt
       iv_label       = 'Default Text For Comment'

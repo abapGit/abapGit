@@ -100,6 +100,7 @@ CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
       iv_required      = abap_true
       iv_upper_case    = abap_true
       iv_side_action   = c_event-choose_package
+      iv_max         = 30
     )->radio(
       iv_name          = c_id-folder_logic
       iv_label         = 'Folder Logic'

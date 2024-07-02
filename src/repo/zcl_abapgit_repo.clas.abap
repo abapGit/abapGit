@@ -181,11 +181,18 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS check_abap_language_version
       RAISING
         zcx_abapgit_exception .
+    METHODS remove_locally_excluded_files
+      CHANGING
+        !ct_rem_files TYPE zif_abapgit_git_definitions=>ty_files_tt OPTIONAL
+        !ct_loc_files TYPE zif_abapgit_definitions=>ty_files_item_tt OPTIONAL
+      RAISING
+        zcx_abapgit_exception .
+
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -502,6 +509,42 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD remove_locally_excluded_files.
+
+    DATA ls_ls TYPE zif_abapgit_persistence=>ty_repo-local_settings.
+    DATA lv_excl TYPE string.
+    DATA lv_full_path TYPE string.
+
+    FIELD-SYMBOLS <ls_rfile> LIKE LINE OF ct_rem_files.
+    FIELD-SYMBOLS <ls_lfile> LIKE LINE OF ct_loc_files.
+
+    ls_ls = get_local_settings( ).
+
+    LOOP AT ls_ls-exclude_remote_paths INTO lv_excl.
+      CHECK lv_excl IS NOT INITIAL.
+
+      IF ct_rem_files IS SUPPLIED.
+        LOOP AT ct_rem_files ASSIGNING <ls_rfile>.
+          lv_full_path = <ls_rfile>-path && <ls_rfile>-filename.
+          IF lv_full_path CP lv_excl.
+            DELETE ct_rem_files INDEX sy-tabix.
+          ENDIF.
+        ENDLOOP.
+
+      ELSEIF ct_loc_files IS SUPPLIED.
+        LOOP AT ct_loc_files ASSIGNING <ls_lfile>.
+          lv_full_path = <ls_lfile>-file-path && <ls_lfile>-file-filename.
+          IF lv_full_path CP lv_excl.
+            DELETE ct_loc_files INDEX sy-tabix.
+          ENDIF.
+        ENDLOOP.
+
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD reset_remote.
     CLEAR mt_remote.
     mv_request_remote_refresh = abap_true.
@@ -764,6 +807,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       ii_data_config = get_data_config( )
       ii_log         = ii_log ).
 
+    remove_locally_excluded_files( CHANGING ct_loc_files = rt_files ).
+
     mt_local                 = rt_files.
     mv_request_local_refresh = abap_false. " Fulfill refresh
 
@@ -802,6 +847,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     IF iv_ignore_files = abap_true.
       remove_ignored_files( CHANGING ct_files = rt_files ).
     ENDIF.
+
+    remove_locally_excluded_files( CHANGING ct_rem_files = rt_files ).
 
     IF ii_obj_filter IS NOT INITIAL.
       lt_filter = ii_obj_filter->get_filter( ).

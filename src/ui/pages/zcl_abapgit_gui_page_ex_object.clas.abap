@@ -139,9 +139,14 @@ CLASS zcl_abapgit_gui_page_ex_object IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_event-export.
 
-        export_object( ).
-        MESSAGE 'Object successfully exported' TYPE 'S'.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+        mo_validation_log = mo_form_util->validate( mo_form_data ).
+        IF mo_validation_log->is_empty( ) = abap_false.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        ELSE.
+          export_object( ).
+          MESSAGE 'Object successfully exported' TYPE 'S'.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+        ENDIF.
 
       WHEN c_event-choose_object_type.
 

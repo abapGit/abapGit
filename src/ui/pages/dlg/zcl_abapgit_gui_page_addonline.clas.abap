@@ -132,6 +132,7 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
       iv_label       = 'Package'
       iv_hint        = 'SAP package for repository (should be a dedicated one)'
       iv_placeholder = 'Z... / $...'
+      iv_max         = 30
     )->text(
       iv_name        = c_id-branch_name
       iv_side_action = c_event-choose_branch

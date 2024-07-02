@@ -1488,7 +1488,7 @@ LinkHints.prototype.handleKey = function(event) {
       this.displayHints(false);
       event.preventDefault();
       if (this.yankModeActive) {
-        submitSapeventForm({ clipboard: hint.parent.firstChild.textContent }, "yank_to_clipboard");
+        submitSapeventForm({ clipboard: hint.parent.firstChild.textContent }, "clipboard");
         this.yankModeActive = false;
       } else {
         this.hintActivate(hint);
@@ -2447,7 +2447,7 @@ function enumerateJumpAllFiles() {
 function saveScrollPosition() {
   // Not supported by Java GUI
   try { if (!window.sessionStorage) { return } }
-  catch (err) { return }
+  catch (err) { return err }
 
   window.sessionStorage.setItem("scrollTop", document.querySelector("html").scrollTop);
 }
@@ -2455,7 +2455,7 @@ function saveScrollPosition() {
 function restoreScrollPosition() {
   // Not supported by Java GUI
   try { if (!window.sessionStorage) { return } }
-  catch (err) { return }
+  catch (err) { return err }
 
   var scrollTop = window.sessionStorage.getItem("scrollTop");
   if (scrollTop) {

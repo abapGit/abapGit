@@ -1,4 +1,10 @@
 {
+  "global": {
+    "files": "/{test/src,src}/**/*.*",
+    "skipGeneratedFunctionGroups": true,
+    "skipGeneratedGatewayClasses": true,
+    "skipGeneratedPersistentClasses": true
+  },
   "dependencies": [
     {
       "files": "/**/*.*",
@@ -10,12 +16,6 @@
       "url": "https://github.com/abaplint/deps"
     }
   ],
-  "global": {
-    "files": "/{test/src,src}/**/*.*",
-    "skipGeneratedFunctionGroups": true,
-    "skipGeneratedGatewayClasses": true,
-    "skipGeneratedPersistentClasses": true
-  },
   "rules": {
     "7bit_ascii": {
       "exclude": [
@@ -28,6 +28,7 @@
     "align_parameters": false,
     "allowed_object_naming": true,
     "allowed_object_types": {
+      "exclude": ["test/src/"],
       "allowed": [
         "CLAS",
         "DEVC",

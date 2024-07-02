@@ -64,11 +64,36 @@ CLASS zcl_abapgit_object_devc DEFINITION PUBLIC
     METHODS remove_obsolete_tadir
       IMPORTING
         !iv_package_name TYPE devclass .
+    METHODS adjust_sw_component
+      CHANGING
+        cv_dlvunit TYPE dlvunit.
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_object_devc IMPLEMENTATION.
+
+
+  METHOD adjust_sw_component.
+
+    DATA:
+      lv_namespace TYPE namespace,
+      lv_comp_type TYPE c LENGTH 1.
+
+    " Keep software component of a package for ABAP add-ons (customer and partner developments)...
+    SELECT SINGLE comp_type FROM cvers INTO lv_comp_type WHERE component = cv_dlvunit.
+    IF sy-subrc = 0 AND lv_comp_type = 'A'.
+      " ... with a matching namespace (typical Add-on Assembly Kit scenario)
+      lv_namespace = |/{ cv_dlvunit }/|.
+      SELECT SINGLE namespace FROM trnspace INTO lv_namespace WHERE namespace = lv_namespace.
+      IF sy-subrc <> 0.
+        CLEAR cv_dlvunit.
+      ENDIF.
+    ELSE.
+      CLEAR cv_dlvunit.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -567,10 +592,12 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
 * Fields not set:
 * korrflag
-* dlvunit
 * parentcl
 * cli_check
 * intprefx
+    IF ls_package_data-dlvunit IS NOT INITIAL.
+      ls_data_sign-dlvunit = abap_true.
+    ENDIF.
     ls_data_sign-ctext            = abap_true.
     ls_data_sign-as4user          = abap_true.
     ls_data_sign-pdevclass        = abap_true.
@@ -843,6 +870,9 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     " Clear obsolete fields
     CLEAR: ls_package_data-intfprefx,
            ls_package_data-cli_check.
+
+    " If software component is related to add-on and a valid namespace, then keep it
+    adjust_sw_component( CHANGING cv_dlvunit = ls_package_data-dlvunit ).
 
     ASSIGN COMPONENT 'TRANSLATION_DEPTH_TEXT'
            OF STRUCTURE ls_package_data

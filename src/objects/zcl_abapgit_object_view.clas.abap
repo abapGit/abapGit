@@ -3,6 +3,20 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
   PROTECTED SECTION.
+    "! get additional data like table authorization group
+    "! @parameter iv_name | name of the view
+    METHODS read_extras IMPORTING iv_name               TYPE ddobjname
+                        RETURNING VALUE(rs_tabl_extras) TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
+
+    "! Update additional data
+    "! @parameter iv_name | name of the table
+    "! @parameter is_tabl_extras | additional view data
+    METHODS update_extras IMPORTING iv_name        TYPE ddobjname
+                                    is_tabl_extras TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
+
+    "! Delete additional data
+    "! @parameter iv_name | name of the view
+    METHODS delete_extras IMPORTING iv_name TYPE ddobjname.
   PRIVATE SECTION.
     TYPES: ty_dd26v TYPE STANDARD TABLE OF dd26v
                           WITH NON-UNIQUE DEFAULT KEY,
@@ -31,6 +45,7 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           et_dd27p    TYPE ty_dd27p
           et_dd28j    TYPE ty_dd28j
           et_dd28v    TYPE ty_dd28v
+          es_extras   TYPE zif_abapgit_object_tabl=>ty_tabl_extras
         RAISING
           zcx_abapgit_exception,
 
@@ -51,7 +66,14 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_view IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
+
+
+  METHOD delete_extras.
+
+    DELETE FROM tddat WHERE tabname = iv_name.
+
+  ENDMETHOD.
 
 
   METHOD deserialize_texts.
@@ -108,6 +130,13 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD read_extras.
+
+    SELECT SINGLE * FROM tddat INTO rs_tabl_extras-tddat WHERE tabname = iv_name.
+
+  ENDMETHOD.
+
+
   METHOD read_view.
 
     DATA: lv_name TYPE ddobjname.
@@ -134,6 +163,8 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
+    es_extras = read_extras( lv_name ).
 
   ENDMETHOD.
 
@@ -204,6 +235,17 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD update_extras.
+
+    IF is_tabl_extras-tddat IS INITIAL.
+      delete_extras( iv_name ).
+    ELSE.
+      MODIFY tddat FROM is_tabl_extras-tddat.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
 
     SELECT SINGLE as4user FROM dd25l INTO rv_user
@@ -219,24 +261,29 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
+    DATA lv_objname TYPE rsedd0-ddobjname.
+
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
+    lv_objname = ms_item-obj_name.
     delete_ddic( 'V' ).
+    delete_extras( lv_objname ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lv_name  TYPE ddobjname,
-          ls_dd25v TYPE dd25v,
-          ls_dd09l TYPE dd09l,
-          lt_dd26v TYPE TABLE OF dd26v,
-          lt_dd27p TYPE TABLE OF dd27p,
-          lt_dd28j TYPE TABLE OF dd28j,
-          lt_dd28v TYPE TABLE OF dd28v.
+    DATA: lv_name   TYPE ddobjname,
+          ls_dd25v  TYPE dd25v,
+          ls_dd09l  TYPE dd09l,
+          lt_dd26v  TYPE TABLE OF dd26v,
+          lt_dd27p  TYPE TABLE OF dd27p,
+          lt_dd28j  TYPE TABLE OF dd28j,
+          lt_dd28v  TYPE TABLE OF dd28v,
+          ls_extras TYPE zif_abapgit_object_tabl=>ty_internal-extras.
 
     FIELD-SYMBOLS: <ls_dd27p> LIKE LINE OF lt_dd27p.
 
@@ -252,6 +299,8 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
                   CHANGING cg_data = lt_dd28j ).
     io_xml->read( EXPORTING iv_name = 'DD28V_TABLE'
                   CHANGING cg_data = lt_dd28v ).
+    io_xml->read( EXPORTING iv_name = zif_abapgit_object_tabl=>c_s_dataname-tabl_extras
+                  CHANGING cg_data = ls_extras ).
 
     lv_name = ms_item-obj_name. " type conversion
 
@@ -299,6 +348,9 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
 
     deserialize_longtexts( ii_xml         = io_xml
                            iv_longtext_id = c_longtext_id_view ).
+
+    update_extras( iv_name        = lv_name
+                   is_tabl_extras = ls_extras ).
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
@@ -379,13 +431,14 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_dd25v TYPE dd25v,
-          lv_state TYPE ddgotstate,
-          ls_dd09l TYPE dd09l,
-          lt_dd26v TYPE ty_dd26v,
-          lt_dd27p TYPE ty_dd27p,
-          lt_dd28j TYPE ty_dd28j,
-          lt_dd28v TYPE ty_dd28v.
+    DATA: ls_dd25v  TYPE dd25v,
+          lv_state  TYPE ddgotstate,
+          ls_dd09l  TYPE dd09l,
+          lt_dd26v  TYPE ty_dd26v,
+          lt_dd27p  TYPE ty_dd27p,
+          lt_dd28j  TYPE ty_dd28j,
+          lt_dd28v  TYPE ty_dd28v,
+          ls_extras TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
 
     FIELD-SYMBOLS: <ls_dd27p> LIKE LINE OF lt_dd27p.
 
@@ -399,7 +452,8 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
         et_dd26v    = lt_dd26v
         et_dd27p    = lt_dd27p
         et_dd28j    = lt_dd28j
-        et_dd28v    = lt_dd28v ).
+        et_dd28v    = lt_dd28v
+        es_extras   = ls_extras ).
 
     IF ls_dd25v IS INITIAL OR lv_state <> 'A'.
       RETURN.
@@ -456,6 +510,8 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
                  iv_name = 'DD28J_TABLE' ).
     io_xml->add( ig_data = lt_dd28v
                  iv_name = 'DD28V_TABLE' ).
+    io_xml->add( iv_name = zif_abapgit_object_tabl=>c_s_dataname-tabl_extras
+                 ig_data = ls_extras ).
 
     IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts( io_xml ).

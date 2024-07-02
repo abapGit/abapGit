@@ -37,7 +37,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -46,6 +46,7 @@ CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
 
 
   METHOD initialize_registry_table.
+    register( 'CDBO' ).
     register( 'CHKC' ).
     register( 'CHKO' ).
     register( 'CHKV' ).

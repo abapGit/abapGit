@@ -114,6 +114,16 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    zcl_abapgit_sotr_handler=>delete_sotr(
+      iv_pgmid    = 'R3TR'
+      iv_object   = ms_item-obj_type
+      iv_obj_name = ms_item-obj_name ).
+
+    zcl_abapgit_sots_handler=>delete_sots(
+      iv_pgmid    = 'R3TR'
+      iv_object   = ms_item-obj_type
+      iv_obj_name = ms_item-obj_name ).
+
     lv_corrnum = iv_transport.
 
     lv_enh_id = ms_item-obj_name.
@@ -155,6 +165,10 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
                           iv_package = iv_package ).
 
     zcl_abapgit_sotr_handler=>create_sotr(
+      iv_package = iv_package
+      io_xml     = io_xml ).
+
+    zcl_abapgit_sots_handler=>create_sots(
       iv_package = iv_package
       io_xml     = io_xml ).
 
@@ -263,11 +277,18 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
                         ii_enh_tool = li_enh_tool ).
 
     zcl_abapgit_sotr_handler=>read_sotr(
-      iv_pgmid    = 'R3TR'
-      iv_object   = ms_item-obj_type
-      iv_obj_name = ms_item-obj_name
+      iv_pgmid       = 'R3TR'
+      iv_object      = ms_item-obj_type
+      iv_obj_name    = ms_item-obj_name
       io_i18n_params = mo_i18n_params
-      io_xml      = io_xml ).
+      io_xml         = io_xml ).
+
+    zcl_abapgit_sots_handler=>read_sots(
+      iv_pgmid       = 'R3TR'
+      iv_object      = ms_item-obj_type
+      iv_obj_name    = ms_item-obj_name
+      io_i18n_params = mo_i18n_params
+      io_xml         = io_xml ).
 
   ENDMETHOD.
 ENDCLASS.
