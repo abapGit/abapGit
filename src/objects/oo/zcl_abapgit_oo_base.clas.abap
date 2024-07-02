@@ -284,8 +284,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~update_descriptions_class.
     DATA lt_descriptions LIKE it_descriptions.
-
-    FIELD-SYMBOLS <ls_description> LIKE LINE OF it_descriptions.
+    DATA ls_description LIKE LINE OF it_descriptions.
 
     IF it_descriptions IS INITIAL.
       RETURN.
@@ -296,9 +295,9 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       WHERE clsname = is_key-clsname AND langu = iv_language
       ORDER BY PRIMARY KEY.
 
-    LOOP AT it_descriptions ASSIGNING <ls_description> WHERE langu <> iv_language.
-      <ls_description>-clsname = is_key-clsname.
-      INSERT <ls_description> INTO TABLE lt_descriptions.
+    LOOP AT it_descriptions INTO ls_description WHERE langu <> iv_language.
+      ls_description-clsname = is_key-clsname.
+      INSERT ls_description INTO TABLE lt_descriptions.
     ENDLOOP.
 
     DELETE FROM seoclasstx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
