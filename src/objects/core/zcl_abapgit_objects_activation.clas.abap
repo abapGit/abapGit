@@ -390,7 +390,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
       IF strlen( <ls_message>-object_text ) > 5.
         ls_item-obj_type = <ls_message>-object_text(4).
         ls_item-obj_name = <ls_message>-object_text+5(*).
-      ELSE.
+      ELSEIF <ls_message>-show_req IS NOT INITIAL.
         ls_item-obj_name = <ls_message>-show_req->object_name.
         SELECT SINGLE tadir FROM euobjedit INTO ls_item-obj_type
           WHERE type = <ls_message>-show_req->object_type.
