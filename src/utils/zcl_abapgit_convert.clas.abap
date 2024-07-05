@@ -208,17 +208,15 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
           RECEIVING
             result = lv_converter_instance.
 
-        CALL METHOD lv_converter_instance->(`IF_AFF_LANGUAGE_CONVERTER~SAP1_TO_BCP47`)
-          EXPORTING
-            language      = im_lang_sap1
-          RECEIVING
-            result        = re_lang_bcp47
-          EXCEPTIONS
-            no_assignment = 1
-            OTHERS        = 2.
-        IF sy-subrc <> 0.
-          RAISE no_assignment.
-        ENDIF.
+        TRY.
+            CALL METHOD lv_converter_instance->(`IF_AFF_LANGUAGE_CONVERTER~SAP1_TO_BCP47`)
+              EXPORTING
+                language      = im_lang_sap1
+              RECEIVING
+                result        = re_lang_bcp47.
+          CATCH cx_static_check.
+            RAISE no_assignment.
+        ENDTRY.
       CATCH cx_sy_dyn_call_error.
         TRY.
             re_lang_bcp47 = lcl_bcp47_language_table=>sap1_to_bcp47( im_lang_sap1 ).
@@ -248,7 +246,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
               RECEIVING
                 result   = re_lang_sap1.
 
-          CATCH cx_aff_lang_conversion_error.
+          CATCH cx_static_check.
             RAISE no_assignment.
         ENDTRY.
 
