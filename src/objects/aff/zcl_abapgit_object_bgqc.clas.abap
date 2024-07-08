@@ -42,7 +42,7 @@ CLASS zcl_abapgit_object_bgqc IMPLEMENTATION.
 
       CATCH cx_root INTO lx_root.
 
-        zcx_abapgit_exception=>raise_with_text( ix_previous = lx_root ).
+        zcx_abapgit_exception=>raise_with_text( lx_root ).
 
     ENDTRY.
   ENDMETHOD.
