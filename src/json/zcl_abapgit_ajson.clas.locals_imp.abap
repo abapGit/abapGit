@@ -896,6 +896,8 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
               IF is_parent_type-tab_item_buf IS NOT BOUND. " Indirect hint that table was srt/hsh, see get_node_type
                 APPEND INITIAL LINE TO <parent_stdtab> REFERENCE INTO lr_target_field.
                 ASSERT sy-subrc = 0.
+              ELSE.
+                CLEAR <tab_item>.
               ENDIF.
 
             WHEN lif_kind=>struct_flat OR lif_kind=>struct_deep.
@@ -1809,8 +1811,13 @@ CLASS lcl_filter_runner IMPLEMENTATION.
   METHOD walk.
 
     DATA ls_node TYPE zif_abapgit_ajson_types=>ty_node.
+    DATA lv_tab_key TYPE string.
 
-    LOOP AT mr_source_tree->* INTO ls_node WHERE path = iv_path.
+    IF cs_parent-type = zif_abapgit_ajson_types=>node_type-array.
+      lv_tab_key = 'array_index'. " path + index
+    ENDIF.
+
+    LOOP AT mr_source_tree->* INTO ls_node USING KEY (lv_tab_key) WHERE path = iv_path.
       CASE ls_node-type.
         WHEN zif_abapgit_ajson_types=>node_type-boolean OR zif_abapgit_ajson_types=>node_type-null
           OR zif_abapgit_ajson_types=>node_type-number OR zif_abapgit_ajson_types=>node_type-string.
