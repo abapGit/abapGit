@@ -1466,6 +1466,21 @@ CLASS ltcl_json_to_abap DEFINITION
     METHODS to_abap_str_to_packed
       FOR TESTING
       RAISING cx_static_check.
+    METHODS to_abap_compressed_stdrd
+      FOR TESTING
+      RAISING cx_static_check.
+    METHODS to_abap_compressed_stdrd_key
+      FOR TESTING
+      RAISING cx_static_check.
+    METHODS to_abap_compressed_sort
+      FOR TESTING
+      RAISING cx_static_check.
+    METHODS to_abap_compressed_sort_unique
+      FOR TESTING
+      RAISING cx_static_check.
+    METHODS to_abap_compressed_hash
+      FOR TESTING
+      RAISING cx_static_check.
 ENDCLASS.
 
 CLASS zcl_abapgit_ajson DEFINITION LOCAL FRIENDS ltcl_json_to_abap.
@@ -2186,6 +2201,171 @@ CLASS ltcl_json_to_abap IMPLEMENTATION.
         act = lx->message
         exp = 'Path not found' ).
     ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD to_abap_compressed_stdrd.
+
+    TYPES: BEGIN OF ty_foo_bar,
+             foo TYPE string,
+             bar TYPE string,
+           END OF ty_foo_bar.
+
+    DATA lt_foo_bar TYPE STANDARD TABLE OF ty_foo_bar.
+    DATA ls_foo_bar LIKE LINE OF lt_foo_bar.
+    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
+    DATA lv_json TYPE string.
+
+    lv_json =
+    '[' &&
+    '  {' &&
+    '    "foo": "abc",' &&
+    '    "bar": "123"' &&
+    '  },' &&
+    '  {' &&
+    '    "foo": "cde"' &&
+    '  }' &&
+    ']'.
+
+    lo_ajson = zcl_abapgit_ajson=>parse( lv_json ).
+
+    lo_ajson->to_abap( IMPORTING ev_container = lt_foo_bar ).
+
+    READ TABLE lt_foo_bar WITH KEY foo = 'cde' INTO ls_foo_bar.
+
+    cl_abap_unit_assert=>assert_initial( act = ls_foo_bar-bar ).
+
+  ENDMETHOD.
+
+  METHOD to_abap_compressed_stdrd_key.
+
+    TYPES: BEGIN OF ty_foo_bar,
+             foo TYPE string,
+             bar TYPE string,
+           END OF ty_foo_bar.
+
+    DATA lt_foo_bar TYPE STANDARD TABLE OF ty_foo_bar WITH NON-UNIQUE KEY foo.
+    DATA ls_foo_bar LIKE LINE OF lt_foo_bar.
+    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
+    DATA lv_json TYPE string.
+
+    lv_json =
+    '[' &&
+    '  {' &&
+    '    "foo": "abc",' &&
+    '    "bar": "123"' &&
+    '  },' &&
+    '  {' &&
+    '    "foo": "cde"' &&
+    '  }' &&
+    ']'.
+
+    lo_ajson = zcl_abapgit_ajson=>parse( lv_json ).
+
+    lo_ajson->to_abap( IMPORTING ev_container = lt_foo_bar ).
+
+    READ TABLE lt_foo_bar WITH KEY foo = 'cde' INTO ls_foo_bar.
+
+    cl_abap_unit_assert=>assert_initial( act = ls_foo_bar-bar ).
+
+  ENDMETHOD.
+
+  METHOD to_abap_compressed_sort.
+
+    TYPES: BEGIN OF ty_foo_bar,
+             foo TYPE string,
+             bar TYPE string,
+           END OF ty_foo_bar.
+
+    DATA lt_foo_bar TYPE SORTED TABLE OF ty_foo_bar WITH NON-UNIQUE KEY foo.
+    DATA ls_foo_bar LIKE LINE OF lt_foo_bar.
+    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
+    DATA lv_json TYPE string.
+
+    lv_json =
+    '[' &&
+    '  {' &&
+    '    "foo": "abc",' &&
+    '    "bar": "123"' &&
+    '  },' &&
+    '  {' &&
+    '    "foo": "cde"' &&
+    '  }' &&
+    ']'.
+
+    lo_ajson = zcl_abapgit_ajson=>parse( lv_json ).
+
+    lo_ajson->to_abap( IMPORTING ev_container = lt_foo_bar ).
+
+    READ TABLE lt_foo_bar WITH KEY foo = 'cde' INTO ls_foo_bar.
+
+    cl_abap_unit_assert=>assert_initial( act = ls_foo_bar-bar ).
+
+  ENDMETHOD.
+
+  METHOD to_abap_compressed_sort_unique.
+
+    TYPES: BEGIN OF ty_foo_bar,
+             foo TYPE string,
+             bar TYPE string,
+           END OF ty_foo_bar.
+
+    DATA lt_foo_bar TYPE SORTED TABLE OF ty_foo_bar WITH UNIQUE KEY foo.
+    DATA ls_foo_bar LIKE LINE OF lt_foo_bar.
+    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
+    DATA lv_json TYPE string.
+
+    lv_json =
+    '[' &&
+    '  {' &&
+    '    "foo": "abc",' &&
+    '    "bar": "123"' &&
+    '  },' &&
+    '  {' &&
+    '    "foo": "cde"' &&
+    '  }' &&
+    ']'.
+
+    lo_ajson = zcl_abapgit_ajson=>parse( lv_json ).
+
+    lo_ajson->to_abap( IMPORTING ev_container = lt_foo_bar ).
+
+    READ TABLE lt_foo_bar WITH KEY foo = 'cde' INTO ls_foo_bar.
+
+    cl_abap_unit_assert=>assert_initial( act = ls_foo_bar-bar ).
+
+  ENDMETHOD.
+
+  METHOD to_abap_compressed_hash.
+
+    TYPES: BEGIN OF ty_foo_bar,
+             foo TYPE string,
+             bar TYPE string,
+           END OF ty_foo_bar.
+
+    DATA lt_foo_bar TYPE HASHED TABLE OF ty_foo_bar WITH UNIQUE KEY foo.
+    DATA ls_foo_bar LIKE LINE OF lt_foo_bar.
+    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
+    DATA lv_json TYPE string.
+
+    lv_json =
+    '[' &&
+    '  {' &&
+    '    "foo": "abc",' &&
+    '    "bar": "123"' &&
+    '  },' &&
+    '  {' &&
+    '    "foo": "cde"' &&
+    '  }' &&
+    ']'.
+
+    lo_ajson = zcl_abapgit_ajson=>parse( lv_json ).
+
+    lo_ajson->to_abap( IMPORTING ev_container = lt_foo_bar ).
+
+    READ TABLE lt_foo_bar WITH KEY foo = 'cde' INTO ls_foo_bar.
+
+    cl_abap_unit_assert=>assert_initial( act = ls_foo_bar-bar ).
 
   ENDMETHOD.
 
@@ -4408,15 +4588,47 @@ CLASS ltcl_filter_test IMPLEMENTATION.
     lo_json->push(
       iv_path = '/'
       iv_val  = 'b' ).
+    lo_json->push(
+      iv_path = '/'
+      iv_val  = 'c' ).
+    lo_json->push(
+      iv_path = '/'
+      iv_val  = 'd' ).
+    lo_json->push(
+      iv_path = '/'
+      iv_val  = 'e' ).
+    lo_json->push(
+      iv_path = '/'
+      iv_val  = 'f' ).
+    lo_json->push(
+      iv_path = '/'
+      iv_val  = 'g' ).
+    lo_json->push(
+      iv_path = '/'
+      iv_val  = 'h' ).
+    lo_json->push(
+      iv_path = '/'
+      iv_val  = 'i' ).
+    lo_json->push(
+      iv_path = '/'
+      iv_val  = 'j' ).
 
     lo_json_filtered = zcl_abapgit_ajson=>create_from(
       ii_source_json = lo_json
       ii_filter      = me ).
 
     CREATE OBJECT lo_nodes_exp.
-    lo_nodes_exp->add( '       |      |array  |     | |2' ).
+    lo_nodes_exp->add( '       |      |array  |     | |10' ).
     lo_nodes_exp->add( '/      |1     |str    |a    |1|0' ).
     lo_nodes_exp->add( '/      |2     |str    |b    |2|0' ).
+    lo_nodes_exp->add( '/      |3     |str    |c    |3|0' ).
+    lo_nodes_exp->add( '/      |4     |str    |d    |4|0' ).
+    lo_nodes_exp->add( '/      |5     |str    |e    |5|0' ).
+    lo_nodes_exp->add( '/      |6     |str    |f    |6|0' ).
+    lo_nodes_exp->add( '/      |7     |str    |g    |7|0' ).
+    lo_nodes_exp->add( '/      |8     |str    |h    |8|0' ).
+    lo_nodes_exp->add( '/      |9     |str    |i    |9|0' ).
+    lo_nodes_exp->add( '/      |10    |str    |j    |10|0' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lo_json_filtered->mt_json_tree
