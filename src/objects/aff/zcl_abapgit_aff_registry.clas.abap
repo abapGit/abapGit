@@ -60,6 +60,7 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
     register( 'SMBC' ).
     register( 'NONT' ).
     register( 'RONT' ).
+    register( 'UIAD' ).
     register( 'UIPG' ).
     register( 'UIST' ).
   ENDMETHOD.
