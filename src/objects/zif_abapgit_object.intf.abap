@@ -100,6 +100,8 @@ INTERFACE zif_abapgit_object
   CLASS-METHODS map_object_to_filename
     IMPORTING
       !is_item    TYPE zif_abapgit_definitions=>ty_item
+      !iv_ext     TYPE string
+      !iv_extra   TYPE clike
     CHANGING
       cv_filename TYPE string
     RAISING

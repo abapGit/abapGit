@@ -42,6 +42,7 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
         code_inspector_check_variant TYPE string VALUE 'code_inspector_check_variant',
         block_commit                 TYPE string VALUE 'block_commit',
         flow                         TYPE string VALUE 'flow',
+        exclude_remote_paths         TYPE string VALUE 'exclude_remote_paths',
       END OF c_id .
     CONSTANTS:
       BEGIN OF c_event,
@@ -103,7 +104,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
 
 
   METHOD choose_check_variant.
@@ -279,6 +280,12 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       iv_readonly = boolc( li_package->are_changes_recorded_in_tr_req( ) = abap_false )
       iv_label    = 'BETA: Enable abapGit flow for this repository (requires transported packages)' ).
 
+    ro_form->textarea(
+      iv_name        = c_id-exclude_remote_paths
+      iv_label       = 'Exclude Paths'
+      iv_hint        = 'List of files patterns (CP operator) to exclude from' &&
+                       ' syncronization (e.g. unwanted parts of the package, examples...)' ).
+
     ro_form->start_group(
       iv_name        = c_id-checks
       iv_label       = 'Local Checks'
@@ -339,7 +346,8 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
   METHOD read_settings.
 
-    DATA: li_package TYPE REF TO zif_abapgit_sap_package.
+    DATA li_package TYPE REF TO zif_abapgit_sap_package.
+    DATA lv_excl_rem TYPE string.
 
     li_package = zcl_abapgit_factory=>get_sap_package( mo_repo->get_package( ) ).
 
@@ -389,6 +397,13 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       iv_key = c_id-block_commit
       iv_val = boolc( ms_settings-block_commit = abap_true ) ) ##TYPE.
 
+    lv_excl_rem = concat_lines_of(
+      table = ms_settings-exclude_remote_paths
+      sep   = cl_abap_char_utilities=>newline ).
+    ro_form_data->set(
+      iv_key = c_id-exclude_remote_paths
+      iv_val = lv_excl_rem ).
+
   ENDMETHOD.
 
 
@@ -405,6 +420,10 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     ms_settings-only_local_objects           = mo_form_data->get( c_id-only_local_objects ).
     ms_settings-code_inspector_check_variant = mo_form_data->get( c_id-code_inspector_check_variant ).
     ms_settings-block_commit                 = mo_form_data->get( c_id-block_commit ).
+    ms_settings-exclude_remote_paths         =
+      zcl_abapgit_convert=>split_string( mo_form_data->get( c_id-exclude_remote_paths ) ).
+
+    DELETE ms_settings-exclude_remote_paths WHERE table_line IS INITIAL.
 
     mo_repo->set_local_settings( ms_settings ).
 

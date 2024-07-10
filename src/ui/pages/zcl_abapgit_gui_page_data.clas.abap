@@ -163,7 +163,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
     DATA lv_where LIKE LINE OF rt_where.
 
-    SPLIT io_map->get( c_id-where ) AT |\n| INTO TABLE rt_where.
+    rt_where = zcl_abapgit_convert=>split_string( io_map->get( c_id-where ) ).
 
     DELETE rt_where WHERE table_line IS INITIAL.
 
