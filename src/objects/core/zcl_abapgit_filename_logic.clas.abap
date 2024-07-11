@@ -183,6 +183,12 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
   METHOD i18n_file_to_object.
 
     DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
+    DATA lt_filename_elements TYPE string_table.
+    DATA lv_index TYPE syst_tabix.
+    DATA lv_langu_bcp47 TYPE string.
+    DATA lv_sap1 TYPE syst_langu.
+
+    CLEAR: es_item, ev_lang, ev_ext.
 
     lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
 
@@ -194,8 +200,31 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
       IMPORTING
         es_item     = es_item ).
 
-    FIND FIRST OCCURRENCE OF REGEX 'i18n\.([^.]{2})\.([^.]+)$' IN iv_filename
-      SUBMATCHES ev_lang ev_ext ##SUBRC_OK.
+    SPLIT iv_filename AT '.' INTO TABLE lt_filename_elements.
+
+    READ TABLE lt_filename_elements INDEX lines( lt_filename_elements ) INTO ev_ext.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Could not derive file extension of file { iv_filename }| ).
+    ENDIF.
+
+    READ TABLE lt_filename_elements WITH KEY table_line = `i18n` TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      lv_index = sy-tabix.
+      READ TABLE lt_filename_elements INDEX ( lv_index + 1 ) INTO lv_langu_bcp47.
+      IF sy-subrc = 0.
+        lv_sap1 = zcl_abapgit_convert=>language_bcp47_to_sap1( lv_langu_bcp47 ).
+        ev_lang = zcl_abapgit_convert=>language_sap1_to_sap2( lv_sap1 ). " it says it is ISO 639 but is
+
+        " to not break existing PO file implementations
+        IF ev_ext = `po`.
+          ev_lang = to_lower( ev_lang ).
+        ENDIF.
+      ENDIF.
+    ENDIF.
+
+    IF ev_lang IS INITIAL.
+      CLEAR ev_ext.
+    ENDIF.
 
   ENDMETHOD.
 
