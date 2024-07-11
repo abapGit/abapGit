@@ -213,7 +213,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
       READ TABLE lt_filename_elements INDEX ( lv_index + 1 ) INTO lv_langu_bcp47.
       IF sy-subrc = 0.
         lv_sap1 = zcl_abapgit_convert=>language_bcp47_to_sap1( lv_langu_bcp47 ).
-        ev_lang = zcl_abapgit_convert=>language_sap1_to_sap2( lv_sap1 ). " it says it is ISO 639 but is
+        ev_lang = zcl_abapgit_convert=>language_sap1_to_sap2( lv_sap1 ). " actually it is to_upper( ISO-639 )
 
         " to not break existing PO file implementations
         IF ev_ext = `po`.
