@@ -184,7 +184,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
 
     DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
     DATA lt_filename_elements TYPE string_table.
-    DATA lv_index TYPE syst_tabix.
+    DATA lv_index TYPE syst-tabix.
     DATA lv_langu_bcp47 TYPE string.
     DATA lv_sap1 TYPE syst_langu.
 
