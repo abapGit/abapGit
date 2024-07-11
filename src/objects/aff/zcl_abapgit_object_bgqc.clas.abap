@@ -22,17 +22,24 @@ CLASS zcl_abapgit_object_bgqc IMPLEMENTATION.
     DATA lv_subrc         TYPE sy-subrc.
     DATA lx_root          TYPE REF TO cx_root.
 
+    FIELD-SYMBOLS: <lv_ref_bgqc_name> TYPE any.
+
     TRY.
 
         CREATE DATA lv_ref_bgqc_name TYPE (c_bgqc_name).
-        lv_ref_bgqc_name->* = me->ms_item-obj_name.
+        ASSIGN lv_ref_bgqc_name->* TO <lv_ref_bgqc_name>.
+        ASSERT sy-subrc = 0.
+
+        me->ms_item-obj_name = <lv_ref_bgqc_name>.
 
         CREATE OBJECT lo_bgqc_wbi_p TYPE (c_bgqc_wbi_p).
 
         CALL METHOD lo_bgqc_wbi_p->(c_select_changed_by)
-          EXPORTING iv_bgqc_name  = lv_ref_bgqc_name->*
-          IMPORTING ev_changed_by = lv_changed_by
-                    ev_subrc      = lv_subrc.
+          EXPORTING
+            iv_bgqc_name  = <lv_ref_bgqc_name>
+          IMPORTING
+            ev_changed_by = lv_changed_by
+            ev_subrc      = lv_subrc.
 
         IF lv_subrc <> 0.
           zcx_abapgit_exception=>raise_t100( ).
