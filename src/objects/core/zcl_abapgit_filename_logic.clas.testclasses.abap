@@ -24,14 +24,15 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
 
     METHODS:
       setup,
-      is_obj_def_file FOR TESTING,
-      dot_abapgit FOR TESTING RAISING zcx_abapgit_exception,
-      file_to_object FOR TESTING RAISING zcx_abapgit_exception,
-      object_to_file FOR TESTING RAISING zcx_abapgit_exception,
-      i18n_file_to_object FOR TESTING RAISING zcx_abapgit_exception,
-      object_to_i18n_file FOR TESTING RAISING zcx_abapgit_exception,
-      file_to_object_package FOR TESTING RAISING zcx_abapgit_exception,
-      object_to_file_package FOR TESTING RAISING zcx_abapgit_exception.
+      is_obj_def_file                FOR TESTING,
+      dot_abapgit                    FOR TESTING RAISING zcx_abapgit_exception,
+      file_to_object                 FOR TESTING RAISING zcx_abapgit_exception,
+      object_to_file                 FOR TESTING RAISING zcx_abapgit_exception,
+      i18n_file_to_object            FOR TESTING RAISING zcx_abapgit_exception,
+      object_to_i18n_file            FOR TESTING RAISING zcx_abapgit_exception,
+      file_to_object_package         FOR TESTING RAISING zcx_abapgit_exception,
+      object_to_file_package         FOR TESTING RAISING zcx_abapgit_exception,
+      i18n_file_to_object_is_initial FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -382,6 +383,27 @@ CLASS ltcl_run_checks IMPLEMENTATION.
       act = lv_filename ).
 
   ENDMETHOD.
+
+  METHOD i18n_file_to_object_is_initial.
+    DATA lv_lang TYPE laiso.
+    DATA lv_ext TYPE string.
+
+    lv_ext = `txt`.
+    lv_lang = `E`.
+
+    zcl_abapgit_filename_logic=>i18n_file_to_object(
+      EXPORTING
+        iv_filename = 'zif_abapgit.intf.abap'
+        iv_path     = '/src/'
+      IMPORTING
+        ev_lang     = lv_lang
+        ev_ext      = lv_ext ).
+
+    cl_abap_unit_assert=>assert_initial( lv_ext ).
+    cl_abap_unit_assert=>assert_initial( lv_lang ).
+
+  ENDMETHOD.
+
 
   METHOD i18n_file_to_object.
 

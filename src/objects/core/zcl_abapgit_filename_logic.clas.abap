@@ -190,6 +190,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
 
     CLEAR: es_item, ev_lang, ev_ext.
 
+    CLEAR: ev_lang, ev_ext.
     lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
 
     file_to_object(
