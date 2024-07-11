@@ -184,7 +184,6 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
 
     DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
     DATA lt_filename_elements TYPE string_table.
-    DATA lv_index TYPE syst-tabix.
     DATA lv_langu_bcp47 TYPE string.
     DATA lv_sap1 TYPE syst_langu.
 
@@ -210,8 +209,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
 
     READ TABLE lt_filename_elements WITH KEY table_line = `i18n` TRANSPORTING NO FIELDS.
     IF sy-subrc = 0.
-      lv_index = sy-tabix.
-      READ TABLE lt_filename_elements INDEX ( lv_index + 1 ) INTO lv_langu_bcp47.
+      READ TABLE lt_filename_elements INDEX ( sy-tabix + 1 ) INTO lv_langu_bcp47.
       IF sy-subrc = 0.
         lv_sap1 = zcl_abapgit_convert=>language_bcp47_to_sap1( lv_langu_bcp47 ).
         ev_lang = zcl_abapgit_convert=>language_sap1_to_sap2( lv_sap1 ). " actually it is to_upper( ISO-639 )
