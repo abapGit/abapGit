@@ -701,6 +701,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
 
   METHOD deserialize_translation.
     DATA: lo_properties_file  TYPE REF TO zcl_abapgit_properties_file,
+          lt_description_int  LIKE LINE OF et_description_int,
           lt_translation_file TYPE zif_abapgit_i18n_file=>ty_table_of,
           li_translation_file LIKE LINE OF lt_translation_file,
           ls_aff_data         TYPE zif_abapgit_aff_intf_v1=>ty_main,
@@ -726,7 +727,12 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
         IMPORTING
           es_data        = ls_ag_data ).
 
-      APPEND LINES OF ls_ag_data-description_int TO et_description_int.
+
+      lt_description_int-clsname  = ls_ag_data-vseointerf-clsname.
+      lt_description_int-langu    = ls_ag_data-vseointerf-langu.
+      lt_description_int-descript = ls_ag_data-vseointerf-descript.
+
+      APPEND lt_description_int TO et_description_int.
       APPEND LINES OF ls_ag_data-description     TO et_description.
       APPEND LINES OF ls_ag_data-description_sub TO et_description_sub.
 
