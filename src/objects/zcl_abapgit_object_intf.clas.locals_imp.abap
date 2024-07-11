@@ -729,7 +729,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
 
 
       lt_description-clsname  = ls_ag_data-vseointerf-clsname.
-      lt_description-langu    = to_upper( li_translation_file->lang( ) ).
+      lt_description-langu    = ls_ag_data-vseointerf-langu.
       lt_description-descript = ls_ag_data-vseointerf-descript.
 
       APPEND lt_description TO et_description_int.
