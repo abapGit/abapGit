@@ -50,21 +50,20 @@ CLASS zcl_abapgit_properties_file IMPLEMENTATION.
 
     DATA:
       lv_translation TYPE string,
-      lo_ajson       TYPE REF TO zcl_abapgit_json_handler,
+      lo_ajson       TYPE REF TO zif_abapgit_ajson,
       lo_json_path   TYPE REF TO zcl_abapgit_json_path,
       lx_exception   TYPE REF TO cx_static_check.
 
-    CREATE OBJECT lo_ajson.
     CREATE OBJECT lo_json_path.
 
     TRY.
         lv_translation = lo_json_path->deserialize( mt_translation ).
 
-        lo_ajson->deserialize(
-          EXPORTING
-            iv_content = lv_translation
-          IMPORTING
-            ev_data    = ev_data ).
+        lo_ajson = zcl_abapgit_ajson=>parse( lv_translation
+          )->map( zcl_abapgit_ajson_mapping=>create_to_snake_case( ) ).
+
+        lo_ajson->to_abap( IMPORTING ev_container = ev_data ).
+
       CATCH cx_static_check INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
