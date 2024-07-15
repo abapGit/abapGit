@@ -192,9 +192,6 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
   METHOD i18n_file_to_object.
 
     DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
-    DATA lt_filename_elements TYPE string_table.
-    DATA lv_langu_bcp47 TYPE string.
-    DATA lv_sap1 TYPE sy-langu.
 
     CLEAR: es_item, ev_lang, ev_ext.
     lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
