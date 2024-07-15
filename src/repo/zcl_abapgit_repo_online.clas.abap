@@ -37,6 +37,8 @@ CLASS zcl_abapgit_repo_online DEFINITION
         REDEFINITION .
     METHODS zif_abapgit_repo~get_name
         REDEFINITION .
+    METHODS zif_abapgit_repo~has_remote_source
+        REDEFINITION .
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -385,5 +387,10 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
           rv_name = 'New online repo'. "unlikely fallback
       ENDTRY.
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~has_remote_source.
+    rv_yes = abap_true.
   ENDMETHOD.
 ENDCLASS.
