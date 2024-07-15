@@ -581,7 +581,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       ls_clskey          TYPE seoclskey,
       ls_intf            TYPE ty_intf,
       lt_description     TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
-      lt_description_int TYPE zif_abapgit_oo_object_fnc=>ty_seoclasstx_tt,
       lt_description_sub TYPE zif_abapgit_oo_object_fnc=>ty_seosubcotx_tt.
 
     IF iv_step = zif_abapgit_object=>gc_step_id-abap.
@@ -595,11 +594,9 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
             is_item            = ms_item
           IMPORTING
             et_description     = lt_description
-            et_description_int = lt_description_int
             et_description_sub = lt_description_sub ).
 
         APPEND LINES OF lt_description TO ls_intf-description.
-        APPEND LINES OF lt_description_int TO ls_intf-description_int.
         APPEND LINES OF lt_description_sub TO ls_intf-description_sub.
 
       ELSE.
