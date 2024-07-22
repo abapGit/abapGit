@@ -451,7 +451,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
       exp = 'ZPROGRAM'
       act = ls_item-obj_name ).
     cl_abap_unit_assert=>assert_equals(
-      exp = 'EN'
+      exp = 'en'
       act = lv_lang ).
     cl_abap_unit_assert=>assert_equals(
       exp = 'properties'
