@@ -6,7 +6,7 @@ CLASS zcl_abapgit_object_dsfd DEFINITION
 
   PUBLIC SECTION.
     METHODS zif_abapgit_object~changed_by            REDEFINITION.
-    methods zif_abapgit_object~get_deserialize_steps redefinition.
+    METHODS zif_abapgit_object~get_deserialize_steps REDEFINITION.
   protected section.
     methods get_additional_extensions                redefinition.
   private section.
