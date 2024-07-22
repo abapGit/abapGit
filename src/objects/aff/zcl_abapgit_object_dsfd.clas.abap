@@ -7,54 +7,63 @@ CLASS zcl_abapgit_object_dsfd DEFINITION
   PUBLIC SECTION.
     METHODS zif_abapgit_object~changed_by            REDEFINITION.
     METHODS zif_abapgit_object~get_deserialize_steps REDEFINITION.
-  protected section.
-    methods get_additional_extensions                redefinition.
-  private section.
-endclass.
+  PROTECTED SECTION.
+    METHODS get_additional_extensions                REDEFINITION.
+  PRIVATE SECTION.
+ENDCLASS.
 
 
 
-class zcl_abapgit_object_dsfd implementation.
-  method zif_abapgit_object~changed_by.
+CLASS zcl_abapgit_object_dsfd IMPLEMENTATION.
+  METHOD zif_abapgit_object~changed_by.
 
-    data: lo_dsfd_handler          type ref to object,
-          lo_dsfd_source_container type ref to object,
-          lv_object_key            type seu_objkey,
-          lx_error                 type ref to cx_root.
+    DATA: lo_dsfd_handler          TYPE REF TO object,
+          lo_dsfd_source_container TYPE REF TO object,
+          lv_object_key            TYPE seu_objkey,
+          lv_exists                TYPE abap_bool,
+          lx_error                 TYPE REF TO cx_root.
 
-    try.
+    TRY.
         lv_object_key = ms_item-obj_name.
-        call method ('CL_DSFD_AFF_OBJECT_HANDLER')=>('GET_DDIC_HANDLER')
-          exporting
+        CALL METHOD ('CL_DSFD_AFF_OBJECT_HANDLER')=>('GET_DDIC_HANDLER')
+          EXPORTING
             object_key = lv_object_key
-          receiving
+          RECEIVING
             handler    = lo_dsfd_handler.
 
-        call method lo_dsfd_handler->('GET_SOURCE_CONTAINER')
-          exporting
+        CALL METHOD lo_dsfd_handler->('CHECK_EXISTENCE')
+          EXPORTING
             iv_as4local = 'A'
-          receiving
-            ro_result   = lo_dsfd_source_container.
+          RECEIVING
+            rv_exists   = lv_exists.
 
-        call method lo_dsfd_source_container->('GET_AS4USER')
-          receiving
-            rv_as4user = rv_user.
+        IF lv_exists = abap_true.
+          CALL METHOD lo_dsfd_handler->('GET_SOURCE_CONTAINER')
+            EXPORTING
+              iv_as4local = 'A'
+            RECEIVING
+              ro_result   = lo_dsfd_source_container.
 
-      catch cx_root into lx_error.
+          CALL METHOD lo_dsfd_source_container->('GET_AS4USER')
+            RECEIVING
+              rv_as4user = rv_user.
+        ENDIF.
+
+      CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
-    endtry.
-  endmethod.
+    ENDTRY.
+  ENDMETHOD.
 
-  method zif_abapgit_object~get_deserialize_steps.
-    append zif_abapgit_object=>gc_step_id-ddic to rt_steps.
-  endmethod.
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+  ENDMETHOD.
 
-  method get_additional_extensions.
-    data ls_additional_extension like line of rv_additional_extensions.
+  METHOD get_additional_extensions.
+    DATA ls_additional_extension LIKE LINE OF rv_additional_extensions.
     ls_additional_extension-extension = 'acds'.
-    call method ('CL_CDS_AFF_FILE_NAME_MAPPER')=>for_cds
-      receiving
+    CALL METHOD ('CL_CDS_AFF_FILE_NAME_MAPPER')=>for_cds
+      RECEIVING
         result = ls_additional_extension-file_name_mapper.
-    append ls_additional_extension to rv_additional_extensions.
-  endmethod.
-endclass.
+    APPEND ls_additional_extension TO rv_additional_extensions.
+  ENDMETHOD.
+ENDCLASS.
