@@ -4,7 +4,7 @@ CLASS zcl_abapgit_object_dsfd DEFINITION
   FINAL
   CREATE PUBLIC .
 
-  public section.
+  PUBLIC SECTION.
     methods zif_abapgit_object~changed_by            redefinition.
     methods zif_abapgit_object~get_deserialize_steps redefinition.
   protected section.
