@@ -75,10 +75,13 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~read_attributes.
   ENDMETHOD.
 
-  METHOD zif_abapgit_oo_object_fnc~read_descriptions.
+  METHOD zif_abapgit_oo_object_fnc~read_descriptions_class.
   ENDMETHOD.
 
-  METHOD zif_abapgit_oo_object_fnc~read_descriptions_sub.
+  METHOD zif_abapgit_oo_object_fnc~read_descriptions_compo.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_oo_object_fnc~read_descriptions_subco.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~read_documentation.
@@ -96,12 +99,15 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~serialize_abap.
   ENDMETHOD.
 
-  METHOD zif_abapgit_oo_object_fnc~update_descriptions.
+  METHOD zif_abapgit_oo_object_fnc~update_descriptions_class.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_oo_object_fnc~update_descriptions_compo.
     ms_descriptions_key = is_key.
     mt_descriptions     = it_descriptions.
   ENDMETHOD.
 
-  METHOD zif_abapgit_oo_object_fnc~update_descriptions_sub.
+  METHOD zif_abapgit_oo_object_fnc~update_descriptions_subco.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~syntax_check.

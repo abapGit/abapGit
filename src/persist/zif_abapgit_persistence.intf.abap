@@ -31,6 +31,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
       transport_request            TYPE trkorr,
       customizing_request          TYPE trkorr,
       flow                         TYPE abap_bool,
+      exclude_remote_paths         TYPE string_table,
     END OF ty_local_settings.
 
   TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.

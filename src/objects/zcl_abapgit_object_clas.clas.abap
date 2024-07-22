@@ -25,6 +25,9 @@ CLASS zcl_abapgit_object_clas DEFINITION
         IMPORTING ii_xml     TYPE REF TO zif_abapgit_xml_input
                   iv_package TYPE devclass
         RAISING   zcx_abapgit_exception,
+      deserialize_descr
+        IMPORTING ii_xml TYPE REF TO zif_abapgit_xml_input
+        RAISING   zcx_abapgit_exception,
       deserialize_docu
         IMPORTING ii_xml TYPE REF TO zif_abapgit_xml_input
         RAISING   zcx_abapgit_exception,
@@ -50,13 +53,19 @@ CLASS zcl_abapgit_object_clas DEFINITION
           !iv_clsname TYPE seoclsname
         RAISING
           zcx_abapgit_exception,
-      serialize_descr
+      serialize_descr_class
         IMPORTING
           !ii_xml     TYPE REF TO zif_abapgit_xml_output
           !iv_clsname TYPE seoclsname
         RAISING
           zcx_abapgit_exception,
-      serialize_descr_sub
+      serialize_descr_compo
+        IMPORTING
+          !ii_xml     TYPE REF TO zif_abapgit_xml_output
+          !iv_clsname TYPE seoclsname
+        RAISING
+          zcx_abapgit_exception,
+      serialize_descr_subco
         IMPORTING
           !ii_xml     TYPE REF TO zif_abapgit_xml_output
           !iv_clsname TYPE seoclsname
@@ -169,8 +178,6 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
           lt_local_implementations TYPE seop_source_string,
           lt_local_macros          TYPE seop_source_string,
           lt_test_classes          TYPE seop_source_string,
-          lt_descriptions          TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
-          lt_descriptions_sub      TYPE zif_abapgit_oo_object_fnc=>ty_seosubcotx_tt,
           ls_class_key             TYPE seoclskey,
           lt_attributes            TYPE zif_abapgit_oo_object_fnc=>ty_obj_attribute_tt.
 
@@ -233,21 +240,40 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       iv_version = ls_vseoclass-unicode
       it_source  = lt_source ).
 
-    ii_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
-                  CHANGING cg_data = lt_descriptions ).
+  ENDMETHOD.
 
-    mi_object_oriented_object_fct->update_descriptions(
+
+  METHOD deserialize_descr.
+
+    DATA:
+      ls_class_key          TYPE seoclskey,
+      lt_descriptions_class TYPE zif_abapgit_oo_object_fnc=>ty_seoclasstx_tt,
+      lt_descriptions_compo TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
+      lt_descriptions_subco TYPE zif_abapgit_oo_object_fnc=>ty_seosubcotx_tt.
+
+    ls_class_key-clsname = ms_item-obj_name.
+
+    ii_xml->read( EXPORTING iv_name = 'DESCRIPTIONS_CLASS'
+                  CHANGING  cg_data = lt_descriptions_class ).
+
+    mi_object_oriented_object_fct->update_descriptions_class(
       is_key          = ls_class_key
-      it_descriptions = lt_descriptions ).
+      iv_language     = mv_language
+      it_descriptions = lt_descriptions_class ).
+
+    ii_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
+                  CHANGING  cg_data = lt_descriptions_compo ).
+
+    mi_object_oriented_object_fct->update_descriptions_compo(
+      is_key          = ls_class_key
+      it_descriptions = lt_descriptions_compo ).
 
     ii_xml->read( EXPORTING iv_name = 'DESCRIPTIONS_SUB'
-                  CHANGING cg_data = lt_descriptions_sub ).
+                  CHANGING  cg_data = lt_descriptions_subco ).
 
-    mi_object_oriented_object_fct->update_descriptions_sub(
+    mi_object_oriented_object_fct->update_descriptions_subco(
       is_key          = ls_class_key
-      it_descriptions = lt_descriptions_sub ).
-
-    mi_object_oriented_object_fct->add_to_activation_list( ms_item ).
+      it_descriptions = lt_descriptions_subco ).
 
   ENDMETHOD.
 
@@ -493,7 +519,34 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD serialize_descr.
+  METHOD serialize_descr_class.
+
+    DATA: lt_descriptions    TYPE zif_abapgit_oo_object_fnc=>ty_seoclasstx_tt,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
+
+    " Main language is already in VSEOCLASS so we serialize only translations
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
+      RETURN.
+    ENDIF.
+
+    lt_descriptions = mi_object_oriented_object_fct->read_descriptions_class(
+      iv_object_name = iv_clsname
+      iv_language    = mv_language ).
+
+    IF lines( lt_descriptions ) = 0.
+      RETURN.
+    ENDIF.
+    " Remove technical languages
+    lt_language_filter = mo_i18n_params->build_language_filter( ).
+    DELETE lt_descriptions WHERE NOT langu IN lt_language_filter AND langu <> mv_language.
+
+    ii_xml->add( iv_name = 'DESCRIPTIONS_CLASS'
+                 ig_data = lt_descriptions ).
+
+  ENDMETHOD.
+
+
+  METHOD serialize_descr_compo.
 
     DATA: lt_descriptions    TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
           lv_language        TYPE spras,
@@ -503,7 +556,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       lv_language = mv_language.
     ENDIF.
 
-    lt_descriptions = mi_object_oriented_object_fct->read_descriptions(
+    lt_descriptions = mi_object_oriented_object_fct->read_descriptions_compo(
       iv_object_name = iv_clsname
       iv_language    = lv_language ).
 
@@ -520,7 +573,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD serialize_descr_sub.
+  METHOD serialize_descr_subco.
 
     DATA: lt_descriptions    TYPE zif_abapgit_oo_object_fnc=>ty_seosubcotx_tt,
           lv_language        TYPE spras,
@@ -530,7 +583,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       lv_language = mv_language.
     ENDIF.
 
-    lt_descriptions = mi_object_oriented_object_fct->read_descriptions_sub(
+    lt_descriptions = mi_object_oriented_object_fct->read_descriptions_subco(
       iv_object_name = iv_clsname
       iv_language    = lv_language ).
 
@@ -770,11 +823,14 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
                     iv_clsname          = ls_clskey-clsname
                     it_langu_additional = lt_langu_additional ).
 
-    serialize_descr( ii_xml     = ii_xml
-                     iv_clsname = ls_clskey-clsname ).
+    serialize_descr_class( ii_xml     = ii_xml
+                           iv_clsname = ls_clskey-clsname ).
 
-    serialize_descr_sub( ii_xml     = ii_xml
-                         iv_clsname = ls_clskey-clsname ).
+    serialize_descr_compo( ii_xml     = ii_xml
+                           iv_clsname = ls_clskey-clsname ).
+
+    serialize_descr_subco( ii_xml     = ii_xml
+                           iv_clsname = ls_clskey-clsname ).
 
     serialize_attr( ii_xml     = ii_xml
                     iv_clsname = ls_clskey-clsname ).
@@ -873,6 +929,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       deserialize_abap( ii_xml     = io_xml
                         iv_package = iv_package ).
 
+      deserialize_descr( io_xml ).
+
       deserialize_tpool( io_xml ).
 
       IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
@@ -883,6 +941,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
                         iv_package = iv_package ).
 
       deserialize_docu( io_xml ).
+
+      mi_object_oriented_object_fct->add_to_activation_list( ms_item ).
 
     ELSEIF iv_step = zif_abapgit_object=>gc_step_id-early.
 
