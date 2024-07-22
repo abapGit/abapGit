@@ -43,7 +43,6 @@ CLASS zcl_abapgit_object_dras IMPLEMENTATION.
               iv_as4local = 'A'
             RECEIVING
               ro_result   = lo_dras_source_container.
-  
           CALL METHOD lo_dras_source_container->('GET_AS4USER')
             RECEIVING
               rv_as4user = rv_user.
