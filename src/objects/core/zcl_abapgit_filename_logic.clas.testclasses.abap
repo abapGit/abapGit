@@ -437,7 +437,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     " Properties file
     zcl_abapgit_filename_logic=>i18n_file_to_object(
       EXPORTING
-        iv_filename = 'zprogram.prog.i18n.en.properties'
+        iv_filename = 'zif_abap.intf.i18n.en.properties'
         iv_path     = '/src/'
       IMPORTING
         es_item     = ls_item
@@ -445,10 +445,10 @@ CLASS ltcl_run_checks IMPLEMENTATION.
         ev_ext      = lv_ext ).
 
     cl_abap_unit_assert=>assert_equals(
-      exp = 'PROG'
+      exp = 'INTF'
       act = ls_item-obj_type ).
     cl_abap_unit_assert=>assert_equals(
-      exp = 'ZPROGRAM'
+      exp = 'ZIF_ABAP'
       act = ls_item-obj_name ).
     cl_abap_unit_assert=>assert_equals(
       exp = 'EN'
@@ -457,6 +457,28 @@ CLASS ltcl_run_checks IMPLEMENTATION.
       exp = 'properties'
       act = lv_ext ).
 
+    " Properties file
+    zcl_abapgit_filename_logic=>i18n_file_to_object(
+      EXPORTING
+        iv_filename = 'zif_abap.intf.i18n.en-GB.properties'
+        iv_path     = '/src/'
+      IMPORTING
+        es_item     = ls_item
+        ev_lang     = lv_lang
+        ev_ext      = lv_ext ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'INTF'
+      act = ls_item-obj_type ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'ZIF_ABAP'
+      act = ls_item-obj_name ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'N6'
+      act = lv_lang ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'properties'
+      act = lv_ext ).
   ENDMETHOD.
 
   METHOD object_to_i18n_file.
