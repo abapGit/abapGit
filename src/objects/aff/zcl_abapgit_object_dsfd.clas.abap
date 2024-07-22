@@ -1,8 +1,8 @@
-class zcl_abapgit_object_dsfd definition
-  public
-  inheriting from zcl_abapgit_object_common_aff
-  final
-  create public .
+CLASS zcl_abapgit_object_dsfd DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_object_common_aff
+  FINAL
+  CREATE PUBLIC .
 
   public section.
     methods zif_abapgit_object~changed_by            redefinition.
