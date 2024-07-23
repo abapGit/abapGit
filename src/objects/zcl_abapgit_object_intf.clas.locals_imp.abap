@@ -706,7 +706,8 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
           li_translation_file LIKE LINE OF lt_translation_file,
           ls_aff_data         TYPE zif_abapgit_aff_intf_v1=>ty_main,
           lo_type_mapper      TYPE REF TO zif_abapgit_aff_type_mapping,
-          ls_ag_data          TYPE zcl_abapgit_object_intf=>ty_intf.
+          ls_ag_data          TYPE zcl_abapgit_object_intf=>ty_intf,
+          lv_sap1             TYPE syst_langu.
 
     lt_translation_file = io_files->read_i18n_files( ).
 
@@ -717,7 +718,9 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
       lo_properties_file ?= li_translation_file.
       lo_properties_file->get_translations( IMPORTING ev_data = ls_aff_data ).
 
-      ls_aff_data-header-original_language = to_upper( li_translation_file->lang( ) ). " is target language
+      lv_sap1 = zcl_abapgit_convert=>language_sap2_to_sap1( li_translation_file->lang( ) ).
+      ls_aff_data-header-original_language = lv_sap1.
+
 
       CREATE OBJECT lo_type_mapper TYPE lcl_aff_type_mapping.
       lo_type_mapper->to_abapgit(
