@@ -122,11 +122,12 @@ CLASS zcl_abapgit_convert DEFINITION
       EXCEPTIONS
         no_assignment.
 
+    TYPES ty_char02 TYPE c LENGTH 2.
     CLASS-METHODS uccp
       IMPORTING
         iv_uccp        TYPE string
       RETURNING
-        VALUE(rv_char) TYPE char1
+        VALUE(rv_char) TYPE ty_char02
       EXCEPTIONS
         no_assignment.
 
