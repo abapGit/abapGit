@@ -358,6 +358,10 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
       REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
     ENDIF.
 
+    IF iv_ext = 'properties'.
+      RETURN.
+    ENDIF.
+
     TRANSLATE rv_filename TO LOWER CASE.
 
   ENDMETHOD.
