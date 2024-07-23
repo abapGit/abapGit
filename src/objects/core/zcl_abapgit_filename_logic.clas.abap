@@ -105,8 +105,19 @@ CLASS zcl_abapgit_filename_logic DEFINITION
     CLASS-METHODS map_object_to_filename
       IMPORTING
         !is_item    TYPE zif_abapgit_definitions=>ty_item
+        !iv_ext     TYPE string
+        !iv_extra   TYPE clike
       CHANGING
         cv_filename TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS get_lang_and_ext
+      IMPORTING
+        iv_filename TYPE string
+      EXPORTING
+        ev_lang     TYPE laiso
+        ev_ext      TYPE string
       RAISING
         zcx_abapgit_exception.
 
@@ -182,6 +193,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
 
     DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
 
+    CLEAR: es_item, ev_lang, ev_ext.
     lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
 
     file_to_object(
@@ -192,8 +204,12 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
       IMPORTING
         es_item     = es_item ).
 
-    FIND FIRST OCCURRENCE OF REGEX 'i18n\.([^.]{2})\.([^.]+)$' IN iv_filename
-      SUBMATCHES ev_lang ev_ext ##SUBRC_OK.
+    get_lang_and_ext(
+      EXPORTING
+        iv_filename = iv_filename
+      IMPORTING
+        ev_lang     = ev_lang
+        ev_ext      = ev_ext ).
 
   ENDMETHOD.
 
@@ -267,6 +283,8 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
         CALL METHOD (lv_class)=>('ZIF_ABAPGIT_OBJECT~MAP_OBJECT_TO_FILENAME')
           EXPORTING
             is_item     = is_item
+            iv_ext      = iv_ext
+            iv_extra    = iv_extra
           CHANGING
             cv_filename = cv_filename.
       CATCH cx_sy_dyn_call_illegal_class ##NO_HANDLER.
@@ -320,6 +338,8 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
         map_object_to_filename(
           EXPORTING
             is_item     = is_item
+            iv_ext      = iv_ext
+            iv_extra    = iv_extra
           CHANGING
             cv_filename = rv_filename ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
@@ -351,4 +371,38 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
       iv_ext   = iv_ext ).
 
   ENDMETHOD.
+
+  METHOD get_lang_and_ext.
+
+    DATA lt_filename_elements TYPE string_table.
+    DATA lv_langu_bcp47 TYPE string.
+    DATA lv_sap1 TYPE sy-langu.
+
+    SPLIT iv_filename AT '.' INTO TABLE lt_filename_elements.
+
+    READ TABLE lt_filename_elements INDEX lines( lt_filename_elements ) INTO ev_ext.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Could not derive file extension of file { iv_filename }| ).
+    ENDIF.
+
+    READ TABLE lt_filename_elements WITH KEY table_line = `i18n` TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      READ TABLE lt_filename_elements INDEX ( sy-tabix + 1 ) INTO lv_langu_bcp47.
+      IF sy-subrc = 0.
+        lv_sap1 = zcl_abapgit_convert=>language_bcp47_to_sap1( lv_langu_bcp47 ).
+        ev_lang = zcl_abapgit_convert=>language_sap1_to_sap2( lv_sap1 ). " actually it is to_upper( ISO-639 )
+
+        " to not break existing PO file implementations
+        IF ev_ext = `po`.
+          ev_lang = to_lower( ev_lang ).
+        ENDIF.
+      ENDIF.
+    ENDIF.
+
+    IF ev_lang IS INITIAL.
+      CLEAR ev_ext.
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.
