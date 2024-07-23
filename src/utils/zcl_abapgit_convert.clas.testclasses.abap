@@ -368,7 +368,7 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
 
   METHOD english_gb.
     DATA lv_to TYPE sy-langu.
-    lv_to = cl_abap_conv_in_ce=>uccp( 'B46E' ).
+    lv_to = zcl_abapgit_convert=>uccp( 'B46E' ).
 
     assert_bcp47_to_sap1( im_from = 'en-GB'
                           im_to = lv_to ).
@@ -386,7 +386,7 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
 
   METHOD german_swiss.
     DATA lv_to TYPE sy-langu.
-    lv_to = cl_abap_conv_in_ce=>uccp( 'B3A7' ).
+    lv_to = zcl_abapgit_convert=>uccp( 'B3A7' ).
 
     assert_bcp47_to_sap1( im_from = 'de-CH'
                           im_to = lv_to ).
@@ -404,7 +404,7 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
 
   METHOD chinese_singapore.
     DATA lv_to TYPE sy-langu.
-    lv_to = cl_abap_conv_in_ce=>uccp( 'B343' ).
+    lv_to = zcl_abapgit_convert=>uccp( 'B343' ).
 
     assert_bcp47_to_sap1( im_from = 'zh-SG'
                           im_to = lv_to ).
@@ -495,7 +495,7 @@ CLASS ltcl_sap1_to_bcp47 IMPLEMENTATION.
 
   METHOD english_gb.
     DATA lv_from TYPE sy-langu.
-    lv_from = cl_abap_conv_in_ce=>uccp( 'B46E' ).
+    lv_from = zcl_abapgit_convert=>uccp( 'B46E' ).
 
     assert_sap1_to_bcp47( im_from = lv_from
                           im_to = 'en-GB' ).
@@ -508,7 +508,7 @@ CLASS ltcl_sap1_to_bcp47 IMPLEMENTATION.
 
   METHOD chinese_singapore.
     DATA lv_from TYPE sy-langu.
-    lv_from = cl_abap_conv_in_ce=>uccp( 'B343' ).
+    lv_from = zcl_abapgit_convert=>uccp( 'B343' ).
 
     assert_sap1_to_bcp47( im_from = lv_from
                           im_to = 'zh-SG' ).
