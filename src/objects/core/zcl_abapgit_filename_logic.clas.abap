@@ -318,15 +318,17 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
   METHOD object_to_file.
 
     DATA lv_obj_name TYPE string.
+    DATA lv_obj_type TYPE string.
     DATA lv_nb_of_slash TYPE string.
 
     " Get escaped object name
     lv_obj_name = to_lower( name_escape( is_item-obj_name ) ).
+    lv_obj_type = to_lower( is_item-obj_type ).
 
     IF iv_extra IS INITIAL.
-      CONCATENATE lv_obj_name '.' is_item-obj_type INTO rv_filename.
+      CONCATENATE lv_obj_name '.' lv_obj_type INTO rv_filename.
     ELSE.
-      CONCATENATE lv_obj_name '.' is_item-obj_type '.' iv_extra INTO rv_filename.
+      CONCATENATE lv_obj_name '.' lv_obj_type '.' iv_extra INTO rv_filename.
     ENDIF.
 
     IF iv_ext IS NOT INITIAL.
