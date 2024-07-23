@@ -11,7 +11,7 @@ CLASS lcl_test IMPLEMENTATION.
 
   METHOD assert_lang.
 
-    data: lo_cut type ref to zif_abapgit_i18n_file.
+    DATA: lo_cut type ref to zif_abapgit_i18n_file.
     data: lv_act type laiso.
     lo_cut = new zcl_abapgit_properties_file( iv_lang = 'DE' ).
     lv_act = lo_cut->lang( ).
