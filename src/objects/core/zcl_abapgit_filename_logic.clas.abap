@@ -367,7 +367,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     DATA: lv_langu_sap1 TYPE sy-langu,
           lv_langu_bcp47 TYPE string.
 
-    lv_langu_sap1 = zcl_abapgit_convert=>language_sap2_to_sap1( iv_lang ).
+    lv_langu_sap1 = zcl_abapgit_convert=>language_sap2_to_sap1( to_upper( iv_lang ) ).
     lv_langu_bcp47 = zcl_abapgit_convert=>language_sap1_to_bcp47( lv_langu_sap1 ).
 
     rv_filename = object_to_file(
