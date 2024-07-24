@@ -196,7 +196,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     DATA lv_sap1 TYPE sy-langu.
 
     IF strlen( im_sap1 ) = 4.
-      lv_sap1 = cl_abap_conv_in_ce=>uccp( im_sap1 ).
+      lv_sap1 = zcl_abapgit_convert=>uccp( im_sap1 ).
     ELSEIF strlen( im_sap1 ) = 1.
       lv_sap1 = im_sap1.
     ENDIF.

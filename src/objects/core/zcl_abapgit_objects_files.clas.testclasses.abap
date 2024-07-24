@@ -54,7 +54,7 @@ CLASS ltcl_objects_files IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
     <ls_files>-filename = 'zlf.prog.i18n.es.po'.
     APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
-    <ls_files>-filename = 'zlf.prog.i18n.cz.other'.
+    <ls_files>-filename = 'zlf.prog.i18n.cs.other'.
 
     " object type and name are upper case
     ls_item-obj_type = 'PROG'.

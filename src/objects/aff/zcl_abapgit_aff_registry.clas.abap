@@ -53,6 +53,8 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
     register( 'CHKV' ).
     register( 'DRTY' ).
     register( 'DTEB' ).
+    register( 'DRAS' ).
+    register( 'DSFD' ).
     register( 'EVTB' ).
     register( 'EEEC' ).
     register( 'GSMP' ).
