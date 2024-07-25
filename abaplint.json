@@ -207,6 +207,7 @@
         "^sychar70$",
         "^sydatum$",
         "^sylangu$",
+        "^syst_langu$",
         "^syst_title$",
         "^syuzeit$",
         "^xubname$"
