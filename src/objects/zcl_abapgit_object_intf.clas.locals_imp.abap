@@ -707,7 +707,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
           ls_aff_data         TYPE zif_abapgit_aff_intf_v1=>ty_main,
           lo_type_mapper      TYPE REF TO zif_abapgit_aff_type_mapping,
           ls_ag_data          TYPE zcl_abapgit_object_intf=>ty_intf,
-          lv_sap1             TYPE syst_langu.
+          lv_sap1             TYPE sy-langu.
 
     lt_translation_file = io_files->read_i18n_files( ).
 
