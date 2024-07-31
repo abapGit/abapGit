@@ -146,7 +146,7 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
       iv_label         = 'Icon Scaling (HDPI)'
       iv_hint          = 'Adjust size of icons for High DPI displays'
     )->option(
-      iv_label         = 'Automatic'
+      iv_label         = 'No scaling'
       iv_value         = ''
     )->option(
       iv_label         = 'Small'
