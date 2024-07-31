@@ -246,6 +246,8 @@ FORM open_gui RAISING zcx_abapgit_exception.
         lv_action = zif_abapgit_definitions=>c_action-go_home.
     ENDCASE.
 
+    zcl_abapgit_html=>set_debug_mode( boolc( lv_mode = 'HREF' ) ).
+
     lcl_startup=>prepare_gui_startup( ).
     zcl_abapgit_ui_factory=>get_gui( )->go_home( lv_action ).
     CALL SELECTION-SCREEN 1001. " trigger screen
