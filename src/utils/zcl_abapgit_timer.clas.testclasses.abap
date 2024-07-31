@@ -19,9 +19,8 @@ ENDCLASS.
 CLASS ltcl_timer IMPLEMENTATION.
 
   METHOD setup.
-    DATA lv_skip TYPE c LENGTH 30.
-    GET PARAMETER ID 'TSE' FIELD lv_skip.
-    mv_disabled = boolc( sy-sysid = 'ABC' OR lv_skip CS 'SKIP_TIMER' ).
+* dont run on open-abap, the NodeJS garbage collector can run any time, causing flaky test
+    mv_disabled = boolc( sy-sysid = 'ABC' ).
   ENDMETHOD.
 
 
