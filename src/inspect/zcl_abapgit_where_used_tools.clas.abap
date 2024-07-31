@@ -12,12 +12,12 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
         obj_type      TYPE tadir-object,
         obj_prog_type TYPE trdir-subc,
         obj_name      TYPE tadir-obj_name,
-        obj_cls       TYPE rsfindlst-object_cls,
+        obj_cls       TYPE string,
         dep_package   TYPE devclass,
         dep_obj_type  TYPE tadir-object,
         dep_obj_name  TYPE tadir-obj_name,
-        dep_used_cls  TYPE rsfindlst-used_cls,
-        dep_used_obj  TYPE rsfindlst-used_obj,
+        dep_used_cls  TYPE string,
+        dep_used_obj  TYPE string,
       END OF ty_dependency.
     TYPES:
       ty_dependency_tt TYPE STANDARD TABLE OF ty_dependency WITH DEFAULT KEY.

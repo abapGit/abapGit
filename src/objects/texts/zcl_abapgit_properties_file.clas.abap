@@ -42,7 +42,7 @@ CLASS zcl_abapgit_properties_file IMPLEMENTATION.
 
 
   METHOD constructor.
-    mv_lang = to_lower( iv_lang ).
+    mv_lang = to_upper( iv_lang ).
   ENDMETHOD.
 
 
