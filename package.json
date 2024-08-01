@@ -8,7 +8,7 @@
     "build": "rm -rf output && abap_transpile test/abap_transpile.json",
     "unit": "npm run build && echo RUNNING && node output/index.mjs",
     "coverage": "npm run unit && c8 node output/index.mjs && c8 report --reporter=html",
-    "integration": "rm -rf output && cp test/abap_transpile.json test/abap_transpile_int.json && sed -i 's/src,deps/test\\/src,src,deps/g' test/abap_transpile_int.json && abap_transpile test/abap_transpile_int.json && echo RUNNING && node output/index.mjs",
+    "integration": "rm -rf output && cp test/abap_transpile.json test/abap_transpile_int.json && sed -i 's/src,deps/test\\/src,src,deps/g' test/abap_transpile_int.json && abap_transpile test/abap_transpile_int.json && cp -f src/ui/zabapgit_icon_font.w3mi.data.woff output/ && echo RUNNING && node output/index.mjs",
     "abaplint": "abaplint --format codeframe",
     "eslint": "eslint src"
   },
