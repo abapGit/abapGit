@@ -7,23 +7,29 @@ CLASS zcl_abapgit_web DEFINITION
     CLASS-METHODS handle
       IMPORTING
         ii_request  TYPE REF TO zif_abapgit_web_request
-        ii_response TYPE REF TO zif_abapgit_web_response.
+        ii_response TYPE REF TO zif_abapgit_web_response
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
 
-    CONSTANTS gc_base      TYPE string VALUE '/sap/zabapgit/' ##NO_TEXT.
+    CONSTANTS c_base      TYPE string VALUE '/sap/zabapgit/' ##NO_TEXT.
 
-    CLASS-DATA mo_viewer   TYPE REF TO zcl_abapgit_html_viewer_web .
-    CLASS-DATA mo_gui      TYPE REF TO zcl_abapgit_gui .
-    CLASS-DATA mi_request  TYPE REF TO zif_abapgit_web_request.
-    CLASS-DATA mi_response TYPE REF TO zif_abapgit_web_response.
+    CLASS-DATA go_viewer   TYPE REF TO zcl_abapgit_html_viewer_web .
+    CLASS-DATA go_gui      TYPE REF TO zcl_abapgit_gui .
+    CLASS-DATA gi_request  TYPE REF TO zif_abapgit_web_request.
+    CLASS-DATA gi_response TYPE REF TO zif_abapgit_web_response.
 
-    CLASS-METHODS initialize.
+    CLASS-METHODS initialize
+      RAISING
+        zcx_abapgit_exception.
     CLASS-METHODS sapevent.
     CLASS-METHODS redirect.
     CLASS-METHODS search_asset
       RETURNING
-        VALUE(rv_found) TYPE abap_bool .
+        VALUE(rv_found) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -36,10 +42,10 @@ CLASS zcl_abapgit_web IMPLEMENTATION.
     DATA lv_found TYPE abap_bool.
     DATA lv_path  TYPE string.
 
-    mi_request = ii_request.
-    mi_response = ii_response.
+    gi_request = ii_request.
+    gi_response = ii_response.
 
-    IF mo_viewer IS INITIAL.
+    IF go_viewer IS INITIAL.
       initialize( ).
     ENDIF.
 
@@ -51,11 +57,11 @@ CLASS zcl_abapgit_web IMPLEMENTATION.
     lv_path = cl_http_utility=>unescape_url( ii_request->get_header_field( '~path' ) ).
     IF lv_path = '/sap/zabapgit'.
       redirect( ).
-    ELSEIF lv_path = gc_base.
-      mo_gui->go_home( zif_abapgit_definitions=>c_action-go_home ).
-    ELSEIF lv_path = |{ gc_base }css/bundle.css|.
-      mo_viewer->zif_abapgit_html_viewer~show_url( |css/bundle.css| ).
-    ELSEIF lv_path CP |{ gc_base }sapevent:+*|.
+    ELSEIF lv_path = c_base.
+      go_gui->go_home( zif_abapgit_definitions=>c_action-go_home ).
+    ELSEIF lv_path = |{ c_base }css/bundle.css|.
+      go_viewer->zif_abapgit_html_viewer~show_url( |css/bundle.css| ).
+    ELSEIF lv_path CP |{ c_base }sapevent:+*|.
       sapevent( ).
     ELSE.
       ii_response->set_content_type( 'text/html' ).
@@ -67,14 +73,14 @@ CLASS zcl_abapgit_web IMPLEMENTATION.
 
   METHOD initialize.
 
-    CREATE OBJECT mo_viewer
+    CREATE OBJECT go_viewer
       EXPORTING
-        ii_request  = mi_request
-        ii_response = mi_response.
+        ii_request  = gi_request
+        ii_response = gi_response.
 
-    zcl_abapgit_ui_injector=>set_html_viewer( mo_viewer ).
+    zcl_abapgit_ui_injector=>set_html_viewer( go_viewer ).
 
-    mo_gui = zcl_abapgit_ui_factory=>get_gui( ).
+    go_gui = zcl_abapgit_ui_factory=>get_gui( ).
 
   ENDMETHOD.
 
@@ -88,14 +94,14 @@ CLASS zcl_abapgit_web IMPLEMENTATION.
       |<html>\n| &&
       |   <head>\n| &&
       |      <title>HTML Meta Tag</title>\n| &&
-      |      <meta http-equiv = "refresh" content = "0; url = { gc_base }" />\n| &&
+      |      <meta http-equiv = "refresh" content = "0; url = { c_base }" />\n| &&
       |   </head>\n| &&
       |   <body>\n| &&
       |      <p>Redirecting</p>\n| &&
       |   </body>\n| &&
       |</html>|.
 
-    mi_response->set_cdata( lv_html ).
+    gi_response->set_cdata( lv_html ).
 
   ENDMETHOD.
 
@@ -112,17 +118,17 @@ CLASS zcl_abapgit_web IMPLEMENTATION.
           lv_value    TYPE string,
           lt_postdata TYPE zif_abapgit_html_viewer=>ty_post_data.
 
-    lv_value = mi_request->get_header_field( '~request_uri' ).
+    lv_value = gi_request->get_header_field( '~request_uri' ).
 
-    REPLACE FIRST OCCURRENCE OF gc_base IN lv_value WITH ''.
+    REPLACE FIRST OCCURRENCE OF c_base IN lv_value WITH ''.
 
     FIND REGEX '^sapevent:([\w-]+)' IN lv_value SUBMATCHES lv_action.
 
     FIND REGEX '\?([\w=&%.]+)' IN lv_value SUBMATCHES lv_getdata.
 
-    lv_method = mi_request->get_method( ).
+    lv_method = gi_request->get_method( ).
     IF lv_method = 'POST'.
-      lv_body = mi_request->get_cdata( ).
+      lv_body = gi_request->get_cdata( ).
 
       zcl_abapgit_convert=>string_to_tab(
         EXPORTING
@@ -131,7 +137,7 @@ CLASS zcl_abapgit_web IMPLEMENTATION.
           et_tab = lt_postdata ).
     ENDIF.
 
-    mo_gui->on_event(
+    go_gui->on_event(
       action   = lv_action
       getdata  = lv_getdata
       postdata = lt_postdata ).
@@ -151,17 +157,17 @@ CLASS zcl_abapgit_web IMPLEMENTATION.
     DATA li_assets TYPE REF TO zif_abapgit_gui_asset_manager.
 
 
-    lv_path = cl_http_utility=>unescape_url( mi_request->get_header_field( '~path' ) ).
+    lv_path = cl_http_utility=>unescape_url( gi_request->get_header_field( '~path' ) ).
 
     li_assets = zcl_abapgit_ui_factory=>get_asset_manager( ).
 
-    IF lv_path CP |{ gc_base }+*|.
+    IF lv_path CP |{ c_base }+*|.
       lv_search = lv_path.
-      REPLACE FIRST OCCURRENCE OF gc_base IN lv_search WITH ''.
+      REPLACE FIRST OCCURRENCE OF c_base IN lv_search WITH ''.
       TRY.
           ls_asset = li_assets->get_asset( lv_search ).
-          mi_response->set_content_type( |{ ls_asset-type }/{ ls_asset-subtype }| ).
-          mi_response->set_xdata( ls_asset-content ).
+          gi_response->set_content_type( |{ ls_asset-type }/{ ls_asset-subtype }| ).
+          gi_response->set_xdata( ls_asset-content ).
           rv_found = abap_true.
         CATCH zcx_abapgit_exception.
           rv_found = abap_false.

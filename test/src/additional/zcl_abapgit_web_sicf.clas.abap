@@ -42,9 +42,14 @@ CLASS zcl_abapgit_web_sicf IMPLEMENTATION.
 
     server->set_session_stateful( ).
 
-    zcl_abapgit_web=>handle(
-      ii_request  = me
-      ii_response = me ).
+    TRY.
+        zcl_abapgit_web=>handle(
+          ii_request  = me
+          ii_response = me ).
+      CATCH cx_static_check.
+      " todo, show error page
+        ASSERT 1 = 2.
+    ENDTRY.
 
   ENDMETHOD.
 
