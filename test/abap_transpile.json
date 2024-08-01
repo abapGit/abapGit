@@ -4,6 +4,7 @@
     "\\.w3mi.",
     "deps/",
     "src/ui/zcl_abapgit_e",
+    "src/ui/lib/zcl_abapgit_e",
     "src/utils/*",
     "src/zcl_abapgit_e",
     "zag1",
