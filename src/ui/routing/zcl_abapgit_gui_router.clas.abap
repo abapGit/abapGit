@@ -70,6 +70,13 @@ CLASS zcl_abapgit_gui_router DEFINITION
         iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception.
+    METHODS go_stage_transport
+      IMPORTING
+        iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RETURNING
+        VALUE(ro_filter) TYPE REF TO zcl_abapgit_object_filter_tran
+      RAISING
+        zcx_abapgit_exception.
     METHODS repository_services
       IMPORTING
         !ii_event         TYPE REF TO zif_abapgit_gui_event
@@ -241,11 +248,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
   METHOD general_page_routing.
 
-    DATA: lv_key              TYPE zif_abapgit_persistence=>ty_repo-key,
-          lv_last_repo_key    TYPE zif_abapgit_persistence=>ty_repo-key,
-          lo_obj_filter_trans TYPE REF TO zcl_abapgit_object_filter_tran,
-          lo_repo             TYPE REF TO zcl_abapgit_repo,
-          lt_r_trkorr         TYPE zif_abapgit_definitions=>ty_trrngtrkor_tt.
+    DATA: lv_key           TYPE zif_abapgit_persistence=>ty_repo-key,
+          lv_last_repo_key TYPE zif_abapgit_persistence=>ty_repo-key.
 
     lv_key = ii_event->query( )->get( 'KEY' ).
 
@@ -288,17 +292,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         rs_handled-page  = get_page_stage( ii_event ).
         rs_handled-state = get_state_diff( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_stage_transport.              " Go Staging page by Transport
-
-        lt_r_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_select_wb_tc_tr_and_tsk( ).
-
-        lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-
-        CREATE OBJECT lo_obj_filter_trans.
-        lo_obj_filter_trans->set_filter_values( iv_package  = lo_repo->get_package( )
-                                                it_r_trkorr = lt_r_trkorr ).
-
         rs_handled-page = get_page_stage( ii_event      = ii_event
-                                          ii_obj_filter = lo_obj_filter_trans ).
+                                          ii_obj_filter = go_stage_transport( lv_key ) ).
         rs_handled-state = get_state_diff( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_tutorial.                     " Go to tutorial
         rs_handled-page  = zcl_abapgit_gui_page_tutorial=>create( ).
@@ -884,6 +879,21 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     lo_repo->refresh( ).
     file_download( iv_package = lo_repo->get_package( )
                    iv_xstr    = lv_xstr ).
+
+  ENDMETHOD.
+
+  METHOD go_stage_transport.
+
+    DATA lt_r_trkorr TYPE zif_abapgit_definitions=>ty_trrngtrkor_tt.
+    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
+
+    lt_r_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_select_wb_tc_tr_and_tsk( ).
+
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+
+    CREATE OBJECT ro_filter.
+    ro_filter->set_filter_values( iv_package  = lo_repo->get_package( )
+                                  it_r_trkorr = lt_r_trkorr ).
 
   ENDMETHOD.
 ENDCLASS.
