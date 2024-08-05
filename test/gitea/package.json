@@ -5,13 +5,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "gitea": "docker-compose down && docker-compose up -d && npx playwright install && playwright test && sleep 20 && sh create.sh"
+    "gitea": "docker compose down && docker compose up -d && npx playwright install && playwright test && sleep 20 && sh create.sh"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@playwright/test": "^1.42.1",
-    "@types/node": "^20.11.30"
+    "@playwright/test": "^1.45.3",
+    "@types/node": "^22.0.2"
   }
 }
