@@ -46,15 +46,15 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
 
 
   METHOD initialize_registry_table.
+    register( 'BGQC' ).
     register( 'CDBO' ).
     register( 'CHKC' ).
     register( 'CHKO' ).
     register( 'CHKV' ).
     register( 'DRTY' ).
     register( 'DTEB' ).
-    register( 'DSFD' ).
-    register( 'DSFI' ).
     register( 'DRAS' ).
+    register( 'DSFD' ).
     register( 'EVTB' ).
     register( 'EEEC' ).
     register( 'GSMP' ).
