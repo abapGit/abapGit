@@ -62,6 +62,7 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
     register( iv_obj_type     = 'INTF'
               iv_experimental = abap_true ).
     register( 'SMBC' ).
+    register( 'SWCR' ).
     register( 'NONT' ).
     register( 'RONT' ).
     register( 'UIAD' ).
