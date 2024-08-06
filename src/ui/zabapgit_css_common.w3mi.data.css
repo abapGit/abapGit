@@ -1564,6 +1564,12 @@ table.unit_tests {
   padding-top: 50px;
 }
 
+/* Give more padding if browser control warning is present */
+.sticky:has(.browser-control-warning) + .not_sticky,
+.sticky_full_width:has(.browser-control-warning) + .not_sticky {
+  padding-top: 75px;
+}
+
 .sticky_full_width + .not_sticky {
   padding-top: 50px;
 }
