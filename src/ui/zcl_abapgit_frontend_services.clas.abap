@@ -351,36 +351,56 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
 
   METHOD zif_abapgit_frontend_services~gui_is_available.
 
-    CALL FUNCTION 'GUI_IS_AVAILABLE'
-      IMPORTING
-        return = rv_gui_is_available.
+    TRY.
+        CALL FUNCTION 'GUI_IS_AVAILABLE'
+          IMPORTING
+            return = rv_gui_is_available.
+      CATCH cx_sy_dyn_call_illegal_func.
+* when running on open-abap
+        RETURN.
+    ENDTRY.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_frontend_services~is_sapgui_for_java.
 
-    CALL FUNCTION 'GUI_HAS_JAVABEANS'
-      IMPORTING
-        return = rv_result.
+    TRY.
+        CALL FUNCTION 'GUI_HAS_JAVABEANS'
+          IMPORTING
+            return = rv_result.
+      CATCH cx_sy_dyn_call_illegal_func.
+* when running on open-abap
+        RETURN.
+    ENDTRY.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_frontend_services~is_sapgui_for_windows.
 
-    CALL FUNCTION 'GUI_HAS_ACTIVEX'
-      IMPORTING
-        return = rv_result.
+    TRY.
+        CALL FUNCTION 'GUI_HAS_ACTIVEX'
+          IMPORTING
+            return = rv_result.
+      CATCH cx_sy_dyn_call_illegal_func.
+* when running on open-abap
+        RETURN.
+    ENDTRY.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_frontend_services~is_webgui.
 
-    CALL FUNCTION 'GUI_IS_ITS'
-      IMPORTING
-        return = rv_is_webgui.
+    TRY.
+        CALL FUNCTION 'GUI_IS_ITS'
+          IMPORTING
+            return = rv_is_webgui.
+      CATCH cx_sy_dyn_call_illegal_func.
+* when running on open-abap
+        RETURN.
+    ENDTRY.
 
   ENDMETHOD.
 

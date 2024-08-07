@@ -4,6 +4,7 @@
     "\\.w3mi.",
     "deps/",
     "src/ui/zcl_abapgit_e",
+    "src/ui/lib/zcl_abapgit_e",
     "src/utils/*",
     "src/zcl_abapgit_e",
     "zag1",
@@ -44,6 +45,7 @@
     "zcl_abapgit_t",
     "zcl_abapgit_u",
     "zcl_abapgit_v",
+    "zcl_abapgit_web",
     "zcl_abapgit_x",
     "zcl_abapgit_z",
     "zcx_abapgit",
@@ -65,6 +67,7 @@
     "zif_abapgit_s",
     "zif_abapgit_t",
     "zif_abapgit_v",
+    "zif_abapgit_w",
     "zif_abapgit_x",
     "zif_abapgit_i18n_file"
   ],
@@ -75,6 +78,9 @@
     },
     {
       "url": "https://github.com/open-abap/open-abap-gui"
+    },
+    {
+      "url": "https://github.com/open-abap/express-icf-shim"
     }
   ],
   "write_unit_tests": true,

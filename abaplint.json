@@ -126,7 +126,7 @@
     "double_space": true,
     "downport": false,
     "dynpro_checks": false,
-    "easy_to_find_messages": true,
+    "easy_to_find_messages": false,
     "empty_line_in_statement": {
       "allowChained": true
     },
@@ -207,6 +207,7 @@
         "^sychar70$",
         "^sydatum$",
         "^sylangu$",
+        "^syst_langu$",
         "^syst_title$",
         "^syuzeit$",
         "^xubname$"

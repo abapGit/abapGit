@@ -34,6 +34,9 @@ CLASS zcl_abapgit_html DEFINITION
         iv_str         TYPE string OPTIONAL
       RETURNING
         VALUE(rs_data_attr) TYPE zif_abapgit_html=>ty_data_attr .
+    CLASS-METHODS set_debug_mode
+      IMPORTING
+        iv_mode TYPE abap_bool.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -105,8 +108,6 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
   METHOD class_constructor.
 
-    DATA lv_mode TYPE tabname.
-
     CREATE OBJECT go_single_tags_re
       EXPORTING
         pattern     = '<(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|!)'
@@ -116,11 +117,12 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       val = ` `
       occ = c_max_indent ).
 
-    GET PARAMETER ID 'DBT' FIELD lv_mode.
-    gv_debug_mode = boolc( lv_mode = 'HREF' ).
-
   ENDMETHOD.
 
+
+  METHOD set_debug_mode.
+    gv_debug_mode = iv_mode.
+  ENDMETHOD.
 
   METHOD create.
     CREATE OBJECT ri_instance TYPE zcl_abapgit_html.
@@ -136,8 +138,6 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
           lv_name       TYPE string,
           lv_color      TYPE string,
           lv_class      TYPE string,
-          lv_large_icon TYPE string,
-          lv_xpixel     TYPE i,
           lv_onclick    TYPE string.
 
     SPLIT iv_name AT '/' INTO lv_name lv_color.
@@ -155,15 +155,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       lv_color = | { lv_color }|.
     ENDIF.
 
-    " Automatic icon scaling (could be overwritten by personal setting)
-    " see zcl_abapgit_gui_page->html_head
-    lv_xpixel = cl_gui_cfw=>compute_pixel_from_metric( x_or_y = 'X'
-                                                       in = 1 ).
-    IF lv_xpixel >= 2.
-      lv_large_icon = ' large'.
-    ENDIF.
-
-    rv_str = |<i class="icon{ lv_large_icon } icon-{ lv_name }{ lv_color }|.
+    rv_str = |<i class="icon icon-{ lv_name }{ lv_color }|.
     rv_str = |{ rv_str }{ lv_class }"{ lv_onclick }{ lv_hint }></i>|.
 
   ENDMETHOD.
