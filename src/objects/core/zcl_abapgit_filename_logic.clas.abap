@@ -318,15 +318,17 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
   METHOD object_to_file.
 
     DATA lv_obj_name TYPE string.
+    DATA lv_obj_type TYPE string.
     DATA lv_nb_of_slash TYPE string.
 
     " Get escaped object name
     lv_obj_name = to_lower( name_escape( is_item-obj_name ) ).
+    lv_obj_type = to_lower( is_item-obj_type ).
 
     IF iv_extra IS INITIAL.
-      CONCATENATE lv_obj_name '.' is_item-obj_type INTO rv_filename.
+      CONCATENATE lv_obj_name '.' lv_obj_type INTO rv_filename.
     ELSE.
-      CONCATENATE lv_obj_name '.' is_item-obj_type '.' iv_extra INTO rv_filename.
+      CONCATENATE lv_obj_name '.' lv_obj_type '.' iv_extra INTO rv_filename.
     ENDIF.
 
     IF iv_ext IS NOT INITIAL.
@@ -358,16 +360,25 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
       REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
     ENDIF.
 
+    IF iv_ext = 'properties'.
+      RETURN.
+    ENDIF.
+
     TRANSLATE rv_filename TO LOWER CASE.
 
   ENDMETHOD.
 
 
   METHOD object_to_i18n_file.
+    DATA: lv_langu_sap1 TYPE sy-langu,
+          lv_langu_bcp47 TYPE string.
+
+    lv_langu_sap1 = zcl_abapgit_convert=>language_sap2_to_sap1( to_upper( iv_lang ) ).
+    lv_langu_bcp47 = zcl_abapgit_convert=>language_sap1_to_bcp47( lv_langu_sap1 ).
 
     rv_filename = object_to_file(
       is_item  = is_item
-      iv_extra = |i18n.{ iv_lang }|
+      iv_extra = |i18n.{ lv_langu_bcp47 }|
       iv_ext   = iv_ext ).
 
   ENDMETHOD.

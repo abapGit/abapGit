@@ -30,6 +30,7 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
       object_to_file                 FOR TESTING RAISING zcx_abapgit_exception,
       i18n_file_to_object            FOR TESTING RAISING zcx_abapgit_exception,
       object_to_i18n_file            FOR TESTING RAISING zcx_abapgit_exception,
+      object_to_i18n_file_bcp47      FOR TESTING RAISING zcx_abapgit_exception,
       file_to_object_package         FOR TESTING RAISING zcx_abapgit_exception,
       object_to_file_package         FOR TESTING RAISING zcx_abapgit_exception,
       i18n_file_to_object_is_initial FOR TESTING RAISING zcx_abapgit_exception.
@@ -485,6 +486,26 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       exp = 'zprogram.prog.i18n.en.properties'
+      act = lv_filename ).
+
+  ENDMETHOD.
+
+  METHOD object_to_i18n_file_bcp47.
+
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_filename TYPE string.
+
+    ls_item-obj_type = 'INTF'.
+    ls_item-obj_name = 'ZIF_ABAP'.
+
+    " Properties files
+    lv_filename = zcl_abapgit_filename_logic=>object_to_i18n_file(
+      is_item = ls_item
+      iv_lang = '6N'
+      iv_ext  = 'properties' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'zif_abap.intf.i18n.en-GB.properties'
       act = lv_filename ).
 
   ENDMETHOD.
