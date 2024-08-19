@@ -292,9 +292,9 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
   METHOD language_sap1_to_sap2.
 
     TRY.
-      re_lang_sap2 = lcl_bcp47_language_table=>sap1_to_sap2( im_lang_sap1 ).
-    CATCH zcx_abapgit_exception.
-      RAISE no_assignment.
+        re_lang_sap2 = lcl_bcp47_language_table=>sap1_to_sap2( im_lang_sap1 ).
+      CATCH zcx_abapgit_exception.
+        RAISE no_assignment.
     ENDTRY.
 
   ENDMETHOD.
