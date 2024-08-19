@@ -291,57 +291,23 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   METHOD language_sap1_to_sap2.
 
-    DATA lv_class TYPE string.
-
     TRY.
-        SELECT SINGLE languageisocode FROM ('I_LANGUAGE')
-          INTO re_lang_sap2
-          WHERE language = im_lang_sap1.
-        IF sy-subrc <> 0.
-          RAISE no_assignment.
-        ENDIF.
-      CATCH cx_sy_dynamic_osql_error.
-        lv_class = 'CL_I18N_LANGUAGES'.
-        CALL METHOD (lv_class)=>sap1_to_sap2
-          EXPORTING
-            im_lang_sap1  = im_lang_sap1
-          RECEIVING
-            re_lang_sap2  = re_lang_sap2
-          EXCEPTIONS
-            no_assignment = 1
-            OTHERS        = 2.
-        IF sy-subrc = 1.
-          RAISE no_assignment.
-        ENDIF.
+      re_lang_sap2 = lcl_bcp47_language_table=>sap1_to_sap2( im_lang_sap1 ).
+    CATCH zcx_abapgit_exception.
+      RAISE no_assignment.
     ENDTRY.
+
   ENDMETHOD.
 
 
   METHOD language_sap2_to_sap1.
 
-    DATA lv_class TYPE string.
-
     TRY.
-        SELECT SINGLE language FROM ('I_LANGUAGE')
-          INTO re_lang_sap1
-          WHERE languageisocode = im_lang_sap2.
-        IF sy-subrc <> 0.
-          RAISE no_assignment.
-        ENDIF.
-      CATCH cx_sy_dynamic_osql_error.
-        lv_class = 'CL_I18N_LANGUAGES'.
-        CALL METHOD (lv_class)=>sap2_to_sap1
-          EXPORTING
-            im_lang_sap2  = im_lang_sap2
-          RECEIVING
-            re_lang_sap1  = re_lang_sap1
-          EXCEPTIONS
-            no_assignment = 1
-            OTHERS        = 2.
-        IF sy-subrc = 1.
-          RAISE no_assignment.
-        ENDIF.
+      re_lang_sap1 = lcl_bcp47_language_table=>sap2_to_sap1( im_lang_sap2 ).
+    CATCH zcx_abapgit_exception.
+      RAISE no_assignment.
     ENDTRY.
+
   ENDMETHOD.
 
 
