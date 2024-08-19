@@ -245,6 +245,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     ENDIF.
 
     lv_line-bcp47_code = im_bcp47.
+    lv_line-sap2_code = im_sap2.
     lv_line-sap1_code = lv_sap1.
 
     APPEND lv_line TO gv_language_mappings.
