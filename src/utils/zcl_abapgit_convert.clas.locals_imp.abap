@@ -205,13 +205,12 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
   METHOD sap1_to_sap2.
     DATA lv_language_mapping TYPE ty_language_mapping.
 
-    IF gv_language_mappings IS INITIAL OR lines( gv_language_mappings ) = 0.
+    IF gv_language_mappings IS INITIAL.
       fill_language_mappings( ).
     ENDIF.
 
-    LOOP AT gv_language_mappings INTO lv_language_mapping WHERE sap1_code = im_sap1.
-      re_sap2 = lv_language_mapping-sap2_code.
-    ENDLOOP.
+    READ TABLE gv_language_mappings WITH KEY sap1_code = im_sap1 INTO lv_language_mapping.
+    re_sap2 = lv_language_mapping-sap2_code.
 
     IF re_sap2 IS INITIAL.
       zcx_abapgit_exception=>raise( |Could not convert SAP1 language code { im_sap1 } to SAP2 language code.| ).
@@ -221,13 +220,12 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
   METHOD sap2_to_sap1.
     DATA lv_language_mapping TYPE ty_language_mapping.
 
-    IF gv_language_mappings IS INITIAL OR lines( gv_language_mappings ) = 0.
+    IF gv_language_mappings IS INITIAL.
       fill_language_mappings( ).
     ENDIF.
 
-    LOOP AT gv_language_mappings INTO lv_language_mapping WHERE sap2_code = im_sap2.
-      re_sap1 = lv_language_mapping-sap1_code.
-    ENDLOOP.
+    READ TABLE gv_language_mappings WITH KEY sap2_code = im_sap2 INTO lv_language_mapping.
+    re_sap1 = lv_language_mapping-sap1_code.
 
     IF re_sap1 IS INITIAL.
       zcx_abapgit_exception=>raise( |Could not map SAP2 language code { im_sap2 } to SAP1 language code.| ).
