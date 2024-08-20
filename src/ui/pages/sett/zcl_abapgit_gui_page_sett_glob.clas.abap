@@ -163,18 +163,18 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
       iv_name        = c_id-commitmsg_hide_author
       iv_label       = 'Hide Author Fields' ).
 
-    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
-      ro_form->start_group(
-        iv_name        = c_id-devint_settings
-        iv_label       = 'Development Internal Settings'
-      )->checkbox(
-        iv_name        = c_id-run_critical_tests
-        iv_label       = 'Enable Critical Unit Tests'
-      )->text(
-        iv_name        = c_id-experimental_features
-        iv_label       = 'Experimental Features'
-        iv_hint        = 'Set to "X" to enable all features or add feature values as a comma-separated list' ).
-    ENDIF.
+    ro_form->start_group(
+      iv_name        = c_id-devint_settings
+      iv_label       = 'Development Internal Settings'
+    )->checkbox(
+      iv_name        = c_id-run_critical_tests
+      iv_label       = 'Enable Critical Unit Tests'
+      iv_readonly    = zcl_abapgit_factory=>get_environment( )->is_merged( )
+    )->text(
+      iv_name        = c_id-experimental_features
+      iv_label       = 'Experimental Features'
+      iv_readonly    = zcl_abapgit_factory=>get_environment( )->is_merged( )
+      iv_hint        = 'Set to "X" to enable all features or add feature values as a comma-separated list' ).
 
     ro_form->command(
       iv_label       = 'Save Settings'
