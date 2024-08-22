@@ -117,6 +117,9 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       RETURNING VALUE(rs_intf) TYPE ty_intf
       RAISING
                 zcx_abapgit_exception.
+    METHODS extract_languages_for_transl
+      IMPORTING is_intf         TYPE zcl_abapgit_object_intf=>ty_intf
+      RETURNING VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_languages.
 ENDCLASS.
 
 
@@ -447,7 +450,8 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       lv_serialized_data  TYPE xstring,
       lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus,
       lt_i18n_file        TYPE zif_abapgit_i18n_file=>ty_table_of,
-      lo_i18n_file        TYPE REF TO zif_abapgit_i18n_file.
+      lo_i18n_file        TYPE REF TO zif_abapgit_i18n_file,
+      lt_languages_for_translation type zif_abapgit_definitions=>ty_languages.
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -478,9 +482,12 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       lv_serialized_data = lcl_aff_metadata_handler=>serialize( ls_intf ).
       mo_files->add_raw( iv_ext  = 'json'
                          iv_data = lv_serialized_data ).
+
+      lt_languages_for_translation = extract_languages_for_transl( ls_intf ).
+
       lt_i18n_file = lcl_aff_metadata_handler=>serialize_translations(
         is_intf     = ls_intf
-        it_language = mo_i18n_params->ms_params-translation_languages ).
+        it_language = lt_languages_for_translation ).
 
       LOOP AT lt_i18n_file INTO lo_i18n_file.
         mo_files->add_i18n_file( lo_i18n_file ).
@@ -770,4 +777,28 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     serialize_xml( io_xml ).
 
   ENDMETHOD.
+
+  METHOD extract_languages_for_transl.
+    DATA lt_language_compo TYPE STANDARD TABLE OF sy-langu.
+    DATA lt_language_subcompo TYPE STANDARD TABLE OF sy-langu.
+    DATA lt_language_classtx TYPE STANDARD TABLE OF sy-langu.
+    DATA lt_unique_language TYPE STANDARD TABLE OF sy-langu.
+    DATA lv_original_language TYPE syst_langu.
+
+    lv_original_language = mo_i18n_params->ms_params-main_language.
+    lt_language_compo = VALUE #( FOR wa_seocompotx IN is_intf-description WHERE ( langu <> lv_original_language ) ( wa_seocompotx-langu ) ).
+    lt_language_classtx = VALUE #( FOR wa_seoclasstx IN is_intf-description_int WHERE ( langu <> lv_original_language ) ( wa_seoclasstx-langu ) ).
+    lt_language_subcompo = VALUE #( FOR wa_seosubcompotx IN is_intf-description_sub WHERE ( langu <> lv_original_language ) ( wa_seosubcompotx-langu ) ).
+
+    APPEND LINES OF lt_language_classtx TO lt_unique_language.
+    APPEND LINES OF lt_language_compo TO lt_unique_language.
+    APPEND LINES OF lt_language_subcompo TO lt_unique_language.
+
+    SORT lt_unique_language ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM lt_unique_language.
+
+    rs_result = VALUE #( FOR wa_itab IN lt_unique_language
+                         ( zcl_abapgit_convert=>language_sap1_to_sap2( wa_itab ) ) ).
+  ENDMETHOD.
+
 ENDCLASS.
