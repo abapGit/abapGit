@@ -118,7 +118,7 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       RAISING
                 zcx_abapgit_exception.
     METHODS extract_languages_for_transl
-      IMPORTING is_intf         TYPE zcl_abapgit_object_intf=>ty_intf
+      IMPORTING is_intf          TYPE zcl_abapgit_object_intf=>ty_intf
       RETURNING VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_languages.
 ENDCLASS.
 
@@ -445,13 +445,13 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
   METHOD serialize_xml.
 
     DATA:
-      ls_intf             TYPE ty_intf,
-      ls_clskey           TYPE seoclskey,
-      lv_serialized_data  TYPE xstring,
-      lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus,
-      lt_i18n_file        TYPE zif_abapgit_i18n_file=>ty_table_of,
-      lo_i18n_file        TYPE REF TO zif_abapgit_i18n_file,
-      lt_languages_for_translation type zif_abapgit_definitions=>ty_languages.
+      ls_intf                      TYPE ty_intf,
+      ls_clskey                    TYPE seoclskey,
+      lv_serialized_data           TYPE xstring,
+      lt_langu_additional          TYPE zif_abapgit_lang_definitions=>ty_langus,
+      lt_i18n_file                 TYPE zif_abapgit_i18n_file=>ty_table_of,
+      lo_i18n_file                 TYPE REF TO zif_abapgit_i18n_file,
+      lt_languages_for_translation TYPE zif_abapgit_definitions=>ty_languages.
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -779,26 +779,37 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD extract_languages_for_transl.
-    DATA lt_language_compo TYPE STANDARD TABLE OF sy-langu.
-    DATA lt_language_subcompo TYPE STANDARD TABLE OF sy-langu.
-    DATA lt_language_classtx TYPE STANDARD TABLE OF sy-langu.
-    DATA lt_unique_language TYPE STANDARD TABLE OF sy-langu.
-    DATA lv_original_language TYPE syst_langu.
+    DATA: lv_desc              TYPE seocompotx,
+          lv_desc_int          TYPE seoclasstx,
+          lv_desc_sub          TYPE seosubcotx,
+          lv_unique            TYPE sy-langu,
+          lv_sap2              TYPE string,
+          lt_unique_language   TYPE STANDARD TABLE OF sy-langu,
+          lv_original_language TYPE syst_langu.
+
 
     lv_original_language = mo_i18n_params->ms_params-main_language.
-    lt_language_compo = VALUE #( FOR wa_seocompotx IN is_intf-description WHERE ( langu <> lv_original_language ) ( wa_seocompotx-langu ) ).
-    lt_language_classtx = VALUE #( FOR wa_seoclasstx IN is_intf-description_int WHERE ( langu <> lv_original_language ) ( wa_seoclasstx-langu ) ).
-    lt_language_subcompo = VALUE #( FOR wa_seosubcompotx IN is_intf-description_sub WHERE ( langu <> lv_original_language ) ( wa_seosubcompotx-langu ) ).
 
-    APPEND LINES OF lt_language_classtx TO lt_unique_language.
-    APPEND LINES OF lt_language_compo TO lt_unique_language.
-    APPEND LINES OF lt_language_subcompo TO lt_unique_language.
+    LOOP AT is_intf-description INTO lv_desc WHERE langu <> lv_original_language.
+      APPEND lv_desc-langu TO lt_unique_language.
+    ENDLOOP.
+
+    LOOP AT is_intf-description_int INTO lv_desc_int WHERE langu <> lv_original_language.
+      APPEND lv_desc_int-langu TO lt_unique_language.
+    ENDLOOP.
+
+    LOOP AT is_intf-description_sub INTO lv_desc_sub WHERE langu <> lv_original_language.
+      APPEND lv_desc_sub-langu TO lt_unique_language.
+    ENDLOOP.
 
     SORT lt_unique_language ASCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_unique_language.
 
-    rs_result = VALUE #( FOR wa_itab IN lt_unique_language
-                         ( zcl_abapgit_convert=>language_sap1_to_sap2( wa_itab ) ) ).
+    LOOP AT lt_unique_language INTO lv_unique.
+      lv_sap2 = zcl_abapgit_convert=>language_sap1_to_sap2( lv_unique ).
+      APPEND lv_sap2 TO rs_result.
+    ENDLOOP.
+
   ENDMETHOD.
 
 ENDCLASS.
