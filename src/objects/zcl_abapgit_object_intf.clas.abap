@@ -118,7 +118,7 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       RAISING
                 zcx_abapgit_exception.
     METHODS extract_languages_for_transl
-      IMPORTING is_intf          TYPE zcl_abapgit_object_intf=>ty_intf
+      IMPORTING is_intf          TYPE ty_intf
       RETURNING VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_languages.
 ENDCLASS.
 
