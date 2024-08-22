@@ -785,7 +785,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
           lv_unique            TYPE sy-langu,
           lv_sap2              TYPE string,
           lt_unique_language   TYPE STANDARD TABLE OF sy-langu,
-          lv_original_language TYPE syst_langu.
+          lv_original_language TYPE sy-langu.
 
 
     lv_original_language = mo_i18n_params->ms_params-main_language.
