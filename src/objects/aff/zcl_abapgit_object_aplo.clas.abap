@@ -11,7 +11,6 @@ CLASS zcl_abapgit_object_aplo DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    DATA mv_object TYPE balobj .
 ENDCLASS.
 
 
