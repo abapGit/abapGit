@@ -160,14 +160,14 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
     " With special characters
     zcl_abapgit_filename_logic=>file_to_object(
-     EXPORTING
-       iv_filename = 'ztest%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3dvc.prog.abap'
-       iv_path     = '/src/'
-       iv_devclass = '$PACK'
-       io_dot      = mo_dot
-     IMPORTING
-       es_item     = ls_item
-       ev_is_xml   = lv_is_xml ).
+      EXPORTING
+        iv_filename = 'ztest%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3d%3dvc.prog.abap'
+        iv_path     = '/src/'
+        iv_devclass = '$PACK'
+        io_dot      = mo_dot
+      IMPORTING
+        es_item     = ls_item
+        ev_is_xml   = lv_is_xml ).
 
     cl_abap_unit_assert=>assert_equals(
       exp = 'PROG'
@@ -180,14 +180,14 @@ CLASS ltcl_run_checks IMPLEMENTATION.
       act = lv_is_xml ).
 
     zcl_abapgit_filename_logic=>file_to_object(
-     EXPORTING
-       iv_filename = 'zmime_%3c%3e_%3f.w3mi.jpg'
-       iv_path     = '/src/'
-       iv_devclass = '$PACK'
-       io_dot      = mo_dot
-     IMPORTING
-       es_item     = ls_item
-       ev_is_xml   = lv_is_xml ).
+      EXPORTING
+        iv_filename = 'zmime_%3c%3e_%3f.w3mi.jpg'
+        iv_path     = '/src/'
+        iv_devclass = '$PACK'
+        io_dot      = mo_dot
+      IMPORTING
+        es_item     = ls_item
+        ev_is_xml   = lv_is_xml ).
 
     cl_abap_unit_assert=>assert_equals(
       exp = 'W3MI'
@@ -200,14 +200,14 @@ CLASS ltcl_run_checks IMPLEMENTATION.
       act = lv_is_xml ).
 
     zcl_abapgit_filename_logic=>file_to_object(
-     EXPORTING
-       iv_filename = 'ztest(name).w3mi.data.json'
-       iv_path     = '/src/'
-       iv_devclass = '$PACK'
-       io_dot      = mo_dot
-     IMPORTING
-       es_item     = ls_item
-       ev_is_xml   = lv_is_xml ).
+      EXPORTING
+        iv_filename = 'ztest(name).w3mi.data.json'
+        iv_path     = '/src/'
+        iv_devclass = '$PACK'
+        io_dot      = mo_dot
+      IMPORTING
+        es_item     = ls_item
+        ev_is_xml   = lv_is_xml ).
 
     cl_abap_unit_assert=>assert_equals(
       exp = 'W3MI'
@@ -438,7 +438,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     " Properties file
     zcl_abapgit_filename_logic=>i18n_file_to_object(
       EXPORTING
-        iv_filename = 'zprogram.prog.i18n.en.properties'
+        iv_filename = 'zprogram.prog.texts.en.properties'
         iv_path     = '/src/'
       IMPORTING
         es_item     = ls_item
@@ -485,7 +485,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
       iv_ext  = 'properties' ).
 
     cl_abap_unit_assert=>assert_equals(
-      exp = 'zprogram.prog.i18n.en.properties'
+      exp = 'zprogram.prog.texts.en.properties'
       act = lv_filename ).
 
   ENDMETHOD.
@@ -505,7 +505,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
       iv_ext  = 'properties' ).
 
     cl_abap_unit_assert=>assert_equals(
-      exp = 'zif_abap.intf.i18n.en-GB.properties'
+      exp = 'zif_abap.intf.texts.en-GB.properties'
       act = lv_filename ).
 
   ENDMETHOD.

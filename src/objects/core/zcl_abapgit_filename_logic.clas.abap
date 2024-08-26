@@ -370,16 +370,23 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
 
 
   METHOD object_to_i18n_file.
-    DATA: lv_langu_sap1 TYPE sy-langu,
+    DATA: lv_langu_sap1  TYPE sy-langu,
           lv_langu_bcp47 TYPE string.
 
     lv_langu_sap1 = zcl_abapgit_convert=>language_sap2_to_sap1( to_upper( iv_lang ) ).
     lv_langu_bcp47 = zcl_abapgit_convert=>language_sap1_to_bcp47( lv_langu_sap1 ).
 
-    rv_filename = object_to_file(
-      is_item  = is_item
-      iv_extra = |i18n.{ lv_langu_bcp47 }|
-      iv_ext   = iv_ext ).
+    IF iv_ext = `properties`.
+      rv_filename = object_to_file(
+        is_item  = is_item
+        iv_extra = |texts.{ lv_langu_bcp47 }|
+        iv_ext   = iv_ext ).
+    ELSE.
+      rv_filename = object_to_file(
+        is_item  = is_item
+        iv_extra = |i18n.{ lv_langu_bcp47 }|
+        iv_ext   = iv_ext ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -402,11 +409,17 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
       IF sy-subrc = 0.
         lv_sap1 = zcl_abapgit_convert=>language_bcp47_to_sap1( lv_langu_bcp47 ).
         ev_lang = zcl_abapgit_convert=>language_sap1_to_sap2( lv_sap1 ). " actually it is to_upper( ISO-639 )
+        ev_lang = to_lower( ev_lang ).
+      ENDIF.
+    ENDIF.
 
-        " to not break existing PO file implementations
-        IF ev_ext = `po`.
-          ev_lang = to_lower( ev_lang ).
-        ENDIF.
+    " ABAP file formats translation files
+    READ TABLE lt_filename_elements WITH KEY table_line = `texts` TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      READ TABLE lt_filename_elements INDEX ( sy-tabix + 1 ) INTO lv_langu_bcp47.
+      IF sy-subrc = 0.
+        lv_sap1 = zcl_abapgit_convert=>language_bcp47_to_sap1( lv_langu_bcp47 ).
+        ev_lang = zcl_abapgit_convert=>language_sap1_to_sap2( lv_sap1 ). " actually it is to_upper( ISO-639 )
       ENDIF.
     ENDIF.
 
