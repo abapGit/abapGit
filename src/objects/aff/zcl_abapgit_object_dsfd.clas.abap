@@ -39,8 +39,7 @@ CLASS zcl_abapgit_object_dsfd IMPLEMENTATION.
 
         IF lv_exists = abap_true.
           CALL METHOD lo_dsfd_handler->('IF_DD_DSFD_WB_HANDLER~GET_SOURCE_CONTAINER')
-
-            EXPORTING
+EXPORTING
               iv_as4local = 'A'
             RECEIVING
               ro_result   = lo_dsfd_source_container.
