@@ -57,7 +57,7 @@ CLASS zcl_abapgit_objects_activation DEFINITION
       c_switches   TYPE c LENGTH 24 VALUE 'SF01 SF02 SFSW SFBS SFBF',
       c_para       TYPE c LENGTH 4  VALUE 'PARA', " can be referenced by DTEL
       c_enhd       TYPE c LENGTH 4  VALUE 'ENHD',
-      c_scalarfunc TYPE c LENGTH 9  VALUE 'DSFD DSFI', 
+      c_scalarfunc TYPE c LENGTH 9  VALUE 'DSFD DSFI',
       c_aspect     TYPE c LENGTH 4  VALUE 'DRAS'.
 
     CLASS-DATA:
