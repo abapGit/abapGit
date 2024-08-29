@@ -117,6 +117,9 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       RETURNING VALUE(rs_intf) TYPE ty_intf
       RAISING
                 zcx_abapgit_exception.
+    METHODS extract_languages_for_transl
+      IMPORTING is_intf          TYPE ty_intf
+      RETURNING VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_languages.
 ENDCLASS.
 
 
@@ -442,12 +445,13 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
   METHOD serialize_xml.
 
     DATA:
-      ls_intf             TYPE ty_intf,
-      ls_clskey           TYPE seoclskey,
-      lv_serialized_data  TYPE xstring,
-      lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus,
-      lt_i18n_file        TYPE zif_abapgit_i18n_file=>ty_table_of,
-      lo_i18n_file        TYPE REF TO zif_abapgit_i18n_file.
+      ls_intf                      TYPE ty_intf,
+      ls_clskey                    TYPE seoclskey,
+      lv_serialized_data           TYPE xstring,
+      lt_langu_additional          TYPE zif_abapgit_lang_definitions=>ty_langus,
+      lt_i18n_file                 TYPE zif_abapgit_i18n_file=>ty_table_of,
+      lo_i18n_file                 TYPE REF TO zif_abapgit_i18n_file,
+      lt_languages_for_translation TYPE zif_abapgit_definitions=>ty_languages.
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -478,9 +482,12 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       lv_serialized_data = lcl_aff_metadata_handler=>serialize( ls_intf ).
       mo_files->add_raw( iv_ext  = 'json'
                          iv_data = lv_serialized_data ).
+
+      lt_languages_for_translation = extract_languages_for_transl( ls_intf ).
+
       lt_i18n_file = lcl_aff_metadata_handler=>serialize_translations(
         is_intf     = ls_intf
-        it_language = mo_i18n_params->ms_params-translation_languages ).
+        it_language = lt_languages_for_translation ).
 
       LOOP AT lt_i18n_file INTO lo_i18n_file.
         mo_files->add_i18n_file( lo_i18n_file ).
@@ -770,4 +777,39 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     serialize_xml( io_xml ).
 
   ENDMETHOD.
+
+  METHOD extract_languages_for_transl.
+    DATA: lv_desc              TYPE seocompotx,
+          lv_desc_int          TYPE seoclasstx,
+          lv_desc_sub          TYPE seosubcotx,
+          lv_unique            TYPE sy-langu,
+          lv_sap2              TYPE string,
+          lt_unique_language   TYPE STANDARD TABLE OF sy-langu,
+          lv_original_language TYPE sy-langu.
+
+
+    lv_original_language = mo_i18n_params->ms_params-main_language.
+
+    LOOP AT is_intf-description INTO lv_desc WHERE langu <> lv_original_language.
+      APPEND lv_desc-langu TO lt_unique_language.
+    ENDLOOP.
+
+    LOOP AT is_intf-description_int INTO lv_desc_int WHERE langu <> lv_original_language.
+      APPEND lv_desc_int-langu TO lt_unique_language.
+    ENDLOOP.
+
+    LOOP AT is_intf-description_sub INTO lv_desc_sub WHERE langu <> lv_original_language.
+      APPEND lv_desc_sub-langu TO lt_unique_language.
+    ENDLOOP.
+
+    SORT lt_unique_language ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM lt_unique_language.
+
+    LOOP AT lt_unique_language INTO lv_unique.
+      lv_sap2 = zcl_abapgit_convert=>language_sap1_to_sap2( lv_unique ).
+      APPEND lv_sap2 TO rs_result.
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.
