@@ -34,22 +34,22 @@ CLASS zcl_abapgit_object_dsfi IMPLEMENTATION.
         ASSIGN ('CE_DD_DSFI_AS4LOCAL=>EN_STATE-ACTIVE')
           TO <lv_active>.
         IF sy-subrc = 0.
-          CALL METHOD lo_dsfi_handler->('CHECK_EXISTENCE')
+          CALL METHOD lo_dsfi_handler->('IF_DD_DSFI_WB_HANDLER~CHECK_EXISTENCE')
             EXPORTING
               iv_as4local = <lv_active>
             RECEIVING
               rv_exists   = lv_exists.
 
           IF lv_exists = abap_true.
-            CALL METHOD lo_dsfi_handler->('GET_SOURCE_CONTAINER')
+            CALL METHOD lo_dsfi_handler->('IF_DD_DSFI_WB_HANDLER~GET_SOURCE_CONTAINER')
               EXPORTING
                 iv_as4local = <lv_active>
               RECEIVING
                 ro_result   = lo_dsfi_source_container.
 
-            CALL METHOD lo_dsfi_source_container->('GET_AS4USER')
+            CALL METHOD lo_dsfi_source_container->('IF_DD_DSFI_SRC_CONTAINER~GET_AS4USER')
               RECEIVING
-                rv_as4user = rv_user.
+                rv_result = rv_user.
           ENDIF.
         ENDIF.
 
