@@ -56,7 +56,9 @@ CLASS zcl_abapgit_objects_activation DEFINITION
       c_ddls       TYPE c LENGTH 24 VALUE 'DDLS DRUL DTDC DTEB',
       c_switches   TYPE c LENGTH 24 VALUE 'SF01 SF02 SFSW SFBS SFBF',
       c_para       TYPE c LENGTH 4  VALUE 'PARA', " can be referenced by DTEL
-      c_enhd       TYPE c LENGTH 4  VALUE 'ENHD'.
+      c_enhd       TYPE c LENGTH 4  VALUE 'ENHD',
+      c_scalarfunc TYPE c LENGTH 9  VALUE 'DSFD DSFI',
+      c_aspect     TYPE c LENGTH 4  VALUE 'DRAS'.
 
     CLASS-DATA:
       gt_classes TYPE STANDARD TABLE OF ty_classes WITH DEFAULT KEY .
@@ -554,7 +556,8 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
        c_enqueue  NS iv_obj_type AND c_sqsc       NS iv_obj_type AND
        c_stob     NS iv_obj_type AND c_ntab       NS iv_obj_type AND
        c_ddls     NS iv_obj_type AND c_para       NS iv_obj_type AND
-       c_switches NS iv_obj_type AND iv_obj_type <> c_enhd.
+       c_switches NS iv_obj_type AND iv_obj_type <> c_enhd       AND
+       c_aspect   NS iv_obj_type AND c_scalarfunc NS iv_obj_type.
       rv_result = abap_false.
     ENDIF.
 
