@@ -84,10 +84,14 @@ CLASS ltcl_field_rules IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD fill3.
+    DATA lv_timestamp TYPE timestamp.
+    CONVERT DATE sy-datum TIME sy-uzeit
+      INTO TIME STAMP lv_timestamp
+      TIME ZONE sy-zonlo.
     fill_value(
       iv_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
       iv_len  = 10
-      iv_exp  = |{ sy-datum }{ sy-uzeit(2) }| ). " avoid comparing minutes
+      iv_exp  = |{ lv_timestamp DIV 10000 }| ). " avoid comparing minutes
   ENDMETHOD.
 
   METHOD fill4.
@@ -194,10 +198,11 @@ CLASS ltcl_field_rules IMPLEMENTATION.
   METHOD apply_fill_logic.
 
     DATA:
-      li_rules TYPE REF TO zif_abapgit_field_rules,
-      ls_act   TYPE ty_test,
-      lt_act   TYPE STANDARD TABLE OF ty_test,
-      lv_ts    TYPE string.
+      li_rules     TYPE REF TO zif_abapgit_field_rules,
+      ls_act       TYPE ty_test,
+      lt_act       TYPE STANDARD TABLE OF ty_test,
+      lv_ts        TYPE string,
+      lv_timestamp TYPE timestamp.
 
     ls_act-key  = 1.
     INSERT ls_act INTO TABLE lt_act.
@@ -235,16 +240,19 @@ CLASS ltcl_field_rules IMPLEMENTATION.
       act = ls_act-time(4)
       exp = sy-uzeit(4) ). " avoid comparing seconds
 
+    CONVERT DATE sy-datum TIME sy-uzeit
+      INTO TIME STAMP lv_timestamp
+      TIME ZONE sy-zonlo.
     lv_ts = ls_act-ts.
     lv_ts = lv_ts(12).
     cl_abap_unit_assert=>assert_equals(
       act = lv_ts
-      exp = |{ sy-datum }{ sy-uzeit(4) }| ). " avoid comparing seconds
+      exp = |{ lv_timestamp DIV 100 }| ). " avoid comparing second
     lv_ts = ls_act-tl.
     lv_ts = lv_ts(12).
     cl_abap_unit_assert=>assert_equals(
       act = lv_ts
-      exp = |{ sy-datum }{ sy-uzeit(4) }| ). " avoid comparing seconds
+      exp = |{ lv_timestamp DIV 100 }| ). " avoid comparing seconds
 
     READ TABLE lt_act INTO ls_act INDEX 2.
 
