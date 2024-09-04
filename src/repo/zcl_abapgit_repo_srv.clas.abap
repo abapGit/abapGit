@@ -71,8 +71,6 @@ CLASS zcl_abapgit_repo_srv DEFINITION
       IMPORTING
         !iv_package    TYPE devclass
         !iv_ign_subpkg TYPE abap_bool DEFAULT abap_false
-      EXPORTING
-        !ev_reason     TYPE string
       RAISING
         zcx_abapgit_exception.
 ENDCLASS.
