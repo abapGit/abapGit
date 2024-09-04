@@ -25,7 +25,7 @@ CLASS zcl_abapgit_syntax_factory IMPLEMENTATION.
     " Create instance of highlighter dynamically dependent on syntax type
     IF iv_filename CP '*.abap'.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_abap.
-    ELSEIF iv_filename CP '*.xml' OR iv_filename CP '*.html'.
+    ELSEIF iv_filename CP '*.xml' OR iv_filename CP '*.html' OR iv_filename CP '*.xdp'.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_xml.
     ELSEIF iv_filename CP '*.css'.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_css.
