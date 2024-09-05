@@ -360,6 +360,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     CALL FUNCTION 'TR_OBJECTS_CHECK'
       TABLES
         wt_ko200                = lt_tables
+        wt_e071k                = lt_table_keys
       EXCEPTIONS
         cancel_edit_other_error = 1
         show_only_other_error   = 2
@@ -374,13 +375,14 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
     CALL FUNCTION 'TRINT_OBJECTS_CHECK_AND_INSERT'
       EXPORTING
-        iv_order       = iv_transport
-        iv_with_dialog = lv_with_dialog
+        iv_order           = iv_transport
+        iv_with_dialog     = lv_with_dialog
+        iv_append_to_order = iv_append_to_order
       CHANGING
-        ct_ko200       = lt_tables
-        ct_e071k       = lt_table_keys
+        ct_ko200           = lt_tables
+        ct_e071k           = lt_table_keys
       EXCEPTIONS
-        OTHERS         = 1.
+        OTHERS             = 1.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
