@@ -282,10 +282,10 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
 
     DATA: lv_name TYPE fpname.
 
+    " Check for any state
     SELECT SINGLE name FROM fplayout
       INTO lv_name
-      WHERE name = ms_item-obj_name
-      AND state = 'A'.
+      WHERE name = ms_item-obj_name.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
