@@ -49,6 +49,9 @@ CLASS zcl_abapgit_objects_program DEFINITION
         fields     TYPE dyfatc_tab,
         flow_logic TYPE swydyflow,
         spaces     TYPE ty_spaces_tt,
+        nat_header TYPE d020s,
+        nat_fields TYPE STANDARD TABLE OF d021s WITH DEFAULT KEY,
+        nat_texts  TYPE STANDARD TABLE OF d021t WITH DEFAULT KEY,
       END OF ty_dynpro .
     TYPES:
       ty_dynpro_tt TYPE STANDARD TABLE OF ty_dynpro WITH DEFAULT KEY .
@@ -304,6 +307,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     DATA: lv_name            TYPE dwinactiv-obj_name,
           lt_d020s_to_delete TYPE TABLE OF d020s,
           ls_d020s           LIKE LINE OF lt_d020s_to_delete,
+          lt_params          TYPE TABLE OF d023s,
           ls_dynpro          LIKE LINE OF it_dynpros.
 
     FIELD-SYMBOLS: <ls_field> TYPE rpy_dyfatc.
@@ -371,30 +375,52 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
       ENDLOOP.
 
-      CALL FUNCTION 'RPY_DYNPRO_INSERT'
-        EXPORTING
-          header                 = ls_dynpro-header
-          suppress_exist_checks  = abap_true
-          suppress_generate      = ls_dynpro-header-no_execute
-        TABLES
-          containers             = ls_dynpro-containers
-          fields_to_containers   = ls_dynpro-fields
-          flow_logic             = ls_dynpro-flow_logic
-        EXCEPTIONS
-          cancelled              = 1
-          already_exists         = 2
-          program_not_exists     = 3
-          not_executed           = 4
-          missing_required_field = 5
-          illegal_field_value    = 6
-          field_not_allowed      = 7
-          not_generated          = 8
-          illegal_field_position = 9
-          OTHERS                 = 10.
+      IF ls_dynpro-header-type = 'N' AND ls_dynpro-nat_header IS NOT INITIAL.
+        DELETE FROM d021t WHERE prog = ls_dynpro-header-program AND dynr = ls_dynpro-header-screen ##SUBRC_OK.
+        INSERT d021t FROM TABLE ls_dynpro-nat_texts ##SUBRC_OK.
+
+        ls_dynpro-nat_header-dgen = sy-datum.
+        ls_dynpro-nat_header-tgen = sy-uzeit.
+
+        CALL FUNCTION 'RPY_DYNPRO_INSERT_NATIVE'
+          EXPORTING
+            header             = ls_dynpro-nat_header
+            dynprotext         = ls_dynpro-header-descript
+          TABLES
+            fieldlist          = ls_dynpro-nat_fields
+            flowlogic          = ls_dynpro-flow_logic
+            params             = lt_params
+          EXCEPTIONS
+            cancelled          = 1
+            already_exists     = 2
+            program_not_exists = 3
+            not_executed       = 4
+            OTHERS             = 5.
+      ELSE.
+        CALL FUNCTION 'RPY_DYNPRO_INSERT'
+          EXPORTING
+            header                 = ls_dynpro-header
+            suppress_exist_checks  = abap_true
+            suppress_generate      = ls_dynpro-header-no_execute
+          TABLES
+            containers             = ls_dynpro-containers
+            fields_to_containers   = ls_dynpro-fields
+            flow_logic             = ls_dynpro-flow_logic
+          EXCEPTIONS
+            cancelled              = 1
+            already_exists         = 2
+            program_not_exists     = 3
+            not_executed           = 4
+            missing_required_field = 5
+            illegal_field_value    = 6
+            field_not_allowed      = 7
+            not_generated          = 8
+            illegal_field_position = 9
+            OTHERS                 = 10.
+      ENDIF.
       IF sy-subrc <> 2 AND sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
-* todo, RPY_DYNPRO_UPDATE?
 
       CONCATENATE ls_dynpro-header-program ls_dynpro-header-screen
         INTO lv_name RESPECTING BLANKS.
@@ -717,6 +743,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           lt_fields_to_containers TYPE dyfatc_tab,
           lt_flow_logic           TYPE swydyflow,
           lt_d020s                TYPE TABLE OF d020s,
+          lt_texts                TYPE TABLE OF d021t,
           lt_fieldlist_int        TYPE TABLE OF d021s. "internal format
 
     FIELD-SYMBOLS: <ls_d020s>       LIKE LINE OF lt_d020s,
@@ -777,11 +804,11 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
       CALL FUNCTION 'RPY_DYNPRO_READ_NATIVE'
         EXPORTING
-          progname  = iv_program_name
-          dynnr     = <ls_d020s>-dnum
+          progname   = iv_program_name
+          dynnr      = <ls_d020s>-dnum
         TABLES
-          fieldlist = lt_fieldlist_int.
-
+          fieldlist  = lt_fieldlist_int
+          fieldtexts = lt_texts.
 
       LOOP AT lt_fields_to_containers ASSIGNING <ls_field>.
 * output style is a NUMC field, the XML conversion will fail if it contains invalid value
@@ -824,10 +851,19 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
       APPEND INITIAL LINE TO rt_dynpro ASSIGNING <ls_dynpro>.
       <ls_dynpro>-header     = ls_header.
-      <ls_dynpro>-containers = lt_containers.
-      <ls_dynpro>-fields     = lt_fields_to_containers.
-
       <ls_dynpro>-flow_logic = lt_flow_logic.
+
+      READ TABLE lt_fieldlist_int TRANSPORTING NO FIELDS WITH KEY fill = 'X'.
+      IF ls_header-type = 'N' AND sy-subrc = 0.
+        " In particular for dynpros with splitter
+        <ls_dynpro>-nat_header = <ls_d020s>.
+        CLEAR: <ls_dynpro>-nat_header-dgen, <ls_dynpro>-nat_header-tgen.
+        <ls_dynpro>-nat_fields = lt_fieldlist_int.
+        <ls_dynpro>-nat_texts  = lt_texts.
+      ELSE.
+        <ls_dynpro>-containers = lt_containers.
+        <ls_dynpro>-fields     = lt_fields_to_containers.
+      ENDIF.
 
     ENDLOOP.
 
