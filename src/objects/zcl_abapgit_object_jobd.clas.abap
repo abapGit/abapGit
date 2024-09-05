@@ -74,6 +74,7 @@ CLASS zcl_abapgit_object_jobd IMPLEMENTATION.
 
     DATA: lr_job_definition TYPE REF TO data,
           lo_job_definition TYPE REF TO object,
+          lx_error          TYPE REF TO cx_root,
           lv_name           TYPE ty_jd_name.
 
     FIELD-SYMBOLS: <lg_job_definition> TYPE any,
@@ -105,8 +106,8 @@ CLASS zcl_abapgit_object_jobd IMPLEMENTATION.
           EXPORTING
             im_jd_attributes = <lg_job_definition>.
 
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( |Error deserializing JOBD| ).
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -240,7 +241,7 @@ CLASS zcl_abapgit_object_jobd IMPLEMENTATION.
         ASSIGN COMPONENT 'CREATED_TIME' OF STRUCTURE <lg_job_definition> TO <lg_field>.
         CLEAR <lg_field>.
 
-        ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <lg_job_definition> TO <lg_field>.
+        ASSIGN COMPONENT 'CHANGEDBY' OF STRUCTURE <lg_job_definition> TO <lg_field>.
         CLEAR <lg_field>.
 
         ASSIGN COMPONENT 'CHANGED_DATE' OF STRUCTURE <lg_job_definition> TO <lg_field>.
