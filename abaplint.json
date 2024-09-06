@@ -125,6 +125,9 @@
     },
     "double_space": true,
     "downport": false,
+    "add_test_attributes": true,
+    "implicit_start_of_selection": true,
+    "empty_event": true,
     "dynpro_checks": false,
     "easy_to_find_messages": false,
     "empty_line_in_statement": {
