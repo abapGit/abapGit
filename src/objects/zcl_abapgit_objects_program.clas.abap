@@ -375,7 +375,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
       ENDLOOP.
 
-      IF ls_dynpro-header-type = 'N'.
+      IF ls_dynpro-header-type = 'N' AND ls_dynpro-nat_header IS NOT INITIAL.
         DELETE FROM d021t WHERE prog = ls_dynpro-header-program AND dynr = ls_dynpro-header-screen ##SUBRC_OK.
         INSERT d021t FROM TABLE ls_dynpro-nat_texts ##SUBRC_OK.
 
@@ -853,7 +853,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       <ls_dynpro>-header     = ls_header.
       <ls_dynpro>-flow_logic = lt_flow_logic.
 
-      IF ls_header-type = 'N'.
+      READ TABLE lt_fieldlist_int TRANSPORTING NO FIELDS WITH KEY fill = 'X'.
+      IF ls_header-type = 'N' AND sy-subrc = 0.
         " In particular for dynpros with splitter
         <ls_dynpro>-nat_header = <ls_d020s>.
         CLEAR: <ls_dynpro>-nat_header-dgen, <ls_dynpro>-nat_header-tgen.

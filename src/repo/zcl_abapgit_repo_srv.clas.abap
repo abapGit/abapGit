@@ -55,6 +55,7 @@ CLASS zcl_abapgit_repo_srv DEFINITION
         !is_meta TYPE zif_abapgit_persistence=>ty_repo_xml
       RAISING
         zcx_abapgit_exception .
+
     METHODS validate_sub_super_packages
       IMPORTING
         !iv_package    TYPE devclass
@@ -65,6 +66,13 @@ CLASS zcl_abapgit_repo_srv DEFINITION
         !ev_reason     TYPE string
       RAISING
         zcx_abapgit_exception .
+
+    METHODS validate_package_korrflag
+      IMPORTING
+        !iv_package    TYPE devclass
+        !iv_ign_subpkg TYPE abap_bool DEFAULT abap_false
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -215,6 +223,35 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ls_full_meta-key = iv_key.
 
     instantiate_and_add( ls_full_meta ).
+
+  ENDMETHOD.
+
+
+  METHOD validate_package_korrflag.
+
+    DATA:
+      li_package  TYPE REF TO zif_abapgit_sap_package,
+      lv_korrflag TYPE abap_bool,
+      lv_package  TYPE devclass,
+      lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+
+    li_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
+    IF li_package->exists( ) = abap_false.
+      " Skip dangling repository
+      RETURN.
+    ENDIF.
+
+    lv_korrflag = li_package->are_changes_recorded_in_tr_req( ).
+
+    IF iv_ign_subpkg = abap_false.
+      lt_packages = li_package->list_subpackages( ).
+      LOOP AT lt_packages INTO lv_package.
+        li_package = zcl_abapgit_factory=>get_sap_package( lv_package ).
+        IF li_package->exists( ) = abap_true AND li_package->are_changes_recorded_in_tr_req( ) <> lv_korrflag.
+          zcx_abapgit_exception=>raise( 'Mix of transportable and non-transportable packages is not supported' ).
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -708,6 +745,11 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
         zcx_abapgit_exception=>raise( lv_reason ).
       ENDIF.
     ENDIF.
+
+    " Check if package hierarchy is a mix of transportable and local packages
+    validate_package_korrflag(
+      iv_package    = iv_package
+      iv_ign_subpkg = iv_ign_subpkg ).
 
   ENDMETHOD.
 
