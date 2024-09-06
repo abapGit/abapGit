@@ -40,14 +40,18 @@ CLASS zcl_abapgit_progress IMPLEMENTATION.
 
     DATA: lv_f TYPE f.
 
-    lv_f = ( iv_current / mv_total ) * 100.
-    rv_pct = lv_f.
+    TRY.
+        lv_f = ( iv_current / mv_total ) * 100.
+        rv_pct = lv_f.
 
-    IF rv_pct = 100.
-      rv_pct = 99.
-    ELSEIF rv_pct = 0.
-      rv_pct = 1.
-    ENDIF.
+        IF rv_pct = 100.
+          rv_pct = 99.
+        ELSEIF rv_pct = 0.
+          rv_pct = 1.
+        ENDIF.
+      CATCH cx_sy_zerodivide.
+        rv_pct = 0.
+    ENDTRY.
 
   ENDMETHOD.
 
