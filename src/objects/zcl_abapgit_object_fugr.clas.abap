@@ -168,7 +168,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
+CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 
   METHOD check_rfc_parameters.
@@ -948,7 +948,6 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     DATA: lt_includes TYPE ty_sobj_name_tt.
 
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.
-
 
     lt_includes = includes( ).
 

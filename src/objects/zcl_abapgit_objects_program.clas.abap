@@ -154,6 +154,7 @@ CLASS zcl_abapgit_objects_program DEFINITION
         !it_source  TYPE abaptxt255_tab
         !iv_title   TYPE repti
         !iv_package TYPE devclass
+        !iv_state   TYPE progdir-state DEFAULT c_state-inactive
       RAISING
         zcx_abapgit_exception .
     METHODS update_program
@@ -161,8 +162,22 @@ CLASS zcl_abapgit_objects_program DEFINITION
         !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
         !it_source  TYPE abaptxt255_tab
         !iv_title   TYPE repti
+        !iv_state   TYPE progdir-state DEFAULT c_state-inactive
       RAISING
         zcx_abapgit_exception .
+    METHODS is_exit_include
+      IMPORTING
+        !iv_program               TYPE syrepid
+      RETURNING
+        VALUE(rv_is_exit_include) TYPE abap_bool.
+    METHODS deserialize_exit_include
+      IMPORTING
+        !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
+        !it_source  TYPE abaptxt255_tab
+        !it_tpool   TYPE textpool_table
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -456,11 +471,52 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD deserialize_exit_include.
+
+    DATA:
+      lv_progname TYPE reposrc-progname,
+      lv_title    TYPE rglif-title.
+
+    " Includes in SAP exit function groups must be processed in active state only
+    " (check in RS_INSERT_INTO_WORKING_AREA)
+    lv_title = get_program_title( it_tpool ).
+
+    SELECT SINGLE progname FROM reposrc INTO lv_progname
+      WHERE progname = is_progdir-name
+      AND r3state = c_state-active.
+
+    IF sy-subrc = 0.
+      update_program(
+        is_progdir = is_progdir
+        it_source  = it_source
+        iv_title   = lv_title
+        iv_state   = '' ).
+    ELSE.
+      insert_program(
+        is_progdir = is_progdir
+        it_source  = it_source
+        iv_title   = lv_title
+        iv_package = iv_package
+        iv_state   = '' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD deserialize_program.
 
     DATA:
       lv_progname TYPE reposrc-progname,
       lv_title    TYPE rglif-title.
+
+    IF is_exit_include( is_progdir-name ) = abap_true.
+      deserialize_exit_include(
+        is_progdir = is_progdir
+        it_source  = it_source
+        it_tpool   = it_tpool
+        iv_package = iv_package ).
+      RETURN.
+    ENDIF.
 
     zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
       iv_object   = 'ABAP'
@@ -579,7 +635,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
             program_name      = is_progdir-name
             program_type      = is_progdir-subc
             title_string      = iv_title
-            save_inactive     = c_state-inactive
+            save_inactive     = iv_state
             suppress_dialog   = abap_true
             uccheck           = is_progdir-uccheck " does not exist on lower releases
           TABLES
@@ -597,7 +653,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
             program_name      = is_progdir-name
             program_type      = is_progdir-subc
             title_string      = iv_title
-            save_inactive     = c_state-inactive
+            save_inactive     = iv_state
             suppress_dialog   = abap_true
           TABLES
             source_extended   = it_source
@@ -671,6 +727,13 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     rv_is_cua_locked = exists_a_lock_entry_for( iv_lock_object = 'ESCUAPAINT'
                                                 iv_argument    = lv_object ).
 
+  ENDMETHOD.
+
+
+  METHOD is_exit_include.
+    rv_is_exit_include = boolc(
+      iv_program CP 'LX*' OR iv_program CP 'SAPLX*' OR
+      iv_program+1 CP '/LX*' OR iv_program+1 CP '/SAPLX*' ).
   ENDMETHOD.
 
 
@@ -1062,7 +1125,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       EXPORTING
         program_name     = is_progdir-name
         title_string     = iv_title
-        save_inactive    = c_state-inactive
+        save_inactive    = iv_state
       TABLES
         source_extended  = it_source
       EXCEPTIONS
@@ -1080,7 +1143,9 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         " for generated table maintenance function groups, the author is set to SAP* instead of the user which
         " generates the function group. This hits some standard checks, pulling new code again sets the author
         " to the current user which avoids the check
-        zcx_abapgit_exception=>raise( |Delete function group and pull again, { is_progdir-name } (EU522)| ).
+        IF is_exit_include( is_progdir-name ) = abap_false.
+          zcx_abapgit_exception=>raise( |Delete function group and pull again, { is_progdir-name } (EU522)| ).
+        ENDIF.
       ELSE.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
