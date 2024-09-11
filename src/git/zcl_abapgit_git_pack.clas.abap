@@ -152,7 +152,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_pack IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
 
   METHOD decode.
@@ -483,7 +483,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
           AND ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-file
           AND ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-executable
           AND ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-submodule.
-        zcx_abapgit_exception=>raise( |Unknown chmod| ).
+        zcx_abapgit_exception=>raise( |Unknown chmod { ls_node-chmod }| ).
       ENDIF.
 
       lv_offset = lv_match + 1.
