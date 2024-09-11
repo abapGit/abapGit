@@ -479,8 +479,10 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
       CLEAR ls_node.
       ls_node-chmod = lv_chmod.
+
       IF ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-dir
           AND ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-file
+          AND ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-symbolic_link
           AND ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-executable
           AND ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-submodule.
         zcx_abapgit_exception=>raise( |Unknown chmod { ls_node-chmod }| ).
