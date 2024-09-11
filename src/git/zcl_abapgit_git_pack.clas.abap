@@ -479,7 +479,6 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
       CLEAR ls_node.
       ls_node-chmod = lv_chmod.
-
       IF ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-dir
           AND ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-file
           AND ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-symbolic_link
