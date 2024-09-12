@@ -9,7 +9,7 @@ CLASS lcl_tabl_xml DEFINITION FINAL.
 
     CLASS-METHODS read
       IMPORTING
-        io_xml            TYPE REF TO zif_abapgit_xml_input
+        io_xml             TYPE REF TO zif_abapgit_xml_input
       RETURNING
         VALUE(rs_internal) TYPE zif_abapgit_object_tabl=>ty_internal
       RAISING

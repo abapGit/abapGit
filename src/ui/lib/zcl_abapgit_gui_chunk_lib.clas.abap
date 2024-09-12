@@ -21,9 +21,9 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html)  TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_success
       IMPORTING
-        iv_message TYPE string
+        iv_message     TYPE string
       RETURNING
-        VALUE(ri_html)  TYPE REF TO zif_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_repo_top
       IMPORTING
         !io_repo               TYPE REF TO zcl_abapgit_repo
@@ -189,7 +189,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
     CLASS-METHODS render_help_hint
       IMPORTING
         iv_text_to_wrap TYPE string
-        iv_add_class TYPE string OPTIONAL
+        iv_add_class    TYPE string OPTIONAL
       RETURNING
         VALUE(rv_html)  TYPE string.
 

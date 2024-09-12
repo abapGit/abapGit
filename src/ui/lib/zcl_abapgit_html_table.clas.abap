@@ -8,11 +8,11 @@ CLASS zcl_abapgit_html_table DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        !ii_renderer    TYPE REF TO zif_abapgit_html_table OPTIONAL " Can be passed to renderer
+        !ii_renderer              TYPE REF TO zif_abapgit_html_table OPTIONAL " Can be passed to renderer
         !is_initial_sorting_state TYPE zif_abapgit_html_table=>ty_sorting_state OPTIONAL
         PREFERRED PARAMETER ii_renderer
       RETURNING
-        VALUE(ro_instance) TYPE REF TO zcl_abapgit_html_table .
+        VALUE(ro_instance)        TYPE REF TO zcl_abapgit_html_table .
     " maybe also th css_class
     METHODS define_column
       IMPORTING
@@ -21,41 +21,41 @@ CLASS zcl_abapgit_html_table DEFINITION
         !iv_from_field   TYPE abap_compname OPTIONAL
         !iv_sortable     TYPE abap_bool DEFAULT abap_true
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_table .
+        VALUE(ro_self)   TYPE REF TO zcl_abapgit_html_table .
     METHODS define_column_group
       IMPORTING
         !iv_group_id    TYPE string OPTIONAL " not mandatory, but can be used for CSS (TODO data-gid)
         !iv_group_title TYPE string OPTIONAL " can be empty !
         PREFERRED PARAMETER iv_group_title
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_table
+        VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_table
       RAISING
         zcx_abapgit_exception .
     " Maybe also data_provider
     " TODO record Limiter
     METHODS render
       IMPORTING
-        !ii_renderer   TYPE REF TO zif_abapgit_html_table OPTIONAL
-        !it_data       TYPE ANY TABLE
-        !iv_id         TYPE csequence OPTIONAL
-        !iv_css_class  TYPE csequence OPTIONAL
-        !iv_with_cids  TYPE abap_bool DEFAULT abap_false
+        !ii_renderer      TYPE REF TO zif_abapgit_html_table OPTIONAL
+        !it_data          TYPE ANY TABLE
+        !iv_id            TYPE csequence OPTIONAL
+        !iv_css_class     TYPE csequence OPTIONAL
+        !iv_with_cids     TYPE abap_bool DEFAULT abap_false
         !is_sorting_state TYPE zif_abapgit_html_table=>ty_sorting_state OPTIONAL
         !iv_wrap_in_div   TYPE string OPTIONAL " div class name
       RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+        VALUE(ri_html)    TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
 
     " Sorting utils
     CLASS-METHODS detect_sorting_request
       IMPORTING
-        iv_event TYPE string
+        iv_event                  TYPE string
       RETURNING
         VALUE(rs_sorting_request) TYPE zif_abapgit_html_table=>ty_sorting_state.
     METHODS process_sorting_request
       IMPORTING
-        iv_event TYPE string
+        iv_event            TYPE string
       RETURNING
         VALUE(rv_processed) TYPE abap_bool.
 
@@ -101,13 +101,13 @@ CLASS zcl_abapgit_html_table DEFINITION
     METHODS render_row
       IMPORTING
         iv_row_index TYPE i
-        is_row TYPE any
+        is_row       TYPE any
       RAISING
         zcx_abapgit_exception .
 
     METHODS render_column_title
       IMPORTING
-        is_col TYPE ty_column
+        is_col         TYPE ty_column
       RETURNING
         VALUE(rv_text) TYPE string
       RAISING
@@ -115,13 +115,13 @@ CLASS zcl_abapgit_html_table DEFINITION
 
     CLASS-METHODS cid_attr
       IMPORTING
-        iv_column_id TYPE string
+        iv_column_id        TYPE string
       RETURNING
         VALUE(rs_data_attr) TYPE zif_abapgit_html=>ty_data_attr.
 
     CLASS-METHODS gid_attr
       IMPORTING
-        iv_column_id TYPE string
+        iv_column_id        TYPE string
       RETURNING
         VALUE(rs_data_attr) TYPE zif_abapgit_html=>ty_data_attr.
 

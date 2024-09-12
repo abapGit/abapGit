@@ -18,7 +18,7 @@ CLASS ltcl_test_checksum_serializer DEFINITION FINAL
         ev_str       TYPE string.
     CLASS-METHODS space_to_separator
       IMPORTING
-        iv_str TYPE string
+        iv_str        TYPE string
       RETURNING
         VALUE(rv_str) TYPE string.
 ENDCLASS.

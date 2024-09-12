@@ -21,22 +21,22 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        io_repo        TYPE REF TO zcl_abapgit_repo_online
-        iv_seed        TYPE string OPTIONAL
-        iv_sci_result  TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
-        ii_obj_filter  TYPE REF TO zif_abapgit_object_filter OPTIONAL
+        io_repo          TYPE REF TO zcl_abapgit_repo_online
+        iv_seed          TYPE string OPTIONAL
+        iv_sci_result    TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
+        ii_obj_filter    TYPE REF TO zif_abapgit_object_filter OPTIONAL
         ii_force_refresh TYPE abap_bool DEFAULT abap_true
       RETURNING
-        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+        VALUE(ri_page)   TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception.
 
     METHODS constructor
       IMPORTING
-        io_repo       TYPE REF TO zcl_abapgit_repo_online
-        iv_seed       TYPE string OPTIONAL
-        iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
-        ii_obj_filter TYPE REF TO zif_abapgit_object_filter OPTIONAL
+        io_repo          TYPE REF TO zcl_abapgit_repo_online
+        iv_seed          TYPE string OPTIONAL
+        iv_sci_result    TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
+        ii_obj_filter    TYPE REF TO zif_abapgit_object_filter OPTIONAL
         ii_force_refresh TYPE abap_bool DEFAULT abap_true
       RAISING
         zcx_abapgit_exception.

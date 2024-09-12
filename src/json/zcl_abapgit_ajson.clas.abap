@@ -55,25 +55,25 @@ CLASS zcl_abapgit_ajson DEFINITION
         !ii_custom_mapping  TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
         !iv_keep_item_order TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ro_instance) TYPE REF TO zcl_abapgit_ajson
+        VALUE(ro_instance)  TYPE REF TO zcl_abapgit_ajson
       RAISING
         zcx_abapgit_ajson_error .
 
     CLASS-METHODS create_empty " Might be deprecated, prefer using new( ) or create object
       IMPORTING
-        !ii_custom_mapping TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
-        iv_keep_item_order TYPE abap_bool DEFAULT abap_false
-        iv_format_datetime TYPE abap_bool DEFAULT abap_true
+        !ii_custom_mapping            TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
+        iv_keep_item_order            TYPE abap_bool DEFAULT abap_false
+        iv_format_datetime            TYPE abap_bool DEFAULT abap_true
         iv_to_abap_corresponding_only TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ro_instance) TYPE REF TO zcl_abapgit_ajson.
+        VALUE(ro_instance)            TYPE REF TO zcl_abapgit_ajson.
 
     " Experimental ! May change
     CLASS-METHODS create_from " TODO, rename to 'from' ?
       IMPORTING
-        !ii_source_json TYPE REF TO zif_abapgit_ajson
-        !ii_filter TYPE REF TO zif_abapgit_ajson_filter OPTIONAL " Might be deprecated, use filter() instead
-        !ii_mapper TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL " Might be deprecated, use map() instead
+        !ii_source_json    TYPE REF TO zif_abapgit_ajson
+        !ii_filter         TYPE REF TO zif_abapgit_ajson_filter OPTIONAL " Might be deprecated, use filter() instead
+        !ii_mapper         TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL " Might be deprecated, use map() instead
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_ajson
       RAISING
@@ -81,16 +81,16 @@ CLASS zcl_abapgit_ajson DEFINITION
 
     METHODS constructor
       IMPORTING
-        iv_keep_item_order TYPE abap_bool DEFAULT abap_false
-        iv_format_datetime TYPE abap_bool DEFAULT abap_true
+        iv_keep_item_order            TYPE abap_bool DEFAULT abap_false
+        iv_format_datetime            TYPE abap_bool DEFAULT abap_true
         iv_to_abap_corresponding_only TYPE abap_bool DEFAULT abap_false.
     CLASS-METHODS new
       IMPORTING
-        iv_keep_item_order TYPE abap_bool DEFAULT abap_false
-        iv_format_datetime TYPE abap_bool DEFAULT abap_true
+        iv_keep_item_order            TYPE abap_bool DEFAULT abap_false
+        iv_format_datetime            TYPE abap_bool DEFAULT abap_true
         iv_to_abap_corresponding_only TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ro_instance) TYPE REF TO zcl_abapgit_ajson.
+        VALUE(ro_instance)            TYPE REF TO zcl_abapgit_ajson.
 
   PROTECTED SECTION.
 
@@ -108,16 +108,16 @@ CLASS zcl_abapgit_ajson DEFINITION
         VALUE(rv_item) TYPE REF TO zif_abapgit_ajson_types=>ty_node.
     METHODS prove_path_exists
       IMPORTING
-        iv_path              TYPE string
+        iv_path            TYPE string
       RETURNING
         VALUE(rr_end_node) TYPE REF TO zif_abapgit_ajson_types=>ty_node
       RAISING
         zcx_abapgit_ajson_error.
     METHODS delete_subtree
       IMPORTING
-        iv_path           TYPE string
-        iv_name           TYPE string
-        ir_parent         TYPE REF TO zif_abapgit_ajson_types=>ty_node OPTIONAL
+        iv_path            TYPE string
+        iv_name            TYPE string
+        ir_parent          TYPE REF TO zif_abapgit_ajson_types=>ty_node OPTIONAL
       RETURNING
         VALUE(rs_top_node) TYPE zif_abapgit_ajson_types=>ty_node.
     METHODS read_only_watchdog

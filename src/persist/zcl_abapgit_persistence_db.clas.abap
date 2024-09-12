@@ -73,7 +73,7 @@ CLASS zcl_abapgit_persistence_db DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS validate_entry_type
       IMPORTING
-        !iv_type  TYPE zif_abapgit_persistence=>ty_type
+        !iv_type TYPE zif_abapgit_persistence=>ty_type
       RAISING
         zcx_abapgit_exception .
 

@@ -57,6 +57,7 @@
       ]
     },
     "abapdoc": false,
+    "align_type_expressions": true,
     "align_pseudo_comments": false,
     "invalid_table_index": true,
     "tables_declared_locally": true,
@@ -291,7 +292,7 @@
         "/json/",
         "zcl_abapgit_object_pdts.clas.testclasses.abap"
       ],
-      "length": 120
+      "length": 125
     },
     "line_only_punc": {
       "ignoreExceptions": true
