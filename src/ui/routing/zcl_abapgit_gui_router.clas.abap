@@ -72,7 +72,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         zcx_abapgit_exception.
     METHODS go_stage_transport
       IMPORTING
-        iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+        iv_key           TYPE zif_abapgit_persistence=>ty_repo-key
       RETURNING
         VALUE(ro_filter) TYPE REF TO zcl_abapgit_object_filter_tran
       RAISING

@@ -71,7 +71,7 @@ CLASS zcl_abapgit_gui_page_sett_glob DEFINITION
     CLASS-METHODS read_proxy_bypass
       IMPORTING
         io_form_data TYPE REF TO zcl_abapgit_string_map
-        io_settings TYPE REF TO zcl_abapgit_settings
+        io_settings  TYPE REF TO zcl_abapgit_settings
       RAISING
         zcx_abapgit_exception.
     METHODS save_proxy_bypass

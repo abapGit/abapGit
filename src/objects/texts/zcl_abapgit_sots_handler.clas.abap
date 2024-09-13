@@ -17,14 +17,14 @@ CLASS zcl_abapgit_sots_handler DEFINITION
 
     CLASS-METHODS read_sots
       IMPORTING
-        !iv_pgmid    TYPE pgmid DEFAULT 'R3TR'
-        !iv_object   TYPE trobjtype
-        !iv_obj_name TYPE csequence
-        !io_xml      TYPE REF TO zif_abapgit_xml_output OPTIONAL
+        !iv_pgmid       TYPE pgmid DEFAULT 'R3TR'
+        !iv_object      TYPE trobjtype
+        !iv_obj_name    TYPE csequence
+        !io_xml         TYPE REF TO zif_abapgit_xml_output OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params
       EXPORTING
-        !et_sots     TYPE ty_sots_tt
-        !et_sots_use TYPE ty_sots_use_tt
+        !et_sots        TYPE ty_sots_tt
+        !et_sots_use    TYPE ty_sots_use_tt
       RAISING
         zcx_abapgit_exception.
 

@@ -12,7 +12,7 @@ CLASS zcl_abapgit_log DEFINITION
 
     CLASS-METHODS from_exception
       IMPORTING
-        io_x TYPE REF TO cx_root
+        io_x          TYPE REF TO cx_root
       RETURNING
         VALUE(ro_log) TYPE REF TO zcl_abapgit_log.
 
