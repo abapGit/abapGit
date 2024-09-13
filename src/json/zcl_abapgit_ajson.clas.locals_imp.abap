@@ -59,25 +59,25 @@ CLASS lcl_utils DEFINITION FINAL.
 
     CLASS-METHODS normalize_path
       IMPORTING
-        iv_path TYPE string
+        iv_path        TYPE string
       RETURNING
         VALUE(rv_path) TYPE string.
     CLASS-METHODS split_path
       IMPORTING
-        iv_path TYPE string
+        iv_path             TYPE string
       RETURNING
         VALUE(rv_path_name) TYPE zif_abapgit_ajson_types=>ty_path_name.
     CLASS-METHODS validate_array_index
       IMPORTING
-        iv_path TYPE string
-        iv_index TYPE string
+        iv_path         TYPE string
+        iv_index        TYPE string
       RETURNING
         VALUE(rv_index) TYPE i
       RAISING
         zcx_abapgit_ajson_error.
     CLASS-METHODS string_to_xstring_utf8
       IMPORTING
-        iv_str TYPE string
+        iv_str         TYPE string
       RETURNING
         VALUE(rv_xstr) TYPE xstring.
 
@@ -188,8 +188,8 @@ CLASS lcl_json_parser DEFINITION FINAL.
 
     METHODS parse
       IMPORTING
-        iv_json TYPE string
-        iv_keep_item_order TYPE abap_bool DEFAULT abap_false
+        iv_json             TYPE string
+        iv_keep_item_order  TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_json_tree) TYPE zif_abapgit_ajson_types=>ty_nodes_tt
       RAISING
@@ -212,7 +212,7 @@ CLASS lcl_json_parser DEFINITION FINAL.
 
     METHODS _parse
       IMPORTING
-        iv_json TYPE string
+        iv_json             TYPE string
       RETURNING
         VALUE(rt_json_tree) TYPE zif_abapgit_ajson_types=>ty_nodes_tt
       RAISING
@@ -406,9 +406,9 @@ CLASS lcl_json_serializer DEFINITION FINAL CREATE PRIVATE.
 
     CLASS-METHODS stringify
       IMPORTING
-        it_json_tree TYPE zif_abapgit_ajson_types=>ty_nodes_ts
-        iv_indent TYPE i DEFAULT 0
-        iv_keep_item_order TYPE abap_bool DEFAULT abap_false
+        it_json_tree          TYPE zif_abapgit_ajson_types=>ty_nodes_ts
+        iv_indent             TYPE i DEFAULT 0
+        iv_keep_item_order    TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rv_json_string) TYPE string
       RAISING
@@ -428,7 +428,7 @@ CLASS lcl_json_serializer DEFINITION FINAL CREATE PRIVATE.
 
     CLASS-METHODS escape_string
       IMPORTING
-        iv_unescaped TYPE string
+        iv_unescaped      TYPE string
       RETURNING
         VALUE(rv_escaped) TYPE string.
 
@@ -447,7 +447,7 @@ CLASS lcl_json_serializer DEFINITION FINAL CREATE PRIVATE.
     METHODS stringify_set
       IMPORTING
         iv_parent_path TYPE string
-        iv_array TYPE abap_bool
+        iv_array       TYPE abap_bool
       RAISING
         zcx_abapgit_ajson_error.
 
@@ -650,7 +650,7 @@ CLASS lcl_json_to_abap DEFINITION FINAL.
 
     METHODS to_abap
       IMPORTING
-        it_nodes     TYPE zif_abapgit_ajson_types=>ty_nodes_ts
+        it_nodes    TYPE zif_abapgit_ajson_types=>ty_nodes_ts
       CHANGING
         c_container TYPE any
       RAISING
@@ -698,16 +698,16 @@ CLASS lcl_json_to_abap DEFINITION FINAL.
 
     METHODS any_to_abap
       IMPORTING
-        iv_path        TYPE string
-        is_parent_type TYPE ty_type_cache OPTIONAL
+        iv_path         TYPE string
+        is_parent_type  TYPE ty_type_cache OPTIONAL
         i_container_ref TYPE REF TO data
       RAISING
         zcx_abapgit_ajson_error.
 
     METHODS value_to_abap
       IMPORTING
-        is_node      TYPE zif_abapgit_ajson_types=>ty_node
-        is_node_type TYPE ty_type_cache
+        is_node         TYPE zif_abapgit_ajson_types=>ty_node
+        is_node_type    TYPE ty_type_cache
         i_container_ref TYPE REF TO data
       RAISING
         zcx_abapgit_ajson_error
@@ -715,9 +715,9 @@ CLASS lcl_json_to_abap DEFINITION FINAL.
 
     METHODS get_node_type
       IMPORTING
-        is_node            TYPE zif_abapgit_ajson_types=>ty_node OPTIONAL " Empty for root
-        is_parent_type     TYPE ty_type_cache OPTIONAL
-        i_container_ref    TYPE REF TO data OPTIONAL
+        is_node             TYPE zif_abapgit_ajson_types=>ty_node OPTIONAL " Empty for root
+        is_parent_type      TYPE ty_type_cache OPTIONAL
+        i_container_ref     TYPE REF TO data OPTIONAL
       RETURNING
         VALUE(rs_node_type) TYPE ty_type_cache
       RAISING
@@ -1141,12 +1141,12 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
 
     CLASS-METHODS convert
       IMPORTING
-        iv_data            TYPE any
-        is_prefix          TYPE zif_abapgit_ajson_types=>ty_path_name OPTIONAL
-        iv_array_index     TYPE i DEFAULT 0
-        ii_custom_mapping  TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
-        is_opts            TYPE zif_abapgit_ajson=>ty_opts OPTIONAL
-        iv_item_order      TYPE i DEFAULT 0
+        iv_data           TYPE any
+        is_prefix         TYPE zif_abapgit_ajson_types=>ty_path_name OPTIONAL
+        iv_array_index    TYPE i DEFAULT 0
+        ii_custom_mapping TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
+        is_opts           TYPE zif_abapgit_ajson=>ty_opts OPTIONAL
+        iv_item_order     TYPE i DEFAULT 0
       RETURNING
         VALUE(rt_nodes)   TYPE zif_abapgit_ajson_types=>ty_nodes_tt
       RAISING
@@ -1154,13 +1154,13 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
 
     CLASS-METHODS insert_with_type
       IMPORTING
-        iv_data            TYPE any
-        iv_type            TYPE zif_abapgit_ajson_types=>ty_node_type
-        is_prefix          TYPE zif_abapgit_ajson_types=>ty_path_name OPTIONAL
-        iv_array_index     TYPE i DEFAULT 0
-        ii_custom_mapping  TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
-        is_opts            TYPE zif_abapgit_ajson=>ty_opts OPTIONAL
-        iv_item_order      TYPE i DEFAULT 0
+        iv_data           TYPE any
+        iv_type           TYPE zif_abapgit_ajson_types=>ty_node_type
+        is_prefix         TYPE zif_abapgit_ajson_types=>ty_path_name OPTIONAL
+        iv_array_index    TYPE i DEFAULT 0
+        ii_custom_mapping TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
+        is_opts           TYPE zif_abapgit_ajson=>ty_opts OPTIONAL
+        iv_item_order     TYPE i DEFAULT 0
       RETURNING
         VALUE(rt_nodes)   TYPE zif_abapgit_ajson_types=>ty_nodes_tt
       RAISING
@@ -1168,17 +1168,17 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
 
     CLASS-METHODS format_date
       IMPORTING
-        iv_date TYPE d
+        iv_date       TYPE d
       RETURNING
         VALUE(rv_str) TYPE string.
     CLASS-METHODS format_time
       IMPORTING
-        iv_time TYPE t
+        iv_time       TYPE t
       RETURNING
         VALUE(rv_str) TYPE string.
     CLASS-METHODS format_timestamp
       IMPORTING
-        iv_ts TYPE timestamp
+        iv_ts         TYPE timestamp
       RETURNING
         VALUE(rv_str) TYPE string.
 
@@ -1193,84 +1193,84 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
 
     METHODS convert_any
       IMPORTING
-        iv_data TYPE any
-        io_type TYPE REF TO cl_abap_typedescr
-        is_prefix TYPE zif_abapgit_ajson_types=>ty_path_name
-        iv_index TYPE i DEFAULT 0
+        iv_data       TYPE any
+        io_type       TYPE REF TO cl_abap_typedescr
+        is_prefix     TYPE zif_abapgit_ajson_types=>ty_path_name
+        iv_index      TYPE i DEFAULT 0
         iv_item_order TYPE i DEFAULT 0
       CHANGING
-        ct_nodes TYPE zif_abapgit_ajson_types=>ty_nodes_tt
+        ct_nodes      TYPE zif_abapgit_ajson_types=>ty_nodes_tt
       RAISING
         zcx_abapgit_ajson_error.
 
     METHODS convert_ajson
       IMPORTING
-        io_json TYPE REF TO zif_abapgit_ajson
-        is_prefix TYPE zif_abapgit_ajson_types=>ty_path_name
-        iv_index TYPE i DEFAULT 0
+        io_json       TYPE REF TO zif_abapgit_ajson
+        is_prefix     TYPE zif_abapgit_ajson_types=>ty_path_name
+        iv_index      TYPE i DEFAULT 0
         iv_item_order TYPE i DEFAULT 0
       CHANGING
-        ct_nodes TYPE zif_abapgit_ajson_types=>ty_nodes_tt
+        ct_nodes      TYPE zif_abapgit_ajson_types=>ty_nodes_tt
       RAISING
         zcx_abapgit_ajson_error.
 
     METHODS convert_value
       IMPORTING
-        iv_data TYPE any
-        io_type TYPE REF TO cl_abap_typedescr
-        is_prefix TYPE zif_abapgit_ajson_types=>ty_path_name
-        iv_index TYPE i DEFAULT 0
+        iv_data       TYPE any
+        io_type       TYPE REF TO cl_abap_typedescr
+        is_prefix     TYPE zif_abapgit_ajson_types=>ty_path_name
+        iv_index      TYPE i DEFAULT 0
         iv_item_order TYPE i DEFAULT 0
       CHANGING
-        ct_nodes TYPE zif_abapgit_ajson_types=>ty_nodes_tt
+        ct_nodes      TYPE zif_abapgit_ajson_types=>ty_nodes_tt
       RAISING
         zcx_abapgit_ajson_error.
 
     METHODS convert_ref
       IMPORTING
-        iv_data TYPE any
-        is_prefix TYPE zif_abapgit_ajson_types=>ty_path_name
-        iv_index TYPE i DEFAULT 0
+        iv_data       TYPE any
+        is_prefix     TYPE zif_abapgit_ajson_types=>ty_path_name
+        iv_index      TYPE i DEFAULT 0
         iv_item_order TYPE i DEFAULT 0
       CHANGING
-        ct_nodes TYPE zif_abapgit_ajson_types=>ty_nodes_tt
+        ct_nodes      TYPE zif_abapgit_ajson_types=>ty_nodes_tt
       RAISING
         zcx_abapgit_ajson_error.
 
     METHODS convert_struc
       IMPORTING
-        iv_data TYPE any
-        io_type TYPE REF TO cl_abap_typedescr
-        is_prefix TYPE zif_abapgit_ajson_types=>ty_path_name
-        iv_index TYPE i DEFAULT 0
+        iv_data       TYPE any
+        io_type       TYPE REF TO cl_abap_typedescr
+        is_prefix     TYPE zif_abapgit_ajson_types=>ty_path_name
+        iv_index      TYPE i DEFAULT 0
         iv_item_order TYPE i DEFAULT 0
       CHANGING
-        ct_nodes TYPE zif_abapgit_ajson_types=>ty_nodes_tt
+        ct_nodes      TYPE zif_abapgit_ajson_types=>ty_nodes_tt
       RAISING
         zcx_abapgit_ajson_error.
 
     METHODS convert_table
       IMPORTING
-        iv_data TYPE any
-        io_type TYPE REF TO cl_abap_typedescr
-        is_prefix TYPE zif_abapgit_ajson_types=>ty_path_name
-        iv_index TYPE i DEFAULT 0
+        iv_data       TYPE any
+        io_type       TYPE REF TO cl_abap_typedescr
+        is_prefix     TYPE zif_abapgit_ajson_types=>ty_path_name
+        iv_index      TYPE i DEFAULT 0
         iv_item_order TYPE i DEFAULT 0
       CHANGING
-        ct_nodes TYPE zif_abapgit_ajson_types=>ty_nodes_tt
+        ct_nodes      TYPE zif_abapgit_ajson_types=>ty_nodes_tt
       RAISING
         zcx_abapgit_ajson_error.
 
     METHODS insert_value_with_type
       IMPORTING
-        iv_data TYPE any
-        iv_type TYPE zif_abapgit_ajson_types=>ty_node_type
-        io_type TYPE REF TO cl_abap_typedescr
-        is_prefix TYPE zif_abapgit_ajson_types=>ty_path_name
-        iv_index TYPE i DEFAULT 0
+        iv_data       TYPE any
+        iv_type       TYPE zif_abapgit_ajson_types=>ty_node_type
+        io_type       TYPE REF TO cl_abap_typedescr
+        is_prefix     TYPE zif_abapgit_ajson_types=>ty_path_name
+        iv_index      TYPE i DEFAULT 0
         iv_item_order TYPE i DEFAULT 0
       CHANGING
-        ct_nodes TYPE zif_abapgit_ajson_types=>ty_nodes_tt
+        ct_nodes      TYPE zif_abapgit_ajson_types=>ty_nodes_tt
       RAISING
         zcx_abapgit_ajson_error.
 
@@ -1751,7 +1751,7 @@ INTERFACE lif_mutator_runner.
     IMPORTING
       it_source_tree TYPE zif_abapgit_ajson_types=>ty_nodes_ts
     EXPORTING
-      et_dest_tree TYPE zif_abapgit_ajson_types=>ty_nodes_ts
+      et_dest_tree   TYPE zif_abapgit_ajson_types=>ty_nodes_ts
     RAISING
       zcx_abapgit_ajson_error.
 ENDINTERFACE.
@@ -1765,7 +1765,7 @@ CLASS lcl_filter_runner DEFINITION FINAL.
     INTERFACES lif_mutator_runner.
     CLASS-METHODS new
       IMPORTING
-        ii_filter TYPE REF TO zif_abapgit_ajson_filter
+        ii_filter          TYPE REF TO zif_abapgit_ajson_filter
       RETURNING
         VALUE(ro_instance) TYPE REF TO lcl_filter_runner.
     METHODS constructor
@@ -1779,7 +1779,7 @@ CLASS lcl_filter_runner DEFINITION FINAL.
 
     METHODS walk
       IMPORTING
-        iv_path TYPE string
+        iv_path   TYPE string
       CHANGING
         cs_parent TYPE zif_abapgit_ajson_types=>ty_node OPTIONAL
       RAISING
@@ -1877,7 +1877,7 @@ CLASS lcl_mapper_runner DEFINITION FINAL.
     INTERFACES lif_mutator_runner.
     CLASS-METHODS new
       IMPORTING
-        ii_mapper TYPE REF TO zif_abapgit_ajson_mapping
+        ii_mapper          TYPE REF TO zif_abapgit_ajson_mapping
       RETURNING
         VALUE(ro_instance) TYPE REF TO lcl_mapper_runner.
     METHODS constructor
@@ -1991,7 +1991,7 @@ CLASS lcl_mutator_queue DEFINITION FINAL.
         VALUE(ro_instance) TYPE REF TO lcl_mutator_queue.
     METHODS add
       IMPORTING
-        ii_mutator TYPE REF TO lif_mutator_runner
+        ii_mutator     TYPE REF TO lif_mutator_runner
       RETURNING
         VALUE(ro_self) TYPE REF TO lcl_mutator_queue.
 

@@ -8,10 +8,10 @@ CLASS zcl_abapgit_html_parts DEFINITION
     METHODS add_part
       IMPORTING
         !iv_collection TYPE string
-        !ii_part TYPE REF TO zif_abapgit_html .
+        !ii_part       TYPE REF TO zif_abapgit_html .
     METHODS get_parts
       IMPORTING
-        !iv_collection TYPE string
+        !iv_collection  TYPE string
       RETURNING
         VALUE(rt_parts) TYPE zif_abapgit_html=>ty_table_of .
     METHODS get_collection_names
@@ -37,10 +37,10 @@ CLASS zcl_abapgit_html_parts DEFINITION
 
     METHODS get_collection
       IMPORTING
-        !iv_collection TYPE string
+        !iv_collection        TYPE string
         !iv_create_if_missing TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rr_collection) TYPE REF TO ty_named_collection .
+        VALUE(rr_collection)  TYPE REF TO ty_named_collection .
 
 ENDCLASS.
 

@@ -12,7 +12,7 @@ CLASS lcl_table_scheme DEFINITION FINAL.
         iv_title          TYPE string OPTIONAL
         iv_allow_order_by TYPE any OPTIONAL
       RETURNING
-        VALUE(ro_me) TYPE REF TO lcl_table_scheme.
+        VALUE(ro_me)      TYPE REF TO lcl_table_scheme.
 
 ENDCLASS.
 

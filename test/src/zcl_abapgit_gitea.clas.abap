@@ -2,7 +2,7 @@ CLASS zcl_abapgit_gitea DEFINITION PUBLIC.
   PUBLIC SECTION.
     CLASS-METHODS create_repo
       IMPORTING
-        iv_name TYPE string
+        iv_name       TYPE string
       RETURNING
         VALUE(rv_url) TYPE string
       RAISING

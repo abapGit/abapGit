@@ -34,7 +34,7 @@ CLASS zcl_abapgit_repo_checksums DEFINITION
 
     METHODS build_checksums_from_files
       IMPORTING
-        it_local     TYPE ty_local_files_by_item_tt
+        it_local            TYPE ty_local_files_by_item_tt
       RETURNING
         VALUE(rt_checksums) TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 
