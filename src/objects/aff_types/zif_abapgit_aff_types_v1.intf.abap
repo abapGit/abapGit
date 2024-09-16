@@ -58,8 +58,8 @@ INTERFACE zif_abapgit_aff_types_v1 PUBLIC.
 
   TYPES:
     BEGIN OF ty_header_60_no_abap_lv,
-      description           TYPE ty_description_60,
-      original_language     TYPE ty_original_language,
+      description       TYPE ty_description_60,
+      original_language TYPE ty_original_language,
     END OF ty_header_60_no_abap_lv.
 
   TYPES:

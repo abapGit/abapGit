@@ -47,7 +47,7 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
       IMPORTING
         iv_object_type TYPE tadir-object
       RETURNING
-        VALUE(rv_yes) TYPE abap_bool.
+        VALUE(rv_yes)  TYPE abap_bool.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -85,8 +85,8 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
 
     METHODS serialize_as_po
       IMPORTING
-        !iv_object_type   TYPE tadir-object
-        !iv_object_name   TYPE tadir-obj_name
+        !iv_object_type TYPE tadir-object
+        !iv_object_name TYPE tadir-obj_name
       RAISING
         zcx_abapgit_exception .
 
@@ -101,8 +101,8 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
 
     METHODS deserialize_from_po
       IMPORTING
-        !iv_object_type   TYPE tadir-object
-        !iv_object_name   TYPE tadir-obj_name
+        !iv_object_type TYPE tadir-object
+        !iv_object_name TYPE tadir-obj_name
       RAISING
         zcx_abapgit_exception .
 

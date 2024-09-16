@@ -17,14 +17,14 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
 
     CLASS-METHODS read_sotr
       IMPORTING
-        !iv_pgmid    TYPE pgmid DEFAULT 'R3TR'
-        !iv_object   TYPE trobjtype
-        !iv_obj_name TYPE csequence
-        !io_xml      TYPE REF TO zif_abapgit_xml_output OPTIONAL
+        !iv_pgmid       TYPE pgmid DEFAULT 'R3TR'
+        !iv_object      TYPE trobjtype
+        !iv_obj_name    TYPE csequence
+        !io_xml         TYPE REF TO zif_abapgit_xml_output OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params
       EXPORTING
-        !et_sotr     TYPE ty_sotr_tt
-        !et_sotr_use TYPE ty_sotr_use_tt
+        !et_sotr        TYPE ty_sotr_tt
+        !et_sotr_use    TYPE ty_sotr_use_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS create_sotr

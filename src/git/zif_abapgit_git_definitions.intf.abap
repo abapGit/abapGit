@@ -78,10 +78,11 @@ INTERFACE zif_abapgit_git_definitions
 
   CONSTANTS:
     BEGIN OF c_chmod,
-      file       TYPE ty_chmod VALUE '100644',
-      executable TYPE ty_chmod VALUE '100755',
-      dir        TYPE ty_chmod VALUE '40000 ',
-      submodule  TYPE ty_chmod VALUE '160000',
+      file          TYPE ty_chmod VALUE '100644',
+      executable    TYPE ty_chmod VALUE '100755',
+      dir           TYPE ty_chmod VALUE '40000 ',
+      submodule     TYPE ty_chmod VALUE '160000',
+      symbolic_link TYPE ty_chmod VALUE '120000',
     END OF c_chmod .
 
   TYPES:

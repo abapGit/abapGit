@@ -1,7 +1,11 @@
-CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_program FINAL.
+CLASS zcl_abapgit_object_fugr DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_program
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_object.
+
+    INTERFACES zif_abapgit_object .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -944,7 +948,6 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     DATA: lt_includes TYPE ty_sobj_name_tt.
 
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.
-
 
     lt_includes = includes( ).
 

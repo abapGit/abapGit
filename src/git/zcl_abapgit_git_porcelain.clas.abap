@@ -809,6 +809,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
       CASE <ls_node>-chmod.
         WHEN zif_abapgit_git_definitions=>c_chmod-file
             OR zif_abapgit_git_definitions=>c_chmod-executable
+            OR zif_abapgit_git_definitions=>c_chmod-symbolic_link
             OR zif_abapgit_git_definitions=>c_chmod-submodule.
           APPEND INITIAL LINE TO rt_expanded ASSIGNING <ls_exp>.
           <ls_exp>-path  = iv_base.
@@ -822,7 +823,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
             iv_base    = iv_base && <ls_node>-name && '/' ).
           APPEND LINES OF lt_expanded TO rt_expanded.
         WHEN OTHERS.
-          zcx_abapgit_exception=>raise( 'walk_tree: unknown chmod' ).
+          zcx_abapgit_exception=>raise( |walk_tree: unknown chmod { <ls_node>-chmod }| ).
       ENDCASE.
     ENDLOOP.
 
