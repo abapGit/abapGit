@@ -15,8 +15,8 @@ CLASS zcl_abapgit_gui_page_whereused DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        iv_package TYPE devclass OPTIONAL
-        ii_repo    TYPE REF TO zif_abapgit_repo OPTIONAL
+        iv_package     TYPE devclass OPTIONAL
+        ii_repo        TYPE REF TO zif_abapgit_repo OPTIONAL
         PREFERRED PARAMETER iv_package
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
