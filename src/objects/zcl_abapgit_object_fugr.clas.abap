@@ -679,7 +679,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           INTO TABLE lt_reposrc
           FOR ALL ENTRIES IN rt_includes
           WHERE progname = rt_includes-table_line
-            AND r3state = 'A'.
+          AND r3state = 'A'.
       ENDIF.
       SORT lt_reposrc BY progname ASCENDING.
     ENDIF.
