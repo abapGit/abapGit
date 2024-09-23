@@ -168,7 +168,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
 
   METHOD check_rfc_parameters.
@@ -799,7 +799,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
         " compare complete tadir key to distinguish between regular and exit function groups
         IF ( ls_tadir-obj_name <> ms_item-obj_name OR ls_tadir-object <> ms_item-obj_type ) AND
-           zcl_abapgit_objects=>exists( ls_item_key ).
+           zcl_abapgit_objects=>exists( ls_item_key ) = abap_true.
           rv_belongs_to_other_fugr = abap_true.
         ENDIF.
       ENDIF.
