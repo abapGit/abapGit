@@ -90,7 +90,6 @@
     "addFilenames": true,
     "addCommonJS": true,
     "unknownTypes": "runtimeError",
-    "keywords": ["return", "in", "class", "arguments"],
     "extraSetup": "../test/setup.mjs",
     "skip": [
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_get_t100_longtext", "method": "test01", "note": "uses MSAG from database"},
