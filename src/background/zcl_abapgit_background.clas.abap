@@ -73,7 +73,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
           lr_typedescr       TYPE REF TO cl_abap_typedescr,
           lr_typedescr_class TYPE REF TO cl_abap_classdescr.
 
-    FIELD-SYMBOLS: <fs_local_class> LIKE LINE OF lt_local_classes,
+    FIELD-SYMBOLS: <ls_local_class> LIKE LINE OF lt_local_classes,
                    <ls_method>      LIKE LINE OF rt_methods.
 
 
@@ -87,8 +87,8 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
         TABLES
           olist   = lt_local_classes.
 
-      LOOP AT lt_local_classes ASSIGNING <fs_local_class>.
-        lv_classname = |\\PROGRAM={ c_name-report }\\CLASS={ <fs_local_class>-name }|.
+      LOOP AT lt_local_classes ASSIGNING <ls_local_class>.
+        lv_classname = |\\PROGRAM={ c_name-report }\\CLASS={ <ls_local_class>-name }|.
         cl_abap_typedescr=>describe_by_name(
          EXPORTING
            p_name         = lv_classname
@@ -96,16 +96,15 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
            p_descr_ref    = lr_typedescr
          EXCEPTIONS
            type_not_found = 1
-           OTHERS         = 2
-       ).
+           OTHERS         = 2 ).
 
-        IF ( sy-subrc = 0 ) AND ( lr_typedescr IS BOUND ).
+        IF sy-subrc = 0 AND lr_typedescr IS BOUND.
           lr_typedescr_class ?= lr_typedescr.
           IF lr_typedescr_class IS BOUND.
             lt_interf = lr_typedescr_class->interfaces.
             READ TABLE lt_interf WITH TABLE KEY name = c_name-interface TRANSPORTING NO FIELDS.
             IF sy-subrc = 0.
-              ls_method-class = <fs_local_class>-name.
+              ls_method-class = <ls_local_class>-name.
               INSERT ls_method INTO TABLE rt_methods.
             ENDIF.
           ENDIF.
@@ -184,7 +183,8 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
                 ii_log      = li_log
                 it_settings = <ls_list>-settings ).
             CATCH cx_sy_create_object_error.
-              li_log->add_warning( |{ <ls_list>-method } could not be executed, as it is not accessible (local/global class).| ).
+              li_log->add_warning( |{ <ls_list>-method } could not be executed,|
+                && | as it is not accessible (local/global class).| ).
           ENDTRY.
 
           " Decrease memory usage for repository already processed (but keep log)
