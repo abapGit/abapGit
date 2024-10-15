@@ -37,7 +37,10 @@ CLASS ltcl_field_rules DEFINITION FOR TESTING RISK LEVEL HARMLESS
         RETURNING
           VALUE(ri_rules) TYPE REF TO zif_abapgit_field_rules,
       apply_clear_logic FOR TESTING,
-      apply_fill_logic FOR TESTING.
+      apply_fill_logic FOR TESTING,
+      get_utc_timestamp
+        RETURNING
+          VALUE(rv_timestamp) TYPE timestamp.
 
 ENDCLASS.
 
@@ -84,10 +87,12 @@ CLASS ltcl_field_rules IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD fill3.
+    DATA lv_timestamp TYPE timestamp.
+    lv_timestamp = get_utc_timestamp( ).
     fill_value(
       iv_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
       iv_len  = 10
-      iv_exp  = |{ sy-datum }{ sy-uzeit(2) }| ). " avoid comparing minutes
+      iv_exp  = |{ lv_timestamp DIV 10000 }| ). " avoid comparing minutes
   ENDMETHOD.
 
   METHOD fill4.
@@ -194,10 +199,11 @@ CLASS ltcl_field_rules IMPLEMENTATION.
   METHOD apply_fill_logic.
 
     DATA:
-      li_rules TYPE REF TO zif_abapgit_field_rules,
-      ls_act   TYPE ty_test,
-      lt_act   TYPE STANDARD TABLE OF ty_test,
-      lv_ts    TYPE string.
+      li_rules     TYPE REF TO zif_abapgit_field_rules,
+      ls_act       TYPE ty_test,
+      lt_act       TYPE STANDARD TABLE OF ty_test,
+      lv_ts        TYPE string,
+      lv_timestamp TYPE timestamp.
 
     ls_act-key  = 1.
     INSERT ls_act INTO TABLE lt_act.
@@ -235,16 +241,17 @@ CLASS ltcl_field_rules IMPLEMENTATION.
       act = ls_act-time(4)
       exp = sy-uzeit(4) ). " avoid comparing seconds
 
+    lv_timestamp = get_utc_timestamp( ).
     lv_ts = ls_act-ts.
     lv_ts = lv_ts(12).
     cl_abap_unit_assert=>assert_equals(
       act = lv_ts
-      exp = |{ sy-datum }{ sy-uzeit(4) }| ). " avoid comparing seconds
+      exp = |{ lv_timestamp DIV 100 }| ). " avoid comparing second
     lv_ts = ls_act-tl.
     lv_ts = lv_ts(12).
     cl_abap_unit_assert=>assert_equals(
       act = lv_ts
-      exp = |{ sy-datum }{ sy-uzeit(4) }| ). " avoid comparing seconds
+      exp = |{ lv_timestamp DIV 100 }| ). " avoid comparing seconds
 
     READ TABLE lt_act INTO ls_act INDEX 2.
 
@@ -263,4 +270,20 @@ CLASS ltcl_field_rules IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD get_utc_timestamp.
+    DATA lv_syst_timezone TYPE timezone.
+    CALL FUNCTION 'GET_SYSTEM_TIMEZONE'
+      IMPORTING
+        timezone            = lv_syst_timezone
+      EXCEPTIONS
+        customizing_missing = 1
+        OTHERS              = 2.
+    IF sy-subrc <> 0.
+      cl_abap_unit_assert=>fail( 'Could not get system timezone' ).
+    ENDIF.
+
+    CONVERT DATE sy-datum TIME sy-uzeit
+      INTO TIME STAMP rv_timestamp
+      TIME ZONE lv_syst_timezone.
+  ENDMETHOD.
 ENDCLASS.

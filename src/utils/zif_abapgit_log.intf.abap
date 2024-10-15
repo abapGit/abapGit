@@ -29,8 +29,8 @@ INTERFACE zif_abapgit_log
                 WITH NON-UNIQUE DEFAULT KEY .
   TYPES:
     BEGIN OF ty_msg,
-      text TYPE string,
-      type TYPE sy-msgty,
+      text  TYPE string,
+      type  TYPE sy-msgty,
       level TYPE i,
     END OF ty_msg .
   TYPES:
@@ -93,13 +93,13 @@ INTERFACE zif_abapgit_log
       VALUE(rv_title) TYPE string .
   METHODS set_title
     IMPORTING
-      !iv_title TYPE csequence
+      !iv_title     TYPE csequence
     RETURNING
       VALUE(ri_log) TYPE REF TO zif_abapgit_log.
   METHODS merge_with
     IMPORTING
-      ii_log TYPE REF TO zif_abapgit_log
-      iv_min_level TYPE i DEFAULT 0
+      ii_log        TYPE REF TO zif_abapgit_log
+      iv_min_level  TYPE i DEFAULT 0
     RETURNING
       VALUE(ri_log) TYPE REF TO zif_abapgit_log.
   METHODS clone

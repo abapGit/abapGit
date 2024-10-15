@@ -41,10 +41,10 @@ CLASS zcl_abapgit_ajson_utilities DEFINITION
         zcx_abapgit_ajson_error .
     METHODS is_equal
       IMPORTING
-        !iv_json_a            TYPE string OPTIONAL
-        !iv_json_b            TYPE string OPTIONAL
-        !ii_json_a            TYPE REF TO zif_abapgit_ajson OPTIONAL
-        !ii_json_b            TYPE REF TO zif_abapgit_ajson OPTIONAL
+        !iv_json_a    TYPE string OPTIONAL
+        !iv_json_b    TYPE string OPTIONAL
+        !ii_json_a    TYPE REF TO zif_abapgit_ajson OPTIONAL
+        !ii_json_b    TYPE REF TO zif_abapgit_ajson OPTIONAL
       RETURNING
         VALUE(rv_yes) TYPE abap_bool
       RAISING

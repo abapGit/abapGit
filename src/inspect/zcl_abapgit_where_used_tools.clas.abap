@@ -30,11 +30,11 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
     " here: https://github.com/sbcgua/crossdeps
     METHODS select_external_usages
       IMPORTING
-        iv_package       TYPE tadir-devclass
+        iv_package            TYPE tadir-devclass
         iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
-        ir_package_scope TYPE ty_devc_range OPTIONAL
+        ir_package_scope      TYPE ty_devc_range OPTIONAL
       RETURNING
-        VALUE(rt_objs)   TYPE ty_dependency_tt
+        VALUE(rt_objs)        TYPE ty_dependency_tt
       RAISING
         zcx_abapgit_exception.
 

@@ -129,11 +129,11 @@ CLASS lcl_update_calculator DEFINITION
 
     CLASS-METHODS calculate_updated
       IMPORTING
-        it_updated_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
+        it_updated_files     TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
         it_current_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt
-        it_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt
+        it_local_files       TYPE zif_abapgit_definitions=>ty_files_item_tt
       RETURNING
-        VALUE(rt_checksums) TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+        VALUE(rt_checksums)  TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 
   PRIVATE SECTION.
 

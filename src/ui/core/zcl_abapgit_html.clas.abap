@@ -31,7 +31,7 @@ CLASS zcl_abapgit_html DEFINITION
         VALUE(rv_html) TYPE string .
     CLASS-METHODS parse_data_attr
       IMPORTING
-        iv_str         TYPE string OPTIONAL
+        iv_str              TYPE string OPTIONAL
       RETURNING
         VALUE(rs_data_attr) TYPE zif_abapgit_html=>ty_data_attr .
     CLASS-METHODS set_debug_mode
