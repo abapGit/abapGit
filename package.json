@@ -29,7 +29,7 @@
     "express": "^4.21.1",
     "@abaplint/transpiler-cli": "^2.10.20",
     "globals": "^15.11.0",
-    "abapmerge": "^0.16.5",
+    "abapmerge": "^0.16.6",
     "c8": "^10.1.2",
     "eslint": "^9.12.0"
   }
