@@ -37,9 +37,9 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         zcx_abapgit_exception.
     METHODS render_head
       IMPORTING
-        !ii_html       TYPE REF TO zif_abapgit_html
-        !iv_variant    TYPE sci_chkv
-        !iv_summary    TYPE string.
+        !ii_html    TYPE REF TO zif_abapgit_html
+        !iv_variant TYPE sci_chkv
+        !iv_summary TYPE string.
     METHODS render_detail
       IMPORTING
         !ii_html   TYPE REF TO zif_abapgit_html
@@ -54,7 +54,7 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         zcx_abapgit_exception.
     METHODS render_success
       IMPORTING
-        ii_html TYPE REF TO zif_abapgit_html
+        ii_html    TYPE REF TO zif_abapgit_html
         iv_message TYPE string.
     METHODS build_base_menu
       RETURNING
@@ -80,7 +80,7 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
 
     METHODS convert_result_to_view
       IMPORTING
-        it_result TYPE zif_abapgit_code_inspector=>ty_results
+        it_result      TYPE zif_abapgit_code_inspector=>ty_results
       RETURNING
         VALUE(rt_view) TYPE ty_view_tab.
     METHODS explain_include
@@ -116,10 +116,10 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         zcx_abapgit_exception.
     METHODS render_stat
       IMPORTING
-        !ii_html   TYPE REF TO zif_abapgit_html
-        !iv_count  TYPE i
-        !iv_type   TYPE string
-        !iv_title  TYPE string
+        !ii_html  TYPE REF TO zif_abapgit_html
+        !iv_count TYPE i
+        !iv_type  TYPE string
+        !iv_title TYPE string
       RAISING
         zcx_abapgit_exception.
 

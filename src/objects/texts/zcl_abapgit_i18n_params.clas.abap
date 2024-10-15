@@ -15,7 +15,7 @@ CLASS zcl_abapgit_i18n_params DEFINITION
         !iv_use_lxe            TYPE abap_bool DEFAULT abap_false
         !is_params             TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL
       RETURNING
-        VALUE(ro_instance) TYPE REF TO zcl_abapgit_i18n_params .
+        VALUE(ro_instance)     TYPE REF TO zcl_abapgit_i18n_params .
     METHODS constructor
       IMPORTING
         !iv_main_language      TYPE spras DEFAULT zif_abapgit_definitions=>c_english
@@ -32,7 +32,7 @@ CLASS zcl_abapgit_i18n_params DEFINITION
         VALUE(rt_language_filter) TYPE zif_abapgit_environment=>ty_system_language_filter .
     METHODS trim_saplang_list
       CHANGING
-        ct_sap_langs  TYPE zif_abapgit_definitions=>ty_sap_langu_tab
+        ct_sap_langs TYPE zif_abapgit_definitions=>ty_sap_langu_tab
       RAISING
         zcx_abapgit_exception.
     METHODS trim_saplang_keyed_table
@@ -50,7 +50,7 @@ CLASS zcl_abapgit_i18n_params DEFINITION
 
     CLASS-METHODS iso_langs_to_lang_filter
       IMPORTING
-        it_iso_filter      TYPE zif_abapgit_definitions=>ty_languages
+        it_iso_filter             TYPE zif_abapgit_definitions=>ty_languages
       RETURNING
         VALUE(rt_language_filter) TYPE zif_abapgit_environment=>ty_system_language_filter.
 

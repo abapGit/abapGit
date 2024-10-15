@@ -22,7 +22,7 @@ CLASS lcl_rename DEFINITION.
     METHODS constructor
       IMPORTING
         it_rename_map TYPE zif_abapgit_ajson_mapping~tty_rename_map
-        iv_rename_by TYPE i.
+        iv_rename_by  TYPE i.
 
   PROTECTED SECTION.
 
