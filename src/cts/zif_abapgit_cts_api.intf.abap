@@ -59,11 +59,12 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rv_messages_confirmed) TYPE abap_bool .
   METHODS create_transport_entries
     IMPORTING
-      !iv_transport TYPE trkorr
-      !it_table_ins TYPE ANY TABLE
-      !it_table_upd TYPE ANY TABLE
-      !it_table_del TYPE ANY TABLE
-      !iv_tabname   TYPE tabname
+      !iv_transport       TYPE trkorr
+      !it_table_ins       TYPE ANY TABLE OPTIONAL
+      !it_table_upd       TYPE ANY TABLE OPTIONAL
+      !it_table_del       TYPE ANY TABLE OPTIONAL
+      !iv_tabname         TYPE tabname
+      !iv_append_to_order TYPE abap_bool DEFAULT abap_false
     RAISING
       zcx_abapgit_exception .
   METHODS get_r3tr_obj_for_limu_obj
