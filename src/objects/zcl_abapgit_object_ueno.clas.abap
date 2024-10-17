@@ -26,8 +26,8 @@ CLASS zcl_abapgit_object_ueno DEFINITION
     TYPES BEGIN OF ty_docu.
     TYPES language TYPE dm40t-sprache.
     TYPES header   TYPE thead.
-    TYPES content TYPE xstring.
-    TYPES itf     TYPE tsftext.
+    TYPES content  TYPE xstring.
+    TYPES itf      TYPE tsftext.
     TYPES END OF ty_docu.
 
     TYPES ty_docu_lines TYPE STANDARD TABLE OF ty_docu WITH DEFAULT KEY.
@@ -124,8 +124,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
   METHOD build_text_name.
 
     TYPES BEGIN OF ty_text_name.
-    TYPES id TYPE c LENGTH 4.
-    TYPES entity TYPE c LENGTH 26.
+    TYPES id       TYPE c LENGTH 4.
+    TYPES entity   TYPE c LENGTH 26.
     TYPES modifier TYPE c LENGTH 2.
     TYPES END OF ty_text_name.
 

@@ -27,16 +27,16 @@ CLASS zcl_abapgit_gui_html_processor DEFINITION
 
     METHODS patch_html
       IMPORTING
-        iv_html TYPE string
+        iv_html     TYPE string
       EXPORTING
-        ev_html TYPE string
+        ev_html     TYPE string
         et_css_urls TYPE string_table
       RAISING
         zcx_abapgit_exception.
 
     METHODS is_preserved
       IMPORTING
-        !iv_css_url TYPE string
+        !iv_css_url   TYPE string
       RETURNING
         VALUE(rv_yes) TYPE abap_bool.
 

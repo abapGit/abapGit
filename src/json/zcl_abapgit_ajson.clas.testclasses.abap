@@ -65,7 +65,7 @@ CLASS ltcl_parser_test DEFINITION FINAL
 
     CLASS-METHODS sample_json
       IMPORTING
-        iv_separator TYPE string OPTIONAL
+        iv_separator   TYPE string OPTIONAL
       RETURNING
         VALUE(rv_json) TYPE string.
 
@@ -1395,17 +1395,17 @@ CLASS ltcl_json_to_abap DEFINITION
       tty_struc_sorted TYPE SORTED TABLE OF ty_struc WITH UNIQUE KEY a,
       tty_struc_hashed TYPE HASHED TABLE OF ty_struc WITH UNIQUE KEY a,
       BEGIN OF ty_complex,
-        str   TYPE string,
-        int   TYPE i,
-        float TYPE f,
-        bool  TYPE abap_bool,
-        obj   TYPE ty_struc,
-        tab   TYPE tty_struc,
+        str        TYPE string,
+        int        TYPE i,
+        float      TYPE f,
+        bool       TYPE abap_bool,
+        obj        TYPE ty_struc,
+        tab        TYPE tty_struc,
         tab_plain  TYPE string_table,
         tab_hashed TYPE tty_struc_hashed,
-        oref  TYPE REF TO object,
-        date1 TYPE d,
-        date2 TYPE d,
+        oref       TYPE REF TO object,
+        date1      TYPE d,
+        date2      TYPE d,
         timestamp1 TYPE timestamp,
         timestamp2 TYPE timestamp,
         timestamp3 TYPE timestamp,
@@ -2416,9 +2416,9 @@ CLASS ltcl_writer_test DEFINITION FINAL
 
     METHODS set_with_type_slice
       IMPORTING
-        io_json_in TYPE REF TO zcl_abapgit_ajson
+        io_json_in  TYPE REF TO zcl_abapgit_ajson
         io_json_out TYPE REF TO zif_abapgit_ajson
-        iv_path TYPE string
+        iv_path     TYPE string
       RAISING
         zcx_abapgit_ajson_error.
 
@@ -3724,22 +3724,22 @@ CLASS ltcl_integrated DEFINITION
         col TYPE i,
       END OF ty_loc,
       BEGIN OF ty_issue,
-        message TYPE string,
-        key TYPE string,
+        message  TYPE string,
+        key      TYPE string,
         filename TYPE string,
-        start TYPE ty_loc,
-        end TYPE ty_loc,
+        start    TYPE ty_loc,
+        end      TYPE ty_loc,
       END OF ty_issue,
       tt_issues TYPE STANDARD TABLE OF ty_issue WITH KEY message key,
       BEGIN OF ty_target,
-        string TYPE string,
-        number TYPE i,
-        float TYPE f,
+        string  TYPE string,
+        number  TYPE i,
+        float   TYPE f,
         boolean TYPE abap_bool,
-        false TYPE abap_bool,
-        null TYPE string,
-        date TYPE string, " ??? TODO
-        issues TYPE tt_issues,
+        false   TYPE abap_bool,
+        null    TYPE string,
+        date    TYPE string, " ??? TODO
+        issues  TYPE tt_issues,
       END OF ty_target.
 
     METHODS reader FOR TESTING RAISING zcx_abapgit_ajson_error.
