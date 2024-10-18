@@ -66,7 +66,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_bckg IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -210,9 +210,13 @@ CLASS zcl_abapgit_gui_page_sett_bckg IMPLEMENTATION.
 
       " skip invalid values, from old background logic
       IF ls_per-method <> 'push' AND ls_per-method <> 'pull' AND ls_per-method <> 'nothing'.
-        CALL METHOD (ls_per-method)=>zif_abapgit_background~get_settings
-          CHANGING
-            ct_settings = lt_settings.
+        TRY.
+            CALL METHOD (ls_per-method)=>zif_abapgit_background~get_settings
+              CHANGING
+                ct_settings = lt_settings.
+          CATCH cx_sy_dyn_call_illegal_class.
+            CLEAR lt_settings.
+        ENDTRY.
       ENDIF.
 
       LOOP AT lt_settings INTO ls_settings.
