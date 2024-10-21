@@ -171,10 +171,9 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
     INSERT ls_key INTO TABLE lt_keys.
 
     zcl_abapgit_factory=>get_cts_api( )->create_transport_entries(
-      iv_transport       = iv_transport
-      it_table_ins       = lt_keys
-      iv_tabname         = 'TDDAT'
-      iv_append_to_order = abap_true ).
+      iv_transport = iv_transport
+      it_table_ins = lt_keys
+      iv_tabname   = 'TDDAT' ).
 
   ENDMETHOD.
 
