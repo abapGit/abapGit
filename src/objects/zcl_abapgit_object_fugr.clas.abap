@@ -772,6 +772,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     DATA lv_namespace TYPE rs38l-namespace.
     DATA lv_function_group TYPE rs38l-area.
     DATA lv_include TYPE rs38l-include.
+    DATA ls_item_key TYPE zif_abapgit_definitions=>ty_item.
 
     rv_belongs_to_other_fugr = abap_false.
     IF iv_include(1) = 'L' OR iv_include+1 CS '/L'.
@@ -789,14 +790,22 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       IF lv_function_group(1) = 'X'.    " "EXIT"-function-module
         ls_tadir-object = 'FUGS'.
       ENDIF.
+
       IF sy-subrc = 0.
+
         CONCATENATE lv_namespace lv_function_group INTO ls_tadir-obj_name.
+        ls_item_key-obj_type = ls_tadir-object.
+        ls_item_key-obj_name = ls_tadir-obj_name.
+
         " compare complete tadir key to distinguish between regular and exit function groups
-        IF ls_tadir-obj_name <> ms_item-obj_name OR ls_tadir-object <> ms_item-obj_type.
+        IF ( ls_tadir-obj_name <> ms_item-obj_name OR ls_tadir-object <> ms_item-obj_type ) AND
+           zcl_abapgit_objects=>exists( ls_item_key ) = abap_true.
           rv_belongs_to_other_fugr = abap_true.
         ENDIF.
       ENDIF.
+
     ENDIF.
+
   ENDMETHOD.
 
 
