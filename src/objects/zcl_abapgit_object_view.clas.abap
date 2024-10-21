@@ -5,18 +5,41 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PROTECTED SECTION.
     "! get additional data like table authorization group
     "! @parameter iv_name | name of the view
-    METHODS read_extras IMPORTING iv_name               TYPE ddobjname
-                        RETURNING VALUE(rs_tabl_extras) TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
+    METHODS read_extras
+      IMPORTING
+        iv_name               TYPE ddobjname
+      RETURNING
+        VALUE(rs_tabl_extras) TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
 
     "! Update additional data
     "! @parameter iv_name | name of the table
+    "! @parameter iv_transport | transport request
     "! @parameter is_tabl_extras | additional view data
-    METHODS update_extras IMPORTING iv_name        TYPE ddobjname
-                                    is_tabl_extras TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
+    METHODS update_extras
+      IMPORTING
+        iv_name        TYPE ddobjname
+        iv_transport   TYPE trkorr
+        is_tabl_extras TYPE zif_abapgit_object_tabl=>ty_tabl_extras
+      RAISING
+        zcx_abapgit_exception.
 
     "! Delete additional data
     "! @parameter iv_name | name of the view
-    METHODS delete_extras IMPORTING iv_name TYPE ddobjname.
+    "! @parameter iv_transport | transport request
+    METHODS delete_extras
+      IMPORTING
+        iv_name      TYPE ddobjname
+        iv_transport TYPE trkorr
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS insert_transport
+      IMPORTING
+        iv_name      TYPE ddobjname
+        iv_transport TYPE trkorr
+      RAISING
+        zcx_abapgit_exception.
+
   PRIVATE SECTION.
     TYPES: ty_dd26v TYPE STANDARD TABLE OF dd26v
                           WITH NON-UNIQUE DEFAULT KEY,
@@ -66,12 +89,16 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_object_view IMPLEMENTATION.
 
 
   METHOD delete_extras.
 
     DELETE FROM tddat WHERE tabname = iv_name.
+
+    insert_transport(
+      iv_name      = iv_name
+      iv_transport = iv_transport ).
 
   ENDMETHOD.
 
@@ -126,6 +153,27 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
       ENDIF.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD insert_transport.
+
+    DATA:
+      ls_key  TYPE tddat,
+      lt_keys TYPE TABLE OF tddat.
+
+    IF iv_transport IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    ls_key-tabname = iv_name.
+    INSERT ls_key INTO TABLE lt_keys.
+
+    zcl_abapgit_factory=>get_cts_api( )->create_transport_entries(
+      iv_transport = iv_transport
+      it_table_ins = lt_keys
+      iv_tabname   = 'TDDAT' ).
 
   ENDMETHOD.
 
@@ -238,9 +286,15 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
   METHOD update_extras.
 
     IF is_tabl_extras-tddat IS INITIAL.
-      delete_extras( iv_name ).
+      delete_extras(
+        iv_name      = iv_name
+        iv_transport = iv_transport ).
     ELSE.
       MODIFY tddat FROM is_tabl_extras-tddat.
+
+      insert_transport(
+        iv_name      = iv_name
+        iv_transport = iv_transport ).
     ENDIF.
 
   ENDMETHOD.
@@ -269,7 +323,10 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
 
     lv_objname = ms_item-obj_name.
     delete_ddic( 'V' ).
-    delete_extras( lv_objname ).
+
+    delete_extras(
+      iv_name      = lv_objname
+      iv_transport = iv_transport ).
 
   ENDMETHOD.
 
@@ -350,6 +407,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
                            iv_longtext_id = c_longtext_id_view ).
 
     update_extras( iv_name        = lv_name
+                   iv_transport   = iv_transport
                    is_tabl_extras = ls_extras ).
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
