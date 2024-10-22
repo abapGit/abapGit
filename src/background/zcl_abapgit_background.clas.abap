@@ -61,7 +61,6 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
 
     CONSTANTS: BEGIN OF c_name,
                  interface TYPE seoclskey VALUE 'ZIF_ABAPGIT_BACKGROUND',
-                 report    TYPE syrepid VALUE 'ZABAPGIT_STANDALONE',
                END OF c_name.
 
     DATA: ls_method          LIKE LINE OF rt_methods,
@@ -77,18 +76,18 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
                    <ls_method>      LIKE LINE OF rt_methods.
 
 
-    IF sy-repid = c_name-report.
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
       " Assume the standalone version runs.
       CALL FUNCTION 'WB_TREE_GET_OBJECTS'
         EXPORTING
           include = ' '
           otype   = 'L'
-          program = c_name-report
+          program = sy-repid
         TABLES
           olist   = lt_local_classes.
 
       LOOP AT lt_local_classes ASSIGNING <ls_local_class>.
-        lv_classname = |\\PROGRAM={ c_name-report }\\CLASS={ <ls_local_class>-name }|.
+        lv_classname = |\\PROGRAM={ sy-repid }\\CLASS={ <ls_local_class>-name }|.
         cl_abap_typedescr=>describe_by_name(
          EXPORTING
            p_name         = lv_classname
