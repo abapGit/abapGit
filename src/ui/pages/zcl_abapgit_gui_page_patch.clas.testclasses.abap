@@ -1,5 +1,3 @@
-*"* use this source file for your ABAP unit test classes
-
 CLASS ltcl_get_patch_data DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
