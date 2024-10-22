@@ -183,7 +183,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
                 it_settings = <ls_list>-settings ).
             CATCH cx_sy_create_object_error.
               li_log->add_warning( |{ <ls_list>-method } could not be executed,|
-                && | as it is not accessible (local/global class).| ).
+                                 & | as it is not accessible (local/global class).| ).
           ENDTRY.
 
           " Decrease memory usage for repository already processed (but keep log)
