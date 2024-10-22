@@ -26,6 +26,7 @@ CLASS zcl_abapgit_background DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS c_enq_type TYPE c LENGTH 12 VALUE 'BACKGROUND'.
+    CONSTANTS c_interface TYPE seoclskey VALUE 'ZIF_ABAPGIT_BACKGROUND'.
 ENDCLASS.
 
 
@@ -59,10 +60,6 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
 
   METHOD list_methods.
 
-    CONSTANTS: BEGIN OF c_name,
-                 interface TYPE seoclskey VALUE 'ZIF_ABAPGIT_BACKGROUND',
-               END OF c_name.
-
     DATA: ls_method          LIKE LINE OF rt_methods,
           lt_implementing    TYPE seor_implementing_keys,
           ls_implementing    LIKE LINE OF lt_implementing,
@@ -74,7 +71,6 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_local_class> LIKE LINE OF lt_local_classes,
                    <ls_method>      LIKE LINE OF rt_methods.
-
 
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
       " Assume the standalone version runs.
@@ -101,7 +97,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
           lr_typedescr_class ?= lr_typedescr.
           IF lr_typedescr_class IS BOUND.
             lt_interf = lr_typedescr_class->interfaces.
-            READ TABLE lt_interf WITH TABLE KEY name = c_name-interface TRANSPORTING NO FIELDS.
+            READ TABLE lt_interf WITH TABLE KEY name = c_interface TRANSPORTING NO FIELDS.
             IF sy-subrc = 0.
               ls_method-class = <ls_local_class>-name.
               INSERT ls_method INTO TABLE rt_methods.
@@ -114,7 +110,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
       " Assume the developer version runs.
       CALL FUNCTION 'SEO_INTERFACE_IMPLEM_GET_ALL'
         EXPORTING
-          intkey       = c_name-interface
+          intkey       = c_interface
         IMPORTING
           impkeys      = lt_implementing
         EXCEPTIONS
