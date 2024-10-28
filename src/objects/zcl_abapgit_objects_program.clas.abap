@@ -359,6 +359,9 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         it_flow = ls_dynpro-flow_logic
         it_spaces = ls_dynpro-spaces ).
 
+      IF ls_dynpro-flow_logic IS INITIAL.
+        ls_dynpro-flow_logic = mo_files->read_abap( iv_extra = 'screen_' && ls_dynpro-header-screen ).
+      ENDIF.
 
       LOOP AT ls_dynpro-fields ASSIGNING <ls_field>.
 * if the DDIC element has a PARAMETER_ID and the flag "from_dict" is active
@@ -913,8 +916,12 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       ENDLOOP.
 
       APPEND INITIAL LINE TO rt_dynpro ASSIGNING <ls_dynpro>.
-      <ls_dynpro>-header     = ls_header.
-      <ls_dynpro>-flow_logic = lt_flow_logic.
+      <ls_dynpro>-header = ls_header.
+
+      " Store flow logic as separate ABAP files instead of XML
+      mo_files->add_abap(
+        iv_extra = 'screen_' && ls_header-screen
+        it_abap  = lt_flow_logic ).
 
       READ TABLE lt_fieldlist_int TRANSPORTING NO FIELDS WITH KEY fill = 'X'.
       IF ls_header-type = 'N' AND sy-subrc = 0.
