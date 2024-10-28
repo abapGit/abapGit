@@ -1,4 +1,3 @@
-*"* use this source file for your ABAP unit test classes
 CLASS ltcl_apack_manifest_reader DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
   PRIVATE SECTION.
     METHODS:
