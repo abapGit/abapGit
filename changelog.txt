@@ -12,6 +12,7 @@ Legend
 -------------------
 
 ! PROG: Store flow logic as separate ABAP files (#7066)
+! WDYN: Store controller code as separate ABAP files (#7069)
 + CLIF: Add missing translations for classes and interfaces (#6963)
 + UIAD: Add support for Launchpad App Descriptor Item (#6969)
 + BGQC: Add support for Background Processing Context (#6974)
