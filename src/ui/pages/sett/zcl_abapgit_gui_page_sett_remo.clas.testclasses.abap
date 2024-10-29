@@ -1,5 +1,3 @@
-*"* use this source file for your ABAP unit test classes
-
 CLASS ltd_git_transport DEFINITION FINAL FOR TESTING.
 
   PUBLIC SECTION.

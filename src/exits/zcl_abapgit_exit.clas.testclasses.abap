@@ -1,5 +1,3 @@
-*"* use this source file for your ABAP unit test classes
-
 CLASS ltcl_test DEFINITION DEFERRED.
 CLASS zcl_abapgit_exit DEFINITION LOCAL FRIENDS ltcl_test.
 
