@@ -122,7 +122,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
 
     ii_node->set_value( '' ).
     LOOP AT lt_abap INTO ls_abap.
-      li_node = li_xml_doc->create_element( name = 'item' ).
+      li_node = li_xml_doc->create_element( 'item' ).
       li_node->set_value( |{ ls_abap-line }| ).
       ii_node->append_child( li_node ).
     ENDLOOP.
@@ -613,7 +613,6 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
 
     DATA: lo_sf       TYPE REF TO cl_ssf_fb_smart_form,
           lv_name     TYPE string,
-          lv_code     TYPE string,
           li_node     TYPE REF TO if_ixml_node,
           li_element  TYPE REF TO if_ixml_element,
           li_iterator TYPE REF TO if_ixml_node_iterator,
