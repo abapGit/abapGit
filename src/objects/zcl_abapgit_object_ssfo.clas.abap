@@ -349,15 +349,15 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 * see function module FB_UPLOAD_FORM
 
-    DATA: li_node                TYPE REF TO if_ixml_node,
-          lv_formname            TYPE tdsfname,
-          lv_name                TYPE string,
-          li_iterator            TYPE REF TO if_ixml_node_iterator,
-          lo_sf                  TYPE REF TO cl_ssf_fb_smart_form,
-          lo_res                 TYPE REF TO cl_ssf_fb_smart_form,
-          lx_error               TYPE REF TO cx_ssf_fb,
-          lv_text                TYPE string,
-          lv_within_code_section TYPE abap_bool.
+    DATA:
+      li_node     TYPE REF TO if_ixml_node,
+      lv_formname TYPE tdsfname,
+      lv_name     TYPE string,
+      li_iterator TYPE REF TO if_ixml_node_iterator,
+      lo_sf       TYPE REF TO cl_ssf_fb_smart_form,
+      lo_res      TYPE REF TO cl_ssf_fb_smart_form,
+      lx_error    TYPE REF TO cx_ssf_fb,
+      lv_text     TYPE string.
 
     CREATE OBJECT lo_sf.
 
