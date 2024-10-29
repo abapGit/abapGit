@@ -48,7 +48,8 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA lt_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
 
-    INSERT '7bdd8f9f4c6bb0ece461b78c7b559957fad6c3ae' INTO TABLE lt_sha1.
+* todo, given the sha1, this test might fail after a year?
+    INSERT 'e83a31ebafde4e8e7e80ca36662e42e8f20895c5' INTO TABLE lt_sha1.
 
     lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->commits_last_year(
       iv_url  = 'https://github.com/abapGit/abapGit.git'
