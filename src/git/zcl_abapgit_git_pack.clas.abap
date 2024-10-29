@@ -178,7 +178,11 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
     lv_data = iv_data.
 
 * header
-    IF NOT xstrlen( lv_data ) > 4 OR lv_data(4) <> c_pack_start.
+    IF xstrlen( lv_data ) < 4.
+      zcx_abapgit_exception=>raise( |Unexpected pack header, short reply| ).
+    ENDIF.
+
+    IF lv_data(4) <> c_pack_start.
       zcx_abapgit_exception=>raise( |Unexpected pack header, { lv_data(4) }| ).
     ENDIF.
     lv_data = lv_data+4.
