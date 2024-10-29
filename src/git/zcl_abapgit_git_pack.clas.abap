@@ -179,13 +179,13 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
 * header
     IF NOT xstrlen( lv_data ) > 4 OR lv_data(4) <> c_pack_start.
-      zcx_abapgit_exception=>raise( |Unexpected pack header| ).
+      zcx_abapgit_exception=>raise( |Unexpected pack header, { lv_data(4) }| ).
     ENDIF.
     lv_data = lv_data+4.
 
 * version
     IF lv_data(4) <> c_version.
-      zcx_abapgit_exception=>raise( |Version not supported| ).
+      zcx_abapgit_exception=>raise( |Version not supported, { lv_data(4) }| ).
     ENDIF.
     lv_data = lv_data+4.
 
