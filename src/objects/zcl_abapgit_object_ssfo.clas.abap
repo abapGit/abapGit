@@ -15,7 +15,6 @@ CLASS zcl_abapgit_object_ssfo DEFINITION
       ty_string_range TYPE RANGE OF string .
 
     CLASS-DATA gt_range_node_codes TYPE ty_string_range .
-    CONSTANTS c_attrib_abapgit_leadig_spaces TYPE string VALUE 'abapgit-leadig-spaces'.
     CONSTANTS c_prefix TYPE string VALUE 'File:'.
 
     METHODS fix_ids
@@ -26,25 +25,9 @@ CLASS zcl_abapgit_object_ssfo DEFINITION
         !ii_xml_doc TYPE REF TO if_ixml_document
       RAISING
         zcx_abapgit_exception .
-    METHODS handle_attrib_leading_spaces
-      IMPORTING
-        !iv_name                TYPE string
-        !ii_node                TYPE REF TO if_ixml_node
-      CHANGING
-        !cv_within_code_section TYPE abap_bool .
     METHODS get_range_node_codes
       RETURNING
         VALUE(rt_range_node_codes) TYPE ty_string_range .
-    METHODS code_item_section_handling
-      IMPORTING
-        !iv_name                TYPE string
-        !ii_node                TYPE REF TO if_ixml_node
-      EXPORTING
-        !ei_code_item_element   TYPE REF TO if_ixml_element
-      CHANGING
-        !cv_within_code_section TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
     METHODS deserialize_sources
       IMPORTING
         !ii_node TYPE REF TO if_ixml_node
@@ -67,33 +50,6 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
-
-
-  METHOD code_item_section_handling.
-    CONSTANTS: lc_node_item TYPE string VALUE 'item'.
-    CONSTANTS: lc_node_text TYPE string VALUE '#text'.
-
-    IF iv_name IN get_range_node_codes( ).
-      cv_within_code_section = abap_true.
-    ENDIF.
-
-    IF cv_within_code_section = abap_true.
-      IF iv_name = lc_node_item.
-        TRY.
-            ei_code_item_element ?= ii_node.
-            RETURN.
-          CATCH cx_sy_move_cast_error ##NO_HANDLER.
-        ENDTRY.
-
-      ELSEIF iv_name NOT IN get_range_node_codes( ) AND
-             iv_name <> lc_node_text.
-        cv_within_code_section = abap_false.
-      ENDIF.
-    ENDIF.
-
-    RAISE EXCEPTION TYPE zcx_abapgit_exception.
-
-  ENDMETHOD.
 
 
   METHOD deserialize_sources.
@@ -250,32 +206,6 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
     ENDIF.
 
     rt_range_node_codes = gt_range_node_codes.
-
-  ENDMETHOD.
-
-
-  METHOD handle_attrib_leading_spaces.
-
-    DATA li_element        TYPE REF TO if_ixml_element.
-    DATA lv_leading_spaces TYPE string.
-    DATA lv_coding_line    TYPE string.
-
-    TRY.
-        code_item_section_handling( EXPORTING iv_name                = iv_name
-                                              ii_node                = ii_node
-                                    IMPORTING ei_code_item_element   = li_element
-                                    CHANGING  cv_within_code_section = cv_within_code_section ).
-
-* for downwards compatibility, this code can be removed sometime in the future
-        lv_leading_spaces = li_element->get_attribute_ns( c_attrib_abapgit_leadig_spaces ).
-
-        lv_coding_line = li_element->get_value( ).
-        IF strlen( lv_coding_line ) >= 1 AND lv_coding_line(1) <> | |.
-          SHIFT lv_coding_line RIGHT BY lv_leading_spaces PLACES.
-          li_element->set_value( lv_coding_line ).
-        ENDIF.
-      CATCH zcx_abapgit_exception ##NO_HANDLER.
-    ENDTRY.
 
   ENDMETHOD.
 
@@ -445,10 +375,6 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
           li_node->set_value( sy-uname && '' ).
 
       ENDCASE.
-
-      handle_attrib_leading_spaces( EXPORTING iv_name                = lv_name
-                                              ii_node                = li_node
-                                    CHANGING  cv_within_code_section = lv_within_code_section ).
 
       IF lv_name IN get_range_node_codes( ) AND li_node->get_namespace_prefix( ) IS INITIAL.
         deserialize_sources( li_node ).
