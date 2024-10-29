@@ -8,11 +8,12 @@ Legend
 + : added
 - : removed
 
-2024-10-29 v1.130.0
+2024-10-39 v1.130.0
 -------------------
 
 ! PROG: Store flow logic as separate ABAP files (#7066)
 ! WDYN: Store controller code as separate ABAP files (#7069)
+! SSFO: Store smartform code as separate ABAP files (#7071)
 + CLIF: Add missing translations for classes and interfaces (#6963)
 + UIAD: Add support for Launchpad App Descriptor Item (#6969)
 + BGQC: Add support for Background Processing Context (#6974)
