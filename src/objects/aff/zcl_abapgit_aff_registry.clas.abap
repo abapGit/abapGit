@@ -46,6 +46,7 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
 
 
   METHOD initialize_registry_table.
+    register( 'APLO' ).
     register( 'BGQC' ).
     register( 'CDBO' ).
     register( 'CHKC' ).
