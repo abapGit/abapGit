@@ -85,6 +85,10 @@ CLASS ltcl_parser_test DEFINITION FINAL
     METHODS parse_date FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS parse_bare_values FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS parse_error FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS parse_input_xstring FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS parse_input_string FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS parse_input_string_table FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS parse_input_error FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS duplicate_key FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS non_json FOR TESTING RAISING zcx_abapgit_ajson_error.
 
@@ -246,6 +250,78 @@ CLASS ltcl_parser_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lt_act
       exp = mo_nodes->mt_nodes ).
+  ENDMETHOD.
+
+  METHOD parse_input_xstring.
+    mo_nodes->add( '                 |         |object |                        |  |1' ).
+    mo_nodes->add( '/                |string   |str    |abc                     |  |0' ).
+
+    DATA lt_act TYPE zif_abapgit_ajson_types=>ty_nodes_tt.
+    DATA lv_xstr TYPE xstring.
+
+    lv_xstr = '7B22737472696E67223A2022616263227D0A'.
+    lt_act = mo_cut->parse( lv_xstr ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = mo_nodes->mt_nodes ).
+  ENDMETHOD.
+
+  METHOD parse_input_string.
+    mo_nodes->add( '                 |         |object |                        |  |1' ).
+    mo_nodes->add( '/                |string   |str    |abc                     |  |0' ).
+
+    DATA lt_act TYPE zif_abapgit_ajson_types=>ty_nodes_tt.
+    DATA lv_str TYPE string.
+
+    lv_str = `{"string": "abc"}`.
+    lt_act = mo_cut->parse( lv_str ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = mo_nodes->mt_nodes ).
+  ENDMETHOD.
+
+  METHOD parse_input_string_table.
+    mo_nodes->add( '                 |         |object |                        |  |2' ).
+    mo_nodes->add( '/                |string   |str    |abc                     |  |0' ).
+    mo_nodes->add( '/                |number   |num    |123                     |  |0' ).
+
+    DATA lt_act TYPE zif_abapgit_ajson_types=>ty_nodes_tt.
+    DATA lt_json TYPE string_table.
+
+    INSERT `{` INTO TABLE lt_json.
+    INSERT `"string": "abc",` INTO TABLE lt_json.
+    INSERT `"number": 123` INTO TABLE lt_json.
+    INSERT `}` INTO TABLE lt_json.
+
+    lt_act = mo_cut->parse( lt_json ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = mo_nodes->mt_nodes ).
+  ENDMETHOD.
+
+  METHOD parse_input_error.
+
+    DATA lo_cut TYPE REF TO lcl_json_parser.
+    DATA lx TYPE REF TO zcx_abapgit_ajson_error.
+    DATA lv_numc TYPE n LENGTH 10.
+    DATA lt_hashed TYPE HASHED TABLE OF string WITH UNIQUE DEFAULT KEY.
+
+    CREATE OBJECT lo_cut.
+
+    TRY.
+        lo_cut->parse( lv_numc ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_ajson_error INTO lx.
+        cl_abap_unit_assert=>assert_not_initial( lx ).
+    ENDTRY.
+
+    TRY.
+        lo_cut->parse( lt_hashed ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_ajson_error INTO lx.
+        cl_abap_unit_assert=>assert_not_initial( lx ).
+    ENDTRY.
+
   ENDMETHOD.
 
   METHOD sample_json.
@@ -2401,6 +2477,7 @@ CLASS ltcl_writer_test DEFINITION FINAL
     METHODS set_bool_tab FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_str FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_int FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_number FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_date FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_timestamp FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS read_only FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -3237,6 +3314,27 @@ CLASS ltcl_writer_test IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->mt_json_tree
+      exp = lo_nodes_exp->sorted( ) ).
+
+  ENDMETHOD.
+
+  METHOD set_number.
+
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+    DATA li_json TYPE REF TO zif_abapgit_ajson.
+    DATA lv_p TYPE p LENGTH 5 DECIMALS 2 VALUE '123.45'.
+
+    li_json = zcl_abapgit_ajson=>create_empty( ).
+    CREATE OBJECT lo_nodes_exp.
+    lo_nodes_exp->add( '        |      |object |         ||1' ).
+    lo_nodes_exp->add( '/       |a     |num    |123.45   ||0' ).
+
+    li_json->set(
+      iv_path = '/a'
+      iv_val  = lv_p ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = li_json->mt_json_tree
       exp = lo_nodes_exp->sorted( ) ).
 
   ENDMETHOD.
