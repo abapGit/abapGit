@@ -1,4 +1,3 @@
-*"* use this source file for your ABAP unit test classes
 CLASS ltcl_normalize_program_name DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
