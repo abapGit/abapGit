@@ -55,7 +55,9 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
 
     METHODS create_aff_setting_deserialize FINAL
       RETURNING
-        VALUE(ro_settings_deserialize) TYPE REF TO object.
+        VALUE(ro_settings_deserialize) TYPE REF TO object
+      RAISING
+        zcx_abapgit_exception.
 
   PRIVATE SECTION.
     METHODS is_file_empty
@@ -107,6 +109,29 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Object type { is_item-obj_type } is not supported by this system| ).
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD create_aff_setting_deserialize.
+    IF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version AND
+       ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
+      TRY.
+          CREATE OBJECT ro_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
+            EXPORTING
+              version               = 'A'
+              language              = mv_language
+              user                  = sy-uname
+              abap_language_version = ms_item-abap_language_version.
+        CATCH cx_root.
+          zcx_abapgit_exception=>raise( |System does not supported ABAP language version for AFF| ).
+      ENDTRY.
+    ELSE.
+      CREATE OBJECT ro_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
+        EXPORTING
+          version               = 'A'
+          language              = mv_language
+          user                  = sy-uname.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -409,25 +434,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           ix_exc  = lx_exception
           is_item = ms_item ).
     ENDTRY.
-  ENDMETHOD.
-
-
-  METHOD create_aff_setting_deserialize.
-    IF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version AND
-       ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
-      CREATE OBJECT ro_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
-        EXPORTING
-          version               = 'A'
-          language              = mv_language
-          user                  = sy-uname
-          abap_language_version = ms_item-abap_language_version.
-    ELSE.
-      CREATE OBJECT ro_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
-        EXPORTING
-          version               = 'A'
-          language              = mv_language
-          user                  = sy-uname.
-    ENDIF.
   ENDMETHOD.
 
 
