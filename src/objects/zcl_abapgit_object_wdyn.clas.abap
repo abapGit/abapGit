@@ -59,6 +59,12 @@ CLASS zcl_abapgit_object_wdyn DEFINITION
         IMPORTING is_view         TYPE wdy_md_view_meta_data
         RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
         RAISING   zcx_abapgit_exception,
+      deserialize_sources
+        IMPORTING ii_xml TYPE REF TO zif_abapgit_xml_input
+        RAISING   zcx_abapgit_exception,
+      serialize_sources
+        IMPORTING ii_xml TYPE REF TO zif_abapgit_xml_output
+        RAISING   zcx_abapgit_exception,
       add_fm_param_exporting
         IMPORTING iv_name  TYPE string
                   ig_value TYPE any
@@ -79,7 +85,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
+CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
 
 
   METHOD add_fm_exception.
@@ -378,6 +384,61 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_sources.
+
+    DATA:
+      lv_extra   TYPE string,
+      lt_extra   TYPE string_table,
+      ls_abap    TYPE abaptxt255,
+      lt_abap    TYPE abaptxt255_tab,
+      lv_line    TYPE wdy_ctlr_compo_source_vrs-line_number,
+      lv_cmpname TYPE wdy_ctlr_compo_source_vrs-cmpname,
+      ls_sources LIKE LINE OF mt_sources.
+
+    " Old format
+    ii_xml->read( EXPORTING iv_name  = 'SOURCES'
+                  CHANGING cg_data = mt_sources ).
+
+    IF mt_sources IS NOT INITIAL.
+      RETURN.
+    ENDIF.
+
+    " New format
+    ii_xml->read( EXPORTING iv_name  = 'FILES'
+                  CHANGING cg_data = lt_extra ).
+
+    LOOP AT lt_extra INTO lv_extra.
+      lv_line = 0.
+      lt_abap = mo_files->read_abap( iv_extra = lv_extra ).
+      LOOP AT lt_abap INTO ls_abap.
+        " Start of method
+        FIND REGEX '\s*method\s+(.*)\s*\.' IN ls_abap-line IGNORING CASE SUBMATCHES lv_cmpname.
+        IF sy-subrc = 0.
+          lv_line = 1.
+        ENDIF.
+
+        IF lv_cmpname IS NOT INITIAL AND lv_line > 0.
+          CLEAR ls_sources.
+          ls_sources-component_name  = ms_item-obj_name.
+          ls_sources-controller_name = to_upper( lv_extra ).
+          ls_sources-cmpname         = to_upper( lv_cmpname ).
+          ls_sources-line_number     = lv_line.
+          ls_sources-source_line     = ls_abap-line.
+          INSERT ls_sources INTO TABLE mt_sources.
+          lv_line = lv_line + 1.
+        ENDIF.
+
+        " End of method
+        FIND REGEX '\s*endmethod\s*\.' IN ls_abap-line IGNORING CASE.
+        IF sy-subrc = 0.
+          lv_line = 0.
+        ENDIF.
+      ENDLOOP.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -786,6 +847,47 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD serialize_sources.
+
+    DATA:
+      lv_extra TYPE string,
+      lt_extra TYPE string_table,
+      ls_abap  TYPE abaptxt255,
+      lt_abap  TYPE abaptxt255_tab.
+
+    FIELD-SYMBOLS <ls_sources> LIKE LINE OF mt_sources.
+
+    " Store code as separate ABAP files instead of XML (assumes sorted data, see "read")
+    LOOP AT mt_sources ASSIGNING <ls_sources>.
+      AT NEW controller_name.
+        CLEAR lt_abap.
+        lv_extra = to_lower( <ls_sources>-controller_name ).
+      ENDAT.
+
+      ls_abap-line = <ls_sources>-source_line.
+      INSERT ls_abap INTO TABLE lt_abap.
+
+      AT END OF cmpname.
+        CLEAR ls_abap.
+        INSERT ls_abap INTO TABLE lt_abap.
+      ENDAT.
+      AT END OF controller_name.
+        IF lt_abap IS NOT INITIAL.
+          mo_files->add_abap(
+            iv_extra = lv_extra
+            it_abap  = lt_abap ).
+          INSERT lv_extra INTO TABLE lt_extra.
+        ENDIF.
+      ENDAT.
+    ENDLOOP.
+
+    ii_xml->add(
+      iv_name = 'FILES'
+      ig_data = lt_extra ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
     SELECT SINGLE changedby FROM wdy_component INTO rv_user
       WHERE component_name = ms_item-obj_name AND version = 'A'.
@@ -831,8 +933,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
                   CHANGING cg_data = ls_component ).
     io_xml->read( EXPORTING iv_name  = 'COMPONENTS'
                   CHANGING cg_data = mt_components ).
-    io_xml->read( EXPORTING iv_name  = 'SOURCES'
-                  CHANGING cg_data = mt_sources ).
+
+    deserialize_sources( io_xml ).
 
     ls_component-comp_metadata-definition-author = sy-uname.
     ls_component-comp_metadata-definition-createdon = sy-datum.
@@ -944,8 +1046,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
                  ig_data = ls_component ).
     io_xml->add( ig_data = mt_components
                  iv_name = 'COMPONENTS' ).
-    io_xml->add( ig_data = mt_sources
-                 iv_name = 'SOURCES' ).
+
+    serialize_sources( io_xml ).
 
     READ TABLE ls_component-comp_metadata-descriptions INTO ls_description INDEX 1.
     IF sy-subrc = 0.
