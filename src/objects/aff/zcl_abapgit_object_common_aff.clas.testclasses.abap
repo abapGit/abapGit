@@ -226,7 +226,13 @@ CLASS ltcl_aff_settings_deserialize IMPLEMENTATION.
         is_item     = ls_item
         iv_language = 'E'.
 
-    lo_settings_deserialize = lo_cut->create_aff_setting_deserialize( ).
+    TRY.
+        lo_settings_deserialize = lo_cut->create_aff_setting_deserialize( ).
+      CATCH cx_root.
+        " System doesn't support AFF with ABAP language version
+        RETURN.
+    ENDTRY.
+
     CALL METHOD lo_settings_deserialize->('IF_AFF_SETTINGS_DESERIALIZE~GET_ABAP_LANGUAGE_VERSION')
       RECEIVING
         result = lv_act_setting_abap_lv.
