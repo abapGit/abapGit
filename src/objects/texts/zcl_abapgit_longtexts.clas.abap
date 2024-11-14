@@ -76,7 +76,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
         DELETE lt_dokil WHERE masterlang <> abap_true.
       ENDIF.
 
-    ELSEIF iv_longtext_id IS NOT INITIAL.
+    ELSEIF iv_longtext_id IS NOT INITIAL AND lv_object NA '#'.
       IF iv_main_lang_only = abap_true.
         SELECT * FROM dokil
                  INTO TABLE lt_dokil
