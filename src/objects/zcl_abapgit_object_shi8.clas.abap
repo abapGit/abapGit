@@ -76,6 +76,8 @@ CLASS zcl_abapgit_object_shi8 IMPLEMENTATION.
     ls_node_data-tree_id = ls_assignment_data-tree_id.
     ls_node_data-node_id = ls_assignment_data-node_id.
 
+    tadir_insert( iv_package ).
+
     CALL FUNCTION 'STREE_SFW_ASSIGNMENT_SAVE'
       EXPORTING
         assignment_id = ls_assignment_data-sfw_ass_id
