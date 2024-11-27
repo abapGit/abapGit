@@ -260,5 +260,4 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
     rv_is_variant_maintenance = boolc( lines( lt_variscreens ) > 0 ).
 
   ENDMETHOD.
-
 ENDCLASS.
