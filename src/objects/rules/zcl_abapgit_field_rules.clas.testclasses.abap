@@ -35,7 +35,7 @@ CLASS ltcl_field_rules DEFINITION FOR TESTING RISK LEVEL HARMLESS
       fill7 FOR TESTING,
       get_rules
         RETURNING
-          value(ri_rules) TYPE REF TO zif_abapgit_field_rules,
+          VALUE(ri_rules) TYPE REF TO zif_abapgit_field_rules,
       apply_clear_logic FOR TESTING,
       apply_fill_logic FOR TESTING.
 
