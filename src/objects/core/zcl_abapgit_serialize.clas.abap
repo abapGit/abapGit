@@ -279,7 +279,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
 
   METHOD determine_max_processes.
-
     DATA: li_exit TYPE REF TO zif_abapgit_exit.
     DATA lv_available_sessions TYPE i.
 
@@ -332,7 +331,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     ASSERT rv_processes >= 1.
 
-  ENDMETHOD.
   ENDMETHOD.
 
 
