@@ -279,7 +279,9 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
 
   METHOD determine_max_processes.
+
     DATA: li_exit TYPE REF TO zif_abapgit_exit.
+    DATA lv_available_sessions TYPE i.
 
     IF iv_force_sequential = abap_true.
       rv_processes = 1.
@@ -319,6 +321,18 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     ASSERT rv_processes >= 1. " check exit above
 
+    " Avoid going over the maximum available user sessions
+    IF sy-batch IS INITIAL.
+      lv_available_sessions = zcl_abapgit_factory=>get_environment( )->get_available_user_sessions( ).
+
+      IF rv_processes > lv_available_sessions AND lv_available_sessions <> 0.
+        rv_processes = lv_available_sessions.
+      ENDIF.
+    ENDIF.
+
+    ASSERT rv_processes >= 1.
+
+  ENDMETHOD.
   ENDMETHOD.
 
 
