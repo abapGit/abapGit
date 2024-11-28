@@ -7,7 +7,7 @@ CLASS zcl_abapgit_object_shlp DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS handle_dependencies
       IMPORTING
-        !iv_step TYPE zif_abapgit_definitions=>ty_deserialization_step
+        !iv_step TYPE zif_abapgit_objects=>ty_deserialization_step
       CHANGING
         !cv_exit TYPE dd30v-selmexit
         !cv_done TYPE abap_bool.

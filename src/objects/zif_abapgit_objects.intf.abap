@@ -1,5 +1,4 @@
-INTERFACE zif_abapgit_objects
-  PUBLIC.
+INTERFACE zif_abapgit_objects PUBLIC.
 
   TYPES:
     BEGIN OF ty_serialization,
@@ -16,8 +15,14 @@ INTERFACE zif_abapgit_objects
   TYPES:
     ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY .
   TYPES:
+    ty_types_tt TYPE SORTED TABLE OF tadir-object WITH UNIQUE KEY table_line.
+  TYPES:
+    ty_deserialization_step TYPE string.
+  TYPES:
+    ty_deserialization_step_tt TYPE STANDARD TABLE OF ty_deserialization_step WITH DEFAULT KEY.
+  TYPES:
     BEGIN OF ty_step_data,
-      step_id      TYPE zif_abapgit_definitions=>ty_deserialization_step,
+      step_id      TYPE ty_deserialization_step,
       order        TYPE i,
       descr        TYPE string,
       syntax_check TYPE abap_bool,
