@@ -241,15 +241,15 @@ CLASS ltcl_field_rules IMPLEMENTATION.
       exp = sy-uzeit(4) ). " avoid comparing seconds
 
     lv_ts = ls_act-ts.
-    lv_ts = lv_ts(12).
+    lv_ts = lv_ts(10).
     cl_abap_unit_assert=>assert_equals(
       act = lv_ts
-      exp = |{ lv_timestamp DIV 100 }| ). " avoid comparing second
+      exp = |{ lv_timestamp DIV 10000 }| ). " avoid comparing second
     lv_ts = ls_act-tl.
-    lv_ts = lv_ts(12).
+    lv_ts = lv_ts(10).
     cl_abap_unit_assert=>assert_equals(
       act = lv_ts
-      exp = |{ lv_timestamp DIV 100 }| ). " avoid comparing seconds
+      exp = |{ lv_timestamp DIV 10000 }| ). " avoid comparing seconds
 
     READ TABLE lt_act INTO ls_act INDEX 2.
 
