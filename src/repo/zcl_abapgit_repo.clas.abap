@@ -402,7 +402,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD get_unsupported_objects_local.
 
     DATA: lt_tadir           TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lt_supported_types TYPE zcl_abapgit_objects=>ty_types_tt.
+          lt_supported_types TYPE zif_abapgit_objects=>ty_types_tt.
 
     FIELD-SYMBOLS: <ls_tadir>  LIKE LINE OF lt_tadir,
                    <ls_object> LIKE LINE OF rt_objects.
