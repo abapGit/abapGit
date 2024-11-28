@@ -37,17 +37,13 @@ CLASS zcl_abapgit_object_msag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception .
     METHODS delete_msgid
       IMPORTING
-        !iv_message_id TYPE arbgb
-      RAISING
-        zcx_abapgit_exception.
+        !iv_message_id TYPE arbgb .
     METHODS free_access_permission
       IMPORTING
         !iv_message_id TYPE arbgb .
     METHODS delete_documentation
       IMPORTING
-        !iv_message_id TYPE arbgb
-      RAISING
-        zcx_abapgit_exception.
+        !iv_message_id TYPE arbgb .
 ENDCLASS.
 
 
@@ -65,7 +61,9 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         element  = iv_message_id
         addition = '   '
       IMPORTING
-        object   = lv_key_s.
+        object   = lv_key_s
+      EXCEPTIONS
+        OTHERS   = 0.
 
     CALL FUNCTION 'DOKU_DELETE_ALL'
       EXPORTING
@@ -82,11 +80,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         no_docu_found                  = 4
         object_is_already_enqueued     = 5
         object_is_enqueued_by_corr     = 6
-        user_break                     = 7
-        OTHERS                         = 8.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error deleting messages' ).
-    ENDIF.
+        user_break                     = 7.
 
   ENDMETHOD.
 

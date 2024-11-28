@@ -131,11 +131,7 @@ CLASS zcl_abapgit_object_iwvb IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
 
-    DATA lv_prog TYPE progname.
-
-    lv_prog = '/IWBEP/R_DST_VOCAN_REGISTER'.
-
-    SUBMIT (lv_prog)
+    SUBMIT /iwbep/r_dst_vocan_register
       WITH ip_aname = ms_item-obj_name
       WITH ip_avers = ms_item-obj_name+32(4)
       AND RETURN.
