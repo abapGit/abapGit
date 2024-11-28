@@ -85,7 +85,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         user_break                     = 7
         OTHERS                         = 8.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error deleting messages' ).
+      zcx_abapgit_exception=>raise( 'Error deleting longtext for message' ).
     ENDIF.
 
   ENDMETHOD.
