@@ -115,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
@@ -373,7 +373,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
           li_modal ?= ii_page.
           rv_yes = li_modal->is_modal( ).
         ENDIF.
-      CATCH cx_sy_move_cast_error.
+      CATCH cx_sy_move_cast_error ##NO_HANDLER.
     ENDTRY.
 
   ENDMETHOD.

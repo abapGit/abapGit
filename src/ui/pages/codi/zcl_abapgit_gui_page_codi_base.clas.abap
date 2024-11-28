@@ -127,7 +127,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
 
 
   METHOD apply_filter_kind.
@@ -256,7 +256,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
             ENDIF.
 
         ENDCASE.
-      CATCH cx_root.
+      CATCH cx_root ##NO_HANDLER.
         " leave empty, fallback to default, defined elsewhere
     ENDTRY.
 
@@ -340,7 +340,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
           RETURN.
 
         ENDIF.
-      CATCH zcx_abapgit_exception.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
 
     TRY.
