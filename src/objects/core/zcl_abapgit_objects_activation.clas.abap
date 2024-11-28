@@ -310,7 +310,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
               excecution_error       = 1
               cancelled              = 2
               insert_into_corr_error = 3
-              OTHERS                 = 4 ##SUBRC_OK.
+              OTHERS                 = 4 ##FM_SUBRC_OK.
         CATCH cx_sy_dyn_call_param_not_found.
           CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
             EXPORTING
@@ -324,7 +324,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
               excecution_error       = 1
               cancelled              = 2
               insert_into_corr_error = 3
-              OTHERS                 = 4 ##SUBRC_OK.
+              OTHERS                 = 4 ##FM_SUBRC_OK.
       ENDTRY.
       CASE sy-subrc.
         WHEN 1 OR 3 OR 4.
