@@ -23,7 +23,7 @@
     ]
   },
   "devDependencies": {
-    "@abaplint/cli": "^2.113.66",
+    "@abaplint/cli": "^2.113.68",
     "@abaplint/database-sqlite": "^2.10.20",
     "@abaplint/runtime": "^2.10.20",
     "express": "^4.21.1",
