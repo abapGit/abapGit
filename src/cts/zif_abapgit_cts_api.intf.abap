@@ -60,9 +60,9 @@ INTERFACE zif_abapgit_cts_api
   METHODS create_transport_entries
     IMPORTING
       !iv_transport TYPE trkorr
-      !it_table_ins TYPE ANY TABLE
-      !it_table_upd TYPE ANY TABLE
-      !it_table_del TYPE ANY TABLE
+      !it_table_ins TYPE ANY TABLE OPTIONAL
+      !it_table_upd TYPE ANY TABLE OPTIONAL
+      !it_table_del TYPE ANY TABLE OPTIONAL
       !iv_tabname   TYPE tabname
     RAISING
       zcx_abapgit_exception .

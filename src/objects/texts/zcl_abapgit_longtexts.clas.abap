@@ -77,19 +77,21 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
       ENDIF.
 
     ELSEIF iv_longtext_id IS NOT INITIAL.
-      IF iv_main_lang_only = abap_true.
-        SELECT * FROM dokil
-                 INTO TABLE lt_dokil
-                 WHERE id     = iv_longtext_id
-                 AND object LIKE lv_object ESCAPE '#'
-                 AND masterlang = abap_true
-                 ORDER BY PRIMARY KEY.
-      ELSE.
-        SELECT * FROM dokil
-                 INTO TABLE lt_dokil
-                 WHERE id     = iv_longtext_id
-                 AND object LIKE lv_object ESCAPE '#'
-                 ORDER BY PRIMARY KEY.
+      IF lv_object NA '#'.
+        IF iv_main_lang_only = abap_true.
+          SELECT * FROM dokil
+                   INTO TABLE lt_dokil
+                   WHERE id     = iv_longtext_id
+                   AND object LIKE lv_object ESCAPE '#'
+                   AND masterlang = abap_true
+                   ORDER BY PRIMARY KEY.
+        ELSE.
+          SELECT * FROM dokil
+                   INTO TABLE lt_dokil
+                   WHERE id     = iv_longtext_id
+                   AND object LIKE lv_object ESCAPE '#'
+                   ORDER BY PRIMARY KEY.
+        ENDIF.
       ENDIF.
     ELSE.
 

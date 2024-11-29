@@ -739,6 +739,10 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     fill_language_mapping( im_sap1  = 'C0C1'
                            im_sap2  = 'WA'
                            im_bcp47 = 'wa' ).
+
+    fill_language_mapping( im_sap1  = 'A'
+                           im_sap2  = 'AR'
+                           im_bcp47 = 'ar-SA' ).
   ENDMETHOD.
 
 
