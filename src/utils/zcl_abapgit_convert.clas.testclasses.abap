@@ -331,12 +331,15 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
     DATA lv_result TYPE sy-langu.
     lv_result = zcl_abapgit_convert=>language_bcp47_to_sap1( im_from ).
 
-    cl_abap_unit_assert=>assert_equals( exp = im_to
-                                        act = lv_result ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = im_to
+      act = lv_result
+      msg = |Converting "{ im_from }" should result in "{ im_to }"| ).
   ENDMETHOD.
 
   METHOD assert_bcp47_to_sap1_fail.
     DATA lv_result TYPE string.
+    DATA lv_act TYPE sy-subrc.
 
     zcl_abapgit_convert=>language_bcp47_to_sap1(
       EXPORTING
@@ -345,10 +348,15 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
         re_lang_sap1  = lv_result
       EXCEPTIONS
         no_assignment = 1
-        OTHERS = 2 ).
+        OTHERS        = 2 ).
 
-    cl_abap_unit_assert=>assert_equals( exp = 1
-                                        act = sy-subrc ).
+    " Assert itself might change sy-subrc (it does in 702!)
+    lv_act = sy-subrc.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 1
+      act = lv_act
+      msg = |Converting "{ im_from }" should fail| ).
   ENDMETHOD.
 
   METHOD english.
@@ -466,14 +474,18 @@ CLASS ltcl_sap1_to_bcp47 IMPLEMENTATION.
 
   METHOD assert_sap1_to_bcp47.
     DATA lv_result TYPE string.
+
     lv_result = zcl_abapgit_convert=>language_sap1_to_bcp47( im_from ).
 
-    cl_abap_unit_assert=>assert_equals( exp = im_to
-                                        act = lv_result ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = im_to
+      act = lv_result
+      msg = |Converting "{ im_from }" should result in "{ im_to }"| ).
   ENDMETHOD.
 
   METHOD assert_sap1_to_bcp47_fail.
     DATA lv_result TYPE string.
+    DATA lv_act TYPE sy-subrc.
 
     zcl_abapgit_convert=>language_sap1_to_bcp47(
       EXPORTING
@@ -482,10 +494,15 @@ CLASS ltcl_sap1_to_bcp47 IMPLEMENTATION.
         re_lang_bcp47 = lv_result
       EXCEPTIONS
         no_assignment = 1
-        OTHERS = 2 ).
+        OTHERS        = 2 ).
 
-    cl_abap_unit_assert=>assert_equals( exp = 1
-                                        act = sy-subrc ).
+    " Assert itself might change sy-subrc (it does in 702!)
+    lv_act = sy-subrc.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 1
+      act = lv_act
+      msg = |Converting "{ im_from }" should fail| ).
   ENDMETHOD.
 
   METHOD english.
