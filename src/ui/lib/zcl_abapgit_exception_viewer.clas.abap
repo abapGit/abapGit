@@ -146,6 +146,7 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
 
   METHOD goto_message.
 
+    DATA: lv_msg TYPE c LENGTH 100.
     DATA: lt_bdcdata TYPE STANDARD TABLE OF bdcdata,
           ls_bdcdata LIKE LINE OF lt_bdcdata.
 
@@ -177,17 +178,18 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
     CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
       STARTING NEW TASK 'GIT'
       EXPORTING
-        tcode                   = 'SE91'
-        mode_val                = 'E'
+        tcode                 = 'SE91'
+        mode_val              = 'E'
       TABLES
-        using_tab               = lt_bdcdata
+        using_tab             = lt_bdcdata
       EXCEPTIONS
-        call_transaction_denied = 1
-        tcode_invalid           = 2
-        OTHERS                  = 3.
+        system_failure        = 1 MESSAGE lv_msg
+        communication_failure = 2 MESSAGE lv_msg
+        resource_failure      = 3
+        OTHERS                = 4.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
+      zcx_abapgit_exception=>raise( lv_msg ).
     ENDIF.
 
   ENDMETHOD.
