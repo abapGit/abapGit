@@ -172,7 +172,7 @@ CLASS lcl_task_definition IMPLEMENTATION.
       IF sy-subrc <> 0.
         TRY.
             li_container->element_remove( name = lv_element ).
-          CATCH cx_swf_cnt_container.
+          CATCH cx_swf_cnt_container ##NO_HANDLER.
             "Shouldn't happen, doesn't matter if it does
         ENDTRY.
       ENDIF.
