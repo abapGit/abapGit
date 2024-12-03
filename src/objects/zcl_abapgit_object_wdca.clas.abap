@@ -303,7 +303,7 @@ CLASS zcl_abapgit_object_wdca IMPLEMENTATION.
           WHERE config_id   = ls_outline-config_id
             AND config_type = ls_outline-config_type
             AND config_var  = ls_outline-config_var.
-      CATCH zcx_abapgit_exception.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
         " File not found
     ENDTRY.
 
