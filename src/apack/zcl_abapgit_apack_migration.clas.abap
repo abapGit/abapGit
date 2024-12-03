@@ -178,7 +178,7 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
             component_error = 4
             no_access       = 5
             other           = 6
-            OTHERS          = 7.
+            OTHERS          = 7 ##FM_SUBRC_OK.
       CATCH cx_sy_dyn_call_param_not_found.
         CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
           EXPORTING

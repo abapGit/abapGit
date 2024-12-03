@@ -181,7 +181,7 @@ FORM password_popup
         pv_repo_url TYPE string
       CHANGING
         cv_user     TYPE string
-        cv_pass     TYPE string.
+        cv_pass     TYPE string ##CALLED.
 
   lcl_password_dialog=>popup(
     EXPORTING
