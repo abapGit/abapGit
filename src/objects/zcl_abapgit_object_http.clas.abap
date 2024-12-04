@@ -43,19 +43,19 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
 
     TRY.
-      SELECT SINGLE changedby FROM ('uconhttpservhead') INTO rv_user WHERE id = ms_item-obj_name.
-      if sy-subrc <> 0.
-        rv_user = c_user_unknown.
-      endif.
-    CATCH cx_root.
-      zcx_abapgit_exception=>raise( 'HTTP not supported' ).
+        SELECT SINGLE changedby FROM ('uconhttpservhead') INTO rv_user WHERE id = ms_item-obj_name.
+        IF sy-subrc <> 0.
+          rv_user = c_user_unknown.
+        ENDIF.
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( 'HTTP not supported' ).
     ENDTRY.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~delete.
     DATA lx TYPE REF TO cx_root.
-    data lo_name type c length 30.
+    DATA lo_name TYPE c LENGTH 30.
     lo_name = ms_item-obj_name.
     TRY.
         CALL METHOD ('CL_UCON_API_FACTORY')=>('DELETE_HTTP_SERVICE')
@@ -63,7 +63,7 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
             name     = lo_name
             devclass = iv_package.
       CATCH cx_ucon_api_http_service INTO lx. " Exception class: HTTP Service
-        zcx_abapgit_exception=>raise( iv_text     = lx->get_text( )
+        zcx_abapgit_exception=>raise(  iv_text     = lx->get_text( )
                                       ix_previous = lx->previous ).
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'HTTP not supported' ).
@@ -95,8 +95,8 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
             io_xml->read(
               EXPORTING iv_name = 'HTTPHDL'
               CHANGING  cg_data = lt_handler ).
-            data lo_transport type ref to zcl_abapgit_default_transport.
-            create object lo_transport.
+            DATA lo_transport TYPE REF TO zcl_abapgit_default_transport.
+            CREATE OBJECT lo_transport.
             ls_korr = lo_transport->zif_abapgit_default_transport~get( )-ordernum.
 
           CATCH zcx_abapgit_exception INTO lx. " Exception
@@ -143,9 +143,9 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
                       RECEIVING
                         rs_object_version = lv_abap_lang.
 
-                    if lv_abap_lang-id = 'X'. "language version X not supported, use space instead
+                    IF lv_abap_lang-id = 'X'. "language version X not supported, use space instead
                       lv_abap_lang-id = space.
-                    endif.
+                    ENDIF.
 
                     CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_LANGUAGE_VERSION') EXPORTING iv_langu_version = lv_abap_lang-id.
                   CATCH cx_abap_language_version INTO lx.
@@ -216,27 +216,18 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
     rs_metadata = get_metadata( ).
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object~is_active.
     rv_active = is_active( ).
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
-
-* data for http service from tables
-*UCONHTTPSERVHEAD
-*UCONHTTPSERVTEXT
-*Key Column id   uconhttpservid  char(30)  HTTP Service ID
-*Key Column version   r3state  char(1)  ABAP: Program Status (Active, Saved, Transported...)
-*Key Column lang   sprsl  lang(1)  Language Key
-*Column shorttext   ucontext  char(255)  Unified Connectivity Text (short)
-
-
-
 
     DATA: lv_http_srv_id TYPE c LENGTH 30,
           lo_serv        TYPE REF TO object, "if_ucon_api_http_service
@@ -282,15 +273,18 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
         "ii_log->add_error( iv_msg = lv_text is_item = ms_item ). " Exception
       CATCH cx_ucon_api_http_service INTO lx.
         lv_text = lx->get_text( ).
+        "ii_log->add_error( iv_msg = lv_text is_item = ms_item ).
       CATCH cx_root INTO lx.
         zcx_abapgit_exception=>raise( 'HTTP not supported' ).
     ENDTRY.
 
   ENDMETHOD.
 
-   METHOD zif_abapgit_object~map_filename_to_object.
+
+  METHOD zif_abapgit_object~map_filename_to_object.
     RETURN.
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~get_deserialize_order.
     RETURN.
