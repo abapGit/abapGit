@@ -63,7 +63,7 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
             name     = lo_name
             devclass = iv_package.
       CATCH cx_ucon_api_http_service INTO lx. " Exception class: HTTP Service
-        zcx_abapgit_exception=>raise(  iv_text     = lx->get_text( )
+        zcx_abapgit_exception=>raise( iv_text     = lx->get_text( )
                                       ix_previous = lx->previous ).
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'HTTP not supported' ).
