@@ -222,13 +222,6 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-*    TRY.
-*        jump_adt( iv_obj_name = ms_item-obj_name
-*                  iv_obj_type = ms_item-obj_type ).
-*
-*      CATCH cx_abapgit_exception.
-*        cx_abapgit_exception=>raise( 'SIA1 Jump Error' ).   "#EC NOTEXT
-*    ENDTRY.
   ENDMETHOD.
 
 
