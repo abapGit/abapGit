@@ -282,7 +282,6 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
         "ii_log->add_error( iv_msg = lv_text is_item = ms_item ). " Exception
       CATCH cx_ucon_api_http_service INTO lx.
         lv_text = lx->get_text( ).
-        "ii_log->add_error( iv_msg = lv_text is_item = ms_item ).
       CATCH cx_root INTO lx.
         zcx_abapgit_exception=>raise( 'HTTP not supported' ).
     ENDTRY.
