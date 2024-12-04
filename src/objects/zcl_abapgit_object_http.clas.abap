@@ -157,7 +157,6 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
             CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_DESCRIPTION')
               EXPORTING
                 texts = ls_description.
-*            CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~ACTIVATE').
             CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SAVE')
               EXPORTING
                 run_dark  = abap_true
