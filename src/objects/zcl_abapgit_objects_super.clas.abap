@@ -191,7 +191,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
             object_not_specified = 3
             permission_failure   = 4
             dialog_needed        = 5
-            OTHERS               = 6.
+            OTHERS               = 6 ##FM_SUBRC_OK.
       CATCH cx_sy_dyn_call_param_not_found.
         TRY.
             " try to force deletion for APPENDs
@@ -207,7 +207,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
                 object_not_specified = 3
                 permission_failure   = 4
                 dialog_needed        = 5
-                OTHERS               = 6.
+                OTHERS               = 6 ##FM_SUBRC_OK.
           CATCH cx_sy_dyn_call_param_not_found.
             " no_ask_delete_append and aie_force_deletion not available in lower releases
             CALL FUNCTION 'RS_DD_DELETE_OBJ'
@@ -221,7 +221,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
                 object_not_specified = 3
                 permission_failure   = 4
                 dialog_needed        = 5
-                OTHERS               = 6.
+                OTHERS               = 6 ##FM_SUBRC_OK.
         ENDTRY.
     ENDTRY.
 
