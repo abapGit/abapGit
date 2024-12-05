@@ -11,28 +11,28 @@ CLASS zcl_abapgit_object_http DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    TYPES: BEGIN OF s_uconservhttphandler,
+    TYPES: BEGIN OF ty_uconservhttphandler,
              id             TYPE c LENGTH 30,
              version        TYPE c LENGTH 1,
              serviceorder   TYPE n LENGTH 2,
              servicehandler TYPE c LENGTH 30,
-           END OF s_uconservhttphandler.
-    TYPES: BEGIN OF s_uconhttpservtext,
+           END OF ty_uconservhttphandler.
+    TYPES: BEGIN OF ty_uconhttpservtext,
              id        TYPE c LENGTH 30,
              version   TYPE c LENGTH 1,
              lang      TYPE lang,
              shorttext TYPE c LENGTH 255,
-           END OF s_uconhttpservtext.
-    TYPES: BEGIN OF s_handler,
+           END OF ty_uconhttpservtext.
+    TYPES: BEGIN OF ty_handler,
              id             TYPE c LENGTH 30,
              version        TYPE c LENGTH 1,
              serviceorder   TYPE n LENGTH 2,
              servicehandler TYPE c LENGTH 30,
-           END OF s_handler.
-    TYPES: BEGIN OF s_ty_gs_object_version   ,
+           END OF ty_handler.
+    TYPES: BEGIN OF ty_gs_object_version,
              id           TYPE c LENGTH 1,
              object_state TYPE c LENGTH 1,
-           END OF s_ty_gs_object_version.
+           END OF ty_gs_object_version.
 ENDCLASS.
 
 
@@ -71,16 +71,16 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
     TRY.
         DATA: lv_http_servid TYPE c LENGTH 30.
-        DATA: lt_handler TYPE TABLE OF s_handler.
+        DATA: lt_handler TYPE TABLE OF ty_handler.
 
-        DATA: ls_handler LIKE LINE OF lt_handler.
-        DATA: ls_description TYPE s_uconhttpservtext.
+        DATA: lty_handler LIKE LINE OF lt_handler.
+        DATA: ls_description TYPE ty_uconhttpservtext.
         DATA: ls_korr TYPE trkorr.
         DATA: lv_check_object_name TYPE c LENGTH 40.
         DATA: lx           TYPE REF TO cx_root,
               lv_id        TYPE c LENGTH 30,
               lo_http      TYPE REF TO object,
-              lv_abap_lang TYPE s_ty_gs_object_version.
+              lv_abap_lang TYPE ty_gs_object_version.
         TRY.
             io_xml->read(
               EXPORTING iv_name = 'HTTPID'
@@ -124,10 +124,10 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
               EXPORTING
                 handler = lt_handler.
             IF lt_handler IS NOT INITIAL.
-              READ TABLE lt_handler INTO ls_handler INDEX 1.
+              READ TABLE lt_handler INTO lty_handler INDEX 1.
               "get language version from abap class
 
-              lv_check_object_name = ls_handler-servicehandler.
+              lv_check_object_name = lty_handler-servicehandler.
               IF lv_check_object_name IS NOT INITIAL.
                 TRY.
                     DATA lv_instance TYPE REF TO object.
@@ -222,8 +222,8 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
 
     DATA: lv_http_srv_id TYPE c LENGTH 30,
           lo_serv        TYPE REF TO object, "if_ucon_api_http_service
-          lt_handler     TYPE TABLE OF s_uconservhttphandler,
-          ls_description TYPE s_uconhttpservtext,
+          lt_handler     TYPE TABLE OF ty_uconservhttphandler,
+          ls_description TYPE ty_uconhttpservtext,
           lv_text        TYPE string,
           lx             TYPE REF TO cx_root.
     TRY.
