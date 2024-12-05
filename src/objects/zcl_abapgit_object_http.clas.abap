@@ -186,11 +186,7 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
         DATA lv_id TYPE c LENGTH 30.
         SELECT SINGLE id FROM ('uconhttpservhead') INTO lv_id WHERE id = ms_item-obj_name AND version = 'A'.
 
-        IF sy-subrc = 0.
-          rv_bool = abap_true.
-        ELSE.
-          rv_bool = abap_false.
-        ENDIF.
+        rv_bool = boolc( sy-subrc = 0 ).
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'HTTP not supported' ).
     ENDTRY.
