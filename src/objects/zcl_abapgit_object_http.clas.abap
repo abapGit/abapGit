@@ -80,7 +80,9 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
           lo_http TYPE REF TO object,
           lv_abap_lang TYPE ty_gs_object_version,
           lo_transport TYPE REF TO zcl_abapgit_default_transport,
-          lv_instance TYPE REF TO object.
+          lv_instance TYPE REF TO object,
+          lv_tadir_name TYPE tadir-obj_name,
+          lt_ret TYPE bapiret2_t.
 
     TRY.
         TRY.
@@ -143,11 +145,11 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
                       lv_abap_lang-id = space.
                     ENDIF.
 
-                    CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_LANGUAGE_VERSION') 
+                    CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_LANGUAGE_VERSION')
                       EXPORTING iv_langu_version = lv_abap_lang-id.
-                  CATCH cx_root INTO lx.
-                    zcx_abapgit_exception=>raise( iv_text       = lx->get_text( )
-                                                  ix_previous   = lx ).
+                  CATCH cx_root INTO lx_root.
+                    zcx_abapgit_exception=>raise( iv_text       = lx_root->get_text( )
+                                                  ix_previous   = lx_root ).
                 ENDTRY.
               ENDIF.
             ENDIF.
@@ -165,8 +167,6 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
                                  ix_previous   = lx_root->previous ).
         ENDTRY.
 
-        DATA: lv_tadir_name TYPE tadir-obj_name.
-        DATA: lt_ret TYPE bapiret2_t.
         lv_tadir_name = lv_http_servid.
         CALL METHOD ('CL_AUTH_START_TOOLS')=>('SUSH_CREATE')
           EXPORTING
