@@ -71,11 +71,11 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
     DATA: lv_http_servid TYPE c LENGTH 30,
           lt_handler TYPE TABLE OF ty_handler,
-          lty_handler LIKE LINE OF lt_handler,
+          ls_handler LIKE LINE OF lt_handler,
           ls_description TYPE ty_uconhttpservtext,
           ls_korr TYPE trkorr,
           lv_check_object_name TYPE c LENGTH 40,
-          lx TYPE REF TO cx_root,
+          lx_root TYPE REF TO cx_root,
           lv_id TYPE c LENGTH 30,
           lo_http TYPE REF TO object,
           lv_abap_lang TYPE ty_gs_object_version,
@@ -96,9 +96,9 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
             CREATE OBJECT lo_transport.
             ls_korr = lo_transport->zif_abapgit_default_transport~get( )-ordernum.
 
-          CATCH zcx_abapgit_exception INTO lx. " Exception
-            zcx_abapgit_exception=>raise( iv_text     = lx->get_text( )
-                                 ix_previous = lx->previous ).
+          CATCH zcx_abapgit_exception INTO lx_root. " Exception
+            zcx_abapgit_exception=>raise( iv_text     = lx_root->get_text( )
+                                 ix_previous = lx_root->previous ).
         ENDTRY.
 
         SELECT SINGLE id FROM ('uconhttpservhead') INTO lv_id WHERE id = lv_http_servid AND version = 'A'.
@@ -125,10 +125,10 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
               EXPORTING
                 handler = lt_handler.
             IF lt_handler IS NOT INITIAL.
-              READ TABLE lt_handler INTO lty_handler INDEX 1.
+              READ TABLE lt_handler INTO ls_handler INDEX 1.
               "get language version from abap class
 
-              lv_check_object_name = lty_handler-servicehandler.
+              lv_check_object_name = ls_handler-servicehandler.
               IF lv_check_object_name IS NOT INITIAL.
                 TRY.
                     CALL METHOD ('CL_ABAP_LANGUAGE_VERSION')=>('GET_INSTANCE') RECEIVING ro_version_handler = lv_instance.
@@ -160,9 +160,9 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
                 dev_class = iv_package
                 korrnum   = ls_korr.
             CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~FREE').
-          CATCH cx_root INTO lx.
-            zcx_abapgit_exception=>raise( iv_text     = lx->get_text( )
-                                 ix_previous   = lx->previous ).
+          CATCH cx_root INTO lx_root.
+            zcx_abapgit_exception=>raise( iv_text     = lx_root->get_text( )
+                                 ix_previous   = lx_root->previous ).
         ENDTRY.
 
         DATA: lv_tadir_name TYPE tadir-obj_name.
@@ -176,8 +176,8 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
             iv_task   = ls_korr
           IMPORTING
             et_log    = lt_ret.
-      CATCH cx_root INTO lx.
-        zcx_abapgit_exception=>raise( lx->get_text( ) ).
+      CATCH cx_root INTO lx_root.
+        zcx_abapgit_exception=>raise( lx_root->get_text( ) ).
     ENDTRY.
   ENDMETHOD.
 
