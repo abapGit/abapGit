@@ -134,7 +134,7 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
 
     TRY.
         rv_xstr = cl_fp_helper=>convert_form_to_xstring( li_fp_form ).
-      CATCH cx_fp_api INTO lx_fp_conv_err.
+      CATCH cx_fp_api INTO lx_fp_conv_err ##NO_HANDLER.
         " Pass - the exception is handled below!
     ENDTRY.
 

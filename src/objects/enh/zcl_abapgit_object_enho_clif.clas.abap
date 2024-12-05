@@ -62,7 +62,7 @@ CLASS zcl_abapgit_object_enho_clif IMPLEMENTATION.
       TRY.
           io_clif->add_change_enha_type( type_line = ls_type_line ).
         CATCH cx_enh_mod_not_allowed
-        cx_enh_is_not_enhanceable.
+        cx_enh_is_not_enhanceable ##NO_HANDLER.
           " TODO
       ENDTRY.
     ENDLOOP.
