@@ -81,7 +81,7 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
           lv_abap_lang TYPE ty_gs_object_version,
           lo_transport TYPE REF TO zcl_abapgit_default_transport.
 
-  TRY.
+    TRY.
        TRY.
             io_xml->read(
               EXPORTING iv_name = 'HTTPID'
