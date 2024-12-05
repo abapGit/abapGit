@@ -184,7 +184,7 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
     TRY.
-        DATA lv_id TYPE c LENGTH 30 .
+        DATA lv_id TYPE c LENGTH 30.
         SELECT SINGLE id FROM ('uconhttpservhead') INTO lv_id WHERE id = ms_item-obj_name AND version = 'A'.
 
         IF sy-subrc = 0.
