@@ -253,7 +253,8 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
       EXCEPTIONS
         communication_failure = 1 MESSAGE lv_msg
         system_failure        = 2 MESSAGE lv_msg
-        OTHERS                = 3.
+        resource_failure      = 3
+        OTHERS                = 4.
 
     lv_subrc = sy-subrc.
 
