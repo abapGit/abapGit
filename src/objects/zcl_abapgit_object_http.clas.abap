@@ -69,19 +69,20 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-    TRY.
-        DATA: lv_http_servid TYPE c LENGTH 30.
-        DATA: lt_handler TYPE TABLE OF ty_handler.
-
-        DATA: lty_handler LIKE LINE OF lt_handler.
-        DATA: ls_description TYPE ty_uconhttpservtext.
-        DATA: ls_korr TYPE trkorr.
-        DATA: lv_check_object_name TYPE c LENGTH 40.
-        DATA: lx           TYPE REF TO cx_root,
-              lv_id        TYPE c LENGTH 30,
-              lo_http      TYPE REF TO object,
+    
+        DATA: lv_http_servid TYPE c LENGTH 30,
+              lt_handler TYPE TABLE OF ty_handler,
+              lty_handler LIKE LINE OF lt_handler,
+              ls_description TYPE ty_uconhttpservtext,
+              ls_korr TYPE trkorr,
+              lv_check_object_name TYPE c LENGTH 40,
+              lx TYPE REF TO cx_root,
+              lv_id TYPE c LENGTH 30,
+              lo_http TYPE REF TO object,
               lv_abap_lang TYPE ty_gs_object_version.
-        TRY.
+
+  TRY.
+       TRY.
             io_xml->read(
               EXPORTING iv_name = 'HTTPID'
               CHANGING  cg_data = lv_http_servid ).
