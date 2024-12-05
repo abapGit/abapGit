@@ -257,8 +257,7 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
 
         io_xml->add(
           iv_name = 'HTTPTEXT'
-          ig_data = ls_description
-        ).
+          ig_data = ls_description ).
 
         io_xml->add(
           iv_name = 'HTTPHDL'
