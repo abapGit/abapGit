@@ -62,9 +62,6 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
           EXPORTING
             name     = lo_name
             devclass = iv_package.
-      CATCH cx_ucon_api_http_service INTO lx. " Exception class: HTTP Service
-        zcx_abapgit_exception=>raise( iv_text     = lx->get_text( )
-                                      ix_previous = lx->previous ).
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'HTTP not supported' ).
     ENDTRY.
@@ -148,7 +145,7 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
                     ENDIF.
 
                     CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_LANGUAGE_VERSION') EXPORTING iv_langu_version = lv_abap_lang-id.
-                  CATCH cx_abap_language_version INTO lx.
+                  CATCH cx_root INTO lx.
                     zcx_abapgit_exception=>raise(  iv_text       = lx->get_text( )
                                                   ix_previous   = lx ).
                 ENDTRY.
@@ -163,7 +160,7 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
                 dev_class = iv_package
                 korrnum   = ls_korr.
             CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~FREE').
-          CATCH cx_ucon_api_http_service INTO lx.
+          CATCH cx_root INTO lx.
             zcx_abapgit_exception=>raise( iv_text     = lx->get_text( )
                                  ix_previous   = lx->previous ).
         ENDTRY.
@@ -179,7 +176,6 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
             iv_task   = ls_korr
           IMPORTING
             et_log    = lt_ret.
-
       CATCH cx_root INTO lx.
         zcx_abapgit_exception=>raise( lx->get_text( ) ).
     ENDTRY.
@@ -251,7 +247,7 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
             lang = sy-langu
           RECEIVING
             text = ls_description.
-*
+
         "add data to output
         DATA lv_name TYPE c LENGTH 30.
         CALL METHOD lo_serv->('IF_UCON_API_HTTP_SERVICE~GET_NAME') RECEIVING name = lv_name.
@@ -268,7 +264,7 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
           iv_name = 'HTTPHDL'
           ig_data = lt_handler
         ).
-      CATCH zcx_abapgit_exception INTO lx.
+      CATCH zcx_root INTO lx.
         lv_text = lx->get_text( ).
         "ii_log->add_error( iv_msg = lv_text is_item = ms_item ). " Exception
       CATCH cx_ucon_api_http_service INTO lx.
@@ -276,24 +272,19 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
       CATCH cx_root INTO lx.
         zcx_abapgit_exception=>raise( 'HTTP not supported' ).
     ENDTRY.
-
   ENDMETHOD.
-
 
   METHOD zif_abapgit_object~map_filename_to_object.
     RETURN.
   ENDMETHOD.
 
-
   METHOD zif_abapgit_object~get_deserialize_order.
     RETURN.
   ENDMETHOD.
 
-
   METHOD zif_abapgit_object~map_object_to_filename.
     RETURN.
   ENDMETHOD.
-
 
   METHOD zif_abapgit_object~is_locked.
     rv_is_locked = abap_false.
