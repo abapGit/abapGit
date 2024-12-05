@@ -83,7 +83,7 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
           lv_instance TYPE REF TO object.
 
     TRY.
-       TRY.
+        TRY.
             io_xml->read(
               EXPORTING iv_name = 'HTTPID'
               CHANGING  cg_data = lv_http_servid ).
