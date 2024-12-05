@@ -136,7 +136,7 @@ CLASS zcl_abapgit_repo_labels IMPLEMENTATION.
       TRY.
           validate_one_label_color( <ls_c> ).
           APPEND <ls_c> TO lt_normalized.
-        CATCH zcx_abapgit_exception.
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
       ENDTRY.
     ENDLOOP.
 
@@ -225,7 +225,7 @@ CLASS zcl_abapgit_repo_labels IMPLEMENTATION.
           ro_map->set(
             iv_key = <ls_c>-label
             iv_val = <ls_c>-color ).
-        CATCH zcx_abapgit_exception.
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
       ENDTRY.
     ENDLOOP.
 

@@ -786,7 +786,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         CHANGING
           include   = lv_include
         EXCEPTIONS
-          OTHERS    = 1.
+          OTHERS    = 1 ##FM_SUBRC_OK.
+
       IF lv_function_group(1) = 'X'.    " "EXIT"-function-module
         ls_tadir-object = 'FUGS'.
       ENDIF.

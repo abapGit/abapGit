@@ -50,7 +50,7 @@ CLASS zcl_abapgit_pr_enumerator IMPLEMENTATION.
     mv_repo_url = to_lower( iv_url ).
     TRY.
         mi_enum_provider = create_provider( mv_repo_url ).
-      CATCH zcx_abapgit_exception.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
 
   ENDMETHOD.
