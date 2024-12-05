@@ -69,17 +69,16 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-    
-        DATA: lv_http_servid TYPE c LENGTH 30,
-              lt_handler TYPE TABLE OF ty_handler,
-              lty_handler LIKE LINE OF lt_handler,
-              ls_description TYPE ty_uconhttpservtext,
-              ls_korr TYPE trkorr,
-              lv_check_object_name TYPE c LENGTH 40,
-              lx TYPE REF TO cx_root,
-              lv_id TYPE c LENGTH 30,
-              lo_http TYPE REF TO object,
-              lv_abap_lang TYPE ty_gs_object_version.
+    DATA: lv_http_servid TYPE c LENGTH 30,
+          lt_handler TYPE TABLE OF ty_handler,
+          lty_handler LIKE LINE OF lt_handler,
+          ls_description TYPE ty_uconhttpservtext,
+          ls_korr TYPE trkorr,
+          lv_check_object_name TYPE c LENGTH 40,
+          lx TYPE REF TO cx_root,
+          lv_id TYPE c LENGTH 30,
+          lo_http TYPE REF TO object,
+          lv_abap_lang TYPE ty_gs_object_version.
 
   TRY.
        TRY.
