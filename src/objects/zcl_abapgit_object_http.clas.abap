@@ -264,7 +264,7 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
           iv_name = 'HTTPHDL'
           ig_data = lt_handler
         ).
-      CATCH zcx_root INTO lx.
+      CATCH cx_root INTO lx.
         lv_text = lx->get_text( ).
         "ii_log->add_error( iv_msg = lv_text is_item = ms_item ). " Exception
       CATCH cx_ucon_api_http_service INTO lx.
