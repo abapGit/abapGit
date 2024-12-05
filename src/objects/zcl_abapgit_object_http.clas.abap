@@ -79,7 +79,8 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
           lv_id TYPE c LENGTH 30,
           lo_http TYPE REF TO object,
           lv_abap_lang TYPE ty_gs_object_version,
-          lo_transport TYPE REF TO zcl_abapgit_default_transport.
+          lo_transport TYPE REF TO zcl_abapgit_default_transport,
+          lv_instance TYPE REF TO object.
 
     TRY.
        TRY.
@@ -130,7 +131,6 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
               lv_check_object_name = lty_handler-servicehandler.
               IF lv_check_object_name IS NOT INITIAL.
                 TRY.
-                    DATA lv_instance TYPE REF TO object.
                     CALL METHOD ('CL_ABAP_LANGUAGE_VERSION')=>('GET_INSTANCE') RECEIVING ro_version_handler = lv_instance.
                     CALL METHOD lv_instance->('IF_ABAP_LANGUAGE_VERSION~GET_VERSION_OF_OBJECT')
                       EXPORTING
