@@ -248,7 +248,7 @@ CLASS lcl_object_decision_list IMPLEMENTATION.
         TRY.
             lo_columns->get_column( |{ c_fieldname_obj_type }| ).
             lv_object_list = abap_true.
-          CATCH cx_salv_not_found.
+          CATCH cx_salv_not_found ##NO_HANDLER.
         ENDTRY.
 
         setup_columns(

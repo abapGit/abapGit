@@ -486,7 +486,8 @@ CLASS zcl_abapgit_object_scp1 IMPLEMENTATION.
       TABLES
         texts         = ls_scp1-scprtext
       EXCEPTIONS
-        no_text_found = 1.
+        no_text_found = 1
+        OTHERS        = 2 ##FM_SUBRC_OK.
 
     IF ls_scp1-scprattr-type = 'TMP'.
       load_hier( CHANGING cs_scp1 = ls_scp1 ).

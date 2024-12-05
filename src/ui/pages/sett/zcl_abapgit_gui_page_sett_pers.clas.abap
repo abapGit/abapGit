@@ -317,7 +317,7 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
           lo_colors->set(
             iv_key = lv_l
             iv_val = lv_l ).
-        CATCH zcx_abapgit_exception.
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
       ENDTRY.
     ENDLOOP.
 

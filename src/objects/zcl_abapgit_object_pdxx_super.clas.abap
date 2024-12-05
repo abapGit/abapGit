@@ -77,7 +77,7 @@ CLASS zcl_abapgit_object_pdxx_super IMPLEMENTATION.
         enqueue_failed      = 1
         object_not_deleted  = 2
         object_not_found    = 3
-        OTHERS              = 4.       "#EC SUBRC_OK
+        OTHERS              = 4 ##FM_SUBRC_OK.
 
     check_subrc_for( `RH_HRSOBJECT_DELETE` ).
 
