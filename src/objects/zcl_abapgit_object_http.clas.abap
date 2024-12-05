@@ -143,7 +143,8 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
                       lv_abap_lang-id = space.
                     ENDIF.
 
-                    CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_LANGUAGE_VERSION') EXPORTING iv_langu_version = lv_abap_lang-id.
+                    CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_LANGUAGE_VERSION') 
+                      EXPORTING iv_langu_version = lv_abap_lang-id.
                   CATCH cx_root INTO lx.
                     zcx_abapgit_exception=>raise( iv_text       = lx->get_text( )
                                                   ix_previous   = lx ).
@@ -182,10 +183,9 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~exists.
+    DATA lv_id TYPE c LENGTH 30.
     TRY.
-        DATA lv_id TYPE c LENGTH 30.
         SELECT SINGLE id FROM ('uconhttpservhead') INTO lv_id WHERE id = ms_item-obj_name AND version = 'A'.
-
         rv_bool = boolc( sy-subrc = 0 ).
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'HTTP not supported' ).
@@ -225,7 +225,8 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
           lt_handler     TYPE TABLE OF ty_uconservhttphandler,
           ls_description TYPE ty_uconhttpservtext,
           lv_text        TYPE string,
-          lx             TYPE REF TO cx_root.
+          lx_root        TYPE REF TO cx_root,
+          lv_name        TYPE c LENGTH 30.
     TRY.
         lv_http_srv_id = ms_item-obj_name.
         "read http service object
@@ -244,7 +245,6 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
             text = ls_description.
 
         "add data to output
-        DATA lv_name TYPE c LENGTH 30.
         CALL METHOD lo_serv->('IF_UCON_API_HTTP_SERVICE~GET_NAME') RECEIVING name = lv_name.
         io_xml->add(
           iv_name = 'HTTPID'
@@ -257,12 +257,9 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
         io_xml->add(
           iv_name = 'HTTPHDL'
           ig_data = lt_handler ).
-      CATCH cx_root INTO lx.
-        lv_text = lx->get_text( ).
+      CATCH cx_root INTO lx_root.
+        lv_text = lx_root->get_text( ).
         "ii_log->add_error( iv_msg = lv_text is_item = ms_item ). " Exception
-      CATCH cx_ucon_api_http_service INTO lx.
-        lv_text = lx->get_text( ).
-      CATCH cx_root INTO lx.
         zcx_abapgit_exception=>raise( 'HTTP not supported' ).
     ENDTRY.
   ENDMETHOD.
