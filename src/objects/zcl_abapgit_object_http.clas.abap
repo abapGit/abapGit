@@ -146,7 +146,7 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
 
                     CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_LANGUAGE_VERSION') EXPORTING iv_langu_version = lv_abap_lang-id.
                   CATCH cx_root INTO lx.
-                    zcx_abapgit_exception=>raise(  iv_text       = lx->get_text( )
+                    zcx_abapgit_exception=>raise( iv_text       = lx->get_text( )
                                                   ix_previous   = lx ).
                 ENDTRY.
               ENDIF.
