@@ -100,7 +100,7 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
         suppress_transport = 'X'
       EXCEPTIONS
         no_docu_found      = 1
-        OTHERS             = 2.
+        OTHERS             = 2 ##FM_SUBRC_OK.
 
   ENDMETHOD.
 
@@ -317,6 +317,9 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
       EXCEPTIONS
         illegal_input = 1
         OTHERS        = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error reading index' ).
+    ENDIF.
 
     rv_bool = boolc( ls_dd12v IS NOT INITIAL ).
 

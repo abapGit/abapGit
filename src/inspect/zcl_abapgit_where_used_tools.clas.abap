@@ -124,7 +124,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
+CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
 
 
   METHOD build_package_scope.
@@ -311,7 +311,7 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
         not_enough_input         = 1
         no_function_pool         = 2
         delimiter_wrong_position = 3
-        OTHERS                   = 4.
+        OTHERS                   = 4 ##FM_SUBRC_OK.
 
     IF lv_area IS INITIAL.
       SELECT SINGLE master FROM d010inc INTO lv_program
@@ -325,7 +325,7 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
           not_enough_input         = 1
           no_function_pool         = 2
           delimiter_wrong_position = 3
-          OTHERS                   = 4.
+          OTHERS                   = 4 ##FM_SUBRC_OK.
     ENDIF.
 
     IF lv_area IS NOT INITIAL.

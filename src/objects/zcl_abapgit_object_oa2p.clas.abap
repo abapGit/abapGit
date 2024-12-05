@@ -90,7 +90,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
     "authority check
     AUTHORITY-CHECK OBJECT 'S_OA2C_ADM'
-      ID 'ACTVT'     FIELD lc_actvt.
+      ID 'ACTVT' FIELD lc_actvt ##AUTH_OBJ_OK.
     IF sy-subrc <> 0.
       MESSAGE e463(01) WITH mv_profile INTO zcx_abapgit_exception=>null.
       zcx_abapgit_exception=>raise_t100( ).
@@ -104,7 +104,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
         CALL METHOD lo_persist->('IF_WB_OBJECT_PERSIST~DELETE')
           EXPORTING
             p_object_key = lv_profile_key.   " Object Key
-      CATCH cx_swb_object_does_not_exist.
+      CATCH cx_swb_object_does_not_exist ##NO_HANDLER.
       CATCH cx_swb_exception.
         zcx_abapgit_exception=>raise( |Error when deleting OAuth2 Profile { lv_profile_key }.| ).
     ENDTRY.

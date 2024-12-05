@@ -38,6 +38,7 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
             r_ref_db_access = mo_cmp_db.
 
       CATCH cx_root.
+        zcx_abapgit_exception=>raise( 'CMPT not supported' ).
     ENDTRY.
 
     mv_name = ms_item-obj_name.
