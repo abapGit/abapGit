@@ -54,7 +54,6 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~delete.
-    DATA lx TYPE REF TO cx_root.
     DATA lo_name TYPE c LENGTH 30.
     lo_name = ms_item-obj_name.
     TRY.
