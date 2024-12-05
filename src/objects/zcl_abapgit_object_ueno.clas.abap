@@ -569,7 +569,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
           header  = ls_docu-header
           content = ls_docu-content
           itf     = ls_docu-itf
-          pstatus = lv_error_status.
+          pstatus = lv_error_status ##ARG_OK.
 
       CHECK lv_error_status = 'S'. "Success
 

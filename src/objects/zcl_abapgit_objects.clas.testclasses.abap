@@ -29,7 +29,7 @@ CLASS ltcl_object_types IMPLEMENTATION.
 
     DATA: ls_item   TYPE zif_abapgit_definitions=>ty_item,
           lv_exists TYPE abap_bool,
-          lt_types  TYPE zcl_abapgit_objects=>ty_types_tt.
+          lt_types  TYPE zif_abapgit_objects=>ty_types_tt.
 
     FIELD-SYMBOLS: <lv_type> LIKE LINE OF lt_types.
 

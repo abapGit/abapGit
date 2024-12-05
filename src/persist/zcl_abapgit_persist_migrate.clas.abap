@@ -53,7 +53,7 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
 
     TRY.
         lcl_cua_interface=>new( )->put_own_cua( ls_cua ).
-      CATCH zcx_abapgit_exception.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
 
   ENDMETHOD.
@@ -70,7 +70,7 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
 
     TRY.
         ls_own_cua = lcl_cua_interface=>new( )->get_own_cua( ).
-      CATCH zcx_abapgit_exception.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
 
     IF ls_own_cua IS INITIAL.

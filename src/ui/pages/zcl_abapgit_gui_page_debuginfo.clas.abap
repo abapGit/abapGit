@@ -298,15 +298,15 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     DATA: lv_list     TYPE string,
           li_html     TYPE REF TO zif_abapgit_html,
-          lt_types    TYPE zcl_abapgit_objects=>ty_types_tt,
+          lt_types    TYPE zif_abapgit_objects=>ty_types_tt,
           lv_type     LIKE LINE OF lt_types,
           lt_obj      TYPE STANDARD TABLE OF ko100 WITH DEFAULT KEY,
           lv_class    TYPE seoclsname,
           li_object   TYPE REF TO zif_abapgit_object,
           ls_item     TYPE zif_abapgit_definitions=>ty_item,
           ls_metadata TYPE zif_abapgit_definitions=>ty_metadata,
-          lv_step     TYPE zif_abapgit_definitions=>ty_deserialization_step,
-          lt_steps    TYPE zif_abapgit_definitions=>ty_deserialization_step_tt.
+          lv_step     TYPE zif_abapgit_objects=>ty_deserialization_step,
+          lt_steps    TYPE zif_abapgit_objects=>ty_deserialization_step_tt.
 
     FIELD-SYMBOLS: <ls_obj> TYPE ko100.
 

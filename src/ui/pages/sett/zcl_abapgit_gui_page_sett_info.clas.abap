@@ -422,7 +422,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     DATA:
       ls_stats           TYPE ty_stats,
       ls_item            TYPE zif_abapgit_definitions=>ty_item,
-      lt_supported_types TYPE zcl_abapgit_objects=>ty_types_tt.
+      lt_supported_types TYPE zif_abapgit_objects=>ty_types_tt.
 
     ls_stats-measure = 'Number of Objects'.
 
