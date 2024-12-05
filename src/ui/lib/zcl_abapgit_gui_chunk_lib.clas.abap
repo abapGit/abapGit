@@ -243,7 +243,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
   METHOD class_constructor.
@@ -261,7 +261,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
             timezone            = gv_time_zone
           EXCEPTIONS
             customizing_missing = 1
-            OTHERS              = 2.
+            OTHERS              = 2 ##FM_SUBRC_OK.
     ENDTRY.
 
   ENDMETHOD.
