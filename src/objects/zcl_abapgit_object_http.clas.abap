@@ -78,7 +78,8 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
           lx TYPE REF TO cx_root,
           lv_id TYPE c LENGTH 30,
           lo_http TYPE REF TO object,
-          lv_abap_lang TYPE ty_gs_object_version.
+          lv_abap_lang TYPE ty_gs_object_version,
+          lo_transport TYPE REF TO zcl_abapgit_default_transport.
 
   TRY.
        TRY.
@@ -91,7 +92,6 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
             io_xml->read(
               EXPORTING iv_name = 'HTTPHDL'
               CHANGING  cg_data = lt_handler ).
-            DATA lo_transport TYPE REF TO zcl_abapgit_default_transport.
             CREATE OBJECT lo_transport.
             ls_korr = lo_transport->zif_abapgit_default_transport~get( )-ordernum.
 
