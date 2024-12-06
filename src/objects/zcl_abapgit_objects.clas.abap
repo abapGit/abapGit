@@ -4,9 +4,6 @@ CLASS zcl_abapgit_objects DEFINITION
 
   PUBLIC SECTION.
 
-    TYPES:
-      ty_types_tt TYPE SORTED TABLE OF tadir-object WITH UNIQUE KEY table_line .
-
     CLASS-METHODS serialize
       IMPORTING
         !is_item                 TYPE zif_abapgit_definitions=>ty_item
@@ -71,7 +68,7 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(rv_bool) TYPE abap_bool .
     CLASS-METHODS supported_list
       RETURNING
-        VALUE(rt_types) TYPE ty_types_tt .
+        VALUE(rt_types) TYPE zif_abapgit_objects=>ty_types_tt.
     CLASS-METHODS is_active
       IMPORTING
         !is_item         TYPE zif_abapgit_definitions=>ty_item
@@ -663,7 +660,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           li_progress TYPE REF TO zif_abapgit_progress,
           lv_path     TYPE string,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
-          lt_steps_id TYPE zif_abapgit_definitions=>ty_deserialization_step_tt,
+          lt_steps_id TYPE zif_abapgit_objects=>ty_deserialization_step_tt,
           lt_steps    TYPE zif_abapgit_objects=>ty_step_data_tt,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
     DATA lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
@@ -672,7 +669,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     DATA lo_abap_language_vers TYPE REF TO zcl_abapgit_abap_language_vers.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
-                   <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
+                   <lv_step_id> TYPE LINE OF zif_abapgit_objects=>ty_deserialization_step_tt,
                    <ls_step>    TYPE LINE OF zif_abapgit_objects=>ty_step_data_tt,
                    <ls_deser>   TYPE LINE OF zif_abapgit_objects=>ty_deserialization_tt.
 

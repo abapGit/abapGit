@@ -49,7 +49,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DATA_UTILS IMPLEMENTATION.
+CLASS zcl_abapgit_data_utils IMPLEMENTATION.
 
 
   METHOD build_config_filename.
@@ -196,7 +196,7 @@ CLASS ZCL_ABAPGIT_DATA_UTILS IMPLEMENTATION.
         db_not_exists      = 3
         no_permission      = 4
         no_change_allowed  = 5
-        table_is_gtt       = 6
+*        table_is_gtt       = 6 " not in lower releases
         OTHERS             = 7.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Table { is_item-obj_name } cannot be displayed| ).

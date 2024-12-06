@@ -444,7 +444,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   METHOD filter_unsupported_objects.
 
     DATA: ls_unsupported_count TYPE ty_unsupported_count,
-          lt_supported_types   TYPE zcl_abapgit_objects=>ty_types_tt,
+          lt_supported_types   TYPE zif_abapgit_objects=>ty_types_tt,
           lt_unsupported_count TYPE ty_unsupported_count_tt.
 
     FIELD-SYMBOLS: <ls_tadir>             LIKE LINE OF ct_tadir,

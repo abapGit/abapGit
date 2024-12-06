@@ -1,12 +1,11 @@
-INTERFACE zif_abapgit_object
-  PUBLIC .
+INTERFACE zif_abapgit_object PUBLIC.
 
   CONSTANTS:
     BEGIN OF gc_step_id,
-      early TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `EARLY`,
-      abap  TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `ABAP`,
-      ddic  TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `DDIC`,
-      late  TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `LATE`,
+      early TYPE zif_abapgit_objects=>ty_deserialization_step VALUE 'EARLY',
+      abap  TYPE zif_abapgit_objects=>ty_deserialization_step VALUE 'ABAP',
+      ddic  TYPE zif_abapgit_objects=>ty_deserialization_step VALUE 'DDIC',
+      late  TYPE zif_abapgit_objects=>ty_deserialization_step VALUE 'LATE',
     END OF gc_step_id.
 
   METHODS serialize
@@ -19,7 +18,7 @@ INTERFACE zif_abapgit_object
     IMPORTING
       !iv_package   TYPE devclass
       !io_xml       TYPE REF TO zif_abapgit_xml_input
-      !iv_step      TYPE zif_abapgit_definitions=>ty_deserialization_step
+      !iv_step      TYPE zif_abapgit_objects=>ty_deserialization_step
       !ii_log       TYPE REF TO zif_abapgit_log
       !iv_transport TYPE trkorr
     RAISING
@@ -78,7 +77,7 @@ INTERFACE zif_abapgit_object
 
   METHODS get_deserialize_steps
     RETURNING
-      VALUE(rt_steps) TYPE zif_abapgit_definitions=>ty_deserialization_step_tt .
+      VALUE(rt_steps) TYPE zif_abapgit_objects=>ty_deserialization_step_tt.
 
   METHODS get_deserialize_order
     IMPORTING

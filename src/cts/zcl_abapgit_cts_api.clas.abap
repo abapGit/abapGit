@@ -623,7 +623,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
                   ev_object   = ls_list-object
                   ev_obj_name = ls_list-obj_name ).
               INSERT ls_list INTO TABLE rt_list.
-            CATCH zcx_abapgit_exception.
+            CATCH zcx_abapgit_exception ##NO_HANDLER.
           ENDTRY.
       ENDCASE.
     ENDLOOP.
