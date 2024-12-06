@@ -233,7 +233,7 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
         currently_no_resources_avail   = 4
         no_pbt_resources_found         = 5
         cant_init_different_pbt_groups = 6
-        OTHERS                         = 7.
+        OTHERS                         = 7 ##FM_SUBRC_OK.
     " If SPBT_INITIALIZE fails, check transactions RZ12, SM50, SM21, SARFC
 
   ENDMETHOD.
