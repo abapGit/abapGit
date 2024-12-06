@@ -65,7 +65,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_dokil> LIKE LINE OF lt_dokil.
 
     IF iv_object_name CA '#'.
-      zcx_abapgit_exception=>raise( |Invalid name for longtext: { iv_longtext_id }| ).
+      zcx_abapgit_exception=>raise( |Invalid name for longtext: { iv_longtext_id } { iv_object_name }| ).
     ENDIF.
 
     lv_object = escape_name(
