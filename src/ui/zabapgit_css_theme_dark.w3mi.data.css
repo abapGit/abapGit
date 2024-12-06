@@ -263,4 +263,4 @@ div.log { color: var(--theme-greyscale-dark); }
 .dialog input[readonly] {
   background-color: var(--theme-greyscale-dark);
   color: var(--theme-greyscale-medium);
-}
+}
