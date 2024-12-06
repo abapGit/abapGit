@@ -70,12 +70,16 @@ CLASS ltd_environment DEFINITION FINAL FOR TESTING
       set_is_merged
         IMPORTING iv_is_merged TYPE abap_bool,
 
+      set_available_sessions
+        IMPORTING iv_available_sessions TYPE i,
+
       set_free_work_processes
         IMPORTING iv_free_work_processes TYPE i.
 
   PRIVATE SECTION.
     DATA:
       mv_is_merged           TYPE abap_bool,
+      mv_available_sessions  TYPE i,
       mv_free_work_processes TYPE i.
 
 ENDCLASS.
@@ -87,6 +91,10 @@ CLASS ltd_environment IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~get_basis_release.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_environment~get_available_user_sessions.
+    rv_sessions = mv_available_sessions.
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~get_system_language_filter.
@@ -116,11 +124,16 @@ CLASS ltd_environment IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD set_is_merged.
-    me->mv_is_merged = iv_is_merged.
+    mv_is_merged = iv_is_merged.
   ENDMETHOD.
 
+  METHOD set_available_sessions.
+    mv_available_sessions = iv_available_sessions.
+  ENDMETHOD.
+
+
   METHOD set_free_work_processes.
-    me->mv_free_work_processes = iv_free_work_processes.
+    mv_free_work_processes = iv_free_work_processes.
   ENDMETHOD.
 
 ENDCLASS.
@@ -255,6 +268,7 @@ CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LE
       determine_max_processes_no_pp FOR TESTING RAISING zcx_abapgit_exception,
       determine_max_processes_merged FOR TESTING RAISING zcx_abapgit_exception,
       determine_max_processes_exit FOR TESTING RAISING zcx_abapgit_exception,
+      determine_max_processes_capped FOR TESTING RAISING zcx_abapgit_exception,
       force FOR TESTING RAISING zcx_abapgit_exception,
 
       teardown,
@@ -266,6 +280,10 @@ CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LE
       given_is_merged
         IMPORTING
           iv_is_merged TYPE abap_bool,
+
+      given_available_sessions
+        IMPORTING
+          iv_available_sessions TYPE i,
 
       given_free_work_processes
         IMPORTING
@@ -390,6 +408,19 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD determine_max_processes_capped.
+
+    given_parallel_proc_disabled( abap_false ).
+    given_is_merged( abap_false ).
+    given_free_work_processes( 50 ). " big system
+    given_available_sessions( 10 ). " but user session is capped
+
+    when_determine_max_processes( ).
+
+    then_we_shd_have_n_processes( 10 ).
+
+  ENDMETHOD.
+
 
   METHOD force.
 
@@ -410,6 +441,12 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
   METHOD given_is_merged.
 
     mo_environment_double->set_is_merged( iv_is_merged ).
+
+  ENDMETHOD.
+
+  METHOD given_available_sessions.
+
+    mo_environment_double->set_available_sessions( iv_available_sessions ).
 
   ENDMETHOD.
 
