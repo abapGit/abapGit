@@ -12,7 +12,7 @@ INTERFACE zif_abapgit_popups
       show_icon TYPE abap_bool,
       center    TYPE abap_bool,
     END OF ty_alv_column,
-    ty_alv_column_tt TYPE TABLE OF ty_alv_column WITH DEFAULT KEY.
+    ty_alv_column_tt TYPE STANDARD TABLE OF ty_alv_column WITH DEFAULT KEY.
 
   TYPES:
     BEGIN OF ty_popup_position,
