@@ -186,7 +186,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       EXCEPTIONS
         communication_failure = 1 MESSAGE lv_msg
         system_failure        = 2 MESSAGE lv_msg
-        OTHERS                = 3.
+        resource_failure      = 3
+        OTHERS                = 4.
     IF sy-subrc <> 0.
       lv_msg = |Error starting transaction { iv_tcode }: { lv_msg }|.
       MESSAGE lv_msg TYPE 'I'.
@@ -478,6 +479,22 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD go_stage_transport.
+
+    DATA lt_r_trkorr TYPE zif_abapgit_definitions=>ty_trrngtrkor_tt.
+    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
+
+    lt_r_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_select_wb_tc_tr_and_tsk( ).
+
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+
+    CREATE OBJECT ro_filter.
+    ro_filter->set_filter_values( iv_package  = lo_repo->get_package( )
+                                  it_r_trkorr = lt_r_trkorr ).
+
+  ENDMETHOD.
+
+
   METHOD jump_display_transport.
 
     DATA:
@@ -762,6 +779,28 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zip_export_transport.
+
+    DATA lo_obj_filter_trans TYPE REF TO zcl_abapgit_object_filter_tran.
+    DATA lt_r_trkorr         TYPE zif_abapgit_definitions=>ty_trrngtrkor_tt.
+    DATA lo_repo             TYPE REF TO zcl_abapgit_repo.
+    DATA lv_xstr             TYPE xstring.
+
+    lt_r_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_select_wb_tc_tr_and_tsk( ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo->refresh( ).
+    CREATE OBJECT lo_obj_filter_trans.
+    lo_obj_filter_trans->set_filter_values( iv_package  = lo_repo->get_package( )
+                                            it_r_trkorr = lt_r_trkorr ).
+
+    lv_xstr = zcl_abapgit_zip=>encode_files( lo_repo->get_files_local_filtered( lo_obj_filter_trans ) ).
+    lo_repo->refresh( ).
+    file_download( iv_package = lo_repo->get_package( )
+                   iv_xstr    = lv_xstr ).
+
+  ENDMETHOD.
+
+
   METHOD zip_services.
 
     DATA: lv_key            TYPE zif_abapgit_persistence=>ty_repo-key,
@@ -858,42 +897,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         rs_handled-page  = zcl_abapgit_gui_page_whereused=>create( ii_repo = lo_repo ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
     ENDCASE.
-
-  ENDMETHOD.
-
-  METHOD zip_export_transport.
-
-    DATA lo_obj_filter_trans TYPE REF TO zcl_abapgit_object_filter_tran.
-    DATA lt_r_trkorr         TYPE zif_abapgit_definitions=>ty_trrngtrkor_tt.
-    DATA lo_repo             TYPE REF TO zcl_abapgit_repo.
-    DATA lv_xstr             TYPE xstring.
-
-    lt_r_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_select_wb_tc_tr_and_tsk( ).
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    lo_repo->refresh( ).
-    CREATE OBJECT lo_obj_filter_trans.
-    lo_obj_filter_trans->set_filter_values( iv_package  = lo_repo->get_package( )
-                                            it_r_trkorr = lt_r_trkorr ).
-
-    lv_xstr = zcl_abapgit_zip=>encode_files( lo_repo->get_files_local_filtered( lo_obj_filter_trans ) ).
-    lo_repo->refresh( ).
-    file_download( iv_package = lo_repo->get_package( )
-                   iv_xstr    = lv_xstr ).
-
-  ENDMETHOD.
-
-  METHOD go_stage_transport.
-
-    DATA lt_r_trkorr TYPE zif_abapgit_definitions=>ty_trrngtrkor_tt.
-    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
-
-    lt_r_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_select_wb_tc_tr_and_tsk( ).
-
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-
-    CREATE OBJECT ro_filter.
-    ro_filter->set_filter_values( iv_package  = lo_repo->get_package( )
-                                  it_r_trkorr = lt_r_trkorr ).
 
   ENDMETHOD.
 ENDCLASS.
