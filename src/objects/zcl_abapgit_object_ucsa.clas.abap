@@ -158,6 +158,8 @@ CLASS zcl_abapgit_object_ucsa IMPLEMENTATION.
 
     tadir_delete( ).
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
