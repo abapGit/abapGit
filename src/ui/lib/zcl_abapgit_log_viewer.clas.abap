@@ -393,6 +393,16 @@ CLASS zcl_abapgit_log_viewer IMPLEMENTATION.
           lo_column->set_technical( abap_true ).
         ENDIF.
 
+        LOOP AT gt_log TRANSPORTING NO FIELDS WHERE id IS NOT INITIAL.
+          EXIT.
+        ENDLOOP.
+        IF sy-subrc <> 0.
+          lo_column = lo_columns->get_column( |ID| ).
+          lo_column->set_technical( abap_true ).
+          lo_column = lo_columns->get_column( |NUMBER| ).
+          lo_column->set_technical( abap_true ).
+        ENDIF.
+
         ls_position = zcl_abapgit_popups=>center(
           iv_width  = 125
           iv_height = 20 ).
