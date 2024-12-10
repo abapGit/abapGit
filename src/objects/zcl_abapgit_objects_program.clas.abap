@@ -601,7 +601,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    IF lv_state = c_state-inactive. "Textpool in main language needs to be activated
+    "Textpool in main language needs to be activated (not for FUGS/FUGX)
+    IF lv_state = c_state-inactive AND iv_program NP 'SAPLX*'.
       zcl_abapgit_objects_activation=>add(
         iv_type   = 'REPT'
         iv_name   = iv_program
