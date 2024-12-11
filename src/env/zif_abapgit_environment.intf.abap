@@ -39,5 +39,8 @@ INTERFACE zif_abapgit_environment
       iv_group                      TYPE clike
     RETURNING
       VALUE(rv_free_work_processes) TYPE i.
+  METHODS get_available_user_sessions
+    RETURNING
+      VALUE(rv_sessions) TYPE i.
 
 ENDINTERFACE.

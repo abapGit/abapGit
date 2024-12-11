@@ -26,6 +26,8 @@ CLASS lcl_environment IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_environment~get_basis_release.
   ENDMETHOD.
+  METHOD zif_abapgit_environment~get_available_user_sessions.
+  ENDMETHOD.
   METHOD zif_abapgit_environment~get_system_language_filter.
   ENDMETHOD.
   METHOD zif_abapgit_environment~is_merged.
