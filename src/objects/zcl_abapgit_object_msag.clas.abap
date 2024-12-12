@@ -84,7 +84,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         object_is_enqueued_by_corr     = 6
         user_break                     = 7
         OTHERS                         = 8.
-    IF sy-subrc <> 0.
+    IF sy-subrc <> 0 AND sy-subrc <> 4.
       zcx_abapgit_exception=>raise( 'Error deleting longtext for message' ).
     ENDIF.
 

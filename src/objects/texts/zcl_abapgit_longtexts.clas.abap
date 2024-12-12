@@ -64,6 +64,10 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_dokil> LIKE LINE OF lt_dokil.
 
+    IF iv_object_name CA '#'.
+      zcx_abapgit_exception=>raise( |Invalid name for longtext: { iv_longtext_id } { iv_object_name }| ).
+    ENDIF.
+
     lv_object = escape_name(
       iv_longtext_id = iv_longtext_id
       iv_object_name = iv_object_name ).
@@ -77,21 +81,19 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
       ENDIF.
 
     ELSEIF iv_longtext_id IS NOT INITIAL.
-      IF lv_object NA '#'.
-        IF iv_main_lang_only = abap_true.
-          SELECT * FROM dokil
-                   INTO TABLE lt_dokil
-                   WHERE id     = iv_longtext_id
-                   AND object LIKE lv_object ESCAPE '#'
-                   AND masterlang = abap_true
-                   ORDER BY PRIMARY KEY.
-        ELSE.
-          SELECT * FROM dokil
-                   INTO TABLE lt_dokil
-                   WHERE id     = iv_longtext_id
-                   AND object LIKE lv_object ESCAPE '#'
-                   ORDER BY PRIMARY KEY.
-        ENDIF.
+      IF iv_main_lang_only = abap_true.
+        SELECT * FROM dokil
+                 INTO TABLE lt_dokil
+                 WHERE id     = iv_longtext_id
+                 AND object LIKE lv_object ESCAPE '#'
+                 AND masterlang = abap_true
+                 ORDER BY PRIMARY KEY.
+      ELSE.
+        SELECT * FROM dokil
+                 INTO TABLE lt_dokil
+                 WHERE id     = iv_longtext_id
+                 AND object LIKE lv_object ESCAPE '#'
+                 ORDER BY PRIMARY KEY.
       ENDIF.
     ELSE.
 

@@ -137,7 +137,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD check_selected.
@@ -281,7 +281,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
               es_item     = ls_item ).
           ls_changed_by-item = ls_item.
           INSERT ls_changed_by INTO TABLE lt_changed_by_remote.
-        CATCH zcx_abapgit_exception.
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
       ENDTRY.
     ENDLOOP.
 
@@ -348,7 +348,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
         rt_transports = li_cts_api->get_transports_for_list( lt_items ).
 
-      CATCH zcx_abapgit_exception.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
 
   ENDMETHOD.

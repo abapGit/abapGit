@@ -310,7 +310,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
               excecution_error       = 1
               cancelled              = 2
               insert_into_corr_error = 3
-              OTHERS                 = 4 ##SUBRC_OK.
+              OTHERS                 = 4 ##FM_SUBRC_OK.
         CATCH cx_sy_dyn_call_param_not_found.
           CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
             EXPORTING
@@ -324,7 +324,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
               excecution_error       = 1
               cancelled              = 2
               insert_into_corr_error = 3
-              OTHERS                 = 4 ##SUBRC_OK.
+              OTHERS                 = 4 ##FM_SUBRC_OK.
       ENDTRY.
       CASE sy-subrc.
         WHEN 1 OR 3 OR 4.
@@ -398,9 +398,18 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
           WHERE type = <ls_message>-show_req->object_type.
       ENDIF.
       LOOP AT <ls_message>-mtext ASSIGNING <lv_msg>.
-        ii_log->add_error(
-          iv_msg  = <lv_msg>
-          is_item = ls_item ).
+        IF sy-tabix = 1.
+          ii_log->add(
+            iv_type   = 'E'
+            iv_msg    = <lv_msg>
+            iv_class  = <ls_message>-message-msgid
+            iv_number = <ls_message>-message-msgno
+            is_item   = ls_item ).
+        ELSE.
+          ii_log->add_error(
+            iv_msg  = <lv_msg>
+            is_item = ls_item ).
+        ENDIF.
       ENDLOOP.
     ENDLOOP.
 
@@ -439,8 +448,10 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
     DELETE lt_lines WHERE class = 'D0' AND number = '319'.
 
     LOOP AT lt_lines ASSIGNING <ls_line>.
-      ii_log->add( iv_msg  = <ls_line>-line
-                   iv_type = <ls_line>-severity ).
+      ii_log->add( iv_msg    = <ls_line>-line
+                   iv_type   = <ls_line>-severity
+                   iv_class  = <ls_line>-class
+                   iv_number = |{ <ls_line>-number }| ).
     ENDLOOP.
 
     ii_log->add_info( |View complete activation log in program RSPUTPRT (type D, log name { iv_logname })| ).
