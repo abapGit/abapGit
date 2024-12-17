@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_HTTP</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>zcl_abapgit_object_http</DESCRIPT>
+    <DESCRIPT>abapGit - HTTP - HTTP Destination</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

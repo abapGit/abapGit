@@ -2,11 +2,11 @@ CLASS zcl_abapgit_object_http DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_objects_super
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_object .
+    INTERFACES zif_abapgit_object.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -20,7 +20,7 @@ CLASS zcl_abapgit_object_http DEFINITION
     TYPES: BEGIN OF ty_uconhttpservtext,
              id        TYPE c LENGTH 30,
              version   TYPE c LENGTH 1,
-             lang      TYPE lang,
+             lang      TYPE c LENGTH 1,
              shorttext TYPE c LENGTH 255,
            END OF ty_uconhttpservtext.
     TYPES: BEGIN OF ty_handler,
@@ -33,33 +33,37 @@ CLASS zcl_abapgit_object_http DEFINITION
              id           TYPE c LENGTH 1,
              object_state TYPE c LENGTH 1,
            END OF ty_gs_object_version.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
+CLASS zcl_abapgit_object_http IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
 
     TRY.
-        SELECT SINGLE changedby FROM ('uconhttpservhead') INTO rv_user WHERE id = ms_item-obj_name.
+        SELECT SINGLE changedby FROM ('UCONHTTPSERVHEAD') INTO rv_user WHERE id = ms_item-obj_name.
         IF sy-subrc <> 0.
           rv_user = c_user_unknown.
         ENDIF.
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'HTTP not supported' ).
     ENDTRY.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~delete.
-    DATA lo_name TYPE c LENGTH 30.
-    lo_name = ms_item-obj_name.
+
+    DATA lv_name TYPE c LENGTH 30.
+
+    lv_name = ms_item-obj_name.
     TRY.
         CALL METHOD ('CL_UCON_API_FACTORY')=>('DELETE_HTTP_SERVICE')
           EXPORTING
-            name     = lo_name
+            name     = lv_name
             devclass = iv_package.
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'HTTP not supported' ).
@@ -69,103 +73,91 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-    DATA: lv_http_servid TYPE c LENGTH 30,
-          lt_handler TYPE TABLE OF ty_handler,
-          ls_handler LIKE LINE OF lt_handler,
-          ls_description TYPE ty_uconhttpservtext,
-          ls_korr TYPE trkorr,
+
+    DATA: lv_http_servid       TYPE c LENGTH 30,
+          lt_handler           TYPE TABLE OF ty_handler,
+          ls_handler           LIKE LINE OF lt_handler,
+          ls_description       TYPE ty_uconhttpservtext,
           lv_check_object_name TYPE c LENGTH 40,
-          lx_root TYPE REF TO cx_root,
-          lv_id TYPE c LENGTH 30,
-          lo_http TYPE REF TO object,
-          lv_abap_lang TYPE ty_gs_object_version,
-          lo_transport TYPE REF TO zcl_abapgit_default_transport,
-          lv_instance TYPE REF TO object,
-          lv_tadir_name TYPE tadir-obj_name,
-          lt_ret TYPE bapiret2_t.
+          lx_root              TYPE REF TO cx_root,
+          lv_id                TYPE c LENGTH 30,
+          lo_http              TYPE REF TO object,
+          ls_abap_lang         TYPE ty_gs_object_version,
+          lo_instance          TYPE REF TO object,
+          lv_tadir_name        TYPE tadir-obj_name,
+          lt_ret               TYPE bapiret2_t.
 
     TRY.
-        TRY.
-            io_xml->read(
-              EXPORTING iv_name = 'HTTPID'
-              CHANGING  cg_data = lv_http_servid ).
-            io_xml->read(
-              EXPORTING iv_name = 'HTTPTEXT'
-              CHANGING  cg_data = ls_description ).
-            io_xml->read(
-              EXPORTING iv_name = 'HTTPHDL'
-              CHANGING  cg_data = lt_handler ).
-            CREATE OBJECT lo_transport.
-            ls_korr = lo_transport->zif_abapgit_default_transport~get( )-ordernum.
+        io_xml->read(
+          EXPORTING iv_name = 'HTTPID'
+          CHANGING  cg_data = lv_http_servid ).
+        io_xml->read(
+          EXPORTING iv_name = 'HTTPTEXT'
+          CHANGING  cg_data = ls_description ).
+        io_xml->read(
+          EXPORTING iv_name = 'HTTPHDL'
+          CHANGING  cg_data = lt_handler ).
 
-          CATCH zcx_abapgit_exception INTO lx_root. " Exception
-            zcx_abapgit_exception=>raise( iv_text     = lx_root->get_text( )
-                                 ix_previous = lx_root->previous ).
-        ENDTRY.
+        SELECT SINGLE id FROM ('UCONHTTPSERVHEAD') INTO lv_id WHERE id = lv_http_servid AND version = 'A'.
+        IF sy-subrc = 0.
+          "update
+          CALL METHOD ('CL_UCON_API_FACTORY')=>('GET_HTTP_SERVICE')
+            EXPORTING
+              name          = lv_http_servid
+              no_auth_check = abap_true
+            RECEIVING
+              http_service  = lo_http.
+        ELSE.
+          "create
+          CALL METHOD ('CL_UCON_API_FACTORY')=>('NEW_HTTP_SERVICE')
+            EXPORTING
+              name         = lv_http_servid
+            RECEIVING
+              http_service = lo_http.
+        ENDIF.
 
-        SELECT SINGLE id FROM ('uconhttpservhead') INTO lv_id WHERE id = lv_http_servid AND version = 'A'.
+        CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_HANDLER')
+          EXPORTING
+            handler = lt_handler.
+        IF lt_handler IS NOT INITIAL.
+          READ TABLE lt_handler INTO ls_handler INDEX 1.
+          "get language version from abap class
 
-        TRY.
-            IF sy-subrc = 0.
-              "update
-              CALL METHOD ('CL_UCON_API_FACTORY')=>('GET_HTTP_SERVICE')
-                EXPORTING
-                  name          = lv_http_servid
-                  no_auth_check = abap_true
-                RECEIVING
-                  http_service  = lo_http.
-            ELSE.
-              "create
-              CALL METHOD ('CL_UCON_API_FACTORY')=>('NEW_HTTP_SERVICE')
-                EXPORTING
-                  name         = lv_http_servid
-                RECEIVING
-                  http_service = lo_http.
-            ENDIF.
+          lv_check_object_name = ls_handler-servicehandler.
+          IF lv_check_object_name IS NOT INITIAL.
+            TRY.
+                CALL METHOD ('CL_ABAP_LANGUAGE_VERSION')=>('GET_INSTANCE')
+                  RECEIVING
+                    ro_version_handler = lo_instance.
+                CALL METHOD lo_instance->('IF_ABAP_LANGUAGE_VERSION~GET_VERSION_OF_OBJECT')
+                  EXPORTING
+                    iv_object_type    = 'CLAS'
+                    iv_object_name    = lv_check_object_name
+                  RECEIVING
+                    rs_object_version = ls_abap_lang.
 
-            CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_HANDLER')
-              EXPORTING
-                handler = lt_handler.
-            IF lt_handler IS NOT INITIAL.
-              READ TABLE lt_handler INTO ls_handler INDEX 1.
-              "get language version from abap class
+                IF ls_abap_lang-id = 'X'. "language version X not supported, use space instead
+                  ls_abap_lang-id = space.
+                ENDIF.
 
-              lv_check_object_name = ls_handler-servicehandler.
-              IF lv_check_object_name IS NOT INITIAL.
-                TRY.
-                    CALL METHOD ('CL_ABAP_LANGUAGE_VERSION')=>('GET_INSTANCE') RECEIVING ro_version_handler = lv_instance.
-                    CALL METHOD lv_instance->('IF_ABAP_LANGUAGE_VERSION~GET_VERSION_OF_OBJECT')
-                      EXPORTING
-                        iv_object_type    = 'CLAS'
-                        iv_object_name    = lv_check_object_name
-                      RECEIVING
-                        rs_object_version = lv_abap_lang.
+                CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_LANGUAGE_VERSION')
+                  EXPORTING
+                    iv_langu_version = ls_abap_lang-id.
+              CATCH cx_root ##NO_HANDLER.
+                " ABAP language version not supported in this system
+            ENDTRY.
+          ENDIF.
+        ENDIF.
 
-                    IF lv_abap_lang-id = 'X'. "language version X not supported, use space instead
-                      lv_abap_lang-id = space.
-                    ENDIF.
-
-                    CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_LANGUAGE_VERSION')
-                      EXPORTING iv_langu_version = lv_abap_lang-id.
-                  CATCH cx_root INTO lx_root.
-                    zcx_abapgit_exception=>raise( iv_text       = lx_root->get_text( )
-                                                  ix_previous   = lx_root ).
-                ENDTRY.
-              ENDIF.
-            ENDIF.
-            CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_DESCRIPTION')
-              EXPORTING
-                texts = ls_description.
-            CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SAVE')
-              EXPORTING
-                run_dark  = abap_true
-                dev_class = iv_package
-                korrnum   = ls_korr.
-            CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~FREE').
-          CATCH cx_root INTO lx_root.
-            zcx_abapgit_exception=>raise( iv_text     = lx_root->get_text( )
-                                 ix_previous   = lx_root->previous ).
-        ENDTRY.
+        CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_DESCRIPTION')
+          EXPORTING
+            texts = ls_description.
+        CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SAVE')
+          EXPORTING
+            run_dark  = abap_true
+            dev_class = iv_package
+            korrnum   = iv_transport.
+        CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~FREE').
 
         lv_tadir_name = lv_http_servid.
         CALL METHOD ('CL_AUTH_START_TOOLS')=>('SUSH_CREATE')
@@ -173,19 +165,23 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
             iv_type   = 'HTTP'
             iv_name   = lv_tadir_name
             iv_silent = abap_true
-            iv_task   = ls_korr
+            iv_task   = iv_transport
           IMPORTING
             et_log    = lt_ret.
+
       CATCH cx_root INTO lx_root.
-        zcx_abapgit_exception=>raise( lx_root->get_text( ) ).
+        zcx_abapgit_exception=>raise_with_text( lx_root ).
     ENDTRY.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
+
     DATA lv_id TYPE c LENGTH 30.
+
     TRY.
-        SELECT SINGLE id FROM ('uconhttpservhead') INTO lv_id WHERE id = ms_item-obj_name AND version = 'A'.
+        SELECT SINGLE id FROM ('UCONHTTPSERVHEAD') INTO lv_id WHERE id = ms_item-obj_name AND version = 'A'.
         rv_bool = boolc( sy-subrc = 0 ).
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'HTTP not supported' ).
@@ -195,6 +191,11 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_comparator.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
   ENDMETHOD.
 
 
@@ -213,8 +214,23 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 
 
@@ -227,6 +243,7 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
           lv_text        TYPE string,
           lx_root        TYPE REF TO cx_root,
           lv_name        TYPE c LENGTH 30.
+
     TRY.
         lv_http_srv_id = ms_item-obj_name.
         "read http service object
@@ -246,6 +263,7 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
 
         "add data to output
         CALL METHOD lo_serv->('IF_UCON_API_HTTP_SERVICE~GET_NAME') RECEIVING name = lv_name.
+
         io_xml->add(
           iv_name = 'HTTPID'
           ig_data = lv_name ).
@@ -257,26 +275,10 @@ CLASS ZCL_ABAPGIT_OBJECT_HTTP IMPLEMENTATION.
         io_xml->add(
           iv_name = 'HTTPHDL'
           ig_data = lt_handler ).
+
       CATCH cx_root INTO lx_root.
-        lv_text = lx_root->get_text( ).
-        "ii_log->add_error( iv_msg = lv_text is_item = ms_item ). " Exception
-        zcx_abapgit_exception=>raise( 'HTTP not supported' ).
+        zcx_abapgit_exception=>raise_with_text( lx_root ).
     ENDTRY.
-  ENDMETHOD.
 
-  METHOD zif_abapgit_object~map_filename_to_object.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_deserialize_order.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_object_to_filename.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-    rv_is_locked = abap_false.
   ENDMETHOD.
 ENDCLASS.
