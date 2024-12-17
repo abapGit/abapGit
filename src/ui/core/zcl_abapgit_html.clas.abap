@@ -48,6 +48,7 @@ CLASS zcl_abapgit_html DEFINITION
         within_style    TYPE abap_bool,
         within_js       TYPE abap_bool,
         within_textarea TYPE abap_bool,
+        within_pre      TYPE abap_bool,
         indent          TYPE i,
         indent_str      TYPE string,
       END OF ty_indent_context .
@@ -59,6 +60,8 @@ CLASS zcl_abapgit_html DEFINITION
         script_close   TYPE abap_bool,
         textarea_open  TYPE abap_bool,
         textarea_close TYPE abap_bool,
+        pre_open       TYPE abap_bool,
+        pre_close      TYPE abap_bool,
         tag_close      TYPE abap_bool,
         curly_close    TYPE abap_bool,
         openings       TYPE i,
@@ -85,7 +88,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
+CLASS zcl_abapgit_html IMPLEMENTATION.
 
 
   METHOD checkbox.
@@ -120,10 +123,6 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_debug_mode.
-    gv_debug_mode = iv_mode.
-  ENDMETHOD.
-
   METHOD create.
     CREATE OBJECT ri_instance TYPE zcl_abapgit_html.
     IF iv_initial_chunk IS NOT INITIAL.
@@ -134,11 +133,11 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
   METHOD icon.
 
-    DATA: lv_hint       TYPE string,
-          lv_name       TYPE string,
-          lv_color      TYPE string,
-          lv_class      TYPE string,
-          lv_onclick    TYPE string.
+    DATA: lv_hint    TYPE string,
+          lv_name    TYPE string,
+          lv_color   TYPE string,
+          lv_class   TYPE string,
+          lv_onclick TYPE string.
 
     SPLIT iv_name AT '/' INTO lv_name lv_color.
 
@@ -178,6 +177,17 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       cs_context-within_textarea = abap_false.
       RETURN.
     ELSEIF cs_context-within_textarea = abap_true.
+      RETURN.
+    ENDIF.
+
+    " No indent for pre tags
+    IF ls_study-pre_open = abap_true.
+      cs_context-within_pre = abap_true.
+      RETURN.
+    ELSEIF ls_study-pre_close = abap_true.
+      cs_context-within_pre = abap_false.
+      RETURN.
+    ELSEIF cs_context-within_pre = abap_true.
       RETURN.
     ENDIF.
 
@@ -236,6 +246,11 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       CLEAR rs_data_attr.
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD set_debug_mode.
+    gv_debug_mode = iv_mode.
   ENDMETHOD.
 
 
@@ -306,6 +321,16 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       FIND FIRST OCCURRENCE OF '</TEXTAREA' IN lv_line.
       IF sy-subrc > 0. " Not found
         rs_result-textarea_open = abap_true.
+      ENDIF.
+    ENDIF.
+
+    " Pre (same assumptions as above)
+    IF is_context-within_pre = abap_true AND lv_len >= 5 AND lv_line(5) = '</PRE'.
+      rs_result-pre_close = abap_true.
+    ELSEIF is_context-within_pre = abap_false AND lv_len >= 4 AND lv_line(4) = '<PRE'.
+      FIND FIRST OCCURRENCE OF '</PRE' IN lv_line.
+      IF sy-subrc > 0. " Not found
+        rs_result-pre_open = abap_true.
       ENDIF.
     ENDIF.
 
@@ -564,10 +589,10 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     DATA lv_close_tag TYPE string.
     DATA ls_data_attr LIKE LINE OF it_data_attrs.
 
-    DATA: lv_class TYPE string,
-          lv_id    TYPE string,
+    DATA: lv_class     TYPE string,
+          lv_id        TYPE string,
           lv_data_attr TYPE string,
-          lv_title TYPE string.
+          lv_title     TYPE string.
 
     IF iv_id IS NOT INITIAL.
       lv_id = | id="{ iv_id }"|.
