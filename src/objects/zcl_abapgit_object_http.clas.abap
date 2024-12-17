@@ -240,7 +240,6 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
           lo_serv        TYPE REF TO object, "if_ucon_api_http_service
           lt_handler     TYPE TABLE OF ty_uconservhttphandler,
           ls_description TYPE ty_uconhttpservtext,
-          lv_text        TYPE string,
           lx_root        TYPE REF TO cx_root,
           lv_name        TYPE c LENGTH 30.
 
