@@ -41,7 +41,7 @@ INTERFACE zif_abapgit_environment
       VALUE(rv_free_work_processes) TYPE i.
   METHODS check_parallel_processing
     IMPORTING
-      iv_group         TYPE clike
+      iv_group          TYPE clike
     RETURNING
       VALUE(rv_checked) TYPE abap_bool.
   METHODS get_available_user_sessions
