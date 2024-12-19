@@ -107,7 +107,9 @@ CLASS ltcl_convert IMPLEMENTATION.
     DATA lv_size TYPE i.
     DATA lv_xstr TYPE xstring.
 
-    lv_xstr = repeat( val = '1122334455' occ = 200 ).
+    lv_xstr = repeat(
+      val = '1122334455'
+      occ = 200 ).
 
     zcl_abapgit_convert=>xstring_to_bintab(
       EXPORTING
