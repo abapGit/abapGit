@@ -2,11 +2,11 @@ CLASS zcl_abapgit_environment DEFINITION
   PUBLIC
   FINAL
   CREATE PRIVATE
-  GLOBAL FRIENDS zcl_abapgit_factory .
+  GLOBAL FRIENDS zcl_abapgit_factory.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_environment .
+    INTERFACES zif_abapgit_environment.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -16,7 +16,7 @@ CLASS zcl_abapgit_environment DEFINITION
 
     METHODS is_system_changes_allowed
       RETURNING
-        VALUE(rv_result) TYPE abap_bool .
+        VALUE(rv_result) TYPE abap_bool.
 ENDCLASS.
 
 
@@ -72,6 +72,49 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
       lv_sys_cliinddep_edit NA '23' AND
       lv_is_shadow <> abap_true AND
       lv_is_upgrade <> abap_true ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_environment~check_parallel_processing.
+
+    " If check fails, see transactions RZ12
+    DATA:
+      lt_setup      TYPE STANDARD TABLE OF rzllitab,
+      ls_setup      LIKE LINE OF lt_setup,
+      lt_erfc_setup TYPE STANDARD TABLE OF rzlliclass,
+      lt_instances  TYPE STANDARD TABLE OF msxxlist WITH DEFAULT KEY.
+
+    " Check if server group for parallel processing exists
+    CALL FUNCTION 'SMLG_GET_SETUP'
+      EXPORTING
+        grouptype          = 'S'
+      TABLES
+        setup              = lt_setup
+        erfc_setup         = lt_erfc_setup
+      EXCEPTIONS
+        foreign_lock       = 1
+        system_failure     = 2
+        invalid_group_type = 3
+        OTHERS             = 4.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_setup INTO ls_setup WITH KEY classname = iv_group.
+    IF sy-subrc = 0 AND ls_setup-applserver IS NOT INITIAL.
+
+      " Check if assigned server instance exists
+      CALL FUNCTION 'TH_SERVER_LIST'
+        TABLES
+          list = lt_instances.
+
+      READ TABLE lt_instances TRANSPORTING NO FIELDS WITH KEY name = ls_setup-applserver.
+      IF sy-subrc = 0.
+        rv_checked = abap_true.
+      ENDIF.
+
+    ENDIF.
 
   ENDMETHOD.
 
