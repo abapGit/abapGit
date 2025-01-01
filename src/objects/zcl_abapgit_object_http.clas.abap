@@ -85,7 +85,7 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
           ls_abap_lang         TYPE ty_gs_object_version,
           lo_instance          TYPE REF TO object,
           lv_tadir_name        TYPE tadir-obj_name,
-          lt_ret               TYPE bapiret2_t.
+          lt_ret               TYPE STANDARD TABLE OF bapiret2.
 
     TRY.
         io_xml->read(
