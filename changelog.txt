@@ -13,6 +13,7 @@ Legend
 
 ! Remove need to `parallel_generators` server group (#7119)
 + VIEW: save `tddat` entries to transport (#7042)
++ Support for HTTP Destination (#7100)
 + Enhance logging with message id and number (#7111)
 * Fix language conversion for language A (#7076)
 * longtexts: workaround strange object names dump (#7077)
