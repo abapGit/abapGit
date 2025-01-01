@@ -8,6 +8,27 @@ Legend
 + : added
 - : removed
 
+2025-01-01 v1.131.0
+-------------------
+
+! Remove need to `parallel_generators` server group (#7119)
++ VIEW: save `tddat` entries to transport (#7042)
++ Support for HTTP Destination (#7100)
++ Enhance logging with message id and number (#7111)
+* Fix language conversion for language A (#7076)
+* longtexts: workaround strange object names dump (#7077)
+* SRVB: Clear fields and fix deserialize order (#7085)
+* MSAG: Fix error handling during deletion (#7093)
+* Fix error handling in exception viewer (#7095)
+* Fix dark theme CSS whitespace (#7104)
+* MSAG: Fix deletion of message longtexts (#7109)
+* Fix RFC error handling (#7102)
+* IDOC/IEXT: Fix deserialize in background (#7113)
+* USCA: Fix missing transport entry (#7110)
+* FUGS: Fix activation error (#7115)
+* Limit number of GUI sessions (#7080)
+* Fix dump when converting `xstring` to `bintab` (#7120)
+
 2024-11-04 v1.130.0
 -------------------
 
