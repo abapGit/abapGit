@@ -245,7 +245,6 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     DATA:
       lt_stream      TYPE TABLE OF tdline,
       lt_string      TYPE TABLE OF string,
-      lv_string      LIKE LINE OF lt_string,
       lt_itf         TYPE tline_tab,
       lv_has_content TYPE abap_bool,
       lv_tabix_from  TYPE syst-tabix,
