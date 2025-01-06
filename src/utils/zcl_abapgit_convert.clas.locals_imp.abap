@@ -247,7 +247,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
           lv_sap1 = zcl_abapgit_convert=>uccp( im_sap1 ).
         CATCH cx_root.
           " Language is not supported in this system -> ignore it
-          " Should someone try to such language in a repo, it will result in an error (see above)
+          " Should someone try to use the language in a repo, it will result in an error (see above)
           RETURN.
       ENDTRY.
     ELSEIF strlen( im_sap1 ) = 1.
