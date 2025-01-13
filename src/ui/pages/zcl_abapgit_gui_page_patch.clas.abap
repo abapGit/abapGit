@@ -528,7 +528,10 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
       lv_patched           TYPE abap_bool,
       lv_is_patch_possible TYPE abap_bool.
 
-    lv_patched = get_diff_object( iv_filename )->is_line_patched( iv_index ).
+    " In case an object is falsely detected as changed, filename is empty and there's no diff object
+    IF iv_filename IS NOT INITIAL.
+      lv_patched = get_diff_object( iv_filename )->is_line_patched( iv_index ).
+    ENDIF.
 
     lv_is_patch_possible = is_patch_line_possible( is_diff_line ).
 
