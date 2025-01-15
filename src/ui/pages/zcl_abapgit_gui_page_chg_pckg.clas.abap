@@ -94,7 +94,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg DEFINITION
 
     METHODS delete_packages
       IMPORTING
-        !it_mapping TYPE ty_mapping
+        !it_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -102,6 +102,12 @@ CLASS zcl_abapgit_gui_page_chg_pckg DEFINITION
       IMPORTING
         !it_mapping TYPE ty_mapping
         !it_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS update_sotr_package_assignment
+      IMPORTING
+        !it_mapping TYPE ty_mapping
       RAISING
         zcx_abapgit_exception.
 
@@ -144,6 +150,8 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
       it_mapping = lt_mapping
       it_tadir   = lt_tadir ).
 
+    update_sotr_package_assignment( lt_mapping ).
+
     update_repo_persistence(
       iv_old_package = iv_old_package
       iv_new_package = iv_new_package ).
@@ -151,7 +159,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
     update_repo_checksums( lt_mapping ).
 
     IF iv_remove_old = abap_true.
-      delete_packages( lt_mapping ).
+      delete_packages( lt_tadir ).
     ENDIF.
 
     zcl_abapgit_repo_srv=>get_instance( )->init( ).
@@ -267,6 +275,16 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
 
   METHOD delete_packages.
 
+    DATA lt_tadir LIKE it_tadir.
+
+    lt_tadir = it_tadir.
+
+    DELETE lt_tadir WHERE object <> 'DEVC'.
+
+    SORT lt_tadir DESCENDING BY obj_name.
+
+    zcl_abapgit_objects=>delete( lt_tadir ).
+
   ENDMETHOD.
 
 
@@ -367,7 +385,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
 
     lt_checksums = lo_checksums->zif_abapgit_repo_checksums~get( ).
 
-    LOOP AT lt_checksums ASSIGNING <ls_checksum>.
+    LOOP AT lt_checksums ASSIGNING <ls_checksum> WHERE item-devclass IS NOT INITIAL.
       READ TABLE it_mapping ASSIGNING <ls_map> WITH KEY old_package = <ls_checksum>-item-devclass.
       ASSERT sy-subrc = 0.
 
@@ -409,6 +427,18 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
       iv_key         = lv_key
       is_meta        = ls_meta
       is_change_mask = ls_change_mask ).
+
+  ENDMETHOD.
+
+
+  METHOD update_sotr_package_assignment.
+
+    FIELD-SYMBOLS <ls_map> LIKE LINE OF it_mapping.
+
+    LOOP AT it_mapping ASSIGNING <ls_map>.
+      UPDATE sotr_head SET paket = <ls_map>-new_package WHERE paket = <ls_map>-old_package ##SUBRC_OK.
+      UPDATE sotr_headu SET paket = <ls_map>-new_package WHERE paket = <ls_map>-old_package ##SUBRC_OK.
+    ENDLOOP.
 
   ENDMETHOD.
 
