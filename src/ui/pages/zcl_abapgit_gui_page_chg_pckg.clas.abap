@@ -379,7 +379,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
       <ls_checksum> LIKE LINE OF lt_checksums,
       <ls_map>      LIKE LINE OF it_mapping.
 
-    lv_key =  mo_repo->get_key( ).
+    lv_key = mo_repo->get_key( ).
 
     CREATE OBJECT lo_checksums EXPORTING iv_repo_key = lv_key.
 
@@ -407,7 +407,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
       ls_meta        TYPE zif_abapgit_persistence=>ty_repo_xml,
       ls_change_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask.
 
-    lv_key =  mo_repo->get_key( ).
+    lv_key = mo_repo->get_key( ).
     lo_persist = zcl_abapgit_persist_factory=>get_repo( ).
 
     TRY.
