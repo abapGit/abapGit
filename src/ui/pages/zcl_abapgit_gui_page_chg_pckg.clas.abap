@@ -226,7 +226,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
         io_repo = io_repo.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
-      iv_page_title      = 'Change Repo Package'
+      iv_page_title      = 'Change Repository Package'
       ii_child_component = lo_component ).
 
   ENDMETHOD.
@@ -258,7 +258,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Error inserting package { <ls_map>-new_package }| ).
       ENDIF.
 
-      SELECT * FROM tdevct INTO ls_tdevct WHERE devclass = <ls_map>-old_package.
+      SELECT * FROM tdevct INTO ls_tdevct WHERE devclass = <ls_map>-old_package ORDER BY PRIMARY KEY.
         ls_tdevct-devclass = <ls_map>-new_package.
 
         INSERT tdevct FROM ls_tdevct.
@@ -402,7 +402,6 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
     DATA:
       lv_key         TYPE zif_abapgit_persistence=>ty_repo-key,
       lo_persist     TYPE REF TO zif_abapgit_persist_repo,
-      lo_checksums   TYPE REF TO zif_abapgit_persist_repo_cs,
       ls_repo_data   TYPE zif_abapgit_persistence=>ty_repo,
       ls_meta        TYPE zif_abapgit_persistence=>ty_repo_xml,
       ls_change_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask.
