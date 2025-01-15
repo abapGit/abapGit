@@ -262,9 +262,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
   METHOD compute_diff_extra.
 
     DATA:
-      lv_last_new TYPE c LENGTH 1,
-      lv_last_old TYPE c LENGTH 1,
-      ls_diff     LIKE LINE OF rt_diff.
+      ls_diff LIKE LINE OF rt_diff.
 
     FIELD-SYMBOLS:
       <ls_old> LIKE LINE OF it_old,
@@ -281,24 +279,14 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
       ls_diff-new_num = sy-tabix.
       ls_diff-new     = <ls_new>.
       " SAP function ignores lines that contain only whitespace so we compare directly
-      " Also check if one line has trailing space(s)
+      " Also check if length differs
       IF ( mv_compare_mode = 1 OR mv_compare_mode = 3 ) AND <ls_old> <> <ls_new>.
 
-        IF strlen( condense( <ls_old> ) ) = 0 OR strlen( condense( <ls_new> ) ) = 0.
-
+        IF strlen( condense( <ls_old> ) ) = 0 OR strlen( condense( <ls_new> ) ) = 0
+        OR strlen( <ls_old> ) <> strlen( <ls_new> ).
           ls_diff-result = zif_abapgit_definitions=>c_diff-update.
-
-        ELSEIF strlen( <ls_old> ) > 0 AND strlen( <ls_new> ) > 0.
-
-          lv_last_new = substring( val = <ls_new>
-                                   off = strlen( <ls_new> ) - 1 ).
-          lv_last_old = substring( val = <ls_old>
-                                   off = strlen( <ls_old> ) - 1 ).
-          IF lv_last_new = space OR lv_last_old = space.
-            ls_diff-result = zif_abapgit_definitions=>c_diff-update.
-          ENDIF.
-
         ENDIF.
+
       ENDIF.
       APPEND ls_diff TO rt_diff.
     ENDLOOP.
