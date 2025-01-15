@@ -201,7 +201,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -302,6 +302,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       ro_advanced_dropdown->add( iv_txt = 'Stage by Transport'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-go_stage_transport }?key={ mv_key }| ).
     ENDIF.
+
+    ro_advanced_dropdown->add( iv_txt = 'Change Repository Package'
+                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_change_package }?key={ mv_key }| ).
 
     ro_advanced_dropdown->add( iv_txt = 'Quality Assurance'
                                iv_typ = zif_abapgit_html=>c_action_type-separator ).
