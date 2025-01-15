@@ -89,6 +89,12 @@ CLASS zcl_abapgit_diff DEFINITION
         VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt.
     METHODS calculate_stats.
     METHODS adjust_diff.
+    METHODS has_line_diff
+      IMPORTING
+        iv_old             TYPE string
+        iv_new             TYPE string
+      RETURNING
+        VALUE(rv_has_diff) TYPE abap_bool.
 ENDCLASS.
 
 
@@ -265,28 +271,24 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
       ls_diff LIKE LINE OF rt_diff.
 
     FIELD-SYMBOLS:
-      <ls_old> LIKE LINE OF it_old,
-      <ls_new> LIKE LINE OF it_new.
+      <lv_old> LIKE LINE OF it_old,
+      <lv_new> LIKE LINE OF it_new.
 
-    LOOP AT it_old ASSIGNING <ls_old>.
+    LOOP AT it_old ASSIGNING <lv_old>.
       CLEAR ls_diff.
       ls_diff-old_num = sy-tabix.
-      ls_diff-old     = <ls_old>.
-      READ TABLE it_new ASSIGNING <ls_new> INDEX sy-tabix.
+      ls_diff-old     = <lv_old>.
+      READ TABLE it_new ASSIGNING <lv_new> INDEX sy-tabix.
       IF sy-subrc <> 0.
         EXIT.
       ENDIF.
       ls_diff-new_num = sy-tabix.
-      ls_diff-new     = <ls_new>.
-      " SAP function ignores lines that contain only whitespace so we compare directly
-      " Also check if length differs
-      IF ( mv_compare_mode = 1 OR mv_compare_mode = 3 ) AND <ls_old> <> <ls_new>.
+      ls_diff-new     = <lv_new>.
 
-        IF strlen( condense( <ls_old> ) ) = 0 OR strlen( condense( <ls_new> ) ) = 0
-        OR strlen( <ls_old> ) <> strlen( <ls_new> ).
-          ls_diff-result = zif_abapgit_definitions=>c_diff-update.
-        ENDIF.
-
+      IF ( mv_compare_mode = 1 OR mv_compare_mode = 3 )
+      AND has_line_diff( iv_old = <lv_old>
+                         iv_new = <lv_new> ) = abap_true.
+        ls_diff-result = zif_abapgit_definitions=>c_diff-update.
       ENDIF.
       APPEND ls_diff TO rt_diff.
     ENDLOOP.
@@ -563,4 +565,17 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
     SPLIT lv_old AT cl_abap_char_utilities=>newline INTO TABLE et_old.
 
   ENDMETHOD.
+
+
+  METHOD has_line_diff.
+
+    " SAP function ignores lines that contain only whitespace so we compare directly
+    " Also check if length differs and implicitly if one line has trailing space(s)
+    rv_has_diff = xsdbool( iv_old <> iv_new
+                      AND ( strlen( condense( iv_old ) ) = 0
+                         OR strlen( condense( iv_new ) ) = 0
+                         OR strlen( iv_old ) <> strlen( iv_new ) ) ).
+
+  ENDMETHOD.
+
 ENDCLASS.
