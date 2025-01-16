@@ -382,7 +382,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
-    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'advanced-data' ).
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-advanced-data' ).
 
     ro_toolbar->add( iv_txt = 'Add Via Transport'
                      iv_act = c_event-add_via_transport ).

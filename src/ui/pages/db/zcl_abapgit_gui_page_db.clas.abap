@@ -595,7 +595,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
-    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'database-utility' ).
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-database-utility' ).
 
     ro_toolbar->add(
       iv_txt = 'Backup'
@@ -648,7 +648,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
         rs_render-css_class = 'data'.
       WHEN 'cmd'.
         lv_action  = zcl_abapgit_html_action_utils=>dbkey_encode( is_row ).
-        lo_toolbar = zcl_abapgit_html_toolbar=>create(
+        lo_toolbar = zcl_abapgit_html_toolbar=>create( 'actionbar-database-utility'
           )->add(
             iv_txt = 'Display'
             iv_act = |{ zif_abapgit_definitions=>c_action-db_display }?{ lv_action }|

@@ -96,7 +96,7 @@ CLASS zcl_abapgit_gui_page_db_entry IMPLEMENTATION.
 
   METHOD build_toolbar.
 
-    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'database-entry' ).
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-database-entry' ).
 
     IF mv_edit_mode = abap_true.
       ro_toolbar->add(

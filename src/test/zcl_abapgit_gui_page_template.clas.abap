@@ -99,7 +99,7 @@ CLASS zcl_abapgit_gui_page_template IMPLEMENTATION.
 
     " TODO: top level menu; use unique id
 
-    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-id' )->add(
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-template-id' )->add(
       iv_txt = 'Refresh'
       iv_act = c_action-refresh ).
 

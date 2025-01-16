@@ -152,7 +152,7 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
 
   METHOD settings.
 
-    ro_menu = zcl_abapgit_html_toolbar=>create( 'toolbar-Settings' ).
+    ro_menu = zcl_abapgit_html_toolbar=>create( 'toolbar-abapgit-settings' ).
 
     ro_menu->add(
       iv_txt = 'Global'
