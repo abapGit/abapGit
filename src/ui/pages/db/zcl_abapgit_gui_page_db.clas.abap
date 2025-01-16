@@ -595,7 +595,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
-    CREATE OBJECT ro_toolbar.
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'database-utility' ).
 
     ro_toolbar->add(
       iv_txt = 'Backup'
@@ -658,6 +658,9 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
           )->add(
             iv_txt = 'Delete'
             iv_act = |{ c_action-delete }?{ lv_action }| ).
+
+        zcl_abapgit_exit=>get_instance( )->enhance_any_toolbar( lo_toolbar ).
+
         rs_render-html = lo_toolbar->render( ).
 
     ENDCASE.

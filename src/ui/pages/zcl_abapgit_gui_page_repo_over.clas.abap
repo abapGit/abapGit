@@ -446,7 +446,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
     DATA lo_toolbar_more_sub TYPE REF TO zcl_abapgit_html_toolbar.
 
-    CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-ovp'.
+    lo_toolbar = zcl_abapgit_html_toolbar=>create( 'actionbar-repo-list' ).
 
     lo_toolbar->add(
       iv_txt      = |Pull|
@@ -511,6 +511,12 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar_more_sub->add(
+      iv_txt      = |Change Repository Package|
+      iv_act      = |{ zif_abapgit_definitions=>c_action-repo_change_package }{ lc_dummy_key }|
+      iv_class    = |{ lc_action_class } { lc_online_class }|
+      iv_li_class = |{ lc_action_class }| ).
+
+    lo_toolbar_more_sub->add(
       iv_txt = 'Danger'
       iv_typ = zif_abapgit_html=>c_action_type-separator ).
 
@@ -543,6 +549,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       io_sub      = lo_toolbar_more_sub
       iv_class    = |{ lc_action_class }|
       iv_li_class = |{ lc_action_class }| ).
+
+    zcl_abapgit_exit=>get_instance( )->enhance_any_toolbar( lo_toolbar ).
 
     ri_html = lo_toolbar->render( iv_right = abap_true ).
 
@@ -1001,7 +1009,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
-    CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-main'.
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-repo-list' ).
 
     ro_toolbar->add(
       iv_txt = zcl_abapgit_gui_buttons=>flow( )

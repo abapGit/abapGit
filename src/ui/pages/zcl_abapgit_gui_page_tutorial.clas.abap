@@ -30,7 +30,7 @@ CLASS zcl_abapgit_gui_page_tutorial IMPLEMENTATION.
 
   METHOD build_main_menu.
 
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
+    ro_menu = zcl_abapgit_html_toolbar=>create( 'toolbar-tutorial' ).
 
     ro_menu->add(
       iv_txt = zcl_abapgit_gui_buttons=>repo_list( )
