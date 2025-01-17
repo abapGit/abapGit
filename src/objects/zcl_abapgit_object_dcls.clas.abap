@@ -70,9 +70,10 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lr_data  TYPE REF TO data,
-          lo_dcl   TYPE REF TO object,
-          lx_error TYPE REF TO cx_root.
+    DATA: lr_data                  TYPE REF TO data,
+          lo_dcl                   TYPE REF TO object,
+          lx_error                 TYPE REF TO cx_root,
+          lv_abap_language_version TYPE uccheck.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
                    <lg_field> TYPE any.
@@ -91,6 +92,12 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     <lg_field> = mo_files->read_string( 'asdcls' ).
 
+    ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <lg_data> TO <lg_field>.
+    IF sy-subrc = 0.
+      lv_abap_language_version = <lg_field>.
+      set_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+    ENDIF.
+
     TRY.
         tadir_insert( iv_package ).
 
@@ -98,13 +105,24 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
           RECEIVING
             ro_handler = lo_dcl.
 
-        CALL METHOD lo_dcl->('SAVE')
-          EXPORTING
-            iv_dclname     = ms_item-obj_name
-            iv_put_state   = 'I'
-            is_dclsrc      = <lg_data>
-            iv_devclass    = iv_package
-            iv_access_mode = 'INSERT'.
+        TRY.
+            CALL METHOD lo_dcl->('SAVE')
+              EXPORTING
+                iv_dclname               = ms_item-obj_name
+                iv_put_state             = 'I'
+                is_dclsrc                = <lg_data>
+                iv_devclass              = iv_package
+                iv_access_mode           = 'INSERT'
+                iv_abap_language_version = lv_abap_language_version.
+          CATCH cx_sy_dyn_call_param_not_found.
+            CALL METHOD lo_dcl->('SAVE')
+              EXPORTING
+                iv_dclname     = ms_item-obj_name
+                iv_put_state   = 'I'
+                is_dclsrc      = <lg_data>
+                iv_devclass    = iv_package
+                iv_access_mode = 'INSERT'.
+        ENDTRY.
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
@@ -236,7 +254,7 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
 
         ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <lg_data> TO <lg_field>.
         IF sy-subrc = 0.
-          CLEAR <lg_field>.
+          clear_abap_language_version( CHANGING cv_abap_language_version = <lg_field> ).
         ENDIF.
 
         ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
