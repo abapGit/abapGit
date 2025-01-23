@@ -276,11 +276,12 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
       lx_error         TYPE REF TO cx_root.
 
     FIELD-SYMBOLS:
-      <lg_data>             TYPE any,
-      <lg_data_baseinfo>    TYPE any,
-      <lg_source>           TYPE any,
-      <lg_baseinfo_string>  TYPE any,
-      <lg_baseinfo_ddlname> TYPE any.
+      <lg_data>                  TYPE any,
+      <lg_data_baseinfo>         TYPE any,
+      <lg_source>                TYPE any,
+      <lg_baseinfo_string>       TYPE any,
+      <lg_baseinfo_ddlname>      TYPE any,
+      <lg_abap_language_version> TYPE any.
 
     TRY.
         CREATE DATA lr_data TYPE ('DDDDLSRCV').
@@ -292,6 +293,11 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_source>.
         ASSERT sy-subrc = 0.
         <lg_source> = mo_files->read_string( 'asddls' ).
+
+        ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <lg_data> TO <lg_abap_language_version>.
+        IF sy-subrc = 0.
+          set_abap_language_version( CHANGING cv_abap_language_version = <lg_abap_language_version> ).
+        ENDIF.
 
         CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
           RECEIVING
@@ -310,12 +316,22 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
           ASSERT sy-subrc = 0.
           <lg_baseinfo_ddlname> = ms_item-obj_name.
 
-          CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~SAVE')
-            EXPORTING
-              name            = ms_item-obj_name
-              put_state       = 'N'
-              ddddlsrcv_wa    = <lg_data>
-              baseinfo_string = <lg_data_baseinfo>.
+          TRY.
+              CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~SAVE')
+                EXPORTING
+                  name                  = ms_item-obj_name
+                  put_state             = 'N'
+                  ddddlsrcv_wa          = <lg_data>
+                  baseinfo_string       = <lg_data_baseinfo>
+                  save_language_version = abap_true.
+            CATCH cx_sy_dyn_call_param_not_found.
+              CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~SAVE')
+                EXPORTING
+                  name            = ms_item-obj_name
+                  put_state       = 'N'
+                  ddddlsrcv_wa    = <lg_data>
+                  baseinfo_string = <lg_data_baseinfo>.
+          ENDTRY.
         ELSE.
           CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~SAVE')
             EXPORTING
@@ -447,13 +463,14 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
           lt_clr_comps     TYPE STANDARD TABLE OF fieldname WITH DEFAULT KEY,
           lx_error         TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <lg_data>          TYPE any,
-                   <lg_field>         TYPE any,
-                   <lv_comp>          LIKE LINE OF lt_clr_comps,
-                   <lt_data_baseinfo> TYPE ANY TABLE,
-                   <lg_data_baseinfo> TYPE any,
-                   <lg_ddlname>       TYPE any,
-                   <lg_as4local>      TYPE any.
+    FIELD-SYMBOLS: <lg_data>                  TYPE any,
+                   <lg_field>                 TYPE any,
+                   <lv_comp>                  LIKE LINE OF lt_clr_comps,
+                   <lt_data_baseinfo>         TYPE ANY TABLE,
+                   <lg_data_baseinfo>         TYPE any,
+                   <lg_ddlname>               TYPE any,
+                   <lg_as4local>              TYPE any,
+                   <lg_abap_language_version> TYPE any.
 
 
     TRY.
@@ -506,12 +523,16 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
+    ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <lg_data> TO <lg_abap_language_version>.
+    IF sy-subrc = 0.
+      clear_abap_language_version( CHANGING cv_abap_language_version = <lg_abap_language_version> ).
+    ENDIF.
+
     APPEND 'AS4USER'               TO lt_clr_comps.
     APPEND 'AS4DATE'               TO lt_clr_comps.
     APPEND 'AS4TIME'               TO lt_clr_comps.
     APPEND 'ACTFLAG'               TO lt_clr_comps.
     APPEND 'CHGFLAG'               TO lt_clr_comps.
-    APPEND 'ABAP_LANGUAGE_VERSION' TO lt_clr_comps.
     APPEND 'ABAP_LANGU_VERSION'    TO lt_clr_comps.
 
     LOOP AT lt_clr_comps ASSIGNING <lv_comp>.
