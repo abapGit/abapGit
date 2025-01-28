@@ -163,6 +163,9 @@ CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
     MOVE-CORRESPONDING ls_idoc-attributes TO ls_attributes.
 
     IF zif_abapgit_object~exists( ) = abap_false.
+      " Avoid popup asking for package
+      tadir_insert( iv_package ).
+
       CALL FUNCTION 'IDOCTYPE_CREATE'
         EXPORTING
           pi_idoctyp       = mv_idoctyp

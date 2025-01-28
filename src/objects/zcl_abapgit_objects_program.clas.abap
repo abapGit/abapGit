@@ -131,6 +131,8 @@ CLASS zcl_abapgit_objects_program DEFINITION
         inactive TYPE r3state VALUE 'I',
       END OF c_state.
 
+    CONSTANTS c_native_dynpro TYPE c LENGTH 2 VALUE 'IN'.
+
     METHODS:
       uncondense_flow
         IMPORTING it_flow        TYPE swydyflow
@@ -359,6 +361,9 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         it_flow = ls_dynpro-flow_logic
         it_spaces = ls_dynpro-spaces ).
 
+      IF ls_dynpro-flow_logic IS INITIAL.
+        ls_dynpro-flow_logic = mo_files->read_abap( iv_extra = 'screen_' && ls_dynpro-header-screen ).
+      ENDIF.
 
       LOOP AT ls_dynpro-fields ASSIGNING <ls_field>.
 * if the DDIC element has a PARAMETER_ID and the flag "from_dict" is active
@@ -390,7 +395,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
       ENDLOOP.
 
-      IF ls_dynpro-header-type = 'N' AND ls_dynpro-nat_header IS NOT INITIAL.
+      IF ls_dynpro-header-type CA c_native_dynpro AND ls_dynpro-nat_header IS NOT INITIAL.
         DELETE FROM d021t WHERE prog = ls_dynpro-header-program AND dynr = ls_dynpro-header-screen ##SUBRC_OK.
         INSERT d021t FROM TABLE ls_dynpro-nat_texts ##SUBRC_OK.
 
@@ -596,7 +601,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    IF lv_state = c_state-inactive. "Textpool in main language needs to be activated
+    "Textpool in main language needs to be activated (not for FUGS/FUGX)
+    IF lv_state = c_state-inactive AND iv_program NP 'SAPLX*'.
       zcl_abapgit_objects_activation=>add(
         iv_type   = 'REPT'
         iv_name   = iv_program
@@ -645,7 +651,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
             cancelled         = 2
             name_not_allowed  = 3
             permission_error  = 4
-            OTHERS            = 5.
+            OTHERS            = 5 ##FM_SUBRC_OK.
       CATCH cx_sy_dyn_call_param_not_found.
         CALL FUNCTION 'RPY_PROGRAM_INSERT'
           EXPORTING
@@ -662,7 +668,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
             cancelled         = 2
             name_not_allowed  = 3
             permission_error  = 4
-            OTHERS            = 5.
+            OTHERS            = 5 ##FM_SUBRC_OK.
     ENDTRY.
     IF sy-subrc = 3.
 
@@ -913,11 +919,15 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       ENDLOOP.
 
       APPEND INITIAL LINE TO rt_dynpro ASSIGNING <ls_dynpro>.
-      <ls_dynpro>-header     = ls_header.
-      <ls_dynpro>-flow_logic = lt_flow_logic.
+      <ls_dynpro>-header = ls_header.
+
+      " Store flow logic as separate ABAP files instead of XML
+      mo_files->add_abap(
+        iv_extra = 'screen_' && ls_header-screen
+        it_abap  = lt_flow_logic ).
 
       READ TABLE lt_fieldlist_int TRANSPORTING NO FIELDS WITH KEY fill = 'X'.
-      IF ls_header-type = 'N' AND sy-subrc = 0.
+      IF ls_header-type CA c_native_dynpro AND sy-subrc = 0.
         " In particular for dynpros with splitter
         <ls_dynpro>-nat_header = <ls_d020s>.
         CLEAR: <ls_dynpro>-nat_header-dgen, <ls_dynpro>-nat_header-tgen.

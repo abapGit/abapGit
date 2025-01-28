@@ -1,5 +1,6 @@
 CLASS ltcl_determine_max_processes DEFINITION DEFERRED.
-CLASS zcl_abapgit_serialize DEFINITION LOCAL FRIENDS ltcl_determine_max_processes.
+CLASS ltcl_determine_server_group DEFINITION DEFERRED.
+CLASS zcl_abapgit_serialize DEFINITION LOCAL FRIENDS ltcl_determine_max_processes ltcl_determine_server_group.
 
 CLASS ltd_settings DEFINITION FINAL FOR TESTING
   DURATION SHORT
@@ -67,15 +68,23 @@ CLASS ltd_environment DEFINITION FINAL FOR TESTING
       zif_abapgit_environment.
 
     METHODS:
+      set_server_group
+        IMPORTING iv_group TYPE rzlli_apcl,
+
       set_is_merged
         IMPORTING iv_is_merged TYPE abap_bool,
+
+      set_available_sessions
+        IMPORTING iv_available_sessions TYPE i,
 
       set_free_work_processes
         IMPORTING iv_free_work_processes TYPE i.
 
   PRIVATE SECTION.
     DATA:
+      mv_group               TYPE rzlli_apcl,
       mv_is_merged           TYPE abap_bool,
+      mv_available_sessions  TYPE i,
       mv_free_work_processes TYPE i.
 
 ENDCLASS.
@@ -87,6 +96,10 @@ CLASS ltd_environment IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~get_basis_release.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_environment~get_available_user_sessions.
+    rv_sessions = mv_available_sessions.
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~get_system_language_filter.
@@ -115,12 +128,25 @@ CLASS ltd_environment IMPLEMENTATION.
     rv_free_work_processes = mv_free_work_processes.
   ENDMETHOD.
 
-  METHOD set_is_merged.
-    me->mv_is_merged = iv_is_merged.
+  METHOD zif_abapgit_environment~check_parallel_processing.
+    rv_checked = boolc( iv_group = mv_group ).
   ENDMETHOD.
 
+  METHOD set_server_group.
+    mv_group = iv_group.
+  ENDMETHOD.
+
+  METHOD set_is_merged.
+    mv_is_merged = iv_is_merged.
+  ENDMETHOD.
+
+  METHOD set_available_sessions.
+    mv_available_sessions = iv_available_sessions.
+  ENDMETHOD.
+
+
   METHOD set_free_work_processes.
-    me->mv_free_work_processes = iv_free_work_processes.
+    mv_free_work_processes = iv_free_work_processes.
   ENDMETHOD.
 
 ENDCLASS.
@@ -134,12 +160,16 @@ CLASS ltd_exit DEFINITION FINAL FOR TESTING
       zif_abapgit_exit.
 
     METHODS:
+      set_server_group
+        IMPORTING iv_group TYPE rzlli_apcl,
+
       set_max_parallel_processes
         IMPORTING
           iv_max_parallel_processes TYPE i.
 
   PRIVATE SECTION.
     DATA:
+      mv_group                  TYPE rzlli_apcl,
       mv_max_parallel_processes TYPE i.
 
 ENDCLASS.
@@ -175,6 +205,9 @@ CLASS ltd_exit IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_exit~change_rfc_server_group.
+    IF mv_group IS NOT INITIAL.
+      cv_group = mv_group.
+    ENDIF.
   ENDMETHOD.
 
   METHOD zif_abapgit_exit~change_supported_data_objects.
@@ -228,8 +261,116 @@ CLASS ltd_exit IMPLEMENTATION.
   METHOD zif_abapgit_exit~wall_message_repo.
   ENDMETHOD.
 
+  METHOD set_server_group.
+    mv_group = iv_group.
+  ENDMETHOD.
+
   METHOD set_max_parallel_processes.
     mv_max_parallel_processes = iv_max_parallel_processes.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+CLASS ltcl_determine_server_group DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
+
+  PRIVATE SECTION.
+    DATA:
+      mo_cut                TYPE REF TO zcl_abapgit_serialize,
+      mo_environment_double TYPE REF TO ltd_environment,
+      mo_exit               TYPE REF TO ltd_exit,
+      mv_act_group          TYPE rzlli_apcl.
+
+    METHODS:
+      setup,
+
+      default_server_group FOR TESTING RAISING zcx_abapgit_exception,
+      legacy_server_group FOR TESTING RAISING zcx_abapgit_exception,
+      exit_server_group FOR TESTING RAISING zcx_abapgit_exception,
+      exit_not_exist_server_group FOR TESTING RAISING zcx_abapgit_exception,
+
+      teardown,
+
+      given_db_server_group
+        IMPORTING
+          iv_group TYPE rzlli_apcl,
+
+      given_exit_chg_server_group
+        IMPORTING
+          iv_group TYPE rzlli_apcl,
+
+      when_determine_server_group
+        RAISING
+          zcx_abapgit_exception,
+
+      then_we_shd_have_server_group
+        IMPORTING
+          iv_exp_group TYPE rzlli_apcl.
+
+ENDCLASS.
+
+CLASS ltcl_determine_server_group IMPLEMENTATION.
+
+  METHOD setup.
+
+    CREATE OBJECT mo_environment_double.
+    zcl_abapgit_injector=>set_environment( mo_environment_double ).
+
+    CREATE OBJECT mo_exit.
+    zcl_abapgit_injector=>set_exit( mo_exit ).
+
+    TRY.
+        CREATE OBJECT mo_cut.
+      CATCH zcx_abapgit_exception.
+        cl_abap_unit_assert=>fail( 'Error creating serializer' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD teardown.
+    CLEAR: mo_cut->mv_group.
+  ENDMETHOD.
+
+  METHOD default_server_group.
+    when_determine_server_group( ).
+    then_we_shd_have_server_group( '' ).
+  ENDMETHOD.
+
+  METHOD legacy_server_group.
+    given_db_server_group( 'parallel_generators' ).
+    when_determine_server_group( ).
+    then_we_shd_have_server_group( 'parallel_generators' ).
+  ENDMETHOD.
+
+  METHOD exit_server_group.
+    given_db_server_group( 'my_group' ).
+    given_exit_chg_server_group( 'my_group' ).
+    when_determine_server_group( ).
+    then_we_shd_have_server_group( 'my_group' ).
+  ENDMETHOD.
+
+  METHOD exit_not_exist_server_group.
+    given_exit_chg_server_group( 'my_servers' ).
+    when_determine_server_group( ).
+    then_we_shd_have_server_group( '' ).
+  ENDMETHOD.
+
+  METHOD given_db_server_group.
+    mo_environment_double->set_server_group( iv_group ).
+  ENDMETHOD.
+
+  METHOD given_exit_chg_server_group.
+    mo_exit->set_server_group( iv_group ).
+  ENDMETHOD.
+
+  METHOD when_determine_server_group.
+    mv_act_group = mo_cut->determine_rfc_server_group( ).
+  ENDMETHOD.
+
+  METHOD then_we_shd_have_server_group.
+    cl_abap_unit_assert=>assert_equals(
+      act = mv_act_group
+      exp = iv_exp_group ).
   ENDMETHOD.
 
 ENDCLASS.
@@ -255,6 +396,7 @@ CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LE
       determine_max_processes_no_pp FOR TESTING RAISING zcx_abapgit_exception,
       determine_max_processes_merged FOR TESTING RAISING zcx_abapgit_exception,
       determine_max_processes_exit FOR TESTING RAISING zcx_abapgit_exception,
+      determine_max_processes_capped FOR TESTING RAISING zcx_abapgit_exception,
       force FOR TESTING RAISING zcx_abapgit_exception,
 
       teardown,
@@ -266,6 +408,10 @@ CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LE
       given_is_merged
         IMPORTING
           iv_is_merged TYPE abap_bool,
+
+      given_available_sessions
+        IMPORTING
+          iv_available_sessions TYPE i,
 
       given_free_work_processes
         IMPORTING
@@ -390,6 +536,19 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD determine_max_processes_capped.
+
+    given_parallel_proc_disabled( abap_false ).
+    given_is_merged( abap_false ).
+    given_free_work_processes( 50 ). " big system
+    given_available_sessions( 10 ). " but user session is capped
+
+    when_determine_max_processes( ).
+
+    then_we_shd_have_n_processes( 10 ).
+
+  ENDMETHOD.
+
 
   METHOD force.
 
@@ -410,6 +569,12 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
   METHOD given_is_merged.
 
     mo_environment_double->set_is_merged( iv_is_merged ).
+
+  ENDMETHOD.
+
+  METHOD given_available_sessions.
+
+    mo_environment_double->set_available_sessions( iv_available_sessions ).
 
   ENDMETHOD.
 

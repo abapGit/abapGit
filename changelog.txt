@@ -8,6 +8,65 @@ Legend
 + : added
 - : removed
 
+2025-01-01 v1.131.0
+-------------------
+
+! Remove need to `parallel_generators` server group (#7119)
++ VIEW: save `tddat` entries to transport (#7042)
++ Support for HTTP Destination (#7100)
++ Enhance logging with message id and number (#7111)
+* Fix language conversion for language A (#7076)
+* longtexts: workaround strange object names dump (#7077)
+* SRVB: Clear fields and fix deserialize order (#7085)
+* MSAG: Fix error handling during deletion (#7093)
+* Fix error handling in exception viewer (#7095)
+* Fix dark theme CSS whitespace (#7104)
+* MSAG: Fix deletion of message longtexts (#7109)
+* Fix RFC error handling (#7102)
+* IDOC/IEXT: Fix deserialize in background (#7113)
+* USCA: Fix missing transport entry (#7110)
+* FUGS: Fix activation error (#7115)
+* Limit number of GUI sessions (#7080)
+* Fix dump when converting `xstring` to `bintab` (#7120)
+
+2024-11-04 v1.130.0
+-------------------
+
+! PROG: Store flow logic as separate ABAP files (#7066)
+! WDYN: Store controller code as separate ABAP files (#7069)
+! SSFO: Store smartform code as separate ABAP files (#7071)
++ CLIF: Add missing translations for classes and interfaces (#6963)
++ UIAD: Add support for Launchpad App Descriptor Item (#6969)
++ BGQC: Add support for Background Processing Context (#6974)
++ DSFD: CDS Scalar Function Definition (#6951)
++ DRAS: CDS Aspect (#6953)
++ DSFI: CDS Scalar Function Implementation (#6952)
++ Add support for Software Component Relations (#7012)
+* ENHO: Fix diff in generated comments of class enhancements (#6962)
+* SXSD: Fix check if BADI exists (#6961)
+* CDBO: Fix missing parameters in `constructor` (#6966)
+* Fix dump in activation error handling (#6967)
+* Fix deserialize SEOCLASSTX for INTF [AFF] (#6983)
+* Allow staging for empty repositories (#6981)
+* fix: syst_langu does not exist on older releases (#6999)
+* fix sticky header with browser control warning (#6997)
+* DSFI: Updated object handler to match the latest AFF definition (#7013)
+* Filenames for translation are case sensitive (#6995)
+* Enable deserialization of DSFD, DSFI and DRAS (#7029)
+* PROG: Support dynpros with splitter control (#7035, #7038)
+* Fix `CX_SY_ZERODIVIDE` dump in progress bar (#7036)
+* JOBD: Clear `changedby` field (#7039)
+* SFPF: Add syntax highlighting for `xdp` files (#7040)
+* SFPF: Fix check if object exists (#7041)
+* Add package check when creating repository (#7037)
+* FUGS: serialization (#7045)
+* Enable CDS types (#7048)
+* Don't discard includes of nonexistent FUGR (#7053)
+* Added enhanced method resolution for background exit (#7059)
+* TABU: Display transport requests (#7063)
+* Show diffs in case of trailing spaces (#7062)
+- remove 200% icon scaling (#7003)
+
 2024-07-01 v1.129.0
 -------------------
 

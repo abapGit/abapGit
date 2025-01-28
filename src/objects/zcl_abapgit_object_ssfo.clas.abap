@@ -7,6 +7,7 @@ CLASS zcl_abapgit_object_ssfo DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_object.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -14,7 +15,7 @@ CLASS zcl_abapgit_object_ssfo DEFINITION
       ty_string_range TYPE RANGE OF string .
 
     CLASS-DATA gt_range_node_codes TYPE ty_string_range .
-    CONSTANTS c_attrib_abapgit_leadig_spaces TYPE string VALUE 'abapgit-leadig-spaces' ##NO_TEXT.
+    CONSTANTS c_prefix TYPE string VALUE 'File:'.
 
     METHODS fix_ids
       IMPORTING
@@ -24,25 +25,26 @@ CLASS zcl_abapgit_object_ssfo DEFINITION
         !ii_xml_doc TYPE REF TO if_ixml_document
       RAISING
         zcx_abapgit_exception .
-    METHODS handle_attrib_leading_spaces
-      IMPORTING
-        !iv_name                TYPE string
-        !ii_node                TYPE REF TO if_ixml_node
-      CHANGING
-        !cv_within_code_section TYPE abap_bool .
     METHODS get_range_node_codes
       RETURNING
         VALUE(rt_range_node_codes) TYPE ty_string_range .
-    METHODS code_item_section_handling
+    METHODS deserialize_sources
       IMPORTING
-        !iv_name                TYPE string
-        !ii_node                TYPE REF TO if_ixml_node
-      EXPORTING
-        !ei_code_item_element   TYPE REF TO if_ixml_element
-      CHANGING
-        !cv_within_code_section TYPE abap_bool
+        !ii_node TYPE REF TO if_ixml_node
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+    METHODS serialize_sources
+      IMPORTING
+        !ii_node TYPE REF TO if_ixml_node
+      RAISING
+        zcx_abapgit_exception.
+    METHODS get_hash_for_path
+      IMPORTING
+        !ii_node       TYPE REF TO if_ixml_node
+      RETURNING
+        VALUE(rv_hash) TYPE string
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -50,29 +52,36 @@ ENDCLASS.
 CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
 
 
-  METHOD code_item_section_handling.
-    CONSTANTS: lc_node_item TYPE string VALUE 'item'.
-    CONSTANTS: lc_node_text TYPE string VALUE '#text'.
+  METHOD deserialize_sources.
 
-    IF iv_name IN get_range_node_codes( ).
-      cv_within_code_section = abap_true.
+    DATA:
+      lv_extra   TYPE string,
+      ls_abap    TYPE abaptxt255,
+      lt_abap    TYPE abaptxt255_tab,
+      li_node    TYPE REF TO if_ixml_node,
+      li_ixml    TYPE REF TO if_ixml,
+      li_xml_doc TYPE REF TO if_ixml_document.
+
+    li_ixml = cl_ixml=>create( ).
+    li_xml_doc = li_ixml->create_document( ).
+
+    " Old format
+    lv_extra = ii_node->get_value( ).
+    IF lv_extra NS c_prefix.
+      RETURN.
     ENDIF.
 
-    IF cv_within_code_section = abap_true.
-      IF iv_name = lc_node_item.
-        TRY.
-            ei_code_item_element ?= ii_node.
-            RETURN.
-          CATCH cx_sy_move_cast_error ##NO_HANDLER.
-        ENDTRY.
+    " New format
+    lv_extra = lv_extra+5(*).
 
-      ELSEIF iv_name NOT IN get_range_node_codes( ) AND
-             iv_name <> lc_node_text.
-        cv_within_code_section = abap_false.
-      ENDIF.
-    ENDIF.
+    lt_abap = mo_files->read_abap( iv_extra = lv_extra ).
 
-    RAISE EXCEPTION TYPE zcx_abapgit_exception.
+    ii_node->set_value( '' ).
+    LOOP AT lt_abap INTO ls_abap.
+      li_node = li_xml_doc->create_element( 'item' ).
+      li_node->set_value( |{ ls_abap-line }| ).
+      ii_node->append_child( li_node ).
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -150,6 +159,35 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_hash_for_path.
+
+    DATA:
+      lv_name  TYPE string,
+      lv_path  TYPE string,
+      li_node  TYPE REF TO if_ixml_node,
+      li_name  TYPE REF TO if_ixml_node,
+      li_iname TYPE REF TO if_ixml_node.
+
+    li_node = ii_node->get_parent( ).
+    WHILE NOT li_node IS INITIAL.
+      lv_name = li_node->get_name( ).
+      IF ( lv_name = 'CODE' OR lv_name = 'WINDOW' OR lv_name = 'PAGE' )
+        AND li_node->get_namespace_prefix( ) IS NOT INITIAL.
+        li_name  = li_node->get_first_child( ).
+        li_iname = li_node->get_first_child( ).
+        lv_name  = lv_name && ':' && li_iname->get_value( ).
+      ENDIF.
+      lv_path = lv_name && '/' && lv_path.
+      li_node = li_node->get_parent( ).
+    ENDWHILE.
+
+    rv_hash = substring(
+      val = zcl_abapgit_hash=>sha1_string( lv_path )
+      len = 8 ).
+
+  ENDMETHOD.
+
+
   METHOD get_range_node_codes.
 
     DATA: ls_range_node_code TYPE LINE OF ty_string_range.
@@ -172,28 +210,36 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD handle_attrib_leading_spaces.
+  METHOD serialize_sources.
 
-    DATA li_element        TYPE REF TO if_ixml_element.
-    DATA lv_leading_spaces TYPE string.
-    DATA lv_coding_line    TYPE string.
+    DATA:
+      lv_extra    TYPE string,
+      ls_abap     TYPE abaptxt255,
+      lt_abap     TYPE abaptxt255_tab,
+      li_node     TYPE REF TO if_ixml_node,
+      li_iterator TYPE REF TO if_ixml_node_iterator.
 
-    TRY.
-        code_item_section_handling( EXPORTING iv_name                = iv_name
-                                              ii_node                = ii_node
-                                    IMPORTING ei_code_item_element   = li_element
-                                    CHANGING  cv_within_code_section = cv_within_code_section ).
+    " Store code as separate ABAP files instead of XML
+    lv_extra    = to_lower( ii_node->get_name( ) ).
+    li_iterator = ii_node->get_children( )->create_iterator( ).
+    li_node     = li_iterator->get_next( ).
+    WHILE NOT li_node IS INITIAL.
+      ls_abap-line = li_node->get_value( ).
+      INSERT ls_abap INTO TABLE lt_abap.
 
-* for downwards compatibility, this code can be removed sometime in the future
-        lv_leading_spaces = li_element->get_attribute_ns( c_attrib_abapgit_leadig_spaces ).
+      li_node = li_iterator->get_next( ).
+    ENDWHILE.
 
-        lv_coding_line = li_element->get_value( ).
-        IF strlen( lv_coding_line ) >= 1 AND lv_coding_line(1) <> | |.
-          SHIFT lv_coding_line RIGHT BY lv_leading_spaces PLACES.
-          li_element->set_value( lv_coding_line ).
-        ENDIF.
-      CATCH zcx_abapgit_exception ##NO_HANDLER.
-    ENDTRY.
+    " For CODE sections, get full path and hash it
+    IF lv_extra = 'code'.
+      lv_extra = get_hash_for_path( ii_node ).
+    ENDIF.
+
+    mo_files->add_abap(
+      iv_extra = lv_extra
+      it_abap  = lt_abap ).
+
+    ii_node->set_value( c_prefix && lv_extra ).
 
   ENDMETHOD.
 
@@ -303,15 +349,15 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 * see function module FB_UPLOAD_FORM
 
-    DATA: li_node                TYPE REF TO if_ixml_node,
-          lv_formname            TYPE tdsfname,
-          lv_name                TYPE string,
-          li_iterator            TYPE REF TO if_ixml_node_iterator,
-          lo_sf                  TYPE REF TO cl_ssf_fb_smart_form,
-          lo_res                 TYPE REF TO cl_ssf_fb_smart_form,
-          lx_error               TYPE REF TO cx_ssf_fb,
-          lv_text                TYPE string,
-          lv_within_code_section TYPE abap_bool.
+    DATA:
+      li_node     TYPE REF TO if_ixml_node,
+      lv_formname TYPE tdsfname,
+      lv_name     TYPE string,
+      li_iterator TYPE REF TO if_ixml_node_iterator,
+      lo_sf       TYPE REF TO cl_ssf_fb_smart_form,
+      lo_res      TYPE REF TO cl_ssf_fb_smart_form,
+      lx_error    TYPE REF TO cx_ssf_fb,
+      lv_text     TYPE string.
 
     CREATE OBJECT lo_sf.
 
@@ -330,9 +376,9 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
 
       ENDCASE.
 
-      handle_attrib_leading_spaces( EXPORTING iv_name                = lv_name
-                                              ii_node                = li_node
-                                    CHANGING  cv_within_code_section = lv_within_code_section ).
+      IF lv_name IN get_range_node_codes( ) AND li_node->get_namespace_prefix( ) IS INITIAL.
+        deserialize_sources( li_node ).
+      ENDIF.
 
       li_node = li_iterator->get_next( ).
     ENDWHILE.
@@ -530,6 +576,11 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
           OR lv_name = 'LASTUSER'.
         li_node->set_value( 'DUMMY' ).
       ENDIF.
+
+      IF lv_name IN get_range_node_codes( ) AND li_node->get_namespace_prefix( ) IS INITIAL.
+        serialize_sources( li_node ).
+      ENDIF.
+
       li_node = li_iterator->get_next( ).
     ENDWHILE.
 

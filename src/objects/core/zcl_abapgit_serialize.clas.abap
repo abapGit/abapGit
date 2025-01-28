@@ -99,6 +99,11 @@ CLASS zcl_abapgit_serialize DEFINITION
         VALUE(ct_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
+    METHODS determine_rfc_server_group
+      RETURNING
+        VALUE(rv_group) TYPE rzlli_apcl
+      RAISING
+        zcx_abapgit_exception.
     METHODS determine_max_processes
       IMPORTING
         !iv_force_sequential TYPE abap_bool DEFAULT abap_false
@@ -255,11 +260,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA li_exit TYPE REF TO zif_abapgit_exit.
-
-    mv_group = 'parallel_generators'.
-    li_exit = zcl_abapgit_exit=>get_instance( ).
-    li_exit->change_rfc_server_group( CHANGING cv_group = mv_group ).
+    mv_group = determine_rfc_server_group( ).
 
     mo_dot_abapgit = io_dot_abapgit.
     ms_local_settings = is_local_settings.
@@ -280,6 +281,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
   METHOD determine_max_processes.
     DATA: li_exit TYPE REF TO zif_abapgit_exit.
+    DATA lv_available_sessions TYPE i.
 
     IF iv_force_sequential = abap_true.
       rv_processes = 1.
@@ -318,6 +320,40 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         cv_max_processes = rv_processes ).
 
     ASSERT rv_processes >= 1. " check exit above
+
+    " Avoid going over the maximum available user sessions
+    IF sy-batch IS INITIAL.
+      lv_available_sessions = zcl_abapgit_factory=>get_environment( )->get_available_user_sessions( ).
+
+      IF rv_processes > lv_available_sessions AND lv_available_sessions <> 0.
+        rv_processes = lv_available_sessions.
+      ENDIF.
+    ENDIF.
+
+    ASSERT rv_processes >= 1.
+
+  ENDMETHOD.
+
+
+  METHOD determine_rfc_server_group.
+
+    DATA:
+      li_exit   TYPE REF TO zif_abapgit_exit,
+      lv_exists TYPE abap_bool.
+
+    " According to SAP Note 3215918 it's recommended NOT to use this group anymore.
+    " However, we keep it for compatibility. If it does not exist, we switch to the
+    " recommended DEFAULT behaviour.
+    rv_group = 'parallel_generators'.
+
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->change_rfc_server_group( CHANGING cv_group = rv_group ).
+
+    " Check if RFC server group exists and fallback to the default
+    lv_exists = zcl_abapgit_factory=>get_environment( )->check_parallel_processing( rv_group ).
+    IF lv_exists = abap_false.
+      rv_group = ''.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -432,7 +468,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   METHOD filter_unsupported_objects.
 
     DATA: ls_unsupported_count TYPE ty_unsupported_count,
-          lt_supported_types   TYPE zcl_abapgit_objects=>ty_types_tt,
+          lt_supported_types   TYPE zif_abapgit_objects=>ty_types_tt,
           lt_unsupported_count TYPE ty_unsupported_count_tt.
 
     FIELD-SYMBOLS: <ls_tadir>             LIKE LINE OF ct_tadir,
@@ -483,7 +519,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     rv_result = boolc( zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false
                    AND zcl_abapgit_persist_factory=>get_settings( )->read( )->get_parallel_proc_disabled( ) = abap_false
-                   AND mv_group IS NOT INITIAL
                    " The function module below should always exist here as is_merged evaluated to false above.
                    " It does however not exist in the transpiled version which then causes unit tests to fail.
                    " Therefore the check needs to stay.
@@ -545,6 +580,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     DO.
       lv_task = |{ iv_task }-{ sy-index }|.
+      " An initial server group is handled like DEFAULT meaning all instances are used
       CALL FUNCTION 'Z_ABAPGIT_SERIALIZE_PARALLEL'
         STARTING NEW TASK lv_task
         DESTINATION IN GROUP mv_group

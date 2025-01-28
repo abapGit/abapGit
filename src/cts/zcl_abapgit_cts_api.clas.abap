@@ -345,6 +345,9 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     DATA lt_table_keys  TYPE STANDARD TABLE OF e071k.
     DATA lv_with_dialog TYPE abap_bool.
 
+    FIELD-SYMBOLS <ls_table> LIKE LINE OF lt_tables.
+    FIELD-SYMBOLS <ls_table_key> LIKE LINE OF lt_table_keys.
+
     cl_table_utilities_brf=>create_transport_entries(
       EXPORTING
         it_table_ins = it_table_ins
@@ -360,6 +363,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     CALL FUNCTION 'TR_OBJECTS_CHECK'
       TABLES
         wt_ko200                = lt_tables
+        wt_e071k                = lt_table_keys
       EXCEPTIONS
         cancel_edit_other_error = 1
         show_only_other_error   = 2
@@ -372,15 +376,24 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       lv_with_dialog = abap_true.
     ENDIF.
 
-    CALL FUNCTION 'TRINT_OBJECTS_CHECK_AND_INSERT'
+    READ TABLE lt_tables ASSIGNING <ls_table> INDEX 1.
+    ASSERT sy-subrc = 0.
+
+    LOOP AT lt_table_keys ASSIGNING <ls_table_key>.
+      <ls_table_key>-objfunc = <ls_table>-objfunc.
+    ENDLOOP.
+
+    CALL FUNCTION 'TR_OBJECT_INSERT'
       EXPORTING
-        iv_order       = iv_transport
-        iv_with_dialog = lv_with_dialog
-      CHANGING
-        ct_ko200       = lt_tables
-        ct_e071k       = lt_table_keys
+        wi_order                = iv_transport
+        wi_ko200                = <ls_table>
+        iv_no_show_option       = abap_true
+      TABLES
+        wt_e071k                = lt_table_keys
       EXCEPTIONS
-        OTHERS         = 1.
+        cancel_edit_other_error = 1
+        show_only_other_error   = 2
+        OTHERS                  = 3.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
@@ -610,7 +623,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
                   ev_object   = ls_list-object
                   ev_obj_name = ls_list-obj_name ).
               INSERT ls_list INTO TABLE rt_list.
-            CATCH zcx_abapgit_exception.
+            CATCH zcx_abapgit_exception ##NO_HANDLER.
           ENDTRY.
       ENDCASE.
     ENDLOOP.

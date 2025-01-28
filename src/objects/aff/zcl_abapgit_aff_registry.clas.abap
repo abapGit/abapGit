@@ -46,6 +46,7 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
 
 
   METHOD initialize_registry_table.
+    register( 'APLO' ).
     register( 'BGQC' ).
     register( 'CDBO' ).
     register( 'CHKC' ).
@@ -61,6 +62,8 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
     register( 'GSMP' ).
     register( iv_obj_type     = 'INTF'
               iv_experimental = abap_true ).
+    register( 'SAJT' ).
+    register( 'SAJC' ).
     register( 'SMBC' ).
     register( 'SWCR' ).
     register( 'NONT' ).

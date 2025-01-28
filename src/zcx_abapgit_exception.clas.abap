@@ -104,11 +104,6 @@ CLASS zcx_abapgit_exception DEFINITION
 
     CONSTANTS c_generic_error_msg TYPE string VALUE `An error occurred (ZCX_ABAPGIT_EXCEPTION)`.
 
-    CLASS-METHODS split_text_to_symsg
-      IMPORTING
-        !iv_text      TYPE string
-      RETURNING
-        VALUE(rs_msg) TYPE symsg .
     METHODS save_callstack .
     METHODS itf_to_string
       IMPORTING
@@ -250,7 +245,6 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     DATA:
       lt_stream      TYPE TABLE OF tdline,
       lt_string      TYPE TABLE OF string,
-      lv_string      LIKE LINE OF lt_string,
       lt_itf         TYPE tline_tab,
       lv_has_content TYPE abap_bool,
       lv_tabix_from  TYPE syst-tabix,
@@ -307,31 +301,20 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
         itf_text     = lt_itf
         text_stream  = lt_stream.
 
-    LOOP AT lt_string INTO lv_string.
-      IF sy-tabix = 1.
-        rv_result = lv_string.
-      ELSE.
-        CONCATENATE rv_result lv_string
-                    INTO rv_result
-                    SEPARATED BY cl_abap_char_utilities=>newline.
-      ENDIF.
-
-    ENDLOOP.
+    rv_result = concat_lines_of(
+      table = lt_string
+      sep   = cl_abap_char_utilities=>newline ).
 
   ENDMETHOD.
 
 
   METHOD raise.
 
-    DATA lv_text TYPE string.
-
     IF iv_text IS INITIAL.
-      lv_text = c_generic_error_msg.
+      cl_message_helper=>set_msg_vars_for_clike( c_generic_error_msg ).
     ELSE.
-      lv_text = iv_text.
+      cl_message_helper=>set_msg_vars_for_clike( iv_text ).
     ENDIF.
-
-    split_text_to_symsg( lv_text ).
 
     raise_t100(
       ii_log      = ii_log
@@ -437,24 +420,6 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
       ENDIF.
 
     ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD split_text_to_symsg.
-
-    DATA ls_msg TYPE symsg.
-
-    cl_message_helper=>set_msg_vars_for_clike( iv_text ).
-    ls_msg-msgv1 = sy-msgv1.
-    ls_msg-msgv2 = sy-msgv2.
-    ls_msg-msgv3 = sy-msgv3.
-    ls_msg-msgv4 = sy-msgv4.
-
-    " Set syst using generic error message
-    MESSAGE e001(00) WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4 INTO null.
-
-    rs_msg = ls_msg.
 
   ENDMETHOD.
 ENDCLASS.

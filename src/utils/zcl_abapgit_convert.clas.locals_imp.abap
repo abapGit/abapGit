@@ -125,16 +125,22 @@ CLASS lcl_bcp47_language_table DEFINITION CREATE PRIVATE.
              bcp47_code TYPE string,
            END OF ty_language_mapping,
            ty_language_mappings TYPE STANDARD TABLE OF ty_language_mapping WITH DEFAULT KEY.
-    CLASS-DATA gv_language_mappings TYPE ty_language_mappings.
+    CLASS-DATA gt_language_mappings TYPE ty_language_mappings.
     CLASS-METHODS:
       sap1_to_sap2
-        IMPORTING im_sap1        TYPE sy-langu
-        RETURNING VALUE(re_sap2) TYPE laiso
-        RAISING   zcx_abapgit_exception,
+        IMPORTING
+          im_sap1        TYPE sy-langu
+        RETURNING
+          VALUE(re_sap2) TYPE laiso
+        RAISING
+          zcx_abapgit_exception,
       sap2_to_sap1
-        IMPORTING im_sap2        TYPE laiso
-        RETURNING VALUE(re_sap1) TYPE sy-langu
-        RAISING   zcx_abapgit_exception,
+        IMPORTING
+          im_sap2        TYPE laiso
+        RETURNING
+          VALUE(re_sap1) TYPE sy-langu
+        RAISING
+          zcx_abapgit_exception,
       sap1_to_bcp47
         IMPORTING
           im_sap1         TYPE sy-langu
@@ -168,11 +174,11 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
   METHOD sap1_to_bcp47.
     DATA lv_language_mapping TYPE ty_language_mapping.
 
-    IF gv_language_mappings IS INITIAL OR lines( gv_language_mappings ) = 0.
+    IF gt_language_mappings IS INITIAL OR lines( gt_language_mappings ) = 0.
       fill_language_mappings( ).
     ENDIF.
 
-    LOOP AT gv_language_mappings INTO lv_language_mapping WHERE sap1_code = im_sap1.
+    LOOP AT gt_language_mappings INTO lv_language_mapping WHERE sap1_code = im_sap1.
       IF re_bcp47 IS INITIAL OR strlen( re_bcp47 ) > strlen( lv_language_mapping-bcp47_code ).
         re_bcp47 = lv_language_mapping-bcp47_code.
       ENDIF.
@@ -186,11 +192,11 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
   METHOD bcp47_to_sap1.
     DATA lv_language_mapping TYPE ty_language_mapping.
 
-    IF gv_language_mappings IS INITIAL OR lines( gv_language_mappings ) = 0.
+    IF gt_language_mappings IS INITIAL OR lines( gt_language_mappings ) = 0.
       fill_language_mappings( ).
     ENDIF.
 
-    LOOP AT gv_language_mappings INTO lv_language_mapping.
+    LOOP AT gt_language_mappings INTO lv_language_mapping.
       IF to_lower( lv_language_mapping-bcp47_code ) = to_lower( im_bcp47 ) AND re_sap1 IS INITIAL.
         re_sap1 = lv_language_mapping-sap1_code.
       ENDIF.
@@ -205,26 +211,26 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
   METHOD sap1_to_sap2.
     DATA lv_language_mapping TYPE ty_language_mapping.
 
-    IF gv_language_mappings IS INITIAL.
+    IF gt_language_mappings IS INITIAL.
       fill_language_mappings( ).
     ENDIF.
 
-    READ TABLE gv_language_mappings WITH KEY sap1_code = im_sap1 INTO lv_language_mapping.
+    READ TABLE gt_language_mappings WITH KEY sap1_code = im_sap1 INTO lv_language_mapping.
     re_sap2 = lv_language_mapping-sap2_code.
 
     IF re_sap2 IS INITIAL.
-      zcx_abapgit_exception=>raise( |Could not convert SAP1 language code { im_sap1 } to SAP2 language code.| ).
+      zcx_abapgit_exception=>raise( |Could not map SAP1 language code { im_sap1 } to SAP2 language code.| ).
     ENDIF.
   ENDMETHOD.
 
   METHOD sap2_to_sap1.
     DATA lv_language_mapping TYPE ty_language_mapping.
 
-    IF gv_language_mappings IS INITIAL.
+    IF gt_language_mappings IS INITIAL.
       fill_language_mappings( ).
     ENDIF.
 
-    READ TABLE gv_language_mappings WITH KEY sap2_code = im_sap2 INTO lv_language_mapping.
+    READ TABLE gt_language_mappings WITH KEY sap2_code = im_sap2 INTO lv_language_mapping.
     re_sap1 = lv_language_mapping-sap1_code.
 
     IF re_sap1 IS INITIAL.
@@ -237,7 +243,13 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     DATA lv_sap1 TYPE sy-langu.
 
     IF strlen( im_sap1 ) = 4.
-      lv_sap1 = zcl_abapgit_convert=>uccp( im_sap1 ).
+      TRY.
+          lv_sap1 = zcl_abapgit_convert=>uccp( im_sap1 ).
+        CATCH cx_root.
+          " Language is not supported in this system -> ignore it
+          " Should someone try to use the language in a repo, it will result in an error (see above)
+          RETURN.
+      ENDTRY.
     ELSEIF strlen( im_sap1 ) = 1.
       lv_sap1 = im_sap1.
     ENDIF.
@@ -246,7 +258,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     lv_line-sap2_code = im_sap2.
     lv_line-sap1_code = lv_sap1.
 
-    APPEND lv_line TO gv_language_mappings.
+    APPEND lv_line TO gt_language_mappings.
     CLEAR lv_line.
   ENDMETHOD.
 
@@ -739,6 +751,10 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     fill_language_mapping( im_sap1  = 'C0C1'
                            im_sap2  = 'WA'
                            im_bcp47 = 'wa' ).
+
+    fill_language_mapping( im_sap1  = 'A'
+                           im_sap2  = 'AR'
+                           im_bcp47 = 'ar-SA' ).
   ENDMETHOD.
 
 
