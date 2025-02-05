@@ -214,6 +214,9 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
           DELETE lt_requires WHERE obj_type <> 'IASP'
             AND obj_type <> 'PROG'
             AND obj_type <> 'IARP'.
+        WHEN 'IDOC' OR 'IEXT'.
+          lt_requires = lt_items.
+          DELETE lt_requires WHERE obj_type <> 'TABL'.
         WHEN 'DCLS'.
           lt_requires = lt_items.
           DELETE lt_requires WHERE obj_type <> 'DDLS'.
@@ -245,6 +248,15 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
         WHEN 'ENSC'.
           lt_requires = lt_items.
           DELETE lt_requires WHERE obj_type <> 'ENHS'.
+        WHEN 'IWMO' OR 'IWSV' OR 'IWVB'.
+          lt_requires = lt_items.
+          DELETE lt_requires WHERE obj_type <> 'SRVB'.
+        WHEN 'SUSH'.
+          lt_requires = lt_items.
+          DELETE lt_requires WHERE obj_type <> 'SRVB' AND obj_type <> 'HTTP'.
+        WHEN 'SRVB'.
+          lt_requires = lt_items.
+          DELETE lt_requires WHERE obj_type <> 'SRVD'.
       ENDCASE.
 * TODO: END extract to object handler method
 

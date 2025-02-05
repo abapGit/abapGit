@@ -37,10 +37,7 @@ CLASS ltcl_field_rules DEFINITION FOR TESTING RISK LEVEL HARMLESS
         RETURNING
           VALUE(ri_rules) TYPE REF TO zif_abapgit_field_rules,
       apply_clear_logic FOR TESTING,
-      apply_fill_logic FOR TESTING,
-      get_utc_timestamp
-        RETURNING
-          VALUE(rv_timestamp) TYPE timestamp.
+      apply_fill_logic FOR TESTING.
 
 ENDCLASS.
 
@@ -88,7 +85,7 @@ CLASS ltcl_field_rules IMPLEMENTATION.
 
   METHOD fill3.
     DATA lv_timestamp TYPE timestamp.
-    lv_timestamp = get_utc_timestamp( ).
+    GET TIME STAMP FIELD lv_timestamp.
     fill_value(
       iv_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
       iv_len  = 10
@@ -205,6 +202,8 @@ CLASS ltcl_field_rules IMPLEMENTATION.
       lv_ts        TYPE string,
       lv_timestamp TYPE timestamp.
 
+    GET TIME STAMP FIELD lv_timestamp.
+
     ls_act-key  = 1.
     INSERT ls_act INTO TABLE lt_act.
     ls_act-key  = 2.
@@ -241,17 +240,16 @@ CLASS ltcl_field_rules IMPLEMENTATION.
       act = ls_act-time(4)
       exp = sy-uzeit(4) ). " avoid comparing seconds
 
-    lv_timestamp = get_utc_timestamp( ).
     lv_ts = ls_act-ts.
-    lv_ts = lv_ts(12).
+    lv_ts = lv_ts(10).
     cl_abap_unit_assert=>assert_equals(
       act = lv_ts
-      exp = |{ lv_timestamp DIV 100 }| ). " avoid comparing second
+      exp = |{ lv_timestamp DIV 10000 }| ). " avoid comparing second
     lv_ts = ls_act-tl.
-    lv_ts = lv_ts(12).
+    lv_ts = lv_ts(10).
     cl_abap_unit_assert=>assert_equals(
       act = lv_ts
-      exp = |{ lv_timestamp DIV 100 }| ). " avoid comparing seconds
+      exp = |{ lv_timestamp DIV 10000 }| ). " avoid comparing seconds
 
     READ TABLE lt_act INTO ls_act INDEX 2.
 
@@ -268,22 +266,5 @@ CLASS ltcl_field_rules IMPLEMENTATION.
       act = ls_act-time(4)
       exp = sy-uzeit(4) ). " avoid comparing seconds
 
-  ENDMETHOD.
-
-  METHOD get_utc_timestamp.
-    DATA lv_syst_timezone TYPE timezone.
-    CALL FUNCTION 'GET_SYSTEM_TIMEZONE'
-      IMPORTING
-        timezone            = lv_syst_timezone
-      EXCEPTIONS
-        customizing_missing = 1
-        OTHERS              = 2.
-    IF sy-subrc <> 0.
-      cl_abap_unit_assert=>fail( 'Could not get system timezone' ).
-    ENDIF.
-
-    CONVERT DATE sy-datum TIME sy-uzeit
-      INTO TIME STAMP rv_timestamp
-      TIME ZONE lv_syst_timezone.
   ENDMETHOD.
 ENDCLASS.

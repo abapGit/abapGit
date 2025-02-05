@@ -601,7 +601,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    IF lv_state = c_state-inactive. "Textpool in main language needs to be activated
+    "Textpool in main language needs to be activated (not for FUGS/FUGX)
+    IF lv_state = c_state-inactive AND iv_program NP 'SAPLX*'.
       zcl_abapgit_objects_activation=>add(
         iv_type   = 'REPT'
         iv_name   = iv_program
@@ -650,7 +651,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
             cancelled         = 2
             name_not_allowed  = 3
             permission_error  = 4
-            OTHERS            = 5.
+            OTHERS            = 5 ##FM_SUBRC_OK.
       CATCH cx_sy_dyn_call_param_not_found.
         CALL FUNCTION 'RPY_PROGRAM_INSERT'
           EXPORTING
@@ -667,7 +668,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
             cancelled         = 2
             name_not_allowed  = 3
             permission_error  = 4
-            OTHERS            = 5.
+            OTHERS            = 5 ##FM_SUBRC_OK.
     ENDTRY.
     IF sy-subrc = 3.
 

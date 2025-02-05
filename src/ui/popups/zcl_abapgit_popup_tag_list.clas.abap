@@ -18,6 +18,7 @@ CLASS zcl_abapgit_popup_tag_list DEFINITION
       IMPORTING
         iv_url TYPE string.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA mv_repo_url TYPE string.
@@ -34,26 +35,15 @@ ENDCLASS.
 CLASS zcl_abapgit_popup_tag_list IMPLEMENTATION.
 
 
-  METHOD create.
-    CREATE OBJECT ri_popup TYPE zcl_abapgit_popup_tag_list
-      EXPORTING
-        iv_url = iv_url.
-  ENDMETHOD.
-
-
   METHOD constructor.
     mv_repo_url = iv_url.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_html_popup~create_picklist.
-
-    CREATE OBJECT ro_picklist
+  METHOD create.
+    CREATE OBJECT ri_popup TYPE zcl_abapgit_popup_tag_list
       EXPORTING
-        iv_title         = 'Choose Tag'
-        it_list          = fetch_tag_list( )
-        ii_item_renderer = me.
-
+        iv_url = iv_url.
   ENDMETHOD.
 
 
@@ -80,9 +70,19 @@ CLASS zcl_abapgit_popup_tag_list IMPLEMENTATION.
     FIELD-SYMBOLS <ls_tag> TYPE zif_abapgit_git_definitions=>ty_git_branch.
 
     ASSIGN iv_item TO <ls_tag>.
-    ASSERT sy-subrc = 0.
 
     ri_html = zcl_abapgit_html=>create( |{ <ls_tag>-display_name }| ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html_popup~create_picklist.
+
+    CREATE OBJECT ro_picklist
+      EXPORTING
+        iv_title         = 'Choose Tag'
+        it_list          = fetch_tag_list( )
+        ii_item_renderer = me.
 
   ENDMETHOD.
 ENDCLASS.

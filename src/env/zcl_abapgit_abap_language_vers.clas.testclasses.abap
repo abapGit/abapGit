@@ -26,6 +26,8 @@ CLASS lcl_environment IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_environment~get_basis_release.
   ENDMETHOD.
+  METHOD zif_abapgit_environment~get_available_user_sessions.
+  ENDMETHOD.
   METHOD zif_abapgit_environment~get_system_language_filter.
   ENDMETHOD.
   METHOD zif_abapgit_environment~is_merged.
@@ -39,6 +41,8 @@ CLASS lcl_environment IMPLEMENTATION.
   METHOD zif_abapgit_environment~is_variant_maintenance.
   ENDMETHOD.
   METHOD zif_abapgit_environment~init_parallel_processing.
+  ENDMETHOD.
+  METHOD zif_abapgit_environment~check_parallel_processing.
   ENDMETHOD.
 
 ENDCLASS.
@@ -77,10 +81,12 @@ CLASS ltcl_abap_language_version DEFINITION FOR TESTING RISK LEVEL HARMLESS
   PRIVATE SECTION.
     " Cloud package hardcoded in cl_abap_language_version
     CONSTANTS c_cloud_package TYPE devclass VALUE 'TEST_LANGUAGE_VERSION_SCP'.
+    CONSTANTS c_language_cfg TYPE seoclsname VALUE 'CL_ABAP_LANGUAGE_VERSION_CFG'.
 
     DATA:
       mt_versions          TYPE string_table,
       mv_has_cloud_package TYPE abap_bool,
+      mv_has_language_cfg  TYPE abap_bool,
       mo_environment       TYPE REF TO lcl_environment,
       mi_persistency       TYPE REF TO zif_abapgit_persist_settings,
       mo_dot_abapgit       TYPE REF TO zcl_abapgit_dot_abapgit,
@@ -364,9 +370,11 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
     " Assume on-prem (no cloud)
     set_environment( abap_false ).
 
-    cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->is_import_allowed( '$TMP' ) " existing standard package
-      exp = iv_standard ).
+    IF mv_has_language_cfg = abap_true.
+      cl_abap_unit_assert=>assert_equals(
+        act = mo_cut->is_import_allowed( '$TMP' ) " existing standard package
+        exp = iv_standard ).
+    ENDIF.
 
     IF mv_has_cloud_package = abap_true.
       cl_abap_unit_assert=>assert_equals(
@@ -381,9 +389,11 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
     " Assume cloud platform
     set_environment( abap_true ).
 
-    cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->is_import_allowed( '$TMP' ) " existing standard package
-      exp = iv_standard ).
+    IF mv_has_language_cfg = abap_true.
+      cl_abap_unit_assert=>assert_equals(
+        act = mo_cut->is_import_allowed( '$TMP' ) " existing standard package
+        exp = iv_standard ).
+    ENDIF.
 
     IF mv_has_cloud_package = abap_true.
       cl_abap_unit_assert=>assert_equals(
@@ -401,6 +411,19 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
   METHOD is_import_allowed.
 
     DATA lv_version TYPE string.
+    DATA ls_clskey TYPE seoclskey.
+
+    ls_clskey-clsname = c_language_cfg.
+
+    " Tests using ABAP language version "standard" only work if the required
+    " SAP class is available. In older releases, all packages will have
+    " ABAP language version "undefined" and are handled like a new package
+    CALL FUNCTION 'SEO_CLASS_EXISTENCE_CHECK'
+      EXPORTING
+        clskey = ls_clskey
+      EXCEPTIONS
+        OTHERS = 1.
+    mv_has_language_cfg = boolc( sy-subrc = 0 ).
 
     LOOP AT mt_versions INTO lv_version.
 

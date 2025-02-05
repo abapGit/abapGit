@@ -61,7 +61,7 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
     INSERT ls_ddls_name INTO TABLE lt_ddls_name.
 
     PERFORM ('DDLS_GET_DEP') IN PROGRAM ('RADMASDL')
-                             TABLES lt_ddls_name rt_dependency.
+                             TABLES lt_ddls_name rt_dependency ##PERF_NO_FORM.
 
   ENDMETHOD.
 
@@ -119,7 +119,7 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           " AUTH after DCLS
           <ls_tadir>-korrnum = '715000'.
         WHEN 'SUSH'.
-          " SUSH after SUSC
+          " SUSH after SUSC and SRVB
           <ls_tadir>-korrnum = '712000'.
         WHEN 'SUSC'.
           " SUSC after SUSO
@@ -130,6 +130,14 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
         WHEN 'DCLS'.
           " AUTH and SUSO after DCLS
           <ls_tadir>-korrnum = '705000'.
+        WHEN 'G4BA' OR 'G4BS' OR 'IWMO' OR 'IWSV' OR 'IWVB'.
+          " after SRVB
+          <ls_tadir>-korrnum = '610000'.
+        WHEN 'SRVB'.
+          " after SRVD
+          <ls_tadir>-korrnum = '600500'.
+        WHEN 'SRVD'.
+          <ls_tadir>-korrnum = '600000'.
         WHEN 'IASP'.
           <ls_tadir>-korrnum = '552000'.
         WHEN 'IARP'.

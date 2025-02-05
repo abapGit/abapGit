@@ -7,7 +7,7 @@ INTERFACE zif_abapgit_exit PUBLIC.
       clone_url TYPE string,
     END OF ty_ci_repo.
   TYPES:
-    ty_ci_repos TYPE TABLE OF ty_ci_repo.
+    ty_ci_repos TYPE STANDARD TABLE OF ty_ci_repo WITH DEFAULT KEY.
   TYPES:
     ty_object_types TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY.
   TYPES:
