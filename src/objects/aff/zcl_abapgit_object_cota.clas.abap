@@ -14,7 +14,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_cota IMPLEMENTATION.
 
-    METHOD zif_abapgit_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
       SELECT SINGLE changedby FROM ('sapcontargethead')
         WHERE id = @ms_item-obj_name AND version = 'I'
         INTO @rv_user.
