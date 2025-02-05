@@ -1,8 +1,8 @@
-class zcl_abapgit_object_cota definition
-  public
-  inheriting from ZCL_ABAPGIT_OBJECT_COMMON_AFF
-  final
-  create public .
+CLASS zcl_abapgit_object_cota DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_object_common_aff
+  FINAL
+  CREATE PUBLIC .
 
   public section.
     METHODS zif_abapgit_object~changed_by REDEFINITION.
