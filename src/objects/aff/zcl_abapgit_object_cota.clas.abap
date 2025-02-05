@@ -6,7 +6,7 @@ class zcl_abapgit_object_cota definition
 
   public section.
     METHODS zif_abapgit_object~changed_by REDEFINITION.
-protected section.
+  protected section.
 private section.
 ENDCLASS.
 
