@@ -4,10 +4,10 @@ CLASS zcl_abapgit_object_cota DEFINITION
   FINAL
   CREATE PUBLIC .
 
-  public section.
+  PUBLIC SECTION.
     METHODS zif_abapgit_object~changed_by REDEFINITION.
-  protected section.
-  private section.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -15,14 +15,19 @@ ENDCLASS.
 CLASS zcl_abapgit_object_cota IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
-    SELECT SINGLE changedby FROM ('sapcontargethead')
-      WHERE id = @ms_item-obj_name AND version = 'I'
-      INTO @rv_user.
+    DATA lx_error TYPE REF TO cx_root.
+    TRY.
+        SELECT SINGLE changedby FROM ('sapcontargethead')
+          WHERE id = @ms_item-obj_name AND version = 'I'
+          INTO @rv_user.
 
-    IF rv_user IS INITIAL.
-      SELECT SINGLE changedby FROM ('sapcontargethead')
-        WHERE id = @ms_item-obj_name AND version = 'A'
-        INTO @rv_user.
-    ENDIF.
+        IF rv_user IS INITIAL.
+          SELECT SINGLE changedby FROM ('sapcontargethead')
+            WHERE id = @ms_item-obj_name AND version = 'A'
+            INTO @rv_user.
+        ENDIF.
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
   ENDMETHOD.
 ENDCLASS.
