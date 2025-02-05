@@ -31,9 +31,9 @@ CLASS zcl_abapgit_object_cota IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
+    DATA lx_error TYPE REF TO cx_root.
+    DATA lv_cota_name TYPE c LENGTH 30.
     TRY.
-        DATA lx_error TYPE REF TO cx_root.
-        DATA lv_cota_name TYPE c LENGTH 30.
         lv_cota_name = ms_item-obj_name.
         CALL METHOD ('CL_COTA_FACTORY')=>('DELETE_COTA')
           EXPORTING
