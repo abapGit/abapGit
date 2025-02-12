@@ -80,8 +80,6 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
 
     clear_field( EXPORTING iv_fieldname = 'ABAP_LANGUAGE_VERSION'
                  CHANGING  cg_metadata  = <lg_metadata> ).
-    clear_field( EXPORTING iv_fieldname = 'ABAP_LANGU_VERSION'
-                 CHANGING  cg_metadata  = <lg_metadata> ).
 
   ENDMETHOD.
 
@@ -179,12 +177,13 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
           lr_data       TYPE REF TO data,
           lx_error      TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <lg_data>       TYPE any,
-                   <lg_source>     TYPE data,
-                   <lg_version>    TYPE data,
-                   <lg_package>    TYPE data,
-                   <lg_changed_by> TYPE syuname,
-                   <lg_changed_at> TYPE xsddatetime_z.
+    FIELD-SYMBOLS: <lg_data>                  TYPE any,
+                   <lg_source>                TYPE data,
+                   <lg_version>               TYPE data,
+                   <lg_package>               TYPE data,
+                   <lg_changed_by>            TYPE syuname,
+                   <lg_changed_at>            TYPE xsddatetime_z,
+                   <lg_abap_language_version> TYPE data.
 
     TRY.
         CREATE DATA lr_data
@@ -196,6 +195,11 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
             iv_name = 'DDLX'
           CHANGING
             cg_data = <lg_data> ).
+
+        ASSIGN COMPONENT 'METADATA-ABAP_LANGU_VERSION' OF STRUCTURE <lg_data> TO <lg_abap_language_version>.
+        IF sy-subrc = 0.
+          set_abap_language_version( CHANGING cv_abap_language_version = <lg_abap_language_version> ).
+        ENDIF.
 
         ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lg_source>.
         ASSERT sy-subrc = 0.
@@ -366,6 +370,11 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
         ENDIF.
 
         li_data_model->get_data( IMPORTING p_data = <lg_data> ).
+
+        ASSIGN COMPONENT 'METADATA-ABAP_LANGU_VERSION' OF STRUCTURE <lg_data> TO <lg_field>.
+        IF sy-subrc = 0.
+          clear_abap_language_version( CHANGING cv_abap_language_version = <lg_field> ).
+        ENDIF.
 
         clear_fields( CHANGING cg_data = <lg_data> ).
 
