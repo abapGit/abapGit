@@ -8,6 +8,9 @@ CLASS zcl_abapgit_object_wdcc DEFINITION
 
     INTERFACES zif_abapgit_object .
   PROTECTED SECTION.
+    METHODS after_import
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -230,7 +233,30 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
 
     tadir_insert( iv_package ).
 
+    after_import( ).
+
     corr_insert( iv_package ).
+
+  ENDMETHOD.
+
+  METHOD after_import.
+
+    DATA: lt_cts_object_entry TYPE STANDARD TABLE OF e071 WITH DEFAULT KEY,
+          ls_cts_object_entry LIKE LINE OF lt_cts_object_entry,
+          lt_cts_key          TYPE STANDARD TABLE OF e071k WITH DEFAULT KEY.
+
+    ls_cts_object_entry-pgmid    = 'R3TR'.
+    ls_cts_object_entry-object   = ms_item-obj_type.
+    ls_cts_object_entry-obj_name = ms_item-obj_name.
+    INSERT ls_cts_object_entry INTO TABLE lt_cts_object_entry.
+
+    CALL FUNCTION 'WDR_CFG_AFTER_IMPORT'
+      EXPORTING
+        iv_tarclient  = sy-mandt
+        iv_is_upgrade = abap_false
+      TABLES
+        tt_e071       = lt_cts_object_entry
+        tt_e071k      = lt_cts_key.
 
   ENDMETHOD.
 
