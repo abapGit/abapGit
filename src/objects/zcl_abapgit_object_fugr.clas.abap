@@ -518,6 +518,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     DATA: lv_area    TYPE rs38l-area,
           lt_enlfdir TYPE STANDARD TABLE OF enlfdir.
+    DATA lv_index TYPE i.
 
     FIELD-SYMBOLS: <ls_functab> TYPE LINE OF ty_rs38l_incl_tt,
                    <ls_enlfdir> TYPE enlfdir.
@@ -554,9 +555,10 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     LOOP AT rt_functab ASSIGNING <ls_functab>.
       TRANSLATE <ls_functab> TO UPPER CASE.
+      lv_index = sy-tabix.
       READ TABLE lt_enlfdir WITH KEY funcname = <ls_functab>-funcname TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
-        DELETE rt_functab INDEX sy-index.
+        DELETE rt_functab INDEX lv_index.
       ENDIF.
     ENDLOOP.
 
