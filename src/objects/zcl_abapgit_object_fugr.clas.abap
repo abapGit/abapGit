@@ -537,9 +537,9 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     ENDIF.
 
     SELECT * FROM enlfdir
-      INTO TABLE @lt_enlfdir
-      WHERE area = @ms_item-obj_name
-        AND active = @abap_true
+      INTO TABLE lt_enlfdir
+      WHERE area = ms_item-obj_name
+        AND active = abap_true
       ORDER BY funcname.
 
     IF sy-subrc <> 0.
