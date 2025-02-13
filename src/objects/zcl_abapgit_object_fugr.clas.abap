@@ -541,11 +541,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       INTO TABLE lt_enlfdir
       WHERE area = ms_item-obj_name
         AND active = abap_true
-      ORDER BY funcname.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Function Group { ms_item-obj_name } not found in table ENLFDIR| ).
-    ENDIF.
+      ORDER BY funcname.   "#EC CI_SUBRC
 
     LOOP AT lt_enlfdir ASSIGNING <ls_enlfdir>.
       TRANSLATE <ls_enlfdir>-funcname TO UPPER CASE.
