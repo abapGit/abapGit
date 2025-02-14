@@ -537,11 +537,12 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
+    "FM is not reliable if Function Group is inconsistent, so cross-check results (#7147)
     SELECT * FROM enlfdir
       INTO TABLE lt_enlfdir
       WHERE area = ms_item-obj_name
         AND active = abap_true
-      ORDER BY funcname.   "#EC CI_SUBRC
+      ORDER BY funcname.                                  "#EC CI_SUBRC
 
     LOOP AT lt_enlfdir ASSIGNING <ls_enlfdir>.
       TRANSLATE <ls_enlfdir>-funcname TO UPPER CASE.
@@ -549,6 +550,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     SORT lt_enlfdir BY funcname ASCENDING.
 
+    "Remove anything not in FM attributes table
     LOOP AT rt_functab ASSIGNING <ls_functab>.
       TRANSLATE <ls_functab> TO UPPER CASE.
       lv_index = sy-tabix.
