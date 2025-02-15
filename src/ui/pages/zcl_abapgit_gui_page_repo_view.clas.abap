@@ -426,7 +426,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     DATA:
       li_log TYPE REF TO zif_abapgit_log.
 
-    CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-repo'.
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'actionbar-repo-view' ).
 
     IF mo_repo->is_offline( ) = abap_false.
       " online repo
@@ -1217,7 +1217,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
-    CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-main'.
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-repo-view' ).
 
     ro_toolbar->add(
       iv_txt = zcl_abapgit_gui_buttons=>repo_list( )

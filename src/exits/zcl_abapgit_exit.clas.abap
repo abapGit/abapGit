@@ -328,6 +328,18 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_exit~enhance_any_toolbar.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->enhance_any_toolbar( io_menu ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_exit~enhance_repo_toolbar.
 
     IF gi_exit IS NOT INITIAL.

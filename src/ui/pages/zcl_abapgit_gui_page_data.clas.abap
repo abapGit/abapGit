@@ -97,31 +97,6 @@ ENDCLASS.
 CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
 
-  METHOD get_form_schema.
-    ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'data-config' ).
-
-    ro_form->text(
-      iv_label       = 'Table'
-      iv_name        = c_id-table
-      iv_required    = abap_true
-      iv_max         = 16 ).
-
-    ro_form->checkbox(
-      iv_label = 'Skip Initial Values'
-      iv_name  = c_id-skip_initial ).
-
-    ro_form->textarea(
-      iv_label       = 'Where'
-      iv_placeholder = 'Conditions separated by newline'
-      iv_name        = c_id-where ).
-
-    ro_form->command(
-      iv_label       = 'Add'
-      iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
-      iv_action      = c_event-add ).
-  ENDMETHOD.
-
-
   METHOD add_via_transport.
 
     DATA lv_trkorr  TYPE trkorr.
@@ -297,6 +272,31 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_form_schema.
+    ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'data-config' ).
+
+    ro_form->text(
+      iv_label       = 'Table'
+      iv_name        = c_id-table
+      iv_required    = abap_true
+      iv_max         = 16 ).
+
+    ro_form->checkbox(
+      iv_label = 'Skip Initial Values'
+      iv_name  = c_id-skip_initial ).
+
+    ro_form->textarea(
+      iv_label       = 'Where'
+      iv_placeholder = 'Conditions separated by newline'
+      iv_name        = c_id-where ).
+
+    ro_form->command(
+      iv_label       = 'Add'
+      iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
+      iv_action      = c_event-add ).
+  ENDMETHOD.
+
+
   METHOD render_existing.
 
     DATA lo_form TYPE REF TO zcl_abapgit_html_form.
@@ -382,7 +382,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
-    CREATE OBJECT ro_toolbar.
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-advanced-data' ).
 
     ro_toolbar->add( iv_txt = 'Add Via Transport'
                      iv_act = c_event-add_via_transport ).
