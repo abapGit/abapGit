@@ -63,7 +63,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_PULL IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
 
 
   METHOD choose_transport_request.
@@ -220,7 +220,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PULL IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
-    CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-main'.
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-pull' ).
 
     ro_toolbar->add(
       iv_txt = 'Refresh'

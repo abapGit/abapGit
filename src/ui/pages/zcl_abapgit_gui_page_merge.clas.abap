@@ -155,7 +155,7 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
-    CREATE OBJECT ro_toolbar.
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-merge' ).
 
     ro_toolbar->add( iv_txt = 'Merge'
                      iv_act = c_actions-merge

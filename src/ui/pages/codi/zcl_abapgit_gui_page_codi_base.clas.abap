@@ -168,7 +168,7 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
 
   METHOD build_base_menu.
 
-    ro_menu = zcl_abapgit_html_toolbar=>create( )->add(
+    ro_menu = zcl_abapgit_html_toolbar=>create( 'toolbar-code-inspector' )->add(
       iv_txt = 'Re-Run'
       iv_act = c_actions-rerun ).
 
