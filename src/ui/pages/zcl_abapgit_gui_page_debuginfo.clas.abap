@@ -71,7 +71,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
   METHOD build_toolbar.
 
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-debug'.
+    ro_menu = zcl_abapgit_html_toolbar=>create( 'toolbar-debug-info' ).
 
     ro_menu->add(
       iv_txt = 'Save'

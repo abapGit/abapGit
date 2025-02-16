@@ -18,6 +18,7 @@ CLASS zcl_abapgit_gui_page_db_entry DEFINITION
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
+
     METHODS constructor
       IMPORTING
         !is_key       TYPE zif_abapgit_persistence=>ty_content
@@ -95,7 +96,7 @@ CLASS zcl_abapgit_gui_page_db_entry IMPLEMENTATION.
 
   METHOD build_toolbar.
 
-    CREATE OBJECT ro_toolbar.
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-database-entry' ).
 
     IF mv_edit_mode = abap_true.
       ro_toolbar->add(
