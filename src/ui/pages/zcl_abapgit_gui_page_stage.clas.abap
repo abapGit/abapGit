@@ -156,7 +156,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
       zcl_abapgit_path=>split_file_location(
         EXPORTING
-          iv_fullpath = to_lower( <ls_item>-k )
+          iv_fullpath = <ls_item>-k
         IMPORTING
           ev_path     = ls_file-path
           ev_filename = ls_file-filename ).
@@ -740,7 +740,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
       zcl_abapgit_path=>split_file_location(
         EXPORTING
-          iv_fullpath = to_lower( <ls_item>-k ) " filename is lower cased
+          iv_fullpath = <ls_item>-k
         IMPORTING
           ev_path     = ls_file-path
           ev_filename = ls_file-filename ).
