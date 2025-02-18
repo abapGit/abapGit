@@ -34,6 +34,11 @@ CLASS zcl_abapgit_object_http DEFINITION
              object_state TYPE c LENGTH 1,
            END OF ty_gs_object_version.
 
+    TYPES: BEGIN OF ty_icf_node,
+             icfname    TYPE c LENGTH 15,
+             icfparguid TYPE c LENGTH 25,
+           END OF ty_icf_node.
+
 ENDCLASS.
 
 
@@ -84,8 +89,7 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
           lo_http              TYPE REF TO object,
           ls_abap_lang         TYPE ty_gs_object_version,
           lo_instance          TYPE REF TO object,
-          lv_tadir_name        TYPE tadir-obj_name,
-          lt_ret               TYPE STANDARD TABLE OF bapiret2.
+          lv_icfnode           TYPE ty_icf_node.
 
     TRY.
         io_xml->read(
@@ -97,6 +101,14 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
         io_xml->read(
           EXPORTING iv_name = 'HTTPHDL'
           CHANGING  cg_data = lt_handler ).
+
+        TRY.
+            "link to icf node (in releases older than 757, a http service requires a icf node to function)
+            io_xml->read(
+              EXPORTING iv_name = 'HTTPICFNODE'
+              CHANGING  cg_data = lv_icfnode ).
+          CATCH cx_root.
+        ENDTRY.
 
         SELECT SINGLE id FROM ('UCONHTTPSERVHEAD') INTO lv_id WHERE id = lv_http_servid AND version = 'A'.
         IF sy-subrc = 0.
@@ -152,22 +164,15 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
         CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_DESCRIPTION')
           EXPORTING
             texts = ls_description.
+        CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_ICF_SERVICE')
+          EXPORTING
+            iv_icfservice = lv_icfnode.
         CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SAVE')
           EXPORTING
             run_dark  = abap_true
             dev_class = iv_package
             korrnum   = iv_transport.
         CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~FREE').
-
-        lv_tadir_name = lv_http_servid.
-        CALL METHOD ('CL_AUTH_START_TOOLS')=>('SUSH_CREATE')
-          EXPORTING
-            iv_type   = 'HTTP'
-            iv_name   = lv_tadir_name
-            iv_silent = abap_true
-            iv_task   = iv_transport
-          IMPORTING
-            et_log    = lt_ret.
 
       CATCH cx_root INTO lx_root.
         zcx_abapgit_exception=>raise_with_text( lx_root ).
@@ -241,6 +246,7 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
           lt_handler     TYPE TABLE OF ty_uconservhttphandler,
           ls_description TYPE ty_uconhttpservtext,
           lx_root        TYPE REF TO cx_root,
+          lv_icfnode     TYPE ty_icf_node,
           lv_name        TYPE c LENGTH 30.
 
     TRY.
@@ -274,6 +280,15 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
         io_xml->add(
           iv_name = 'HTTPHDL'
           ig_data = lt_handler ).
+
+        TRY.
+            "link to icf node (in releases older than 757, a http service requires a icf node to function)
+            CALL METHOD lo_serv->('IF_UCON_API_HTTP_SERVICE~GET_ICF_SERVICE') IMPORTING ev_icfservice = lv_icfnode.
+            io_xml->add(
+              iv_name = 'HTTPICFNODE'
+              ig_data = lv_icfnode ).
+          CATCH cx_root.
+        ENDTRY.
 
       CATCH cx_root INTO lx_root.
         zcx_abapgit_exception=>raise_with_text( lx_root ).
