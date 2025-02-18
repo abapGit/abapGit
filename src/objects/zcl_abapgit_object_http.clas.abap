@@ -89,7 +89,6 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
           lo_http              TYPE REF TO object,
           ls_abap_lang         TYPE ty_gs_object_version,
           lo_instance          TYPE REF TO object,
-          lv_tadir_name        TYPE tadir-obj_name,
           lv_icfnode           TYPE ty_icf_node,
           lt_ret               TYPE STANDARD TABLE OF bapiret2.
 
