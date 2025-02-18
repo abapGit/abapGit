@@ -247,6 +247,7 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
           lt_handler     TYPE TABLE OF ty_uconservhttphandler,
           ls_description TYPE ty_uconhttpservtext,
           lx_root        TYPE REF TO cx_root,
+          lv_icfnode     TYPE ty_icf_node,
           lv_name        TYPE c LENGTH 30.
 
     TRY.
@@ -283,7 +284,6 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
 
         TRY.
             "link to icf node (in releases older than 757, a http service requires a icf node to function)
-            DATA lv_icfnode TYPE ty_icf_node.
             CALL METHOD lo_serv->('IF_UCON_API_HTTP_SERVICE~GET_ICF_SERVICE') IMPORTING ev_icfservice = lv_icfnode.
             io_xml->add(
               iv_name = 'HTTPICFNODE'
