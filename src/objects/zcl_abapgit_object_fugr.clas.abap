@@ -516,11 +516,14 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   METHOD functions.
 
-    DATA: lv_area TYPE rs38l-area.
-    FIELD-SYMBOLS: <ls_functab> TYPE LINE OF ty_rs38l_incl_tt.
+    DATA: lv_area    TYPE rs38l-area,
+          lt_enlfdir TYPE STANDARD TABLE OF enlfdir.
+    DATA lv_index TYPE i.
+
+    FIELD-SYMBOLS: <ls_functab> TYPE LINE OF ty_rs38l_incl_tt,
+                   <ls_enlfdir> TYPE enlfdir.
 
     lv_area = ms_item-obj_name.
-
 
     CALL FUNCTION 'RS_FUNCTION_POOL_CONTENTS'
       EXPORTING
@@ -534,9 +537,27 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-* The result can also contain function which are lowercase.
+    "FM is not reliable if Function Group is inconsistent, so cross-check results (#7147)
+    SELECT * FROM enlfdir
+      INTO TABLE lt_enlfdir
+      WHERE area = ms_item-obj_name
+        AND active = abap_true
+      ORDER BY funcname.                                  "#EC CI_SUBRC
+
+    LOOP AT lt_enlfdir ASSIGNING <ls_enlfdir>.
+      TRANSLATE <ls_enlfdir>-funcname TO UPPER CASE.
+    ENDLOOP.
+
+    SORT lt_enlfdir BY funcname ASCENDING.
+
+    "Remove anything not in FM attributes table
     LOOP AT rt_functab ASSIGNING <ls_functab>.
       TRANSLATE <ls_functab> TO UPPER CASE.
+      lv_index = sy-tabix.
+      READ TABLE lt_enlfdir WITH KEY funcname = <ls_functab>-funcname TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        DELETE rt_functab INDEX lv_index.
+      ENDIF.
     ENDLOOP.
 
     SORT rt_functab BY funcname ASCENDING.
