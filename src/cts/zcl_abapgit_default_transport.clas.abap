@@ -5,19 +5,14 @@ CLASS zcl_abapgit_default_transport DEFINITION
   PUBLIC SECTION.
     INTERFACES zif_abapgit_default_transport.
 
-    METHODS
-      constructor
-        RAISING
-          zcx_abapgit_exception.
+    METHODS constructor.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA mv_is_set_by_abapgit TYPE abap_bool .
     DATA ms_save TYPE e070use .
 
-    METHODS store
-      RAISING
-        zcx_abapgit_exception .
+    METHODS store.
     METHODS restore
       RAISING
         zcx_abapgit_exception .
@@ -35,7 +30,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DEFAULT_TRANSPORT IMPLEMENTATION.
+CLASS zcl_abapgit_default_transport IMPLEMENTATION.
 
 
   METHOD clear.
@@ -116,7 +111,11 @@ CLASS ZCL_ABAPGIT_DEFAULT_TRANSPORT IMPLEMENTATION.
 
   METHOD store.
 
-    ms_save = zif_abapgit_default_transport~get( ).
+    TRY.
+        ms_save = zif_abapgit_default_transport~get( ).
+      CATCH zcx_abapgit_exception.
+        CLEAR ms_save.
+    ENDTRY.
 
   ENDMETHOD.
 

@@ -231,6 +231,9 @@ CLASS ltd_exit IMPLEMENTATION.
   METHOD zif_abapgit_exit~determine_transport_request.
   ENDMETHOD.
 
+  METHOD zif_abapgit_exit~enhance_any_toolbar.
+  ENDMETHOD.
+
   METHOD zif_abapgit_exit~enhance_repo_toolbar.
   ENDMETHOD.
 

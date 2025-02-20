@@ -45,7 +45,7 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
 
   METHOD advanced.
 
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-advanced'.
+    ro_menu = zcl_abapgit_html_toolbar=>create( 'toolbar-advanced' ).
 
     ro_menu->add(
       iv_txt = 'Database Utility'
@@ -74,7 +74,7 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
 
   METHOD back.
 
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-back'.
+    ro_menu = zcl_abapgit_html_toolbar=>create( 'toolbar-back' ).
 
     ro_menu->add(
       iv_txt = 'Back'
@@ -96,7 +96,7 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
 
   METHOD help.
 
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-help'.
+    ro_menu = zcl_abapgit_html_toolbar=>create( 'toolbar-help' ).
 
     ro_menu->add(
       iv_txt = 'Tutorial'
@@ -119,7 +119,7 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
 
   METHOD repo_settings.
 
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-repo-settings'.
+    ro_menu = zcl_abapgit_html_toolbar=>create( 'toolbar-repo-settings' ).
 
     ro_menu->add(
       iv_txt = 'Repository'
@@ -152,7 +152,7 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
 
   METHOD settings.
 
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-settings'.
+    ro_menu = zcl_abapgit_html_toolbar=>create( 'toolbar-abapgit-settings' ).
 
     ro_menu->add(
       iv_txt = 'Global'
