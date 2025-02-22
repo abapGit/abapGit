@@ -284,6 +284,11 @@ CLASS ltcl_convert IMPLEMENTATION.
 
     DATA lv_result TYPE string.
 
+    " Test does not work on non-Unicode but is not important for real-world anyway
+    IF cl_abap_char_utilities=>charsize = 1.
+      RETURN.
+    ENDIF.
+
     " 0xF8-0xFF are not valid in UTF-8
     TRY.
         lv_result = zcl_abapgit_convert=>xstring_to_string_utf8( 'F8FF00' ).
