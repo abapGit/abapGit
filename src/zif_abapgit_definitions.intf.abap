@@ -345,6 +345,7 @@ INTERFACE zif_abapgit_definitions
       repo_activate_objects         TYPE string VALUE 'repo_activate_objects',
       repo_add_all_obj_to_trans_req TYPE string VALUE 'repo_add_all_obj_to_trans_req',
       repo_background               TYPE string VALUE 'repo_background',
+      repo_change_package           TYPE string VALUE 'repo_change_package',
       repo_code_inspector           TYPE string VALUE 'repo_code_inspector',
       repo_delete_objects           TYPE string VALUE 'repo_delete_objects',
       repo_infos                    TYPE string VALUE 'repo_infos',
