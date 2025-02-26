@@ -20,9 +20,6 @@ CLASS zcl_abapgit_factory DEFINITION
         VALUE(ri_code_inspector) TYPE REF TO zif_abapgit_code_inspector
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS get_stage_logic
-      RETURNING
-        VALUE(ri_logic) TYPE REF TO zif_abapgit_stage_logic .
     CLASS-METHODS get_cts_api
       RETURNING
         VALUE(ri_cts_api) TYPE REF TO zif_abapgit_cts_api .
@@ -89,7 +86,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
+CLASS zcl_abapgit_factory IMPLEMENTATION.
 
 
   METHOD get_code_inspector.
@@ -230,17 +227,6 @@ CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
     ENDIF.
 
     ri_report = gi_sap_report.
-
-  ENDMETHOD.
-
-
-  METHOD get_stage_logic.
-
-    IF gi_stage_logic IS INITIAL.
-      CREATE OBJECT gi_stage_logic TYPE zcl_abapgit_stage_logic.
-    ENDIF.
-
-    ri_logic = gi_stage_logic.
 
   ENDMETHOD.
 
