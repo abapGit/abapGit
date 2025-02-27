@@ -1,13 +1,24 @@
 CLASS zcl_abapgit_stage_logic DEFINITION
   PUBLIC
-  CREATE PRIVATE
-  GLOBAL FRIENDS zcl_abapgit_factory .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_stage_logic .
+    INTERFACES zif_abapgit_stage_logic.
+
+    CLASS-METHODS get_stage_logic
+      RETURNING
+        VALUE(ri_logic) TYPE REF TO zif_abapgit_stage_logic.
+
+    CLASS-METHODS set_stage_logic
+      IMPORTING
+        ii_logic TYPE REF TO zif_abapgit_stage_logic.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    CLASS-DATA gi_stage_logic TYPE REF TO zif_abapgit_stage_logic.
+
     CLASS-METHODS:
       remove_ignored
         IMPORTING io_repo  TYPE REF TO zcl_abapgit_repo_online
@@ -20,6 +31,17 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_stage_logic IMPLEMENTATION.
+
+
+  METHOD get_stage_logic.
+
+    IF gi_stage_logic IS INITIAL.
+      CREATE OBJECT gi_stage_logic TYPE zcl_abapgit_stage_logic.
+    ENDIF.
+
+    ri_logic = gi_stage_logic.
+
+  ENDMETHOD.
 
 
   METHOD remove_identical.
@@ -82,6 +104,11 @@ CLASS zcl_abapgit_stage_logic IMPLEMENTATION.
 
     ENDLOOP.
 
+  ENDMETHOD.
+
+
+  METHOD set_stage_logic.
+    gi_stage_logic = ii_logic.
   ENDMETHOD.
 
 

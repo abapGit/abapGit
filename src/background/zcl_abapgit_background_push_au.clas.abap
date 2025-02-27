@@ -110,7 +110,7 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
                    <ls_local>   LIKE LINE OF ls_files-local.
 
 
-    ls_files = zcl_abapgit_factory=>get_stage_logic( )->get( io_repo ).
+    ls_files = zcl_abapgit_stage_logic=>get_stage_logic( )->get( io_repo ).
 
     LOOP AT ls_files-local ASSIGNING <ls_local>.
       lv_changed_by = zcl_abapgit_objects=>changed_by(
@@ -237,7 +237,7 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
     DATA: ls_files TYPE zif_abapgit_definitions=>ty_stage_files.
 
     mi_log = ii_log.
-    ls_files = zcl_abapgit_factory=>get_stage_logic( )->get( io_repo ).
+    ls_files = zcl_abapgit_stage_logic=>get_stage_logic( )->get( io_repo ).
 
     IF lines( ls_files-local ) = 0 AND lines( ls_files-remote ) = 0.
       ii_log->add_info( 'Nothing to stage' ).
