@@ -3,8 +3,7 @@
 [![License](https://img.shields.io/github/license/abapGit/abapGit?label=License&color=green)](LICENSE)
 [![REUSE Status](https://api.reuse.software/badge/github.com/abapGit/abapGit?color=success)](https://api.reuse.software/info/github.com/abapGit/abapGit)
 [![Slack](https://img.shields.io/badge/Join-Slack-blue)](https://communityinviter.com/apps/abapgit/abap)
-[![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/abapGit/abapGit/src/zif_abapgit_version.intf.abap/c_abap_version&label=version)](https://github.com/abapGit/abapGit/blob/main/src/zif_abapgit_version.intf.abap)
-
+[![abap package version](https://img.shields.io/endpoint?url=https://shield.abappm.com/github/abapGit/abapGit/-main/src/zif_abapgit_version.intf.abap/c_abap_version&label=version)](https://github.com/abapGit/abapGit/blob/main/src/zif_abapgit_version.intf.abap)
 
 <!--
 <picture>
