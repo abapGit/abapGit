@@ -85,8 +85,11 @@ CLASS ltcl_xml_output IMPLEMENTATION.
 
     lv_xstring = lo_conv_out_string->get_buffer( ).
 
-    lv_bom = cl_abap_char_utilities=>byte_order_mark_little. "UTF-16LE, 4103
-    CONCATENATE lv_bom lv_xstring INTO lv_xstring IN BYTE MODE.
+    " Add BOM for Unicode systems
+    IF cl_abap_char_utilities=>charsize > 1.
+      lv_bom = cl_abap_char_utilities=>byte_order_mark_little. "UTF-16LE, 4103
+      CONCATENATE lv_bom lv_xstring INTO lv_xstring IN BYTE MODE.
+    ENDIF.
 
     lo_conv_in_string = cl_abap_conv_in_ce=>create(
       encoding = lv_encoding
