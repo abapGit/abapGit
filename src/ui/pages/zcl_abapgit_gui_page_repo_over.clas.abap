@@ -511,6 +511,12 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar_more_sub->add(
+      iv_txt      = |Change Repository Package|
+      iv_act      = |{ zif_abapgit_definitions=>c_action-repo_change_package }{ lc_dummy_key }|
+      iv_class    = |{ lc_action_class } { lc_online_class }|
+      iv_li_class = |{ lc_action_class }| ).
+
+    lo_toolbar_more_sub->add(
       iv_txt = 'Danger'
       iv_typ = zif_abapgit_html=>c_action_type-separator ).
 
