@@ -282,7 +282,10 @@ CLASS zcl_abapgit_syntax_highlighter IMPLEMENTATION.
     rv_line = iv_line.
 
     IF mv_hidden_chars = abap_true.
+      " The order of these replacements matters to properly show CR, LF, and CRLF
       REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>horizontal_tab IN rv_line WITH '&nbsp;&rarr;&nbsp;'.
+      REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf          IN rv_line WITH '&para;'.
+      REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline        IN rv_line WITH '&crarr;'.
       REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf(1)       IN rv_line WITH '&para;'.
       REPLACE ALL OCCURRENCES OF ` `                                    IN rv_line WITH '&middot;'.
       REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>form_feed IN rv_line

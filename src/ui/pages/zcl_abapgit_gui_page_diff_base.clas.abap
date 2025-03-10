@@ -1374,7 +1374,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
-    CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-main'.
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-diff' ).
 
     add_menu_begin( ro_toolbar ).
     add_jump_sub_menu( ro_toolbar ).
