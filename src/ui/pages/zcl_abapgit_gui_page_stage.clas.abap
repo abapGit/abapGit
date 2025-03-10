@@ -137,7 +137,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
 
   METHOD check_selected.
@@ -154,12 +154,15 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     " Check all added files if the exist in different paths (packages) without being removed
     LOOP AT io_files->mt_entries ASSIGNING <ls_item> WHERE v = zif_abapgit_definitions=>c_method-add.
 
+      " Allow mixed case path, but check filename to lower case
       zcl_abapgit_path=>split_file_location(
         EXPORTING
           iv_fullpath = <ls_item>-k
         IMPORTING
           ev_path     = ls_file-path
           ev_filename = ls_file-filename ).
+
+      ls_file-filename = to_lower( ls_file-filename ).
 
       " Skip packages since they all have identical filenames
       IF ls_file-filename <> 'package.devc.xml'.
@@ -235,11 +238,11 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        io_repo       = io_repo
-        iv_seed       = iv_seed
-        iv_sci_result = iv_sci_result
+        io_repo          = io_repo
+        iv_seed          = iv_seed
+        iv_sci_result    = iv_sci_result
         ii_force_refresh = ii_force_refresh
-        ii_obj_filter = ii_obj_filter.
+        ii_obj_filter    = ii_obj_filter.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title         = 'Stage'
@@ -738,12 +741,15 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
       "Ignore Files that we don't want to stage, so any errors don't stop the staging process
       WHERE v <> zif_abapgit_definitions=>c_method-skip.
 
+      " Allow mixed case path, but check filename to lower case
       zcl_abapgit_path=>split_file_location(
         EXPORTING
           iv_fullpath = <ls_item>-k
         IMPORTING
           ev_path     = ls_file-path
           ev_filename = ls_file-filename ).
+
+      ls_file-filename = to_lower( ls_file-filename ).
 
       READ TABLE ms_files-status ASSIGNING <ls_status>
         WITH TABLE KEY

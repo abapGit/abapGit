@@ -27,6 +27,8 @@ CLASS zcl_abapgit_path DEFINITION
       IMPORTING iv_path            TYPE string
       RETURNING VALUE(rv_filename) TYPE string.
 
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -125,7 +127,7 @@ CLASS ZCL_ABAPGIT_PATH IMPLEMENTATION.
       ev_filename = iv_fullpath.
     ENDIF.
 
-    ev_filename = cl_http_utility=>unescape_url( escaped = to_lower( ev_filename ) ).
+    ev_filename = cl_http_utility=>unescape_url( escaped = ev_filename ).
 
   ENDMETHOD.
 ENDCLASS.
