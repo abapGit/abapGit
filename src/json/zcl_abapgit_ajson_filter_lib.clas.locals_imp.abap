@@ -1,7 +1,6 @@
 **********************************************************************
 *  FILTER EMPTY VALUES
 **********************************************************************
-
 CLASS lcl_empty_filter DEFINITION FINAL.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_ajson_filter.
