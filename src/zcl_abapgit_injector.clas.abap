@@ -16,9 +16,6 @@ CLASS zcl_abapgit_injector DEFINITION
       IMPORTING
         !iv_package        TYPE devclass
         !ii_code_inspector TYPE REF TO zif_abapgit_code_inspector .
-    CLASS-METHODS set_stage_logic
-      IMPORTING
-        !ii_logic TYPE REF TO zif_abapgit_stage_logic .
     CLASS-METHODS set_cts_api
       IMPORTING
         !ii_cts_api TYPE REF TO zif_abapgit_cts_api .
@@ -143,13 +140,6 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
 
   METHOD set_sap_report.
     zcl_abapgit_factory=>gi_sap_report = ii_report.
-  ENDMETHOD.
-
-
-  METHOD set_stage_logic.
-
-    zcl_abapgit_factory=>gi_stage_logic = ii_logic.
-
   ENDMETHOD.
 
 

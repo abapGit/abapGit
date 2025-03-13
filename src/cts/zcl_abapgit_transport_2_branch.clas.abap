@@ -50,7 +50,7 @@ CLASS zcl_abapgit_transport_2_branch IMPLEMENTATION.
 
     CREATE OBJECT lo_stage.
 
-    ls_stage_objects = zcl_abapgit_factory=>get_stage_logic( )->get( io_repository ).
+    ls_stage_objects = zcl_abapgit_stage_logic=>get_stage_logic( )->get( io_repository ).
 
     lt_object_statuses = zcl_abapgit_repo_status=>calculate( io_repository ).
 
