@@ -10,6 +10,7 @@ CLASS ltcl_filters_test DEFINITION FINAL
     METHODS path_filter_w_patterns FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS path_filter_deep FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS and_filter FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS mixed_case_filter FOR TESTING RAISING zcx_abapgit_ajson_error.
 ENDCLASS.
 
 
@@ -224,6 +225,38 @@ CLASS ltcl_filters_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = li_json_filtered->stringify( )
       exp = '{"a":"1"}' ).
+
+  ENDMETHOD.
+
+  METHOD mixed_case_filter.
+
+    DATA li_json TYPE REF TO zif_abapgit_ajson.
+    DATA li_json_filtered TYPE REF TO zif_abapgit_ajson.
+
+    li_json = zcl_abapgit_ajson=>create_empty( ).
+    li_json->set(
+      iv_path = '/a'
+      iv_val  = '1' ).
+    li_json->set(
+      iv_path = '/bB'
+      iv_val  = '2' ).
+    li_json->set(
+      iv_path = '/CC'
+      iv_val  = '3' ).
+    li_json->set(
+      iv_path = '/cc'
+      iv_val  = '4' ).
+    li_json->set(
+      iv_path = '/d'
+      iv_val  = 5 ).
+
+    li_json_filtered = zcl_abapgit_ajson=>create_from(
+      ii_source_json = li_json
+      ii_filter = zcl_abapgit_ajson_filter_lib=>create_path_filter( iv_skip_paths = '/bB,/CC' ) ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = li_json_filtered->stringify( )
+      exp = '{"a":"1","cc":"4","d":5}' ).
 
   ENDMETHOD.
 
