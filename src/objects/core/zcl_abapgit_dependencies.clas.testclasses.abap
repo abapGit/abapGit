@@ -75,6 +75,10 @@ CLASS ltcl_sap_package IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~get. "##needed
+
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~exists. "##needed
 
   ENDMETHOD.
