@@ -376,8 +376,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
 
   METHOD init_files.
-    ms_files = zcl_abapgit_factory=>get_stage_logic( )->get( io_repo       = mo_repo
-                                                             ii_obj_filter = mi_obj_filter ).
+    ms_files = zcl_abapgit_stage_logic=>get_stage_logic( )->get( io_repo       = mo_repo
+                                                                 ii_obj_filter = mi_obj_filter ).
 
     IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.
       mo_repo->refresh( ).

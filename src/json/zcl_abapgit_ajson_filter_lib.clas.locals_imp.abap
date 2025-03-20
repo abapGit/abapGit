@@ -72,7 +72,7 @@ CLASS lcl_paths_filter IMPLEMENTATION.
     ENDIF.
 
     LOOP AT it_skip_paths INTO lv_s.
-      lv_s = to_lower( lv_s ).
+      lv_s = condense( lv_s ).
       APPEND lv_s TO lt_tab.
     ENDLOOP.
 
@@ -83,7 +83,7 @@ CLASS lcl_paths_filter IMPLEMENTATION.
           DELETE lt_tab INDEX sy-tabix.
           CONTINUE.
         ENDIF.
-        <s> = condense( to_lower( <s> ) ).
+        <s> = condense( <s> ).
       ENDLOOP.
     ENDIF.
 
