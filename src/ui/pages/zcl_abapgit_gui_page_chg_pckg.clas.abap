@@ -235,37 +235,23 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
   METHOD create_package_hierarchy.
 
     DATA:
-      ls_tdevc  TYPE tdevc,
-      ls_tdevct TYPE tdevct,
-      ls_map    TYPE ty_map.
+      ls_package TYPE zif_abapgit_sap_package=>ty_create,
+      ls_map     TYPE ty_map.
 
     FIELD-SYMBOLS <ls_map> LIKE LINE OF it_mapping.
 
     LOOP AT it_mapping ASSIGNING <ls_map>.
-      SELECT SINGLE * FROM tdevc INTO ls_tdevc WHERE devclass = <ls_map>-old_package.
-      ASSERT sy-subrc = 0.
+      ls_package = zcl_abapgit_factory=>get_sap_package( <ls_map>-old_package )->get( ).
 
-      ls_tdevc-devclass = <ls_map>-new_package.
-      ls_tdevc-as4user  = sy-uname.
+      ls_package-devclass = <ls_map>-new_package.
+      ls_package-as4user  = sy-uname.
 
-      READ TABLE it_mapping INTO ls_map WITH KEY old_package = ls_tdevc-parentcl.
+      READ TABLE it_mapping INTO ls_map WITH KEY old_package = ls_package-parentcl.
       IF sy-subrc = 0.
-        ls_tdevc-parentcl = ls_map-new_package.
+        ls_package-parentcl = ls_map-new_package.
       ENDIF.
 
-      INSERT tdevc FROM ls_tdevc.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error inserting package { <ls_map>-new_package }| ).
-      ENDIF.
-
-      SELECT * FROM tdevct INTO ls_tdevct WHERE devclass = <ls_map>-old_package ORDER BY PRIMARY KEY.
-        ls_tdevct-devclass = <ls_map>-new_package.
-
-        INSERT tdevct FROM ls_tdevct.
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( |Error inserting package { <ls_map>-new_package }| ).
-        ENDIF.
-      ENDSELECT.
+      zcl_abapgit_factory=>get_sap_package( ls_map-new_package )->create( ls_package ).
     ENDLOOP.
 
     " TODO: Transportable packages (add to transport and tadir)
