@@ -93,7 +93,9 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
     DATA lt_concepts TYPE btfr_conc_tt.
 
     " Short texts
-    SELECT concept FROM sotr_head INTO TABLE lt_concepts WHERE paket = iv_old_package.
+    SELECT concept FROM sotr_head INTO TABLE lt_concepts
+      WHERE paket = iv_old_package
+      ORDER BY PRIMARY KEY.
 
     IF lt_concepts IS NOT INITIAL.
       CALL FUNCTION 'BTFR_CHANGE_PACKAGE'
@@ -115,7 +117,9 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
     CLEAR lt_concepts.
 
     " Long texts
-    SELECT concept FROM sotr_headu INTO TABLE lt_concepts WHERE paket = iv_old_package.
+    SELECT concept FROM sotr_headu INTO TABLE lt_concepts
+      WHERE paket = iv_old_package
+      ORDER BY PRIMARY KEY.
 
     IF lt_concepts IS NOT INITIAL.
       CALL FUNCTION 'BTFR_CHANGE_PACKAGE'
