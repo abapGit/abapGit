@@ -15,6 +15,11 @@ INTERFACE zif_abapgit_sap_package
            as4user   TYPE usnam,
          END OF ty_create.
 
+  METHODS get
+    RETURNING
+      VALUE(rs_package) TYPE ty_create
+    RAISING
+      zcx_abapgit_exception .
   METHODS validate_name
     RAISING
       zcx_abapgit_exception .
