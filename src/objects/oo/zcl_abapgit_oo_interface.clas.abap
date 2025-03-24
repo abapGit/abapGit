@@ -51,7 +51,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_INTERFACE IMPLEMENTATION.
+CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
 
 
   METHOD init_scanner.
