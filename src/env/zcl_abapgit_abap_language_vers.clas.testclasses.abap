@@ -81,7 +81,7 @@ CLASS ltcl_abap_language_version DEFINITION FOR TESTING RISK LEVEL HARMLESS
   PRIVATE SECTION.
     " Cloud package hardcoded in cl_abap_language_version
     CONSTANTS c_cloud_package TYPE devclass VALUE 'TEST_LANGUAGE_VERSION_SCP'.
-    CONSTANTS c_language_cfg TYPE seoclsname VALUE 'CL_ABAP_LANGUAGE_VERSION_CFG'.
+    CONSTANTS c_language_cfg TYPE seoclskey VALUE 'CL_ABAP_LANGUAGE_VERSION_CFG'.
 
     DATA:
       mt_versions          TYPE string_table,
