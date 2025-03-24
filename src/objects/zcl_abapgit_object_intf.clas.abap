@@ -673,7 +673,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     ls_class_key-clsname = ms_item-obj_name.
 
-    rv_bool = mi_object_oriented_object_fct->exists( ls_class_key ).
+    rv_bool = mi_object_oriented_object_fct->exists( ls_class_key-clsname ).
 
     IF rv_bool = abap_true.
       SELECT SINGLE category FROM seoclassdf INTO lv_category
@@ -778,6 +778,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD extract_languages_for_transl.
     DATA: lv_desc              TYPE seocompotx,
           lv_desc_int          TYPE seoclasstx,
@@ -811,5 +812,4 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
 ENDCLASS.
