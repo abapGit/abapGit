@@ -2347,8 +2347,8 @@ function enumerateUiActions() {
     }
   }
 
-  // toolbars
-  [].slice.call(document.querySelectorAll(".nav-container > ul[id*=toolbar]"))
+  // toolbars and actionbars
+  [].slice.call(document.querySelectorAll(".nav-container > ul[id*=toolbar], .nav-container > ul[id*=actionbar]"))
     .filter(function(toolbar) {
       return (toolbar && toolbar.nodeName === "UL");
     }).forEach(function(toolbar) {
