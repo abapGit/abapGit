@@ -878,8 +878,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-staging' ).
 
-    IF lines( ms_files-local ) > 0
-    OR lines( ms_files-remote ) > 0.
+    IF lines( ms_files-local ) > 0 OR lines( ms_files-remote ) > 0.
       ro_toolbar->add(
         iv_txt = 'Refresh'
         iv_act = |{ c_action-stage_refresh }|
@@ -890,7 +889,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       )->add(
         iv_txt = |Patch|
         iv_typ = zif_abapgit_html=>c_action_type-onclick
-        iv_id  = |patchBtn| ).
+        iv_id  = |patchBtn|
+      )->add(
+        iv_txt = |Back|
+        iv_act = zif_abapgit_definitions=>c_action-go_back ).
     ENDIF.
 
   ENDMETHOD.
