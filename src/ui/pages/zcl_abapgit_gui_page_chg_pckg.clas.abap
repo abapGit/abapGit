@@ -421,8 +421,9 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
     FIELD-SYMBOLS <ls_map> LIKE LINE OF it_mapping.
 
     LOOP AT it_mapping ASSIGNING <ls_map>.
-      UPDATE sotr_head SET paket = <ls_map>-new_package WHERE paket = <ls_map>-old_package ##SUBRC_OK.
-      UPDATE sotr_headu SET paket = <ls_map>-new_package WHERE paket = <ls_map>-old_package ##SUBRC_OK.
+      zcl_abapgit_sotr_handler=>change_sotr_package(
+        iv_old_package = <ls_map>-old_package
+        iv_new_package = <ls_map>-new_package ).
     ENDLOOP.
 
   ENDMETHOD.
