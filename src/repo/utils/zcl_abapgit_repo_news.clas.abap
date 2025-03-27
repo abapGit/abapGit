@@ -154,8 +154,10 @@ CLASS zcl_abapgit_repo_news IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    LOOP AT lt_remote ASSIGNING <ls_file> WHERE path = lc_log_path
-                                            AND ( filename CP lc_log_filename OR filename CP lc_log_filename_up ).
+    LOOP AT lt_remote ASSIGNING <ls_file>
+                      USING KEY file_path
+                      WHERE path = lc_log_path
+                      AND ( filename CP lc_log_filename OR filename CP lc_log_filename_up ).
 
       CREATE OBJECT ro_instance
         EXPORTING
