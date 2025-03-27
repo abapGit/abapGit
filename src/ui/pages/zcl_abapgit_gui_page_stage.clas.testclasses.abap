@@ -443,9 +443,11 @@ CLASS ltcl_stage IMPLEMENTATION.
 
   METHOD assert_table_contains.
 
+    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF it_stage.
+
     READ TABLE it_stage WITH TABLE KEY file-path = is_stage-file-path
                                        file-filename = is_stage-file-filename
-                        ASSIGNING FIELD-SYMBOL(<ls_stage>).
+                        ASSIGNING <ls_stage>.
     cl_abap_unit_assert=>assert_subrc( 0 ).
 
     cl_abap_unit_assert=>assert_equals(
