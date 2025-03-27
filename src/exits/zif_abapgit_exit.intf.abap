@@ -169,7 +169,7 @@ INTERFACE zif_abapgit_exit PUBLIC.
     IMPORTING
       !is_comment TYPE zif_abapgit_git_definitions=>ty_comment
       !io_stage   TYPE REF TO zcl_abapgit_stage
-      !io_repo    TYPE REF TO zcl_abapgit_repo_online
+      !io_repo    TYPE REF TO zif_abapgit_repo_online
     RAISING
       zcx_abapgit_exception.
 

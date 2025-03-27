@@ -11,7 +11,7 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        !io_repo       TYPE REF TO zcl_abapgit_repo_online
+        !io_repo       TYPE REF TO zif_abapgit_repo_online
         !io_stage      TYPE REF TO zcl_abapgit_stage
         !iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
       RETURNING
@@ -20,7 +20,7 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
         zcx_abapgit_exception.
     METHODS constructor
       IMPORTING
-        !io_repo       TYPE REF TO zcl_abapgit_repo_online
+        !io_repo       TYPE REF TO zif_abapgit_repo_online
         !io_stage      TYPE REF TO zcl_abapgit_stage
         !iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result
       RAISING
@@ -53,7 +53,7 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
     DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
     DATA mo_settings TYPE REF TO zcl_abapgit_settings.
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online.
+    DATA mo_repo TYPE REF TO zif_abapgit_repo_online.
     DATA mo_stage TYPE REF TO zcl_abapgit_stage.
     DATA mt_stage TYPE zif_abapgit_definitions=>ty_stage_tt.
     DATA ms_commit TYPE zif_abapgit_services_git=>ty_commit_fields.

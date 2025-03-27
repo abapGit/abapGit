@@ -21,7 +21,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        io_repo          TYPE REF TO zcl_abapgit_repo_online
+        io_repo          TYPE REF TO zif_abapgit_repo_online
         iv_seed          TYPE string OPTIONAL
         iv_sci_result    TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
         ii_obj_filter    TYPE REF TO zif_abapgit_object_filter OPTIONAL
@@ -33,7 +33,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
 
     METHODS constructor
       IMPORTING
-        io_repo          TYPE REF TO zcl_abapgit_repo_online
+        io_repo          TYPE REF TO zif_abapgit_repo_online
         iv_seed          TYPE string OPTIONAL
         iv_sci_result    TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
         ii_obj_filter    TYPE REF TO zif_abapgit_object_filter OPTIONAL
@@ -54,7 +54,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     TYPES:
       ty_changed_by_tt TYPE SORTED TABLE OF ty_changed_by WITH UNIQUE KEY item filename.
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
+    DATA mo_repo TYPE REF TO zif_abapgit_repo_online.
     DATA ms_files TYPE zif_abapgit_definitions=>ty_stage_files .
     DATA mv_seed TYPE string .               " Unique page id to bind JS sessionStorage
     DATA mv_filter_value TYPE string .

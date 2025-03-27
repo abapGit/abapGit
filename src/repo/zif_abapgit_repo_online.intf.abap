@@ -2,6 +2,41 @@ INTERFACE zif_abapgit_repo_online PUBLIC.
 
   INTERFACES zif_abapgit_repo.
 
+  ALIASES ms_data
+    FOR zif_abapgit_repo~ms_data .
+  ALIASES deserialize
+    FOR zif_abapgit_repo~deserialize .
+  ALIASES deserialize_checks
+    FOR zif_abapgit_repo~deserialize_checks .
+  ALIASES get_dot_abapgit
+    FOR zif_abapgit_repo~get_dot_abapgit .
+  ALIASES get_tadir_objects
+    FOR zif_abapgit_repo~get_tadir_objects .
+  ALIASES get_files_local
+    FOR zif_abapgit_repo~get_files_local .
+  ALIASES get_files_local_filtered
+    FOR zif_abapgit_repo~get_files_local_filtered .
+  ALIASES get_files_remote
+    FOR zif_abapgit_repo~get_files_remote .
+  ALIASES get_key
+    FOR zif_abapgit_repo~get_key .
+  ALIASES get_local_settings
+    FOR zif_abapgit_repo~get_local_settings .
+  ALIASES get_name
+    FOR zif_abapgit_repo~get_name .
+  ALIASES get_package
+    FOR zif_abapgit_repo~get_package .
+  ALIASES is_offline
+    FOR zif_abapgit_repo~is_offline .
+  ALIASES refresh
+    FOR zif_abapgit_repo~refresh .
+  ALIASES set_dot_abapgit
+    FOR zif_abapgit_repo~set_dot_abapgit .
+  ALIASES find_remote_dot_abapgit
+    FOR zif_abapgit_repo~find_remote_dot_abapgit .
+  ALIASES has_remote_source
+    FOR zif_abapgit_repo~has_remote_source .
+
   METHODS get_url
     RETURNING
       VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url .
