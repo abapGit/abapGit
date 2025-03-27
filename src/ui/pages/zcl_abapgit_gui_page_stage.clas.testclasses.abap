@@ -73,7 +73,11 @@ CLASS ltcl_stage DEFINITION FINAL FOR TESTING
         IMPORTING
           iv_path     TYPE csequence
           iv_filename TYPE csequence,
-      then_there_is_nothing_to_stage.
+      then_there_is_nothing_to_stage,
+      assert_table_contains
+        IMPORTING
+          is_stage TYPE zif_abapgit_definitions=>ty_stage
+          it_stage TYPE zif_abapgit_definitions=>ty_stage_tt.
 
 ENDCLASS.
 
@@ -365,9 +369,9 @@ CLASS ltcl_stage IMPLEMENTATION.
     ls_exp-file-filename = iv_filename.
     ls_exp-method        = zif_abapgit_definitions=>c_method-ignore.
 
-    cl_abap_unit_assert=>assert_table_contains(
-        line  = ls_exp
-        table = lt_stage ).
+    assert_table_contains(
+        is_stage = ls_exp
+        it_stage = lt_stage ).
 
   ENDMETHOD.
 
@@ -385,9 +389,9 @@ CLASS ltcl_stage IMPLEMENTATION.
     ls_exp-status-filename = iv_filename.
     ls_exp-status-path     = iv_path.
 
-    cl_abap_unit_assert=>assert_table_contains(
-        line  = ls_exp
-        table = lt_stage ).
+    assert_table_contains(
+        is_stage = ls_exp
+        it_stage = lt_stage ).
 
   ENDMETHOD.
 
@@ -423,9 +427,9 @@ CLASS ltcl_stage IMPLEMENTATION.
     ls_exp-status-filename = iv_filename.
     ls_exp-status-path     = iv_path.
 
-    cl_abap_unit_assert=>assert_table_contains(
-        line  = ls_exp
-        table = lt_stage ).
+    assert_table_contains(
+        is_stage = ls_exp
+        it_stage = lt_stage ).
 
   ENDMETHOD.
 
@@ -433,6 +437,20 @@ CLASS ltcl_stage IMPLEMENTATION.
   METHOD then_there_is_nothing_to_stage.
 
     cl_abap_unit_assert=>assert_initial( mo_stage->get_all( ) ).
+
+  ENDMETHOD.
+
+
+  METHOD assert_table_contains.
+
+    READ TABLE it_stage WITH TABLE KEY file-path = is_stage-file-path
+                                       file-filename = is_stage-file-filename
+                        ASSIGNING FIELD-SYMBOL(<ls_stage>).
+    cl_abap_unit_assert=>assert_subrc( 0 ).
+
+    cl_abap_unit_assert=>assert_equals(
+        act = <ls_stage>
+        exp = is_stage ).
 
   ENDMETHOD.
 
