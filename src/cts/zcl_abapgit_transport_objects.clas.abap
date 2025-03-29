@@ -38,7 +38,7 @@ CLASS zcl_abapgit_transport_objects IMPLEMENTATION.
 
     LOOP AT mt_transport_objects INTO ls_transport_object.
       LOOP AT it_object_statuses INTO ls_object_status
-          USING KEY sec_key
+          " USING KEY sec_key " syntax error in 754
           WHERE obj_name = ls_transport_object-obj_name
           AND obj_type = ls_transport_object-object
           AND NOT lstate IS INITIAL.
