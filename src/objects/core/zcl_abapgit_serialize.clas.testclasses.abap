@@ -84,7 +84,7 @@ CLASS ltd_environment DEFINITION FINAL FOR TESTING
     DATA:
       mv_group               TYPE rzlli_apcl,
       mv_is_merged           TYPE abap_bool,
-      mv_available_sessions  TYPE i,
+      mv_available_sessions  TYPE i VALUE 6, " system default
       mv_free_work_processes TYPE i.
 
 ENDCLASS.
@@ -143,7 +143,6 @@ CLASS ltd_environment IMPLEMENTATION.
   METHOD set_available_sessions.
     mv_available_sessions = iv_available_sessions.
   ENDMETHOD.
-
 
   METHOD set_free_work_processes.
     mv_free_work_processes = iv_free_work_processes.
@@ -395,6 +394,7 @@ CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LE
 
       determine_max_processes_free FOR TESTING RAISING zcx_abapgit_exception,
       det_max_processes_not_free FOR TESTING RAISING zcx_abapgit_exception,
+      det_max_proc_none_available FOR TESTING RAISING zcx_abapgit_exception,
       det_max_proc_amdahls_law FOR TESTING RAISING zcx_abapgit_exception,
       determine_max_processes_no_pp FOR TESTING RAISING zcx_abapgit_exception,
       determine_max_processes_merged FOR TESTING RAISING zcx_abapgit_exception,
@@ -460,26 +460,24 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD teardown.
 
     CLEAR: mo_cut->gv_max_processes.
 
   ENDMETHOD.
 
-
   METHOD determine_max_processes_free.
 
     given_parallel_proc_disabled( abap_false ).
     given_is_merged( abap_false ).
     given_free_work_processes( 10 ).
+    given_available_sessions( 10 ).
 
     when_determine_max_processes( ).
 
     then_we_shd_have_n_processes( 9 ).
 
   ENDMETHOD.
-
 
   METHOD det_max_processes_not_free.
 
@@ -493,19 +491,31 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD det_max_proc_none_available.
+
+    given_parallel_proc_disabled( abap_false ).
+    given_is_merged( abap_false ).
+    given_free_work_processes( 10 ).
+    given_available_sessions( 0 ).
+
+    when_determine_max_processes( ).
+
+    then_we_shd_have_n_processes( 1 ).
+
+  ENDMETHOD.
 
   METHOD det_max_proc_amdahls_law.
 
     given_parallel_proc_disabled( abap_false ).
     given_is_merged( abap_false ).
     given_free_work_processes( 50 ).
+    given_available_sessions( 50 ).
 
     when_determine_max_processes( ).
 
     then_we_shd_have_n_processes( 32 ).
 
   ENDMETHOD.
-
 
   METHOD determine_max_processes_no_pp.
 
@@ -518,7 +528,6 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD determine_max_processes_merged.
 
     given_parallel_proc_disabled( abap_false ).
@@ -530,10 +539,12 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD determine_max_processes_exit.
 
+    given_free_work_processes( 10 ).
+    given_available_sessions( 10 ).
     given_exit_chg_max_processes( 7 ).
+
     when_determine_max_processes( ).
     then_we_shd_have_n_processes( 7 ).
 
@@ -552,7 +563,6 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD force.
 
     when_determine_max_processes( abap_true ).
@@ -561,13 +571,11 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD given_parallel_proc_disabled.
 
     mo_settings_double->set_parallel_proc_disabled( iv_parallel_proc_disabled ).
 
   ENDMETHOD.
-
 
   METHOD given_is_merged.
 
@@ -581,13 +589,11 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD given_free_work_processes.
 
     mo_environment_double->set_free_work_processes( iv_free_work_processes ).
 
   ENDMETHOD.
-
 
   METHOD when_determine_max_processes.
 
@@ -597,7 +603,6 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD then_we_shd_have_n_processes.
 
     cl_abap_unit_assert=>assert_equals(
@@ -605,7 +610,6 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
       exp = iv_exp_processes ).
 
   ENDMETHOD.
-
 
   METHOD given_exit_chg_max_processes.
 
@@ -793,7 +797,6 @@ CLASS ltcl_i18n DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
     METHODS:
       setup,
       test FOR TESTING RAISING zcx_abapgit_exception.
-
 
 ENDCLASS.
 

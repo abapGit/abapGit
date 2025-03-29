@@ -325,7 +325,10 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     IF sy-batch IS INITIAL.
       lv_available_sessions = zcl_abapgit_factory=>get_environment( )->get_available_user_sessions( ).
 
-      IF rv_processes > lv_available_sessions AND lv_available_sessions <> 0.
+      IF lv_available_sessions = 0.
+        " No available session -> disable parallel processing
+        rv_processes = 1.
+      ELSEIF rv_processes > lv_available_sessions.
         rv_processes = lv_available_sessions.
       ENDIF.
     ENDIF.
