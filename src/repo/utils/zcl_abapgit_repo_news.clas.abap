@@ -157,7 +157,7 @@ CLASS zcl_abapgit_repo_news IMPLEMENTATION.
     LOOP AT lt_remote ASSIGNING <ls_file>
                       " USING KEY file_path " syntax error in 754
                       WHERE path = lc_log_path
-                      AND ( filename CP lc_log_filename OR filename CP lc_log_filename_up ).
+                      AND ( filename CP lc_log_filename OR filename CP lc_log_filename_up ) ##PRIMKEY[FILE_PATH].
 
       CREATE OBJECT ro_instance
         EXPORTING
