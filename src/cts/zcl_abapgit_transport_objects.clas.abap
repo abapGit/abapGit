@@ -41,7 +41,7 @@ CLASS zcl_abapgit_transport_objects IMPLEMENTATION.
           " USING KEY sec_key " syntax error in 754
           WHERE obj_name = ls_transport_object-obj_name
           AND obj_type = ls_transport_object-object
-          AND NOT lstate IS INITIAL.
+          AND NOT lstate IS INITIAL ##PRIMKEY[SEC_KEY].
 
         CASE ls_object_status-lstate.
           WHEN zif_abapgit_definitions=>c_state-added OR zif_abapgit_definitions=>c_state-modified.
