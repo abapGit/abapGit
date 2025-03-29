@@ -398,6 +398,9 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
     add_view_sub_menu( io_menu ).
 
+    io_menu->add( iv_txt = 'Back'
+                  iv_act = zif_abapgit_definitions=>c_action-go_back ).
+
   ENDMETHOD.
 
 
