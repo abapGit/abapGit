@@ -134,6 +134,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
+
   METHOD constructor.
 
     DATA lv_ts TYPE timestamp.
@@ -439,7 +440,10 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ri_html->add( '</td>' ).
 
     ri_html->add( '<td class="transport">' ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( iv_transport ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport(
+      iv_transport = iv_transport
+      iv_obj_type  = is_item-obj_type
+      iv_obj_name  = is_item-obj_name ) ).
     ri_html->add( '</td>' ).
 
     ri_html->add( '<td class="status">?</td>' ).

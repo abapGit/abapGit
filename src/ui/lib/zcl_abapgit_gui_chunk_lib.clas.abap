@@ -141,6 +141,8 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
     CLASS-METHODS render_transport
       IMPORTING
         !iv_transport   TYPE trkorr
+        !iv_obj_type    TYPE zif_abapgit_definitions=>ty_repo_item-obj_type OPTIONAL
+        !iv_obj_name    TYPE zif_abapgit_definitions=>ty_repo_item-obj_name OPTIONAL
         !iv_interactive TYPE abap_bool DEFAULT abap_true
         !iv_icon_only   TYPE abap_bool DEFAULT abap_false
       RETURNING
@@ -204,7 +206,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item OPTIONAL
         !iv_obj_type   TYPE zif_abapgit_definitions=>ty_repo_item-obj_type OPTIONAL
         !iv_obj_name   TYPE zif_abapgit_definitions=>ty_repo_item-obj_name OPTIONAL
-        PREFERRED PARAMETER is_item
+          PREFERRED PARAMETER is_item
       RETURNING
         VALUE(rv_html) TYPE string.
 
@@ -1278,6 +1280,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     lv_title = zcl_abapgit_factory=>get_cts_api( )->read_description( iv_transport ).
 
     lv_jump = |{ zif_abapgit_definitions=>c_action-jump_transport }?transport={ iv_transport }|.
+
+    IF iv_obj_type IS NOT INITIAL AND iv_obj_name IS NOT INITIAL.
+      lv_jump = lv_jump && |&type={ iv_obj_type }&name={ iv_obj_name }|.
+    ENDIF.
 
     IF iv_icon_only = abap_true.
       ri_html->add_a( iv_act   = lv_jump
