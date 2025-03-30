@@ -273,7 +273,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     ENDIF.
 
     IF ms_data-local_settings-block_commit = abap_true
-        AND zcl_abapgit_factory=>get_code_inspector( get_package( )
+        AND zcl_abapgit_code_inspector=>get_code_inspector( get_package( )
           )->is_successful( ) = abap_false.
       zcx_abapgit_exception=>raise( |A successful code inspection is required| ).
     ENDIF.
