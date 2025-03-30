@@ -48,7 +48,7 @@ CLASS zcl_abapgit_code_inspector DEFINITION
         VALUE(rv_skip) TYPE abap_bool.
   PRIVATE SECTION.
 
-   TYPES:
+    TYPES:
       BEGIN OF ty_code_inspector_pack,
         package  TYPE devclass,
         instance TYPE REF TO zif_abapgit_code_inspector,
