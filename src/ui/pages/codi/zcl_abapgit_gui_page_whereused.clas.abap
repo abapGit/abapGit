@@ -229,7 +229,10 @@ CLASS zcl_abapgit_gui_page_whereused IMPLEMENTATION.
       )->add(
         iv_txt    = 'Refresh'
         iv_act    = c_action-refresh
-        iv_hotkey = 'r' ).
+        iv_hotkey = 'r'
+      )->add(
+        iv_txt    = 'Back'
+        iv_act    = zif_abapgit_definitions=>c_action-go_back ).
 
   ENDMETHOD.
 
