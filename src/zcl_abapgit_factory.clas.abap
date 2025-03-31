@@ -18,9 +18,7 @@ CLASS zcl_abapgit_factory DEFINITION
         VALUE(ri_cts_api) TYPE REF TO zif_abapgit_cts_api .
     CLASS-METHODS get_default_transport
       RETURNING
-        VALUE(ri_default_transport) TYPE REF TO zif_abapgit_default_transport
-      RAISING
-        zcx_abapgit_exception.
+        VALUE(ri_default_transport) TYPE REF TO zif_abapgit_default_transport.
     CLASS-METHODS get_environment
       RETURNING
         VALUE(ri_environment) TYPE REF TO zif_abapgit_environment .
