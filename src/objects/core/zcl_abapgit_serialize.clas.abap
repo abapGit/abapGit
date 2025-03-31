@@ -318,23 +318,27 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     ASSERT rv_processes >= 1.
 
+    " Avoid going over the maximum available user sessions
+    IF sy-batch IS INITIAL.
+      lv_available_sessions = zcl_abapgit_factory=>get_environment( )->get_available_user_sessions( ).
+
+      IF lv_available_sessions = 0.
+        " No available session -> disable parallel processing
+        rv_processes = 1.
+      ELSEIF rv_processes > lv_available_sessions.
+        rv_processes = lv_available_sessions.
+      ENDIF.
+    ENDIF.
+
+    ASSERT rv_processes >= 1.
+
+    " Exit setting has highest priority to change maximum sessions
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->change_max_parallel_processes(
       EXPORTING
         iv_package       = iv_package
       CHANGING
         cv_max_processes = rv_processes ).
-
-    ASSERT rv_processes >= 1. " check exit above
-
-    " Avoid going over the maximum available user sessions
-    IF sy-batch IS INITIAL.
-      lv_available_sessions = zcl_abapgit_factory=>get_environment( )->get_available_user_sessions( ).
-
-      IF rv_processes > lv_available_sessions AND lv_available_sessions <> 0.
-        rv_processes = lv_available_sessions.
-      ENDIF.
-    ENDIF.
 
     ASSERT rv_processes >= 1.
 
