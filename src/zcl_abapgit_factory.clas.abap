@@ -27,9 +27,6 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-METHODS get_longtexts
       RETURNING
         VALUE(ri_longtexts) TYPE REF TO zif_abapgit_longtexts .
-    CLASS-METHODS get_http_agent
-      RETURNING
-        VALUE(ri_http_agent) TYPE REF TO zif_abapgit_http_agent .
     CLASS-METHODS get_lxe_texts
       RETURNING
         VALUE(ri_lxe_texts) TYPE REF TO zif_abapgit_lxe_texts .
@@ -59,7 +56,6 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api .
     CLASS-DATA gi_environment TYPE REF TO zif_abapgit_environment .
     CLASS-DATA gi_longtext TYPE REF TO zif_abapgit_longtexts .
-    CLASS-DATA gi_http_agent TYPE REF TO zif_abapgit_http_agent .
     CLASS-DATA gi_lxe_texts TYPE REF TO zif_abapgit_lxe_texts .
     CLASS-DATA gi_sap_namespace TYPE REF TO zif_abapgit_sap_namespace .
     CLASS-DATA gi_sap_report TYPE REF TO zif_abapgit_sap_report.
@@ -107,17 +103,6 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
     ENDIF.
 
     ri_function_module = gi_function_module.
-
-  ENDMETHOD.
-
-
-  METHOD get_http_agent.
-
-    IF gi_http_agent IS INITIAL.
-      gi_http_agent = zcl_abapgit_http_agent=>create( ).
-    ENDIF.
-
-    ri_http_agent = gi_http_agent.
 
   ENDMETHOD.
 
