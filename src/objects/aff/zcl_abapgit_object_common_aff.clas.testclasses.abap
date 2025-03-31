@@ -228,38 +228,39 @@ CLASS ltcl_aff_settings_deserialize IMPLEMENTATION.
 
     TRY.
         lo_settings_deserialize = lo_cut->create_aff_setting_deserialize( ).
+
+        CALL METHOD lo_settings_deserialize->('IF_AFF_SETTINGS_DESERIALIZE~GET_ABAP_LANGUAGE_VERSION')
+          RECEIVING
+            result = lv_act_setting_abap_lv.
+        cl_abap_unit_assert=>assert_equals( msg = 'Unexpected ABAP language version in settings'
+                                            act = lv_act_setting_abap_lv
+                                            exp = iv_exp_setting_abap_lv ).
+
+        CALL METHOD lo_settings_deserialize->('IF_AFF_SETTINGS_DESERIALIZE~GET_VERSION')
+          RECEIVING
+            result = lv_act_setting_version.
+        cl_abap_unit_assert=>assert_equals( msg = 'Unexpected Version in settings'
+                                            act = lv_act_setting_version
+                                            exp = 'A' ).
+
+        CALL METHOD lo_settings_deserialize->('IF_AFF_SETTINGS_DESERIALIZE~GET_LANGUAGE')
+          RECEIVING
+            result = lv_act_setting_language.
+        cl_abap_unit_assert=>assert_equals( msg = 'Unexpected Language in settings'
+                                            act = lv_act_setting_language
+                                            exp = 'E' ).
+
+        CALL METHOD lo_settings_deserialize->('IF_AFF_SETTINGS_DESERIALIZE~GET_USER')
+          RECEIVING
+            result = lv_act_setting_user.
+        cl_abap_unit_assert=>assert_equals( msg = 'Unexpected User in settings'
+                                            act = lv_act_setting_user
+                                            exp = sy-uname ).
+
       CATCH cx_root.
         " System doesn't support AFF with ABAP language version
         RETURN.
     ENDTRY.
-
-    CALL METHOD lo_settings_deserialize->('IF_AFF_SETTINGS_DESERIALIZE~GET_ABAP_LANGUAGE_VERSION')
-      RECEIVING
-        result = lv_act_setting_abap_lv.
-    cl_abap_unit_assert=>assert_equals( msg = 'Unexpected ABAP language version in settings'
-                                        act = lv_act_setting_abap_lv
-                                        exp = iv_exp_setting_abap_lv ).
-
-    CALL METHOD lo_settings_deserialize->('IF_AFF_SETTINGS_DESERIALIZE~GET_VERSION')
-      RECEIVING
-        result = lv_act_setting_version.
-    cl_abap_unit_assert=>assert_equals( msg = 'Unexpected Version in settings'
-                                        act = lv_act_setting_version
-                                        exp = 'A' ).
-
-    CALL METHOD lo_settings_deserialize->('IF_AFF_SETTINGS_DESERIALIZE~GET_LANGUAGE')
-      RECEIVING
-        result = lv_act_setting_language.
-    cl_abap_unit_assert=>assert_equals( msg = 'Unexpected Language in settings'
-                                        act = lv_act_setting_language
-                                        exp = 'E' ).
-
-    CALL METHOD lo_settings_deserialize->('IF_AFF_SETTINGS_DESERIALIZE~GET_USER')
-      RECEIVING
-        result = lv_act_setting_user.
-    cl_abap_unit_assert=>assert_equals( msg = 'Unexpected User in settings'
-                                        act = lv_act_setting_user
-                                        exp = sy-uname ).
 
   ENDMETHOD.
 

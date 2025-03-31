@@ -70,7 +70,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
 
   METHOD ask_user_for_check_variant.
@@ -151,7 +151,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
     DATA li_code_inspector TYPE REF TO zif_abapgit_code_inspector.
 
-    li_code_inspector = zcl_abapgit_factory=>get_code_inspector( mo_repo->get_package( ) ).
+    li_code_inspector = zcl_abapgit_code_inspector=>get_code_inspector( mo_repo->get_package( ) ).
 
     mt_result = li_code_inspector->run(
       iv_variant = |{ mv_check_variant }|
