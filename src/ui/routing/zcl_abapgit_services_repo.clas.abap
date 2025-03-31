@@ -69,28 +69,28 @@ CLASS zcl_abapgit_services_repo DEFINITION
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     CLASS-METHODS create_package
       IMPORTING
         !iv_prefill_package TYPE devclass OPTIONAL
       RETURNING
         VALUE(rv_package)   TYPE devclass
       RAISING
-        zcx_abapgit_exception.
-  PROTECTED SECTION.
-  PRIVATE SECTION.
-    CLASS-METHODS check_package_exists
-      IMPORTING
-        !iv_package TYPE devclass
-        !it_remote  TYPE zif_abapgit_git_definitions=>ty_files_tt
-      RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     CLASS-METHODS delete_unnecessary_objects
       IMPORTING
         !io_repo   TYPE REF TO zcl_abapgit_repo
         !ii_log    TYPE REF TO zif_abapgit_log
         !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
+      RAISING
+        zcx_abapgit_exception .
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+
+    CLASS-METHODS check_package_exists
+      IMPORTING
+        !iv_package TYPE devclass
+        !it_remote  TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS popup_decisions
@@ -118,17 +118,17 @@ CLASS zcl_abapgit_services_repo DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS raise_error_if_package_exists
       IMPORTING
-        iv_devclass TYPE devclass
+        !iv_devclass TYPE devclass
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     CLASS-METHODS check_for_restart
       IMPORTING
-        !io_repo TYPE REF TO zif_abapgit_repo.
+        !io_repo TYPE REF TO zif_abapgit_repo .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
 
   METHOD activate_objects.
