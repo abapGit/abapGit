@@ -1,5 +1,8 @@
 INTERFACE if_package PUBLIC.
   DATA wbo_korr_flag         TYPE c LENGTH 1 READ-ONLY.
+  DATA package_name          TYPE string READ-ONLY.
+  DATA short_text            TYPE string READ-ONLY.
+  DATA super_package_name    TYPE string READ-ONLY.
   DATA software_component    TYPE string READ-ONLY.
   DATA application_component TYPE string READ-ONLY.
   DATA transport_layer       TYPE string READ-ONLY.

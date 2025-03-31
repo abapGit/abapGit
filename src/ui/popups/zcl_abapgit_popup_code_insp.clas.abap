@@ -34,7 +34,7 @@ CLASS zcl_abapgit_popup_code_insp IMPLEMENTATION.
 
   METHOD fetch_list.
 
-    rt_list = zcl_abapgit_factory=>get_code_inspector( '$TMP' )->list_global_variants( ).
+    rt_list = zcl_abapgit_code_inspector=>get_code_inspector( '$TMP' )->list_global_variants( ).
 
   ENDMETHOD.
 

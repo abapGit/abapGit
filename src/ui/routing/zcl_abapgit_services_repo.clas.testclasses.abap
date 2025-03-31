@@ -310,6 +310,10 @@ CLASS ltcl_sap_package_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~get.
+    RETURN.
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~exists.
 
     rv_bool = boolc( c_package-existing = mv_package ).

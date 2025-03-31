@@ -12,13 +12,6 @@ CLASS zcl_abapgit_injector DEFINITION
       IMPORTING
         !iv_package     TYPE devclass
         !ii_sap_package TYPE REF TO zif_abapgit_sap_package .
-    CLASS-METHODS set_code_inspector
-      IMPORTING
-        !iv_package        TYPE devclass
-        !ii_code_inspector TYPE REF TO zif_abapgit_code_inspector .
-    CLASS-METHODS set_stage_logic
-      IMPORTING
-        !ii_logic TYPE REF TO zif_abapgit_stage_logic .
     CLASS-METHODS set_cts_api
       IMPORTING
         !ii_cts_api TYPE REF TO zif_abapgit_cts_api .
@@ -53,29 +46,6 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_injector IMPLEMENTATION.
-
-
-  METHOD set_code_inspector.
-
-    DATA: ls_code_inspector LIKE LINE OF zcl_abapgit_factory=>gt_code_inspector.
-    FIELD-SYMBOLS: <ls_code_inspector> LIKE LINE OF zcl_abapgit_factory=>gt_code_inspector.
-
-    READ TABLE zcl_abapgit_factory=>gt_code_inspector
-         ASSIGNING <ls_code_inspector>
-         WITH TABLE KEY package = iv_package.
-    IF sy-subrc <> 0.
-
-      ls_code_inspector-package = iv_package.
-
-      INSERT ls_code_inspector
-             INTO TABLE zcl_abapgit_factory=>gt_code_inspector
-             ASSIGNING <ls_code_inspector>.
-
-    ENDIF.
-
-    <ls_code_inspector>-instance = ii_code_inspector.
-
-  ENDMETHOD.
 
 
   METHOD set_cts_api.
@@ -143,13 +113,6 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
 
   METHOD set_sap_report.
     zcl_abapgit_factory=>gi_sap_report = ii_report.
-  ENDMETHOD.
-
-
-  METHOD set_stage_logic.
-
-    zcl_abapgit_factory=>gi_stage_logic = ii_logic.
-
   ENDMETHOD.
 
 

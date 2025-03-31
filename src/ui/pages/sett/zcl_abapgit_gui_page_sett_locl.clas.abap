@@ -104,7 +104,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
 
   METHOD choose_check_variant.
@@ -471,7 +471,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
     lv_check_variant = to_upper( io_form_data->get( c_id-code_inspector_check_variant ) ).
     IF lv_check_variant IS NOT INITIAL.
       TRY.
-          zcl_abapgit_factory=>get_code_inspector( mo_repo->get_package( )
+          zcl_abapgit_code_inspector=>get_code_inspector( mo_repo->get_package( )
             )->validate_check_variant( lv_check_variant ).
         CATCH zcx_abapgit_exception INTO lx_error.
           ro_validation_log->set(

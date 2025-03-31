@@ -11,7 +11,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_background_pull IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_BACKGROUND_PULL IMPLEMENTATION.
 
 
   METHOD zif_abapgit_background~get_description.
@@ -45,6 +45,13 @@ CLASS zcl_abapgit_background_pull IMPLEMENTATION.
     lv_activation_setting = lo_settings->get_activate_wo_popup( ).
 
     lo_settings->set_activate_wo_popup( abap_true ).
+
+
+    " pass decisions to delete
+    zcl_abapgit_services_repo=>delete_unnecessary_objects(
+      io_repo   = io_repo
+      is_checks = ls_checks
+      ii_log    = ii_log ).
 
     io_repo->deserialize( is_checks = ls_checks
                           ii_log    = ii_log ).

@@ -796,9 +796,11 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~exists.
+    DATA ls_object_name TYPE seoclskey.
+    ls_object_name = iv_object_name.
     CALL FUNCTION 'SEO_CLASS_EXISTENCE_CHECK'
       EXPORTING
-        clskey        = is_object_name
+        clskey        = ls_object_name
       EXCEPTIONS
         not_specified = 1
         not_existing  = 2

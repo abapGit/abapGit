@@ -97,6 +97,10 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~get.
+    RETURN.
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~exists.
     rv_bool = abap_true.
   ENDMETHOD.

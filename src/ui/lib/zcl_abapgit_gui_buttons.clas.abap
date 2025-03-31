@@ -1,9 +1,10 @@
 CLASS zcl_abapgit_gui_buttons DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
+
     CLASS-METHODS new_online
       RETURNING VALUE(rv_html_string) TYPE string.
 
@@ -26,6 +27,9 @@ CLASS zcl_abapgit_gui_buttons DEFINITION
       RETURNING VALUE(rv_html_string) TYPE string.
 
     CLASS-METHODS experimental
+      RETURNING VALUE(rv_html_string) TYPE string.
+
+    CLASS-METHODS refresh
       RETURNING VALUE(rv_html_string) TYPE string.
 
   PROTECTED SECTION.
@@ -51,6 +55,11 @@ CLASS zcl_abapgit_gui_buttons IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD flow.
+    rv_html_string = zcl_abapgit_html=>icon( 'flow' ) && ' Flow'.
+  ENDMETHOD.
+
+
   METHOD help.
     rv_html_string = zcl_abapgit_html=>icon(
       iv_name = 'question-circle-solid'
@@ -68,8 +77,10 @@ CLASS zcl_abapgit_gui_buttons IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD flow.
-    rv_html_string = zcl_abapgit_html=>icon( 'flow' ) && ' Flow'.
+  METHOD refresh.
+    rv_html_string = zcl_abapgit_html=>icon(
+      iv_name = 'redo-alt-solid'
+      iv_hint = 'Refresh' ).
   ENDMETHOD.
 
 

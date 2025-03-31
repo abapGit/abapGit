@@ -61,11 +61,6 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     DATA mv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result.
     DATA mi_obj_filter TYPE REF TO zif_abapgit_object_filter.
 
-    METHODS check_selected
-      IMPORTING
-        !io_files TYPE REF TO zcl_abapgit_string_map
-      RAISING
-        zcx_abapgit_exception .
     METHODS find_changed_by
       IMPORTING
         !it_files            TYPE zif_abapgit_definitions=>ty_stage_files
@@ -139,47 +134,6 @@ ENDCLASS.
 
 CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
-
-  METHOD check_selected.
-
-    DATA:
-      ls_file    TYPE zif_abapgit_git_definitions=>ty_file,
-      lv_pattern TYPE string,
-      lv_msg     TYPE string.
-
-    FIELD-SYMBOLS:
-      <ls_item>     LIKE LINE OF io_files->mt_entries,
-      <ls_item_chk> LIKE LINE OF io_files->mt_entries.
-
-    " Check all added files if the exist in different paths (packages) without being removed
-    LOOP AT io_files->mt_entries ASSIGNING <ls_item> WHERE v = zif_abapgit_definitions=>c_method-add.
-
-      zcl_abapgit_path=>split_file_location(
-        EXPORTING
-          iv_fullpath = to_lower( <ls_item>-k )
-        IMPORTING
-          ev_path     = ls_file-path
-          ev_filename = ls_file-filename ).
-
-      " Skip packages since they all have identical filenames
-      IF ls_file-filename <> 'package.devc.xml'.
-        lv_pattern = '*/' && to_upper( ls_file-filename ).
-        REPLACE ALL OCCURRENCES OF '#' IN lv_pattern WITH '##'. " for CP
-
-        LOOP AT io_files->mt_entries ASSIGNING <ls_item_chk>
-          WHERE k CP lv_pattern AND k <> <ls_item>-k AND v <> zif_abapgit_definitions=>c_method-rm.
-
-          lv_msg = |In order to add { to_lower( <ls_item>-k ) }, | &&
-                   |you have to remove { to_lower( <ls_item_chk>-k ) }|.
-          zcx_abapgit_exception=>raise( lv_msg ).
-
-        ENDLOOP.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD constructor.
 
     DATA lv_ts TYPE timestamp.
@@ -235,11 +189,11 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        io_repo       = io_repo
-        iv_seed       = iv_seed
-        iv_sci_result = iv_sci_result
+        io_repo          = io_repo
+        iv_seed          = iv_seed
+        iv_sci_result    = iv_sci_result
         ii_force_refresh = ii_force_refresh
-        ii_obj_filter = ii_obj_filter.
+        ii_obj_filter    = ii_obj_filter.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title         = 'Stage'
@@ -373,8 +327,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD init_files.
-    ms_files = zcl_abapgit_factory=>get_stage_logic( )->get( io_repo       = mo_repo
-                                                             ii_obj_filter = mi_obj_filter ).
+    ms_files = zcl_abapgit_stage_logic=>get_stage_logic( )->get( io_repo       = mo_repo
+                                                                 ii_obj_filter = mi_obj_filter ).
 
     IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.
       mo_repo->refresh( ).
@@ -716,73 +670,10 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
   METHOD stage_selected.
 
-    DATA ls_file  TYPE zif_abapgit_git_definitions=>ty_file.
-    DATA lo_files TYPE REF TO zcl_abapgit_string_map.
-
-    FIELD-SYMBOLS:
-      <ls_file>   LIKE LINE OF ms_files-local,
-      <ls_status> LIKE LINE OF ms_files-status,
-      <ls_item>   LIKE LINE OF lo_files->mt_entries.
-
-    lo_files = ii_event->form_data( ).
-
-    IF lo_files->size( ) = 0.
-      zcx_abapgit_exception=>raise( 'process_stage_list: empty list' ).
-    ENDIF.
-
-    check_selected( lo_files ).
-
-    CREATE OBJECT ro_stage.
-
-    LOOP AT lo_files->mt_entries ASSIGNING <ls_item>
-      "Ignore Files that we don't want to stage, so any errors don't stop the staging process
-      WHERE v <> zif_abapgit_definitions=>c_method-skip.
-
-      zcl_abapgit_path=>split_file_location(
-        EXPORTING
-          iv_fullpath = to_lower( <ls_item>-k ) " filename is lower cased
-        IMPORTING
-          ev_path     = ls_file-path
-          ev_filename = ls_file-filename ).
-
-      READ TABLE ms_files-status ASSIGNING <ls_status>
-        WITH TABLE KEY
-          path     = ls_file-path
-          filename = ls_file-filename.
-      IF sy-subrc <> 0.
-* see https://github.com/abapGit/abapGit/issues/3073
-        zcx_abapgit_exception=>raise(
-          |Unable to stage { ls_file-filename }. If the filename contains spaces, this is a known issue.| &&
-          | Consider ignoring or staging the file at a later time.| ).
-      ENDIF.
-
-      CASE <ls_item>-v.
-        WHEN zif_abapgit_definitions=>c_method-add.
-          READ TABLE ms_files-local ASSIGNING <ls_file>
-            WITH KEY file-path     = ls_file-path
-                     file-filename = ls_file-filename.
-
-          IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise( |process_stage_list: unknown file { ls_file-path }{ ls_file-filename }| ).
-          ENDIF.
-
-          ro_stage->add( iv_path     = <ls_file>-file-path
-                         iv_filename = <ls_file>-file-filename
-                         is_status   = <ls_status>
-                         iv_data     = <ls_file>-file-data ).
-        WHEN zif_abapgit_definitions=>c_method-ignore.
-          ro_stage->ignore( iv_path     = ls_file-path
-                            iv_filename = ls_file-filename ).
-        WHEN zif_abapgit_definitions=>c_method-rm.
-          ro_stage->rm( iv_path     = ls_file-path
-                        is_status   = <ls_status>
-                        iv_filename = ls_file-filename ).
-        WHEN zif_abapgit_definitions=>c_method-skip.
-          " Do nothing
-        WHEN OTHERS.
-          zcx_abapgit_exception=>raise( |process_stage_list: unknown method { <ls_item>-v }| ).
-      ENDCASE.
-    ENDLOOP.
+    ro_stage = lcl_selected=>get_instance( )->stage_selected(
+                     ii_event  = ii_event
+                     it_status = ms_files-status
+                     it_local  = ms_files-local ).
 
   ENDMETHOD.
 
@@ -872,8 +763,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-staging' ).
 
-    IF lines( ms_files-local ) > 0
-    OR lines( ms_files-remote ) > 0.
+    IF lines( ms_files-local ) > 0 OR lines( ms_files-remote ) > 0.
       ro_toolbar->add(
         iv_txt = 'Refresh'
         iv_act = |{ c_action-stage_refresh }|
@@ -884,7 +774,10 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
       )->add(
         iv_txt = |Patch|
         iv_typ = zif_abapgit_html=>c_action_type-onclick
-        iv_id  = |patchBtn| ).
+        iv_id  = |patchBtn|
+      )->add(
+        iv_txt = |Back|
+        iv_act = zif_abapgit_definitions=>c_action-go_back ).
     ENDIF.
 
   ENDMETHOD.
