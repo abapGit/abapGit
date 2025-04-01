@@ -62,7 +62,7 @@ CLASS zcl_abapgit_pr_enumerator IMPLEMENTATION.
     DATA lv_user TYPE string.
     DATA lv_repo TYPE string.
 
-    li_agent = zcl_abapgit_factory=>get_http_agent( ).
+    li_agent = zcl_abapgit_http_agent=>create( ).
 
     FIND ALL OCCURRENCES OF REGEX 'github\.com\/([^\/]+)\/([^\/]+)'
       IN iv_repo_url
