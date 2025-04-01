@@ -415,4 +415,7 @@ INTERFACE zif_abapgit_definitions
       use_lxe               TYPE abap_bool,
     END OF ty_i18n_params .
   TYPES ty_trrngtrkor_tt TYPE RANGE OF trkorr.
+
+  CONSTANTS c_multiple_transports TYPE trkorr VALUE 'MULTIPLE'.
+
 ENDINTERFACE.

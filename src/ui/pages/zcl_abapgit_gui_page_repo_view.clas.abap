@@ -981,7 +981,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     ri_html->add( '<td class="transport">' ).
 
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( is_item-transport ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport(
+      iv_transport = is_item-transport
+      iv_obj_type  = is_item-obj_type
+      iv_obj_name  = is_item-obj_name ) ).
 
     ri_html->add( '</td>' ).
 

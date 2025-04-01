@@ -89,6 +89,9 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     DATA: lv_object_lockable   TYPE abap_bool,
           lv_locked            TYPE abap_bool,
           lv_transport_request TYPE trkorr,
+          ls_tlock             TYPE tlock,
+          lt_tlock             TYPE STANDARD TABLE OF tlock WITH DEFAULT KEY,
+          lt_transports        TYPE STANDARD TABLE OF trkorr WITH DEFAULT KEY,
           lv_task              TYPE trkorr,
           lv_tr_object_name    TYPE trobj_name.
 
@@ -104,6 +107,8 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
         we_locked            = lv_locked
         we_lock_order        = lv_transport_request
         we_lock_task         = lv_task
+      TABLES
+        wt_tlock             = lt_tlock
       EXCEPTIONS
         empty_key            = 1
         no_systemname        = 2
@@ -122,7 +127,15 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Object type { iv_program_id }-{ iv_object_type } not lockable| ).
     ENDIF.
 
-    rv_transport = lv_transport_request.
+    LOOP AT lt_tlock INTO ls_tlock.
+      COLLECT ls_tlock-trkorr INTO lt_transports.
+    ENDLOOP.
+
+    IF lines( lt_transports ) = 1.
+      rv_transport = lv_transport_request.
+    ELSE.
+      rv_transport = zif_abapgit_definitions=>c_multiple_transports.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -470,8 +483,12 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
             WHERE object = ls_lock_key-obj
             AND hikey >= ls_lock_key-low
             AND lokey <= ls_lock_key-hi.                  "#EC PORTABLE
-          lv_request = <ls_tlock>-trkorr.
-          EXIT.
+          IF lv_request IS INITIAL.
+            lv_request = <ls_tlock>-trkorr.
+          ELSE.
+            lv_request = zif_abapgit_definitions=>c_multiple_transports.
+            EXIT.
+          ENDIF.
         ENDLOOP.
       ELSEIF is_object_type_transportable( <ls_item>-obj_type ) = abap_true.
         lv_request = get_current_transport_from_db(
