@@ -23,7 +23,7 @@ CLASS zcl_abapgit_gitea IMPLEMENTATION.
     DATA lv_url      TYPE string.
 
 
-    li_agent = zcl_abapgit_factory=>get_http_agent( ).
+    li_agent = zcl_abapgit_http_agent=>create( ).
 
     li_agent->global_headers( )->set(
       iv_key = 'Accept'
