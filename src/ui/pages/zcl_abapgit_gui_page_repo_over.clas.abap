@@ -55,6 +55,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         select       TYPE string VALUE 'select',
         apply_filter TYPE string VALUE 'apply_filter',
         label_filter TYPE string VALUE 'label_filter',
+        refresh_list TYPE string VALUE 'refresh_list',
       END OF c_action,
       c_label_filter_prefix TYPE string VALUE `label:`,
       c_raw_field_suffix    TYPE string VALUE `_RAW` ##NO_TEXT.
@@ -931,6 +932,11 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         save_settings( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
+      WHEN c_action-refresh_list.
+
+        zcl_abapgit_repo_srv=>get_instance( )->init( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
     ENDCASE.
 
   ENDMETHOD.
@@ -982,6 +988,11 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ls_hotkey_action-hotkey = |a|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
+    ls_hotkey_action-description = |Refresh|.
+    ls_hotkey_action-action = c_action-refresh_list.
+    ls_hotkey_action-hotkey = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
     " registered/handled in js
     ls_hotkey_action-description = |Previous Repository|.
     ls_hotkey_action-action = `#`.
@@ -1023,6 +1034,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>settings( )
       iv_act = zif_abapgit_definitions=>c_action-go_settings
+    )->add(
+      iv_txt = zcl_abapgit_gui_buttons=>refresh( )
+      iv_act = c_action-refresh_list
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>advanced( )
       io_sub = zcl_abapgit_gui_menus=>advanced( )

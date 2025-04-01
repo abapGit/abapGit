@@ -13,30 +13,18 @@ CLASS zcl_abapgit_factory DEFINITION
         !iv_package           TYPE devclass
       RETURNING
         VALUE(ri_sap_package) TYPE REF TO zif_abapgit_sap_package .
-    CLASS-METHODS get_code_inspector
-      IMPORTING
-        !iv_package              TYPE devclass
-      RETURNING
-        VALUE(ri_code_inspector) TYPE REF TO zif_abapgit_code_inspector
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS get_cts_api
       RETURNING
         VALUE(ri_cts_api) TYPE REF TO zif_abapgit_cts_api .
     CLASS-METHODS get_default_transport
       RETURNING
-        VALUE(ri_default_transport) TYPE REF TO zif_abapgit_default_transport
-      RAISING
-        zcx_abapgit_exception.
+        VALUE(ri_default_transport) TYPE REF TO zif_abapgit_default_transport.
     CLASS-METHODS get_environment
       RETURNING
         VALUE(ri_environment) TYPE REF TO zif_abapgit_environment .
     CLASS-METHODS get_longtexts
       RETURNING
         VALUE(ri_longtexts) TYPE REF TO zif_abapgit_longtexts .
-    CLASS-METHODS get_http_agent
-      RETURNING
-        VALUE(ri_http_agent) TYPE REF TO zif_abapgit_http_agent .
     CLASS-METHODS get_lxe_texts
       RETURNING
         VALUE(ri_lxe_texts) TYPE REF TO zif_abapgit_lxe_texts .
@@ -60,22 +48,12 @@ CLASS zcl_abapgit_factory DEFINITION
     TYPES:
       ty_sap_packages TYPE HASHED TABLE OF ty_sap_package
                                     WITH UNIQUE KEY package .
-    TYPES:
-      BEGIN OF ty_code_inspector_pack,
-        package  TYPE devclass,
-        instance TYPE REF TO zif_abapgit_code_inspector,
-      END OF ty_code_inspector_pack .
-    TYPES:
-      ty_code_inspector_packs TYPE HASHED TABLE OF ty_code_inspector_pack
-                                       WITH UNIQUE KEY package .
 
     CLASS-DATA gi_tadir TYPE REF TO zif_abapgit_tadir .
     CLASS-DATA gt_sap_package TYPE ty_sap_packages .
-    CLASS-DATA gt_code_inspector TYPE ty_code_inspector_packs .
     CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api .
     CLASS-DATA gi_environment TYPE REF TO zif_abapgit_environment .
     CLASS-DATA gi_longtext TYPE REF TO zif_abapgit_longtexts .
-    CLASS-DATA gi_http_agent TYPE REF TO zif_abapgit_http_agent .
     CLASS-DATA gi_lxe_texts TYPE REF TO zif_abapgit_lxe_texts .
     CLASS-DATA gi_sap_namespace TYPE REF TO zif_abapgit_sap_namespace .
     CLASS-DATA gi_sap_report TYPE REF TO zif_abapgit_sap_report.
@@ -86,31 +64,6 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_factory IMPLEMENTATION.
-
-
-  METHOD get_code_inspector.
-
-    DATA: ls_code_inspector LIKE LINE OF gt_code_inspector.
-    FIELD-SYMBOLS: <ls_code_inspector> TYPE ty_code_inspector_pack.
-
-    READ TABLE gt_code_inspector ASSIGNING <ls_code_inspector>
-      WITH TABLE KEY package = iv_package.
-    IF sy-subrc <> 0.
-      ls_code_inspector-package = iv_package.
-
-      CREATE OBJECT ls_code_inspector-instance TYPE zcl_abapgit_code_inspector
-        EXPORTING
-          iv_package = iv_package.
-
-      INSERT ls_code_inspector
-             INTO TABLE gt_code_inspector
-             ASSIGNING <ls_code_inspector>.
-
-    ENDIF.
-
-    ri_code_inspector = <ls_code_inspector>-instance.
-
-  ENDMETHOD.
 
 
   METHOD get_cts_api.
@@ -148,17 +101,6 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
     ENDIF.
 
     ri_function_module = gi_function_module.
-
-  ENDMETHOD.
-
-
-  METHOD get_http_agent.
-
-    IF gi_http_agent IS INITIAL.
-      gi_http_agent = zcl_abapgit_http_agent=>create( ).
-    ENDIF.
-
-    ri_http_agent = gi_http_agent.
 
   ENDMETHOD.
 
