@@ -207,6 +207,12 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_filename    TYPE string
       RETURNING
         VALUE(rv_extra) TYPE string.
+
+    CLASS-METHODS is_type_supported_exit
+      IMPORTING
+        !iv_obj_type   TYPE zif_abapgit_definitions=>ty_item-obj_type
+      RETURNING
+        VALUE(rv_bool) TYPE abap_bool.
 ENDCLASS.
 
 
@@ -1103,7 +1109,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       ls_item-obj_type = iv_obj_type.
 
       ls_supported_obj_type-obj_type  = iv_obj_type.
-      ls_supported_obj_type-supported = is_supported( ls_item ).
+
+      IF is_type_supported_exit( iv_obj_type ) = abap_true.
+        ls_supported_obj_type-supported = is_supported( ls_item ).
+      ENDIF.
 
       INSERT ls_supported_obj_type INTO TABLE gt_supported_obj_types.
 
@@ -1113,6 +1122,23 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDIF.
 
     rv_bool = <ls_supported_obj_type>-supported.
+
+  ENDMETHOD.
+
+
+  METHOD is_type_supported_exit.
+
+    DATA:
+      lt_types TYPE zif_abapgit_exit=>ty_object_types,
+      li_exit  TYPE REF TO zif_abapgit_exit.
+
+    INSERT iv_obj_type INTO TABLE lt_types.
+
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->change_supported_object_types( CHANGING ct_types = lt_types ).
+
+    READ TABLE lt_types TRANSPORTING NO FIELDS WITH TABLE KEY table_line = iv_obj_type.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
