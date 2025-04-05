@@ -176,9 +176,9 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
               CREATE OBJECT li_background TYPE (<ls_list>-method).
 
               li_background->run(
-                ii_repo_online     = li_repo_online
-                ii_log      = li_log
-                it_settings = <ls_list>-settings ).
+                ii_repo_online = li_repo_online
+                ii_log         = li_log
+                it_settings    = <ls_list>-settings ).
             CATCH cx_sy_create_object_error.
               li_log->add_warning( |{ <ls_list>-method } could not be executed,|
                                  & | as it is not accessible (local/global class).| ).
