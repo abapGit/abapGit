@@ -70,7 +70,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
       END OF c_action_titles.
 
     DATA mv_unified TYPE abap_bool VALUE abap_true ##NO_TEXT.
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+    DATA mi_repo TYPE REF TO zif_abapgit_repo .
     DATA mt_diff_files TYPE ty_file_diffs .
 
     CLASS-METHODS get_page_layout
@@ -555,15 +555,15 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
     CLEAR: mt_diff_files.
 
-    lt_remote = mo_repo->get_files_remote( ).
-    lt_local  = mo_repo->get_files_local( ).
+    lt_remote = mi_repo->get_files_remote( ).
+    lt_local  = mi_repo->get_files_local( ).
 
-    lt_status = zcl_abapgit_repo_status=>calculate( mo_repo ).
+    lt_status = zcl_abapgit_repo_status=>calculate( mi_repo ).
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->pre_calculate_repo_status(
       EXPORTING
-        is_repo_meta = mo_repo->ms_data
+        is_repo_meta = mi_repo->ms_data
       CHANGING
         ct_local  = lt_local
         ct_remote = lt_remote ).
@@ -622,7 +622,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     super->constructor( ).
     mv_unified  = zcl_abapgit_persistence_user=>get_instance( )->get_diff_unified( ).
     mv_repo_key = iv_key.
-    mo_repo    ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    mi_repo    ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     GET TIME STAMP FIELD lv_ts.
     mv_seed = |diff{ lv_ts }|. " Generate based on time
@@ -784,12 +784,12 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
 
   METHOD refresh_full.
-    mo_repo->refresh( abap_true ).
+    mi_repo->refresh( abap_true ).
   ENDMETHOD.
 
 
   METHOD refresh_local.
-    mo_repo->refresh_local_objects( ).
+    mi_repo->refresh_local_objects( ).
   ENDMETHOD.
 
 
@@ -807,7 +807,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
       SUBMATCHES lv_obj_type lv_obj_name.
 
     IF sy-subrc = 0.
-      mo_repo->refresh_local_object(
+      mi_repo->refresh_local_object(
         iv_obj_type = to_upper( lv_obj_type )
         iv_obj_name = to_upper( lv_obj_name ) ).
     ELSE.
@@ -1397,7 +1397,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     li_progress = zcl_abapgit_progress=>get_instance( lines( mt_diff_files ) ).
 
     ri_html->add( `<div class="repo">` ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mi_repo ) ).
     ri_html->add( `</div>` ).
 
     ri_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).

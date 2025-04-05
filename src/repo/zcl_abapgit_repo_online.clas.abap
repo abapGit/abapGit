@@ -8,43 +8,23 @@ CLASS zcl_abapgit_repo_online DEFINITION
 
     INTERFACES zif_abapgit_repo_online .
 
-    ALIASES create_branch
-      FOR zif_abapgit_repo_online~create_branch .
-    ALIASES get_current_remote
-      FOR zif_abapgit_repo_online~get_current_remote .
-    ALIASES get_selected_branch
-      FOR zif_abapgit_repo_online~get_selected_branch .
-    ALIASES get_selected_commit
-      FOR zif_abapgit_repo_online~get_selected_commit .
-    ALIASES get_url
-      FOR zif_abapgit_repo_online~get_url .
-    ALIASES push
-      FOR zif_abapgit_repo_online~push .
-    ALIASES select_branch
-      FOR zif_abapgit_repo_online~select_branch .
-    ALIASES select_commit
-      FOR zif_abapgit_repo_online~select_commit .
-    ALIASES set_url
-      FOR zif_abapgit_repo_online~set_url .
-    ALIASES switch_origin
-      FOR zif_abapgit_repo_online~switch_origin .
-    ALIASES get_switched_origin
-      FOR zif_abapgit_repo_online~get_switched_origin.
-
-
-
     METHODS zif_abapgit_repo~get_files_remote
         REDEFINITION .
     METHODS zif_abapgit_repo~get_name
         REDEFINITION .
     METHODS zif_abapgit_repo~has_remote_source
         REDEFINITION .
+    METHODS constructor
+      IMPORTING
+        is_data TYPE zif_abapgit_persistence=>ty_repo.
+
 
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
     DATA mv_current_commit TYPE zif_abapgit_git_definitions=>ty_sha1 .
+    DATA mi_repo_online TYPE REF TO zif_abapgit_repo_online .
 
     METHODS handle_stage_ignore
       IMPORTING
@@ -75,6 +55,12 @@ ENDCLASS.
 
 CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
+  METHOD constructor.
+
+    super->constructor( is_data = is_data ).
+    mi_repo_online = me.
+
+  ENDMETHOD.
 
   METHOD fetch_remote.
 
@@ -90,15 +76,15 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     li_progress->show( iv_current = 1
                        iv_text    = 'Fetch remote files' ).
 
-    IF get_selected_commit( ) IS INITIAL.
-      ls_pull = zcl_abapgit_git_porcelain=>pull_by_branch( iv_url         = get_url( )
-                                                           iv_branch_name = get_selected_branch( ) ).
+    IF mi_repo_online->get_selected_commit( ) IS INITIAL.
+      ls_pull = zcl_abapgit_git_porcelain=>pull_by_branch( iv_url         = mi_repo_online->get_url( )
+                                                           iv_branch_name = mi_repo_online->get_selected_branch( ) ).
     ELSE.
-      ls_pull = zcl_abapgit_git_porcelain=>pull_by_commit( iv_url         = get_url( )
-                                                           iv_commit_hash = get_selected_commit( ) ).
+      ls_pull = zcl_abapgit_git_porcelain=>pull_by_commit( iv_url         = mi_repo_online->get_url( )
+                                                           iv_commit_hash = mi_repo_online->get_selected_commit( ) ).
     ENDIF.
 
-    set_files_remote( ls_pull-files ).
+    mi_repo->set_files_remote( ls_pull-files ).
     set_objects( ls_pull-objects ).
     mv_current_commit = ls_pull-commit.
 
@@ -120,7 +106,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
 
-    lo_dot_abapgit = get_dot_abapgit( ).
+    lo_dot_abapgit = mi_repo->get_dot_abapgit( ).
     lt_stage = io_stage->get_all( ).
     LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = zif_abapgit_definitions=>c_method-ignore.
 
@@ -142,7 +128,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
         iv_filename = zif_abapgit_definitions=>c_dot_abapgit
         iv_data     = lo_dot_abapgit->serialize( ) ).
 
-      set_dot_abapgit( lo_dot_abapgit ).
+      mi_repo->set_dot_abapgit( lo_dot_abapgit ).
     ENDIF.
 
   ENDMETHOD.
@@ -154,7 +140,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
       lt_branches     TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
       lv_display_name TYPE string.
 
-    lt_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( get_url( ) )->get_branches_only( ).
+    lt_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( mi_repo_online->get_url( ) )->get_branches_only( ).
 
     READ TABLE lt_branches WITH TABLE KEY name_key
                            COMPONENTS name = iv_name
@@ -181,10 +167,10 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
       lv_head        TYPE string,
       lv_msg         TYPE string.
 
-    lv_branch = get_selected_branch( ).
+    lv_branch = mi_repo_online->get_selected_branch( ).
 
     IF lv_branch IS NOT INITIAL.
-      lo_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( get_url( ) ).
+      lo_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( mi_repo_online->get_url( ) ).
 
       TRY.
           lo_branch_list->find_by_name( lv_branch ).
@@ -193,7 +179,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
           lv_head = lo_branch_list->get_head_symref( ).
           lv_msg = |{ lx_error->get_text( ) }. Switched to { lo_branch_list->get_display_name( lv_head ) }|.
           MESSAGE lv_msg TYPE 'S'.
-          select_branch( lv_head ).
+          mi_repo_online->select_branch( lv_head ).
       ENDTRY.
     ENDIF.
 
@@ -207,7 +193,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     ASSERT iv_name CP zif_abapgit_git_definitions=>c_git_branch-heads.
 
     IF iv_from IS INITIAL.
-      lv_sha1 = get_current_remote( ).
+      lv_sha1 = mi_repo_online->get_current_remote( ).
     ELSE.
       lv_sha1 = iv_from.
     ENDIF.
@@ -215,12 +201,12 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     raise_error_if_branch_exists( iv_name ).
 
     zcl_abapgit_git_porcelain=>create_branch(
-      iv_url  = get_url( )
+      iv_url  = mi_repo_online->get_url( )
       iv_name = iv_name
       iv_from = lv_sha1 ).
 
     " automatically switch to new branch
-    select_branch( iv_name ).
+    mi_repo_online->select_branch( iv_name ).
 
   ENDMETHOD.
 
@@ -232,22 +218,22 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 
   METHOD zif_abapgit_repo_online~get_selected_branch.
-    rv_name = ms_data-branch_name.
+    rv_name = mi_repo->ms_data-branch_name.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_repo_online~get_selected_commit.
-    rv_selected_commit = ms_data-selected_commit.
+    rv_selected_commit = mi_repo->ms_data-selected_commit.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_repo_online~get_switched_origin.
-    rv_switched_origin = ms_data-switched_origin.
+    rv_switched_origin = mi_repo->ms_data-switched_origin.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_repo_online~get_url.
-    rv_url = ms_data-url.
+    rv_url = mi_repo->ms_data-url.
   ENDMETHOD.
 
 
@@ -260,46 +246,46 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
           lv_parent TYPE zif_abapgit_git_definitions=>ty_sha1.
 
 
-    IF ms_data-branch_name CP zif_abapgit_git_definitions=>c_git_branch-tags.
+    IF mi_repo->ms_data-branch_name CP zif_abapgit_git_definitions=>c_git_branch-tags.
       lv_text = |You're working on a tag. Currently it's not |
              && |possible to push on tags. Consider creating a branch instead|.
       zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.
 
-    IF ms_data-selected_commit IS NOT INITIAL.
+    IF mi_repo->ms_data-selected_commit IS NOT INITIAL.
       lv_text = 'You are currently checked out in a commit.'.
       lv_text = |{ lv_text } You must be on a branch to push|.
       zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.
 
-    IF ms_data-local_settings-block_commit = abap_true
-        AND zcl_abapgit_code_inspector=>get_code_inspector( get_package( )
+    IF mi_repo->ms_data-local_settings-block_commit = abap_true
+        AND zcl_abapgit_code_inspector=>get_code_inspector( mi_repo->get_package( )
           )->is_successful( ) = abap_false.
       zcx_abapgit_exception=>raise( |A successful code inspection is required| ).
     ENDIF.
 
     handle_stage_ignore( io_stage ).
 
-    IF get_selected_commit( ) IS INITIAL.
-      lv_parent = get_current_remote( ).
+    IF mi_repo_online->get_selected_commit( ) IS INITIAL.
+      lv_parent = mi_repo_online->get_current_remote( ).
     ELSE.
-      lv_parent = get_selected_commit( ).
+      lv_parent = mi_repo_online->get_selected_commit( ).
     ENDIF.
 
     ls_push = zcl_abapgit_git_porcelain=>push(
       is_comment     = is_comment
       io_stage       = io_stage
-      iv_branch_name = get_selected_branch( )
-      iv_url         = get_url( )
+      iv_branch_name = mi_repo_online->get_selected_branch( )
+      iv_url         = mi_repo_online->get_url( )
       iv_parent      = lv_parent
       it_old_objects = get_objects( ) ).
 
     set_objects( ls_push-new_objects ).
-    set_files_remote( ls_push-new_files ).
+    mi_repo->set_files_remote( ls_push-new_files ).
 
     mv_current_commit = ls_push-branch.
 
-    zif_abapgit_repo~checksums( )->update( ls_push-updated_files ).
+    mi_repo->checksums( )->update( ls_push-updated_files ).
 
   ENDMETHOD.
 
@@ -340,28 +326,28 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     ENDIF.
 
     IF iv_url IS INITIAL.
-      IF ms_data-switched_origin IS INITIAL.
+      IF mi_repo->ms_data-switched_origin IS INITIAL.
         RETURN.
       ELSE.
         lv_offs = find(
-          val = reverse( ms_data-switched_origin )
+          val = reverse( mi_repo->ms_data-switched_origin )
           sub = '@' ).
         IF lv_offs = -1.
           zcx_abapgit_exception=>raise( 'Incorrect format of switched origin' ).
         ENDIF.
-        lv_offs = strlen( ms_data-switched_origin ) - lv_offs - 1.
-        set_url( substring(
-          val = ms_data-switched_origin
+        lv_offs = strlen( mi_repo->ms_data-switched_origin ) - lv_offs - 1.
+        mi_repo_online->set_url( substring(
+          val = mi_repo->ms_data-switched_origin
           len = lv_offs ) ).
-        select_branch( substring(
-          val = ms_data-switched_origin
+        mi_repo_online->select_branch( substring(
+          val = mi_repo->ms_data-switched_origin
           off = lv_offs + 1 ) ).
         set( iv_switched_origin = '' ).
       ENDIF.
-    ELSEIF ms_data-switched_origin IS INITIAL.
-      set( iv_switched_origin = ms_data-url && '@' && ms_data-branch_name ).
-      set_url( iv_url ).
-      select_branch( iv_branch ).
+    ELSEIF mi_repo->ms_data-switched_origin IS INITIAL.
+      set( iv_switched_origin = mi_repo->ms_data-url && '@' && mi_repo->ms_data-branch_name ).
+      mi_repo_online->set_url( iv_url ).
+      mi_repo_online->select_branch( iv_branch ).
     ELSE.
       zcx_abapgit_exception=>raise( 'Cannot switch origin twice' ).
     ENDIF.
@@ -371,17 +357,17 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~get_files_remote.
     fetch_remote( ).
-    rt_files = super->get_files_remote(
+    rt_files = super->zif_abapgit_repo~get_files_remote(
       ii_obj_filter   = ii_obj_filter
       iv_ignore_files = iv_ignore_files ).
   ENDMETHOD.
 
 
   METHOD zif_abapgit_repo~get_name.
-    rv_name = super->get_name( ).
+    rv_name = super->zif_abapgit_repo~get_name( ).
     IF rv_name IS INITIAL.
       TRY.
-          rv_name = zcl_abapgit_url=>name( ms_data-url ).
+          rv_name = zcl_abapgit_url=>name( mi_repo->ms_data-url ).
           rv_name = cl_http_utility=>unescape_url( rv_name ).
         CATCH zcx_abapgit_exception.
           rv_name = 'New online repo'. "unlikely fallback

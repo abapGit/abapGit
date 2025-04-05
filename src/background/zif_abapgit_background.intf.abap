@@ -18,9 +18,9 @@ INTERFACE zif_abapgit_background
       ct_settings TYPE ty_settings_tt .
   METHODS run
     IMPORTING
-      !io_repo     TYPE REF TO zcl_abapgit_repo_online
-      !ii_log      TYPE REF TO zif_abapgit_log
-      !it_settings TYPE ty_settings_tt OPTIONAL
+      !ii_repo_online TYPE REF TO zif_abapgit_repo_online
+      !ii_log         TYPE REF TO zif_abapgit_log
+      !it_settings    TYPE ty_settings_tt OPTIONAL
     RAISING
       zcx_abapgit_exception .
 ENDINTERFACE.

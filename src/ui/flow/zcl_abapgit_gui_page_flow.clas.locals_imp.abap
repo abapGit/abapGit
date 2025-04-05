@@ -89,14 +89,14 @@ CLASS lcl_helper DEFINITION FINAL.
 
     CLASS-METHODS build_repo_data
       IMPORTING
-        io_online      TYPE REF TO zif_abapgit_repo
+        ii_repo        TYPE REF TO zif_abapgit_repo
       RETURNING
         VALUE(rs_data) TYPE zif_abapgit_gui_page_flow=>ty_feature-repo.
 
     CLASS-METHODS map_files_to_objects
       IMPORTING
         it_files                  TYPE zif_abapgit_gui_page_flow=>ty_path_name_tt
-        io_online                 TYPE REF TO zcl_abapgit_repo_online
+        ii_repo                   TYPE REF TO zif_abapgit_repo
       RETURNING
         VALUE(rt_changed_objects) TYPE zif_abapgit_definitions=>ty_items_ts
       RAISING
@@ -104,7 +104,7 @@ CLASS lcl_helper DEFINITION FINAL.
 
     CLASS-METHODS find_changed_files_all
       IMPORTING
-        io_online        TYPE REF TO zcl_abapgit_repo_online
+        ii_repo_online   TYPE REF TO zif_abapgit_repo_online
         it_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       EXPORTING
         et_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
@@ -153,9 +153,9 @@ CLASS lcl_helper DEFINITION FINAL.
 
     CLASS-METHODS add_local_status
       IMPORTING
-        io_online   TYPE REF TO zcl_abapgit_repo_online
+        ii_repo_online TYPE REF TO zif_abapgit_repo_online
       CHANGING
-        ct_features TYPE zif_abapgit_gui_page_flow=>ty_features
+        ct_features    TYPE zif_abapgit_gui_page_flow=>ty_features
       RAISING
         zcx_abapgit_exception.
 
@@ -202,9 +202,9 @@ CLASS lcl_helper IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD build_repo_data.
-    rs_data-name = io_online->get_name( ).
-    rs_data-key = io_online->get_key( ).
-    rs_data-package = io_online->get_package( ).
+    rs_data-name = ii_repo->get_name( ).
+    rs_data-key = ii_repo->get_key( ).
+    rs_data-package = ii_repo->get_package( ).
   ENDMETHOD.
 
   METHOD get_information.
@@ -214,7 +214,7 @@ CLASS lcl_helper IMPLEMENTATION.
     DATA ls_result     LIKE LINE OF rt_features.
     DATA lt_favorites  TYPE zif_abapgit_repo_srv=>ty_repo_list.
     DATA li_favorite   LIKE LINE OF lt_favorites.
-    DATA lo_online     TYPE REF TO zcl_abapgit_repo_online.
+    DATA li_repo_online     TYPE REF TO zif_abapgit_repo_online.
     DATA lt_features   LIKE rt_features.
     DATA lt_transports TYPE ty_transports_tt.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
@@ -234,15 +234,15 @@ CLASS lcl_helper IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      lo_online ?= li_favorite.
+      li_repo_online ?= li_favorite.
 
       lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
-        iv_url    = lo_online->get_url( )
+        iv_url    = li_repo_online->get_url( )
         iv_prefix = 'refs/heads/' )->get_all( ).
 
       CLEAR lt_features.
       LOOP AT lt_branches INTO ls_branch WHERE display_name <> c_main.
-        ls_result-repo = build_repo_data( lo_online ).
+        ls_result-repo = build_repo_data( li_repo_online ).
         ls_result-branch-display_name = ls_branch-display_name.
         ls_result-branch-sha1 = ls_branch-sha1.
         INSERT ls_result INTO TABLE lt_features.
@@ -250,7 +250,7 @@ CLASS lcl_helper IMPLEMENTATION.
 
       find_changed_files_all(
         EXPORTING
-          io_online        = lo_online
+          ii_repo_online   = li_repo_online
           it_branches      = lt_branches
         IMPORTING
           et_main_expanded = lt_main_expanded
@@ -267,20 +267,20 @@ CLASS lcl_helper IMPLEMENTATION.
 
       find_up_to_date(
         EXPORTING
-          iv_url      = lo_online->get_url( )
+          iv_url      = li_repo_online->get_url( )
           it_branches = lt_branches
         CHANGING
           ct_features = lt_features ).
 
       find_prs(
         EXPORTING
-          iv_url      = lo_online->get_url( )
+          iv_url      = li_repo_online->get_url( )
         CHANGING
           ct_features = lt_features ).
 
       add_local_status(
         EXPORTING
-          io_online   = lo_online
+          ii_repo_online   = li_repo_online
         CHANGING
           ct_features = lt_features ).
 
@@ -541,19 +541,21 @@ CLASS lcl_helper IMPLEMENTATION.
     DATA lv_starting_folder TYPE string.
     DATA ls_main            LIKE LINE OF it_branches.
     DATA lt_expanded        TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+    DATA li_repo            TYPE REF TO zif_abapgit_repo.
 
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
 
+    li_repo = ii_repo_online.
 
     LOOP AT it_branches INTO ls_branch WHERE is_head = abap_false.
       APPEND ls_branch-sha1 TO lt_sha1.
     ENDLOOP.
 
     lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_no_blobs_multi(
-      iv_url  = io_online->get_url( )
+      iv_url  = ii_repo_online->get_url( )
       it_sha1 = lt_sha1 ).
 
-    lv_starting_folder = io_online->get_dot_abapgit( )->get_starting_folder( ) && '*'.
+    lv_starting_folder = li_repo->get_dot_abapgit( )->get_starting_folder( ) && '*'.
 
     READ TABLE it_branches INTO ls_main WITH KEY display_name = c_main.
     ASSERT sy-subrc = 0.
@@ -574,8 +576,8 @@ CLASS lcl_helper IMPLEMENTATION.
         it_expanded2 = et_main_expanded ).
 
       <ls_branch>-changed_objects = map_files_to_objects(
-        io_online = io_online
-        it_files  = <ls_branch>-changed_files ).
+        ii_repo  = ii_repo_online
+        it_files = <ls_branch>-changed_files ).
     ENDLOOP.
 
   ENDMETHOD.
@@ -585,6 +587,7 @@ CLASS lcl_helper IMPLEMENTATION.
     DATA lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt.
     DATA lo_filter TYPE REF TO lcl_filter.
     DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA li_repo   TYPE REF TO zif_abapgit_repo.
 
     FIELD-SYMBOLS <ls_branch>       LIKE LINE OF ct_features.
     FIELD-SYMBOLS <ls_local>        LIKE LINE OF lt_local.
@@ -592,6 +595,7 @@ CLASS lcl_helper IMPLEMENTATION.
     FIELD-SYMBOLS <ls_filter>       LIKE LINE OF lt_filter.
     FIELD-SYMBOLS <ls_object>       LIKE LINE OF <ls_branch>-changed_objects.
 
+    li_repo = ii_repo_online.
 
     LOOP AT ct_features ASSIGNING <ls_branch>.
       LOOP AT <ls_branch>-changed_objects ASSIGNING <ls_object>.
@@ -608,7 +612,7 @@ CLASS lcl_helper IMPLEMENTATION.
     ENDIF.
 
     CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
-    lt_local = io_online->get_files_local_filtered( lo_filter ).
+    lt_local = li_repo->get_files_local_filtered( lo_filter ).
 
     LOOP AT ct_features ASSIGNING <ls_branch>.
       LOOP AT <ls_branch>-changed_files ASSIGNING <ls_changed_file>.
@@ -634,8 +638,8 @@ CLASS lcl_helper IMPLEMENTATION.
         EXPORTING
           iv_filename = <ls_file>-filename
           iv_path     = <ls_file>-path
-          iv_devclass = io_online->get_package( )
-          io_dot      = io_online->get_dot_abapgit( )
+          iv_devclass = ii_repo->get_package( )
+          io_dot      = ii_repo->get_dot_abapgit( )
         IMPORTING
           es_item     = ls_item ).
       INSERT ls_item INTO TABLE rt_changed_objects.
