@@ -1,14 +1,15 @@
 CLASS zcl_abapgit_html DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_html .
+    INTERFACES zif_abapgit_html.
 
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
-    CLASS-METHODS class_constructor .
+    CLASS-METHODS class_constructor.
+
     CLASS-METHODS create
       IMPORTING
         !iv_initial_chunk  TYPE any OPTIONAL
@@ -22,21 +23,25 @@ CLASS zcl_abapgit_html DEFINITION
         !iv_class     TYPE string OPTIONAL
         !iv_onclick   TYPE string OPTIONAL
       RETURNING
-        VALUE(rv_str) TYPE string .
+        VALUE(rv_str) TYPE string.
+
     CLASS-METHODS checkbox
       IMPORTING
         iv_id          TYPE string OPTIONAL
         iv_checked     TYPE abap_bool OPTIONAL
       RETURNING
-        VALUE(rv_html) TYPE string .
+        VALUE(rv_html) TYPE string.
+
     CLASS-METHODS parse_data_attr
       IMPORTING
         iv_str              TYPE string OPTIONAL
       RETURNING
-        VALUE(rs_data_attr) TYPE zif_abapgit_html=>ty_data_attr .
+        VALUE(rs_data_attr) TYPE zif_abapgit_html=>ty_data_attr.
+
     CLASS-METHODS set_debug_mode
       IMPORTING
         iv_mode TYPE abap_bool.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -51,7 +56,8 @@ CLASS zcl_abapgit_html DEFINITION
         within_pre      TYPE abap_bool,
         indent          TYPE i,
         indent_str      TYPE string,
-      END OF ty_indent_context .
+      END OF ty_indent_context.
+
     TYPES:
       BEGIN OF ty_study_result,
         style_open     TYPE abap_bool,
@@ -67,23 +73,25 @@ CLASS zcl_abapgit_html DEFINITION
         openings       TYPE i,
         closings       TYPE i,
         singles        TYPE i,
-      END OF ty_study_result .
+      END OF ty_study_result.
 
-    CLASS-DATA go_single_tags_re TYPE REF TO cl_abap_regex .
-    DATA mt_buffer TYPE string_table .
-    CLASS-DATA gv_spaces TYPE string .
-    CLASS-DATA gv_debug_mode TYPE abap_bool .
+    CLASS-DATA go_single_tags_re TYPE REF TO cl_abap_regex.
+    CLASS-DATA gv_spaces TYPE string.
+    CLASS-DATA gv_debug_mode TYPE abap_bool.
+    DATA mt_buffer TYPE string_table.
 
     METHODS indent_line
       CHANGING
         !cs_context TYPE ty_indent_context
-        !cv_line    TYPE string .
+        !cv_line    TYPE string.
+
     METHODS study_line
       IMPORTING
         !iv_line         TYPE string
         !is_context      TYPE ty_indent_context
       RETURNING
-        VALUE(rs_result) TYPE ty_study_result .
+        VALUE(rs_result) TYPE ty_study_result.
+
 ENDCLASS.
 
 
@@ -495,15 +503,19 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
 
   METHOD zif_abapgit_html~div.
+
     zif_abapgit_html~wrap(
-      iv_tag   = 'div'
-      iv_content = iv_content
-      ii_content = ii_content
+      iv_tag        = 'div'
+      iv_content    = iv_content
+      ii_content    = ii_content
       is_data_attr  = is_data_attr
       it_data_attrs = it_data_attrs
-      iv_id    = iv_id
-      iv_class = iv_class ).
+      iv_id         = iv_id
+      iv_style      = iv_style
+      iv_class      = iv_class ).
+
     ri_self = me.
+
   ENDMETHOD.
 
 
@@ -554,32 +566,40 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
 
   METHOD zif_abapgit_html~td.
+
     zif_abapgit_html~wrap(
       iv_format_single_line = iv_format_single_line
-      iv_tag   = 'td'
-      iv_content = iv_content
-      ii_content = ii_content
-      iv_id    = iv_id
-      iv_class = iv_class
-      is_data_attr  = is_data_attr
-      it_data_attrs = it_data_attrs
-      iv_hint  = iv_hint ).
+      iv_tag                = 'td'
+      iv_content            = iv_content
+      ii_content            = ii_content
+      iv_id                 = iv_id
+      iv_class              = iv_class
+      iv_style              = iv_style
+      is_data_attr          = is_data_attr
+      it_data_attrs         = it_data_attrs
+      iv_hint               = iv_hint ).
+
     ri_self = me.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_html~th.
+
     zif_abapgit_html~wrap(
       iv_format_single_line = iv_format_single_line
-      iv_tag   = 'th'
-      iv_content = iv_content
-      ii_content = ii_content
-      iv_id    = iv_id
-      iv_class = iv_class
-      is_data_attr  = is_data_attr
-      it_data_attrs = it_data_attrs
-      iv_hint  = iv_hint ).
+      iv_tag                = 'th'
+      iv_content            = iv_content
+      ii_content            = ii_content
+      iv_id                 = iv_id
+      iv_class              = iv_class
+      iv_style              = iv_style
+      is_data_attr          = is_data_attr
+      it_data_attrs         = it_data_attrs
+      iv_hint               = iv_hint ).
+
     ri_self = me.
+
   ENDMETHOD.
 
 
@@ -590,6 +610,7 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
     DATA ls_data_attr LIKE LINE OF it_data_attrs.
 
     DATA: lv_class     TYPE string,
+          lv_style     TYPE string,
           lv_id        TYPE string,
           lv_data_attr TYPE string,
           lv_title     TYPE string.
@@ -600,6 +621,10 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
     IF iv_class IS NOT INITIAL.
       lv_class = | class="{ iv_class }"|.
+    ENDIF.
+
+    IF iv_style IS NOT INITIAL.
+      lv_style = | style="{ iv_style }"|.
     ENDIF.
 
     IF iv_hint IS NOT INITIAL.
@@ -614,7 +639,7 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
       lv_data_attr = lv_data_attr && | data-{ ls_data_attr-name }="{ ls_data_attr-value }"|.
     ENDLOOP.
 
-    lv_open_tag = |<{ iv_tag }{ lv_id }{ lv_class }{ lv_data_attr }{ lv_title }>|.
+    lv_open_tag = |<{ iv_tag }{ lv_id }{ lv_class }{ lv_style }{ lv_data_attr }{ lv_title }>|.
     lv_close_tag = |</{ iv_tag }>|.
 
     IF ii_content IS NOT BOUND AND iv_content IS INITIAL.
