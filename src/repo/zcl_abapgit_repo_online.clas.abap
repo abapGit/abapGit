@@ -57,7 +57,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_data = is_data ).
+    super->constructor( is_data ).
     mi_repo_online = me.
 
   ENDMETHOD.
