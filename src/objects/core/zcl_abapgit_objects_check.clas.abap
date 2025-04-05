@@ -6,7 +6,7 @@ CLASS zcl_abapgit_objects_check DEFINITION
 
     CLASS-METHODS deserialize_checks
       IMPORTING
-        !io_repo         TYPE REF TO zcl_abapgit_repo
+        !ii_repo         TYPE REF TO zif_abapgit_repo
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
@@ -14,7 +14,7 @@ CLASS zcl_abapgit_objects_check DEFINITION
     CLASS-METHODS class_constructor.
     CLASS-METHODS checks_adjust
       IMPORTING
-        !io_repo    TYPE REF TO zcl_abapgit_repo
+        !ii_repo    TYPE REF TO zif_abapgit_repo
         !is_checks  TYPE zif_abapgit_definitions=>ty_deserialize_checks
       CHANGING
         !ct_results TYPE zif_abapgit_definitions=>ty_results_tt
@@ -39,7 +39,7 @@ CLASS zcl_abapgit_objects_check DEFINITION
         VALUE(rt_overwrite) TYPE zif_abapgit_definitions=>ty_overwrite_tt.
     CLASS-METHODS warning_package_adjust
       IMPORTING
-        !io_repo      TYPE REF TO zcl_abapgit_repo
+        !ii_repo      TYPE REF TO zif_abapgit_repo
         !it_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
       CHANGING
         !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
@@ -48,14 +48,14 @@ CLASS zcl_abapgit_objects_check DEFINITION
     CLASS-METHODS warning_package_find
       IMPORTING
         !it_results         TYPE zif_abapgit_definitions=>ty_results_tt
-        !io_repo            TYPE REF TO zcl_abapgit_repo
+        !ii_repo            TYPE REF TO zif_abapgit_repo
       RETURNING
         VALUE(rt_overwrite) TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS determine_transport_request
       IMPORTING
-        io_repo                     TYPE REF TO zcl_abapgit_repo
+        ii_repo                     TYPE REF TO zif_abapgit_repo
         iv_transport_type           TYPE zif_abapgit_definitions=>ty_transport_type
       RETURNING
         VALUE(rv_transport_request) TYPE trkorr.
@@ -81,7 +81,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
     warning_package_adjust(
       EXPORTING
-        io_repo      = io_repo
+        ii_repo      = ii_repo
         it_overwrite = is_checks-warning_package
       CHANGING
         ct_results   = ct_results ).
@@ -134,23 +134,23 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
           li_package TYPE REF TO zif_abapgit_sap_package.
 
     " get unfiltered status to evaluate properly which warnings are required
-    lt_results = zcl_abapgit_repo_status=>calculate( io_repo ).
+    lt_results = zcl_abapgit_repo_status=>calculate( ii_repo ).
 
     check_multiple_files( lt_results ).
 
     rs_checks-overwrite = warning_overwrite_find( lt_results ).
 
     rs_checks-warning_package = warning_package_find(
-      io_repo    = io_repo
+      ii_repo    = ii_repo
       it_results = lt_results ).
 
     IF lines( lt_results ) > 0.
-      li_package = zcl_abapgit_factory=>get_sap_package( io_repo->get_package( ) ).
+      li_package = zcl_abapgit_factory=>get_sap_package( ii_repo->get_package( ) ).
       rs_checks-transport-required = li_package->are_changes_recorded_in_tr_req( ).
       IF NOT rs_checks-transport-required IS INITIAL.
         rs_checks-transport-type = li_package->get_transport_type( ).
         rs_checks-transport-transport = determine_transport_request(
-                                            io_repo           = io_repo
+                                            ii_repo           = ii_repo
                                             iv_transport_type = rs_checks-transport-type ).
       ENDIF.
     ENDIF.
@@ -162,11 +162,11 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
     " Use transport from repo settings if maintained, or determine via user exit.
     " If transport keeps empty here, it'll requested later via popup.
-    rv_transport_request = io_repo->get_local_settings( )-transport_request.
+    rv_transport_request = ii_repo->get_local_settings( )-transport_request.
 
     gi_exit->determine_transport_request(
       EXPORTING
-        io_repo              = io_repo
+        ii_repo              = ii_repo
         iv_transport_type    = iv_transport_type
       CHANGING
         cv_transport_request = rv_transport_request ).
@@ -310,7 +310,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 * make sure to get the current status, as something might have changed in the meanwhile
     lt_overwrite = warning_package_find(
       it_results   = ct_results
-      io_repo      = io_repo ).
+      ii_repo      = ii_repo ).
 
     LOOP AT lt_overwrite ASSIGNING <ls_overwrite>.
 
@@ -351,8 +351,8 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     LOOP AT it_results ASSIGNING <ls_result> WHERE match IS INITIAL AND packmove IS INITIAL.
 
       lv_package = lo_folder_logic->path_to_package(
-        iv_top  = io_repo->get_package( )
-        io_dot  = io_repo->get_dot_abapgit( )
+        iv_top  = ii_repo->get_package( )
+        io_dot  = ii_repo->get_dot_abapgit( )
         iv_path = <ls_result>-path
         iv_create_if_not_exists = abap_false ).
 

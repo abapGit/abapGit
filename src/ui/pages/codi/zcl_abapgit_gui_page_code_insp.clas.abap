@@ -15,7 +15,7 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        io_repo                  TYPE REF TO zcl_abapgit_repo
+        ii_repo                  TYPE REF TO zif_abapgit_repo
         io_stage                 TYPE REF TO zcl_abapgit_stage OPTIONAL
         iv_check_variant         TYPE sci_chkv OPTIONAL
         iv_raise_when_no_results TYPE abap_bool DEFAULT abap_false
@@ -26,7 +26,7 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION
 
     METHODS constructor
       IMPORTING
-        io_repo                  TYPE REF TO zcl_abapgit_repo
+        ii_repo                  TYPE REF TO zif_abapgit_repo
         io_stage                 TYPE REF TO zcl_abapgit_stage OPTIONAL
         iv_check_variant         TYPE sci_chkv OPTIONAL
         iv_raise_when_no_results TYPE abap_bool DEFAULT abap_false
@@ -87,7 +87,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor( ).
-    mo_repo = io_repo.
+    mi_repo = ii_repo.
     mo_stage = io_stage.
     mv_check_variant = iv_check_variant.
     determine_check_variant( ).
@@ -106,7 +106,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        io_repo                  = io_repo
+        ii_repo                  = ii_repo
         io_stage                 = io_stage
         iv_check_variant         = iv_check_variant
         iv_raise_when_no_results = iv_raise_when_no_results.
@@ -122,7 +122,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    mv_check_variant = mo_repo->get_local_settings( )-code_inspector_check_variant.
+    mv_check_variant = mi_repo->get_local_settings( )-code_inspector_check_variant.
 
     IF mv_check_variant IS INITIAL.
       mv_check_variant = ask_user_for_check_variant( ).
@@ -142,7 +142,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
   METHOD is_stage_allowed.
 
     rv_is_stage_allowed = boolc( NOT (
-      mo_repo->get_local_settings( )-block_commit = abap_true AND has_inspection_errors( ) = abap_true ) ).
+      mi_repo->get_local_settings( )-block_commit = abap_true AND has_inspection_errors( ) = abap_true ) ).
 
   ENDMETHOD.
 
@@ -151,7 +151,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
     DATA li_code_inspector TYPE REF TO zif_abapgit_code_inspector.
 
-    li_code_inspector = zcl_abapgit_code_inspector=>get_code_inspector( mo_repo->get_package( ) ).
+    li_code_inspector = zcl_abapgit_code_inspector=>get_code_inspector( mi_repo->get_package( ) ).
 
     mt_result = li_code_inspector->run(
       iv_variant = |{ mv_check_variant }|
@@ -183,18 +183,18 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
 
     CASE ii_event->mv_action.
       WHEN c_actions-stage.
 
-        lo_repo_online ?= mo_repo.
+        li_repo_online ?= mi_repo.
 
         IF is_stage_allowed( ) = abap_true.
 
           rs_handled-page   = zcl_abapgit_gui_page_stage=>create(
-            io_repo       = lo_repo_online
-            iv_sci_result = status( ) ).
+            ii_repo_online = li_repo_online
+            iv_sci_result  = status( ) ).
 
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
@@ -206,13 +206,13 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
       WHEN c_actions-commit.
 
-        lo_repo_online ?= mo_repo.
+        li_repo_online ?= mi_repo.
 
         IF is_stage_allowed( ) = abap_true.
 
           rs_handled-page = zcl_abapgit_gui_page_commit=>create(
-            io_repo  = lo_repo_online
-            io_stage = mo_stage ).
+            ii_repo_online = li_repo_online
+            io_stage       = mo_stage ).
 
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
@@ -263,7 +263,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
       lv_opt = zif_abapgit_html=>c_html_opt-crossout.
     ENDIF.
 
-    IF mo_repo->is_offline( ) = abap_true.
+    IF mi_repo->is_offline( ) = abap_true.
       RETURN.
     ENDIF.
 
@@ -307,7 +307,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     ri_html->div(
       iv_class = 'repo'
       ii_content = zcl_abapgit_gui_chunk_lib=>render_repo_top(
-        io_repo        = mo_repo
+        ii_repo        = mi_repo
         iv_show_commit = abap_false ) ).
 
     IF mv_check_variant IS INITIAL.

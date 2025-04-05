@@ -15,7 +15,7 @@ INTERFACE zif_abapgit_data_deserializer
 
   METHODS deserialize_check
     IMPORTING
-      !io_repo         TYPE REF TO zcl_abapgit_repo
+      !ii_repo         TYPE REF TO zif_abapgit_repo
       !ii_config       TYPE REF TO zif_abapgit_data_config
     RETURNING
       VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks-customizing

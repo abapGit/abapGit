@@ -33,7 +33,7 @@ CLASS ltcl_validate_form DEFINITION FINAL FOR TESTING
     DATA:
       mo_cut                    TYPE REF TO zcl_abapgit_gui_page_sett_remo,
 
-      mo_repo                   TYPE REF TO zcl_abapgit_repo_online,
+      mi_repo_online            TYPE REF TO zif_abapgit_repo_online,
       mo_given_form_data        TYPE REF TO zcl_abapgit_string_map,
       mo_act_validation_log     TYPE REF TO zcl_abapgit_string_map,
 
@@ -127,14 +127,14 @@ CLASS ltcl_validate_form IMPLEMENTATION.
     ls_data-key = 1.
     ls_data-branch_name = 'main'.
 
-    CREATE OBJECT mo_repo EXPORTING is_data = ls_data.
+    CREATE OBJECT mi_repo_online TYPE zcl_abapgit_repo_online EXPORTING is_data = ls_data.
 
     CREATE OBJECT mo_given_form_data.
     mo_given_form_data->set(
         iv_key = zcl_abapgit_gui_page_sett_remo=>c_id-branch
         iv_val = 'main' ).
 
-    CREATE OBJECT mo_cut EXPORTING io_repo = mo_repo.
+    CREATE OBJECT mo_cut EXPORTING ii_repo = mi_repo_online.
 
   ENDMETHOD.
 

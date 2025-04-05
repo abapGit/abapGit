@@ -30,7 +30,7 @@ CLASS zcl_abapgit_repo_offline IMPLEMENTATION.
 
     lt_backup = mt_remote.
     super->reset_remote( ).
-    set_files_remote( lt_backup ).
+    mi_repo->set_files_remote( lt_backup ).
 
   ENDMETHOD.
 ENDCLASS.

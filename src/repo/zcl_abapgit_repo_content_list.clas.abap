@@ -5,7 +5,7 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
 
   PUBLIC SECTION.
     METHODS constructor
-      IMPORTING io_repo TYPE REF TO zcl_abapgit_repo.
+      IMPORTING ii_repo TYPE REF TO zif_abapgit_repo.
 
     METHODS list
       IMPORTING iv_path              TYPE string
@@ -28,7 +28,7 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
                  inactive   TYPE i VALUE 4,
                END OF c_sortkey.
 
-    DATA: mo_repo TYPE REF TO zcl_abapgit_repo,
+    DATA: mi_repo TYPE REF TO zif_abapgit_repo,
           mi_log  TYPE REF TO zif_abapgit_log.
 
     METHODS build_repo_items
@@ -123,7 +123,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
 
     lt_status = zcl_abapgit_repo_status=>calculate(
-      ii_repo = mo_repo
+      ii_repo = mi_repo
       ii_log  = mi_log ).
 
     LOOP AT lt_status ASSIGNING <ls_status>.
@@ -186,7 +186,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
     DATA lt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt.
 
-    lt_remote = mo_repo->get_files_remote( ).
+    lt_remote = mi_repo->get_files_remote( ).
 
     IF lines( lt_remote ) > lc_new_repo_size.
       " Less files means it's a new repo (with just readme and license, for example) which is ok
@@ -203,7 +203,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
 
   METHOD constructor.
-    mo_repo = io_repo.
+    mi_repo = ii_repo.
     CREATE OBJECT mi_log TYPE zcl_abapgit_log.
   ENDMETHOD.
 
@@ -246,7 +246,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
     ri_log = mi_log.
 
     "add warning and error messages from repo log
-    li_repo_log = mo_repo->get_log( ).
+    li_repo_log = mi_repo->get_log( ).
     IF li_repo_log IS BOUND.
       lt_repo_msg = li_repo_log->get_messages( ).
       LOOP AT lt_repo_msg REFERENCE INTO lr_repo_msg WHERE type CA 'EW'.
@@ -272,7 +272,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
     rt_repo_items = build_repo_items( ).
     check_repo_size( ).
 
-    IF mo_repo->has_remote_source( ) = abap_false.
+    IF mi_repo->has_remote_source( ) = abap_false.
       " If there's no remote source, ignore the item state
       LOOP AT rt_repo_items ASSIGNING <ls_repo_item>.
         CLEAR: <ls_repo_item>-changes, <ls_repo_item>-lstate, <ls_repo_item>-rstate.

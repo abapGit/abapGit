@@ -12,7 +12,7 @@ CLASS zcl_abapgit_gui_page_runit DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        !io_repo       TYPE REF TO zcl_abapgit_repo
+        !ii_repo       TYPE REF TO zif_abapgit_repo
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -20,7 +20,7 @@ CLASS zcl_abapgit_gui_page_runit DEFINITION
 
     METHODS constructor
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo
+        !ii_repo TYPE REF TO zif_abapgit_repo
       RAISING
         zcx_abapgit_exception.
 
@@ -39,7 +39,7 @@ CLASS zcl_abapgit_gui_page_runit DEFINITION
       END OF ty_key,
       ty_keys_tt TYPE STANDARD TABLE OF ty_key WITH DEFAULT KEY.
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo.
+    DATA mi_repo TYPE REF TO zif_abapgit_repo.
     DATA mv_summary TYPE string.
 
     METHODS build_tadir
@@ -77,7 +77,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     DATA ls_tadir LIKE LINE OF lt_tadir.
     DATA ls_row   LIKE LINE OF rt_tadir.
 
-    lt_tadir = mo_repo->get_tadir_objects( ).
+    lt_tadir = mi_repo->get_tadir_objects( ).
 
     LOOP AT lt_tadir INTO ls_tadir.
       CLEAR ls_row.
@@ -92,7 +92,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor( ).
-    mo_repo = io_repo.
+    mi_repo = ii_repo.
 
     TRY.
         CALL METHOD ('\PROGRAM=SAPLSAUCV_GUI_RUNNER\CLASS=PASSPORT')=>get.
@@ -108,7 +108,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_runit.
 
     TRY.
-        CREATE OBJECT lo_component EXPORTING io_repo = io_repo.
+        CREATE OBJECT lo_component EXPORTING ii_repo = ii_repo.
 
         ri_page = zcl_abapgit_gui_page_hoc=>create(
           iv_page_title         = |Unit Tests|
@@ -120,7 +120,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
         " Fallback as either SAPLSAUCV_GUI_RUNNER is not available in old releases
         " or passport=>get is private in newer releases NW >= 756
         ri_page = zcl_abapgit_gui_page_code_insp=>create(
-                    io_repo          = io_repo
+                    ii_repo          = ii_repo
                     iv_check_variant = 'SWF_ABAP_UNIT' ).
 
     ENDTRY.
@@ -294,7 +294,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( '<div class="repo">' ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( io_repo        = mo_repo
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( ii_repo        = mi_repo
                                                               iv_show_commit = abap_false ) ).
 
     lo_result = run( ).

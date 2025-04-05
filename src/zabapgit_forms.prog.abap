@@ -103,7 +103,7 @@ CLASS lcl_startup IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD set_start_repo_from_package.
-    DATA: lo_repo          TYPE REF TO zcl_abapgit_repo,
+    DATA: li_repo          TYPE REF TO zif_abapgit_repo,
           lt_r_package     TYPE RANGE OF devclass,
           ls_r_package     LIKE LINE OF lt_r_package,
           lt_superpackages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
@@ -137,14 +137,14 @@ CLASS lcl_startup IMPLEMENTATION.
     LOOP AT lt_repo_list ASSIGNING <lo_repo>.
 
       IF <lo_repo>->get_package( ) IN lt_r_package.
-        lo_repo ?= <lo_repo>.
+        li_repo ?= <lo_repo>.
         EXIT.
       ENDIF.
 
     ENDLOOP.
 
-    IF lo_repo IS BOUND.
-      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ).
+    IF li_repo IS BOUND.
+      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( li_repo->get_key( ) ).
     ENDIF.
   ENDMETHOD.
 

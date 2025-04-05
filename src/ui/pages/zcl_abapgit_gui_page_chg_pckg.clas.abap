@@ -11,7 +11,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        !io_repo       TYPE REF TO zcl_abapgit_repo
+        !ii_repo       TYPE REF TO zif_abapgit_repo
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -19,7 +19,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg DEFINITION
 
     METHODS constructor
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo
+        !ii_repo TYPE REF TO zif_abapgit_repo
       RAISING
         zcx_abapgit_exception.
 
@@ -47,7 +47,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg DEFINITION
       END OF ty_map,
       ty_mapping TYPE STANDARD TABLE OF ty_map WITH KEY old_package.
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo.
+    DATA mi_repo TYPE REF TO zif_abapgit_repo.
     DATA mo_form TYPE REF TO zcl_abapgit_html_form.
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
@@ -142,7 +142,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
       iv_old_package = iv_old_package
       iv_new_package = iv_new_package ).
 
-    lt_tadir = mo_repo->get_tadir_objects( ).
+    lt_tadir = mi_repo->get_tadir_objects( ).
 
     create_package_hierarchy( lt_mapping ).
 
@@ -200,17 +200,17 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor( ).
-    mo_repo = io_repo.
+    mi_repo = ii_repo.
     CREATE OBJECT mo_validation_log.
     CREATE OBJECT mo_form_data.
     mo_form = get_form_schema( ).
     mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
 
-    IF mo_repo->get_dot_abapgit( )->get_folder_logic( ) <> zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
+    IF mi_repo->get_dot_abapgit( )->get_folder_logic( ) <> zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
       zcx_abapgit_exception=>raise( 'Feature is only supported repositories with prefix folder logic' ).
     ENDIF.
 
-    IF zcl_abapgit_factory=>get_cts_api( )->is_chrec_possible_for_package( mo_repo->get_package( ) ) = abap_true.
+    IF zcl_abapgit_factory=>get_cts_api( )->is_chrec_possible_for_package( mi_repo->get_package( ) ) = abap_true.
       zcx_abapgit_exception=>raise( 'Feature is only supported local packages (no transport)' ).
     ENDIF.
 
@@ -223,7 +223,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        io_repo = io_repo.
+        ii_repo = ii_repo.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Change Repository Package'
@@ -316,7 +316,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_map> LIKE LINE OF rt_mapping.
 
-    IF mo_repo->get_local_settings( )-ignore_subpackages = abap_false.
+    IF mi_repo->get_local_settings( )-ignore_subpackages = abap_false.
       lt_old_packages = zcl_abapgit_factory=>get_sap_package( iv_old_package )->list_subpackages( ).
     ENDIF.
     INSERT iv_old_package INTO TABLE lt_old_packages.
@@ -345,7 +345,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
 
     mo_form_data->set(
       iv_key = c_id-old_package
-      iv_val = mo_repo->get_package( ) ).
+      iv_val = mi_repo->get_package( ) ).
 
     mo_form_data->set(
       iv_key = c_id-remove_old
@@ -365,7 +365,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
       <ls_checksum> LIKE LINE OF lt_checksums,
       <ls_map>      LIKE LINE OF it_mapping.
 
-    lv_key = mo_repo->get_key( ).
+    lv_key = mi_repo->get_key( ).
 
     CREATE OBJECT lo_checksums EXPORTING iv_repo_key = lv_key.
 
@@ -392,7 +392,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
       ls_meta        TYPE zif_abapgit_persistence=>ty_repo_xml,
       ls_change_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask.
 
-    lv_key = mo_repo->get_key( ).
+    lv_key = mi_repo->get_key( ).
     lo_persist = zcl_abapgit_persist_factory=>get_repo( ).
 
     TRY.

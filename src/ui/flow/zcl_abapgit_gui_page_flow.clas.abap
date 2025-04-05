@@ -79,12 +79,12 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
   METHOD refresh.
 
     DATA ls_feature LIKE LINE OF mt_features.
-    DATA lo_online  TYPE REF TO zcl_abapgit_repo_online.
+    DATA li_repo  TYPE REF TO zif_abapgit_repo.
 
 
     LOOP AT mt_features INTO ls_feature.
-      lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( ls_feature-repo-key ).
-      lo_online->refresh( ).
+      li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( ls_feature-repo-key ).
+      li_repo->refresh( ).
     ENDLOOP.
 
     CLEAR mt_features.
@@ -166,13 +166,13 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
   METHOD set_branch.
 
     DATA lv_branch TYPE string.
-    DATA lo_online TYPE REF TO zcl_abapgit_repo_online.
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
 
     IF iv_branch IS NOT INITIAL.
       lv_branch = 'refs/heads/' && iv_branch.
-      lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-      IF lo_online->get_selected_branch( ) <> lv_branch.
-        lo_online->select_branch( lv_branch ).
+      li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+      IF li_repo_online->get_selected_branch( ) <> lv_branch.
+        li_repo_online->select_branch( lv_branch ).
       ENDIF.
     ENDIF.
 
@@ -186,7 +186,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA lo_filter  TYPE REF TO lcl_filter.
     DATA lt_filter  TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA lv_index   TYPE i.
-    DATA lo_online  TYPE REF TO zcl_abapgit_repo_online.
+    DATA li_repo_online  TYPE REF TO zif_abapgit_repo_online.
     DATA ls_feature LIKE LINE OF mt_features.
     DATA ls_event_result TYPE zif_abapgit_flow_exit=>ty_event_result.
 
@@ -209,7 +209,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         lv_key = ii_event->query( )->get( 'KEY' ).
         lv_index = ii_event->query( )->get( 'INDEX' ).
         lv_branch = ii_event->query( )->get( 'BRANCH' ).
-        lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
 
         READ TABLE mt_features INTO ls_feature INDEX lv_index.
         ASSERT sy-subrc = 0.
@@ -227,8 +227,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
         rs_handled-page = zcl_abapgit_gui_page_stage=>create(
           ii_force_refresh = abap_false
-          io_repo       = lo_online
-          ii_obj_filter = lo_filter ).
+          ii_repo_online   = li_repo_online
+          ii_obj_filter    = lo_filter ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
 
@@ -237,7 +237,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         lv_key = ii_event->query( )->get( 'KEY' ).
         lv_index = ii_event->query( )->get( 'INDEX' ).
         lv_branch = ii_event->query( )->get( 'BRANCH' ).
-        lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
 
         READ TABLE mt_features INTO ls_feature INDEX lv_index.
         ASSERT sy-subrc = 0.
@@ -254,7 +254,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
           iv_key    = lv_key ).
 
         rs_handled-page = zcl_abapgit_gui_page_pull=>create(
-          io_repo       = lo_online
+          ii_repo       = li_repo_online
           iv_trkorr     = ls_feature-transport-trkorr
           ii_obj_filter = lo_filter ).
 

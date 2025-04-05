@@ -92,5 +92,63 @@ INTERFACE zif_abapgit_repo
   METHODS has_remote_source
     RETURNING
       VALUE(rv_yes) TYPE abap_bool .
+  METHODS get_log
+    RETURNING
+      VALUE(ri_log) TYPE REF TO zif_abapgit_log .
+  METHODS create_new_log
+    IMPORTING
+      iv_title      TYPE string OPTIONAL
+    RETURNING
+      VALUE(ri_log) TYPE REF TO zif_abapgit_log .
+  METHODS get_dot_apack
+    RETURNING
+      VALUE(ro_dot_apack) TYPE REF TO zcl_abapgit_apack_reader
+    RAISING
+      zcx_abapgit_exception.
+  METHODS delete_checks
+    RETURNING
+      VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_delete_checks
+    RAISING
+      zcx_abapgit_exception .
+  METHODS set_files_remote
+    IMPORTING
+      it_files TYPE zif_abapgit_git_definitions=>ty_files_tt .
+  METHODS get_unsupported_objects_local
+    RETURNING
+      VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_items_tt
+    RAISING
+      zcx_abapgit_exception .
+  METHODS set_local_settings
+    IMPORTING
+      is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
+    RAISING
+      zcx_abapgit_exception .
+  METHODS switch_repo_type
+    IMPORTING
+      iv_offline TYPE abap_bool
+    RAISING
+      zcx_abapgit_exception .
+  METHODS refresh_local_object
+    IMPORTING
+      iv_obj_type TYPE tadir-object
+      iv_obj_name TYPE tadir-obj_name
+    RAISING
+      zcx_abapgit_exception .
+  METHODS refresh_local_objects
+    RAISING
+      zcx_abapgit_exception .
+  METHODS get_data_config
+    RETURNING
+      VALUE(ri_config) TYPE REF TO zif_abapgit_data_config
+    RAISING
+      zcx_abapgit_exception .
+  METHODS bind_listener
+    IMPORTING
+      ii_listener TYPE REF TO zif_abapgit_repo_listener .
+  METHODS remove_ignored_files
+    CHANGING
+      ct_files TYPE zif_abapgit_git_definitions=>ty_files_tt
+    RAISING
+      zcx_abapgit_exception .
 
 ENDINTERFACE.
