@@ -125,13 +125,13 @@ INTERFACE zif_abapgit_repo
       zcx_abapgit_exception .
   METHODS switch_repo_type
     IMPORTING
-       iv_offline TYPE abap_bool
+      iv_offline TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
   METHODS refresh_local_object
     IMPORTING
-       iv_obj_type TYPE tadir-object
-       iv_obj_name TYPE tadir-obj_name
+      iv_obj_type TYPE tadir-object
+      iv_obj_name TYPE tadir-obj_name
     RAISING
       zcx_abapgit_exception .
   METHODS refresh_local_objects
@@ -139,15 +139,15 @@ INTERFACE zif_abapgit_repo
       zcx_abapgit_exception .
   METHODS get_data_config
     RETURNING
-      value(ri_config) TYPE REF TO zif_abapgit_data_config
+      VALUE(ri_config) TYPE REF TO zif_abapgit_data_config
     RAISING
       zcx_abapgit_exception .
   METHODS bind_listener
     IMPORTING
-       ii_listener TYPE REF TO zif_abapgit_repo_listener .
+      ii_listener TYPE REF TO zif_abapgit_repo_listener .
   METHODS remove_ignored_files
     CHANGING
-       ct_files TYPE zif_abapgit_git_definitions=>ty_files_tt
+      ct_files TYPE zif_abapgit_git_definitions=>ty_files_tt
     RAISING
       zcx_abapgit_exception .
 

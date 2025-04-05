@@ -140,7 +140,9 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
       lt_branches     TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
       lv_display_name TYPE string.
 
-    lt_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( mi_repo_online->get_url( ) )->get_branches_only( ).
+    lt_branches = zcl_abapgit_git_factory=>get_git_transport(
+                                        )->branches( mi_repo_online->get_url( )
+                                        )->get_branches_only( ).
 
     READ TABLE lt_branches WITH TABLE KEY name_key
                            COMPONENTS name = iv_name
