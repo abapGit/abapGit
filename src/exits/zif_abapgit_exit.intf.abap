@@ -8,7 +8,7 @@ INTERFACE zif_abapgit_exit PUBLIC.
 
   TYPES ty_ci_repos TYPE STANDARD TABLE OF ty_ci_repo WITH DEFAULT KEY.
 
-  TYPES ty_object_types TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY.
+  TYPES ty_object_types TYPE HASHED TABLE OF tadir-object WITH UNIQUE KEY table_line.
 
   TYPES:
     BEGIN OF ty_class_key,
