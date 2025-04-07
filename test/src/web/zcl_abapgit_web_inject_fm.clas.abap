@@ -13,14 +13,16 @@ CLASS zcl_abapgit_web_inject_fm IMPLEMENTATION.
 
     DATA lt_deps TYPE if_function_test_environment=>tt_function_dependencies.
     DATA li_env  TYPE REF TO if_function_test_environment.
+    DATA lo_handler TYPE REF TO zcl_abapgit_web_inject_fm.
 
 
     INSERT 'ENQUEUE_EZABAPGIT' INTO TABLE lt_deps.
     INSERT 'DEQUEUE_EZABAPGIT' INTO TABLE lt_deps.
     li_env = cl_function_test_environment=>create( lt_deps ).
 
-    li_env->get_double( 'ENQUEUE_EZABAPGIT' )->configure_call( )->ignore_all_parameters( )->then_answer( me ).
-    li_env->get_double( 'DEQUEUE_EZABAPGIT' )->configure_call( )->ignore_all_parameters( )->then_answer( me ).
+    CREATE OBJECT lo_handler.
+    li_env->get_double( 'ENQUEUE_EZABAPGIT' )->configure_call( )->ignore_all_parameters( )->then_answer( lo_handler ).
+    li_env->get_double( 'DEQUEUE_EZABAPGIT' )->configure_call( )->ignore_all_parameters( )->then_answer( lo_handler ).
 
   ENDMETHOD.
 
