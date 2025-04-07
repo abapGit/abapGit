@@ -41,9 +41,6 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
-  METHOD get_html_viewer.
-    RETURN. " todo, implement method
-  ENDMETHOD.
 
 
   METHOD get_asset_manager.
