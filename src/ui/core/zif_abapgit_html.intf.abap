@@ -111,6 +111,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_id                 TYPE string OPTIONAL
       !iv_class              TYPE string OPTIONAL
       !iv_hint               TYPE string OPTIONAL
+      !iv_style              TYPE string OPTIONAL
       !iv_format_single_line TYPE abap_bool DEFAULT abap_false
       !is_data_attr          TYPE ty_data_attr OPTIONAL
       !it_data_attrs         TYPE ty_data_attrs OPTIONAL
@@ -124,10 +125,11 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_id                 TYPE string OPTIONAL
       !iv_class              TYPE string OPTIONAL
       !iv_hint               TYPE string OPTIONAL
+      !iv_style              TYPE string OPTIONAL
       !iv_format_single_line TYPE abap_bool DEFAULT abap_true
       !is_data_attr          TYPE ty_data_attr OPTIONAL
       !it_data_attrs         TYPE ty_data_attrs OPTIONAL
-      PREFERRED PARAMETER iv_content
+        PREFERRED PARAMETER iv_content
     RETURNING
       VALUE(ri_self)         TYPE REF TO zif_abapgit_html.
 
@@ -138,10 +140,11 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_id                 TYPE string OPTIONAL
       !iv_class              TYPE string OPTIONAL
       !iv_hint               TYPE string OPTIONAL
+      !iv_style              TYPE string OPTIONAL
       !iv_format_single_line TYPE abap_bool DEFAULT abap_true
       !is_data_attr          TYPE ty_data_attr OPTIONAL
       !it_data_attrs         TYPE ty_data_attrs OPTIONAL
-      PREFERRED PARAMETER iv_content
+        PREFERRED PARAMETER iv_content
     RETURNING
       VALUE(ri_self)         TYPE REF TO zif_abapgit_html.
 
@@ -151,9 +154,10 @@ INTERFACE zif_abapgit_html PUBLIC.
       !ii_content    TYPE REF TO zif_abapgit_html OPTIONAL
       !iv_id         TYPE string OPTIONAL
       !iv_class      TYPE string OPTIONAL
+      !iv_style      TYPE string OPTIONAL
       !is_data_attr  TYPE ty_data_attr OPTIONAL
       !it_data_attrs TYPE ty_data_attrs OPTIONAL
-      PREFERRED PARAMETER iv_content
+        PREFERRED PARAMETER iv_content
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
 
