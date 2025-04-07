@@ -75,6 +75,8 @@ CLASS zcl_abapgit_web IMPLEMENTATION.
 
     DATA lo_environment TYPE REF TO zcl_abapgit_web_environment.
 
+    zcl_abapgit_web_inject_fm=>inject( ).
+
     CREATE OBJECT lo_environment.
     zcl_abapgit_injector=>set_environment( lo_environment ).
 
@@ -83,6 +85,7 @@ CLASS zcl_abapgit_web IMPLEMENTATION.
         ii_request  = gi_request
         ii_response = gi_response.
     zcl_abapgit_ui_injector=>set_html_viewer( go_viewer ).
+
 
     go_gui = zcl_abapgit_ui_factory=>get_gui( ).
 
