@@ -5,16 +5,28 @@ CLASS zcl_abapgit_repo_offline DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-  PROTECTED SECTION.
+    METHODS constructor
+      IMPORTING
+        is_data TYPE zif_abapgit_persistence=>ty_repo.
 
+  PROTECTED SECTION.
     METHODS reset_remote
         REDEFINITION .
+
   PRIVATE SECTION.
+    DATA mi_super TYPE REF TO zif_abapgit_repo .
+
 ENDCLASS.
 
 
-
 CLASS zcl_abapgit_repo_offline IMPLEMENTATION.
+
+  METHOD constructor.
+
+    super->constructor( is_data = is_data ).
+    mi_super = me.
+
+  ENDMETHOD.
 
 
   METHOD reset_remote.
@@ -30,7 +42,8 @@ CLASS zcl_abapgit_repo_offline IMPLEMENTATION.
 
     lt_backup = mt_remote.
     super->reset_remote( ).
-    mi_repo->set_files_remote( lt_backup ).
+    mi_super->set_files_remote( lt_backup ).
 
   ENDMETHOD.
+
 ENDCLASS.
