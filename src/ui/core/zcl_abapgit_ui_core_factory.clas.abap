@@ -1,49 +1,25 @@
-CLASS zcl_abapgit_ui_factory DEFINITION
+CLASS zcl_abapgit_ui_core_factory DEFINITION
   PUBLIC
   CREATE PRIVATE
-  GLOBAL FRIENDS zcl_abapgit_ui_injector .
+  GLOBAL FRIENDS zcl_abapgit_ui_core_injector .
 
   PUBLIC SECTION.
 
-    CLASS-METHODS get_asset_manager
-      RETURNING
-        VALUE(ri_asset_man) TYPE REF TO zif_abapgit_gui_asset_manager
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS get_popups
-      RETURNING
-        VALUE(ri_popups) TYPE REF TO zif_abapgit_popups .
-    CLASS-METHODS get_gui
-      RETURNING
-        VALUE(ro_gui) TYPE REF TO zcl_abapgit_gui
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS get_gui_services
-      RETURNING
-        VALUE(ri_gui_services) TYPE REF TO zif_abapgit_gui_services
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS get_frontend_services
+    CLASS-METHODS get_html_viewer
       IMPORTING
-        !iv_disable_gui   TYPE abap_bool DEFAULT abap_false
+        !io_container           TYPE REF TO cl_gui_container DEFAULT cl_gui_container=>screen0
+        !iv_disable_query_table TYPE abap_bool DEFAULT abap_true
       RETURNING
-        VALUE(ri_fe_serv) TYPE REF TO zif_abapgit_frontend_services .
-
+        VALUE(ri_viewer)        TYPE REF TO zif_abapgit_html_viewer .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CLASS-DATA gi_popups TYPE REF TO zif_abapgit_popups .
-    CLASS-DATA go_gui TYPE REF TO zcl_abapgit_gui .
-    CLASS-DATA gi_fe_services TYPE REF TO zif_abapgit_frontend_services .
-    CLASS-DATA gi_gui_services TYPE REF TO zif_abapgit_gui_services .
+    CLASS-DATA gi_html_viewer TYPE REF TO zif_abapgit_html_viewer .
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
-  METHOD get_html_viewer.
-    RETURN. " todo, implement method
-  ENDMETHOD.
 
 
   METHOD get_asset_manager.
@@ -163,6 +139,20 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
       gi_gui_services ?= get_gui( ).
     ENDIF.
     ri_gui_services = gi_gui_services.
+  ENDMETHOD.
+
+
+  METHOD get_html_viewer.
+
+    IF gi_html_viewer IS NOT BOUND.
+      CREATE OBJECT gi_html_viewer TYPE zcl_abapgit_html_viewer_gui
+        EXPORTING
+          io_container           = io_container
+          iv_disable_query_table = iv_disable_query_table.
+    ENDIF.
+
+    ri_viewer = gi_html_viewer.
+
   ENDMETHOD.
 
 
