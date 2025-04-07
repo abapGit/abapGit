@@ -14,7 +14,8 @@ CLASS zcl_abapgit_web_environment IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~check_parallel_processing.
-    ASSERT 1 = 'decoupled'.
+* the group doesnt exist
+    rv_checked = abap_false.
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~get_available_user_sessions.

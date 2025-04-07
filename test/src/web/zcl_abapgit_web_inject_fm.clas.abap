@@ -20,6 +20,7 @@ CLASS zcl_abapgit_web_inject_fm IMPLEMENTATION.
     INSERT 'ENQUEUE_EZABAPGIT' INTO TABLE lt_deps.
     INSERT 'DEQUEUE_EZABAPGIT' INTO TABLE lt_deps.
     INSERT 'SAPGUI_PROGRESS_INDICATOR' INTO TABLE lt_deps.
+    INSERT 'TR_OBJECT_TABLE' INTO TABLE lt_deps.
     li_env = cl_function_test_environment=>create( lt_deps ).
 
     CREATE OBJECT lo_handler.
