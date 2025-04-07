@@ -73,11 +73,15 @@ CLASS zcl_abapgit_web IMPLEMENTATION.
 
   METHOD initialize.
 
+    DATA lo_environment TYPE REF TO zcl_abapgit_web_environment.
+
+    CREATE OBJECT lo_environment.
+    zcl_abapgit_injector=>set_environment( lo_environment ).
+
     CREATE OBJECT go_viewer
       EXPORTING
         ii_request  = gi_request
         ii_response = gi_response.
-
     zcl_abapgit_ui_injector=>set_html_viewer( go_viewer ).
 
     go_gui = zcl_abapgit_ui_factory=>get_gui( ).
