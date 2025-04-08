@@ -17,7 +17,7 @@ CLASS zcl_abapgit_sots_handler DEFINITION
 
     CLASS-METHODS read_sots
       IMPORTING
-        !iv_pgmid       TYPE pgmid DEFAULT 'R3TR'
+        !iv_pgmid       TYPE tadir-pgmid DEFAULT 'R3TR'
         !iv_object      TYPE trobjtype
         !iv_obj_name    TYPE csequence
         !io_xml         TYPE REF TO zif_abapgit_xml_output OPTIONAL
@@ -45,7 +45,7 @@ CLASS zcl_abapgit_sots_handler DEFINITION
 
     CLASS-METHODS delete_sots
       IMPORTING
-        !iv_pgmid    TYPE pgmid DEFAULT 'R3TR'
+        !iv_pgmid    TYPE tadir-pgmid DEFAULT 'R3TR'
         !iv_object   TYPE trobjtype
         !iv_obj_name TYPE csequence
       RAISING
@@ -55,7 +55,7 @@ CLASS zcl_abapgit_sots_handler DEFINITION
 
     CLASS-METHODS get_sots_usage
       IMPORTING
-        !iv_pgmid          TYPE pgmid
+        !iv_pgmid          TYPE tadir-pgmid
         !iv_object         TYPE trobjtype
         !iv_obj_name       TYPE csequence
       RETURNING
