@@ -1,7 +1,6 @@
 CLASS zcl_abapgit_code_inspector DEFINITION
   PUBLIC
-  CREATE PROTECTED
-  GLOBAL FRIENDS zcl_abapgit_factory .
+  CREATE PROTECTED.
 
   PUBLIC SECTION.
 
