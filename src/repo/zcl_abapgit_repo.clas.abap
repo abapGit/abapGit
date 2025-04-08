@@ -117,7 +117,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       EXPORTING
         io_dot_abapgit = mi_me->get_dot_abapgit( ).
 
-    IF lo_abapgit_abap_language_vers->is_import_allowed( zif_abapgit_repo~ms_data-package ) = abap_false.
+    IF lo_abapgit_abap_language_vers->is_import_allowed( mi_me->ms_data-package ) = abap_false.
       lv_text = |Repository cannot be imported. | &&
                 |ABAP Language Version of linked package is not compatible with repository settings.|.
       zcx_abapgit_exception=>raise( lv_text ).
@@ -243,7 +243,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       CATCH zcx_abapgit_exception INTO lx_error.
         " Ensure to reset default transport request task
         zcl_abapgit_factory=>get_default_transport( )->reset( ).
-        zif_abapgit_repo~refresh( iv_drop_log = abap_false ).
+        mi_me->refresh( iv_drop_log = abap_false ).
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
@@ -256,7 +256,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
 
-    zif_abapgit_repo~get_files_remote( ).
+    mi_me->get_files_remote( ).
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
       WITH KEY file_path
@@ -296,7 +296,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~get_dot_apack.
     IF mo_apack_reader IS NOT BOUND.
-      mo_apack_reader = zcl_abapgit_apack_reader=>create_instance( zif_abapgit_repo~ms_data-package ).
+      mo_apack_reader = zcl_abapgit_apack_reader=>create_instance( mi_me->ms_data-package ).
     ENDIF.
 
     ro_dot_apack = mo_apack_reader.
@@ -317,7 +317,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_tadir>  LIKE LINE OF lt_tadir,
                    <ls_object> LIKE LINE OF rt_objects.
 
-    lt_tadir = zif_abapgit_repo~get_tadir_objects( ).
+    lt_tadir = mi_me->get_tadir_objects( ).
 
     lt_supported_types = zcl_abapgit_objects=>supported_list( ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
@@ -346,9 +346,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     DATA ls_meta_slug TYPE zif_abapgit_persistence=>ty_repo_xml.
 
     IF mi_listener IS BOUND.
-      MOVE-CORRESPONDING zif_abapgit_repo~ms_data TO ls_meta_slug.
+      MOVE-CORRESPONDING mi_me->ms_data TO ls_meta_slug.
       mi_listener->on_meta_change(
-        iv_key         = zif_abapgit_repo~ms_data-key
+        iv_key         = mi_me->ms_data-key
         is_meta        = ls_meta_slug
         is_change_mask = is_change_mask ).
     ENDIF.
@@ -364,7 +364,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       lt_new_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt,
       lo_serialize       TYPE REF TO zcl_abapgit_serialize.
 
-    lt_tadir = zif_abapgit_repo~get_tadir_objects( ).
+    lt_tadir = mi_me->get_tadir_objects( ).
 
     DELETE mt_local WHERE item-obj_type = iv_obj_type
                       AND item-obj_name = iv_obj_name.
@@ -382,7 +382,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     CREATE OBJECT lo_serialize.
     lt_new_local_files = lo_serialize->serialize(
-      iv_package = zif_abapgit_repo~ms_data-package
+      iv_package = mi_me->ms_data-package
       it_tadir   = lt_tadir ).
 
     INSERT LINES OF lt_new_local_files INTO TABLE mt_local.
@@ -393,7 +393,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD zif_abapgit_repo~refresh_local_objects.
 
     mv_request_local_refresh = abap_true.
-    zif_abapgit_repo~get_files_local( ).
+    mi_me->get_files_local( ).
 
   ENDMETHOD.
 
@@ -405,7 +405,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_files> LIKE LINE OF ct_files.
 
-    lo_dot = zif_abapgit_repo~get_dot_abapgit( ).
+    lo_dot = mi_me->get_dot_abapgit( ).
 
     " Skip ignored files
     LOOP AT ct_files ASSIGNING <ls_files>.

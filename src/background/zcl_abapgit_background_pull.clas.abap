@@ -51,7 +51,7 @@ CLASS zcl_abapgit_background_pull IMPLEMENTATION.
 
     " pass decisions to delete
     zcl_abapgit_services_repo=>delete_unnecessary_objects(
-      ii_repo   = ii_repo_online
+      ii_repo   = li_repo
       is_checks = ls_checks
       ii_log    = ii_log ).
 
