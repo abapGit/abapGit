@@ -137,7 +137,7 @@ CLASS lcl_startup IMPLEMENTATION.
     LOOP AT lt_repo_list ASSIGNING <lo_repo>.
 
       IF <lo_repo>->get_package( ) IN lt_r_package.
-        li_repo ?= <lo_repo>.
+        li_repo = <lo_repo>.
         EXIT.
       ENDIF.
 

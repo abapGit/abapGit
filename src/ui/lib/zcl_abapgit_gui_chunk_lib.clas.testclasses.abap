@@ -112,7 +112,7 @@ CLASS ltd_repo_srv IMPLEMENTATION.
     DATA lo_abapgit_repo TYPE REF TO zif_abapgit_repo.
 
     LOOP AT mt_repositories INTO lo_test_double_repo.
-      lo_abapgit_repo ?= lo_test_double_repo.
+      lo_abapgit_repo = lo_test_double_repo.
       APPEND lo_test_double_repo TO rt_list.
     ENDLOOP.
   ENDMETHOD.

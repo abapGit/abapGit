@@ -587,7 +587,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'new_offline not found' ).
     ENDTRY.
 
-    ri_repo ?= instantiate_and_add( ls_repo ).
+    ri_repo = instantiate_and_add( ls_repo ).
 
     " Local Settings
     IF ls_repo-local_settings-ignore_subpackages <> iv_ign_subpkg.

@@ -201,7 +201,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     mo_form = get_form_schema( ).
     mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
 
-    mi_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     mi_config = mi_repo->get_data_config( ).
 
   ENDMETHOD.

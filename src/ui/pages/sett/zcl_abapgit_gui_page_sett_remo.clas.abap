@@ -730,7 +730,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     IF ls_settings_new-offline <> ms_settings_snapshot-offline.
       " Remember key, switch, retrieve new instance (todo, refactor #2244)
       mi_repo->switch_repo_type( ls_settings_new-offline ).
-      mi_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mi_repo->get_key( ) ).
+      mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mi_repo->get_key( ) ).
     ENDIF.
 
     IF mi_repo->is_offline( ) = abap_false.
