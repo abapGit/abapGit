@@ -74,11 +74,15 @@ CLASS zcl_abapgit_web IMPLEMENTATION.
   METHOD initialize.
 
     DATA lo_environment TYPE REF TO zcl_abapgit_web_environment.
+    DATA lo_cts_api TYPE REF TO zcl_abapgit_web_cts_api.
 
     zcl_abapgit_web_inject_fm=>inject( ).
 
     CREATE OBJECT lo_environment.
     zcl_abapgit_injector=>set_environment( lo_environment ).
+
+    CREATE OBJECT lo_cts_api.
+    zcl_abapgit_injector=>set_cts_api( lo_cts_api ).
 
     CREATE OBJECT go_viewer
       EXPORTING
