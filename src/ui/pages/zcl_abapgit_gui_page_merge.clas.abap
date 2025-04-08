@@ -13,7 +13,7 @@ CLASS zcl_abapgit_gui_page_merge DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        ii_repo        TYPE REF TO zif_abapgit_repo_online
+        ii_repo_online TYPE REF TO zif_abapgit_repo_online
         iv_source      TYPE string
         iv_target      TYPE string
       RETURNING
@@ -79,7 +79,7 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        ii_repo_online = ii_repo
+        ii_repo_online = ii_repo_online
         iv_source      = iv_source
         iv_target      = iv_target.
 

@@ -161,9 +161,9 @@ CLASS zcl_abapgit_gui_page_merge_sel IMPLEMENTATION.
         ENDIF.
 
         rs_handled-page  = zcl_abapgit_gui_page_merge=>create(
-          ii_repo   = mi_repo_online
-          iv_source = mo_form_data->get( c_id-source )
-          iv_target = mo_form_data->get( c_id-target ) ).
+            ii_repo_online = mi_repo_online
+            iv_source      = mo_form_data->get( c_id-source )
+            iv_target      = mo_form_data->get( c_id-target ) ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
