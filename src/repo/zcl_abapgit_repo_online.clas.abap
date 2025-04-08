@@ -369,14 +369,14 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~get_files_remote.
     fetch_remote( ).
-    rt_files = super->zif_abapgit_repo~get_files_remote(
+    rt_files = super->get_files_remote(
       ii_obj_filter   = ii_obj_filter
       iv_ignore_files = iv_ignore_files ).
   ENDMETHOD.
 
 
   METHOD zif_abapgit_repo~get_name.
-    rv_name = super->zif_abapgit_repo~get_name( ).
+    rv_name = super->get_name( ).
     IF rv_name IS INITIAL.
       TRY.
           rv_name = zcl_abapgit_url=>name( ms_data-url ).
