@@ -163,7 +163,7 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
 
       TRY.
           li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( <ls_list>-key ).
-          li_repo_online ?= li_repo_online.
+          li_repo_online ?= li_repo.
           lv_repo_name = li_repo->get_name( ).
           WRITE: / <ls_list>-method, lv_repo_name.
 

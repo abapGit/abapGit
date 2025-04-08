@@ -178,7 +178,7 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
 
     IF lines( ls_files-remote ) > 0.
       push_deletions( ii_repo_online  = ii_repo_online
-                      is_files = ls_files ).
+                      is_files        = ls_files ).
     ENDIF.
 
   ENDMETHOD.

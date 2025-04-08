@@ -127,10 +127,10 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     super->constructor( ).
 
-    mi_repo_online       = ii_repo_online.
-    mo_stage      = io_stage.
-    mt_stage      = mo_stage->get_all( ).
-    mv_sci_result = iv_sci_result.
+    mi_repo_online = ii_repo_online.
+    mo_stage       = io_stage.
+    mt_stage       = mo_stage->get_all( ).
+    mv_sci_result  = iv_sci_result.
 
     " Get settings from DB
     mo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).

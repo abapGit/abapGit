@@ -380,13 +380,13 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     lv_sci_result = zif_abapgit_definitions=>c_sci_result-no_run.
 
+    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+
     TRY.
-        li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        li_repo_online ?= li_repo.
       CATCH cx_sy_move_cast_error INTO lx_error.
         zcx_abapgit_exception=>raise( `Staging is only possible for online repositories.` ).
     ENDTRY.
-
-    li_repo = li_repo_online.
 
     IF li_repo_online->get_selected_branch( ) CP zif_abapgit_git_definitions=>c_git_branch-tags.
       zcx_abapgit_exception=>raise( |You are working on a tag, must be on branch| ).
@@ -398,7 +398,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
       TRY.
           ri_page = zcl_abapgit_gui_page_code_insp=>create(
-            ii_repo                  = li_repo_online
+            ii_repo                  = li_repo
             iv_raise_when_no_results = abap_true ).
 
         CATCH zcx_abapgit_exception.
@@ -491,7 +491,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     lt_r_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_select_wb_tc_tr_and_tsk( ).
 
-    li_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     CREATE OBJECT ro_filter.
     ro_filter->set_filter_values( iv_package  = li_repo->get_package( )
@@ -658,7 +658,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     lv_key = ii_event->query( )->get( 'KEY' ).
     IF lv_key IS NOT INITIAL.
-      li_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+      li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
     ENDIF.
 
     CASE ii_event->mv_action.
@@ -816,7 +816,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     DATA lv_xstr             TYPE xstring.
 
     lt_r_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_select_wb_tc_tr_and_tsk( ).
-    li_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     li_repo->refresh( ).
     CREATE OBJECT lo_obj_filter_trans.
     lo_obj_filter_trans->set_filter_values( iv_package  = li_repo->get_package( )
@@ -854,7 +854,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-zip_import                       " Import repo from ZIP
         OR zif_abapgit_definitions=>c_action-rfc_compare.                     " Compare repo via RFC
 
-        li_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
 
         IF ii_event->mv_action = zif_abapgit_definitions=>c_action-zip_import.
           lv_path = zcl_abapgit_ui_factory=>get_frontend_services( )->show_file_open_dialog(
@@ -904,7 +904,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
             rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
         ENDCASE.
       WHEN zif_abapgit_definitions=>c_action-zip_export.                      " Export repo as ZIP
-        li_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         lv_xstr = zcl_abapgit_zip=>encode_files( li_repo->get_files_local( ) ).
         file_download( iv_package = li_repo->get_package( )
                        iv_xstr    = lv_xstr ).
@@ -922,7 +922,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         rs_handled-page  = zcl_abapgit_gui_page_ex_object=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-where_used.
-        li_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         rs_handled-page  = zcl_abapgit_gui_page_whereused=>create( ii_repo = li_repo ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
     ENDCASE.

@@ -13,7 +13,7 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        ii_repo        TYPE REF TO zif_abapgit_repo_online
+        ii_repo_online TYPE REF TO zif_abapgit_repo_online
         io_merge_page  TYPE REF TO zcl_abapgit_gui_page_merge
         io_merge       TYPE REF TO zif_abapgit_merge
       RETURNING
@@ -23,9 +23,9 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
 
     METHODS constructor
       IMPORTING
-        ii_repo       TYPE REF TO zif_abapgit_repo_online
-        io_merge_page TYPE REF TO zcl_abapgit_gui_page_merge
-        io_merge      TYPE REF TO zif_abapgit_merge
+        ii_repo_online TYPE REF TO zif_abapgit_repo_online
+        io_merge_page  TYPE REF TO zcl_abapgit_gui_page_merge
+        io_merge       TYPE REF TO zif_abapgit_merge
       RAISING
         zcx_abapgit_exception.
 
@@ -146,7 +146,7 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
 
     super->constructor( ).
 
-    mi_repo_online = ii_repo.
+    mi_repo_online = ii_repo_online.
 
     mo_merge_page = io_merge_page.
     mo_merge = io_merge.
@@ -163,9 +163,9 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        ii_repo       = ii_repo
-        io_merge_page = io_merge_page
-        io_merge      = io_merge.
+        ii_repo_online = ii_repo_online
+        io_merge_page  = io_merge_page
+        io_merge       = io_merge.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title         = 'Resolve Merge Conflicts'

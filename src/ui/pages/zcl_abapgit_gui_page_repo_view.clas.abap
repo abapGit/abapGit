@@ -42,7 +42,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
   PRIVATE SECTION.
 
     DATA mi_repo TYPE REF TO zif_abapgit_repo .
-    DATA mi_repo_aggregated_state TYPE REF TO zcl_abapgit_repo_item_state.
+    DATA mo_repo_aggregated_state TYPE REF TO zcl_abapgit_repo_item_state.
     DATA mv_connection_error TYPE abap_bool.
     DATA mv_cur_dir TYPE string .
     DATA mv_hide_files TYPE abap_bool .
@@ -431,7 +431,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     IF mi_repo->is_offline( ) = abap_false.
       " online repo
 
-      IF mi_repo_aggregated_state->is_unchanged( ) = abap_false. " Any changes
+      IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " Any changes
         ro_toolbar->add( iv_txt = 'Pull'
                          iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?key={ mv_key }|
                          iv_opt = get_crossout( iv_protected = abap_true
@@ -459,7 +459,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ELSE.
       " offline repo
 
-      IF mi_repo->has_remote_source( ) = abap_true AND mi_repo_aggregated_state->is_unchanged( ) = abap_false.
+      IF mi_repo->has_remote_source( ) = abap_true AND mo_repo_aggregated_state->is_unchanged( ) = abap_false.
         ro_toolbar->add( iv_txt = 'Pull <sup>zip</sup>'
                          iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
@@ -614,7 +614,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         lo_persistence_user = zcl_abapgit_persistence_user=>get_instance( ).
 
         mv_key = iv_key.
-        mi_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+        mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
         mv_cur_dir = '/'. " Root
 
         mv_hide_files = lo_persistence_user->get_hide_files( ).
@@ -1250,13 +1250,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     register_handlers( ).
 
-    CREATE OBJECT mi_repo_aggregated_state.
+    CREATE OBJECT mo_repo_aggregated_state.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     TRY.
         " Reinit, for the case of type change
-        mi_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mi_repo->get_key( ) ).
+        mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mi_repo->get_key( ) ).
 
         IF mv_connection_error = abap_true.
           " If connection doesn't work, render a minimal header
@@ -1310,7 +1310,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
 
         LOOP AT lt_repo_items ASSIGNING <ls_item>.
-          mi_repo_aggregated_state->sum_with_repo_item( <ls_item> ).
+          mo_repo_aggregated_state->sum_with_repo_item( <ls_item> ).
         ENDLOOP.
 
         ri_html->add( render_head_line( ) ).

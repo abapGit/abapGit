@@ -359,7 +359,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       lv_key = iv_repo_key.
     ELSEIF ii_repo_online IS BOUND.
       li_repo = ii_repo_online.
-      lv_key = ii_repo_online->zif_abapgit_repo~get_key( ).
+      lv_key = li_repo->get_key( ).
     ELSE.
       zcx_abapgit_exception=>raise( 'Either iv_repo_key or io_repo must be supplied' ).
     ENDIF.
@@ -1044,7 +1044,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     IF ii_repo->is_offline( ) = abap_false.
       li_repo_online ?= ii_repo.
       IF iv_show_branch = abap_true.
-        ri_html->add( render_branch_name( ii_repo_online        = li_repo_online
+        ri_html->add( render_branch_name( ii_repo_online = li_repo_online
                                           iv_interactive = iv_interactive_branch ) ).
       ENDIF.
     ENDIF.

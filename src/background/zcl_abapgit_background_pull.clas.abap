@@ -37,7 +37,7 @@ CLASS zcl_abapgit_background_pull IMPLEMENTATION.
 
     li_repo = ii_repo_online.
 
-    ls_checks = ii_repo_online->zif_abapgit_repo~deserialize_checks( ).
+    ls_checks = li_repo->deserialize_checks( ).
 
     LOOP AT ls_checks-overwrite ASSIGNING <ls_overwrite>.
       <ls_overwrite>-decision = zif_abapgit_definitions=>c_yes.
