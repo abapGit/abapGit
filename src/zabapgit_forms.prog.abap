@@ -110,7 +110,7 @@ CLASS lcl_startup IMPLEMENTATION.
           li_package       TYPE REF TO zif_abapgit_sap_package,
           lt_repo_list     TYPE zif_abapgit_repo_srv=>ty_repo_list.
 
-    FIELD-SYMBOLS: <lo_repo>         TYPE LINE OF zif_abapgit_repo_srv=>ty_repo_list,
+    FIELD-SYMBOLS: <li_repo>         TYPE LINE OF zif_abapgit_repo_srv=>ty_repo_list,
                    <lv_superpackage> LIKE LINE OF lt_superpackages.
 
     li_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
@@ -134,10 +134,10 @@ CLASS lcl_startup IMPLEMENTATION.
 
     lt_repo_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
 
-    LOOP AT lt_repo_list ASSIGNING <lo_repo>.
+    LOOP AT lt_repo_list ASSIGNING <li_repo>.
 
-      IF <lo_repo>->get_package( ) IN lt_r_package.
-        li_repo = <lo_repo>.
+      IF <li_repo>->get_package( ) IN lt_r_package.
+        li_repo = <li_repo>.
         EXIT.
       ENDIF.
 
