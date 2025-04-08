@@ -405,6 +405,9 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
         no_access                  = 4
         object_locked_and_modified = 5
         OTHERS                     = 6 ).
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
 
     rv_description = li_package->short_text.
   ENDMETHOD.
