@@ -576,7 +576,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     lv_new_window = boolc( iv_new_window IS NOT INITIAL ).
 
     TRY.
-        li_html_viewer = zcl_abapgit_ui_factory=>get_html_viewer( ).
+        li_html_viewer = zcl_abapgit_ui_core_factory=>get_html_viewer( ).
 
         " Hide HTML Viewer in dummy screen0 for direct CALL SCREEN to work
         li_html_viewer->set_visiblity( abap_false ).
