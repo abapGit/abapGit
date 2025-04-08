@@ -21,7 +21,7 @@ CLASS zcl_abapgit_cts_api DEFINITION
     "! @raising zcx_abapgit_exception | Object is not locked in a transport
     METHODS get_current_transport_for_obj
       IMPORTING
-        !iv_program_id      TYPE pgmid DEFAULT 'R3TR'
+        !iv_program_id      TYPE tadir-pgmid DEFAULT 'R3TR'
         !iv_object_type     TYPE trobjtype
         !iv_object_name     TYPE sobj_name
       RETURNING
@@ -36,7 +36,7 @@ CLASS zcl_abapgit_cts_api DEFINITION
     "! @raising zcx_abapgit_exception | Object is not locked in a transport
     METHODS get_current_transport_from_db
       IMPORTING
-        !iv_program_id      TYPE pgmid DEFAULT 'R3TR'
+        !iv_program_id      TYPE tadir-pgmid DEFAULT 'R3TR'
         !iv_object_type     TYPE trobjtype
         !iv_object_name     TYPE sobj_name
       RETURNING
@@ -51,7 +51,7 @@ CLASS zcl_abapgit_cts_api DEFINITION
     "! @raising zcx_abapgit_exception | Object type is not lockable
     METHODS is_object_locked_in_transport
       IMPORTING
-        !iv_program_id   TYPE pgmid DEFAULT 'R3TR'
+        !iv_program_id   TYPE tadir-pgmid DEFAULT 'R3TR'
         !iv_object_type  TYPE trobjtype
         !iv_object_name  TYPE sobj_name
       RETURNING
@@ -64,7 +64,7 @@ CLASS zcl_abapgit_cts_api DEFINITION
     "! @parameter rv_lockable | Lockable
     METHODS is_object_type_lockable
       IMPORTING
-        !iv_program_id     TYPE pgmid DEFAULT 'R3TR'
+        !iv_program_id     TYPE tadir-pgmid DEFAULT 'R3TR'
         !iv_object_type    TYPE trobjtype
       RETURNING
         VALUE(rv_lockable) TYPE abap_bool .
@@ -74,7 +74,7 @@ CLASS zcl_abapgit_cts_api DEFINITION
     "! @parameter rv_transportable | Transportable
     METHODS is_object_type_transportable
       IMPORTING
-        !iv_program_id          TYPE pgmid DEFAULT 'R3TR'
+        !iv_program_id          TYPE tadir-pgmid DEFAULT 'R3TR'
         !iv_object_type         TYPE trobjtype
       RETURNING
         VALUE(rv_transportable) TYPE abap_bool .
