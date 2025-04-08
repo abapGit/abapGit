@@ -34,4 +34,3 @@ CLASS zcl_abapgit_repo_offline IMPLEMENTATION.
 
   ENDMETHOD.
 ENDCLASS.
-
