@@ -303,7 +303,7 @@ CLASS ltcl_convert IMPLEMENTATION.
     DATA: lv_xstring  TYPE xstring,
           lv_byte     TYPE x,
           lv_input    TYPE i,
-          lv_bitbyte  TYPE zif_abapgit_git_definitions=>ty_bitbyte,
+          lv_bitbyte  TYPE c LENGTH 8,
           lv_byteint  TYPE i,
           lv_xbyteint TYPE xstring,
           lv_xresult  TYPE xstring,
