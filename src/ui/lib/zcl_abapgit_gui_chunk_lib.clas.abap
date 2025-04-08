@@ -361,7 +361,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       li_repo = ii_repo_online.
       lv_key = li_repo->get_key( ).
     ELSE.
-      zcx_abapgit_exception=>raise( 'Either iv_repo_key or io_repo must be supplied' ).
+      zcx_abapgit_exception=>raise( 'Either iv_repo_key or ii_repo_online must be supplied' ).
     ENDIF.
 
     IF iv_branch IS NOT INITIAL.
@@ -378,7 +378,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
         lv_text = zcl_abapgit_git_branch_list=>get_display_name( lv_branch ).
       ENDIF.
     ELSE.
-      zcx_abapgit_exception=>raise( 'Either iv_branch or io_repo must be supplied' ).
+      zcx_abapgit_exception=>raise( 'Either iv_branch or ii_repo_online must be supplied' ).
     ENDIF.
 
     CASE zcl_abapgit_git_branch_list=>get_type( lv_branch ).
