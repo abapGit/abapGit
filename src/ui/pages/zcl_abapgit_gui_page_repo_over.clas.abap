@@ -264,9 +264,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_css_class      = 'wmin'
       iv_allow_order_by = abap_false
     )->add_column(
-      iv_tech_name      = 'TYPE'
-      iv_css_class      = 'wmin'
-      iv_allow_order_by = abap_false
+      iv_tech_name      = 'OFFLINE'
+      iv_display_name   = '#'
+      iv_allow_order_by = abap_true
     )->add_column(
       iv_tech_name      = 'NAME'
       iv_display_name   = 'Name'
@@ -742,9 +742,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       lv_repo_type_icon = 'plug/darkgrey'.
     ENDIF.
 
-    ii_html->td(
-      iv_class   = 'wmin'
-      iv_content = ii_html->icon( lv_repo_type_icon ) ).
+    ii_html->td( ii_html->icon( lv_repo_type_icon ) ).
 
     " Repo name
     IF is_repo-write_protected = abap_true.
