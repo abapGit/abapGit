@@ -278,9 +278,11 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       ms_i18n_params-main_language_only = is_local_settings-main_language_only.
     ENDIF.
 
-    CREATE OBJECT mo_abap_language_version
-      EXPORTING
-        io_dot_abapgit = mo_dot_abapgit.
+    IF mo_dot_abapgit IS NOT INITIAL.
+      CREATE OBJECT mo_abap_language_version
+        EXPORTING
+          io_dot_abapgit = mo_dot_abapgit.
+    ENDIF.
 
   ENDMETHOD.
 
