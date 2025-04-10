@@ -371,7 +371,8 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
           set_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
 
           TRY.
-              UPDATE ('DDDTDC_SOURCE') SET abap_language_version = <lv_abap_language_version> WHERE dtdc_name = ms_item-obj_name.
+              UPDATE ('DDDTDC_SOURCE') SET abap_language_version = <lv_abap_language_version>
+                WHERE dtdc_name = ms_item-obj_name.
             CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
           ENDTRY.
         ENDIF.
