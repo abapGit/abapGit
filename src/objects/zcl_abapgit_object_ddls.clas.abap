@@ -525,7 +525,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
     ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <lg_data> TO <lg_abap_language_version>.
     IF sy-subrc = 0.
-      clear_abap_language_version( CHANGING cv_abap_language_version = <lg_abap_language_version> ).
+      <lg_abap_language_version> = get_abap_language_version( ).
     ENDIF.
 
     APPEND 'AS4USER'               TO lt_clr_comps.

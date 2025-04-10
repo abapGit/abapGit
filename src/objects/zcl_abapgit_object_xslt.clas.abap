@@ -4,6 +4,11 @@ CLASS zcl_abapgit_object_xslt DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    TYPES:
+      BEGIN OF ty_extra,
+        abap_language_version TYPE uccheck,
+      END OF ty_extra.
+
     METHODS:
       get
         RETURNING VALUE(ro_xslt) TYPE REF TO cl_o2_api_xsltdesc
@@ -96,6 +101,7 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 
     DATA: lv_source     TYPE string,
           lo_xslt       TYPE REF TO cl_o2_api_xsltdesc,
+          ls_extra      TYPE ty_extra,
           lv_len        TYPE i,
           ls_attributes TYPE o2xsltattr.
 
@@ -159,6 +165,17 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
       lo_xslt->set_changeable( abap_false ). " unlock
       zcx_abapgit_exception=>raise( |Error from XSLT save, { sy-subrc }| ).
     ENDIF.
+
+    io_xml->read( EXPORTING iv_name = 'EXTRA'
+                  CHANGING  cg_data = ls_extra ).
+
+    TRY.
+        set_abap_language_version( CHANGING cv_abap_language_version = ls_extra-abap_language_version ).
+
+        UPDATE ('O2XSLTDESC') SET abap_language_version = ls_extra-abap_language_version
+          WHERE relid = 'TR' AND xsltdesc = ms_item-obj_name.
+      CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
+    ENDTRY.
 
     lo_xslt->set_changeable( abap_false ).
 
@@ -228,9 +245,9 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: lo_xslt       TYPE REF TO cl_o2_api_xsltdesc,
+          ls_extra      TYPE ty_extra,
           lv_source     TYPE string,
           ls_attributes TYPE o2xsltattr.
-
 
     lo_xslt = get( ).
 
@@ -251,6 +268,18 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
       iv_extra  = 'source'
       iv_ext    = 'xml'
       iv_string = lv_source ).
+
+    TRY.
+        SELECT SINGLE abap_language_version FROM ('O2XSLTDESC') INTO CORRESPONDING FIELDS OF ls_extra
+          WHERE relid = 'TR' AND xsltdesc = ms_item-obj_name AND state = 'A'.
+        IF sy-subrc = 0.
+          clear_abap_language_version( CHANGING cv_abap_language_version = ls_extra-abap_language_version ).
+        ENDIF.
+      CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
+    ENDTRY.
+
+    io_xml->add( iv_name = 'EXTRA'
+                 ig_data = ls_extra ).
 
   ENDMETHOD.
 ENDCLASS.
