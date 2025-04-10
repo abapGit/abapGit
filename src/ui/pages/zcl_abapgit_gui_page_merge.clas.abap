@@ -13,7 +13,7 @@ CLASS zcl_abapgit_gui_page_merge DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        io_repo        TYPE REF TO zcl_abapgit_repo_online
+        ii_repo_online TYPE REF TO zif_abapgit_repo_online
         iv_source      TYPE string
         iv_target      TYPE string
       RETURNING
@@ -23,16 +23,16 @@ CLASS zcl_abapgit_gui_page_merge DEFINITION
 
     METHODS constructor
       IMPORTING
-        io_repo   TYPE REF TO zcl_abapgit_repo_online
-        iv_source TYPE string
-        iv_target TYPE string
+        ii_repo_online TYPE REF TO zif_abapgit_repo_online
+        iv_source      TYPE string
+        iv_target      TYPE string
       RAISING
         zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online.
+    DATA mi_repo_online TYPE REF TO zif_abapgit_repo_online.
     DATA mi_merge TYPE REF TO zif_abapgit_merge.
 
     CONSTANTS:
@@ -59,13 +59,13 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
 
     super->constructor( ).
 
-    mo_repo = io_repo.
+    mi_repo_online = ii_repo_online.
 
-    io_repo->select_branch( |{ zif_abapgit_git_definitions=>c_git_branch-heads_prefix }{ iv_target }| ).
+    ii_repo_online->select_branch( |{ zif_abapgit_git_definitions=>c_git_branch-heads_prefix }{ iv_target }| ).
 
     CREATE OBJECT mi_merge TYPE zcl_abapgit_merge
       EXPORTING
-        io_repo          = io_repo
+        ii_repo_online   = ii_repo_online
         iv_source_branch = iv_source.
 
     mi_merge->run( ).
@@ -79,9 +79,9 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        io_repo   = io_repo
-        iv_source = iv_source
-        iv_target = iv_target.
+        ii_repo_online = ii_repo_online
+        iv_source      = iv_source
+        iv_target      = iv_target.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title         = 'Merge'
@@ -113,6 +113,8 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
+    DATA: li_repo TYPE REF TO zif_abapgit_repo.
+
     CASE ii_event->mv_action.
       WHEN c_actions-merge.
         IF mi_merge->has_conflicts( ) = abap_true.
@@ -123,17 +125,19 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
           zcx_abapgit_exception=>raise( 'nothing to merge' ).
         ENDIF.
 
-        IF mo_repo->get_local_settings( )-code_inspector_check_variant IS NOT INITIAL.
+        li_repo = mi_repo_online.
+
+        IF li_repo->get_local_settings( )-code_inspector_check_variant IS NOT INITIAL.
 
           rs_handled-page = zcl_abapgit_gui_page_code_insp=>create(
-            io_repo  = mo_repo
+            ii_repo  = mi_repo_online
             io_stage = mi_merge->get_result( )-stage ).
 
         ELSE.
 
           rs_handled-page = zcl_abapgit_gui_page_commit=>create(
-            io_repo  = mo_repo
-            io_stage = mi_merge->get_result( )-stage ).
+            ii_repo_online = mi_repo_online
+            io_stage       = mi_merge->get_result( )-stage ).
 
         ENDIF.
 
@@ -142,9 +146,9 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
       WHEN c_actions-res_conflicts.
 
         rs_handled-page = zcl_abapgit_gui_page_merge_res=>create(
-          io_repo       = mo_repo
-          io_merge_page = me
-          io_merge      = mi_merge ).
+          ii_repo_online = mi_repo_online
+          io_merge_page  = me
+          io_merge       = mi_merge ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
@@ -185,7 +189,7 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
 
     ri_html->add( '<div id="toc">' ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-      io_repo         = mo_repo
+      ii_repo         = mi_repo_online
       iv_show_package = abap_false
       iv_show_branch  = abap_false ) ).
 

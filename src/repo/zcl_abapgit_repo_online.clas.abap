@@ -8,30 +8,18 @@ CLASS zcl_abapgit_repo_online DEFINITION
 
     INTERFACES zif_abapgit_repo_online .
 
-    ALIASES create_branch
-      FOR zif_abapgit_repo_online~create_branch .
-    ALIASES get_current_remote
-      FOR zif_abapgit_repo_online~get_current_remote .
-    ALIASES get_selected_branch
-      FOR zif_abapgit_repo_online~get_selected_branch .
-    ALIASES get_selected_commit
-      FOR zif_abapgit_repo_online~get_selected_commit .
-    ALIASES get_url
-      FOR zif_abapgit_repo_online~get_url .
-    ALIASES push
-      FOR zif_abapgit_repo_online~push .
-    ALIASES select_branch
-      FOR zif_abapgit_repo_online~select_branch .
-    ALIASES select_commit
-      FOR zif_abapgit_repo_online~select_commit .
-    ALIASES set_url
-      FOR zif_abapgit_repo_online~set_url .
-    ALIASES switch_origin
-      FOR zif_abapgit_repo_online~switch_origin .
-    ALIASES get_switched_origin
-      FOR zif_abapgit_repo_online~get_switched_origin.
-
-
+    ALIASES get_url                 FOR zif_abapgit_repo_online~get_url.
+    ALIASES get_selected_branch     FOR zif_abapgit_repo_online~get_selected_branch.
+    ALIASES set_url                 FOR zif_abapgit_repo_online~set_url.
+    ALIASES select_branch           FOR zif_abapgit_repo_online~select_branch.
+    ALIASES get_selected_commit     FOR zif_abapgit_repo_online~get_selected_commit.
+    ALIASES get_current_remote      FOR zif_abapgit_repo_online~get_current_remote.
+    ALIASES select_commit           FOR zif_abapgit_repo_online~select_commit.
+    ALIASES switch_origin           FOR zif_abapgit_repo_online~switch_origin.
+    ALIASES get_switched_origin     FOR zif_abapgit_repo_online~get_switched_origin.
+    ALIASES push                    FOR zif_abapgit_repo_online~push.
+    ALIASES create_branch           FOR zif_abapgit_repo_online~create_branch.
+    ALIASES check_for_valid_branch  FOR zif_abapgit_repo_online~check_for_valid_branch.
 
     METHODS zif_abapgit_repo~get_files_remote
         REDEFINITION .
@@ -39,6 +27,9 @@ CLASS zcl_abapgit_repo_online DEFINITION
         REDEFINITION .
     METHODS zif_abapgit_repo~has_remote_source
         REDEFINITION .
+    METHODS constructor
+      IMPORTING
+        is_data TYPE zif_abapgit_persistence=>ty_repo.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -75,6 +66,11 @@ ENDCLASS.
 
 CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
+  METHOD constructor.
+
+    super->constructor( is_data ).
+
+  ENDMETHOD.
 
   METHOD fetch_remote.
 
@@ -154,7 +150,9 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
       lt_branches     TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
       lv_display_name TYPE string.
 
-    lt_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( get_url( ) )->get_branches_only( ).
+    lt_branches = zcl_abapgit_git_factory=>get_git_transport(
+                                        )->branches( get_url( )
+                                        )->get_branches_only( ).
 
     READ TABLE lt_branches WITH TABLE KEY name_key
                            COMPONENTS name = iv_name
@@ -299,7 +297,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     mv_current_commit = ls_push-branch.
 
-    zif_abapgit_repo~checksums( )->update( ls_push-updated_files ).
+    checksums( )->update( ls_push-updated_files ).
 
   ENDMETHOD.
 

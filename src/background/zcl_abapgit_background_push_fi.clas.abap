@@ -22,9 +22,9 @@ CLASS zcl_abapgit_background_push_fi DEFINITION
         VALUE(rv_comment) TYPE string .
     METHODS push_fixed
       IMPORTING
-        !io_repo  TYPE REF TO zcl_abapgit_repo_online
-        !iv_name  TYPE string
-        !iv_email TYPE string
+        !ii_repo_online TYPE REF TO zif_abapgit_repo_online
+        !iv_name        TYPE string
+        !iv_email       TYPE string
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -73,7 +73,7 @@ CLASS zcl_abapgit_background_push_fi IMPLEMENTATION.
                    <ls_remote> LIKE LINE OF ls_files-remote.
 
 
-    ls_files = zcl_abapgit_stage_logic=>get_stage_logic( )->get( io_repo ).
+    ls_files = zcl_abapgit_stage_logic=>get_stage_logic( )->get( ii_repo_online ).
     ASSERT lines( ls_files-local ) > 0
         OR lines( ls_files-remote ) > 0.
 
@@ -99,8 +99,8 @@ CLASS zcl_abapgit_background_push_fi IMPLEMENTATION.
     ls_comment-committer-email = iv_email.
     ls_comment-comment         = build_comment( ls_files ).
 
-    io_repo->push( is_comment = ls_comment
-                   io_stage   = lo_stage ).
+    ii_repo_online->push( is_comment = ls_comment
+                          io_stage   = lo_stage ).
 
   ENDMETHOD.
 
@@ -142,7 +142,7 @@ CLASS zcl_abapgit_background_push_fi IMPLEMENTATION.
           lv_email   TYPE string.
 
     mi_log = ii_log.
-    ls_files = zcl_abapgit_stage_logic=>get_stage_logic( )->get( io_repo ).
+    ls_files = zcl_abapgit_stage_logic=>get_stage_logic( )->get( ii_repo_online ).
 
     IF lines( ls_files-local ) = 0 AND lines( ls_files-remote ) = 0.
       ii_log->add_info( 'Nothing to stage' ).
@@ -156,9 +156,9 @@ CLASS zcl_abapgit_background_push_fi IMPLEMENTATION.
     lv_email = ls_setting-value.
 
     push_fixed(
-      io_repo  = io_repo
-      iv_name  = lv_name
-      iv_email = lv_email ).
+      ii_repo_online = ii_repo_online
+      iv_name        = lv_name
+      iv_email       = lv_email ).
 
   ENDMETHOD.
 ENDCLASS.

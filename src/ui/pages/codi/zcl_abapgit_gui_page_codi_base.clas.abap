@@ -16,7 +16,7 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         apply_filter TYPE string VALUE 'apply_filter',
       END OF c_actions .
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo.
+    DATA mi_repo TYPE REF TO zif_abapgit_repo.
     DATA mt_result TYPE zif_abapgit_code_inspector=>ty_results.
     DATA mv_summary TYPE string.
 

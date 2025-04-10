@@ -112,7 +112,7 @@ CLASS ltd_repo_srv IMPLEMENTATION.
     DATA lo_abapgit_repo TYPE REF TO zif_abapgit_repo.
 
     LOOP AT mt_repositories INTO lo_test_double_repo.
-      lo_abapgit_repo ?= lo_test_double_repo.
+      lo_abapgit_repo = lo_test_double_repo.
       APPEND lo_test_double_repo TO rt_list.
     ENDLOOP.
   ENDMETHOD.
@@ -243,6 +243,59 @@ CLASS ltd_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~find_remote_dot_abapgit.
   ENDMETHOD.
+
+  METHOD zif_abapgit_repo~create_new_log.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~delete_checks.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_dot_apack.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_log.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_data_config.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_unsupported_objects_local.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~refresh_local_object.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~refresh_local_objects.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~set_files_remote.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~set_local_settings.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~switch_repo_type.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~bind_listener.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~remove_ignored_files.
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 

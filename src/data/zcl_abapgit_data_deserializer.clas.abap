@@ -44,7 +44,7 @@ CLASS zcl_abapgit_data_deserializer DEFINITION
         zcx_abapgit_exception .
     METHODS determine_transport_request
       IMPORTING
-        io_repo                     TYPE REF TO zcl_abapgit_repo
+        ii_repo                     TYPE REF TO zif_abapgit_repo
         iv_transport_type           TYPE zif_abapgit_definitions=>ty_transport_type
       RETURNING
         VALUE(rv_transport_request) TYPE trkorr.
@@ -88,11 +88,11 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
     " Use transport from repo settings if maintained, or determine via user exit.
     " If transport keeps empty here, it'll requested later via popup.
-    rv_transport_request = io_repo->get_local_settings( )-customizing_request.
+    rv_transport_request = ii_repo->get_local_settings( )-customizing_request.
 
     li_exit->determine_transport_request(
       EXPORTING
-        io_repo              = io_repo
+        ii_repo              = ii_repo
         iv_transport_type    = iv_transport_type
       CHANGING
         cv_transport_request = rv_transport_request ).
@@ -337,7 +337,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       rs_checks-type-request = zif_abapgit_cts_api=>c_transport_type-cust_request.
       rs_checks-type-task    = zif_abapgit_cts_api=>c_transport_type-cust_task.
       rs_checks-transport    = determine_transport_request(
-                                 io_repo           = io_repo
+                                 ii_repo           = ii_repo
                                  iv_transport_type = rs_checks-type ).
     ENDIF.
 

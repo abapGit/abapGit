@@ -15,7 +15,7 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        io_repo        TYPE REF TO zcl_abapgit_repo
+        ii_repo        TYPE REF TO zif_abapgit_repo
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -23,7 +23,7 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION
 
     METHODS constructor
       IMPORTING
-        io_repo TYPE REF TO zcl_abapgit_repo
+        ii_repo TYPE REF TO zif_abapgit_repo
       RAISING
         zcx_abapgit_exception.
 
@@ -46,7 +46,7 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
-    mo_repo = io_repo.
+    mi_repo = ii_repo.
     run_syntax_check( ).
   ENDMETHOD.
 
@@ -57,7 +57,7 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        io_repo = io_repo.
+        ii_repo = ii_repo.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create( lo_component ).
 
@@ -68,7 +68,7 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
 
     DATA: li_syntax_check TYPE REF TO zif_abapgit_code_inspector.
 
-    li_syntax_check = zcl_abapgit_code_inspector=>get_code_inspector( mo_repo->get_package( ) ).
+    li_syntax_check = zcl_abapgit_code_inspector=>get_code_inspector( mi_repo->get_package( ) ).
 
     TRY.
         mt_result = li_syntax_check->run( c_variant ).
@@ -136,7 +136,7 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
     ri_html->div(
       iv_class   = 'repo'
       ii_content = zcl_abapgit_gui_chunk_lib=>render_repo_top(
-        io_repo        = mo_repo
+        ii_repo        = mi_repo
         iv_show_commit = abap_false ) ).
 
     render_ci_report(

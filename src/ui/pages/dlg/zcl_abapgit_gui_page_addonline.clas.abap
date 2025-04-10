@@ -267,8 +267,8 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: ls_repo_params     TYPE zif_abapgit_services_repo=>ty_repo_params,
-          lo_new_online_repo TYPE REF TO zcl_abapgit_repo_online.
+    DATA: ls_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params,
+          li_new_repo    TYPE REF TO zif_abapgit_repo.
 
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
@@ -335,8 +335,8 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
         IF mo_validation_log->is_empty( ) = abap_true.
           mo_form_data->to_abap( CHANGING cs_container = ls_repo_params ).
-          lo_new_online_repo = zcl_abapgit_services_repo=>new_online( ls_repo_params ).
-          rs_handled-page  = zcl_abapgit_gui_page_repo_view=>create( lo_new_online_repo->get_key( ) ).
+          li_new_repo = zcl_abapgit_services_repo=>new_online( ls_repo_params ).
+          rs_handled-page  = zcl_abapgit_gui_page_repo_view=>create( li_new_repo->get_key( ) ).
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
         ELSE.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render. " Display errors
