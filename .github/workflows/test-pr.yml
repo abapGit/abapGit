@@ -31,12 +31,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
-    - name: npm install
-      run: npm install
-    - name: npm run unit
-      run: npm run unit
-    - name: npm run coverage
-      run: npm run coverage
+    - run: npm install
+    - run: npm run unit
+    - run: npm run coverage
 
   integration:
     runs-on: ubuntu-latest
@@ -45,10 +42,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
-    - name: npm install
-      run: npm install
+    - run: npm install
     - name: start gitea
       working-directory: test/gitea/
       run: npm install && npm run gitea
-    - name: npm run integration
-      run: npm run integration
+    - run: npm run integration

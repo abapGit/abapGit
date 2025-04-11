@@ -44,6 +44,7 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lt_deps    TYPE if_function_test_environment=>tt_function_dependencies.
     DATA lo_initial TYPE REF TO zif_abapgit_repo_srv.
     DATA lo_tr_object_table TYPE REF TO lcl_tr_object_table.
+    DATA lo_environment TYPE REF TO zcl_abapgit_web_environment.
 
     zcl_abapgit_repo_srv=>inject_instance( lo_initial ).
 
@@ -52,19 +53,29 @@ CLASS ltcl_test IMPLEMENTATION.
     INSERT 'ENQUEUE_EZABAPGIT' INTO TABLE lt_deps.
     INSERT 'DEQUEUE_EZABAPGIT' INTO TABLE lt_deps.
     INSERT 'TR_OBJECT_TABLE' INTO TABLE lt_deps.
+    INSERT 'SAPGUI_PROGRESS_INDICATOR' INTO TABLE lt_deps.
 
     mi_env = cl_function_test_environment=>create( lt_deps ).
     mi_env->get_double( 'ENQUEUE_EZABAPGIT' )->configure_call( )->ignore_all_parameters(
       )->then_answer( me ).
     mi_env->get_double( 'DEQUEUE_EZABAPGIT' )->configure_call( )->ignore_all_parameters(
       )->then_answer( me ).
+    mi_env->get_double( 'SAPGUI_PROGRESS_INDICATOR' )->configure_call( )->ignore_all_parameters(
+      )->then_answer( me ).
     mi_env->get_double( 'TR_OBJECT_TABLE' )->configure_call( )->ignore_all_parameters(
       )->then_answer( lo_tr_object_table ).
+
+    CREATE OBJECT lo_environment.
+    zcl_abapgit_injector=>set_environment( lo_environment ).
 
   ENDMETHOD.
 
   METHOD teardown.
+    DATA li_environment TYPE REF TO zif_abapgit_environment.
+
     mi_env->clear_doubles( ).
+
+    zcl_abapgit_injector=>set_environment( li_environment ).
   ENDMETHOD.
 
   METHOD if_ftd_invocation_answer~answer.
