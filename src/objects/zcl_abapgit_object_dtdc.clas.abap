@@ -303,8 +303,9 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
       lx_error              TYPE REF TO cx_root.
 
     FIELD-SYMBOLS:
-      <ls_dynamic_cache> TYPE any,
-      <lv_source>        TYPE data.
+      <lv_abap_language_version> TYPE uccheck,
+      <ls_dynamic_cache>         TYPE any,
+      <lv_source>                TYPE data.
 
     ASSIGN mr_dynamic_cache->* TO <ls_dynamic_cache>.
     ASSERT sy-subrc = 0.
@@ -363,6 +364,18 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
         ENDIF.
 
         CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~ACTIVATE').
+
+        ASSIGN COMPONENT 'METADATA-ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_dynamic_cache>
+          TO <lv_abap_language_version>.
+        IF sy-subrc = 0.
+          set_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+
+          TRY.
+              UPDATE ('DDDTDC_SOURCE') SET abap_language_version = <lv_abap_language_version>
+                WHERE dtdc_name = ms_item-obj_name.
+            CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
+          ENDTRY.
+        ENDIF.
 
         corr_insert( iv_package ).
 
@@ -446,8 +459,9 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
       lv_source             TYPE string.
 
     FIELD-SYMBOLS:
-      <ls_dynamic_cache> TYPE any,
-      <lv_source>        TYPE string.
+      <lv_abap_language_version> TYPE uccheck,
+      <ls_dynamic_cache>         TYPE any,
+      <lv_source>                TYPE string.
 
     ASSIGN mr_dynamic_cache->* TO <ls_dynamic_cache>.
     ASSERT sy-subrc = 0.
@@ -473,6 +487,11 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
+
+    ASSIGN COMPONENT 'METADATA-ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_dynamic_cache> TO <lv_abap_language_version>.
+    IF sy-subrc = 0.
+      <lv_abap_language_version> = get_abap_language_version( ).
+    ENDIF.
 
     io_xml->add(
         iv_name = 'DTDC'
