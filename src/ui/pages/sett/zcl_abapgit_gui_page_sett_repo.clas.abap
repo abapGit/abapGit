@@ -263,8 +263,14 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     CREATE OBJECT ro_form_data.
 
     " Repository Settings
-    SELECT SINGLE sptxt INTO lv_language FROM t002t
-      WHERE spras = sy-langu AND sprsl = lv_main_lang.
+    zcl_abapgit_convert=>language_sap1_to_sap2(
+      EXPORTING
+        im_lang_sap1  = lv_main_lang
+      RECEIVING
+        re_lang_sap2  = lv_language
+      EXCEPTIONS
+        no_assignment = 1
+        OTHERS        = 2 ).
     IF sy-subrc <> 0.
       lv_language = 'Unknown language; Check your .abapgit.xml file'.
     ENDIF.
