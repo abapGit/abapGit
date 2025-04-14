@@ -98,6 +98,12 @@ CLASS zcl_abapgit_convert DEFINITION
       EXCEPTIONS
         no_assignment.
 
+    CLASS-METHODS language_sap1_to_text
+      IMPORTING
+        im_lang_sap1   TYPE sy-langu
+      RETURNING
+        VALUE(re_text) TYPE string.
+
     CLASS-METHODS language_sap2_to_sap1
       IMPORTING
         im_lang_sap2        TYPE laiso
@@ -301,6 +307,11 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
         RAISE no_assignment.
     ENDTRY.
 
+  ENDMETHOD.
+
+
+  METHOD language_sap1_to_text.
+    re_text = lcl_bcp47_language_table=>sap1_to_text( im_lang_sap1 ).
   ENDMETHOD.
 
 
