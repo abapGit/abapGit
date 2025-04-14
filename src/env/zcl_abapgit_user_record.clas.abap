@@ -60,19 +60,30 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
 
   METHOD get_title.
 * the queried username might not exist, so this method is static
+* refactored for open-abap compatibility
 
-    DATA ls_user_address TYPE addr3_val.
+    DATA lr_addr3             TYPE REF TO data.
+    FIELD-SYMBOLS <ls_addr3>  TYPE any.
+    FIELD-SYMBOLS <lv_simple> TYPE simple.
+
+    TRY.
+        CREATE DATA lr_addr3 TYPE ('ADDR3_VAL').
+      CATCH cx_sy_create_data_error.
+        RETURN.
+    ENDTRY.
+    ASSIGN lr_addr3->* TO <ls_addr3>.
 
     CALL FUNCTION 'SUSR_USER_ADDRESS_READ'
       EXPORTING
         user_name              = iv_username
       IMPORTING
-        user_address           = ls_user_address
+        user_address           = <ls_addr3>
       EXCEPTIONS
         user_address_not_found = 1
         OTHERS                 = 2.
     IF sy-subrc = 0.
-      rv_title = ls_user_address-name_text.
+      ASSIGN COMPONENT 'NAME_TEXT' OF STRUCTURE <ls_addr3> TO <lv_simple>.
+      rv_title = <lv_simple>.
     ENDIF.
 
   ENDMETHOD.
