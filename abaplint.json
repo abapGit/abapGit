@@ -319,6 +319,9 @@
     "message_exists": true,
     "method_implemented_twice": true,
     "method_length": {
+      "exclude": [
+        "zcl_abapgit_convert.clas.locals_imp.abap"
+      ],
       "checkForms": true,
       "errorWhenEmpty": false,
       "ignoreTestClasses": false,
