@@ -250,7 +250,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       lo_dot          TYPE REF TO zcl_abapgit_dot_abapgit,
       ls_dot          TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
       lv_main_lang    TYPE spras,
-      lv_language     TYPE t002t-sptxt,
+      lv_language     TYPE string,
       lv_ignore       TYPE string,
       ls_requirements LIKE LINE OF ls_dot-requirements,
       lv_row          TYPE i,
@@ -263,17 +263,11 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     CREATE OBJECT ro_form_data.
 
     " Repository Settings
-    zcl_abapgit_convert=>language_sap1_to_sap2(
+    zcl_abapgit_convert=>language_sap1_to_text(
       EXPORTING
-        im_lang_sap1  = lv_main_lang
+        im_lang_sap1 = lv_main_lang
       RECEIVING
-        re_lang_sap2  = lv_language
-      EXCEPTIONS
-        no_assignment = 1
-        OTHERS        = 2 ).
-    IF sy-subrc <> 0.
-      lv_language = 'Unknown language; Check your .abapgit.xml file'.
-    ENDIF.
+        re_text      = lv_language ).
 
     ro_form_data->set(
       iv_key = c_id-name
