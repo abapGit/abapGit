@@ -496,7 +496,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     fill_language_mapping( im_sap1  = 'B406'
                            im_sap2  = '5F'
                            im_bcp47 = 'fr-CI'
-                           iv_text  = 'French (Côte d’Ivoire)' ).
+                           iv_text  = 'French (Cote d''Ivoire)' ).
 
     fill_language_mapping( im_sap1  = 'B466'
                            im_sap2  = '6F'
@@ -526,7 +526,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     fill_language_mapping( im_sap1  = 'B2E8'
                            im_sap2  = '2H'
                            im_bcp47 = 'fr-RE'
-                           iv_text  = 'French (Réunion)' ).
+                           iv_text  = 'French (Reunion)' ).
 
     fill_language_mapping( im_sap1  = 'B348'
                            im_sap2  = '3H'
