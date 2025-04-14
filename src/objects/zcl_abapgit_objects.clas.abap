@@ -991,6 +991,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    " We want the object list of a repository to show unsupported object (without serializing them)
+    " This is why the follow check and the caught exception return true.
+
     " For unsupported objects, assume object exists
     IF is_type_supported( is_item-obj_type ) = abap_false.
       rv_bool = abap_true.
