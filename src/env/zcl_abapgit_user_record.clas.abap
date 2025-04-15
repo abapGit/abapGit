@@ -35,7 +35,7 @@ CLASS zcl_abapgit_user_record DEFINITION
 
     CLASS-DATA gt_user TYPE HASHED TABLE OF ty_user WITH UNIQUE KEY user.
 
-    METHODS check_user_exists
+    CLASS-METHODS check_user_exists
       IMPORTING
         iv_user     TYPE sy-uname
       EXPORTING
