@@ -241,7 +241,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ENDIF.
     IF rv_email IS INITIAL.
       " get default from user record
-      rv_email = zcl_abapgit_user_record=>get_instance( sy-uname )->get_email( ).
+      rv_email = zcl_abapgit_user_record=>get_instance( )->get_email( sy-uname ).
     ENDIF.
 
   ENDMETHOD.
@@ -259,7 +259,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ENDIF.
     IF rv_user IS INITIAL.
       " get default from user record
-      rv_user = zcl_abapgit_user_record=>get_instance( sy-uname )->get_name( ).
+      rv_user = zcl_abapgit_user_record=>get_instance( )->get_name( sy-uname ).
     ENDIF.
 
   ENDMETHOD.

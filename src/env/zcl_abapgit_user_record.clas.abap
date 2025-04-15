@@ -67,7 +67,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_user_record IMPLEMENTATION.
   METHOD get_instance.
-    RETURN. " todo, implement method
+    CREATE OBJECT ro_user.
   ENDMETHOD.
 
 
