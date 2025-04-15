@@ -147,11 +147,8 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
         rs_user = get_user_dtls_from_other_clnt( iv_user ).
     ENDTRY.
 
-    " If the user has been found add it to the list
-    IF rs_user-name IS NOT INITIAL AND rs_user-email IS NOT INITIAL.
-      rs_user-user = iv_user.
-      INSERT rs_user INTO TABLE gt_user.
-    ENDIF.
+    rs_user-user = iv_user.
+    INSERT rs_user INTO TABLE gt_user.
 
   ENDMETHOD.
 
