@@ -30,7 +30,7 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
         !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_type_not_supported.
 
   PROTECTED SECTION.
     TYPES: BEGIN OF ty_extension_mapper_pair,
@@ -106,7 +106,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     ENDTRY.
 
     IF lv_is_supported IS INITIAL.
-      zcx_abapgit_exception=>raise( |Object type { is_item-obj_type } is not supported by this system| ).
+      RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDIF.
 
   ENDMETHOD.
