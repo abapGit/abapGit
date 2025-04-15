@@ -72,8 +72,7 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
 
 
   METHOD get_title.
-* the queried username might not exist, so this method is static
-* refactored for open-abap compatibility
+* the queried username might not exist, refactored for open-abap compatibility
 
     DATA lr_addr3             TYPE REF TO data.
     FIELD-SYMBOLS <ls_addr3>  TYPE any.
@@ -145,7 +144,7 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
             ev_email    = rs_user-email ).
       CATCH zcx_abapgit_exception.
         " Could not find user, try to get from other clients
-        get_user_dtls_from_other_clnt( iv_user ).
+        rs_user = get_user_dtls_from_other_clnt( iv_user ).
     ENDTRY.
 
     " If the user has been found add it to the list
