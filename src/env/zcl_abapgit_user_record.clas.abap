@@ -190,7 +190,7 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
         ORDER BY PRIMARY KEY.
 
     LOOP AT lt_dev_clients ASSIGNING <lv_dev_client>.
-      SELECT SINGLE u~bname p~name_text a~smtp_addr INTO (rs_user, rs_user-name, rs_user-email)
+      SELECT SINGLE u~bname p~name_text a~smtp_addr INTO (rs_user-user, rs_user-name, rs_user-email)
           FROM usr21 AS u
           INNER JOIN adrp AS p ON p~persnumber = u~persnumber
                               AND p~client     = u~mandt
