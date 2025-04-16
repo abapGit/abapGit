@@ -72,7 +72,7 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
     DATA li_user_record TYPE REF TO zif_abapgit_user_record.
 
 
-    li_user_record = zcl_abapgit_user_record=>get_instance( ).
+    li_user_record = zcl_abapgit_env_factory=>get_user_record( ).
     rs_user-name = li_user_record->get_name( iv_changed_by ).
     rs_user-email = li_user_record->get_email( iv_changed_by ).
 

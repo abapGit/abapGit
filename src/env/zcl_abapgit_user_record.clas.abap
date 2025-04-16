@@ -1,13 +1,11 @@
 CLASS zcl_abapgit_user_record DEFINITION
   PUBLIC
   FINAL
-  CREATE PRIVATE.
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_data_factory.
 
   PUBLIC SECTION.
     CLASS-METHODS reset.
-    CLASS-METHODS get_instance
-      RETURNING
-        VALUE(ri_user) TYPE REF TO zif_abapgit_user_record.
 
     INTERFACES zif_abapgit_user_record.
 
@@ -53,10 +51,6 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_user_record IMPLEMENTATION.
-  METHOD get_instance.
-    CREATE OBJECT ri_user TYPE zcl_abapgit_user_record.
-  ENDMETHOD.
-
 
   METHOD zif_abapgit_user_record~get_title.
 * the queried username might not exist, refactored for open-abap compatibility
