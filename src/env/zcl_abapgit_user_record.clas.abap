@@ -2,7 +2,7 @@ CLASS zcl_abapgit_user_record DEFINITION
   PUBLIC
   FINAL
   CREATE PRIVATE
-  GLOBAL FRIENDS zcl_abapgit_data_factory.
+  GLOBAL FRIENDS zcl_abapgit_env_factory.
 
   PUBLIC SECTION.
     CLASS-METHODS reset.
@@ -50,36 +50,29 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_user_record IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_USER_RECORD IMPLEMENTATION.
 
-  METHOD zif_abapgit_user_record~get_title.
-* the queried username might not exist, refactored for open-abap compatibility
 
-    DATA lr_addr3             TYPE REF TO data.
-    FIELD-SYMBOLS <ls_addr3>  TYPE any.
-    FIELD-SYMBOLS <lv_simple> TYPE simple.
+  METHOD build_cache.
 
+    " Get user details
     TRY.
-        CREATE DATA lr_addr3 TYPE ('ADDR3_VAL').
-      CATCH cx_sy_create_data_error.
-        RETURN.
+        check_user_exists(
+          EXPORTING
+            iv_user     = iv_user
+          IMPORTING
+            ev_fullname = rs_user-name
+            ev_email    = rs_user-email ).
+      CATCH zcx_abapgit_exception.
+        " Could not find user, try to get from other clients
+        rs_user = get_user_dtls_from_other_clnt( iv_user ).
     ENDTRY.
-    ASSIGN lr_addr3->* TO <ls_addr3>.
 
-    CALL FUNCTION 'SUSR_USER_ADDRESS_READ'
-      EXPORTING
-        user_name              = iv_username
-      IMPORTING
-        user_address           = <ls_addr3>
-      EXCEPTIONS
-        user_address_not_found = 1
-        OTHERS                 = 2.
-    IF sy-subrc = 0.
-      ASSIGN COMPONENT 'NAME_TEXT' OF STRUCTURE <ls_addr3> TO <lv_simple>.
-      rv_title = <lv_simple>.
-    ENDIF.
+    rs_user-user = iv_user.
+    INSERT rs_user INTO TABLE gt_user.
 
   ENDMETHOD.
+
 
   METHOD check_user_exists.
 
@@ -109,51 +102,6 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
       ev_email = ls_smtp-e_mail.
       EXIT.
     ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD build_cache.
-
-    " Get user details
-    TRY.
-        check_user_exists(
-          EXPORTING
-            iv_user     = iv_user
-          IMPORTING
-            ev_fullname = rs_user-name
-            ev_email    = rs_user-email ).
-      CATCH zcx_abapgit_exception.
-        " Could not find user, try to get from other clients
-        rs_user = get_user_dtls_from_other_clnt( iv_user ).
-    ENDTRY.
-
-    rs_user-user = iv_user.
-    INSERT rs_user INTO TABLE gt_user.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_user_record~get_email.
-
-    rv_email = read_cache( iv_username )-email.
-
-  ENDMETHOD.
-
-
-  METHOD read_cache.
-
-    READ TABLE gt_user INTO rs_user WITH TABLE KEY user = iv_user.
-    IF sy-subrc <> 0.
-      rs_user = build_cache( iv_user ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_user_record~get_name.
-
-    rv_name = read_cache( iv_username )-name.
 
   ENDMETHOD.
 
@@ -192,7 +140,61 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD read_cache.
+
+    READ TABLE gt_user INTO rs_user WITH TABLE KEY user = iv_user.
+    IF sy-subrc <> 0.
+      rs_user = build_cache( iv_user ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD reset.
     CLEAR gt_user.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_user_record~get_email.
+
+    rv_email = read_cache( iv_username )-email.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_user_record~get_name.
+
+    rv_name = read_cache( iv_username )-name.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_user_record~get_title.
+* the queried username might not exist, refactored for open-abap compatibility
+
+    DATA lr_addr3             TYPE REF TO data.
+    FIELD-SYMBOLS <ls_addr3>  TYPE any.
+    FIELD-SYMBOLS <lv_simple> TYPE simple.
+
+    TRY.
+        CREATE DATA lr_addr3 TYPE ('ADDR3_VAL').
+      CATCH cx_sy_create_data_error.
+        RETURN.
+    ENDTRY.
+    ASSIGN lr_addr3->* TO <ls_addr3>.
+
+    CALL FUNCTION 'SUSR_USER_ADDRESS_READ'
+      EXPORTING
+        user_name              = iv_username
+      IMPORTING
+        user_address           = <ls_addr3>
+      EXCEPTIONS
+        user_address_not_found = 1
+        OTHERS                 = 2.
+    IF sy-subrc = 0.
+      ASSIGN COMPONENT 'NAME_TEXT' OF STRUCTURE <ls_addr3> TO <lv_simple>.
+      rv_title = <lv_simple>.
+    ENDIF.
+
   ENDMETHOD.
 ENDCLASS.
