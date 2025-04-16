@@ -7,7 +7,7 @@ CLASS zcl_abapgit_user_record DEFINITION
     CLASS-METHODS reset.
     CLASS-METHODS get_instance
       RETURNING
-        VALUE(ro_user) TYPE REF TO zcl_abapgit_user_record.
+        VALUE(ri_user) TYPE REF TO zif_abapgit_user_record.
 
     INTERFACES zif_abapgit_user_record.
 
@@ -54,7 +54,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_user_record IMPLEMENTATION.
   METHOD get_instance.
-    CREATE OBJECT ro_user.
+    CREATE OBJECT ri_user TYPE zcl_abapgit_user_record.
   ENDMETHOD.
 
 

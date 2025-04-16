@@ -69,12 +69,12 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
 
   METHOD determine_user_details.
 
-    DATA: lo_user_record TYPE REF TO zcl_abapgit_user_record.
+    DATA li_user_record TYPE REF TO zif_abapgit_user_record.
 
 
-    lo_user_record = zcl_abapgit_user_record=>get_instance( ).
-    rs_user-name = lo_user_record->get_name( iv_changed_by ).
-    rs_user-email = lo_user_record->get_email( iv_changed_by ).
+    li_user_record = zcl_abapgit_user_record=>get_instance( ).
+    rs_user-name = li_user_record->get_name( iv_changed_by ).
+    rs_user-email = li_user_record->get_email( iv_changed_by ).
 
 *   If no email, fall back to localhost/default email
     IF rs_user-email IS INITIAL.
