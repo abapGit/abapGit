@@ -6,20 +6,20 @@ CLASS zcl_abapgit_user_record DEFINITION
   PUBLIC SECTION.
     CLASS-METHODS reset.
     CLASS-METHODS get_instance
-      IMPORTING
-        !iv_user       TYPE sy-uname
       RETURNING
         VALUE(ro_user) TYPE REF TO zcl_abapgit_user_record.
-    METHODS constructor
-      IMPORTING
-        !iv_user TYPE sy-uname.
+
     METHODS get_name
+      IMPORTING
+        iv_username    TYPE sy-uname
       RETURNING
         VALUE(rv_name) TYPE string.
     METHODS get_email
+      IMPORTING
+        iv_username     TYPE sy-uname
       RETURNING
         VALUE(rv_email) TYPE string.
-    CLASS-METHODS get_title
+    METHODS get_title
       IMPORTING
         iv_username     TYPE sy-uname
       RETURNING
@@ -28,18 +28,14 @@ CLASS zcl_abapgit_user_record DEFINITION
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_user,
-        user   TYPE sy-uname,
-        o_user TYPE REF TO zcl_abapgit_user_record,
+        user  TYPE sy-uname,
+        name  TYPE string,
+        email TYPE string,
       END OF ty_user.
 
     CLASS-DATA gt_user TYPE HASHED TABLE OF ty_user WITH UNIQUE KEY user.
 
-    DATA: BEGIN OF ms_user,
-            name  TYPE string,
-            email TYPE string,
-          END OF ms_user .
-
-    METHODS check_user_exists
+    CLASS-METHODS check_user_exists
       IMPORTING
         iv_user     TYPE sy-uname
       EXPORTING
@@ -48,19 +44,35 @@ CLASS zcl_abapgit_user_record DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS get_user_dtls_from_other_clnt
+    CLASS-METHODS get_user_dtls_from_other_clnt
       IMPORTING
-        iv_user TYPE sy-uname.
+        iv_user        TYPE sy-uname
+      RETURNING
+        VALUE(rs_user) TYPE ty_user.
+
+    CLASS-METHODS build_cache
+      IMPORTING
+        iv_user        TYPE sy-uname
+      RETURNING
+        VALUE(rs_user) TYPE ty_user.
+
+    CLASS-METHODS read_cache
+      IMPORTING
+        iv_user        TYPE sy-uname
+      RETURNING
+        VALUE(rs_user) TYPE ty_user.
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_user_record IMPLEMENTATION.
+  METHOD get_instance.
+    CREATE OBJECT ro_user.
+  ENDMETHOD.
 
 
   METHOD get_title.
-* the queried username might not exist, so this method is static
-* refactored for open-abap compatibility
+* the queried username might not exist, refactored for open-abap compatibility
 
     DATA lr_addr3             TYPE REF TO data.
     FIELD-SYMBOLS <ls_addr3>  TYPE any.
@@ -120,9 +132,7 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD constructor.
-
-    DATA ls_user TYPE ty_user.
+  METHOD build_cache.
 
     " Get user details
     TRY.
@@ -130,41 +140,31 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
           EXPORTING
             iv_user     = iv_user
           IMPORTING
-            ev_fullname = ms_user-name
-            ev_email    = ms_user-email ).
+            ev_fullname = rs_user-name
+            ev_email    = rs_user-email ).
       CATCH zcx_abapgit_exception.
         " Could not find user, try to get from other clients
-        get_user_dtls_from_other_clnt( iv_user ).
+        rs_user = get_user_dtls_from_other_clnt( iv_user ).
     ENDTRY.
 
-    " If the user has been found add it to the list
-    IF ms_user-name IS NOT INITIAL AND ms_user-email IS NOT INITIAL.
-      ls_user-user = iv_user.
-      ls_user-o_user = me.
-      INSERT ls_user INTO TABLE gt_user.
-    ENDIF.
+    rs_user-user = iv_user.
+    INSERT rs_user INTO TABLE gt_user.
 
   ENDMETHOD.
 
 
   METHOD get_email.
 
-    rv_email = ms_user-email.
+    rv_email = read_cache( iv_username )-email.
 
   ENDMETHOD.
 
 
-  METHOD get_instance.
+  METHOD read_cache.
 
-    FIELD-SYMBOLS <ls_user> TYPE ty_user.
-
-    READ TABLE gt_user ASSIGNING <ls_user> WITH TABLE KEY user = iv_user.
-    IF sy-subrc = 0.
-      ro_user = <ls_user>-o_user.
-    ELSE.
-      CREATE OBJECT ro_user
-        EXPORTING
-          iv_user = iv_user.
+    READ TABLE gt_user INTO rs_user WITH TABLE KEY user = iv_user.
+    IF sy-subrc <> 0.
+      rs_user = build_cache( iv_user ).
     ENDIF.
 
   ENDMETHOD.
@@ -172,7 +172,7 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
 
   METHOD get_name.
 
-    rv_name = ms_user-name.
+    rv_name = read_cache( iv_username )-name.
 
   ENDMETHOD.
 
@@ -190,7 +190,7 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
         ORDER BY PRIMARY KEY.
 
     LOOP AT lt_dev_clients ASSIGNING <lv_dev_client>.
-      SELECT SINGLE p~name_text a~smtp_addr INTO (ms_user-name, ms_user-email)
+      SELECT SINGLE u~bname p~name_text a~smtp_addr INTO (rs_user-user, rs_user-name, rs_user-email)
           FROM usr21 AS u
           INNER JOIN adrp AS p ON p~persnumber = u~persnumber
                               AND p~client     = u~mandt

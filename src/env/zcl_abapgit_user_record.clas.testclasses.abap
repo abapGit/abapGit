@@ -19,7 +19,7 @@ CLASS ltcl_user_record IMPLEMENTATION.
     DATA: lo_user_record TYPE REF TO zcl_abapgit_user_record.
 
     zcl_abapgit_user_record=>reset( ).
-    lo_user_record = zcl_abapgit_user_record=>get_instance( c_wrong_user ).
+    lo_user_record = zcl_abapgit_user_record=>get_instance( ).
 
     cl_abap_unit_assert=>assert_equals(
       exp = 0
