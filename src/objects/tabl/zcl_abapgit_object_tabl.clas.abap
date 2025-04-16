@@ -84,7 +84,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -715,14 +715,16 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_name     TYPE ddobjname,
-          ls_internal TYPE zif_abapgit_object_tabl=>ty_internal.
+          ls_internal TYPE zif_abapgit_object_tabl=>ty_internal,
+          ls_wa       TYPE dd02l.
 
     FIELD-SYMBOLS: <ls_dd03p>      TYPE dd03p,
                    <ls_dd05m>      TYPE dd05m,
                    <ls_dd08v>      TYPE dd08v,
                    <ls_dd35v>      TYPE dd35v,
                    <ls_dd36m>      TYPE dd36m,
-                   <lg_roworcolst> TYPE any.
+                   <lg_roworcolst> TYPE any,
+                   <ls_value>      TYPE any.
 
     lv_name = ms_item-obj_name. " type conversion
 
@@ -797,6 +799,12 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
           OTHERS            = 6.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+      ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE ls_wa TO <ls_value>.
+      IF sy-subrc = 0.
+        set_abap_language_version( CHANGING cv_abap_language_version = ms_item-abap_language_version ).
+        UPDATE dd02l SET abap_language_version = ms_item-abap_language_version WHERE tabname = lv_name.
       ENDIF.
 
       zcl_abapgit_objects_activation=>add_item( ms_item ).
