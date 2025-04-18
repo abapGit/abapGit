@@ -133,7 +133,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD zif_abapgit_repo~bind_listener.
@@ -312,14 +312,18 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     ENDIF.
 
     CREATE OBJECT ri_config TYPE zcl_abapgit_data_config.
-    mi_data_config = ri_config.
 
-    " Assume remote data has been loaded already
     READ TABLE mt_remote ASSIGNING <ls_remote>
       WITH KEY file_path
       COMPONENTS path = zif_abapgit_data_config=>c_default_path.
     IF sy-subrc = 0.
       ri_config->from_json( mt_remote ).
+    ENDIF.
+
+* offline repos does not have the remote files before the zip is choosen
+* so make sure the json is read after zip file is loaded
+    IF lines( mt_remote ) > 0.
+      mi_data_config = ri_config.
     ENDIF.
 
   ENDMETHOD.
