@@ -8,8 +8,7 @@ CLASS zcl_abapgit_objects_bridge DEFINITION PUBLIC FINAL CREATE PUBLIC INHERITIN
         !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        cx_sy_create_object_error
-        zcx_abapgit_exception.
+        cx_sy_create_object_error.
 
     INTERFACES zif_abapgit_object.
   PROTECTED SECTION.

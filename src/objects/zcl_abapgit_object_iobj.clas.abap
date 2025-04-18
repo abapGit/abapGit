@@ -2,6 +2,14 @@ CLASS zcl_abapgit_object_iobj DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
+    METHODS constructor
+      IMPORTING
+        is_item        TYPE zif_abapgit_definitions=>ty_item
+        iv_language    TYPE spras
+        io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_type_not_supported.
   PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
@@ -16,6 +24,24 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
+
+  METHOD constructor.
+
+    DATA lr_viobj TYPE REF TO data.
+
+    super->constructor(
+        is_item        = is_item
+        iv_language    = iv_language
+        io_files       = io_files
+        io_i18n_params = io_i18n_params ).
+
+    TRY.
+        CREATE DATA lr_viobj TYPE ('RSD_S_VIOBJ').
+      CATCH cx_sy_create_data_error.
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
+    ENDTRY.
+
+  ENDMETHOD.
 
 
   METHOD clear_field.
@@ -43,12 +69,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
     lv_objna = ms_item-obj_name.
 
-    TRY.
-        CREATE DATA lr_viobj TYPE ('RSD_S_VIOBJ').
-      CATCH cx_sy_create_data_error.
-        zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
-    ENDTRY.
-
+    CREATE DATA lr_viobj TYPE ('RSD_S_VIOBJ').
     ASSIGN lr_viobj->* TO <lg_viobj>.
 
     CALL FUNCTION 'RSD_IOBJ_GET'
@@ -61,7 +82,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
         iobj_not_found   = 1
         illegal_input    = 2
         bct_comp_invalid = 3
-*        not_authorized   = 4 " not in lower releases
+*       not_authorized   = 4 " not in lower releases
         OTHERS           = 5.
     IF sy-subrc = 0.
       ASSIGN COMPONENT 'TSTPNM' OF STRUCTURE <lg_viobj> TO <lg_tstpnm>.
@@ -134,20 +155,16 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
       <lg_infoobject>               TYPE data,
       <lt_infoobjects>              TYPE STANDARD TABLE.
 
-    TRY.
-        CREATE DATA lr_details TYPE ('BAPI6108').
-        CREATE DATA lr_compounds TYPE STANDARD TABLE OF ('BAPI6108CM').
-        CREATE DATA lr_attributes TYPE STANDARD TABLE OF ('BAPI6108AT').
-        CREATE DATA lr_navigationattributes TYPE STANDARD TABLE OF ('BAPI6108AN').
-        CREATE DATA lr_atrnavinfoprovider TYPE STANDARD TABLE OF ('BAPI6108NP').
-        CREATE DATA lr_hierarchycharacteristics TYPE STANDARD TABLE OF ('BAPI6108HC').
-        CREATE DATA lr_elimination TYPE STANDARD TABLE OF ('BAPI6108IE').
-        CREATE DATA lr_hanafieldsmapping TYPE STANDARD TABLE OF ('BAPI6108HANA_MAP').
-        CREATE DATA lr_xxlattributes TYPE STANDARD TABLE OF ('BAPI6108ATXXL').
-        CREATE DATA lr_infoobj TYPE STANDARD TABLE OF ('BAPI6108').
-      CATCH cx_sy_create_data_error.
-        zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
-    ENDTRY.
+    CREATE DATA lr_details TYPE ('BAPI6108').
+    CREATE DATA lr_compounds TYPE STANDARD TABLE OF ('BAPI6108CM').
+    CREATE DATA lr_attributes TYPE STANDARD TABLE OF ('BAPI6108AT').
+    CREATE DATA lr_navigationattributes TYPE STANDARD TABLE OF ('BAPI6108AN').
+    CREATE DATA lr_atrnavinfoprovider TYPE STANDARD TABLE OF ('BAPI6108NP').
+    CREATE DATA lr_hierarchycharacteristics TYPE STANDARD TABLE OF ('BAPI6108HC').
+    CREATE DATA lr_elimination TYPE STANDARD TABLE OF ('BAPI6108IE').
+    CREATE DATA lr_hanafieldsmapping TYPE STANDARD TABLE OF ('BAPI6108HANA_MAP').
+    CREATE DATA lr_xxlattributes TYPE STANDARD TABLE OF ('BAPI6108ATXXL').
+    CREATE DATA lr_infoobj TYPE STANDARD TABLE OF ('BAPI6108').
 
     ASSIGN lr_details->* TO <lg_details>.
     ASSIGN lr_compounds->* TO <lt_compounds>.
@@ -335,11 +352,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
     lv_objna = ms_item-obj_name.
 
-    TRY.
-        CREATE DATA lr_viobj TYPE ('RSD_S_VIOBJ').
-      CATCH cx_sy_create_data_error.
-        zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
-    ENDTRY.
+    CREATE DATA lr_viobj TYPE ('RSD_S_VIOBJ').
 
     ASSIGN lr_viobj->* TO <lg_viobj>.
 
@@ -414,19 +427,15 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
       <lt_hanafieldsmapping>        TYPE STANDARD TABLE,
       <lt_xxlattributes>            TYPE STANDARD TABLE.
 
-    TRY.
-        CREATE DATA lr_details TYPE ('BAPI6108').
-        CREATE DATA lr_compounds TYPE STANDARD TABLE OF ('BAPI6108CM').
-        CREATE DATA lr_attributes TYPE STANDARD TABLE OF ('BAPI6108AT').
-        CREATE DATA lr_navigationattributes TYPE STANDARD TABLE OF ('BAPI6108AN').
-        CREATE DATA lr_atrnavinfoprovider TYPE STANDARD TABLE OF ('BAPI6108NP').
-        CREATE DATA lr_hierarchycharacteristics TYPE STANDARD TABLE OF ('BAPI6108HC').
-        CREATE DATA lr_elimination TYPE STANDARD TABLE OF ('BAPI6108IE').
-        CREATE DATA lr_hanafieldsmapping TYPE STANDARD TABLE OF ('BAPI6108HANA_MAP').
-        CREATE DATA lr_xxlattributes TYPE STANDARD TABLE OF ('BAPI6108ATXXL').
-      CATCH cx_sy_create_data_error.
-        zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
-    ENDTRY.
+    CREATE DATA lr_details TYPE ('BAPI6108').
+    CREATE DATA lr_compounds TYPE STANDARD TABLE OF ('BAPI6108CM').
+    CREATE DATA lr_attributes TYPE STANDARD TABLE OF ('BAPI6108AT').
+    CREATE DATA lr_navigationattributes TYPE STANDARD TABLE OF ('BAPI6108AN').
+    CREATE DATA lr_atrnavinfoprovider TYPE STANDARD TABLE OF ('BAPI6108NP').
+    CREATE DATA lr_hierarchycharacteristics TYPE STANDARD TABLE OF ('BAPI6108HC').
+    CREATE DATA lr_elimination TYPE STANDARD TABLE OF ('BAPI6108IE').
+    CREATE DATA lr_hanafieldsmapping TYPE STANDARD TABLE OF ('BAPI6108HANA_MAP').
+    CREATE DATA lr_xxlattributes TYPE STANDARD TABLE OF ('BAPI6108ATXXL').
 
     ASSIGN lr_details->* TO <lg_details>.
     ASSIGN lr_compounds->* TO <lt_compounds>.

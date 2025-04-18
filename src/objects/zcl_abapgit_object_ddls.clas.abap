@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_type_not_supported.
 
   PROTECTED SECTION.
     METHODS open_adt_stob
@@ -51,7 +51,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
           RECEIVING
             handler = lo_ddl.
       CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'Object type DDLS is not supported by this system' ).
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDTRY.
 
   ENDMETHOD.

@@ -225,7 +225,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
       WHERE objectname = is_item-obj_type
       AND objecttype = lc_logical_transport_object.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Not found in OBJH, or not supported' ).
+      RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDIF.
 
     " object tables

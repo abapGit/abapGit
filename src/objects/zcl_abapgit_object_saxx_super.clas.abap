@@ -23,6 +23,9 @@ CLASS zcl_abapgit_object_saxx_super DEFINITION
       ABSTRACT
       RETURNING
         VALUE(rv_data_structure_name) TYPE string .
+    METHODS create_channel_objects
+      RAISING
+        zcx_abapgit_type_not_supported .
 
   PRIVATE SECTION.
 
@@ -32,9 +35,6 @@ CLASS zcl_abapgit_object_saxx_super DEFINITION
     DATA mv_appl_obj_cls_name TYPE seoclsname .
     DATA mv_persistence_cls_name TYPE seoclsname .
 
-    METHODS create_channel_objects
-      RAISING
-        zcx_abapgit_exception .
     METHODS get_data
       EXPORTING
         !eg_data TYPE any
@@ -53,7 +53,6 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
-
   METHOD create_channel_objects.
 
     get_names( ).
@@ -68,7 +67,7 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
         ENDIF.
 
       CATCH cx_root.
-        zcx_abapgit_exception=>raise( |{ ms_item-obj_type } not supported| ).
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = ms_item-obj_type.
     ENDTRY.
 
   ENDMETHOD.
@@ -76,7 +75,8 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
   METHOD get_data.
 
-    DATA: lv_object_key TYPE seu_objkey.
+    DATA: lv_object_key TYPE seu_objkey,
+          lx_error      TYPE REF TO cx_root.
 
     lv_object_key = ms_item-obj_name.
 
@@ -88,8 +88,8 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
           CHANGING
             p_object_data = mi_appl_obj_data ).
 
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( |{ ms_item-obj_type } not supported| ).
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     mi_appl_obj_data->get_data( IMPORTING p_data = eg_data ).
@@ -119,7 +119,6 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
     DATA: lv_objname    TYPE trobj_name,
           lv_object_key TYPE seu_objkey,
           lv_objtype    TYPE trobjtype.
-
 
     lv_objname    = ms_item-obj_name.
     lv_object_key = ms_item-obj_name.
@@ -167,15 +166,8 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
                    <lg_header>     TYPE any,
                    <lg_changed_by> TYPE any.
 
-    create_channel_objects( ).
-
-    TRY.
-        CREATE DATA lr_data TYPE (mv_data_structure_name).
-        ASSIGN lr_data->* TO <lg_data>.
-
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( |{ ms_item-obj_name } not supported| ).
-    ENDTRY.
+    CREATE DATA lr_data TYPE (mv_data_structure_name).
+    ASSIGN lr_data->* TO <lg_data>.
 
     get_data( IMPORTING eg_data = <lg_data> ).
 
@@ -196,8 +188,6 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_object_key TYPE seu_objkey.
-
-    create_channel_objects( ).
 
     lv_object_key = ms_item-obj_name.
 
@@ -223,15 +213,8 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lg_data> TYPE any.
 
-    create_channel_objects( ).
-
-    TRY.
-        CREATE DATA lr_data TYPE (mv_data_structure_name).
-        ASSIGN lr_data->* TO <lg_data>.
-
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( |{ ms_item-obj_type } not supported| ).
-    ENDTRY.
+    CREATE DATA lr_data TYPE (mv_data_structure_name).
+    ASSIGN lr_data->* TO <lg_data>.
 
     io_xml->read(
       EXPORTING
@@ -265,8 +248,6 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
   METHOD zif_abapgit_object~exists.
 
     DATA: lv_object_key TYPE seu_objkey.
-
-    create_channel_objects( ).
 
     lv_object_key = ms_item-obj_name.
 
@@ -340,15 +321,8 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
                    <lg_header> TYPE any,
                    <lg_field>  TYPE any.
 
-    create_channel_objects( ).
-
-    TRY.
-        CREATE DATA lr_data TYPE (mv_data_structure_name).
-        ASSIGN lr_data->* TO <lg_data>.
-
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( |{ ms_item-obj_type } not supported| ).
-    ENDTRY.
+    CREATE DATA lr_data TYPE (mv_data_structure_name).
+    ASSIGN lr_data->* TO <lg_data>.
 
     get_data( IMPORTING eg_data = <lg_data> ).
 

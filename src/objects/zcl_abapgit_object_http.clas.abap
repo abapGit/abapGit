@@ -14,7 +14,7 @@ CLASS zcl_abapgit_object_http DEFINITION
         io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_type_not_supported.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -66,7 +66,7 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
     TRY.
         CREATE DATA lr_dummy TYPE ('UCONHTTPSERVHEAD').
       CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'HTTP not supported' ).
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDTRY.
 
   ENDMETHOD.
@@ -74,14 +74,10 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    TRY.
-        SELECT SINGLE changedby FROM ('UCONHTTPSERVHEAD') INTO rv_user WHERE id = ms_item-obj_name.
-        IF sy-subrc <> 0.
-          rv_user = c_user_unknown.
-        ENDIF.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'HTTP not supported' ).
-    ENDTRY.
+    SELECT SINGLE changedby FROM ('UCONHTTPSERVHEAD') INTO rv_user WHERE id = ms_item-obj_name.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -91,14 +87,11 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
     DATA lv_name TYPE c LENGTH 30.
 
     lv_name = ms_item-obj_name.
-    TRY.
-        CALL METHOD ('CL_UCON_API_FACTORY')=>('DELETE_HTTP_SERVICE')
-          EXPORTING
-            name     = lv_name
-            devclass = iv_package.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'HTTP not supported' ).
-    ENDTRY.
+
+    CALL METHOD ('CL_UCON_API_FACTORY')=>('DELETE_HTTP_SERVICE')
+      EXPORTING
+        name     = lv_name
+        devclass = iv_package.
 
   ENDMETHOD.
 
@@ -211,12 +204,8 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
 
     DATA lv_id TYPE c LENGTH 30.
 
-    TRY.
-        SELECT SINGLE id FROM ('UCONHTTPSERVHEAD') INTO lv_id WHERE id = ms_item-obj_name AND version = 'A'.
-        rv_bool = boolc( sy-subrc = 0 ).
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'HTTP not supported' ).
-    ENDTRY.
+    SELECT SINGLE id FROM ('UCONHTTPSERVHEAD') INTO lv_id WHERE id = ms_item-obj_name AND version = 'A'.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 

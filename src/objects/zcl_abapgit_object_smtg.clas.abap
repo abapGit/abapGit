@@ -67,9 +67,8 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
       EXCEPTIONS
         type_not_found = 1
         OTHERS         = 2 ).
-
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |SMTG not supported| ).
+      RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = ms_item-obj_type.
     ENDIF.
 
     ls_component-name = iv_fielname.
