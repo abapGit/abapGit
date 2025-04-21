@@ -367,7 +367,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
       WHEN zcl_abapgit_persistence_db=>c_type_user.
         lv_descr       = 'Personal Settings'.
-        ls_explanation-value = zcl_abapgit_user_record=>get_instance( is_data-value )->get_name( ).
+        ls_explanation-value = zcl_abapgit_env_factory=>get_user_record( )->get_name( is_data-value ).
 
       WHEN zcl_abapgit_persistence_db=>c_type_settings.
         lv_descr       = 'Global Settings'.

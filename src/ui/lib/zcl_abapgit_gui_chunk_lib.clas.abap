@@ -1323,7 +1323,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ENDIF.
 
     IF iv_username <> zcl_abapgit_objects_super=>c_user_unknown AND iv_suppress_title = abap_false.
-      lv_title = zcl_abapgit_user_record=>get_title( iv_username ).
+      lv_title = zcl_abapgit_env_factory=>get_user_record( )->get_title( iv_username ).
     ENDIF.
 
     lv_jump = |{ zif_abapgit_definitions=>c_action-jump_user }?user={ iv_username }|.
