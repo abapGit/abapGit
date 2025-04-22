@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_ftgl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_type_not_supported.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -60,7 +60,7 @@ CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
     TRY.
         CREATE DATA mr_toggle TYPE ('FTGL_S_WB_FEATURE_TOGGLE').
       CATCH cx_root.
-        zcx_abapgit_exception=>raise( |FTGL not supported in your NW release| ).
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDTRY.
 
   ENDMETHOD.

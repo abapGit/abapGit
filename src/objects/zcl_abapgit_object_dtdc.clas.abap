@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_dtdc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_type_not_supported.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -151,7 +151,7 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
         CREATE OBJECT mi_persistence TYPE ('CL_DTDC_OBJECT_PERSIST').
 
       CATCH cx_sy_create_error.
-        zcx_abapgit_exception=>raise( |DTDC not supported by your NW release| ).
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDTRY.
 
   ENDMETHOD.

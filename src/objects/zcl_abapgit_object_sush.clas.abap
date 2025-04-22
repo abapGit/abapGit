@@ -88,7 +88,7 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
         CREATE DATA lr_data_head TYPE ('IF_SU22_ADT_OBJECT=>TS_SU2X_HEAD').
 
       CATCH cx_sy_create_data_error.
-        zcx_abapgit_exception=>raise( |SUSH is not supported in your SAP release| ).
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDTRY.
 
   ENDMETHOD.
