@@ -32,6 +32,7 @@ CLASS zcx_abapgit_exception DEFINITION
     DATA mv_longtext TYPE string READ-ONLY.
     DATA mt_callstack TYPE abap_callstack READ-ONLY.
     DATA mi_log TYPE REF TO zif_abapgit_log READ-ONLY.
+    DATA ms_src_info TYPE tpda_sys_srcinfo READ-ONLY.
 
     "! Raise exception with text
     "! @parameter iv_text | Text
@@ -99,6 +100,7 @@ CLASS zcx_abapgit_exception DEFINITION
         REDEFINITION .
     METHODS if_message~get_longtext
         REDEFINITION .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -154,6 +156,13 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     ENDIF.
 
     save_callstack( ).
+
+    " Save for debugger
+    get_source_position(
+      IMPORTING
+        program_name = ms_src_info-program
+        include_name = ms_src_info-include
+        source_line  = ms_src_info-line ).
 
   ENDMETHOD.
 
