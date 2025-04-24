@@ -20,6 +20,7 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception.
 
   PRIVATE SECTION.
+    DATA mo_ddl_handler TYPE REF TO object. " CL_DD_DDL_HANDLER
     METHODS is_baseinfo_supported
       RETURNING
         VALUE(rv_supported) TYPE abap_bool .
@@ -29,6 +30,12 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS format_source_before_serialize
       CHANGING
         cv_string TYPE string.
+    METHODS clear_fields
+      CHANGING
+        !cg_data TYPE any
+      RAISING
+        zcx_abapgit_exception .
+
 ENDCLASS.
 
 
@@ -37,8 +44,6 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
 
   METHOD constructor.
-
-    DATA lo_ddl TYPE REF TO object.
 
     super->constructor(
       is_item        = is_item
@@ -49,7 +54,8 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
     TRY.
         CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
           RECEIVING
-            handler = lo_ddl.
+            handler = mo_ddl_handler.
+
       CATCH cx_root.
         RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDTRY.
@@ -93,13 +99,12 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
   METHOD is_baseinfo_supported.
 
     DATA:
-      lr_data_baseinfo TYPE REF TO data,
-      lx_error         TYPE REF TO cx_root.
+      lr_data_baseinfo TYPE REF TO data.
 
     TRY.
         CREATE DATA lr_data_baseinfo TYPE ('IF_DD_DDL_TYPES=>TY_S_BASEINFO_STRING_SAVE').
         rv_supported = abap_true.
-      CATCH cx_root INTO lx_error.
+      CATCH cx_root.
         rv_supported = abap_false.
     ENDTRY.
 
@@ -108,9 +113,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
   METHOD open_adt_stob.
 
-    DATA: lr_data  TYPE REF TO data,
-          lo_ddl   TYPE REF TO object,
-          lx_error TYPE REF TO cx_root.
+    DATA: lr_data  TYPE REF TO data.
 
     FIELD-SYMBOLS: <lt_ddnames>     TYPE STANDARD TABLE.
     FIELD-SYMBOLS: <lt_entity_view> TYPE STANDARD TABLE.
@@ -120,46 +123,37 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
     FIELD-SYMBOLS: <lg_ddlname>     TYPE any.
 
 
-    TRY.
-        CREATE DATA lr_data TYPE ('IF_DD_DDL_TYPES=>TY_T_DDOBJ').
-        ASSIGN lr_data->* TO <lt_ddnames>.
+    CREATE DATA lr_data TYPE ('IF_DD_DDL_TYPES=>TY_T_DDOBJ').
+    ASSIGN lr_data->* TO <lt_ddnames>.
 
-        CREATE DATA lr_data LIKE LINE OF <lt_ddnames>.
-        ASSIGN lr_data->* TO <lg_ddnames>.
+    CREATE DATA lr_data LIKE LINE OF <lt_ddnames>.
+    ASSIGN lr_data->* TO <lg_ddnames>.
 
-        CREATE DATA lr_data TYPE ('IF_DD_DDL_TYPES=>TY_T_ENTITY_OF_VIEW').
-        ASSIGN lr_data->* TO <lt_entity_view>.
+    CREATE DATA lr_data TYPE ('IF_DD_DDL_TYPES=>TY_T_ENTITY_OF_VIEW').
+    ASSIGN lr_data->* TO <lt_entity_view>.
 
-        CREATE DATA lr_data LIKE LINE OF <lt_entity_view>.
-        ASSIGN lr_data->* TO <lg_entity_view>.
+    CREATE DATA lr_data LIKE LINE OF <lt_entity_view>.
+    ASSIGN lr_data->* TO <lg_entity_view>.
 
-        CLEAR <lt_ddnames>.
-        ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_ddnames> TO <lg_ddname>.
-        <lg_ddname> = iv_ddls_name.
-        INSERT <lg_ddnames> INTO TABLE <lt_ddnames>.
+    CLEAR <lt_ddnames>.
+    ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_ddnames> TO <lg_ddname>.
+    <lg_ddname> = iv_ddls_name.
+    INSERT <lg_ddnames> INTO TABLE <lt_ddnames>.
 
-        CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
-          RECEIVING
-            handler = lo_ddl.
+    CALL METHOD mo_ddl_handler->('IF_DD_DDL_HANDLER~GET_VIEWNAME_FROM_ENTITYNAME')
+      EXPORTING
+        ddnames        = <lt_ddnames>
+      IMPORTING
+        view_of_entity = <lt_entity_view>.
 
-        CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~GET_VIEWNAME_FROM_ENTITYNAME')
-          EXPORTING
-            ddnames        = <lt_ddnames>
-          IMPORTING
-            view_of_entity = <lt_entity_view>.
+    READ TABLE <lt_entity_view> ASSIGNING <lg_entity_view> INDEX 1.
+    IF sy-subrc = 0.
+      ASSIGN COMPONENT 'DDLNAME' OF STRUCTURE <lg_entity_view> TO <lg_ddlname>.
 
-        READ TABLE <lt_entity_view> ASSIGNING <lg_entity_view> INDEX 1.
-        IF sy-subrc = 0.
-          ASSIGN COMPONENT 'DDLNAME' OF STRUCTURE <lg_entity_view> TO <lg_ddlname>.
+      zcl_abapgit_adt_link=>jump( iv_obj_name = <lg_ddlname>
+                                  iv_obj_type = 'DDLS' ).
 
-          zcl_abapgit_adt_link=>jump( iv_obj_name = <lg_ddlname>
-                                      iv_obj_type = 'DDLS' ).
-
-        ENDIF.
-
-      CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise_with_text( lx_error ).
-    ENDTRY.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -180,23 +174,17 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    DATA: lo_ddl   TYPE REF TO object,
-          lr_data  TYPE REF TO data,
+    DATA: lr_data  TYPE REF TO data,
           lx_error TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
                    <lg_field> TYPE any.
 
+    CREATE DATA lr_data TYPE ('DDDDLSRCV').
+    ASSIGN lr_data->* TO <lg_data>.
 
     TRY.
-        CREATE DATA lr_data TYPE ('DDDDLSRCV').
-        ASSIGN lr_data->* TO <lg_data>.
-
-        CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
-          RECEIVING
-            handler = lo_ddl.
-
-        CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~READ')
+        CALL METHOD mo_ddl_handler->('IF_DD_DDL_HANDLER~READ')
           EXPORTING
             name         = ms_item-obj_name
             get_state    = 'A'
@@ -270,7 +258,6 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA:
-      lo_ddl           TYPE REF TO object,
       lr_data          TYPE REF TO data,
       lr_data_baseinfo TYPE REF TO data,
       lx_error         TYPE REF TO cx_root.
@@ -283,10 +270,10 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
       <lg_baseinfo_ddlname>      TYPE any,
       <lg_abap_language_version> TYPE any.
 
-    TRY.
-        CREATE DATA lr_data TYPE ('DDDDLSRCV').
-        ASSIGN lr_data->* TO <lg_data>.
+    CREATE DATA lr_data TYPE ('DDDDLSRCV').
+    ASSIGN lr_data->* TO <lg_data>.
 
+    TRY.
         io_xml->read( EXPORTING iv_name = 'DDLS'
                       CHANGING cg_data  = <lg_data> ).
 
@@ -298,10 +285,6 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         IF sy-subrc = 0.
           set_abap_language_version( CHANGING cv_abap_language_version = <lg_abap_language_version> ).
         ENDIF.
-
-        CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
-          RECEIVING
-            handler = lo_ddl.
 
         IF is_baseinfo_supported( ) = abap_true.
           CREATE DATA lr_data_baseinfo TYPE ('IF_DD_DDL_TYPES=>TY_S_BASEINFO_STRING_SAVE').
@@ -317,7 +300,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
           <lg_baseinfo_ddlname> = ms_item-obj_name.
 
           TRY.
-              CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~SAVE')
+              CALL METHOD mo_ddl_handler->('IF_DD_DDL_HANDLER~SAVE')
                 EXPORTING
                   name                  = ms_item-obj_name
                   put_state             = 'N'
@@ -325,7 +308,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
                   baseinfo_string       = <lg_data_baseinfo>
                   save_language_version = abap_true.
             CATCH cx_sy_dyn_call_param_not_found.
-              CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~SAVE')
+              CALL METHOD mo_ddl_handler->('IF_DD_DDL_HANDLER~SAVE')
                 EXPORTING
                   name            = ms_item-obj_name
                   put_state       = 'N'
@@ -333,14 +316,14 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
                   baseinfo_string = <lg_data_baseinfo>.
           ENDTRY.
         ELSE.
-          CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~SAVE')
+          CALL METHOD mo_ddl_handler->('IF_DD_DDL_HANDLER~SAVE')
             EXPORTING
               name         = ms_item-obj_name
               put_state    = 'N'
               ddddlsrcv_wa = <lg_data>.
         ENDIF.
 
-        CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~WRITE_TADIR')
+        CALL METHOD mo_ddl_handler->('IF_DD_DDL_HANDLER~WRITE_TADIR')
           EXPORTING
             objectname = ms_item-obj_name
             devclass   = iv_package
@@ -349,16 +332,14 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         corr_insert( iv_package ).
 
       CATCH cx_root INTO lx_error.
-        IF lo_ddl IS NOT INITIAL.
-          " Attempt clean-up but catch error if it doesn't work
-          TRY.
-              CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~DELETE')
-                EXPORTING
-                  name = ms_item-obj_name
-                  prid = 0.
-            CATCH cx_root ##NO_HANDLER.
-          ENDTRY.
-        ENDIF.
+        " Attempt clean-up but catch error if it doesn't work
+        TRY.
+            CALL METHOD mo_ddl_handler->('IF_DD_DDL_HANDLER~DELETE')
+              EXPORTING
+                name = ms_item-obj_name
+                prid = 0.
+          CATCH cx_root ##NO_HANDLER.
+        ENDTRY.
 
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
@@ -370,15 +351,10 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_state TYPE objstate,
-          lo_ddl   TYPE REF TO object.
+    DATA: lv_state TYPE objstate.
 
     TRY.
-        CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
-          RECEIVING
-            handler = lo_ddl.
-
-        CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~READ')
+        CALL METHOD mo_ddl_handler->('IF_DD_DDL_HANDLER~READ')
           EXPORTING
             name      = ms_item-obj_name
           IMPORTING
@@ -457,36 +433,28 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lo_ddl           TYPE REF TO object,
-          lr_data          TYPE REF TO data,
+    DATA: lr_data          TYPE REF TO data,
           lr_data_baseinfo TYPE REF TO data,
-          lt_clr_comps     TYPE STANDARD TABLE OF fieldname WITH DEFAULT KEY,
           lx_error         TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <lg_data>                  TYPE any,
-                   <lg_field>                 TYPE any,
-                   <lv_comp>                  LIKE LINE OF lt_clr_comps,
-                   <lt_data_baseinfo>         TYPE ANY TABLE,
-                   <lg_data_baseinfo>         TYPE any,
-                   <lg_ddlname>               TYPE any,
-                   <lg_as4local>              TYPE any,
-                   <lg_abap_language_version> TYPE any.
+    FIELD-SYMBOLS: <lg_data>          TYPE any,
+                   <lg_field>         TYPE any,
+                   <lt_data_baseinfo> TYPE ANY TABLE,
+                   <lg_data_baseinfo> TYPE any,
+                   <lg_ddlname>       TYPE any,
+                   <lg_as4local>      TYPE any.
 
+
+    CREATE DATA lr_data TYPE ('DDDDLSRCV').
+    ASSIGN lr_data->* TO <lg_data>.
 
     TRY.
-        CREATE DATA lr_data TYPE ('DDDDLSRCV').
-        ASSIGN lr_data->* TO <lg_data>.
-
-        CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
-          RECEIVING
-            handler = lo_ddl.
 
         IF is_baseinfo_supported( ) = abap_true.
           CREATE DATA lr_data_baseinfo TYPE ('IF_DD_DDL_TYPES=>TY_T_BASEINFO_STRING').
           ASSIGN lr_data_baseinfo->* TO <lt_data_baseinfo>.
-          ASSIGN lr_data_baseinfo->* TO <lg_data_baseinfo>.
 
-          CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~READ')
+          CALL METHOD mo_ddl_handler->('IF_DD_DDL_HANDLER~READ')
             EXPORTING
               name            = ms_item-obj_name
               get_state       = 'A'
@@ -511,7 +479,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
             ENDIF.
           ENDLOOP.
         ELSE.
-          CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~READ')
+          CALL METHOD mo_ddl_handler->('IF_DD_DDL_HANDLER~READ')
             EXPORTING
               name         = ms_item-obj_name
               get_state    = 'A'
@@ -523,24 +491,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
-    ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <lg_data> TO <lg_abap_language_version>.
-    IF sy-subrc = 0.
-      clear_abap_language_version( CHANGING cv_abap_language_version = <lg_abap_language_version> ).
-    ENDIF.
-
-    APPEND 'AS4USER'               TO lt_clr_comps.
-    APPEND 'AS4DATE'               TO lt_clr_comps.
-    APPEND 'AS4TIME'               TO lt_clr_comps.
-    APPEND 'ACTFLAG'               TO lt_clr_comps.
-    APPEND 'CHGFLAG'               TO lt_clr_comps.
-    APPEND 'ABAP_LANGU_VERSION'    TO lt_clr_comps.
-
-    LOOP AT lt_clr_comps ASSIGNING <lv_comp>.
-      ASSIGN COMPONENT <lv_comp> OF STRUCTURE <lg_data> TO <lg_field>.
-      IF sy-subrc = 0.
-        CLEAR <lg_field>.
-      ENDIF.
-    ENDLOOP.
+    clear_fields( CHANGING cg_data = <lg_data> ).
 
     ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
     ASSERT sy-subrc = 0.
@@ -557,4 +508,30 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
                  ig_data = <lg_data> ).
 
   ENDMETHOD.
+
+
+  METHOD clear_fields.
+
+    DATA:
+      BEGIN OF ls_fields_to_clear,
+        as4user            TYPE c,
+        as4date            TYPE d,
+        as4time            TYPE t,
+        actflag            TYPE c,
+        chgflag            TYPE c,
+        abap_langu_version TYPE c,
+      END OF ls_fields_to_clear.
+
+    FIELD-SYMBOLS:
+      <lg_abap_language_version> TYPE any.
+
+    MOVE-CORRESPONDING ls_fields_to_clear TO cg_data.
+
+    ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE cg_data TO <lg_abap_language_version>.
+    IF sy-subrc = 0.
+      clear_abap_language_version( CHANGING cv_abap_language_version = <lg_abap_language_version> ).
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.
