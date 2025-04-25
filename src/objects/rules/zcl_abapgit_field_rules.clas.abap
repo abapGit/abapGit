@@ -10,8 +10,10 @@ CLASS zcl_abapgit_field_rules DEFINITION
     CLASS-METHODS create
       RETURNING
         VALUE(ro_result) TYPE REF TO zif_abapgit_field_rules.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
+
     TYPES:
       BEGIN OF ty_item,
         tabname   TYPE tabname,
@@ -24,10 +26,12 @@ CLASS zcl_abapgit_field_rules DEFINITION
 
     METHODS fill_value
       IMPORTING
-        iv_rule    TYPE zif_abapgit_field_rules=>ty_fill_rule
-        iv_package TYPE devclass
+        iv_rule                  TYPE zif_abapgit_field_rules=>ty_fill_rule
+        iv_package               TYPE devclass
+        iv_abap_language_version TYPE uccheck OPTIONAL
       CHANGING
-        cv_value   TYPE any.
+        cv_value                 TYPE any.
+
 ENDCLASS.
 
 
@@ -56,6 +60,8 @@ CLASS zcl_abapgit_field_rules IMPLEMENTATION.
         cv_value = sy-mandt.
       WHEN zif_abapgit_field_rules=>c_fill_rule-package.
         cv_value = iv_package.
+      WHEN zif_abapgit_field_rules=>c_fill_rule-abap_language_version.
+        cv_value = iv_abap_language_version.
     ENDCASE.
   ENDMETHOD.
 
@@ -109,10 +115,11 @@ CLASS zcl_abapgit_field_rules IMPLEMENTATION.
         IF sy-subrc = 0.
           fill_value(
             EXPORTING
-              iv_rule    = ls_item-fill_rule
-              iv_package = iv_package
+              iv_rule                  = ls_item-fill_rule
+              iv_package               = iv_package
+              iv_abap_language_version = iv_abap_language_version
             CHANGING
-              cv_value   = <lv_value> ).
+              cv_value                 = <lv_value> ).
         ENDIF.
       ENDLOOP.
     ENDLOOP.

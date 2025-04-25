@@ -177,7 +177,7 @@ CLASS zcl_abapgit_objects DEFINITION
       RETURNING
         VALUE(ri_obj)   TYPE REF TO zif_abapgit_object
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_type_not_supported .
 
     CLASS-METHODS map_tadir_to_items
       IMPORTING
@@ -462,8 +462,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD create_object.
 
-    DATA: lv_message            TYPE string,
-          lv_class_name         TYPE string,
+    DATA: lv_class_name         TYPE string,
           ls_obj_serializer_map LIKE LINE OF gt_obj_serializer_map.
 
     " serialize & deserialize require files and i18n parameters,
@@ -510,26 +509,26 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
               iv_language = zif_abapgit_definitions=>c_english.
         ENDIF.
       CATCH cx_sy_create_object_error.
-        lv_message = |Object type { is_item-obj_type } is not supported by this system|.
-        IF iv_native_only = abap_false.
-          TRY. " 2nd step, try looking for plugins
-              IF io_files IS BOUND AND io_i18n_params IS BOUND.
-                CREATE OBJECT ri_obj TYPE zcl_abapgit_objects_bridge
-                  EXPORTING
-                    is_item        = is_item
-                    io_files       = io_files
-                    io_i18n_params = io_i18n_params.
-              ELSE.
-                CREATE OBJECT ri_obj TYPE zcl_abapgit_objects_bridge
-                  EXPORTING
-                    is_item = is_item.
-              ENDIF.
-            CATCH cx_sy_create_object_error.
-              zcx_abapgit_exception=>raise( lv_message ).
-          ENDTRY.
-        ELSE. " No native support? -> fail
-          zcx_abapgit_exception=>raise( lv_message ).
+        IF iv_native_only = abap_true.
+          " No native support? -> fail
+          RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
         ENDIF.
+
+        TRY. " 2nd step, try looking for plugins
+            IF io_files IS BOUND AND io_i18n_params IS BOUND.
+              CREATE OBJECT ri_obj TYPE zcl_abapgit_objects_bridge
+                EXPORTING
+                  is_item        = is_item
+                  io_files       = io_files
+                  io_i18n_params = io_i18n_params.
+            ELSE.
+              CREATE OBJECT ri_obj TYPE zcl_abapgit_objects_bridge
+                EXPORTING
+                  is_item = is_item.
+            ENDIF.
+          CATCH cx_sy_create_object_error.
+            RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
+        ENDTRY.
     ENDTRY.
 
   ENDMETHOD.
@@ -1084,7 +1083,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           is_item        = is_item
           iv_native_only = iv_native_only ).
         rv_bool = abap_true.
-      CATCH zcx_abapgit_exception.
+      CATCH zcx_abapgit_type_not_supported.
         rv_bool = abap_false.
     ENDTRY.
 
