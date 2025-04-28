@@ -283,7 +283,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     " For optimal performance, we limit here by object type since we know that only TABL has a comparator
     " If there are other object types in the future, extend the where clause or remove the check on object type.
     LOOP AT it_results ASSIGNING <ls_result> WHERE match IS INITIAL AND filename CP '*.xml'
-      AND obj_type ='TABL' ##PRIMKEY[SEC_KEY].
+      AND obj_type = 'TABL' ##PRIMKEY[SEC_KEY].
 
       CLEAR ls_item.
       MOVE-CORRESPONDING <ls_result> TO ls_item.
