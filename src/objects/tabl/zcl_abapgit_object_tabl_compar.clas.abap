@@ -1,24 +1,25 @@
 CLASS zcl_abapgit_object_tabl_compar DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_comparator .
+    INTERFACES zif_abapgit_comparator.
 
     METHODS constructor
       IMPORTING
-        !ii_local TYPE REF TO zif_abapgit_xml_input.
+        !is_item TYPE zif_abapgit_definitions=>ty_item.
+
   PROTECTED SECTION.
 
     TYPES:
       ty_founds  TYPE STANDARD TABLE OF rsfindlst
-                           WITH NON-UNIQUE DEFAULT KEY .
+                           WITH NON-UNIQUE DEFAULT KEY.
     TYPES:
       ty_seu_obj TYPE STANDARD TABLE OF seu_obj
-                           WITH NON-UNIQUE DEFAULT KEY .
+                           WITH NON-UNIQUE DEFAULT KEY.
 
-    DATA mi_local TYPE REF TO zif_abapgit_xml_input.
+    DATA ms_item TYPE zif_abapgit_definitions=>ty_item.
 
     METHODS get_where_used_recursive
       IMPORTING
@@ -29,14 +30,16 @@ CLASS zcl_abapgit_object_tabl_compar DEFINITION
       RETURNING
         VALUE(rt_founds_all) TYPE ty_founds
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     METHODS is_structure_used_in_db_table
       IMPORTING
         !iv_object_name                       TYPE dd02v-tabname
       RETURNING
         VALUE(rv_is_structure_used_in_db_tab) TYPE abap_bool
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     METHODS validate
       IMPORTING
         !ii_remote_version TYPE REF TO zif_abapgit_xml_input
@@ -45,19 +48,19 @@ CLASS zcl_abapgit_object_tabl_compar DEFINITION
       RETURNING
         VALUE(rv_message)  TYPE string
       RAISING
-        zcx_abapgit_exception .
-  PRIVATE SECTION.
+        zcx_abapgit_exception.
 
+  PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
+CLASS zcl_abapgit_object_tabl_compar IMPLEMENTATION.
 
 
   METHOD constructor.
 
-    mi_local = ii_local.
+    ms_item = is_item.
 
   ENDMETHOD.
 
@@ -152,7 +155,6 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
           lt_current_table_fields  TYPE TABLE OF dd03p,
           ls_current_table_field   LIKE LINE OF lt_current_table_fields,
           ls_dd02v                 TYPE dd02v,
-          ls_item                  TYPE zif_abapgit_definitions=>ty_item,
           lv_inconsistent          TYPE abap_bool.
 
     FIELD-SYMBOLS <lv_is_gtt> TYPE abap_bool.
@@ -176,18 +178,15 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
 
     ii_remote_version->read(
       EXPORTING
-        iv_name       = 'DD03P_TABLE'
+        iv_name = 'DD03P_TABLE'
       CHANGING
-        cg_data       = lt_previous_table_fields ).
+        cg_data = lt_previous_table_fields ).
 
     ii_local_version->read(
       EXPORTING
-        iv_name       = 'DD03P_TABLE'
+        iv_name = 'DD03P_TABLE'
       CHANGING
-        cg_data       = lt_current_table_fields ).
-
-    ls_item-obj_name = ls_dd02v-tabname.
-    ls_item-obj_type = 'TABL'.
+        cg_data = lt_current_table_fields ).
 
     LOOP AT lt_previous_table_fields INTO ls_previous_table_field.
       READ TABLE lt_current_table_fields WITH KEY fieldname = ls_previous_table_field-fieldname
@@ -199,37 +198,34 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
               iv_msg  = |Field { ls_previous_table_field-fieldname }: | &
                         |Data element changed from { ls_previous_table_field-rollname } | &
                         |to { ls_current_table_field-rollname }|
-              is_item = ls_item ).
+              is_item = ms_item ).
           ELSEIF ls_current_table_field-rollname IS NOT INITIAL.
             ii_log->add_info(
               iv_msg  = |Field { ls_previous_table_field-fieldname }: | &
                         |Data type changed from internal type | &
                         |{ ls_previous_table_field-inttype }(length { ls_previous_table_field-intlen }) | &
                         |to data element { ls_current_table_field-rollname }|
-              is_item = ls_item ).
+              is_item = ms_item ).
           ELSEIF ls_previous_table_field-rollname IS NOT INITIAL.
             ii_log->add_info(
               iv_msg  = |Field { ls_previous_table_field-fieldname }: | &
                         |Data type changed from date element { ls_previous_table_field-rollname } | &
                         |to internal type | &
                         |{ ls_current_table_field-inttype }(length { ls_current_table_field-intlen })|
-              is_item = ls_item ).
+              is_item = ms_item ).
           ENDIF.
           "TODO: perform several other checks, e.g. field length truncated, ...
           lv_inconsistent = abap_true.
         ENDIF.
       ELSE.
         ii_log->add_info( iv_msg = |Field { ls_previous_table_field-fieldname } removed|
-                          is_item = ls_item ).
+                          is_item = ms_item ).
         lv_inconsistent = abap_true.
       ENDIF.
     ENDLOOP.
-    IF lv_inconsistent = abap_true.
-      rv_message = |Database Table { ls_dd02v-tabname }: Fields were changed. This may lead to inconsistencies!|.
-    ENDIF.
 
-    IF NOT rv_message IS INITIAL.
-      rv_message = |Database Table { ls_dd02v-tabname }: { rv_message }|.
+    IF lv_inconsistent = abap_true.
+      rv_message = 'Fields were changed!'.
     ENDIF.
 
   ENDMETHOD.
@@ -237,9 +233,13 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
 
   METHOD zif_abapgit_comparator~compare.
 
+    IF zcl_abapgit_objects=>exists( ms_item ) = abap_false.
+      RETURN.
+    ENDIF.
+
     rs_result-text = validate(
       ii_remote_version = ii_remote
-      ii_local_version  = mi_local
+      ii_local_version  = ii_local
       ii_log            = ii_log ).
 
   ENDMETHOD.

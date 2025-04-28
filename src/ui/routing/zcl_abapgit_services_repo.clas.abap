@@ -106,6 +106,13 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS popup_data_loss_overwrite
+      IMPORTING
+        !it_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      CHANGING
+        !ct_data_loss TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS popup_package_overwrite
       CHANGING
         !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
@@ -441,6 +448,69 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD popup_data_loss_overwrite.
+
+    DATA: lt_columns  TYPE zif_abapgit_popups=>ty_alv_column_tt,
+          lt_selected LIKE ct_data_loss,
+          li_popups   TYPE REF TO zif_abapgit_popups.
+    DATA lt_preselected_rows TYPE zif_abapgit_popups=>ty_rows.
+
+    FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF it_overwrite,
+                   <ls_data_loss> LIKE LINE OF ct_data_loss,
+                   <ls_column>    TYPE zif_abapgit_popups=>ty_alv_column.
+
+    LOOP AT it_overwrite ASSIGNING <ls_overwrite> WHERE decision <> zif_abapgit_definitions=>c_yes.
+      DELETE ct_data_loss WHERE obj_type = <ls_overwrite>-obj_type AND obj_name = <ls_overwrite>-obj_name.
+    ENDLOOP.
+
+    IF lines( ct_data_loss ) = 0.
+      RETURN.
+    ENDIF.
+
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'OBJ_TYPE'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'OBJ_NAME'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'ICON'.
+    <ls_column>-text = 'Action'.
+    <ls_column>-show_icon = abap_true.
+    <ls_column>-length = 5.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'TEXT'.
+    <ls_column>-text = 'Description'.
+
+    LOOP AT ct_data_loss ASSIGNING <ls_data_loss> WHERE decision = zif_abapgit_definitions=>c_yes.
+      INSERT sy-tabix INTO TABLE lt_preselected_rows.
+    ENDLOOP.
+
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->popup_to_select_from_list(
+      EXPORTING
+        it_list               = ct_data_loss
+        iv_header_text        = |Changes to the following objects could lead to DATA LOSS!|
+                             && | Select the objects which should be changed to the remote version, anyway.|
+        iv_select_column_text = 'Overwrite?'
+        it_columns_to_display = lt_columns
+        it_preselected_rows   = lt_preselected_rows
+      IMPORTING
+        et_list               = lt_selected ).
+
+    LOOP AT ct_data_loss ASSIGNING <ls_data_loss>.
+      READ TABLE lt_selected WITH TABLE KEY object_type_and_name
+                             COMPONENTS obj_type = <ls_data_loss>-obj_type
+                                        obj_name = <ls_data_loss>-obj_name
+                             TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        <ls_data_loss>-decision = zif_abapgit_definitions=>c_yes.
+      ELSE.
+        <ls_data_loss>-decision = zif_abapgit_definitions=>c_no.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD popup_decisions.
 
     DATA:
@@ -479,6 +549,13 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ENDIF.
 
     popup_objects_overwrite( CHANGING ct_overwrite = lt_decision ).
+
+    popup_data_loss_overwrite(
+      EXPORTING
+        it_overwrite = lt_decision
+      CHANGING
+        ct_data_loss = cs_checks-data_loss ).
+
     popup_package_overwrite( CHANGING ct_overwrite = cs_checks-warning_package ).
 
     IF cs_checks-transport-required = abap_true AND cs_checks-transport-transport IS INITIAL.

@@ -120,14 +120,6 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_transport TYPE trkorr
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS compare_remote_to_local
-      IMPORTING
-        !ii_object TYPE REF TO zif_abapgit_object
-        !it_remote TYPE zif_abapgit_git_definitions=>ty_files_tt
-        !is_result TYPE zif_abapgit_definitions=>ty_result
-        !ii_log    TYPE REF TO zif_abapgit_log
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS deserialize_steps
       IMPORTING
         !it_steps     TYPE zif_abapgit_objects=>ty_step_data_tt
@@ -382,80 +374,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   METHOD class_name.
 
     CONCATENATE 'ZCL_ABAPGIT_OBJECT_' is_item-obj_type INTO rv_class_name.
-
-  ENDMETHOD.
-
-
-  METHOD compare_remote_to_local.
-* this method is used for comparing local with remote objects
-* before pull, this is useful eg. when overwriting a TABL object.
-* only the main XML file is used for comparison
-
-    DATA: ls_remote_file    TYPE zif_abapgit_git_definitions=>ty_file,
-          li_remote_version TYPE REF TO zif_abapgit_xml_input,
-          lv_count          TYPE i,
-          ls_result         TYPE zif_abapgit_comparator=>ty_result,
-          lv_answer         TYPE string,
-          li_comparator     TYPE REF TO zif_abapgit_comparator,
-          ls_item           TYPE zif_abapgit_definitions=>ty_item.
-
-    FIND ALL OCCURRENCES OF '.' IN is_result-filename MATCH COUNT lv_count.
-
-    IF is_result-filename CS '.XML' AND lv_count = 2.
-      IF ii_object->exists( ) = abap_false.
-        RETURN.
-      ENDIF.
-
-      READ TABLE it_remote WITH KEY file
-        COMPONENTS filename = is_result-filename INTO ls_remote_file.
-      IF sy-subrc <> 0. "if file does not exist in remote, we don't need to validate
-        RETURN.
-      ENDIF.
-
-      li_comparator = ii_object->get_comparator( ).
-      IF NOT li_comparator IS BOUND.
-        RETURN.
-      ENDIF.
-
-      CREATE OBJECT li_remote_version
-        TYPE zcl_abapgit_xml_input
-        EXPORTING
-          iv_xml      = zcl_abapgit_convert=>xstring_to_string_utf8( ls_remote_file-data )
-          iv_filename = ls_remote_file-filename.
-
-      ls_result = li_comparator->compare( ii_remote = li_remote_version
-                                          ii_log = ii_log ).
-      IF ls_result-text IS INITIAL.
-        RETURN.
-      ENDIF.
-
-      "log comparison result
-      ls_item-obj_type = is_result-obj_type.
-      ls_item-obj_name = is_result-obj_name.
-      ii_log->add_warning( iv_msg = ls_result-text
-                           is_item = ls_item ).
-
-      "continue or abort?
-      IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true.
-        lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-          iv_titlebar              = 'Warning'
-          iv_text_question         = ls_result-text
-          iv_text_button_1         = 'Pull Anyway'
-          iv_icon_button_1         = 'ICON_OKAY'
-          iv_text_button_2         = 'Cancel'
-          iv_icon_button_2         = 'ICON_CANCEL'
-          iv_default_button        = '2'
-          iv_display_cancel_button = abap_false ).
-
-        IF lv_answer = '2'.
-          zcx_abapgit_exception=>raise( |Deserialization for object { is_result-obj_name } | &
-                                        |(type { is_result-obj_type }) aborted by user| ).
-        ENDIF.
-      ELSE.
-        zcx_abapgit_exception=>raise( |Deserialization for object { is_result-obj_name } | &
-                                      |(type { is_result-obj_type }) aborted, user decision required| ).
-      ENDIF.
-    ENDIF.
 
   ENDMETHOD.
 
@@ -802,12 +720,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             is_metadata    = ls_metadata
             io_files       = lo_files
             io_i18n_params = lo_i18n_params ).
-
-          compare_remote_to_local(
-            ii_object = li_obj
-            it_remote = lt_remote
-            is_result = <ls_result>
-            ii_log    = ii_log ).
 
           "get required steps for deserialize the object
           lt_steps_id = li_obj->get_deserialize_steps( ).
