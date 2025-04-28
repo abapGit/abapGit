@@ -1,6 +1,7 @@
 CLASS zcl_abapgit_persistence_user DEFINITION
   PUBLIC
-  CREATE PRIVATE .
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_persist_factory.
 
   PUBLIC SECTION.
 
@@ -15,9 +16,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
-        !iv_user TYPE sy-uname DEFAULT sy-uname
-      RAISING
-        zcx_abapgit_exception .
+        !iv_user TYPE sy-uname DEFAULT sy-uname.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -55,12 +54,8 @@ CLASS zcl_abapgit_persistence_user DEFINITION
       IMPORTING
         !iv_xml        TYPE string
       RETURNING
-        VALUE(rs_user) TYPE ty_user
-      RAISING
-        zcx_abapgit_exception .
-    METHODS read
-      RAISING
-        zcx_abapgit_exception .
+        VALUE(rs_user) TYPE ty_user.
+    METHODS read.
     METHODS read_repo_config
       IMPORTING
         !iv_url               TYPE zif_abapgit_persistence=>ty_repo-url

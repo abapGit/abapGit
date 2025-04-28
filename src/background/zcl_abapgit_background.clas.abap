@@ -31,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
+CLASS zcl_abapgit_background IMPLEMENTATION.
 
 
   METHOD dequeue.
@@ -135,14 +135,14 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
 
   METHOD run.
 
-    DATA: lo_per         TYPE REF TO zcl_abapgit_persist_background,
-          li_repo        TYPE REF TO zif_abapgit_repo,
-          li_repo_online TYPE REF TO zif_abapgit_repo_online,
-          lt_list        TYPE zcl_abapgit_persist_background=>ty_background_keys,
-          li_background  TYPE REF TO zif_abapgit_background,
-          li_log         TYPE REF TO zif_abapgit_log,
-          lx_error       TYPE REF TO zcx_abapgit_exception,
-          lv_repo_name   TYPE string.
+    DATA:
+      li_repo        TYPE REF TO zif_abapgit_repo,
+      li_repo_online TYPE REF TO zif_abapgit_repo_online,
+      lt_list        TYPE zif_abapgit_persist_background=>ty_background_keys,
+      li_background  TYPE REF TO zif_abapgit_background,
+      li_log         TYPE REF TO zif_abapgit_log,
+      lx_error       TYPE REF TO zcx_abapgit_exception,
+      lv_repo_name   TYPE string.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
 
@@ -153,8 +153,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    CREATE OBJECT lo_per.
-    lt_list = lo_per->list( ).
+    lt_list = zcl_abapgit_persist_factory=>get_background( )->list( ).
 
     WRITE: / 'Background mode'.
 
