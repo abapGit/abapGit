@@ -8,21 +8,27 @@ CLASS zcl_abapgit_object_saxx_super DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_object .
+    METHODS constructor
+      IMPORTING
+        is_item        TYPE zif_abapgit_definitions=>ty_item
+        iv_language    TYPE spras
+        io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL.
 
   PROTECTED SECTION.
 
-    METHODS get_persistence_class_name
-      ABSTRACT
+    METHODS get_persistence_class_name ABSTRACT
       RETURNING
         VALUE(rv_persistence_class_name) TYPE seoclsname .
-    METHODS get_data_class_name
-      ABSTRACT
+    METHODS get_data_class_name ABSTRACT
       RETURNING
         VALUE(rv_data_class_name) TYPE seoclsname .
-    METHODS get_data_structure_name
-      ABSTRACT
+    METHODS get_data_structure_name ABSTRACT
       RETURNING
         VALUE(rv_data_structure_name) TYPE string .
+    METHODS get_lock_object ABSTRACT
+      RETURNING
+        VALUE(rv_lock_object) TYPE string.
     METHODS create_channel_objects
       RAISING
         zcx_abapgit_type_not_supported .
@@ -34,6 +40,7 @@ CLASS zcl_abapgit_object_saxx_super DEFINITION
     DATA mv_data_structure_name TYPE string .
     DATA mv_appl_obj_cls_name TYPE seoclsname .
     DATA mv_persistence_cls_name TYPE seoclsname .
+    DATA mv_object_key TYPE seu_objkey .
 
     METHODS get_data
       EXPORTING
@@ -47,26 +54,34 @@ CLASS zcl_abapgit_object_saxx_super DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS get_names .
+
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
+  METHOD constructor.
+
+    super->constructor(
+        is_item        = is_item
+        iv_language    = iv_language
+        io_files       = io_files
+        io_i18n_params = io_i18n_params ).
+
+    mv_object_key = ms_item-obj_name.
+
+  ENDMETHOD.
+
   METHOD create_channel_objects.
 
     get_names( ).
 
     TRY.
-        IF mi_appl_obj_data IS NOT BOUND.
-          CREATE OBJECT mi_appl_obj_data TYPE (mv_appl_obj_cls_name).
-        ENDIF.
+        CREATE OBJECT mi_appl_obj_data TYPE (mv_appl_obj_cls_name).
+        CREATE OBJECT mi_persistence TYPE (mv_persistence_cls_name).
 
-        IF mi_persistence IS NOT BOUND.
-          CREATE OBJECT mi_persistence TYPE (mv_persistence_cls_name).
-        ENDIF.
-
-      CATCH cx_root.
+      CATCH cx_sy_create_object_error.
         RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = ms_item-obj_type.
     ENDTRY.
 
@@ -75,20 +90,17 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
   METHOD get_data.
 
-    DATA: lv_object_key TYPE seu_objkey,
-          lx_error      TYPE REF TO cx_root.
-
-    lv_object_key = ms_item-obj_name.
+    DATA: lx_error TYPE REF TO cx_swb_exception.
 
     TRY.
         mi_persistence->get(
           EXPORTING
-            p_object_key  = lv_object_key
+            p_object_key  = mv_object_key
             p_version     = 'A'
           CHANGING
             p_object_data = mi_appl_obj_data ).
 
-      CATCH cx_root INTO lx_error.
+      CATCH cx_swb_exception INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
@@ -116,18 +128,16 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
   METHOD lock.
 
-    DATA: lv_objname    TYPE trobj_name,
-          lv_object_key TYPE seu_objkey,
-          lv_objtype    TYPE trobjtype.
+    DATA: lv_objname TYPE trobj_name,
+          lv_objtype TYPE trobjtype.
 
-    lv_objname    = ms_item-obj_name.
-    lv_object_key = ms_item-obj_name.
-    lv_objtype    = ms_item-obj_type.
+    lv_objname = ms_item-obj_name.
+    lv_objtype = ms_item-obj_type.
 
     mi_persistence->lock(
       EXPORTING
         p_objname_tr   = lv_objname
-        p_object_key   = lv_object_key
+        p_object_key   = mv_object_key
         p_objtype_tr   = lv_objtype
       EXCEPTIONS
         foreign_lock   = 1
@@ -143,16 +153,14 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
   METHOD unlock.
 
-    DATA: lv_objname    TYPE trobj_name,
-          lv_object_key TYPE seu_objkey,
-          lv_objtype    TYPE trobjtype.
+    DATA: lv_objname TYPE trobj_name,
+          lv_objtype TYPE trobjtype.
 
-    lv_objname    = ms_item-obj_name.
-    lv_object_key = ms_item-obj_name.
-    lv_objtype    = ms_item-obj_type.
+    lv_objname = ms_item-obj_name.
+    lv_objtype = ms_item-obj_type.
 
     mi_persistence->unlock( p_objname_tr = lv_objname
-                            p_object_key = lv_object_key
+                            p_object_key = mv_object_key
                             p_objtype_tr = lv_objtype ).
 
   ENDMETHOD.
@@ -163,7 +171,6 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
     DATA: lr_data TYPE REF TO data.
 
     FIELD-SYMBOLS: <lg_data>       TYPE any,
-                   <lg_header>     TYPE any,
                    <lg_changed_by> TYPE any.
 
     CREATE DATA lr_data TYPE (mv_data_structure_name).
@@ -171,9 +178,7 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
     get_data( IMPORTING eg_data = <lg_data> ).
 
-    ASSIGN COMPONENT 'HEADER' OF STRUCTURE <lg_data> TO <lg_header>.
-    ASSERT sy-subrc = 0.
-    ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <lg_header> TO <lg_changed_by>.
+    ASSIGN COMPONENT 'HEADER-CHANGED_BY' OF STRUCTURE <lg_data> TO <lg_changed_by>.
     ASSERT sy-subrc = 0.
 
     IF <lg_changed_by> IS NOT INITIAL.
@@ -187,15 +192,9 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_object_key TYPE seu_objkey.
-
-    lv_object_key = ms_item-obj_name.
-
     TRY.
         lock( ).
-
-        mi_persistence->delete( lv_object_key ).
-
+        mi_persistence->delete( mv_object_key ).
         unlock( ).
 
       CATCH cx_swb_exception.
@@ -229,13 +228,9 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
     TRY.
         lock( ).
-
         corr_insert( iv_package ).
-
         mi_appl_obj_data->set_data( <lg_data> ).
-
         mi_persistence->save( mi_appl_obj_data ).
-
         unlock( ).
 
       CATCH cx_swb_exception.
@@ -247,16 +242,12 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_object_key TYPE seu_objkey.
-
-    lv_object_key = ms_item-obj_name.
-
     TRY.
-        mi_persistence->get( p_object_key           = lv_object_key
+        mi_persistence->get( p_object_key           = mv_object_key
                              p_version              = 'A'
                              p_existence_check_only = abap_true ).
 
-      CATCH cx_swb_object_does_not_exist cx_swb_exception.
+      CATCH cx_swb_exception.
         rv_bool = abap_false.
         RETURN.
     ENDTRY.
@@ -293,7 +284,18 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_locked.
 
-    rv_is_locked = abap_false.
+    DATA: lv_argument    TYPE seqg3-garg,
+          lv_lock_object TYPE string.
+
+    lv_lock_object = get_lock_object( ).
+
+    lv_argument = mv_object_key.
+    OVERLAY lv_argument WITH '                              '.
+    lv_argument = lv_argument && '*'.
+
+    rv_is_locked = exists_a_lock_entry_for(
+                     iv_lock_object = lv_lock_object
+                     iv_argument    = lv_argument ).
 
   ENDMETHOD.
 
@@ -315,7 +317,7 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lr_data             TYPE REF TO data.
+    DATA: lr_data TYPE REF TO data.
 
     FIELD-SYMBOLS: <lg_data>   TYPE any,
                    <lg_header> TYPE any,
@@ -365,4 +367,5 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
                  ig_data = <lg_data> ).
 
   ENDMETHOD.
+
 ENDCLASS.

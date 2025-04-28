@@ -21,6 +21,8 @@ CLASS zcl_abapgit_object_samc DEFINITION
         REDEFINITION .
     METHODS get_persistence_class_name
         REDEFINITION .
+    METHODS get_lock_object
+        REDEFINITION .
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -60,4 +62,12 @@ CLASS zcl_abapgit_object_samc IMPLEMENTATION.
     rv_persistence_class_name = 'CL_AMC_APPLICATION_OBJ_PERS'.
 
   ENDMETHOD.
+
+
+  METHOD get_lock_object.
+
+    rv_lock_object = 'E_AMC_APPL'.
+
+  ENDMETHOD.
+
 ENDCLASS.
