@@ -8,6 +8,13 @@ CLASS zcx_abapgit_exception DEFINITION
 
     INTERFACES if_t100_message .
 
+    TYPES:
+      BEGIN OF ty_scr_info,
+        program TYPE progname,
+        include TYPE progname,
+        line    TYPE i,
+      END OF ty_scr_info.
+
     CONSTANTS:
       BEGIN OF c_section_text,
         cause           TYPE string VALUE `Cause`,
@@ -32,6 +39,7 @@ CLASS zcx_abapgit_exception DEFINITION
     DATA mv_longtext TYPE string READ-ONLY.
     DATA mt_callstack TYPE abap_callstack READ-ONLY.
     DATA mi_log TYPE REF TO zif_abapgit_log READ-ONLY.
+    DATA ms_src_info TYPE ty_scr_info READ-ONLY.
 
     "! Raise exception with text
     "! @parameter iv_text | Text
@@ -99,6 +107,7 @@ CLASS zcx_abapgit_exception DEFINITION
         REDEFINITION .
     METHODS if_message~get_longtext
         REDEFINITION .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -154,6 +163,13 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     ENDIF.
 
     save_callstack( ).
+
+    " Save for debugger
+    get_source_position(
+      IMPORTING
+        program_name = ms_src_info-program
+        include_name = ms_src_info-include
+        source_line  = ms_src_info-line ).
 
   ENDMETHOD.
 
