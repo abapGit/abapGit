@@ -1,55 +1,14 @@
 CLASS zcl_abapgit_persist_background DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_persist_factory.
 
   PUBLIC SECTION.
 
-    TYPES:
-      BEGIN OF ty_xml,
-        method   TYPE string,
-        username TYPE string,
-        password TYPE string,
-        settings TYPE zif_abapgit_background=>ty_settings_tt,
-      END OF ty_xml .
-    TYPES:
-      BEGIN OF ty_background,
-        key TYPE zif_abapgit_persistence=>ty_value.
-        INCLUDE TYPE ty_xml.
-    TYPES: END OF ty_background .
-    TYPES:
-      ty_background_keys TYPE STANDARD TABLE OF ty_background WITH DEFAULT KEY .
+    INTERFACES zif_abapgit_persist_background.
 
-    METHODS constructor .
-    METHODS list
-      RETURNING
-        VALUE(rt_list) TYPE ty_background_keys
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_by_key
-      IMPORTING
-        !iv_key        TYPE ty_background-key
-      RETURNING
-        VALUE(rs_data) TYPE ty_background
-      RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_not_found .
-    METHODS modify
-      IMPORTING
-        !is_data TYPE ty_background
-      RAISING
-        zcx_abapgit_exception .
-    METHODS delete
-      IMPORTING
-        !iv_key TYPE ty_background-key
-      RAISING
-        zcx_abapgit_exception .
-    METHODS exists
-      IMPORTING
-        !iv_key       TYPE ty_background-key
-      RETURNING
-        VALUE(rv_yes) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
+    METHODS constructor.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -59,19 +18,20 @@ CLASS zcl_abapgit_persist_background DEFINITION
       IMPORTING
         !iv_string    TYPE string
       RETURNING
-        VALUE(rs_xml) TYPE ty_xml
+        VALUE(rs_xml) TYPE zif_abapgit_persist_background=>ty_xml
       RAISING
         zcx_abapgit_exception .
+
     METHODS to_xml
       IMPORTING
-        !is_background   TYPE ty_background
+        !is_background   TYPE zif_abapgit_persist_background=>ty_background
       RETURNING
         VALUE(rv_string) TYPE string .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSIST_BACKGROUND IMPLEMENTATION.
+CLASS zcl_abapgit_persist_background IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -79,7 +39,26 @@ CLASS ZCL_ABAPGIT_PERSIST_BACKGROUND IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD delete.
+  METHOD from_xml.
+    CALL TRANSFORMATION id
+      OPTIONS value_handling = 'accept_data_loss'
+      SOURCE XML iv_string
+      RESULT data = rs_xml.
+  ENDMETHOD.
+
+
+  METHOD to_xml.
+    DATA ls_xml TYPE zif_abapgit_persist_background=>ty_xml.
+
+    MOVE-CORRESPONDING is_background TO ls_xml.
+
+    CALL TRANSFORMATION id
+      SOURCE data = ls_xml
+      RESULT XML rv_string.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_background~delete.
 
     TRY.
         mo_db->read( iv_type  = zcl_abapgit_persistence_db=>c_type_background
@@ -94,7 +73,7 @@ CLASS ZCL_ABAPGIT_PERSIST_BACKGROUND IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD exists.
+  METHOD zif_abapgit_persist_background~exists.
 
     TRY.
         mo_db->read( iv_type  = zcl_abapgit_persistence_db=>c_type_background
@@ -107,19 +86,11 @@ CLASS ZCL_ABAPGIT_PERSIST_BACKGROUND IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD from_xml.
-    CALL TRANSFORMATION id
-      OPTIONS value_handling = 'accept_data_loss'
-      SOURCE XML iv_string
-      RESULT data = rs_xml.
-  ENDMETHOD.
+  METHOD zif_abapgit_persist_background~get_by_key.
 
+    DATA: lt_list TYPE zif_abapgit_persist_background=>ty_background_keys.
 
-  METHOD get_by_key.
-
-    DATA: lt_list TYPE ty_background_keys.
-
-    lt_list = list( ).
+    lt_list = zif_abapgit_persist_background~list( ).
 
     READ TABLE lt_list WITH KEY key = iv_key INTO rs_data.
     IF sy-subrc <> 0.
@@ -129,10 +100,10 @@ CLASS ZCL_ABAPGIT_PERSIST_BACKGROUND IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD list.
+  METHOD zif_abapgit_persist_background~list.
 
     DATA: lt_list TYPE zif_abapgit_persistence=>ty_contents,
-          ls_xml  TYPE ty_xml.
+          ls_xml  TYPE zif_abapgit_persist_background=>ty_xml.
 
     FIELD-SYMBOLS: <ls_list>   LIKE LINE OF lt_list,
                    <ls_output> LIKE LINE OF rt_list.
@@ -151,7 +122,7 @@ CLASS ZCL_ABAPGIT_PERSIST_BACKGROUND IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD modify.
+  METHOD zif_abapgit_persist_background~modify.
 
     ASSERT NOT is_data-key IS INITIAL.
 
@@ -160,16 +131,5 @@ CLASS ZCL_ABAPGIT_PERSIST_BACKGROUND IMPLEMENTATION.
       iv_value = is_data-key
       iv_data  = to_xml( is_data ) ).
 
-  ENDMETHOD.
-
-
-  METHOD to_xml.
-    DATA: ls_xml TYPE ty_xml.
-
-    MOVE-CORRESPONDING is_background TO ls_xml.
-
-    CALL TRANSFORMATION id
-      SOURCE data = ls_xml
-      RESULT XML rv_string.
   ENDMETHOD.
 ENDCLASS.
