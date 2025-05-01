@@ -933,13 +933,11 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   METHOD render_repo_top.
 
     DATA: li_repo_online TYPE REF TO zif_abapgit_repo_online,
-          lo_pback       TYPE REF TO zcl_abapgit_persist_background,
           lx_error       TYPE REF TO zcx_abapgit_exception,
           lv_hint        TYPE string,
           lv_icon        TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    CREATE OBJECT lo_pback.
 
     IF ii_repo->is_offline( ) = abap_true.
       lv_icon = 'plug/darkgrey'.
@@ -1026,7 +1024,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
                                             iv_hint  = 'Toggle Favorite' ) ).
 
     " BG
-    IF lo_pback->exists( ii_repo->get_key( ) ) = abap_true.
+    IF zcl_abapgit_persist_factory=>get_background( )->exists( ii_repo->get_key( ) ) = abap_true.
       ri_html->add( '<span class="bg_marker" title="background">BG</span>' ).
     ENDIF.
 

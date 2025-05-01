@@ -1,50 +1,29 @@
 CLASS zcl_abapgit_persist_packages DEFINITION
   PUBLIC
-  CREATE PRIVATE .
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_persist_factory.
 
   PUBLIC SECTION.
 
-    TYPES:
-      BEGIN OF ty_package,
-        devclass   TYPE scompkdtln-devclass,
-        component  TYPE scompkdtln-component,
-        comp_posid TYPE scompkdtln-comp_posid,
-      END OF ty_package .
-    TYPES:
-      ty_packages TYPE HASHED TABLE OF ty_package WITH UNIQUE KEY devclass .
+    INTERFACES zif_abapgit_persist_packages.
 
-    METHODS init .
-    METHODS modify
-      IMPORTING
-        !iv_package    TYPE scompkdtln-devclass
-        !iv_component  TYPE scompkdtln-component OPTIONAL
-        !iv_comp_posid TYPE scompkdtln-comp_posid OPTIONAL
-      RAISING
-        zcx_abapgit_exception .
-    METHODS read
-      IMPORTING
-        !iv_package       TYPE scompkdtln-devclass
-      RETURNING
-        VALUE(rs_package) TYPE ty_package .
-    CLASS-METHODS get_instance
-      RETURNING
-        VALUE(ro_persist) TYPE REF TO zcl_abapgit_persist_packages .
+    METHODS init.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CLASS-DATA go_persist TYPE REF TO zcl_abapgit_persist_packages.
-    DATA mt_packages TYPE ty_packages.
+    DATA mt_packages TYPE zif_abapgit_persist_packages=>ty_packages.
 
     METHODS from_xml
       IMPORTING
         iv_xml             TYPE string
       RETURNING
-        VALUE(rt_packages) TYPE ty_packages
+        VALUE(rt_packages) TYPE zif_abapgit_persist_packages=>ty_packages
       RAISING
         zcx_abapgit_exception.
     METHODS to_xml
       IMPORTING
-        it_packages   TYPE ty_packages
+        it_packages   TYPE zif_abapgit_persist_packages=>ty_packages
       RETURNING
         VALUE(rv_xml) TYPE string
       RAISING
@@ -72,16 +51,6 @@ CLASS zcl_abapgit_persist_packages IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_instance.
-
-    IF go_persist IS NOT BOUND.
-      CREATE OBJECT go_persist.
-    ENDIF.
-    ro_persist = go_persist.
-
-  ENDMETHOD.
-
-
   METHOD init.
 
     TRY.
@@ -95,7 +64,22 @@ CLASS zcl_abapgit_persist_packages IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD modify.
+  METHOD to_xml.
+
+    DATA li_output TYPE REF TO zif_abapgit_xml_output.
+
+    CREATE OBJECT li_output TYPE zcl_abapgit_xml_output.
+
+    li_output->add(
+      iv_name = zcl_abapgit_persistence_db=>c_type_packages
+      ig_data = it_packages ).
+
+    rv_xml = li_output->render( ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_packages~modify.
 
     DATA ls_package LIKE LINE OF mt_packages.
 
@@ -128,7 +112,7 @@ CLASS zcl_abapgit_persist_packages IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD read.
+  METHOD zif_abapgit_persist_packages~read.
 
     init( ).
 
@@ -136,21 +120,6 @@ CLASS zcl_abapgit_persist_packages IMPLEMENTATION.
     IF sy-subrc <> 0.
       rs_package-devclass = iv_package. " no component
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD to_xml.
-
-    DATA li_output TYPE REF TO zif_abapgit_xml_output.
-
-    CREATE OBJECT li_output TYPE zcl_abapgit_xml_output.
-
-    li_output->add(
-      iv_name = zcl_abapgit_persistence_db=>c_type_packages
-      ig_data = it_packages ).
-
-    rv_xml = li_output->render( ).
 
   ENDMETHOD.
 ENDCLASS.
