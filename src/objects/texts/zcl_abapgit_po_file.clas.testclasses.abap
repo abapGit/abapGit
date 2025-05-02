@@ -74,6 +74,7 @@ CLASS ltcl_po_file IMPLEMENTATION.
     DATA lt_lxe_pairs_act TYPE zif_abapgit_lxe_texts=>ty_text_pairs.
     DATA lt_lxe_pairs_exp TYPE zif_abapgit_lxe_texts=>ty_text_pairs.
     DATA lo_buf TYPE REF TO zcl_abapgit_string_buffer.
+    data lv_changed TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_p> LIKE LINE OF lt_lxe_pairs_act.
 
@@ -115,7 +116,14 @@ CLASS ltcl_po_file IMPLEMENTATION.
 
     CREATE OBJECT lo_po EXPORTING iv_lang = 'xx'.
     lo_po->parse_po( lo_buf->join_w_newline_and_flush( ) ).
-    lo_po->zif_abapgit_i18n_file~translate( CHANGING ct_text_pairs = lt_lxe_pairs_act ).
+    lo_po->zif_abapgit_i18n_file~translate(
+      CHANGING
+        cv_changed    = lv_changed
+        ct_text_pairs = lt_lxe_pairs_act ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_changed
+      exp = abap_true ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_lxe_pairs_act

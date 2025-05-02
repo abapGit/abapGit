@@ -303,7 +303,10 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
           iv_objname   = <lv_lxe_object>-objname
           iv_read_only = abap_false ).
 
-        lv_changed = li_po->translate( CHANGING ct_text_pairs = lt_text_pairs_tmp ).
+        li_po->translate(
+          CHANGING
+            cv_changed    = lv_changed
+            ct_text_pairs = lt_text_pairs_tmp ).
 
         IF lv_changed = abap_true.
           write_lxe_object_text_pair(
