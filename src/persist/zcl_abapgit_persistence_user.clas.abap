@@ -41,7 +41,6 @@ CLASS zcl_abapgit_persistence_user DEFINITION
 
     DATA mv_user TYPE sy-uname .
     DATA ms_user TYPE ty_user.
-    CLASS-DATA gi_current_user TYPE REF TO zif_abapgit_persist_user .
 
     METHODS from_xml
       IMPORTING
