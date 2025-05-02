@@ -364,9 +364,13 @@ CLASS zcl_abapgit_po_file IMPLEMENTATION.
 
       READ TABLE mt_pairs ASSIGNING <ls_tr> WITH KEY source = <ls_lxe>-s_text.
       IF sy-subrc = 0 AND <ls_tr>-target IS NOT INITIAL.
-        <ls_lxe>-t_text = <ls_tr>-target.
+        IF <ls_lxe>-t_text <> <ls_tr>-target.
+          rv_changed = abap_true.
+          <ls_lxe>-t_text = <ls_tr>-target.
+        ENDIF.
       ELSE.
         DELETE ct_text_pairs INDEX lv_idx. " Otherwise error in LXE FMs for empty translation
+        rv_changed = abap_true.
       ENDIF.
     ENDLOOP.
 

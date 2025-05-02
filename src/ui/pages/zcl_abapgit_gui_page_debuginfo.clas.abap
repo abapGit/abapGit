@@ -398,6 +398,8 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
             lv_step = |{ lv_step } (3)|.
           WHEN zif_abapgit_object=>gc_step_id-late.
             lv_step = |<i>{ lv_step } (4)</i>|.
+          WHEN zif_abapgit_object=>gc_step_id-lxe.
+            lv_step = |<i>{ lv_step } (5)</i>|.
           WHEN OTHERS.
             ASSERT 1 = 2.
         ENDCASE.

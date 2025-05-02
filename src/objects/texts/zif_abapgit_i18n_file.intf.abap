@@ -10,7 +10,9 @@ INTERFACE zif_abapgit_i18n_file PUBLIC.
 
   METHODS translate
     CHANGING
-      ct_text_pairs TYPE zif_abapgit_lxe_texts=>ty_text_pairs
+      ct_text_pairs     TYPE zif_abapgit_lxe_texts=>ty_text_pairs
+    RETURNING
+      VALUE(rv_changed) TYPE abap_bool
     RAISING
       zcx_abapgit_exception.
 
