@@ -35,7 +35,7 @@ CLASS lcl_startup IMPLEMENTATION.
       ls_settings         TYPE zif_abapgit_definitions=>ty_s_user_settings,
       li_user_persistence TYPE REF TO zif_abapgit_persist_user.
 
-    li_user_persistence = zcl_abapgit_persistence_user=>get_instance( ).
+    li_user_persistence = zcl_abapgit_persist_factory=>get_user( ).
 
     ls_settings = li_user_persistence->get_settings( ).
 
@@ -72,7 +72,7 @@ CLASS lcl_startup IMPLEMENTATION.
 
     IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_show_default_repo( ) = abap_false.
       " Don't show the last seen repo at startup
-      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).
+      zcl_abapgit_persist_factory=>get_user( )->set_repo_show( || ).
     ENDIF.
 
     " We have three special cases for gui startup
@@ -88,7 +88,7 @@ CLASS lcl_startup IMPLEMENTATION.
     IF lv_repo_key IS NOT INITIAL.
 
       SET PARAMETER ID zif_abapgit_definitions=>c_spagpa_param_repo_key FIELD '' ##EXISTS.
-      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_repo_key ).
+      zcl_abapgit_persist_factory=>get_user( )->set_repo_show( lv_repo_key ).
 
     ELSEIF lv_package IS NOT INITIAL.
 
@@ -144,7 +144,7 @@ CLASS lcl_startup IMPLEMENTATION.
     ENDLOOP.
 
     IF li_repo IS BOUND.
-      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( li_repo->get_key( ) ).
+      zcl_abapgit_persist_factory=>get_user( )->set_repo_show( li_repo->get_key( ) ).
     ENDIF.
   ENDMETHOD.
 

@@ -7,13 +7,6 @@ CLASS zcl_abapgit_persistence_user DEFINITION
 
     INTERFACES zif_abapgit_persist_user .
 
-    CLASS-METHODS get_instance
-      IMPORTING
-        !iv_user       TYPE sy-uname DEFAULT sy-uname
-      RETURNING
-        VALUE(ri_user) TYPE REF TO zif_abapgit_persist_user
-      RAISING
-        zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
         !iv_user TYPE sy-uname DEFAULT sy-uname.
@@ -104,22 +97,6 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
       OPTIONS value_handling = 'accept_data_loss'
       SOURCE XML lv_xml
       RESULT user = rs_user.
-  ENDMETHOD.
-
-
-  METHOD get_instance.
-
-    IF iv_user = sy-uname ##USER_OK.
-      IF gi_current_user IS NOT BOUND.
-        CREATE OBJECT gi_current_user TYPE zcl_abapgit_persistence_user.
-      ENDIF.
-      ri_user = gi_current_user.
-    ELSE.
-      CREATE OBJECT ri_user TYPE zcl_abapgit_persistence_user
-        EXPORTING
-          iv_user = iv_user.
-    ENDIF.
-
   ENDMETHOD.
 
 
