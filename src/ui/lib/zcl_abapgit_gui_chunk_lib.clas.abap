@@ -1013,7 +1013,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ri_html->add( '<td class="repo_attr right">' ).
 
     " Fav
-    IF abap_true = zcl_abapgit_persistence_user=>get_instance( )->is_favorite_repo( ii_repo->get_key( ) ).
+    IF abap_true = zcl_abapgit_persist_factory=>get_user( )->is_favorite_repo( ii_repo->get_key( ) ).
       lv_icon = 'star/blue'.
     ELSE.
       lv_icon = 'star/grey'.
