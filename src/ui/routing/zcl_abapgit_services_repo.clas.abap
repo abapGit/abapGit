@@ -397,7 +397,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     toggle_favorite( ri_repo->get_key( ) ).
 
     " Set default repo for user
-    zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( ri_repo->get_key( ) ).
+    zcl_abapgit_persist_factory=>get_user( )->set_repo_show( ri_repo->get_key( ) ).
 
     COMMIT WORK AND WAIT.
 
@@ -439,7 +439,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     toggle_favorite( li_repo->get_key( ) ).
 
     " Set default repo for user
-    zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( li_repo->get_key( ) ).
+    zcl_abapgit_persist_factory=>get_user( )->set_repo_show( li_repo->get_key( ) ).
 
     COMMIT WORK AND WAIT.
 
@@ -908,7 +908,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD toggle_favorite.
 
-    zcl_abapgit_persistence_user=>get_instance( )->toggle_favorite( iv_key ).
+    zcl_abapgit_persist_factory=>get_user( )->toggle_favorite( iv_key ).
 
   ENDMETHOD.
 

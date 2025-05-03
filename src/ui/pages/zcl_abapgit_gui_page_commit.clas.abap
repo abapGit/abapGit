@@ -233,7 +233,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     DATA li_user TYPE REF TO zif_abapgit_persist_user.
 
-    li_user = zcl_abapgit_persistence_user=>get_instance( ).
+    li_user = zcl_abapgit_persist_factory=>get_user( ).
 
     rv_email = li_user->get_repo_git_user_email( mi_repo_online->get_url( ) ).
     IF rv_email IS INITIAL.
@@ -251,7 +251,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     DATA li_user TYPE REF TO zif_abapgit_persist_user.
 
-    li_user = zcl_abapgit_persistence_user=>get_instance( ).
+    li_user = zcl_abapgit_persist_factory=>get_user( ).
 
     rv_user  = li_user->get_repo_git_user_name( mi_repo_online->get_url( ) ).
     IF rv_user IS INITIAL.

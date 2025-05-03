@@ -146,7 +146,7 @@ CLASS zcl_abapgit_repo_news IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_last_seen = zcl_abapgit_persistence_user=>get_instance( )->get_repo_last_change_seen( lv_url ).
+    lv_last_seen = zcl_abapgit_persist_factory=>get_user( )->get_repo_last_change_seen( lv_url ).
 
     TRY. " Find changelog
         lt_remote = ii_repo->get_files_remote( ).
@@ -170,7 +170,7 @@ CLASS zcl_abapgit_repo_news IMPLEMENTATION.
     ENDLOOP.
 
     IF ro_instance IS BOUND AND lv_last_seen <> ro_instance->latest_version( ).
-      zcl_abapgit_persistence_user=>get_instance( )->set_repo_last_change_seen(
+      zcl_abapgit_persist_factory=>get_user( )->set_repo_last_change_seen(
         iv_url     = lv_url
         iv_version = ro_instance->latest_version( ) ).
     ENDIF.
