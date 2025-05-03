@@ -78,6 +78,7 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_deserialize_checks,
       overwrite       TYPE ty_overwrite_tt,
       warning_package TYPE ty_overwrite_tt,
+      data_loss       TYPE ty_overwrite_tt,
       requirements    TYPE ty_requirements,
       dependencies    TYPE ty_dependencies,
       transport       TYPE ty_transport,

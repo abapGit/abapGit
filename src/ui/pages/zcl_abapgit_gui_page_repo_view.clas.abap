@@ -611,7 +611,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     super->constructor( ).
 
     TRY.
-        lo_persistence_user = zcl_abapgit_persistence_user=>get_instance( ).
+        lo_persistence_user = zcl_abapgit_persist_factory=>get_user( ).
 
         mv_key = iv_key.
         mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
@@ -632,7 +632,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       CATCH zcx_abapgit_exception INTO lx_error.
         " Reset 'last shown repo' so next start will go to repo overview
         " and allow troubleshooting of issue
-        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).
+        zcl_abapgit_persist_factory=>get_user( )->set_repo_show( || ).
 
         RAISE EXCEPTION lx_error.
     ENDTRY.
@@ -1102,7 +1102,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_actions-toggle_hide_files. " Toggle file display
-        mv_hide_files    = zcl_abapgit_persistence_user=>get_instance( )->toggle_hide_files( ).
+        mv_hide_files    = zcl_abapgit_persist_factory=>get_user( )->toggle_hide_files( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-change_dir.        " Change dir
@@ -1113,16 +1113,16 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-toggle_folders.    " Toggle folder view
-        mv_show_folders = zcl_abapgit_persistence_user=>get_instance( )->toggle_show_folders( ).
+        mv_show_folders = zcl_abapgit_persist_factory=>get_user( )->toggle_show_folders( ).
         mv_cur_dir      = '/'. " Root
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-toggle_changes.    " Toggle changes only view
-        mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->toggle_changes_only( ).
+        mv_changes_only = zcl_abapgit_persist_factory=>get_user( )->toggle_changes_only( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-toggle_diff_first.
-        mv_diff_first = zcl_abapgit_persistence_user=>get_instance( )->set_diff_first(
+        mv_diff_first = zcl_abapgit_persist_factory=>get_user( )->set_diff_first(
           boolc( mv_diff_first = abap_false ) ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
@@ -1131,13 +1131,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-change_order_by.
-        mv_order_by = zcl_abapgit_persistence_user=>get_instance( )->set_order_by(
+        mv_order_by = zcl_abapgit_persist_factory=>get_user( )->set_order_by(
           ii_event->query( )->get( 'ORDERBY' ) ).
-        mv_order_descending = zcl_abapgit_persistence_user=>get_instance( )->set_order_descending( abap_false ).
+        mv_order_descending = zcl_abapgit_persist_factory=>get_user( )->set_order_descending( abap_false ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-direction.
-        mv_order_descending = zcl_abapgit_persistence_user=>get_instance( )->set_order_descending(
+        mv_order_descending = zcl_abapgit_persist_factory=>get_user( )->set_order_descending(
           boolc( ii_event->query( )->get( 'DIRECTION' ) = 'DESCENDING' ) ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
@@ -1393,7 +1393,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       CATCH zcx_abapgit_exception INTO lx_error.
         " Reset 'last shown repo' so next start will go to repo overview
         " and allow troubleshooting of issue
-        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).
+        zcl_abapgit_persist_factory=>get_user( )->set_repo_show( || ).
 
         RAISE EXCEPTION lx_error.
     ENDTRY.

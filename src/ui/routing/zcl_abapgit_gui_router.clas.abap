@@ -258,7 +258,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_home.                        " Go Home
-        lv_last_repo_key = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
+        lv_last_repo_key = zcl_abapgit_persist_factory=>get_user( )->get_repo_show( ).
 
         IF lv_last_repo_key IS NOT INITIAL.
           rs_handled-page  = zcl_abapgit_gui_page_repo_view=>create( lv_last_repo_key ).
