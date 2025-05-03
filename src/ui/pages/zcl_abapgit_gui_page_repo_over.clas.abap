@@ -347,7 +347,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     super->constructor( ).
 
-    ms_list_settings = zcl_abapgit_persistence_user=>get_instance( )->get_list_settings( ).
+    ms_list_settings = zcl_abapgit_persist_factory=>get_user( )->get_list_settings( ).
 
     " Overwrite setting
     IF iv_only_favorites = abap_true.
@@ -382,7 +382,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
       CLEAR ls_overview.
 
-      ls_overview-favorite        = zcl_abapgit_persistence_user=>get_instance(
+      ls_overview-favorite        = zcl_abapgit_persist_factory=>get_user(
         )->is_favorite_repo( <ls_repo>->ms_data-key ).
       ls_overview-offline         = <ls_repo>->ms_data-offline.
       ls_overview-key             = <ls_repo>->ms_data-key.
@@ -840,7 +840,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
 
   METHOD save_settings.
-    zcl_abapgit_persistence_user=>get_instance( )->set_list_settings( ms_list_settings ).
+    zcl_abapgit_persist_factory=>get_user( )->set_list_settings( ms_list_settings ).
   ENDMETHOD.
 
 
@@ -885,7 +885,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_action-select.
 
-        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
+        zcl_abapgit_persist_factory=>get_user( )->set_repo_show( lv_key ).
 
         TRY.
             zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->refresh( ).

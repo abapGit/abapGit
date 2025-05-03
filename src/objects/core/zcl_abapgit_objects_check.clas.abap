@@ -1,8 +1,10 @@
 CLASS zcl_abapgit_objects_check DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
+
+    CLASS-METHODS class_constructor.
 
     CLASS-METHODS deserialize_checks
       IMPORTING
@@ -10,8 +12,8 @@ CLASS zcl_abapgit_objects_check DEFINITION
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS class_constructor.
+        zcx_abapgit_exception.
+
     CLASS-METHODS checks_adjust
       IMPORTING
         !ii_repo    TYPE REF TO zif_abapgit_repo
@@ -19,11 +21,22 @@ CLASS zcl_abapgit_objects_check DEFINITION
       CHANGING
         !ct_results TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
-        zcx_abapgit_exception .
-  PROTECTED SECTION.
+        zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
-    CLASS-DATA: gi_exit TYPE REF TO zif_abapgit_exit.
+
+    CLASS-DATA gi_exit TYPE REF TO zif_abapgit_exit.
+
+    CLASS-METHODS adjust_result
+      IMPORTING
+        !iv_txt           TYPE string
+        !it_overwrite_old TYPE zif_abapgit_definitions=>ty_overwrite_tt
+        !it_overwrite_new TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      CHANGING
+        !ct_results       TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception.
 
     CLASS-METHODS warning_overwrite_adjust
       IMPORTING
@@ -32,11 +45,13 @@ CLASS zcl_abapgit_objects_check DEFINITION
         !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception.
+
     CLASS-METHODS warning_overwrite_find
       IMPORTING
         !it_results         TYPE zif_abapgit_definitions=>ty_results_tt
       RETURNING
         VALUE(rt_overwrite) TYPE zif_abapgit_definitions=>ty_overwrite_tt.
+
     CLASS-METHODS warning_package_adjust
       IMPORTING
         !ii_repo      TYPE REF TO zif_abapgit_repo
@@ -45,6 +60,7 @@ CLASS zcl_abapgit_objects_check DEFINITION
         !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception.
+
     CLASS-METHODS warning_package_find
       IMPORTING
         !it_results         TYPE zif_abapgit_definitions=>ty_results_tt
@@ -53,17 +69,38 @@ CLASS zcl_abapgit_objects_check DEFINITION
         VALUE(rt_overwrite) TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
         zcx_abapgit_exception.
+
+    CLASS-METHODS warning_data_loss_adjust
+      IMPORTING
+        !ii_repo      TYPE REF TO zif_abapgit_repo
+        !it_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      CHANGING
+        !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS warning_data_loss_find
+      IMPORTING
+        !ii_repo            TYPE REF TO zif_abapgit_repo
+        !it_results         TYPE zif_abapgit_definitions=>ty_results_tt
+      RETURNING
+        VALUE(rt_overwrite) TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS determine_transport_request
       IMPORTING
         ii_repo                     TYPE REF TO zif_abapgit_repo
         iv_transport_type           TYPE zif_abapgit_definitions=>ty_transport_type
       RETURNING
         VALUE(rv_transport_request) TYPE trkorr.
+
     CLASS-METHODS check_multiple_files
       IMPORTING
         !it_results TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -71,7 +108,35 @@ ENDCLASS.
 CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
 
+  METHOD adjust_result.
+
+    DATA ls_overwrite TYPE zif_abapgit_definitions=>ty_overwrite.
+
+    FIELD-SYMBOLS <ls_overwrite> TYPE zif_abapgit_definitions=>ty_overwrite.
+
+    LOOP AT it_overwrite_new ASSIGNING <ls_overwrite>.
+
+      READ TABLE it_overwrite_old INTO ls_overwrite WITH TABLE KEY object_type_and_name
+        COMPONENTS obj_type = <ls_overwrite>-obj_type obj_name = <ls_overwrite>-obj_name.
+      IF sy-subrc <> 0 OR ls_overwrite-decision IS INITIAL.
+        zcx_abapgit_exception=>raise( |{ iv_txt } { <ls_overwrite>-obj_type } { <ls_overwrite>-obj_name } undecided| ).
+      ENDIF.
+
+      IF ls_overwrite-decision = zif_abapgit_definitions=>c_no.
+        DELETE ct_results WHERE obj_type = <ls_overwrite>-obj_type AND obj_name = <ls_overwrite>-obj_name.
+        ASSERT sy-subrc = 0.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD checks_adjust.
+
+    " Make sure to get the current status, as something might have changed in the meanwhile
+    " - Remove objects from results that were deselected in confirmation popup
+    " - Raise exception if an object has no decision of what to do
 
     warning_overwrite_adjust(
       EXPORTING
@@ -83,6 +148,13 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
       EXPORTING
         ii_repo      = ii_repo
         it_overwrite = is_checks-warning_package
+      CHANGING
+        ct_results   = ct_results ).
+
+    warning_data_loss_adjust(
+      EXPORTING
+        ii_repo      = ii_repo
+        it_overwrite = is_checks-data_loss
       CHANGING
         ct_results   = ct_results ).
 
@@ -144,6 +216,10 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
       ii_repo    = ii_repo
       it_results = lt_results ).
 
+    rs_checks-data_loss = warning_data_loss_find(
+      ii_repo    = ii_repo
+      it_results = lt_results ).
+
     IF lines( lt_results ) > 0.
       li_package = zcl_abapgit_factory=>get_sap_package( ii_repo->get_package( ) ).
       rs_checks-transport-required = li_package->are_changes_recorded_in_tr_req( ).
@@ -174,36 +250,82 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD warning_overwrite_adjust.
+  METHOD warning_data_loss_adjust.
 
-    DATA: lt_overwrite LIKE it_overwrite,
-          ls_overwrite LIKE LINE OF lt_overwrite.
+    DATA lt_overwrite LIKE it_overwrite.
 
-    FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF lt_overwrite.
+    lt_overwrite = warning_data_loss_find(
+      it_results = ct_results
+      ii_repo    = ii_repo ).
+
+    adjust_result(
+      EXPORTING
+        iv_txt           = 'Potential data loss for'
+        it_overwrite_old = it_overwrite
+        it_overwrite_new = lt_overwrite
+      CHANGING
+        ct_results       = ct_results ).
+
+  ENDMETHOD.
 
 
-* make sure to get the current status, as something might have changed in the meanwhile
-    lt_overwrite = warning_overwrite_find( ct_results ).
+  METHOD warning_data_loss_find.
 
-    LOOP AT lt_overwrite ASSIGNING <ls_overwrite>.
+    DATA:
+      ls_item       TYPE zif_abapgit_definitions=>ty_item,
+      li_comparator TYPE REF TO zif_abapgit_comparator,
+      lv_result     TYPE string.
 
-      READ TABLE it_overwrite INTO ls_overwrite
-                              WITH TABLE KEY object_type_and_name
-                              COMPONENTS obj_type = <ls_overwrite>-obj_type
-                                         obj_name = <ls_overwrite>-obj_name.
-      IF sy-subrc <> 0 OR ls_overwrite-decision IS INITIAL.
-        zcx_abapgit_exception=>raise( |Overwrite { <ls_overwrite>-obj_type } {
-          <ls_overwrite>-obj_name } undecided| ).
+    FIELD-SYMBOLS:
+      <ls_result>    LIKE LINE OF it_results,
+      <ls_overwrite> LIKE LINE OF rt_overwrite.
+
+    " For optimal performance, we limit here by object type since we know that only TABL has a comparator
+    " If there are other object types in the future, extend the where clause or remove the check on object type.
+    LOOP AT it_results ASSIGNING <ls_result> WHERE match IS INITIAL AND filename CP '*.xml'
+      AND obj_type = 'TABL' ##PRIMKEY[SEC_KEY].
+
+      CLEAR ls_item.
+      MOVE-CORRESPONDING <ls_result> TO ls_item.
+
+      li_comparator = zcl_abapgit_objects_compare=>get_comparator( ls_item ).
+      IF NOT li_comparator IS BOUND.
+        RETURN.
       ENDIF.
 
-      IF ls_overwrite-decision = zif_abapgit_definitions=>c_no.
-        DELETE ct_results WHERE
-          obj_type = <ls_overwrite>-obj_type AND
-          obj_name = <ls_overwrite>-obj_name.
-        ASSERT sy-subrc = 0.
+      lv_result = zcl_abapgit_objects_compare=>get_result(
+        ii_comparator = li_comparator
+        iv_filename   = <ls_result>-filename
+        it_local      = ii_repo->get_files_local( )
+        it_remote     = ii_repo->get_files_remote( iv_ignore_files = abap_true ) ).
+
+      IF lv_result IS NOT INITIAL.
+        APPEND INITIAL LINE TO rt_overwrite ASSIGNING <ls_overwrite>.
+        MOVE-CORRESPONDING <ls_result> TO <ls_overwrite>.
+        <ls_overwrite>-devclass = <ls_result>-package.
+        <ls_overwrite>-action   = zif_abapgit_objects=>c_deserialize_action-data_loss.
+        <ls_overwrite>-icon     = icon_warning.
+        <ls_overwrite>-text     = lv_result.
       ENDIF.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD warning_overwrite_adjust.
+
+    DATA lt_overwrite LIKE it_overwrite.
+
+    lt_overwrite = warning_overwrite_find( ct_results ).
+
+    adjust_result(
+      EXPORTING
+        iv_txt           = 'Overwrite of object'
+        it_overwrite_old = it_overwrite
+        it_overwrite_new = lt_overwrite
+      CHANGING
+        ct_results       = ct_results ).
 
   ENDMETHOD.
 
@@ -301,36 +423,19 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
   METHOD warning_package_adjust.
 
-    DATA: lt_overwrite LIKE it_overwrite,
-          ls_overwrite LIKE LINE OF lt_overwrite.
+    DATA lt_overwrite LIKE it_overwrite.
 
-    FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF lt_overwrite.
-
-
-* make sure to get the current status, as something might have changed in the meanwhile
     lt_overwrite = warning_package_find(
-      it_results   = ct_results
-      ii_repo      = ii_repo ).
+      it_results = ct_results
+      ii_repo    = ii_repo ).
 
-    LOOP AT lt_overwrite ASSIGNING <ls_overwrite>.
-
-      READ TABLE it_overwrite INTO ls_overwrite
-                              WITH TABLE KEY object_type_and_name
-                              COMPONENTS obj_type = <ls_overwrite>-obj_type
-                                         obj_name = <ls_overwrite>-obj_name.
-      IF sy-subrc <> 0 OR ls_overwrite-decision IS INITIAL.
-        zcx_abapgit_exception=>raise( |Overwrite of package { <ls_overwrite>-obj_type } {
-          <ls_overwrite>-obj_name } undecided| ).
-      ENDIF.
-
-      IF ls_overwrite-decision = zif_abapgit_definitions=>c_no.
-        DELETE ct_results WHERE
-          obj_type = <ls_overwrite>-obj_type AND
-          obj_name = <ls_overwrite>-obj_name.
-        ASSERT sy-subrc = 0.
-      ENDIF.
-
-    ENDLOOP.
+    adjust_result(
+      EXPORTING
+        iv_txt           = 'Overwrite of package'
+        it_overwrite_old = it_overwrite
+        it_overwrite_new = lt_overwrite
+      CHANGING
+        ct_results       = ct_results ).
 
   ENDMETHOD.
 
@@ -361,7 +466,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         iv_obj_name = <ls_result>-obj_name ).
 
       IF NOT ls_tadir IS INITIAL AND ls_tadir-devclass <> lv_package.
-* overwriting object from different package than expected
+        " overwriting object from different package than expected
         CLEAR ls_overwrite.
         CONCATENATE <ls_result>-lstate <ls_result>-rstate INTO ls_overwrite-state RESPECTING BLANKS.
         REPLACE ALL OCCURRENCES OF ` ` IN ls_overwrite-state WITH '_'.

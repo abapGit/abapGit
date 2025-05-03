@@ -43,6 +43,7 @@ INTERFACE zif_abapgit_objects PUBLIC.
       delete     TYPE i VALUE 4,
       delete_add TYPE i VALUE 5,
       packmove   TYPE i VALUE 6,
+      data_loss  TYPE i VALUE 7,
     END OF c_deserialize_action.
 
 ENDINTERFACE.

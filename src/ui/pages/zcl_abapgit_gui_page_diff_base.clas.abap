@@ -620,7 +620,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     DATA: lv_ts TYPE timestamp.
 
     super->constructor( ).
-    mv_unified  = zcl_abapgit_persistence_user=>get_instance( )->get_diff_unified( ).
+    mv_unified  = zcl_abapgit_persist_factory=>get_user( )->get_diff_unified( ).
     mv_repo_key = iv_key.
     mi_repo     = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
@@ -654,7 +654,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
   METHOD get_page_layout.
 
     TRY.
-        IF zcl_abapgit_persistence_user=>get_instance( )->get_diff_unified( ) = abap_true.
+        IF zcl_abapgit_persist_factory=>get_user( )->get_diff_unified( ) = abap_true.
           rv_page_layout = zcl_abapgit_gui_page=>c_page_layout-centered.
         ELSE.
           rv_page_layout = zcl_abapgit_gui_page=>c_page_layout-full_width.
@@ -1294,7 +1294,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_actions-toggle_unified. " Toggle file display
 
-        mv_unified = zcl_abapgit_persistence_user=>get_instance( )->toggle_diff_unified( ).
+        mv_unified = zcl_abapgit_persist_factory=>get_user( )->toggle_diff_unified( ).
 
         rs_handled-page  = zcl_abapgit_gui_page_hoc=>create(
           iv_page_title         = 'Diff'
