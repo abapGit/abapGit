@@ -288,6 +288,41 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD extract_languages_for_transl.
+    DATA: lv_desc              TYPE seocompotx,
+          lv_desc_int          TYPE seoclasstx,
+          lv_desc_sub          TYPE seosubcotx,
+          lv_unique            TYPE sy-langu,
+          lv_sap2              TYPE string,
+          lt_unique_language   TYPE STANDARD TABLE OF sy-langu,
+          lv_original_language TYPE sy-langu.
+
+
+    lv_original_language = mo_i18n_params->ms_params-main_language.
+
+    LOOP AT is_intf-description INTO lv_desc WHERE langu <> lv_original_language.
+      APPEND lv_desc-langu TO lt_unique_language.
+    ENDLOOP.
+
+    LOOP AT is_intf-description_int INTO lv_desc_int WHERE langu <> lv_original_language.
+      APPEND lv_desc_int-langu TO lt_unique_language.
+    ENDLOOP.
+
+    LOOP AT is_intf-description_sub INTO lv_desc_sub WHERE langu <> lv_original_language.
+      APPEND lv_desc_sub-langu TO lt_unique_language.
+    ENDLOOP.
+
+    SORT lt_unique_language ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM lt_unique_language.
+
+    LOOP AT lt_unique_language INTO lv_unique.
+      lv_sap2 = zcl_abapgit_convert=>language_sap1_to_sap2( lv_unique ).
+      APPEND lv_sap2 TO rs_result.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD read_json.
     DATA lv_json_data TYPE string.
     DATA ls_intf_aff TYPE zif_abapgit_aff_intf_v1=>ty_main.
@@ -708,6 +743,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-early TO rt_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
   ENDMETHOD.
 
 
@@ -775,41 +811,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     mo_files->add_abap( lt_source ).
 
     serialize_xml( io_xml ).
-
-  ENDMETHOD.
-
-
-  METHOD extract_languages_for_transl.
-    DATA: lv_desc              TYPE seocompotx,
-          lv_desc_int          TYPE seoclasstx,
-          lv_desc_sub          TYPE seosubcotx,
-          lv_unique            TYPE sy-langu,
-          lv_sap2              TYPE string,
-          lt_unique_language   TYPE STANDARD TABLE OF sy-langu,
-          lv_original_language TYPE sy-langu.
-
-
-    lv_original_language = mo_i18n_params->ms_params-main_language.
-
-    LOOP AT is_intf-description INTO lv_desc WHERE langu <> lv_original_language.
-      APPEND lv_desc-langu TO lt_unique_language.
-    ENDLOOP.
-
-    LOOP AT is_intf-description_int INTO lv_desc_int WHERE langu <> lv_original_language.
-      APPEND lv_desc_int-langu TO lt_unique_language.
-    ENDLOOP.
-
-    LOOP AT is_intf-description_sub INTO lv_desc_sub WHERE langu <> lv_original_language.
-      APPEND lv_desc_sub-langu TO lt_unique_language.
-    ENDLOOP.
-
-    SORT lt_unique_language ASCENDING.
-    DELETE ADJACENT DUPLICATES FROM lt_unique_language.
-
-    LOOP AT lt_unique_language INTO lv_unique.
-      lv_sap2 = zcl_abapgit_convert=>language_sap1_to_sap2( lv_unique ).
-      APPEND lv_sap2 TO rs_result.
-    ENDLOOP.
 
   ENDMETHOD.
 ENDCLASS.
