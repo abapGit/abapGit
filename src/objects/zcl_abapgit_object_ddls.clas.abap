@@ -534,4 +534,28 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
                  ig_data = <lg_data> ).
 
   ENDMETHOD.
+
+  METHOD clear_fields.
+
+    DATA:
+      BEGIN OF ls_fields_to_clear,
+        as4user            TYPE c,
+        as4date            TYPE d,
+        as4time            TYPE t,
+        actflag            TYPE c,
+        chgflag            TYPE c,
+        abap_langu_version TYPE c,
+      END OF ls_fields_to_clear.
+
+    FIELD-SYMBOLS:
+      <lg_abap_language_version> TYPE any.
+
+    MOVE-CORRESPONDING ls_fields_to_clear TO cg_data.
+
+    ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE cg_data TO <lg_abap_language_version>.
+    IF sy-subrc = 0.
+      <lg_abap_language_version> = get_abap_language_version( ).
+    ENDIF.
+
+  ENDMETHOD.
 ENDCLASS.

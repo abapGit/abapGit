@@ -89,6 +89,11 @@ CLASS zcl_abapgit_objects_super DEFINITION
         !iv_no_ask_delete_append TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
+    METHODS get_abap_language_version
+      RETURNING
+        VALUE(rv_abap_language_version) TYPE uccheck
+      RAISING
+        zcx_abapgit_exception .
     METHODS set_abap_language_version
       CHANGING
         !cv_abap_language_version TYPE uccheck
@@ -289,6 +294,26 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     IF sy-subrc = 0.
       rv_exists_a_lock_entry = abap_true.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_abap_language_version.
+
+    " This is limited to DDIC objects
+    TRY.
+        CALL METHOD ('CL_DD_ABAP_LANGUAGE_VERSION')=>get_abap_language_version
+          EXPORTING
+            iv_object_type           = ms_item-obj_type
+            iv_object_name           = ms_item-obj_name
+          RECEIVING
+            rv_abap_language_version = rv_abap_language_version.
+      CATCH cx_root.
+        " does not exist in lower releases
+        RETURN.
+    ENDTRY.
+
+    clear_abap_language_version( CHANGING cv_abap_language_version = rv_abap_language_version ).
 
   ENDMETHOD.
 
