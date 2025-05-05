@@ -152,7 +152,7 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
     DATA lv_field TYPE abap_compname.
 
     CASE ms_sorting_state-column_id.
-      WHEN 'kind' OR 'obj_type' OR 'location' OR 'text' or 'author'.
+      WHEN 'kind' OR 'obj_type' OR 'location' OR 'text' OR 'author'.
         lv_field = to_upper( ms_sorting_state-column_id ).
       WHEN OTHERS.
         RETURN.
