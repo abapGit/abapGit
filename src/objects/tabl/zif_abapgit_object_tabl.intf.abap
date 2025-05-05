@@ -22,7 +22,8 @@ INTERFACE zif_abapgit_object_tabl PUBLIC.
   TYPES: ty_segment_definitions TYPE STANDARD TABLE OF ty_segment_definition WITH DEFAULT KEY.
 
   TYPES: BEGIN OF ty_tabl_extras,
-           tddat TYPE tddat,
+           tddat                 TYPE tddat,
+           abap_language_version TYPE uccheck,
          END OF ty_tabl_extras.
 
   TYPES: BEGIN OF ty_internal,
