@@ -996,6 +996,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     APPEND zif_abapgit_object=>gc_step_id-early TO rt_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
     APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
   ENDMETHOD.
 
 

@@ -24,11 +24,12 @@ INTERFACE zif_abapgit_lxe_texts
       zcx_abapgit_exception .
   METHODS deserialize
     IMPORTING
-      !iv_object_type TYPE tadir-object OPTIONAL
-      !iv_object_name TYPE tadir-obj_name OPTIONAL
-      !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params
+      !iv_object_type TYPE tadir-object
+      !iv_object_name TYPE tadir-obj_name
+      !iv_package     TYPE tadir-devclass
       !ii_xml         TYPE REF TO zif_abapgit_xml_input
       !io_files       TYPE REF TO zcl_abapgit_objects_files
+      !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
     RAISING
       zcx_abapgit_exception .
 
