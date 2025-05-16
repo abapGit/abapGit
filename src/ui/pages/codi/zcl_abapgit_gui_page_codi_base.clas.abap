@@ -9,9 +9,9 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
 
     CONSTANTS:
       BEGIN OF c_actions,
-        rerun  TYPE string VALUE 'rerun',
-        stage  TYPE string VALUE 'stage',
-        commit TYPE string VALUE 'commit',
+        rerun        TYPE string VALUE 'rerun',
+        stage        TYPE string VALUE 'stage',
+        commit       TYPE string VALUE 'commit',
         filter_kind  TYPE string VALUE 'filter_kind',
         apply_filter TYPE string VALUE 'apply_filter',
       END OF c_actions .
@@ -75,6 +75,7 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         location TYPE string,
         text     TYPE string,
         nav      TYPE string,
+        author   TYPE c LENGTH 12,
       END OF ty_result_view,
       ty_view_tab TYPE STANDARD TABLE OF ty_result_view WITH DEFAULT KEY.
 
@@ -151,7 +152,7 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
     DATA lv_field TYPE abap_compname.
 
     CASE ms_sorting_state-column_id.
-      WHEN 'kind' OR 'obj_type' OR 'location' OR 'text'.
+      WHEN 'kind' OR 'obj_type' OR 'location' OR 'text' OR 'author'.
         lv_field = to_upper( ms_sorting_state-column_id ).
       WHEN OTHERS.
         RETURN.
@@ -197,6 +198,7 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
       <ls_v>-obj_type = <ls_r>-objtype.
       <ls_v>-nav      = build_nav_link( <ls_r> ).
       <ls_v>-text     = <ls_r>-text.
+      <ls_v>-author   = <ls_r>-author.
 
       IF <ls_r>-sobjname IS INITIAL OR
          ( <ls_r>-sobjname = <ls_r>-objname AND
@@ -435,6 +437,9 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
         iv_column_id    = 'location'
         iv_column_title = 'Obj. name / location'
       )->define_column(
+        iv_column_id    = 'author'
+        iv_column_title = 'Changed by'
+      )->define_column(
         iv_column_id    = 'text'
         iv_column_title = 'Text' ).
 
@@ -603,6 +608,8 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
           iv_txt = <ls_item>-location
           iv_act = <ls_item>-nav
           iv_typ = zif_abapgit_html=>c_action_type-sapevent ).
+      WHEN 'author'.
+        rs_render-content = zcl_abapgit_gui_chunk_lib=>render_user_name( |{ <ls_item>-author }| )->render( ).
       WHEN 'text'.
         rs_render-content = escape(
           val    = <ls_item>-text
