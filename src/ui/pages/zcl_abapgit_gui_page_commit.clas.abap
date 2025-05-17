@@ -253,9 +253,9 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     li_user = zcl_abapgit_persist_factory=>get_user( ).
 
-    rv_user  = li_user->get_repo_git_user_name( mi_repo_online->get_url( ) ).
+    rv_user = li_user->get_repo_git_user_name( mi_repo_online->get_url( ) ).
     IF rv_user IS INITIAL.
-      rv_user  = li_user->get_default_git_user_name( ).
+      rv_user = li_user->get_default_git_user_name( ).
     ENDIF.
     IF rv_user IS INITIAL.
       " get default from user record
@@ -267,9 +267,19 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
   METHOD get_defaults.
 
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
+
     ms_commit-committer_name  = get_committer_name( ).
     ms_commit-committer_email = get_committer_email( ).
     ms_commit-comment         = get_comment_default( ).
+
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->change_committer_info(
+      EXPORTING
+        iv_repo_url = mi_repo_online->get_url( )
+      CHANGING
+        cv_name     = ms_commit-committer_name
+        cv_email    = ms_commit-committer_email ).
 
     " Committer
     mo_form_data->set(
