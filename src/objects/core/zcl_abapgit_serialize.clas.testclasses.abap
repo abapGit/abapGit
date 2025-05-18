@@ -180,6 +180,9 @@ CLASS ltd_exit IMPLEMENTATION.
   METHOD zif_abapgit_exit~adjust_display_commit_url.
   ENDMETHOD.
 
+  METHOD zif_abapgit_exit~change_committer_info.
+  ENDMETHOD.
+
   METHOD zif_abapgit_exit~adjust_display_filename.
   ENDMETHOD.
 
