@@ -158,7 +158,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_hint        = 'Comma-separate 2-letter ISO language codes e.g. "DE,ES,..." - should not include main language'
     )->checkbox(
       iv_name        = c_id-use_lxe
-      iv_label       = 'Use Experimental LXE Approach for Translations'
+      iv_label       = 'Use LXE Approach for Translations'
       iv_hint        = 'It''s mandatory to specify the list of languages above in addition to this setting'
     )->start_group(
       iv_name        = c_id-file_system

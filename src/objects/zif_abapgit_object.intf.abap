@@ -6,6 +6,7 @@ INTERFACE zif_abapgit_object PUBLIC.
       abap  TYPE zif_abapgit_objects=>ty_deserialization_step VALUE 'ABAP',
       ddic  TYPE zif_abapgit_objects=>ty_deserialization_step VALUE 'DDIC',
       late  TYPE zif_abapgit_objects=>ty_deserialization_step VALUE 'LATE',
+      lxe   TYPE zif_abapgit_objects=>ty_deserialization_step VALUE 'LXE',
     END OF gc_step_id.
 
   METHODS serialize
