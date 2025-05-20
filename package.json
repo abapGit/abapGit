@@ -10,6 +10,7 @@
     "coverage": "npm run unit && c8 node output/index.mjs --skip-critical && c8 report --reporter=html",
     "integration": "npm run build && echo RUNNING && node output/index.mjs --only-critical",
     "abaplint": "abaplint --format codeframe",
+    "express": "npm run build && node test/express.mjs",
     "eslint": "eslint src"
   },
   "repository": {
