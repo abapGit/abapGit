@@ -104,7 +104,6 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
           ls_description       TYPE ty_uconhttpservtext,
           lv_check_object_name TYPE c LENGTH 40,
           lx_root              TYPE REF TO cx_root,
-          lv_id                TYPE c LENGTH 30,
           lo_http              TYPE REF TO object,
           ls_abap_lang         TYPE ty_gs_object_version,
           lo_instance          TYPE REF TO object,
@@ -129,8 +128,8 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
           CATCH cx_root.
         ENDTRY.
 
-        SELECT SINGLE id FROM ('UCONHTTPSERVHEAD') INTO lv_id WHERE id = lv_http_servid AND version = 'A'.
-        IF sy-subrc = 0.
+        SELECT COUNT(*) FROM ('UCONHTTPSERVHEAD') WHERE id = lv_http_servid.
+        IF sy-dbcnt > 0.
           "update
           CALL METHOD ('CL_UCON_API_FACTORY')=>('GET_HTTP_SERVICE')
             EXPORTING
@@ -186,6 +185,7 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
         CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_ICF_SERVICE')
           EXPORTING
             iv_icfservice = lv_icfnode.
+        CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~ACTIVATE').
         CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SAVE')
           EXPORTING
             run_dark  = abap_true
@@ -202,10 +202,8 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA lv_id TYPE c LENGTH 30.
-
-    SELECT SINGLE id FROM ('UCONHTTPSERVHEAD') INTO lv_id WHERE id = ms_item-obj_name AND version = 'A'.
-    rv_bool = boolc( sy-subrc = 0 ).
+    SELECT COUNT(*) FROM ('UCONHTTPSERVHEAD') WHERE id = ms_item-obj_name.
+    rv_bool = boolc( sy-dbcnt > 0 ).
 
   ENDMETHOD.
 
