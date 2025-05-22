@@ -3,7 +3,6 @@ CLASS zcl_abapgit_diff DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
-    CONSTANTS c_starting_beacon TYPE i VALUE 1.
 
 * assumes data is UTF8 based with newlines
     METHODS constructor
@@ -51,6 +50,8 @@ CLASS zcl_abapgit_diff DEFINITION
   PROTECTED SECTION.
 
   PRIVATE SECTION.
+
+    CONSTANTS c_starting_beacon TYPE i VALUE 1.
 
     TYPES:
       ty_regexset_tt TYPE STANDARD TABLE OF REF TO cl_abap_regex WITH KEY table_line.
