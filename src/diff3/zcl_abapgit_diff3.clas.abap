@@ -159,7 +159,7 @@ iv_end = iv_end_offset ).
 
       temp2 = sy-tabix.
       READ TABLE it_buffer INDEX iv_offset + sy-index INTO temp1.
-      sy-tabix = temp2.
+
       IF sy-subrc <> 0.
         RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
       ENDIF.
@@ -379,7 +379,7 @@ iv_end = iv_end_offset ).
 
       temp2 = sy-tabix.
       READ TABLE lt_hunks INDEX lv_hunk + 1 INTO temp1.
-      sy-tabix = temp2.
+
       IF sy-subrc <> 0.
         RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
       ENDIF.
@@ -409,7 +409,7 @@ iv_end = iv_end_offset ).
 
         temp7 = sy-tabix.
         READ TABLE lt_hunks INDEX lv_hunk + 1 INTO temp3.
-        sy-tabix = temp7.
+
         IF sy-subrc <> 0.
           RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
         ENDIF.
@@ -477,7 +477,7 @@ iv_end = ls_hunk-ab_start + ls_hunk-ab_length ).
 
           temp5 = sy-tabix.
           READ TABLE lt_region_hunks INDEX lv_region_hunk + 1 INTO temp4.
-          sy-tabix = temp5.
+
           IF sy-subrc <> 0.
             RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
           ENDIF.
@@ -599,7 +599,7 @@ iv_end = lv_b_end ).
 
     temp16 = sy-tabix.
     READ TABLE lt_lcs WITH KEY key = lines( lt_lcs ) - 1 INTO temp15.
-    sy-tabix = temp16.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -616,7 +616,7 @@ iv_end = lv_b_end ).
 
         temp8 = sy-tabix.
         READ TABLE it_buffer1 INDEX lv_tail1 + 1 INTO temp7.
-        sy-tabix = temp8.
+
         IF sy-subrc <> 0.
           RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
         ENDIF.
@@ -632,7 +632,7 @@ iv_end = lv_b_end ).
 
         temp10 = sy-tabix.
         READ TABLE it_buffer2 INDEX lv_tail2 + 1 INTO temp9.
-        sy-tabix = temp10.
+
         IF sy-subrc <> 0.
           RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
         ENDIF.
@@ -656,7 +656,7 @@ iv_end = lv_b_end ).
 
         temp12 = sy-tabix.
         READ TABLE it_buffer1 INDEX lv_tail1 + 1 INTO temp11.
-        sy-tabix = temp12.
+
         IF sy-subrc <> 0.
           RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
         ENDIF.
@@ -671,7 +671,7 @@ iv_end = lv_b_end ).
 
       temp14 = sy-tabix.
       READ TABLE lt_lcs WITH KEY key = ls_candidate-chain INTO temp13.
-      sy-tabix = temp14.
+
       IF sy-subrc <> 0.
         RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
       ENDIF.
@@ -716,7 +716,7 @@ iv_end = lv_b_end ).
 
     temp19 = sy-tabix.
     READ TABLE lt_lcs WITH KEY key = lines( lt_lcs ) - 1 INTO temp18.
-    sy-tabix = temp19.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -755,7 +755,7 @@ iv_end = lv_b_end ).
 
       temp17 = sy-tabix.
       READ TABLE lt_lcs WITH KEY key = ls_candidate-chain INTO temp16.
-      sy-tabix = temp17.
+
       IF sy-subrc <> 0.
         RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
       ENDIF.
@@ -793,7 +793,7 @@ iv_end = lv_b_end ).
 
     temp21 = sy-tabix.
     READ TABLE lt_lcs WITH KEY key = lines( lt_lcs ) - 1 INTO temp20.
-    sy-tabix = temp21.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -825,7 +825,7 @@ iv_end = lv_b_end ).
 
       temp19 = sy-tabix.
       READ TABLE lt_lcs WITH KEY key = ls_candidate-chain INTO temp18.
-      sy-tabix = temp19.
+
       IF sy-subrc <> 0.
         RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
       ENDIF.
@@ -948,7 +948,7 @@ iv_end = lv_b_end ).
 
         temp29 = sy-tabix.
         READ TABLE lt_equivalenceclasses WITH KEY key = <lv_buffer1> INTO temp27.
-        sy-tabix = temp29.
+
         IF sy-subrc <> 0.
           RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
         ENDIF.
@@ -964,7 +964,7 @@ iv_end = lv_b_end ).
 
       temp34 = sy-tabix.
       READ TABLE lt_candidates WITH KEY key = 0 INTO temp31.
-      sy-tabix = temp34.
+
       IF sy-subrc <> 0.
         RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
       ENDIF.
@@ -979,7 +979,7 @@ iv_end = lv_b_end ).
 
             temp24 = sy-tabix.
             READ TABLE lt_candidates WITH KEY key = lv_s INTO temp23.
-            sy-tabix = temp24.
+
             IF sy-subrc <> 0.
               RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
             ENDIF.
@@ -991,7 +991,7 @@ iv_end = lv_b_end ).
 
               temp26 = sy-tabix.
               READ TABLE lt_candidates WITH KEY key = lv_s + 1 INTO temp25.
-              sy-tabix = temp26.
+
               IF sy-subrc <> 0.
                 RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
               ENDIF.
@@ -1018,7 +1018,7 @@ iv_end = lv_b_end ).
 
             temp28 = sy-tabix.
             READ TABLE lt_candidates WITH KEY key = lv_r ASSIGNING <temp27>.
-            sy-tabix = temp28.
+
             IF sy-subrc <> 0.
               RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
             ENDIF.
@@ -1027,7 +1027,7 @@ iv_end = lv_b_end ).
 
             temp30 = sy-tabix.
             READ TABLE lt_candidates WITH KEY key = lv_r ASSIGNING <temp29>.
-            sy-tabix = temp30.
+
             IF sy-subrc <> 0.
               RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
             ENDIF.
@@ -1036,7 +1036,7 @@ iv_end = lv_b_end ).
 
             temp32 = sy-tabix.
             READ TABLE lt_candidates WITH KEY key = lv_r ASSIGNING <temp31>.
-            sy-tabix = temp32.
+
             IF sy-subrc <> 0.
               RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
             ENDIF.
@@ -1060,7 +1060,7 @@ iv_end = lv_b_end ).
 
         temp35 = sy-tabix.
         READ TABLE lt_candidates WITH KEY key = lv_r ASSIGNING <temp34>.
-        sy-tabix = temp35.
+
         IF sy-subrc <> 0.
           RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
         ENDIF.
@@ -1069,7 +1069,7 @@ iv_end = lv_b_end ).
 
         temp37 = sy-tabix.
         READ TABLE lt_candidates WITH KEY key = lv_r ASSIGNING <temp36>.
-        sy-tabix = temp37.
+
         IF sy-subrc <> 0.
           RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
         ENDIF.
@@ -1078,7 +1078,7 @@ iv_end = lv_b_end ).
 
         temp39 = sy-tabix.
         READ TABLE lt_candidates WITH KEY key = lv_r ASSIGNING <temp38>.
-        sy-tabix = temp39.
+
         IF sy-subrc <> 0.
           RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
         ENDIF.
@@ -1229,7 +1229,7 @@ iv_end = lv_b_end ).
 
         temp41 = sy-tabix.
         READ TABLE it_buffer INDEX lv_curroffset + 1 INTO temp40.
-        sy-tabix = temp41.
+
         IF sy-subrc <> 0.
           RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
         ENDIF.
@@ -1242,7 +1242,7 @@ iv_end = lv_b_end ).
 
         temp43 = sy-tabix.
         READ TABLE <ls_patch>-buffer2-chunk INDEX sy-index INTO temp42.
-        sy-tabix = temp43.
+
         IF sy-subrc <> 0.
           RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
         ENDIF.
@@ -1257,7 +1257,7 @@ iv_end = lv_b_end ).
 
       temp45 = sy-tabix.
       READ TABLE it_buffer INDEX lv_curroffset + 1 INTO temp44.
-      sy-tabix = temp45.
+
       IF sy-subrc <> 0.
         RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
       ENDIF.
@@ -1298,7 +1298,7 @@ iv_end = lv_b_end ).
 
       temp47 = sy-tabix.
       READ TABLE it_data INDEX lv_line INTO temp46.
-      sy-tabix = temp47.
+
       IF sy-subrc <> 0.
         RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
       ENDIF.

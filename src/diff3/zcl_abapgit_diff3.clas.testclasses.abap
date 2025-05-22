@@ -80,7 +80,7 @@ CLASS ltcl_lcs IMPLEMENTATION.
 
     temp36 = sy-tabix.
     READ TABLE lt_lcs WITH KEY key = lines( lt_lcs ) - 1 INTO temp35.
-    sy-tabix = temp36.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -99,7 +99,7 @@ CLASS ltcl_lcs IMPLEMENTATION.
 
     temp49 = sy-tabix.
     READ TABLE lt_lcs WITH KEY key = ls_result-chain INTO temp48.
-    sy-tabix = temp49.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -117,7 +117,7 @@ CLASS ltcl_lcs IMPLEMENTATION.
 
     temp51 = sy-tabix.
     READ TABLE lt_lcs WITH KEY key = ls_result-chain INTO temp50.
-    sy-tabix = temp51.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -135,7 +135,7 @@ CLASS ltcl_lcs IMPLEMENTATION.
 
     temp53 = sy-tabix.
     READ TABLE lt_lcs WITH KEY key = ls_result-chain INTO temp52.
-    sy-tabix = temp53.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -153,7 +153,7 @@ CLASS ltcl_lcs IMPLEMENTATION.
 
     temp55 = sy-tabix.
     READ TABLE lt_lcs WITH KEY key = ls_result-chain INTO temp54.
-    sy-tabix = temp55.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -171,7 +171,7 @@ CLASS ltcl_lcs IMPLEMENTATION.
 
     temp57 = sy-tabix.
     READ TABLE lt_lcs WITH KEY key = ls_result-chain INTO temp56.
-    sy-tabix = temp57.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -189,7 +189,7 @@ CLASS ltcl_lcs IMPLEMENTATION.
 
     temp59 = sy-tabix.
     READ TABLE lt_lcs WITH KEY key = ls_result-chain INTO temp58.
-    sy-tabix = temp59.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -269,7 +269,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp61 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp60.
-    sy-tabix = temp61.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -280,7 +280,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp63 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp62.
-    sy-tabix = temp63.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -290,7 +290,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp65 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp64.
-    sy-tabix = temp65.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -299,7 +299,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp67 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp66.
-    sy-tabix = temp67.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -310,7 +310,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp69 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp68.
-    sy-tabix = temp69.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -322,7 +322,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp71 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp70.
-    sy-tabix = temp71.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -333,7 +333,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp73 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp72.
-    sy-tabix = temp73.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -343,7 +343,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp75 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp74.
-    sy-tabix = temp75.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -352,7 +352,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp77 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp76.
-    sy-tabix = temp77.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -363,7 +363,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp79 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp78.
-    sy-tabix = temp79.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -375,7 +375,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp81 = sy-tabix.
     READ TABLE lt_result INDEX 5 INTO temp80.
-    sy-tabix = temp81.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -386,7 +386,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp83 = sy-tabix.
     READ TABLE lt_result INDEX 5 INTO temp82.
-    sy-tabix = temp83.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -396,7 +396,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp85 = sy-tabix.
     READ TABLE lt_result INDEX 6 INTO temp84.
-    sy-tabix = temp85.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -405,7 +405,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp87 = sy-tabix.
     READ TABLE lt_result INDEX 6 INTO temp86.
-    sy-tabix = temp87.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -416,7 +416,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp89 = sy-tabix.
     READ TABLE lt_result INDEX 6 INTO temp88.
-    sy-tabix = temp89.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -428,7 +428,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp91 = sy-tabix.
     READ TABLE lt_result INDEX 7 INTO temp90.
-    sy-tabix = temp91.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -439,7 +439,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
 
     temp93 = sy-tabix.
     READ TABLE lt_result INDEX 7 INTO temp92.
-    sy-tabix = temp93.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -513,7 +513,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp95 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp94.
-    sy-tabix = temp95.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -524,7 +524,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp97 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp96.
-    sy-tabix = temp97.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -535,7 +535,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp99 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp98.
-    sy-tabix = temp99.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -546,7 +546,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp101 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp100.
-    sy-tabix = temp101.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -557,7 +557,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp103 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp102.
-    sy-tabix = temp103.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -568,7 +568,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp105 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp104.
-    sy-tabix = temp105.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -580,7 +580,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp107 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp106.
-    sy-tabix = temp107.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -591,7 +591,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp109 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp108.
-    sy-tabix = temp109.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -602,7 +602,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp111 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp110.
-    sy-tabix = temp111.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -613,7 +613,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp113 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp112.
-    sy-tabix = temp113.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -624,7 +624,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp115 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp114.
-    sy-tabix = temp115.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -635,7 +635,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp117 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp116.
-    sy-tabix = temp117.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -647,7 +647,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp119 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp118.
-    sy-tabix = temp119.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -658,7 +658,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp121 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp120.
-    sy-tabix = temp121.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -669,7 +669,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp123 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp122.
-    sy-tabix = temp123.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -680,7 +680,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp125 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp124.
-    sy-tabix = temp125.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -691,7 +691,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp127 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp126.
-    sy-tabix = temp127.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -702,7 +702,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
 
     temp129 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp128.
-    sy-tabix = temp129.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -794,7 +794,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp131 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp130.
-    sy-tabix = temp131.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -805,7 +805,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp133 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp132.
-    sy-tabix = temp133.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -816,7 +816,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp135 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp134.
-    sy-tabix = temp135.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -827,7 +827,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp137 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp136.
-    sy-tabix = temp137.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -838,7 +838,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp139 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp138.
-    sy-tabix = temp139.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -849,7 +849,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp141 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp140.
-    sy-tabix = temp141.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -861,7 +861,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp143 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp142.
-    sy-tabix = temp143.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -872,7 +872,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp145 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp144.
-    sy-tabix = temp145.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -883,7 +883,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp147 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp146.
-    sy-tabix = temp147.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -894,7 +894,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp149 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp148.
-    sy-tabix = temp149.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -905,7 +905,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp151 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp150.
-    sy-tabix = temp151.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -916,7 +916,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp153 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp152.
-    sy-tabix = temp153.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -928,7 +928,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp155 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp154.
-    sy-tabix = temp155.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -939,7 +939,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp157 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp156.
-    sy-tabix = temp157.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -950,7 +950,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp159 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp158.
-    sy-tabix = temp159.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -961,7 +961,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp161 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp160.
-    sy-tabix = temp161.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -972,7 +972,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp163 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp162.
-    sy-tabix = temp163.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -983,7 +983,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp165 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp164.
-    sy-tabix = temp165.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1066,7 +1066,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp167 = sy-tabix.
     READ TABLE lt_strip INDEX 1 INTO temp166.
-    sy-tabix = temp167.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1077,7 +1077,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp169 = sy-tabix.
     READ TABLE lt_strip INDEX 1 INTO temp168.
-    sy-tabix = temp169.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1088,7 +1088,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp171 = sy-tabix.
     READ TABLE lt_strip INDEX 1 INTO temp170.
-    sy-tabix = temp171.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1097,7 +1097,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp173 = sy-tabix.
     READ TABLE lt_strip INDEX 1 INTO temp172.
-    sy-tabix = temp173.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1106,7 +1106,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp175 = sy-tabix.
     READ TABLE lt_strip INDEX 1 INTO temp174.
-    sy-tabix = temp175.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1115,7 +1115,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp177 = sy-tabix.
     READ TABLE lt_strip INDEX 1 INTO temp176.
-    sy-tabix = temp177.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1127,7 +1127,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp179 = sy-tabix.
     READ TABLE lt_strip INDEX 2 INTO temp178.
-    sy-tabix = temp179.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1138,7 +1138,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp181 = sy-tabix.
     READ TABLE lt_strip INDEX 2 INTO temp180.
-    sy-tabix = temp181.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1149,7 +1149,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp183 = sy-tabix.
     READ TABLE lt_strip INDEX 2 INTO temp182.
-    sy-tabix = temp183.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1158,7 +1158,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp185 = sy-tabix.
     READ TABLE lt_strip INDEX 2 INTO temp184.
-    sy-tabix = temp185.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1167,7 +1167,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp187 = sy-tabix.
     READ TABLE lt_strip INDEX 2 INTO temp186.
-    sy-tabix = temp187.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1176,7 +1176,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp189 = sy-tabix.
     READ TABLE lt_strip INDEX 2 INTO temp188.
-    sy-tabix = temp189.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1188,7 +1188,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp191 = sy-tabix.
     READ TABLE lt_strip INDEX 3 INTO temp190.
-    sy-tabix = temp191.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1199,7 +1199,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp193 = sy-tabix.
     READ TABLE lt_strip INDEX 3 INTO temp192.
-    sy-tabix = temp193.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1210,7 +1210,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp195 = sy-tabix.
     READ TABLE lt_strip INDEX 3 INTO temp194.
-    sy-tabix = temp195.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1219,7 +1219,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp197 = sy-tabix.
     READ TABLE lt_strip INDEX 3 INTO temp196.
-    sy-tabix = temp197.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1228,7 +1228,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp199 = sy-tabix.
     READ TABLE lt_strip INDEX 3 INTO temp198.
-    sy-tabix = temp199.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1237,7 +1237,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp201 = sy-tabix.
     READ TABLE lt_strip INDEX 3 INTO temp200.
-    sy-tabix = temp201.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1310,7 +1310,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp203 = sy-tabix.
     READ TABLE lt_invert INDEX 1 INTO temp202.
-    sy-tabix = temp203.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1321,7 +1321,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp205 = sy-tabix.
     READ TABLE lt_invert INDEX 1 INTO temp204.
-    sy-tabix = temp205.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1332,7 +1332,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp207 = sy-tabix.
     READ TABLE lt_invert INDEX 1 INTO temp206.
-    sy-tabix = temp207.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1343,7 +1343,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp209 = sy-tabix.
     READ TABLE lt_invert INDEX 1 INTO temp208.
-    sy-tabix = temp209.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1354,7 +1354,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp211 = sy-tabix.
     READ TABLE lt_invert INDEX 1 INTO temp210.
-    sy-tabix = temp211.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1365,7 +1365,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp213 = sy-tabix.
     READ TABLE lt_invert INDEX 1 INTO temp212.
-    sy-tabix = temp213.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1377,7 +1377,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp215 = sy-tabix.
     READ TABLE lt_invert INDEX 2 INTO temp214.
-    sy-tabix = temp215.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1388,7 +1388,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp217 = sy-tabix.
     READ TABLE lt_invert INDEX 2 INTO temp216.
-    sy-tabix = temp217.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1399,7 +1399,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp219 = sy-tabix.
     READ TABLE lt_invert INDEX 2 INTO temp218.
-    sy-tabix = temp219.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1410,7 +1410,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp221 = sy-tabix.
     READ TABLE lt_invert INDEX 2 INTO temp220.
-    sy-tabix = temp221.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1421,7 +1421,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp223 = sy-tabix.
     READ TABLE lt_invert INDEX 2 INTO temp222.
-    sy-tabix = temp223.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1432,7 +1432,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp225 = sy-tabix.
     READ TABLE lt_invert INDEX 2 INTO temp224.
-    sy-tabix = temp225.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1444,7 +1444,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp227 = sy-tabix.
     READ TABLE lt_invert INDEX 3 INTO temp226.
-    sy-tabix = temp227.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1455,7 +1455,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp229 = sy-tabix.
     READ TABLE lt_invert INDEX 3 INTO temp228.
-    sy-tabix = temp229.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1466,7 +1466,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp231 = sy-tabix.
     READ TABLE lt_invert INDEX 3 INTO temp230.
-    sy-tabix = temp231.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1477,7 +1477,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp233 = sy-tabix.
     READ TABLE lt_invert INDEX 3 INTO temp232.
-    sy-tabix = temp233.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1488,7 +1488,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp235 = sy-tabix.
     READ TABLE lt_invert INDEX 3 INTO temp234.
-    sy-tabix = temp235.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1499,7 +1499,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
 
     temp237 = sy-tabix.
     READ TABLE lt_invert INDEX 3 INTO temp236.
-    sy-tabix = temp237.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1656,7 +1656,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp239 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp238.
-    sy-tabix = temp239.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1667,7 +1667,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp241 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp240.
-    sy-tabix = temp241.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1678,7 +1678,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp243 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp242.
-    sy-tabix = temp243.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1689,7 +1689,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp245 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp244.
-    sy-tabix = temp245.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1700,7 +1700,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp247 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp246.
-    sy-tabix = temp247.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1712,7 +1712,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp249 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp248.
-    sy-tabix = temp249.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1723,7 +1723,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp251 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp250.
-    sy-tabix = temp251.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1734,7 +1734,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp253 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp252.
-    sy-tabix = temp253.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1745,7 +1745,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp255 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp254.
-    sy-tabix = temp255.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1756,7 +1756,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp257 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp256.
-    sy-tabix = temp257.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1767,7 +1767,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp259 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp258.
-    sy-tabix = temp259.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1778,7 +1778,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp261 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp260.
-    sy-tabix = temp261.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1789,7 +1789,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp263 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp262.
-    sy-tabix = temp263.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1800,7 +1800,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp265 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp264.
-    sy-tabix = temp265.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1811,7 +1811,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp267 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp266.
-    sy-tabix = temp267.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1823,7 +1823,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp269 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp268.
-    sy-tabix = temp269.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1834,7 +1834,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp271 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp270.
-    sy-tabix = temp271.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1845,7 +1845,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp273 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp272.
-    sy-tabix = temp273.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1856,7 +1856,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp275 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp274.
-    sy-tabix = temp275.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1867,7 +1867,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp277 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp276.
-    sy-tabix = temp277.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1879,7 +1879,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp279 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp278.
-    sy-tabix = temp279.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1890,7 +1890,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp281 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp280.
-    sy-tabix = temp281.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1901,7 +1901,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp283 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp282.
-    sy-tabix = temp283.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1912,7 +1912,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp285 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp284.
-    sy-tabix = temp285.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1923,7 +1923,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp287 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp286.
-    sy-tabix = temp287.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1934,7 +1934,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp289 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp288.
-    sy-tabix = temp289.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1945,7 +1945,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp291 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp290.
-    sy-tabix = temp291.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1956,7 +1956,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp293 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp292.
-    sy-tabix = temp293.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1967,7 +1967,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp295 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp294.
-    sy-tabix = temp295.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1978,7 +1978,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp297 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp296.
-    sy-tabix = temp297.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -1990,7 +1990,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp299 = sy-tabix.
     READ TABLE lt_result INDEX 5 INTO temp298.
-    sy-tabix = temp299.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2001,7 +2001,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp301 = sy-tabix.
     READ TABLE lt_result INDEX 5 INTO temp300.
-    sy-tabix = temp301.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2012,7 +2012,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp303 = sy-tabix.
     READ TABLE lt_result INDEX 5 INTO temp302.
-    sy-tabix = temp303.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2023,7 +2023,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp305 = sy-tabix.
     READ TABLE lt_result INDEX 5 INTO temp304.
-    sy-tabix = temp305.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2034,7 +2034,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp307 = sy-tabix.
     READ TABLE lt_result INDEX 5 INTO temp306.
-    sy-tabix = temp307.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2046,7 +2046,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp309 = sy-tabix.
     READ TABLE lt_result INDEX 6 INTO temp308.
-    sy-tabix = temp309.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2057,7 +2057,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp311 = sy-tabix.
     READ TABLE lt_result INDEX 6 INTO temp310.
-    sy-tabix = temp311.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2068,7 +2068,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp313 = sy-tabix.
     READ TABLE lt_result INDEX 6 INTO temp312.
-    sy-tabix = temp313.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2079,7 +2079,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp315 = sy-tabix.
     READ TABLE lt_result INDEX 6 INTO temp314.
-    sy-tabix = temp315.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2090,7 +2090,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp317 = sy-tabix.
     READ TABLE lt_result INDEX 6 INTO temp316.
-    sy-tabix = temp317.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2102,7 +2102,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp319 = sy-tabix.
     READ TABLE lt_result INDEX 7 INTO temp318.
-    sy-tabix = temp319.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2113,7 +2113,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp321 = sy-tabix.
     READ TABLE lt_result INDEX 7 INTO temp320.
-    sy-tabix = temp321.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2124,7 +2124,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp323 = sy-tabix.
     READ TABLE lt_result INDEX 7 INTO temp322.
-    sy-tabix = temp323.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2135,7 +2135,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp325 = sy-tabix.
     READ TABLE lt_result INDEX 7 INTO temp324.
-    sy-tabix = temp325.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2146,7 +2146,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
 
     temp327 = sy-tabix.
     READ TABLE lt_result INDEX 7 INTO temp326.
-    sy-tabix = temp327.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2259,7 +2259,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp329 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp328.
-    sy-tabix = temp329.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2270,7 +2270,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp331 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp330.
-    sy-tabix = temp331.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2280,7 +2280,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp333 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp332.
-    sy-tabix = temp333.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2289,7 +2289,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp335 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp334.
-    sy-tabix = temp335.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2298,7 +2298,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp337 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp336.
-    sy-tabix = temp337.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2309,7 +2309,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp339 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp338.
-    sy-tabix = temp339.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2321,7 +2321,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp341 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp340.
-    sy-tabix = temp341.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2332,7 +2332,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp343 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp342.
-    sy-tabix = temp343.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2342,7 +2342,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp345 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp344.
-    sy-tabix = temp345.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2351,7 +2351,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp347 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp346.
-    sy-tabix = temp347.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2362,7 +2362,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp349 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp348.
-    sy-tabix = temp349.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2373,7 +2373,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp351 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp350.
-    sy-tabix = temp351.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2385,7 +2385,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp353 = sy-tabix.
     READ TABLE lt_result INDEX 5 INTO temp352.
-    sy-tabix = temp353.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2396,7 +2396,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp355 = sy-tabix.
     READ TABLE lt_result INDEX 5 INTO temp354.
-    sy-tabix = temp355.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2426,7 +2426,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp357 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp356.
-    sy-tabix = temp357.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2437,7 +2437,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp359 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp358.
-    sy-tabix = temp359.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2480,7 +2480,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp361 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp360.
-    sy-tabix = temp361.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2491,7 +2491,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp363 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp362.
-    sy-tabix = temp363.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2501,7 +2501,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp365 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp364.
-    sy-tabix = temp365.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2510,7 +2510,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp367 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp366.
-    sy-tabix = temp367.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2519,7 +2519,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp369 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp368.
-    sy-tabix = temp369.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2530,7 +2530,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp371 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp370.
-    sy-tabix = temp371.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2542,7 +2542,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp373 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp372.
-    sy-tabix = temp373.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2553,7 +2553,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
 
     temp375 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp374.
-    sy-tabix = temp375.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2946,7 +2946,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp378 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp377.
-    sy-tabix = temp378.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2957,7 +2957,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp380 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp379.
-    sy-tabix = temp380.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2967,7 +2967,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp382 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp381.
-    sy-tabix = temp382.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2976,7 +2976,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp384 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp383.
-    sy-tabix = temp384.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2987,7 +2987,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp386 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp385.
-    sy-tabix = temp386.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -2999,7 +2999,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp388 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp387.
-    sy-tabix = temp388.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3010,7 +3010,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp390 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp389.
-    sy-tabix = temp390.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3020,7 +3020,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp392 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp391.
-    sy-tabix = temp392.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3029,7 +3029,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp394 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp393.
-    sy-tabix = temp394.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3040,7 +3040,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp396 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp395.
-    sy-tabix = temp396.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3052,7 +3052,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp398 = sy-tabix.
     READ TABLE lt_result INDEX 5 INTO temp397.
-    sy-tabix = temp398.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3063,7 +3063,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp400 = sy-tabix.
     READ TABLE lt_result INDEX 5 INTO temp399.
-    sy-tabix = temp400.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3073,7 +3073,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp402 = sy-tabix.
     READ TABLE lt_result INDEX 6 INTO temp401.
-    sy-tabix = temp402.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3082,7 +3082,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp404 = sy-tabix.
     READ TABLE lt_result INDEX 6 INTO temp403.
-    sy-tabix = temp404.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3093,7 +3093,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp406 = sy-tabix.
     READ TABLE lt_result INDEX 6 INTO temp405.
-    sy-tabix = temp406.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3105,7 +3105,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp408 = sy-tabix.
     READ TABLE lt_result INDEX 7 INTO temp407.
-    sy-tabix = temp408.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3116,7 +3116,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp410 = sy-tabix.
     READ TABLE lt_result INDEX 7 INTO temp409.
-    sy-tabix = temp410.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3126,7 +3126,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp412 = sy-tabix.
     READ TABLE lt_result INDEX 8 INTO temp411.
-    sy-tabix = temp412.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3135,7 +3135,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp414 = sy-tabix.
     READ TABLE lt_result INDEX 8 INTO temp413.
-    sy-tabix = temp414.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3146,7 +3146,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp416 = sy-tabix.
     READ TABLE lt_result INDEX 8 INTO temp415.
-    sy-tabix = temp416.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3199,7 +3199,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp418 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp417.
-    sy-tabix = temp418.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3210,7 +3210,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp420 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp419.
-    sy-tabix = temp420.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3221,7 +3221,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp422 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp421.
-    sy-tabix = temp422.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3232,7 +3232,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp424 = sy-tabix.
     READ TABLE lt_result INDEX 1 INTO temp423.
-    sy-tabix = temp424.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3244,7 +3244,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp426 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp425.
-    sy-tabix = temp426.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3255,7 +3255,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp428 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp427.
-    sy-tabix = temp428.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3266,7 +3266,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp430 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp429.
-    sy-tabix = temp430.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3277,7 +3277,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp432 = sy-tabix.
     READ TABLE lt_result INDEX 2 INTO temp431.
-    sy-tabix = temp432.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3289,7 +3289,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp434 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp433.
-    sy-tabix = temp434.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3300,7 +3300,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp436 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp435.
-    sy-tabix = temp436.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3311,7 +3311,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp438 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp437.
-    sy-tabix = temp438.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3322,7 +3322,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp440 = sy-tabix.
     READ TABLE lt_result INDEX 3 INTO temp439.
-    sy-tabix = temp440.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3334,7 +3334,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp442 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp441.
-    sy-tabix = temp442.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3345,7 +3345,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp444 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp443.
-    sy-tabix = temp444.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3356,7 +3356,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp446 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp445.
-    sy-tabix = temp446.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
@@ -3367,7 +3367,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
 
     temp448 = sy-tabix.
     READ TABLE lt_result INDEX 4 INTO temp447.
-    sy-tabix = temp448.
+
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
     ENDIF.
