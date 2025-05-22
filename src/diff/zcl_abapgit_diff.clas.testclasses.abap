@@ -96,7 +96,7 @@ CLASS ltcl_diff IMPLEMENTATION.
           lv_xnew TYPE xstring,
           lv_old  TYPE string,
           lv_xold TYPE xstring,
-          lo_diff TYPE REF TO zcl_abapgit_diff,
+          lo_diff TYPE REF TO zif_abapgit_diff,
           lt_diff TYPE zif_abapgit_definitions=>ty_diffs_tt.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diff.
@@ -109,6 +109,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     lv_xold = zcl_abapgit_convert=>string_to_xstring_utf8( lv_old ).
 
     CREATE OBJECT lo_diff
+      TYPE zcl_abapgit_diff
       EXPORTING
         iv_new                = lv_xnew
         iv_old                = lv_xold
