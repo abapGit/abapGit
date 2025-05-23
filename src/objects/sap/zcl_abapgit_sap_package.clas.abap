@@ -28,21 +28,26 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   METHOD zif_abapgit_sap_package~get_default_transport_layer.
 
     " Get default transport layer
-    CALL FUNCTION 'TR_GET_TRANSPORT_TARGET'
-      EXPORTING
-        iv_use_default             = abap_true
-        iv_get_layer_only          = abap_true
-      IMPORTING
-        ev_layer                   = rv_transport_layer
-      EXCEPTIONS
-        wrong_call                 = 1
-        invalid_input              = 2
-        cts_initialization_failure = 3
-        OTHERS                     = 4.
-    IF sy-subrc <> 0.
+    TRY.
+        CALL FUNCTION 'TR_GET_TRANSPORT_TARGET'
+          EXPORTING
+            iv_use_default             = abap_true
+            iv_get_layer_only          = abap_true
+          IMPORTING
+            ev_layer                   = rv_transport_layer
+          EXCEPTIONS
+            wrong_call                 = 1
+            invalid_input              = 2
+            cts_initialization_failure = 3
+            OTHERS                     = 4.
+        IF sy-subrc <> 0.
       " Return empty layer (i.e. "local workbench request" for the package)
-      CLEAR rv_transport_layer.
-    ENDIF.
+          CLEAR rv_transport_layer.
+        ENDIF.
+      CATCH cx_sy_dyn_call_illegal_func.
+* in open-abap
+        CLEAR rv_transport_layer.
+    ENDTRY.
 
   ENDMETHOD.
 
