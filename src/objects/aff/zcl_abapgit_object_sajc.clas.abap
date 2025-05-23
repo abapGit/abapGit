@@ -8,6 +8,7 @@ CLASS zcl_abapgit_object_sajc DEFINITION
 
     METHODS zif_abapgit_object~changed_by
         REDEFINITION .
+    METHODS zif_abapgit_object~get_deserialize_steps REDEFINITION.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -34,5 +35,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SAJC IMPLEMENTATION.
         WHERE job_catalog_entry_name = ms_item-obj_name
           AND job_catalog_entry_version = 'A'.
     ENDIF.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 ENDCLASS.
