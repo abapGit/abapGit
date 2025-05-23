@@ -106,7 +106,7 @@ CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
 
     ro_form->text(
       iv_label       = 'Super Package'
-      iv_name        = c_id-package
+      iv_name        = c_id-super_package
       iv_upper_case  = abap_true
       iv_max         = 30 ).
 
@@ -144,15 +144,21 @@ CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN c_event-create.
-        ls_create-devclass = mo_form_data->get( c_id-package ).
-        ls_create-ctext = mo_form_data->get( c_id-description ).
-        ls_create-component = mo_form_data->get( c_id-software_component ).
-        ls_create-parentcl = mo_form_data->get( c_id-super_package ).
-        ls_create-pdevclass = mo_form_data->get( c_id-transport_layer ).
+        mo_validation_log = mo_form_util->validate( mo_form_data ).
 
-        zcl_abapgit_factory=>get_sap_package( ls_create-devclass )->create( ls_create ).
-        MESSAGE 'Package created' TYPE 'S'.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+        IF mo_validation_log->is_empty( ) = abap_true.
+          ls_create-devclass = mo_form_data->get( c_id-package ).
+          ls_create-ctext = mo_form_data->get( c_id-description ).
+          ls_create-component = mo_form_data->get( c_id-software_component ).
+          ls_create-parentcl = mo_form_data->get( c_id-super_package ).
+          ls_create-pdevclass = mo_form_data->get( c_id-transport_layer ).
+
+          zcl_abapgit_factory=>get_sap_package( ls_create-devclass )->create( ls_create ).
+          MESSAGE 'Package created' TYPE 'S'.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+        ELSE.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        ENDIF.
       WHEN OTHERS.
         " do nothing
     ENDCASE.
