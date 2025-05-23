@@ -39,7 +39,7 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
         lstate     TYPE char1,
         rstate     TYPE char1,
         fstate     TYPE char1, " FILE state - Abstraction for shorter ifs
-        o_diff     TYPE REF TO zcl_abapgit_diff,
+        o_diff     TYPE REF TO zif_abapgit_diff,
         changed_by TYPE syuname,
         type       TYPE string,
       END OF ty_file_diff .
@@ -475,6 +475,7 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
 
     IF ms_diff_file-type <> 'binary'.
       CREATE OBJECT ms_diff_file-o_diff
+        TYPE zcl_abapgit_diff
         EXPORTING
           iv_new = <ls_conflict>-source_data
           iv_old = <ls_conflict>-target_data.

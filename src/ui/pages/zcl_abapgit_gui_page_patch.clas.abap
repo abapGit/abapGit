@@ -121,12 +121,12 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
       IMPORTING
         !iv_filename   TYPE string
       RETURNING
-        VALUE(ro_diff) TYPE REF TO zcl_abapgit_diff
+        VALUE(ro_diff) TYPE REF TO zif_abapgit_diff
       RAISING
         zcx_abapgit_exception .
     METHODS get_diff_line
       IMPORTING
-        !io_diff       TYPE REF TO zcl_abapgit_diff
+        !io_diff       TYPE REF TO zif_abapgit_diff
         !iv_line_index TYPE string
       RETURNING
         VALUE(rs_diff) TYPE zif_abapgit_definitions=>ty_diff
@@ -278,7 +278,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
   METHOD apply_patch_for.
 
-    DATA: lo_diff      TYPE REF TO zcl_abapgit_diff,
+    DATA: lo_diff      TYPE REF TO zif_abapgit_diff,
           ls_diff_line TYPE zif_abapgit_definitions=>ty_diff,
           lv_line      TYPE i.
 
