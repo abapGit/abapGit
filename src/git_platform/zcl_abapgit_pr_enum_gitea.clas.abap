@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_pr_enum_github DEFINITION
+CLASS zcl_abapgit_pr_enum_gitea DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC .
@@ -48,7 +48,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_PR_ENUM_gitea IMPLEMENTATION.
 
 
   METHOD clean_url.
@@ -60,29 +60,15 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
 
 
   METHOD constructor.
+* https://docs.gitea.com/api/1.23/#tag/repository/operation/repoListPullRequests
 
-    DATA lv_search TYPE string.
-
-    mv_repo_url   = |https://api.github.com/repos/{ iv_user_and_repo }|.
+    mv_repo_url   = |http://localhost:3050/api/v1/repos/{ iv_user_and_repo }|.
     mi_http_agent = ii_http_agent.
-    mi_http_agent->global_headers( )->set(
-      iv_key = 'Accept'
-      iv_val = 'application/vnd.github.v3+json' ).
 
     IF zcl_abapgit_login_manager=>get( mv_repo_url ) IS NOT INITIAL.
       mi_http_agent->global_headers( )->set(
         iv_key = 'Authorization'
         iv_val = zcl_abapgit_login_manager=>get( mv_repo_url ) ).
-    ELSE.
-* fallback, try searching for the git credentials
-      lv_search = mv_repo_url.
-      REPLACE FIRST OCCURRENCE OF 'api.github.com/repos' IN lv_search WITH 'github.com'.
-      IF zcl_abapgit_login_manager=>get( lv_search ) IS NOT INITIAL.
-        mi_http_agent->global_headers( )->set(
-          iv_key = 'Authorization'
-          iv_val = zcl_abapgit_login_manager=>get( lv_search ) ).
-      ENDIF.
-
     ENDIF.
 
   ENDMETHOD.
