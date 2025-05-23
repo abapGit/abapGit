@@ -150,8 +150,11 @@ CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
 
 
   METHOD get_defaults.
-    mo_form_data->set( iv_key = c_id-transport_layer
-                       iv_val = 'ZABC' ).
+
+    mo_form_data->set(
+      iv_key = c_id-transport_layer
+      iv_val = zcl_abapgit_factory=>get_sap_package( 'DUMMY' )->get_default_transport_layer( ) ).
+
   ENDMETHOD.
 
   METHOD zif_abapgit_gui_renderable~render.
