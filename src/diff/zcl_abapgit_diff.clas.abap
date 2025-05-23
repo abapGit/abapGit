@@ -285,6 +285,8 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
     map_beacons( ).
     shortlist( ).
 
+    ri_diff = me.
+
   ENDMETHOD.
 
 
