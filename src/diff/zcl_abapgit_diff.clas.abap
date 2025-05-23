@@ -1,6 +1,7 @@
 CLASS zcl_abapgit_diff DEFINITION
   PUBLIC
-  CREATE PUBLIC.
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_diff_factory .
 
   PUBLIC SECTION.
 
