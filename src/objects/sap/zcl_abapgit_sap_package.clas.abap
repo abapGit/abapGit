@@ -45,7 +45,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
           CLEAR rv_transport_layer.
         ENDIF.
       CATCH cx_sy_dyn_call_illegal_func.
-* in open-abap
+* the function module doesnt exist in open-abap
         CLEAR rv_transport_layer.
     ENDTRY.
 
