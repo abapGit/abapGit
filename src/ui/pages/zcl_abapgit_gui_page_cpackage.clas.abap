@@ -32,7 +32,11 @@ CLASS zcl_abapgit_gui_page_cpackage DEFINITION
 
     CONSTANTS:
       BEGIN OF c_id,
-        name TYPE string VALUE 'name',
+        package            TYPE string VALUE 'package',
+        description        TYPE string VALUE 'description',
+        software_component TYPE string VALUE 'software_component',
+        transport_layer    TYPE string VALUE 'transport_layer',
+        super_package      TYPE string VALUE 'super_package',
       END OF c_id.
 
     CONSTANTS:
@@ -43,17 +47,19 @@ CLASS zcl_abapgit_gui_page_cpackage DEFINITION
     METHODS get_form_schema
       RETURNING
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
-    METHODS render_existing
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+
+    METHODS get_defaults
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
+  METHOD zif_abapgit_gui_menu_provider~get_menu.
+    RETURN. " todo, implement method
+  ENDMETHOD.
 
   METHOD constructor.
 
@@ -68,38 +74,52 @@ CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_form_schema.
-    ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'data-config' ).
+    ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'create-package' ).
 
     ro_form->text(
-      iv_label       = 'Name'
-      iv_name        = c_id-name
+      iv_label       = 'Package'
+      iv_name        = c_id-package
       iv_required    = abap_true
-      iv_max         = 16 ).
+      iv_upper_case  = abap_true
+      iv_max         = 30 ).
+
+    ro_form->text(
+      iv_label       = 'Description'
+      iv_name        = c_id-description
+      iv_required    = abap_true
+      iv_max         = 60 ).
+
+    ro_form->text(
+      iv_label       = 'Software Component'
+      iv_name        = c_id-software_component
+      iv_required    = abap_true
+      iv_upper_case  = abap_true
+      iv_placeholder = 'typically HOME or LOCAL'
+      iv_max         = 20 ).
+
+    ro_form->text(
+      iv_label       = 'Transport Layer'
+      iv_name        = c_id-transport_layer
+      iv_required    = abap_true
+      iv_upper_case  = abap_true
+      iv_max         = 4 ).
+
+    ro_form->text(
+      iv_label       = 'Super Package'
+      iv_name        = c_id-package
+      iv_upper_case  = abap_true
+      iv_max         = 30 ).
+
+*********
 
     ro_form->command(
       iv_label       = 'Create'
       iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
       iv_action      = c_event-create ).
-  ENDMETHOD.
 
-
-  METHOD render_existing.
-
-    DATA lo_form TYPE REF TO zcl_abapgit_html_form.
-    DATA lo_form_data TYPE REF TO zcl_abapgit_string_map.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    CREATE OBJECT lo_form_data.
-
-    lo_form_data->set(
-      iv_key = c_id-name
-      iv_val = |todo| ).
-    lo_form->text(
-      iv_label    = 'Name'
-      iv_name     = c_id-name
-      iv_readonly = abap_true
-      iv_max      = 16 ).
-
+    ro_form->command(
+      iv_label       = 'Back'
+      iv_action      = zif_abapgit_definitions=>c_action-go_back ).
 
   ENDMETHOD.
 
@@ -119,32 +139,32 @@ CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
-    " todo CASE ii_event->mv_action.
-    " todo ENDCASE.
+    CASE ii_event->mv_action.
+      WHEN c_event-create.
+        WRITE / 'todo'.
+      WHEN OTHERS.
+        " do nothing
+    ENDCASE.
 
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_menu_provider~get_menu.
-
-    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-advanced-data' ).
-
-    ro_toolbar->add( iv_txt = 'Back'
-                     iv_act = zif_abapgit_definitions=>c_action-go_back ).
-
+  METHOD get_defaults.
+    mo_form_data->set( iv_key = c_id-transport_layer
+                       iv_val = 'ZABC' ).
   ENDMETHOD.
-
 
   METHOD zif_abapgit_gui_renderable~render.
 
     register_handlers( ).
 
+    IF mo_form_util->is_empty( mo_form_data ) = abap_true.
+      get_defaults( ).
+    ENDIF.
+
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    ri_html->add( '<div class="repo">' ).
-    ri_html->add( render_existing( ) ).
-    mo_form_data->delete( 'table' ).
-    mo_form_data->delete( 'skip_initial' ).
-    mo_form_data->delete( 'where' ).
+
+    ri_html->add( '<div class="form-container">' ).
     ri_html->add( mo_form->render(
       io_values         = mo_form_data
       io_validation_log = mo_validation_log ) ).
