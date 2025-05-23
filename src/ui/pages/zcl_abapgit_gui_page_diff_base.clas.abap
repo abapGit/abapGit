@@ -19,7 +19,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         lstate     TYPE c LENGTH 1,
         rstate     TYPE c LENGTH 1,
         fstate     TYPE c LENGTH 1, " FILE state - Abstraction for shorter ifs
-        o_diff     TYPE REF TO zcl_abapgit_diff,
+        o_diff     TYPE REF TO zif_abapgit_diff,
         changed_by TYPE syuname,
         type       TYPE string,
       END OF ty_file_diff.
@@ -523,6 +523,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     IF <ls_diff>-type <> 'binary'.
       IF <ls_diff>-fstate = c_fstate-remote. " Remote file leading changes
         CREATE OBJECT <ls_diff>-o_diff
+          TYPE zcl_abapgit_diff
           EXPORTING
             iv_new                = <ls_remote>-data
             iv_old                = <ls_local>-file-data
@@ -531,6 +532,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
             iv_ignore_case        = ms_view-ignore_case.
       ELSE.             " Local leading changes or both were modified
         CREATE OBJECT <ls_diff>-o_diff
+          TYPE zcl_abapgit_diff
           EXPORTING
             iv_new                = <ls_local>-file-data
             iv_old                = <ls_remote>-data
