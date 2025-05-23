@@ -1,0 +1,154 @@
+CLASS zcl_abapgit_gui_page_cpackage DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_gui_component
+  FINAL
+  CREATE PUBLIC.
+
+  PUBLIC SECTION.
+
+    INTERFACES:
+      zif_abapgit_gui_event_handler,
+      zif_abapgit_gui_menu_provider,
+      zif_abapgit_gui_renderable.
+
+    CLASS-METHODS create
+      RETURNING
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS constructor
+      RAISING
+        zcx_abapgit_exception.
+
+  PROTECTED SECTION.
+
+  PRIVATE SECTION.
+
+    DATA mo_form           TYPE REF TO zcl_abapgit_html_form.
+    DATA mo_form_data      TYPE REF TO zcl_abapgit_string_map.
+    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
+    DATA mo_form_util      TYPE REF TO zcl_abapgit_html_form_utils.
+
+    CONSTANTS:
+      BEGIN OF c_id,
+        name TYPE string VALUE 'name',
+      END OF c_id.
+
+    CONSTANTS:
+      BEGIN OF c_event,
+        create TYPE string VALUE 'create',
+      END OF c_event.
+
+    METHODS get_form_schema
+      RETURNING
+        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
+    METHODS render_existing
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+
+ENDCLASS.
+
+
+
+CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
+
+  METHOD constructor.
+
+    super->constructor( ).
+
+    CREATE OBJECT mo_validation_log.
+    CREATE OBJECT mo_form_data.
+
+    mo_form = get_form_schema( ).
+    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
+
+  ENDMETHOD.
+
+  METHOD get_form_schema.
+    ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'data-config' ).
+
+    ro_form->text(
+      iv_label       = 'Name'
+      iv_name        = c_id-name
+      iv_required    = abap_true
+      iv_max         = 16 ).
+
+    ro_form->command(
+      iv_label       = 'Create'
+      iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
+      iv_action      = c_event-create ).
+  ENDMETHOD.
+
+
+  METHOD render_existing.
+
+    DATA lo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA lo_form_data TYPE REF TO zcl_abapgit_string_map.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    CREATE OBJECT lo_form_data.
+
+    lo_form_data->set(
+      iv_key = c_id-name
+      iv_val = |todo| ).
+    lo_form->text(
+      iv_label    = 'Name'
+      iv_name     = c_id-name
+      iv_readonly = abap_true
+      iv_max      = 16 ).
+
+
+  ENDMETHOD.
+
+  METHOD create.
+
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_cpackage.
+
+    CREATE OBJECT lo_component.
+
+    ri_page = zcl_abapgit_gui_page_hoc=>create(
+      iv_page_title         = 'Create Package'
+      ii_page_menu_provider = lo_component
+      ii_child_component    = lo_component ).
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_gui_event_handler~on_event.
+    mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
+
+    " todo CASE ii_event->mv_action.
+    " todo ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_menu_provider~get_menu.
+
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-advanced-data' ).
+
+    ro_toolbar->add( iv_txt = 'Back'
+                     iv_act = zif_abapgit_definitions=>c_action-go_back ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~render.
+
+    register_handlers( ).
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( '<div class="repo">' ).
+    ri_html->add( render_existing( ) ).
+    mo_form_data->delete( 'table' ).
+    mo_form_data->delete( 'skip_initial' ).
+    mo_form_data->delete( 'where' ).
+    ri_html->add( mo_form->render(
+      io_values         = mo_form_data
+      io_validation_log = mo_validation_log ) ).
+    ri_html->add( '</div>' ).
+
+  ENDMETHOD.
+ENDCLASS.

@@ -275,16 +275,19 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_event-create_package.
 
-        mo_form_data->set(
-          iv_key = c_id-package
-          iv_val = zcl_abapgit_services_repo=>create_package(
-            iv_prefill_package = |{ mo_form_data->get( c_id-package ) }| ) ).
-        IF mo_form_data->get( c_id-package ) IS NOT INITIAL.
-          mo_validation_log = validate_form( mo_form_data ).
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-        ELSE.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
-        ENDIF.
+        rs_handled-page  = zcl_abapgit_gui_page_cpackage=>create( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+
+        " todo mo_form_data->set(
+        " todo   iv_key = c_id-package
+        " todo   iv_val = zcl_abapgit_services_repo=>create_package(
+        " todo     iv_prefill_package = |{ mo_form_data->get( c_id-package ) }| ) ).
+        " todo IF mo_form_data->get( c_id-package ) IS NOT INITIAL.
+        " todo   mo_validation_log = validate_form( mo_form_data ).
+        " todo   rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        " todo ELSE.
+        " todo   rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+        " todo ENDIF.
 
       WHEN c_event-choose_package.
 
