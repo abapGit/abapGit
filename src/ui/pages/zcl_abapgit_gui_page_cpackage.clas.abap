@@ -58,7 +58,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
   METHOD zif_abapgit_gui_menu_provider~get_menu.
-    RETURN. " todo, implement method
+    RETURN.
   ENDMETHOD.
 
   METHOD constructor.
