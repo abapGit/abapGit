@@ -12,14 +12,7 @@ CLASS zcl_abapgit_sap_package DEFINITION
         !iv_package TYPE devclass .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA: mv_package TYPE devclass.
-
-    METHODS get_transport_layer
-      RETURNING
-        VALUE(rv_transport_layer) TYPE devlayer
-      RAISING
-        zcx_abapgit_exception .
-
+    DATA mv_package TYPE devclass.
 ENDCLASS.
 
 
@@ -32,7 +25,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_transport_layer.
+  METHOD zif_abapgit_sap_package~get_default_transport_layer.
 
     " Get default transport layer
     CALL FUNCTION 'TR_GET_TRANSPORT_TARGET'
@@ -118,7 +111,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
     " For transportable packages, get default transport and layer
     IF ls_package-devclass(1) <> '$' AND ls_package-pdevclass IS INITIAL.
-      ls_package-pdevclass = get_transport_layer( ).
+      ls_package-pdevclass = zif_abapgit_sap_package~get_default_transport_layer( ).
     ENDIF.
 
     cl_package_factory=>create_new_package(
