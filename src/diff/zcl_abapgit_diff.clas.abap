@@ -6,17 +6,6 @@ CLASS zcl_abapgit_diff DEFINITION
 
     INTERFACES zif_abapgit_diff.
 
-* assumes data is UTF8 based with newlines
-    METHODS constructor
-      IMPORTING
-        !iv_new                TYPE xstring
-        !iv_old                TYPE xstring
-        !iv_ignore_indentation TYPE abap_bool DEFAULT abap_false
-        !iv_ignore_comments    TYPE abap_bool DEFAULT abap_false
-        !iv_ignore_case        TYPE abap_bool DEFAULT abap_false
-      RAISING
-        zcx_abapgit_exception.
-
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -267,7 +256,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD constructor.
+  METHOD zif_abapgit_diff~create.
 
     DATA: lt_new TYPE rswsourcet,
           lt_old TYPE rswsourcet.
