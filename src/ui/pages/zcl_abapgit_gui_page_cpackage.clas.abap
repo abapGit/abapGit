@@ -137,11 +137,22 @@ CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
+
+    DATA ls_create TYPE zif_abapgit_sap_package=>ty_create.
+
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
       WHEN c_event-create.
-        WRITE / 'todo'.
+        ls_create-devclass = mo_form_data->get( c_id-package ).
+        ls_create-ctext = mo_form_data->get( c_id-description ).
+        ls_create-component = mo_form_data->get( c_id-software_component ).
+        ls_create-parentcl = mo_form_data->get( c_id-super_package ).
+        ls_create-pdevclass = mo_form_data->get( c_id-transport_layer ).
+
+        zcl_abapgit_factory=>get_sap_package( ls_create-devclass )->create( ls_create ).
+        MESSAGE 'Package created' TYPE 'S'.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
       WHEN OTHERS.
         " do nothing
     ENDCASE.
