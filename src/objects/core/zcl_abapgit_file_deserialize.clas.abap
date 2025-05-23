@@ -203,6 +203,9 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
           lt_requires = lt_items.
           DELETE lt_requires WHERE obj_type <> 'SPRX'
             AND obj_type <> 'XSLT'.
+        WHEN 'HTTP'.
+          lt_requires = lt_items.
+          DELETE lt_requires WHERE obj_type <> 'CLAS' AND obj_type <> 'INTF'.
         WHEN 'TABL'.
           lt_requires = lt_items.
           DELETE lt_requires WHERE obj_type <> 'SPRX'.
