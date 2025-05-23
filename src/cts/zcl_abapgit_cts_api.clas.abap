@@ -694,7 +694,13 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     SELECT SINGLE as4text FROM e07t
       INTO rv_description
       WHERE trkorr = iv_trkorr
-      AND langu = sy-langu ##SUBRC_OK.
+      AND langu = sy-langu.
+    IF sy-subrc <> 0.
+* fallback to any language
+      SELECT SINGLE as4text FROM e07t
+        INTO rv_description
+        WHERE trkorr = iv_trkorr ##SUBRC_OK. "#EC CI_NOORDER
+    ENDIF.
 
   ENDMETHOD.
 
