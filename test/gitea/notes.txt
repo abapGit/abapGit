@@ -6,3 +6,6 @@ docker-compose logs
 docker-compose down
 
 http://localhost:3050
+
+
+https://docs.gitea.com/api/1.23/#tag/repository/operation/repoListPullRequests

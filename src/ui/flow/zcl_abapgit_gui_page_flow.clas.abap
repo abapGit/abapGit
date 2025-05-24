@@ -27,7 +27,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         pull    TYPE string VALUE 'pull',
         stage   TYPE string VALUE 'stage',
       END OF c_action .
-    DATA mt_features TYPE zif_abapgit_gui_page_flow=>ty_features .
+    DATA mt_features TYPE zif_abapgit_flow_logic=>ty_features .
 
     METHODS refresh
       RAISING
@@ -40,13 +40,13 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         zcx_abapgit_exception .
     METHODS render_table
       IMPORTING
-        !is_feature    TYPE zif_abapgit_gui_page_flow=>ty_feature
+        !is_feature    TYPE zif_abapgit_flow_logic=>ty_feature
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_toolbar
       IMPORTING
         !iv_index      TYPE i
-        !is_feature    TYPE zif_abapgit_gui_page_flow=>ty_feature
+        !is_feature    TYPE zif_abapgit_flow_logic=>ty_feature
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
 ENDCLASS.

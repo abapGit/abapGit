@@ -5,7 +5,7 @@ INTERFACE zif_abapgit_flow_exit
   METHODS toolbar_extras
     IMPORTING
       !io_toolbar TYPE REF TO zcl_abapgit_html_toolbar
-      !is_feature TYPE zif_abapgit_gui_page_flow=>ty_feature
+      !is_feature TYPE zif_abapgit_flow_logic=>ty_feature
       !iv_index   TYPE i .
 
   TYPES: BEGIN OF ty_event_result,
@@ -16,7 +16,7 @@ INTERFACE zif_abapgit_flow_exit
   METHODS on_event
     IMPORTING
       ii_event         TYPE REF TO zif_abapgit_gui_event
-      it_features      TYPE zif_abapgit_gui_page_flow=>ty_features
+      it_features      TYPE zif_abapgit_flow_logic=>ty_features
     RETURNING
       VALUE(rs_result) TYPE ty_event_result
     RAISING

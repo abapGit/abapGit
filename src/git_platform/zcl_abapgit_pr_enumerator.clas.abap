@@ -76,11 +76,24 @@ CLASS zcl_abapgit_pr_enumerator IMPLEMENTATION.
         EXPORTING
           iv_user_and_repo = |{ lv_user }/{ lv_repo }|
           ii_http_agent    = li_agent.
-    ELSE.
-      zcx_abapgit_exception=>raise( |PR enumeration is not supported for { iv_repo_url }| ).
+    ENDIF.
+
+* used in integration testing, see /test/ folder
+    FIND ALL OCCURRENCES OF REGEX 'localhost:3050\/([^\/]+)\/([^\/]+)'
+      IN iv_repo_url
+      SUBMATCHES lv_user lv_repo.
+    IF sy-subrc = 0.
+      CREATE OBJECT ri_provider TYPE zcl_abapgit_pr_enum_gitea
+        EXPORTING
+          iv_user_and_repo = |{ lv_user }/{ lv_repo }|
+          ii_http_agent    = li_agent.
     ENDIF.
 
     " TODO somewhen more providers
+
+    IF ri_provider IS NOT BOUND.
+      zcx_abapgit_exception=>raise( |PR enumeration is not supported for { iv_repo_url }| ).
+    ENDIF.
 
   ENDMETHOD.
 
