@@ -158,7 +158,7 @@ CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
           ls_create-pdevclass = mo_form_data->get( c_id-transport_layer ).
 
           zcl_abapgit_factory=>get_sap_package( ls_create-devclass )->create( ls_create ).
-          MESSAGE |Package { ls_create-devclass } created| TYPE 'S'.
+          MESSAGE 'Package created' TYPE 'S'.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
         ELSE.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
