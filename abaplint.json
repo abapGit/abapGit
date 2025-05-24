@@ -118,6 +118,7 @@
     "class_attribute_names": {
       "constants": "^C_.*$",
       "exclude": [
+        "/deps/",
         "/json/",
         "zif_abapgit_objects"
       ],

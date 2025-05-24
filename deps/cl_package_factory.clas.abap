@@ -32,7 +32,8 @@ ENDCLASS.
 
 CLASS cl_package_factory IMPLEMENTATION.
   METHOD if_package~save.
-    ASSERT 1 = 2. " todo, implement method
+    INSERT INTO tdevc VALUES ls_tdevc.
+    ASSERT sy-subrc = 0.
   ENDMETHOD.
 
   METHOD if_package~delete.
@@ -40,7 +41,7 @@ CLASS cl_package_factory IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD if_package~set_changeable.
-    ASSERT 1 = 2. " todo, implement method
+    RETURN.
   ENDMETHOD.
 
   METHOD if_package~get_changeable.
@@ -88,12 +89,12 @@ CLASS cl_package_factory IMPLEMENTATION.
   METHOD create_new_package.
 
     DATA ls_tdevc TYPE tdevc.
+    DATA lo_package TYPE REF TO cl_package_factory.
 
     MOVE-CORRESPONDING c_package_data TO ls_tdevc.
 
-    INSERT INTO tdevc VALUES ls_tdevc.
-    ASSERT sy-subrc = 0.
-
-    " todo, set e_package
+    CREATE OBJECT lo_package TYPE cl_package_factory.
+    lo_package->ls_tdevc = ls_tdevc.
+    e_package ?= lo_package.
   ENDMETHOD.
 ENDCLASS.
