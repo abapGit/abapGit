@@ -474,11 +474,9 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
     ENDIF.
 
     IF ms_diff_file-type <> 'binary'.
-      CREATE OBJECT ms_diff_file-o_diff
-        TYPE zcl_abapgit_diff
-        EXPORTING
-          iv_new = <ls_conflict>-source_data
-          iv_old = <ls_conflict>-target_data.
+      ms_diff_file-o_diff = zcl_abapgit_diff_factory=>get( )->create(
+        iv_new = <ls_conflict>-source_data
+        iv_old = <ls_conflict>-target_data ).
     ENDIF.
 
   ENDMETHOD.

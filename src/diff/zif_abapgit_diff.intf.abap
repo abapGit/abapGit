@@ -1,5 +1,18 @@
 INTERFACE zif_abapgit_diff PUBLIC.
 
+* assumes data is UTF8 based with newlines
+  METHODS create
+    IMPORTING
+      !iv_new                TYPE xstring
+      !iv_old                TYPE xstring
+      !iv_ignore_indentation TYPE abap_bool DEFAULT abap_false
+      !iv_ignore_comments    TYPE abap_bool DEFAULT abap_false
+      !iv_ignore_case        TYPE abap_bool DEFAULT abap_false
+    RETURNING
+      VALUE(ri_diff)         TYPE REF TO zif_abapgit_diff
+    RAISING
+      zcx_abapgit_exception.
+
   METHODS get
     RETURNING
       VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt.
