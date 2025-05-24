@@ -24,9 +24,10 @@ CLASS cl_package_factory DEFINITION PUBLIC CREATE PRIVATE.
       EXPORTING
         VALUE(e_package)             TYPE REF TO if_package
       CHANGING
-        c_package_data               TYPE any.
-  PRIVATE SECTION.
+        c_package_data               TYPE scompkdtln.
 
+  PRIVATE SECTION.
+    DATA ls_tdevc TYPE tdevc.
 ENDCLASS.
 
 CLASS cl_package_factory IMPLEMENTATION.
@@ -71,16 +72,28 @@ CLASS cl_package_factory IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD load_package.
-    DATA ls_tdevc TYPE tdevc.
+    DATA ls_tdevc   TYPE tdevc.
+    DATA lo_package TYPE REF TO cl_package_factory.
 
     SELECT SINGLE * FROM tdevc INTO ls_tdevc WHERE devclass = i_package_name.
     IF sy-subrc <> 0.
       RAISE object_not_existing.
     ENDIF.
+
+    CREATE OBJECT lo_package TYPE cl_package_factory.
+    lo_package->ls_tdevc = ls_tdevc.
+    e_package ?= lo_package.
   ENDMETHOD.
 
   METHOD create_new_package.
-* this should never be called in unit tests
-    ASSERT 1 = 2.
+
+    DATA ls_tdevc TYPE tdevc.
+
+    MOVE-CORRESPONDING c_package_data TO ls_tdevc.
+
+    INSERT INTO tdevc VALUES ls_tdevc.
+    ASSERT sy-subrc = 0.
+
+    " todo, set e_package
   ENDMETHOD.
 ENDCLASS.
