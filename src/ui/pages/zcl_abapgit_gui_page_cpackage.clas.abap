@@ -12,6 +12,8 @@ CLASS zcl_abapgit_gui_page_cpackage DEFINITION
       zif_abapgit_gui_renderable.
 
     CLASS-METHODS create
+      IMPORTING
+        iv_name        TYPE devclass
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -29,6 +31,7 @@ CLASS zcl_abapgit_gui_page_cpackage DEFINITION
     DATA mo_form_data      TYPE REF TO zcl_abapgit_string_map.
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
     DATA mo_form_util      TYPE REF TO zcl_abapgit_html_form_utils.
+    DATA mv_default_name   TYPE devclass.
 
     CONSTANTS:
       BEGIN OF c_id,
@@ -128,6 +131,7 @@ CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_cpackage.
 
     CREATE OBJECT lo_component.
+    lo_component->mv_default_name = iv_name.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title         = 'Create Package'
@@ -154,7 +158,7 @@ CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
           ls_create-pdevclass = mo_form_data->get( c_id-transport_layer ).
 
           zcl_abapgit_factory=>get_sap_package( ls_create-devclass )->create( ls_create ).
-          MESSAGE 'Package created' TYPE 'S'.
+          MESSAGE |Package { ls_create-devclass } created| TYPE 'S'.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
         ELSE.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
@@ -171,6 +175,10 @@ CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
     mo_form_data->set(
       iv_key = c_id-transport_layer
       iv_val = zcl_abapgit_factory=>get_sap_package( 'DUMMY' )->get_default_transport_layer( ) ).
+
+    mo_form_data->set(
+      iv_key = c_id-package
+      iv_val = mv_default_name ).
 
   ENDMETHOD.
 
