@@ -95,6 +95,10 @@ CLASS ltcl_sap_package IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~get_default_transport_layer. "##needed
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltcl_resolve_packages DEFINITION FOR TESTING

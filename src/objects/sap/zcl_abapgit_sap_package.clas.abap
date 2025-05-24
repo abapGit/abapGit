@@ -12,14 +12,7 @@ CLASS zcl_abapgit_sap_package DEFINITION
         !iv_package TYPE devclass .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA: mv_package TYPE devclass.
-
-    METHODS get_transport_layer
-      RETURNING
-        VALUE(rv_transport_layer) TYPE devlayer
-      RAISING
-        zcx_abapgit_exception .
-
+    DATA mv_package TYPE devclass.
 ENDCLASS.
 
 
@@ -32,24 +25,29 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_transport_layer.
+  METHOD zif_abapgit_sap_package~get_default_transport_layer.
 
     " Get default transport layer
-    CALL FUNCTION 'TR_GET_TRANSPORT_TARGET'
-      EXPORTING
-        iv_use_default             = abap_true
-        iv_get_layer_only          = abap_true
-      IMPORTING
-        ev_layer                   = rv_transport_layer
-      EXCEPTIONS
-        wrong_call                 = 1
-        invalid_input              = 2
-        cts_initialization_failure = 3
-        OTHERS                     = 4.
-    IF sy-subrc <> 0.
+    TRY.
+        CALL FUNCTION 'TR_GET_TRANSPORT_TARGET'
+          EXPORTING
+            iv_use_default             = abap_true
+            iv_get_layer_only          = abap_true
+          IMPORTING
+            ev_layer                   = rv_transport_layer
+          EXCEPTIONS
+            wrong_call                 = 1
+            invalid_input              = 2
+            cts_initialization_failure = 3
+            OTHERS                     = 4.
+        IF sy-subrc <> 0.
       " Return empty layer (i.e. "local workbench request" for the package)
-      CLEAR rv_transport_layer.
-    ENDIF.
+          CLEAR rv_transport_layer.
+        ENDIF.
+      CATCH cx_sy_dyn_call_illegal_func.
+* the function module doesnt exist in open-abap
+        CLEAR rv_transport_layer.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -118,7 +116,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
     " For transportable packages, get default transport and layer
     IF ls_package-devclass(1) <> '$' AND ls_package-pdevclass IS INITIAL.
-      ls_package-pdevclass = get_transport_layer( ).
+      ls_package-pdevclass = zif_abapgit_sap_package~get_default_transport_layer( ).
     ENDIF.
 
     cl_package_factory=>create_new_package(

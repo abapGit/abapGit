@@ -118,6 +118,7 @@
     "class_attribute_names": {
       "constants": "^C_.*$",
       "exclude": [
+        "/deps/",
         "/json/",
         "zif_abapgit_objects"
       ],
@@ -336,6 +337,7 @@
     "method_parameter_names": {
       "changing": "^C._.*$",
       "exclude": [
+        "/deps/",
         "/json/"
       ],
       "exporting": "^E._.*$",
@@ -406,6 +408,7 @@
     "prefer_raise_exception_new": true,
     "prefer_returning_to_exporting": {
       "exclude": [
+        "/deps/",
         "/json/"
       ]
     },
