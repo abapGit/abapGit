@@ -267,15 +267,16 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: ls_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params,
-          li_new_repo    TYPE REF TO zif_abapgit_repo.
+    DATA ls_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params.
+    DATA li_new_repo    TYPE REF TO zif_abapgit_repo.
+    DATA lv_package     TYPE devclass.
 
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
       WHEN c_event-create_package.
-
-        rs_handled-page  = zcl_abapgit_gui_page_cpackage=>create( mo_form_data->get( c_id-package ) ).
+        lv_package = mo_form_data->get( c_id-package ).
+        rs_handled-page  = zcl_abapgit_gui_page_cpackage=>create( lv_package ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_event-choose_package.
