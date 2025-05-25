@@ -8,8 +8,8 @@ CLASS zcl_abapgit_po_file DEFINITION
 
     METHODS constructor
       IMPORTING
-        iv_lang TYPE laiso
-        iv_suppress_comments type abap_bool default abap_false.
+        iv_lang              TYPE laiso
+        iv_suppress_comments TYPE abap_bool DEFAULT abap_false.
 
     METHODS parse
       IMPORTING
