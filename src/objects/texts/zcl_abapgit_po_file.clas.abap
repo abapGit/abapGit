@@ -8,7 +8,8 @@ CLASS zcl_abapgit_po_file DEFINITION
 
     METHODS constructor
       IMPORTING
-        iv_lang TYPE laiso.
+        iv_lang TYPE laiso
+        iv_suppress_comments type abap_bool default abap_false.
 
     METHODS parse
       IMPORTING
@@ -48,6 +49,7 @@ CLASS zcl_abapgit_po_file DEFINITION
       END OF ty_msg_pair.
 
     DATA mv_lang TYPE laiso.
+    DATA mv_suppress_comments TYPE abap_bool.
     DATA mt_pairs TYPE SORTED TABLE OF ty_msg_pair WITH UNIQUE KEY source.
 
     METHODS build_po_body
@@ -85,7 +87,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_po_file IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
 
 
   METHOD build_po_body.
@@ -135,6 +137,7 @@ CLASS zcl_abapgit_po_file IMPLEMENTATION.
 
   METHOD constructor.
     mv_lang = to_lower( iv_lang ).
+    mv_suppress_comments = iv_suppress_comments.
   ENDMETHOD.
 
 
@@ -260,11 +263,13 @@ CLASS zcl_abapgit_po_file IMPLEMENTATION.
         <ls_out>-target = <ls_in>-t_text.
       ENDIF.
 
-      ls_comment-kind = c_comment-reference.
-      ls_comment-text = condense( |{ iv_objtype }/{ iv_objname }/{ <ls_in>-textkey }| )
-        && |, maxlen={ <ls_in>-unitmlt }|.
-      APPEND ls_comment TO <ls_out>-comments.
-      ASSERT sy-subrc = 0.
+      IF mv_suppress_comments = abap_false.
+        ls_comment-kind = c_comment-reference.
+        ls_comment-text = condense( |{ iv_objtype }/{ iv_objname }/{ <ls_in>-textkey }| )
+          && |, maxlen={ <ls_in>-unitmlt }|.
+        APPEND ls_comment TO <ls_out>-comments.
+        ASSERT sy-subrc = 0.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.

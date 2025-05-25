@@ -171,7 +171,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
 
   METHOD check_langs_versus_installed.
@@ -623,6 +623,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
       lv_lang = to_lower( lv_lang ).
       CREATE OBJECT lo_po_file
         EXPORTING
+          iv_suppress_comments = mo_i18n_params->ms_params-suppress_po_comments
           iv_lang = lv_lang.
       LOOP AT lt_lxe_texts ASSIGNING <ls_translation>.
         IF iso4_to_iso2( <ls_translation>-target_lang ) = lv_lang.
