@@ -1,4 +1,4 @@
-INTERFACE zif_abapgit_gui_page_flow
+INTERFACE zif_abapgit_flow_logic
   PUBLIC .
 
   TYPES:
