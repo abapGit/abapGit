@@ -300,7 +300,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA ls_feature  LIKE LINE OF mt_features.
     DATA lv_index    TYPE i.
     DATA lv_rendered TYPE abap_bool.
+    DATA lo_timer    TYPE REF TO zcl_abapgit_timer.
 
+
+    lo_timer = zcl_abapgit_timer=>create( )->start( ).
 
     register_handlers( ).
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -389,7 +392,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
           }?url=https://docs.abapgit.org/user-guide/reference/flow.html|
         iv_class = |url| ).
     ELSE.
-      ri_html->add( |<small>{ lines( mt_features ) } transports/features listed</small>| ).
+      ri_html->add( |<small>{ lines( mt_features ) } transports/features listed in { lo_timer->end( ) }</small>| ).
     ENDIF.
 
     ri_html->add( '</div>' ).
