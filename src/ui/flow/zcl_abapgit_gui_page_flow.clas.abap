@@ -364,7 +364,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         is_feature = ls_feature ) ).
 
       IF ls_feature-full_match = abap_true.
-        ri_html->add( |Full Match<br>| ).
+        ri_html->add( |Full Match, {
+          lines( ls_feature-changed_files ) } files, {
+          lines( ls_feature-changed_objects ) } objects<br>| ).
       ELSE.
         ri_html->add( render_table( ls_feature ) ).
       ENDIF.
