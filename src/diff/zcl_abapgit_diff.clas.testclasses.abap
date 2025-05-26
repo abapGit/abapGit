@@ -108,14 +108,12 @@ CLASS ltcl_diff IMPLEMENTATION.
     lv_xnew = zcl_abapgit_convert=>string_to_xstring_utf8( lv_new ).
     lv_xold = zcl_abapgit_convert=>string_to_xstring_utf8( lv_old ).
 
-    CREATE OBJECT lo_diff
-      TYPE zcl_abapgit_diff
-      EXPORTING
+    lo_diff = zcl_abapgit_diff_factory=>get( )->create(
         iv_new                = lv_xnew
         iv_old                = lv_xold
         iv_ignore_indentation = iv_ignore_indentation
         iv_ignore_comments    = iv_ignore_comments
-        iv_ignore_case        = iv_ignore_case.
+        iv_ignore_case        = iv_ignore_case ).
 
     IF iv_check_beacons = abap_true.
       cl_abap_unit_assert=>assert_equals(
