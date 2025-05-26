@@ -18,6 +18,14 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
 
     TYPES ty_transports_tt TYPE STANDARD TABLE OF ty_transport WITH DEFAULT KEY.
 
+    TYPES ty_repos_tt TYPE STANDARD TABLE OF REF TO zif_abapgit_repo_online WITH DEFAULT KEY.
+
+    CLASS-METHODS list_repos
+      RETURNING
+        VALUE(rt_repos) TYPE ty_repos_tt
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS build_repo_data
       IMPORTING
         ii_repo        TYPE REF TO zif_abapgit_repo
@@ -139,24 +147,12 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     rs_data-package = ii_repo->get_package( ).
   ENDMETHOD.
 
-  METHOD get_information.
+  METHOD list_repos.
 
-    DATA lt_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA ls_branch        LIKE LINE OF lt_branches.
-    DATA ls_result        LIKE LINE OF rt_features.
     DATA lt_favorites     TYPE zif_abapgit_repo_srv=>ty_repo_list.
     DATA li_favorite      LIKE LINE OF lt_favorites.
     DATA li_repo_online   TYPE REF TO zif_abapgit_repo_online.
-    DATA lt_features      LIKE rt_features.
-    DATA lt_transports    TYPE ty_transports_tt.
-    DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
 
-    FIELD-SYMBOLS <ls_feature> LIKE LINE OF lt_features.
-    FIELD-SYMBOLS <ls_path_name> LIKE LINE OF <ls_feature>-changed_files.
-
-    lt_transports = find_open_transports( ).
-
-* list branches on favorite + flow enabled + transported repos
     lt_favorites = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( abap_false ).
     LOOP AT lt_favorites INTO li_favorite.
       IF li_favorite->get_local_settings( )-flow = abap_false.
@@ -167,6 +163,29 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       ENDIF.
 
       li_repo_online ?= li_favorite.
+      INSERT li_repo_online INTO TABLE rt_repos.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD get_information.
+
+    DATA lt_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA ls_branch        LIKE LINE OF lt_branches.
+    DATA ls_result        LIKE LINE OF rt_features.
+    DATA li_repo_online   TYPE REF TO zif_abapgit_repo_online.
+    DATA lt_features      LIKE rt_features.
+    DATA lt_transports    TYPE ty_transports_tt.
+    DATA lt_repos         TYPE ty_repos_tt.
+    DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+
+    FIELD-SYMBOLS <ls_feature> LIKE LINE OF lt_features.
+    FIELD-SYMBOLS <ls_path_name> LIKE LINE OF <ls_feature>-changed_files.
+
+    lt_transports = find_open_transports( ).
+
+* list branches on favorite + flow enabled + transported repos
+    lt_repos = list_repos( ).
+    LOOP AT lt_repos INTO li_repo_online.
 
       lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
         iv_url    = li_repo_online->get_url( )
@@ -191,7 +210,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
       try_matching_transports(
         EXPORTING
-          ii_repo          = li_favorite
+          ii_repo          = li_repo_online
           it_main_expanded = lt_main_expanded
         CHANGING
           ct_transports    = lt_transports
