@@ -388,6 +388,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         iv_act   = |{ zif_abapgit_definitions=>c_action-url
           }?url=https://docs.abapgit.org/user-guide/reference/flow.html|
         iv_class = |url| ).
+    ELSE.
+      ri_html->add( |<small>{ lines( mt_features ) } transports/features listed</small>| ).
     ENDIF.
 
     ri_html->add( '</div>' ).
