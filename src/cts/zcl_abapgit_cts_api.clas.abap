@@ -576,7 +576,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 * find all tasks first
     SELECT trkorr trfunction strkorr
       FROM e070 INTO TABLE lt_e070
-      WHERE as4user = sy-uname
+      WHERE as4user = iv_user
       AND trstatus = zif_abapgit_cts_api=>c_transport_status-modifiable
       AND strkorr <> ''
       ORDER BY PRIMARY KEY.
