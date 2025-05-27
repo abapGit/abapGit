@@ -33,6 +33,12 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
       END OF c_action .
     DATA mt_features TYPE zif_abapgit_flow_logic=>ty_features .
 
+    DATA: BEGIN OF ms_user_settings,
+            only_my_transports  TYPE abap_bool,
+            hide_full_matches   TYPE abap_bool,
+            hide_matching_files TYPE abap_bool,
+          END OF ms_user_settings.
+
     METHODS refresh
       RAISING
         zcx_abapgit_exception .
@@ -201,6 +207,15 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
 
     CASE ii_event->mv_action.
+      WHEN c_action-only_my_transports.
+        ms_user_settings-only_my_transports = boolc( ms_user_settings-only_my_transports ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-hide_full_matches.
+        ms_user_settings-hide_full_matches = boolc( ms_user_settings-hide_full_matches ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-hide_matching_files.
+        ms_user_settings-hide_matching_files = boolc( ms_user_settings-hide_matching_files ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-refresh.
         refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
@@ -334,22 +349,40 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       mt_features = zcl_abapgit_flow_logic=>get( ).
     ENDIF.
 
-    lv_icon_class = `grey`.
-    " todo, for enabled flags, lv_icon_class = `blue`.
+
 
     ri_html->add( '<span class="toolbar-light pad-sides">' ).
+
+    IF ms_user_settings-only_my_transports = abap_true.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
     ri_html->add( ri_html->a(
       iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only my transports|
       iv_class = 'command'
       iv_act   = |{ c_action-only_my_transports }| ) ).
+
+    IF ms_user_settings-hide_full_matches = abap_true.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
     ri_html->add( ri_html->a(
       iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide full matches|
       iv_class = 'command'
       iv_act   = |{ c_action-hide_full_matches }| ) ).
+
+    IF ms_user_settings-hide_matching_files = abap_true.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
     ri_html->add( ri_html->a(
       iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide matching files|
       iv_class = 'command'
       iv_act   = |{ c_action-hide_matching_files }| ) ).
+
     ri_html->add( '</span>' ).
 
     ri_html->add( '<br>' ).
