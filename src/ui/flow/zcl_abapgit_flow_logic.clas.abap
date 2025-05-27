@@ -157,14 +157,11 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
     LOOP AT lt_features INTO ls_feature.
       IF ls_feature-branch-display_name IS NOT INITIAL AND ls_feature-branch-up_to_date = abap_false.
-        rs_consolidate-error = |Branch { ls_feature-branch-display_name } is not up to date|.
-        EXIT.
+        INSERT |Branch { ls_feature-branch-display_name } is not up to date| INTO TABLE rs_consolidate-errors.
       ELSEIF ls_feature-branch-display_name IS NOT INITIAL AND ls_feature-transport-trkorr IS INITIAL.
-        rs_consolidate-error = |Branch { ls_feature-branch-display_name } has no transport|.
-        EXIT.
+        INSERT |Branch { ls_feature-branch-display_name } has no transport| INTO TABLE rs_consolidate-errors.
       ELSEIF ls_feature-transport-trkorr IS NOT INITIAL AND ls_feature-branch-display_name IS INITIAL.
-        rs_consolidate-error = |Transport { ls_feature-transport-trkorr } has no branch|.
-        EXIT.
+        INSERT |Transport { ls_feature-transport-trkorr } has no branch| INTO TABLE rs_consolidate-errors.
       ENDIF.
     ENDLOOP.
 

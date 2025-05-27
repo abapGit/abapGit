@@ -42,7 +42,7 @@ INTERFACE zif_abapgit_flow_logic
 **************************************
 
   TYPES: BEGIN OF ty_consolidate,
-           error TYPE string,
+           errors TYPE STANDARD table OF string WITH DEFAULT KEY,
          END OF ty_consolidate.
 
 ENDINTERFACE.

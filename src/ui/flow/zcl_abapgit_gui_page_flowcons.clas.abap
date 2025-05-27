@@ -75,6 +75,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
+    DATA ls_consolidate TYPE zif_abapgit_flow_logic=>ty_consolidate.
+    DATA lv_error       TYPE string.
+
     register_handlers( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -84,6 +87,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
       ii_repo                 = mo_repo
       iv_interactive_favorite = abap_false
       iv_show_branch          = abap_false ) ).
+
+    ls_consolidate = zcl_abapgit_flow_logic=>consolidate( ).
+    LOOP AT ls_consolidate-errors INTO lv_error.
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( iv_error = lv_error ) ).
+    ENDLOOP.
 
     ri_html->add( 'todo' ).
 
