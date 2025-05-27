@@ -350,7 +350,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
 
 
-    lt_trkorr = zcl_abapgit_factory=>get_cts_api( )->list_open_requests_by_user( ).
+    lt_trkorr = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( ).
 
     LOOP AT lt_trkorr INTO lv_trkorr.
       ls_result-trkorr = lv_trkorr.
