@@ -86,6 +86,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
       ii_repo                 = mo_repo
       iv_interactive_favorite = abap_false
+      iv_show_commit          = abap_false
       iv_show_branch          = abap_false ) ).
 
     ls_consolidate = zcl_abapgit_flow_logic=>consolidate( ).
