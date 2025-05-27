@@ -51,6 +51,10 @@ CLASS zcl_abapgit_gui_page_flowcons IMPLEMENTATION.
     ri_html->add( 'todo' ).
     ri_html->add( '</div>' ).
 
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
+      ii_repo        = mo_repo
+      iv_show_branch = abap_false ) ).
+
   ENDMETHOD.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
