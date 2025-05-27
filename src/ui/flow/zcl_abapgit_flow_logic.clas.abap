@@ -151,17 +151,25 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
   METHOD consolidate.
 
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
-    DATA ls_feature LIKE LINE OF lt_features.
+    DATA ls_feature  LIKE LINE OF lt_features.
+    DATA lv_string   TYPE string.
 
     lt_features = get( ).
 
     LOOP AT lt_features INTO ls_feature.
-      IF ls_feature-branch-display_name IS NOT INITIAL AND ls_feature-branch-up_to_date = abap_false.
-        INSERT |Branch { ls_feature-branch-display_name } is not up to date| INTO TABLE rs_consolidate-errors.
-      ELSEIF ls_feature-branch-display_name IS NOT INITIAL AND ls_feature-transport-trkorr IS INITIAL.
-        INSERT |Branch { ls_feature-branch-display_name } has no transport| INTO TABLE rs_consolidate-errors.
-      ELSEIF ls_feature-transport-trkorr IS NOT INITIAL AND ls_feature-branch-display_name IS INITIAL.
-        INSERT |Transport { ls_feature-transport-trkorr } has no branch| INTO TABLE rs_consolidate-errors.
+      IF ls_feature-branch-display_name IS NOT INITIAL
+          AND ls_feature-branch-up_to_date = abap_false.
+        lv_string = |Branch { ls_feature-branch-display_name } is not up to date|.
+        INSERT lv_string INTO TABLE rs_consolidate-errors.
+      ELSEIF ls_feature-branch-display_name IS NOT INITIAL
+          AND ls_feature-transport-trkorr IS INITIAL.
+        lv_string = |Branch { ls_feature-branch-display_name } has no transport|.
+        INSERT lv_string INTO TABLE rs_consolidate-errors.
+      ELSEIF ls_feature-transport-trkorr IS NOT INITIAL
+          AND ls_feature-branch-display_name IS INITIAL
+          AND ls_feature-full_match = abap_false.
+        lv_string = |Transport { ls_feature-transport-trkorr } has no branch|.
+        INSERT lv_string INTO TABLE rs_consolidate-errors.
       ENDIF.
     ENDLOOP.
 
