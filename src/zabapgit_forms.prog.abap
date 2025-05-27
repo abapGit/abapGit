@@ -32,7 +32,7 @@ CLASS lcl_startup IMPLEMENTATION.
 
     DATA:
       lv_answer           TYPE char1,
-      ls_settings         TYPE zif_abapgit_definitions=>ty_s_user_settings,
+      ls_settings         TYPE zif_abapgit_persist_user=>ty_s_user_settings,
       li_user_persistence TYPE REF TO zif_abapgit_persist_user.
 
     li_user_persistence = zcl_abapgit_persist_factory=>get_user( ).
