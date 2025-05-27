@@ -176,22 +176,27 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
       ls_changed-obj_type = <ls_transport>-object.
       ls_changed-obj_name = <ls_transport>-obj_name.
       INSERT ls_changed INTO TABLE cs_feature-changed_objects.
-    ENDLOOP.
 
-    LOOP AT it_local ASSIGNING <ls_local> WHERE file-filename <> zif_abapgit_definitions=>c_dot_abapgit.
-      ls_changed_file-path       = <ls_local>-file-path.
-      ls_changed_file-filename   = <ls_local>-file-filename.
-      ls_changed_file-local_sha1 = <ls_local>-file-sha1.
+      LOOP AT it_local ASSIGNING <ls_local>
+          WHERE file-filename <> zif_abapgit_definitions=>c_dot_abapgit
+          AND item-obj_type = <ls_transport>-object
+          AND item-obj_name = <ls_transport>-obj_name.
 
-      READ TABLE it_main_expanded ASSIGNING <ls_main_expanded>
-        WITH TABLE KEY path_name COMPONENTS
-        path = ls_changed_file-path
-        name = ls_changed_file-filename.
-      IF sy-subrc = 0.
-        ls_changed_file-remote_sha1 = <ls_main_expanded>-sha1.
-      ENDIF.
+        ls_changed_file-path       = <ls_local>-file-path.
+        ls_changed_file-filename   = <ls_local>-file-filename.
+        ls_changed_file-local_sha1 = <ls_local>-file-sha1.
 
-      INSERT ls_changed_file INTO TABLE cs_feature-changed_files.
+        READ TABLE it_main_expanded ASSIGNING <ls_main_expanded>
+          WITH TABLE KEY path_name COMPONENTS
+          path = ls_changed_file-path
+          name = ls_changed_file-filename.
+        IF sy-subrc = 0.
+          ls_changed_file-remote_sha1 = <ls_main_expanded>-sha1.
+        ENDIF.
+
+        INSERT ls_changed_file INTO TABLE cs_feature-changed_files.
+      ENDLOOP.
+
     ENDLOOP.
 
   ENDMETHOD.
