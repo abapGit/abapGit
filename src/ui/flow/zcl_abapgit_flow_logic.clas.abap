@@ -646,8 +646,6 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
   METHOD add_local_status.
 
-    DATA lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt.
-
     FIELD-SYMBOLS <ls_branch>       LIKE LINE OF ct_features.
     FIELD-SYMBOLS <ls_local>        LIKE LINE OF lt_local.
     FIELD-SYMBOLS <ls_changed_file> TYPE zif_abapgit_flow_logic=>ty_path_name.
@@ -655,7 +653,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
     LOOP AT ct_features ASSIGNING <ls_branch>.
       LOOP AT <ls_branch>-changed_files ASSIGNING <ls_changed_file>.
-        READ TABLE lt_local ASSIGNING <ls_local>
+        READ TABLE it_local ASSIGNING <ls_local>
           WITH KEY file-filename = <ls_changed_file>-filename
           file-path = <ls_changed_file>-path.
         IF sy-subrc = 0.
