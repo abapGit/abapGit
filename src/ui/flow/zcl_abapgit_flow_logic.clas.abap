@@ -94,7 +94,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
 
     CLASS-METHODS add_local_status
       IMPORTING
-        ii_repo     TYPE REF TO zif_abapgit_repo
+        it_local    TYPE zif_abapgit_definitions=>ty_files_item_tt
       CHANGING
         ct_features TYPE zif_abapgit_flow_logic=>ty_features
       RAISING
@@ -112,6 +112,17 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
     CLASS-METHODS find_open_transports
       RETURNING
         VALUE(rt_transports) TYPE ty_transports_tt
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS serialize_filtered
+      IMPORTING
+        it_relevant_transports TYPE ty_trkorr_tt
+        ii_repo                TYPE REF TO zif_abapgit_repo
+        it_all_transports      TYPE ty_transports_tt
+        it_features            TYPE zif_abapgit_flow_logic=>ty_features
+      RETURNING
+        VALUE(rt_local)        TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -215,17 +226,55 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD serialize_filtered.
+
+    DATA lv_trkorr TYPE trkorr.
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lo_filter TYPE REF TO lcl_filter.
+    DATA ls_changed_object LIKE LINE OF ct_features-changed_objects.
+    DATA ls_feature LIKE LINE OF ct_features.
+
+    FIELD-SYMBOLS <ls_transport> LIKE LINE OF it_all_transports.
+    FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
+
+* from all relevant transports(matched via package)
+    LOOP AT it_relevant_transports INTO lv_trkorr.
+      LOOP AT it_all_transports ASSIGNING <ls_transport> WHERE trkorr = lv_trkorr.
+        APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
+        <ls_filter>-object = <ls_transport>-object.
+        <ls_filter>-obj_name = <ls_transport>-obj_name.
+      ENDLOOP.
+    ENDLOOP.
+
+* and from git
+    LOOP AT it_features INTO ls_feature.
+      LOOP AT ls_feature-changed_objects INTO ls_changed_object.
+        APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
+        <ls_filter>-object = ls_changed_object-obj_type.
+        <ls_filter>-obj_name = ls_changed_object-obj_name.
+      ENDLOOP.
+    ENDLOOP.
+
+    SORT lt_filter BY object obj_name.
+    DELETE ADJACENT DUPLICATES FROM lt_filter COMPARING object obj_name.
+
+    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+    rt_local = ii_repo->get_files_local_filtered( lo_filter ).
+
+  ENDMETHOD.
+
   METHOD get_information.
 
-    DATA lt_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA ls_branch        LIKE LINE OF lt_branches.
-    DATA ls_result        LIKE LINE OF rt_features.
-    DATA li_repo_online   TYPE REF TO zif_abapgit_repo_online.
-    DATA lt_features      LIKE rt_features.
+    DATA lt_branches            TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA ls_branch              LIKE LINE OF lt_branches.
+    DATA ls_result              LIKE LINE OF rt_features.
+    DATA li_repo_online         TYPE REF TO zif_abapgit_repo_online.
+    DATA lt_features            LIKE rt_features.
     DATA lt_all_transports      TYPE ty_transports_tt.
     DATA lt_relevant_transports TYPE ty_transports_tt.
-    DATA lt_repos         TYPE ty_repos_tt.
-    DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+    DATA lt_repos               TYPE ty_repos_tt.
+    DATA lt_main_expanded       TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+    DATA lt_local               TYPE zif_abapgit_definitions=>ty_files_item_tt.
 
     FIELD-SYMBOLS <ls_feature> LIKE LINE OF lt_features.
     FIELD-SYMBOLS <ls_path_name> LIKE LINE OF <ls_feature>-changed_files.
@@ -261,6 +310,12 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
         ii_repo        = li_repo_online
         it_transports  = lt_all_transports ).
 
+      lt_local = serialize_filtered(
+        it_relevant_transports = lt_relevant_transports
+        ii_repo                = li_repo_online
+        it_features            = lt_features
+        it_all_transports      = lt_all_transports ).
+
       try_matching_transports(
         EXPORTING
           ii_repo          = li_repo_online
@@ -277,7 +332,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
       add_local_status(
         EXPORTING
-          ii_repo     = li_repo_online
+          it_local     = lt_local
         CHANGING
           ct_features = lt_features ).
 
@@ -592,32 +647,11 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
   METHOD add_local_status.
 
     DATA lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    DATA lo_filter TYPE REF TO lcl_filter.
-    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     FIELD-SYMBOLS <ls_branch>       LIKE LINE OF ct_features.
     FIELD-SYMBOLS <ls_local>        LIKE LINE OF lt_local.
     FIELD-SYMBOLS <ls_changed_file> TYPE zif_abapgit_flow_logic=>ty_path_name.
-    FIELD-SYMBOLS <ls_filter>       LIKE LINE OF lt_filter.
-    FIELD-SYMBOLS <ls_object>       LIKE LINE OF <ls_branch>-changed_objects.
 
-
-    LOOP AT ct_features ASSIGNING <ls_branch>.
-      LOOP AT <ls_branch>-changed_objects ASSIGNING <ls_object>.
-        APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
-        <ls_filter>-object = <ls_object>-obj_type.
-        <ls_filter>-obj_name = <ls_object>-obj_name.
-      ENDLOOP.
-    ENDLOOP.
-    SORT lt_filter BY object obj_name.
-    DELETE ADJACENT DUPLICATES FROM lt_filter COMPARING object obj_name.
-
-    IF lines( lt_filter ) = 0.
-      RETURN.
-    ENDIF.
-
-    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
-    lt_local = ii_repo->get_files_local_filtered( lo_filter ).
 
     LOOP AT ct_features ASSIGNING <ls_branch>.
       LOOP AT <ls_branch>-changed_files ASSIGNING <ls_changed_file>.
