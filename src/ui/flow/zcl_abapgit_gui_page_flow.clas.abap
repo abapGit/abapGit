@@ -289,6 +289,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       iv_act = c_action-refresh ).
 
     ro_toolbar->add(
+      iv_txt = 'Consolidate'
+      iv_act = c_action-consolidate ).
+
+    ro_toolbar->add(
       iv_txt = zcl_abapgit_gui_buttons=>repo_list( )
       iv_act = zif_abapgit_definitions=>c_action-abapgit_home ).
 
