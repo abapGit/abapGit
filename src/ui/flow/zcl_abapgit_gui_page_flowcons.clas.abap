@@ -24,48 +24,23 @@ CLASS zcl_abapgit_gui_page_flowcons DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA mo_repo TYPE REF TO zif_abapgit_repo_online.
 
 ENDCLASS.
 
-CLASS zcl_abapgit_gui_page_flowcons IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
+
 
   METHOD constructor.
     super->constructor( ).
     mo_repo = ii_repo.
   ENDMETHOD.
 
-  METHOD zif_abapgit_gui_event_handler~on_event.
-* the back button is handled in the default router
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_gui_renderable~render.
-
-    register_handlers( ).
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    ri_html->add( '<div class="repo-overview">' ).
-    ri_html->add( 'todo' ).
-    ri_html->add( '</div>' ).
-
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-      ii_repo        = mo_repo
-      iv_show_branch = abap_false ) ).
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_gui_menu_provider~get_menu.
-
-    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-flow' ).
-
-    ro_toolbar->add(
-      iv_txt = 'Back'
-      iv_act = zif_abapgit_definitions=>c_action-go_back ).
-
-  ENDMETHOD.
 
   METHOD create.
 
@@ -80,4 +55,39 @@ CLASS zcl_abapgit_gui_page_flowcons IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_gui_event_handler~on_event.
+* the back button is handled in the default router
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_menu_provider~get_menu.
+
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-flow' ).
+
+    ro_toolbar->add(
+      iv_txt = 'Back'
+      iv_act = zif_abapgit_definitions=>c_action-go_back ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~render.
+
+    register_handlers( ).
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( '<div class="repo-overview">' ).
+
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
+      ii_repo        = mo_repo
+      iv_show_branch = abap_false ) ).
+
+    ri_html->add( 'todo' ).
+
+    ri_html->add( '</div>' ).
+
+
+  ENDMETHOD.
 ENDCLASS.
