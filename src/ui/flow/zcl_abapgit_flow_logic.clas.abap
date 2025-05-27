@@ -41,7 +41,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
-    CLASS-METHODS find_changed_files_all
+    CLASS-METHODS find_changed_files_all_git
       IMPORTING
         ii_repo_online   TYPE REF TO zif_abapgit_repo_online
         it_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
@@ -199,7 +199,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
         INSERT ls_result INTO TABLE lt_features.
       ENDLOOP.
 
-      find_changed_files_all(
+      find_changed_files_all_git(
         EXPORTING
           ii_repo_online   = li_repo_online
           it_branches      = lt_branches
@@ -216,13 +216,6 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
           ct_transports    = lt_transports
           ct_features      = lt_features ).
 
-      find_up_to_date(
-        EXPORTING
-          iv_url      = li_repo_online->get_url( )
-          it_branches = lt_branches
-        CHANGING
-          ct_features = lt_features ).
-
       find_prs(
         EXPORTING
           iv_url      = li_repo_online->get_url( )
@@ -232,6 +225,15 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       add_local_status(
         EXPORTING
           ii_repo     = li_repo_online
+        CHANGING
+          ct_features = lt_features ).
+
+*********************
+
+      find_up_to_date(
+        EXPORTING
+          iv_url      = li_repo_online->get_url( )
+          it_branches = lt_branches
         CHANGING
           ct_features = lt_features ).
 
@@ -484,7 +486,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD find_changed_files_all.
+  METHOD find_changed_files_all_git.
 
     DATA ls_branch          LIKE LINE OF it_branches.
     DATA lt_sha1            TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
