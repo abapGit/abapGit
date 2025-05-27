@@ -327,7 +327,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ri_html->add( '<div class="repo-overview">' ).
 
     IF mt_features IS INITIAL.
-      mt_features = zcl_abapgit_flow_logic=>get_information( ).
+      mt_features = zcl_abapgit_flow_logic=>get( ).
     ENDIF.
 
     LOOP AT mt_features INTO ls_feature.

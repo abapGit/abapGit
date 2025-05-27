@@ -1,8 +1,14 @@
 CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
   PUBLIC SECTION.
-    CLASS-METHODS get_information
+    CLASS-METHODS get
       RETURNING
         VALUE(rt_features) TYPE zif_abapgit_flow_logic=>ty_features
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS consolidate
+      RETURNING
+        VALUE(rs_consolidate) TYPE zif_abapgit_flow_logic=>ty_consolidate
       RAISING
         zcx_abapgit_exception.
 
@@ -141,6 +147,11 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
+
+  METHOD consolidate.
+* todo
+    INSERT 'todo' INTO TABLE rs_consolidate-files.
+  ENDMETHOD.
 
 
   METHOD add_local_status.
@@ -444,7 +455,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_information.
+  METHOD get.
 
     DATA lt_branches            TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
     DATA ls_branch              LIKE LINE OF lt_branches.

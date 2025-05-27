@@ -37,4 +37,8 @@ INTERFACE zif_abapgit_flow_logic
          END OF ty_feature.
   TYPES ty_features TYPE STANDARD TABLE OF ty_feature WITH DEFAULT KEY.
 
+  TYPES: BEGIN OF ty_consolidate,
+           files TYPE string_table,
+         END OF ty_consolidate.
+
 ENDINTERFACE.
