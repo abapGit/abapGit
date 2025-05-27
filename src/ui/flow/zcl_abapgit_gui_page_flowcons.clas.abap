@@ -81,8 +81,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
     ri_html->add( '<div class="repo-overview">' ).
 
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-      ii_repo        = mo_repo
-      iv_show_branch = abap_false ) ).
+      ii_repo                 = mo_repo
+      iv_interactive_favorite = abap_false
+      iv_show_branch          = abap_false ) ).
 
     ri_html->add( 'todo' ).
 
