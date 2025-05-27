@@ -353,6 +353,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ri_html->add( '</span>' ).
 
     ri_html->add( '<br>' ).
+    ri_html->add( '<br>' ).
 
     LOOP AT mt_features INTO ls_feature.
       lv_index = sy-tabix.
