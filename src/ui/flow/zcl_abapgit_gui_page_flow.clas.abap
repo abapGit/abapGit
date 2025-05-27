@@ -63,7 +63,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -208,13 +208,13 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN c_action-only_my_transports.
-        ms_user_settings-only_my_transports = boolc( ms_user_settings-only_my_transports ).
+        ms_user_settings-only_my_transports = boolc( ms_user_settings-only_my_transports <> abap_true ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-hide_full_matches.
-        ms_user_settings-hide_full_matches = boolc( ms_user_settings-hide_full_matches ).
+        ms_user_settings-hide_full_matches = boolc( ms_user_settings-hide_full_matches <> abap_true ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-hide_matching_files.
-        ms_user_settings-hide_matching_files = boolc( ms_user_settings-hide_matching_files ).
+        ms_user_settings-hide_matching_files = boolc( ms_user_settings-hide_matching_files <> abap_true ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-refresh.
         refresh( ).
