@@ -404,7 +404,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     LOOP AT mt_files ASSIGNING <ls_file>.
 
-      CHECK find( val = <ls_file>-filename 
+      CHECK find( val = <ls_file>-filename
                   sub = '.i18n.' ) > 0. " Only i18n files are relevant
 
       zcl_abapgit_filename_logic=>i18n_file_to_object(
