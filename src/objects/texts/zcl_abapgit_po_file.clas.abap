@@ -340,6 +340,11 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_i18n_file~lang_suffix.
+    rv_lang_suffix = mv_lang.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_i18n_file~render.
 
     DATA lv_str TYPE string.

@@ -68,7 +68,7 @@ CLASS zcl_abapgit_filename_logic DEFINITION
     CLASS-METHODS object_to_i18n_file
       IMPORTING
         !is_item           TYPE zif_abapgit_definitions=>ty_item
-        !iv_lang           TYPE laiso
+        !iv_lang_suffix    TYPE string
         !iv_ext            TYPE string
       RETURNING
         VALUE(rv_filename) TYPE string.
@@ -125,7 +125,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
 
 
   METHOD detect_obj_definition.
@@ -185,6 +185,41 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
       IMPORTING
         ev_is_xml  = ev_is_xml
         ev_is_json = ev_is_json ).
+
+  ENDMETHOD.
+
+
+  METHOD get_lang_and_ext.
+
+    DATA lt_filename_elements TYPE string_table.
+    DATA lv_lang_suffix TYPE string.
+    DATA lv_sap1 TYPE sy-langu.
+
+    SPLIT iv_filename AT '.' INTO TABLE lt_filename_elements.
+
+    READ TABLE lt_filename_elements INDEX lines( lt_filename_elements ) INTO ev_ext.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Could not derive file extension of file { iv_filename }| ).
+    ENDIF.
+
+    READ TABLE lt_filename_elements WITH KEY table_line = `i18n` TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      READ TABLE lt_filename_elements INDEX ( sy-tabix + 1 ) INTO lv_lang_suffix.
+      IF sy-subrc = 0.
+        IF ev_ext = `po`.
+          ev_lang = to_lower( lv_lang_suffix ).
+        ELSEIF ev_ext = `properties`.
+          lv_sap1 = zcl_abapgit_convert=>language_bcp47_to_sap1( lv_lang_suffix ).
+          ev_lang = zcl_abapgit_convert=>language_sap1_to_sap2( lv_sap1 ). " actually it is to_upper( ISO-639 )
+        ELSE.
+          zcx_abapgit_exception=>raise( |Unexpected translation file format { iv_filename }| ).
+        ENDIF.
+      ENDIF.
+    ENDIF.
+
+    IF ev_lang IS INITIAL.
+      CLEAR ev_ext.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -320,6 +355,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     DATA lv_obj_name TYPE string.
     DATA lv_obj_type TYPE string.
     DATA lv_nb_of_slash TYPE string.
+    DATA lv_keep_case TYPE abap_bool.
 
     " Get escaped object name
     lv_obj_name = to_lower( name_escape( is_item-obj_name ) ).
@@ -361,59 +397,22 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     ENDIF.
 
     IF iv_ext = 'properties'.
-      RETURN.
+      lv_keep_case = abap_true.
     ENDIF.
 
-    TRANSLATE rv_filename TO LOWER CASE.
+    IF lv_keep_case = abap_false. " The default behavior is to lowercase all filenames
+      TRANSLATE rv_filename TO LOWER CASE.
+    ENDIF.
 
   ENDMETHOD.
 
 
   METHOD object_to_i18n_file.
-    DATA: lv_langu_sap1 TYPE sy-langu,
-          lv_langu_bcp47 TYPE string.
-
-    lv_langu_sap1 = zcl_abapgit_convert=>language_sap2_to_sap1( to_upper( iv_lang ) ).
-    lv_langu_bcp47 = zcl_abapgit_convert=>language_sap1_to_bcp47( lv_langu_sap1 ).
 
     rv_filename = object_to_file(
       is_item  = is_item
-      iv_extra = |i18n.{ lv_langu_bcp47 }|
+      iv_extra = |i18n.{ iv_lang_suffix }|
       iv_ext   = iv_ext ).
 
   ENDMETHOD.
-
-  METHOD get_lang_and_ext.
-
-    DATA lt_filename_elements TYPE string_table.
-    DATA lv_langu_bcp47 TYPE string.
-    DATA lv_sap1 TYPE sy-langu.
-
-    SPLIT iv_filename AT '.' INTO TABLE lt_filename_elements.
-
-    READ TABLE lt_filename_elements INDEX lines( lt_filename_elements ) INTO ev_ext.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Could not derive file extension of file { iv_filename }| ).
-    ENDIF.
-
-    READ TABLE lt_filename_elements WITH KEY table_line = `i18n` TRANSPORTING NO FIELDS.
-    IF sy-subrc = 0.
-      READ TABLE lt_filename_elements INDEX ( sy-tabix + 1 ) INTO lv_langu_bcp47.
-      IF sy-subrc = 0.
-        lv_sap1 = zcl_abapgit_convert=>language_bcp47_to_sap1( lv_langu_bcp47 ).
-        ev_lang = zcl_abapgit_convert=>language_sap1_to_sap2( lv_sap1 ). " actually it is to_upper( ISO-639 )
-
-        " to not break existing PO file implementations
-        IF ev_ext = `po`.
-          ev_lang = to_lower( ev_lang ).
-        ENDIF.
-      ENDIF.
-    ENDIF.
-
-    IF ev_lang IS INITIAL.
-      CLEAR ev_ext.
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
