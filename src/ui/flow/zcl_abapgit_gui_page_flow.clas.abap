@@ -156,7 +156,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-flow'.
 
-    IF is_feature-full_match = abap_false.
+    IF is_feature-full_match = abap_false AND is_feature-branch-display_name IS NOT INITIAL.
       lv_extra = |?index={ iv_index }&key={ is_feature-repo-key }&branch={ is_feature-branch-display_name }|.
       lo_toolbar->add( iv_txt = 'Pull'
                        iv_act = |{ c_action-pull }{ lv_extra }|
