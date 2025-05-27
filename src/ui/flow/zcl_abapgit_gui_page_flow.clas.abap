@@ -182,14 +182,16 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA lv_key     TYPE zif_abapgit_persistence=>ty_value.
-    DATA lv_branch  TYPE string.
-    DATA lo_filter  TYPE REF TO lcl_filter.
-    DATA lt_filter  TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lv_index   TYPE i.
+    DATA lv_key          TYPE zif_abapgit_persistence=>ty_value.
+    DATA lv_branch       TYPE string.
+    DATA lo_filter       TYPE REF TO lcl_filter.
+    DATA lt_filter       TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lv_index        TYPE i.
     DATA li_repo_online  TYPE REF TO zif_abapgit_repo_online.
-    DATA ls_feature LIKE LINE OF mt_features.
+    DATA ls_feature      LIKE LINE OF mt_features.
     DATA ls_event_result TYPE zif_abapgit_flow_exit=>ty_event_result.
+    DATA lt_repos        TYPE zcl_abapgit_flow_logic=>ty_repos_tt.
+    DATA li_repo         LIKE LINE OF lt_repos.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_feature-changed_objects.
     FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
@@ -200,8 +202,15 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-consolidate.
-        MESSAGE 'Todo, consolidate' TYPE 'S'.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        lt_repos = zcl_abapgit_flow_logic=>list_repos( abap_false ).
+        IF lines( lt_repos ) <> 1.
+          MESSAGE 'Todo, repository selection popup' TYPE 'S'.
+        ELSE.
+          READ TABLE lt_repos INTO li_repo INDEX 1.
+          ASSERT sy-subrc = 0.
+          rs_handled-page  = zcl_abapgit_gui_page_flowcons=>create( li_repo ).
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+        ENDIF.
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
         lv_key = ii_event->query( )->get( 'KEY' ).
         lv_branch = ii_event->query( )->get( 'EXTRA' ).

@@ -5,6 +5,16 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
         VALUE(rt_features) TYPE zif_abapgit_flow_logic=>ty_features
       RAISING
         zcx_abapgit_exception.
+
+    TYPES ty_repos_tt TYPE STANDARD TABLE OF REF TO zif_abapgit_repo_online WITH DEFAULT KEY.
+
+    CLASS-METHODS list_repos
+      IMPORTING
+        iv_favorites_only TYPE abap_bool DEFAULT abap_true
+      RETURNING
+        VALUE(rt_repos)   TYPE ty_repos_tt
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS c_main TYPE string VALUE 'main'.
@@ -19,15 +29,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
 
     TYPES ty_transports_tt TYPE STANDARD TABLE OF ty_transport WITH DEFAULT KEY.
 
-    TYPES ty_repos_tt TYPE STANDARD TABLE OF REF TO zif_abapgit_repo_online WITH DEFAULT KEY.
-
     TYPES ty_trkorr_tt TYPE STANDARD TABLE OF trkorr WITH DEFAULT KEY.
-
-    CLASS-METHODS list_repos
-      RETURNING
-        VALUE(rt_repos) TYPE ty_repos_tt
-      RAISING
-        zcx_abapgit_exception.
 
     CLASS-METHODS build_repo_data
       IMPORTING
@@ -544,21 +546,26 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
   METHOD list_repos.
 
-    DATA lt_favorites     TYPE zif_abapgit_repo_srv=>ty_repo_list.
-    DATA li_favorite      LIKE LINE OF lt_favorites.
-    DATA li_repo_online   TYPE REF TO zif_abapgit_repo_online.
+    DATA lt_repos  TYPE zif_abapgit_repo_srv=>ty_repo_list.
+    DATA li_repo   LIKE LINE OF lt_repos.
+    DATA li_online TYPE REF TO zif_abapgit_repo_online.
 
-    lt_favorites = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( abap_false ).
-    LOOP AT lt_favorites INTO li_favorite.
-      IF li_favorite->get_local_settings( )-flow = abap_false.
+    IF iv_favorites_only = abap_true.
+      lt_repos = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( abap_false ).
+    ELSE.
+      lt_repos = zcl_abapgit_repo_srv=>get_instance( )->list( abap_false ).
+    ENDIF.
+
+    LOOP AT lt_repos INTO li_repo.
+      IF li_repo->get_local_settings( )-flow = abap_false.
         CONTINUE.
-      ELSEIF zcl_abapgit_factory=>get_sap_package( li_favorite->get_package( )
+      ELSEIF zcl_abapgit_factory=>get_sap_package( li_repo->get_package( )
           )->are_changes_recorded_in_tr_req( ) = abap_false.
         CONTINUE.
       ENDIF.
 
-      li_repo_online ?= li_favorite.
-      INSERT li_repo_online INTO TABLE rt_repos.
+      li_online ?= li_repo.
+      INSERT li_online INTO TABLE rt_repos.
     ENDLOOP.
   ENDMETHOD.
 
