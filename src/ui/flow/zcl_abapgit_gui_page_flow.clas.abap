@@ -23,10 +23,13 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
 
     CONSTANTS:
       BEGIN OF c_action,
-        refresh     TYPE string VALUE 'refresh',
-        consolidate TYPE string VALUE 'consolicate',
-        pull        TYPE string VALUE 'pull',
-        stage       TYPE string VALUE 'stage',
+        refresh             TYPE string VALUE 'refresh',
+        consolidate         TYPE string VALUE 'consolicate',
+        pull                TYPE string VALUE 'pull',
+        stage               TYPE string VALUE 'stage',
+        only_my_transports  TYPE string VALUE 'only_my_transports',
+        hide_full_matches   TYPE string VALUE 'hide_full_matches',
+        hide_matching_files TYPE string VALUE 'hide_matching_files',
       END OF c_action .
     DATA mt_features TYPE zif_abapgit_flow_logic=>ty_features .
 
@@ -314,10 +317,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA ls_feature  LIKE LINE OF mt_features.
-    DATA lv_index    TYPE i.
-    DATA lv_rendered TYPE abap_bool.
-    DATA lo_timer    TYPE REF TO zcl_abapgit_timer.
+    DATA ls_feature    LIKE LINE OF mt_features.
+    DATA lv_index      TYPE i.
+    DATA lv_rendered   TYPE abap_bool.
+    DATA lv_icon_class TYPE string.
+    DATA lo_timer      TYPE REF TO zcl_abapgit_timer.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -329,6 +333,24 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     IF mt_features IS INITIAL.
       mt_features = zcl_abapgit_flow_logic=>get( ).
     ENDIF.
+
+    lv_icon_class = `grey`.
+    " todo, for enabled flags, lv_icon_class = `blue`.
+
+    ri_html->add( '<span class="toolbar-light pad-sides">' ).
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only my transports|
+      iv_class = 'command'
+      iv_act   = |{ c_action-only_my_transports }| ) ).
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide full matches|
+      iv_class = 'command'
+      iv_act   = |{ c_action-hide_full_matches }| ) ).
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide matching files|
+      iv_class = 'command'
+      iv_act   = |{ c_action-hide_matching_files }| ) ).
+    ri_html->add( '</span>' ).
 
     LOOP AT mt_features INTO ls_feature.
       lv_index = sy-tabix.
