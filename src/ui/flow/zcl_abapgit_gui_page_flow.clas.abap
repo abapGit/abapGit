@@ -352,6 +352,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       iv_act   = |{ c_action-hide_matching_files }| ) ).
     ri_html->add( '</span>' ).
 
+    ri_html->add( '<br>' ).
+
     LOOP AT mt_features INTO ls_feature.
       lv_index = sy-tabix.
 
