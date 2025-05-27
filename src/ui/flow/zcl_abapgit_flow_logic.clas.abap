@@ -41,7 +41,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
-    CLASS-METHODS find_changed_files_all_git
+    CLASS-METHODS find_changes_in_git
       IMPORTING
         ii_repo_online   TYPE REF TO zif_abapgit_repo_online
         it_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
@@ -199,7 +199,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
         INSERT ls_result INTO TABLE lt_features.
       ENDLOOP.
 
-      find_changed_files_all_git(
+      find_changes_in_git(
         EXPORTING
           ii_repo_online   = li_repo_online
           it_branches      = lt_branches
@@ -486,7 +486,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD find_changed_files_all_git.
+  METHOD find_changes_in_git.
 
     DATA ls_branch          LIKE LINE OF it_branches.
     DATA lt_sha1            TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
