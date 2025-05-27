@@ -122,6 +122,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     LOOP AT is_feature-changed_files INTO ls_path_name.
       IF ls_path_name-remote_sha1 = ls_path_name-local_sha1.
+        IF ms_user_settings-hide_matching_files = abap_true.
+          CONTINUE.
+        ENDIF.
         lv_status = 'Match'.
       ELSE.
         ASSERT is_feature-repo-key IS NOT INITIAL.
@@ -353,15 +356,15 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     ri_html->add( '<span class="toolbar-light pad-sides">' ).
 
-    IF ms_user_settings-only_my_transports = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only my transports|
-      iv_class = 'command'
-      iv_act   = |{ c_action-only_my_transports }| ) ).
+    " todo IF ms_user_settings-only_my_transports = abap_true.
+    " todo   lv_icon_class = `blue`.
+    " todo ELSE.
+    " todo   lv_icon_class = `grey`.
+    " todo ENDIF.
+    " todo ri_html->add( ri_html->a(
+    " todo   iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only my transports|
+    " todo   iv_class = 'command'
+    " todo   iv_act   = |{ c_action-only_my_transports }| ) ).
 
     IF ms_user_settings-hide_full_matches = abap_true.
       lv_icon_class = `blue`.
@@ -390,6 +393,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     LOOP AT mt_features INTO ls_feature.
       lv_index = sy-tabix.
+
+      IF ms_user_settings-hide_full_matches = abap_true
+          AND ls_feature-full_match = abap_true.
+        CONTINUE.
+      ENDIF.
 
       IF lines( ls_feature-changed_files ) = 0.
 * no changes, eg. only files outside of starting folder changed
