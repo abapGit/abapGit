@@ -23,9 +23,10 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
 
     CONSTANTS:
       BEGIN OF c_action,
-        refresh TYPE string VALUE 'refresh',
-        pull    TYPE string VALUE 'pull',
-        stage   TYPE string VALUE 'stage',
+        refresh     TYPE string VALUE 'refresh',
+        consolidate TYPE string VALUE 'consolicate',
+        pull        TYPE string VALUE 'pull',
+        stage       TYPE string VALUE 'stage',
       END OF c_action .
     DATA mt_features TYPE zif_abapgit_flow_logic=>ty_features .
 
@@ -197,6 +198,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_action-refresh.
         refresh( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-consolidate.
+        MESSAGE 'Todo, consolidate' TYPE 'S'.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
         lv_key = ii_event->query( )->get( 'KEY' ).
