@@ -23,9 +23,10 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
 
     CONSTANTS:
       BEGIN OF c_action,
-        refresh TYPE string VALUE 'refresh',
-        pull    TYPE string VALUE 'pull',
-        stage   TYPE string VALUE 'stage',
+        refresh     TYPE string VALUE 'refresh',
+        consolidate TYPE string VALUE 'consolicate',
+        pull        TYPE string VALUE 'pull',
+        stage       TYPE string VALUE 'stage',
       END OF c_action .
     DATA mt_features TYPE zif_abapgit_flow_logic=>ty_features .
 
@@ -198,6 +199,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       WHEN c_action-refresh.
         refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-consolidate.
+        MESSAGE 'Todo, consolidate' TYPE 'S'.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
         lv_key = ii_event->query( )->get( 'KEY' ).
         lv_branch = ii_event->query( )->get( 'EXTRA' ).
@@ -285,6 +289,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       iv_act = c_action-refresh ).
 
     ro_toolbar->add(
+      iv_txt = 'Consolidate'
+      iv_act = c_action-consolidate ).
+
+    ro_toolbar->add(
       iv_txt = zcl_abapgit_gui_buttons=>repo_list( )
       iv_act = zif_abapgit_definitions=>c_action-abapgit_home ).
 
@@ -300,7 +308,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA ls_feature  LIKE LINE OF mt_features.
     DATA lv_index    TYPE i.
     DATA lv_rendered TYPE abap_bool.
+    DATA lo_timer    TYPE REF TO zcl_abapgit_timer.
 
+
+    lo_timer = zcl_abapgit_timer=>create( )->start( ).
 
     register_handlers( ).
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -364,7 +375,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         is_feature = ls_feature ) ).
 
       IF ls_feature-full_match = abap_true.
-        ri_html->add( |Full Match<br>| ).
+        ri_html->add( |Full Match, {
+          lines( ls_feature-changed_files ) } files, {
+          lines( ls_feature-changed_objects ) } objects<br>| ).
       ELSE.
         ri_html->add( render_table( ls_feature ) ).
       ENDIF.
@@ -386,6 +399,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         iv_act   = |{ zif_abapgit_definitions=>c_action-url
           }?url=https://docs.abapgit.org/user-guide/reference/flow.html|
         iv_class = |url| ).
+    ELSE.
+      ri_html->add( |<small>{ lines( mt_features ) } transports/features listed in { lo_timer->end( ) }</small>| ).
     ENDIF.
 
     ri_html->add( '</div>' ).
