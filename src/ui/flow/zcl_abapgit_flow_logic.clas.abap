@@ -20,6 +20,8 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
 
     TYPES ty_repos_tt TYPE STANDARD TABLE OF REF TO zif_abapgit_repo_online WITH DEFAULT KEY.
 
+    TYPES ty_trkorr_tt TYPE STANDARD TABLE OF trkorr WITH DEFAULT KEY.
+
     CLASS-METHODS list_repos
       RETURNING
         VALUE(rt_repos) TYPE ty_repos_tt
@@ -103,7 +105,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
         ii_repo              TYPE REF TO zif_abapgit_repo
         it_transports        TYPE ty_transports_tt
       RETURNING
-        VALUE(rt_transports) TYPE ty_transports_tt
+        VALUE(rt_transports) TYPE ty_trkorr_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -195,6 +197,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
     LOOP AT lt_trkorr INTO ls_trkorr.
       lv_found = abap_false.
+
       LOOP AT lt_packages INTO lv_package.
         READ TABLE it_transports ASSIGNING <ls_transport> WITH KEY trkorr = ls_trkorr-trkorr devclass = lv_package.
         IF sy-subrc = 0.
@@ -205,6 +208,9 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
+      IF lv_found = abap_true.
+        INSERT ls_trkorr-trkorr INTO TABLE rt_transports.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
