@@ -5,7 +5,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
         VALUE(rt_features) TYPE zif_abapgit_flow_logic=>ty_features
       RAISING
         zcx_abapgit_exception.
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS c_main TYPE string VALUE 'main'.
 
