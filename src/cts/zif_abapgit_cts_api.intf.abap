@@ -132,6 +132,12 @@ INTERFACE zif_abapgit_cts_api
     RAISING
       zcx_abapgit_exception .
 
+  METHODS list_open_requests
+    RETURNING
+      VALUE(rt_trkorr) TYPE ty_trkorr_tt
+    RAISING
+      zcx_abapgit_exception .
+
   METHODS list_r3tr_by_request
     IMPORTING
       !iv_request    TYPE trkorr
