@@ -609,6 +609,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         READ TABLE it_transports ASSIGNING <ls_transport> WITH KEY trkorr = ls_trkorr-trkorr devclass = lv_package.
         IF sy-subrc = 0.
           lv_found = abap_true.
+          EXIT.
         ENDIF.
       ENDLOOP.
       IF lv_found = abap_false.
