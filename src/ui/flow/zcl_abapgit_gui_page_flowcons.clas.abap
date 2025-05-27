@@ -65,7 +65,7 @@ CLASS zcl_abapgit_gui_page_flowcons IMPLEMENTATION.
 
   METHOD create.
 
-    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_flow.
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_flowcons.
 
     CREATE OBJECT lo_component EXPORTING ii_repo = ii_repo.
 
