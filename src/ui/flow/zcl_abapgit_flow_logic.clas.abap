@@ -58,6 +58,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       IMPORTING
         ii_repo          TYPE REF TO zif_abapgit_repo
         it_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
+        it_local         TYPE zif_abapgit_definitions=>ty_files_item_tt
       CHANGING
         ct_features      TYPE zif_abapgit_flow_logic=>ty_features
         ct_transports    TYPE ty_transports_tt
@@ -67,8 +68,8 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
     CLASS-METHODS add_objects_and_files_from_tr
       IMPORTING
         iv_trkorr        TYPE trkorr
-        ii_repo          TYPE REF TO zif_abapgit_repo
         it_transports    TYPE ty_transports_tt
+        it_local         TYPE zif_abapgit_definitions=>ty_files_item_tt
         it_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       CHANGING
         cs_feature       TYPE zif_abapgit_flow_logic=>ty_feature
@@ -319,6 +320,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       try_matching_transports(
         EXPORTING
           ii_repo          = li_repo_online
+          it_local         = lt_local
           it_main_expanded = lt_main_expanded
         CHANGING
           ct_transports    = lt_all_transports
@@ -388,7 +390,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
           add_objects_and_files_from_tr(
             EXPORTING
               iv_trkorr        = <ls_transport>-trkorr
-              ii_repo          = ii_repo
+              it_local         = it_local
               it_main_expanded = it_main_expanded
               it_transports    = ct_transports
             CHANGING
@@ -428,7 +430,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       add_objects_and_files_from_tr(
         EXPORTING
           iv_trkorr        = ls_trkorr-trkorr
-          ii_repo          = ii_repo
+          it_local         = it_local
           it_main_expanded = it_main_expanded
           it_transports    = ct_transports
         CHANGING
@@ -442,14 +444,10 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
   METHOD add_objects_and_files_from_tr.
 
     DATA ls_changed      LIKE LINE OF cs_feature-changed_objects.
-    DATA lo_filter       TYPE REF TO lcl_filter.
-    DATA lt_filter       TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lt_local        TYPE zif_abapgit_definitions=>ty_files_item_tt.
     DATA ls_changed_file LIKE LINE OF cs_feature-changed_files.
 
     FIELD-SYMBOLS <ls_transport> LIKE LINE OF it_transports.
     FIELD-SYMBOLS <ls_local>     LIKE LINE OF lt_local.
-    FIELD-SYMBOLS <ls_filter>    LIKE LINE OF lt_filter.
     FIELD-SYMBOLS <ls_main_expanded> LIKE LINE OF it_main_expanded.
 
 
@@ -457,15 +455,9 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       ls_changed-obj_type = <ls_transport>-object.
       ls_changed-obj_name = <ls_transport>-obj_name.
       INSERT ls_changed INTO TABLE cs_feature-changed_objects.
-
-      APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
-      <ls_filter>-object = <ls_transport>-object.
-      <ls_filter>-obj_name = <ls_transport>-obj_name.
     ENDLOOP.
 
-    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
-    lt_local = ii_repo->get_files_local_filtered( lo_filter ).
-    LOOP AT lt_local ASSIGNING <ls_local> WHERE file-filename <> zif_abapgit_definitions=>c_dot_abapgit.
+    LOOP AT it_local ASSIGNING <ls_local> WHERE file-filename <> zif_abapgit_definitions=>c_dot_abapgit.
       ls_changed_file-path       = <ls_local>-file-path.
       ls_changed_file-filename   = <ls_local>-file-filename.
       ls_changed_file-local_sha1 = <ls_local>-file-sha1.
