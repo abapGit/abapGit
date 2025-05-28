@@ -781,7 +781,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     DATA:
       lo_toolbar      TYPE REF TO zcl_abapgit_html_toolbar,
-      ls_settings     TYPE zif_abapgit_definitions=>ty_s_user_settings,
+      ls_settings     TYPE zif_abapgit_persist_user=>ty_s_user_settings,
       lo_label_colors TYPE REF TO zcl_abapgit_string_map,
       lt_labels       TYPE string_table.
 
