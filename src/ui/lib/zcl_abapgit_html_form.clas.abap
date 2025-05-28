@@ -107,6 +107,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_label      TYPE csequence
         !iv_width      TYPE csequence OPTIONAL
         !iv_readonly   TYPE abap_bool DEFAULT abap_false
+        !iv_item_class TYPE csequence OPTIONAL
       RETURNING
         VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
     METHODS start_group
@@ -231,6 +232,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ls_column-label    = iv_label.
     ls_column-value    = iv_width.
     ls_column-readonly = iv_readonly.
+    ls_column-item_class = iv_item_class.
 
     APPEND ls_column TO <ls_last>-subitems.
 
@@ -753,6 +755,9 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
           lv_value = escape( val    = <ls_subitem>-value
                              format = cl_abap_format=>e_html_attr ).
           lv_value = | width="{ lv_value }"|.
+        ENDIF.
+        IF <ls_subitem>-item_class IS NOT INITIAL.
+          lv_value = lv_value && | class="{ <ls_subitem>-item_class }"|.
         ENDIF.
         ii_html->add( |<td{ lv_value }>{ <ls_subitem>-label }</td>| ).
       ENDLOOP.

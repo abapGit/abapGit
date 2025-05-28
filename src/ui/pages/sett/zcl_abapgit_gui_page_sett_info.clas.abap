@@ -250,10 +250,12 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
       iv_label       = 'Local'
       iv_width       = '25%'
       iv_readonly    = abap_true
+      iv_item_class  = 'right'
     )->column(
       iv_label       = lv_label
       iv_width       = '25%'
-      iv_readonly    = abap_true ).
+      iv_readonly    = abap_true
+      iv_item_class  = 'right' ).
 
     ro_form->command(
       iv_label       = 'Back'

@@ -3,9 +3,10 @@ INTERFACE zif_abapgit_html_form
 
   TYPES:
     BEGIN OF ty_subitem,
-      label    TYPE string,
-      value    TYPE string,
-      readonly TYPE abap_bool,
+      label      TYPE string,
+      value      TYPE string,
+      readonly   TYPE abap_bool,
+      item_class TYPE string,
     END OF ty_subitem .
   TYPES:
     ty_subitems TYPE STANDARD TABLE OF ty_subitem WITH DEFAULT KEY .
