@@ -220,30 +220,7 @@ INTERFACE zif_abapgit_definitions
     END OF ty_repo_item .
   TYPES:
     ty_repo_item_tt TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY .
-  TYPES:
-    BEGIN OF ty_s_user_settings,
-      max_lines              TYPE i,
-      adt_jump_enabled       TYPE abap_bool,
-      show_default_repo      TYPE abap_bool,
-      link_hints_enabled     TYPE abap_bool,
-      link_hint_key          TYPE c LENGTH 1,
-      parallel_proc_disabled TYPE abap_bool,
-      icon_scaling           TYPE c LENGTH 1,
-      ui_theme               TYPE string,
-      hide_sapgui_hint       TYPE abap_bool,
-      activate_wo_popup      TYPE abap_bool,
-      label_colors           TYPE string,
-      default_git_uname      TYPE string,
-      default_git_email      TYPE string,
-    END OF ty_s_user_settings .
-  TYPES:
-    BEGIN OF ty_list_settings,
-      filter           TYPE string,
-      only_favorites   TYPE abap_bool,
-      show_details     TYPE abap_bool,
-      order_by         TYPE string,
-      order_descending TYPE abap_bool,
-    END OF ty_list_settings.
+
   TYPES:
     ty_dokil_tt TYPE STANDARD TABLE OF dokil
                          WITH NON-UNIQUE DEFAULT KEY .

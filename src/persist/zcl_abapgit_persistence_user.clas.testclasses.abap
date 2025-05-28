@@ -87,7 +87,7 @@ CLASS ltcl_user IMPLEMENTATION.
 
   METHOD set_get_settings.
 
-    DATA: ls_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+    DATA: ls_settings TYPE zif_abapgit_persist_user=>ty_s_user_settings.
 
     ls_settings-show_default_repo = abap_true.
 
