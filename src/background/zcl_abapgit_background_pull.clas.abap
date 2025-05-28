@@ -31,7 +31,7 @@ CLASS zcl_abapgit_background_pull IMPLEMENTATION.
     DATA: ls_checks             TYPE zif_abapgit_definitions=>ty_deserialize_checks,
           lo_settings           TYPE REF TO zcl_abapgit_settings,
           li_repo               TYPE REF TO zif_abapgit_repo,
-          lv_activation_setting TYPE zif_abapgit_definitions=>ty_s_user_settings-activate_wo_popup.
+          lv_activation_setting TYPE zif_abapgit_persist_user=>ty_s_user_settings-activate_wo_popup.
 
     FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ls_checks-overwrite.
 

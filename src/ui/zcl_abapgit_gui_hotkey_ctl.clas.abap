@@ -23,7 +23,7 @@ CLASS zcl_abapgit_gui_hotkey_ctl DEFINITION
 
     DATA:
       mt_hotkeys       TYPE zif_abapgit_gui_hotkeys=>ty_hotkeys_with_descr,
-      ms_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings,
+      ms_user_settings TYPE zif_abapgit_persist_user=>ty_s_user_settings,
       mv_visible       TYPE abap_bool.
     CLASS-DATA gv_hint_was_shown TYPE abap_bool .
 
@@ -142,7 +142,7 @@ CLASS zcl_abapgit_gui_hotkey_ctl IMPLEMENTATION.
       lv_hint               TYPE string,
       lt_registered_hotkeys TYPE zif_abapgit_gui_hotkeys=>ty_hotkeys_with_descr,
       lv_hotkey             TYPE string,
-      ls_user_settings      TYPE zif_abapgit_definitions=>ty_s_user_settings.
+      ls_user_settings      TYPE zif_abapgit_persist_user=>ty_s_user_settings.
 
     FIELD-SYMBOLS <ls_hotkey> LIKE LINE OF lt_registered_hotkeys.
 
