@@ -20,7 +20,7 @@ CLASS zcl_abapgit_persist_settings IMPLEMENTATION.
   METHOD zif_abapgit_persist_settings~modify.
 
     DATA: lv_settings      TYPE string,
-          ls_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+          ls_user_settings TYPE zif_abapgit_persist_user=>ty_s_user_settings.
 
 
     lv_settings = io_settings->get_settings_xml( ).

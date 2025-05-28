@@ -62,7 +62,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
     DATA: mt_all_labels   TYPE string_table,
           mo_label_colors TYPE REF TO zcl_abapgit_string_map.
-    DATA ms_list_settings TYPE zif_abapgit_definitions=>ty_list_settings.
+    DATA ms_list_settings TYPE zif_abapgit_persist_user=>ty_list_settings.
 
     METHODS set_order_by
       IMPORTING
@@ -1050,7 +1050,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
 
     DATA lt_overview TYPE ty_overviews.
-    DATA ls_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+    DATA ls_settings TYPE zif_abapgit_persist_user=>ty_s_user_settings.
 
     ls_settings = zcl_abapgit_persist_factory=>get_settings( )->read( )->get_user_settings( ).
     mo_label_colors = zcl_abapgit_repo_labels=>split_colors_into_map( ls_settings-label_colors ).
