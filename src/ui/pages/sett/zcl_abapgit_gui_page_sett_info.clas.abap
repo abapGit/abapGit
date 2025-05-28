@@ -237,8 +237,9 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     )->text(
       iv_name        = c_id-deserialized_at
       iv_label       = 'Last Deserialized At'
-      iv_readonly    = abap_true
-    )->table(
+      iv_readonly    = abap_true ).
+
+    ro_form->table(
       iv_name        = c_id-stats_table
       iv_label       = 'Statistics'
     )->column(
@@ -252,8 +253,9 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     )->column(
       iv_label       = lv_label
       iv_width       = '25%'
-      iv_readonly    = abap_true
-    )->command(
+      iv_readonly    = abap_true ).
+
+    ro_form->command(
       iv_label       = 'Back'
       iv_action      = zif_abapgit_definitions=>c_action-go_back ).
 
