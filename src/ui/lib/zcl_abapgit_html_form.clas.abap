@@ -729,6 +729,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     DATA:
       lv_value    TYPE string,
       lv_readonly TYPE string,
+      lv_class    TYPE string,
       lv_rows     TYPE i,
       lv_cell_id  TYPE string.
 
@@ -751,15 +752,16 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       ii_html->add( |<tr>| ).
       LOOP AT is_field-subitems ASSIGNING <ls_subitem>.
         CLEAR lv_value.
+        CLEAR lv_class.
         IF <ls_subitem>-value IS NOT INITIAL.
           lv_value = escape( val    = <ls_subitem>-value
                              format = cl_abap_format=>e_html_attr ).
           lv_value = | width="{ lv_value }"|.
         ENDIF.
         IF <ls_subitem>-item_class IS NOT INITIAL.
-          lv_value = lv_value && | class="{ <ls_subitem>-item_class }"|.
+          lv_class = | class="{ <ls_subitem>-item_class }"|.
         ENDIF.
-        ii_html->add( |<td{ lv_value }>{ <ls_subitem>-label }</td>| ).
+        ii_html->add( |<td{ lv_value }{ lv_class }>{ <ls_subitem>-label }</td>| ).
       ENDLOOP.
       ii_html->add( |</tr>| ).
       ii_html->add( |</thead>| ).
@@ -776,7 +778,10 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
           IF <ls_subitem>-readonly = abap_true.
             lv_readonly = | readonly|.
           ENDIF.
-          ii_html->add( |<td><input type="text" name="{ lv_cell_id }" id="{
+          IF <ls_subitem>-item_class IS NOT INITIAL.
+            lv_class = | class="{ <ls_subitem>-item_class }"|.
+          ENDIF.
+          ii_html->add( |<td{ lv_class }><input type="text" name="{ lv_cell_id }" id="{
                         lv_cell_id }" value="{ lv_value }"{ lv_readonly }></td>| ).
         ENDLOOP.
         ii_html->add( |</tr>| ).
