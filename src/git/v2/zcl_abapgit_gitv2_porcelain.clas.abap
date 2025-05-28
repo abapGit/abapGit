@@ -170,12 +170,11 @@ CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
     DATA lv_xstring   TYPE xstring.
     DATA lt_arguments TYPE string_table.
     DATA lv_argument  TYPE string.
-    DATA lv_sha1      LIKE LINE OF it_sha1.
 
 
     ASSERT iv_sha1 IS NOT INITIAL.
 
-    lv_argument = |want { lv_sha1 }|.
+    lv_argument = |want { iv_sha1 }|.
     APPEND lv_argument TO lt_arguments.
     APPEND 'no-progress' TO lt_arguments.
     APPEND 'done' TO lt_arguments.
