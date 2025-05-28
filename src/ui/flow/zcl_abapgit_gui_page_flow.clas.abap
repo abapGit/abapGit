@@ -144,7 +144,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
           iv_extra = lv_branch ).
         lv_status = ri_html->a(
           iv_txt = 'Diff'
-          iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_param }| ).
+          iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{
+            lv_param }&remote_sha1={ ls_path_name-remote_sha1 }| ).
       ENDIF.
 
       ri_html->add( |<tr><td><tt>{ ls_path_name-path }{ ls_path_name-filename }</tt></td><td>{
@@ -204,23 +205,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   METHOD call_diff.
 
-    DATA lv_key          TYPE zif_abapgit_persistence=>ty_value.
-    DATA lv_branch       TYPE string.
-    DATA: ls_file   TYPE zif_abapgit_git_definitions=>ty_file,
-          ls_object TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_key         TYPE zif_abapgit_persistence=>ty_value.
+    DATA lv_branch      TYPE string.
+    DATA lv_remote_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA ls_file        TYPE zif_abapgit_git_definitions=>ty_file.
+    DATA ls_object      TYPE zif_abapgit_definitions=>ty_item.
 
 
     lv_key = ii_event->query( )->get( 'KEY' ).
     lv_branch = ii_event->query( )->get( 'EXTRA' ).
-    set_branch(
-      iv_branch = lv_branch
-      iv_key    = lv_key ).
+    lv_remote_sha1 = ii_event->query( )->get( 'REMOTE_SHA1' ).
 
     ls_file-path       = ii_event->query( )->get( 'PATH' ).
     ls_file-filename   = ii_event->query( )->get( 'FILENAME' ). " unescape ?
     ls_object-obj_type = ii_event->query( )->get( 'OBJ_TYPE' ).
     ls_object-obj_name = ii_event->query( )->get( 'OBJ_NAME' ). " unescape ?
 
+    set_branch(
+      iv_branch = lv_branch
+      iv_key    = lv_key ).
     rs_handled-page = zcl_abapgit_gui_page_diff=>create(
       iv_key    = lv_key
       is_file   = ls_file
