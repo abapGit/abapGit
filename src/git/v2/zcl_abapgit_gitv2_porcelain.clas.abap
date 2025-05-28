@@ -1,6 +1,7 @@
 CLASS zcl_abapgit_gitv2_porcelain DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_git_factory .
 
   PUBLIC SECTION.
 

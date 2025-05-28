@@ -210,6 +210,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     DATA lv_remote_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
     DATA ls_file        TYPE zif_abapgit_git_definitions=>ty_file.
     DATA ls_object      TYPE zif_abapgit_definitions=>ty_item.
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
 
 
     lv_key = ii_event->query( )->get( 'KEY' ).
@@ -220,6 +221,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ls_file-filename   = ii_event->query( )->get( 'FILENAME' ). " unescape ?
     ls_object-obj_type = ii_event->query( )->get( 'OBJ_TYPE' ).
     ls_object-obj_name = ii_event->query( )->get( 'OBJ_NAME' ). " unescape ?
+
+    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+    BREAK-POINT.
+    zcl_abapgit_git_factory=>get_v2_porcelain( )->fetch_blob(
+      iv_url = li_repo_online->get_url( )
+      iv_sha1 = lv_remote_sha1 ).
 
     set_branch(
       iv_branch = lv_branch
