@@ -221,10 +221,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ls_object-obj_type = ii_event->query( )->get( 'OBJ_TYPE' ).
     ls_object-obj_name = ii_event->query( )->get( 'OBJ_NAME' ). " unescape ?
 
-    rs_handled-page  = zcl_abapgit_gui_page_diff=>create(
-          iv_key    = lv_key
-          is_file   = ls_file
-          is_object = ls_object ).
+    rs_handled-page = zcl_abapgit_gui_page_diff=>create(
+      iv_key    = lv_key
+      is_file   = ls_file
+      is_object = ls_object ).
     rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
 
   ENDMETHOD.
