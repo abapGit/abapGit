@@ -170,6 +170,8 @@ CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
     DATA lv_xstring   TYPE xstring.
     DATA lt_arguments TYPE string_table.
     DATA lv_argument  TYPE string.
+    DATA lt_objects   TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA ls_object    LIKE LINE OF lt_objects.
 
 
     ASSERT iv_sha1 IS NOT INITIAL.
@@ -185,8 +187,14 @@ CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
       iv_command   = |fetch|
       it_arguments = lt_arguments ).
 
-    rt_objects = decode_pack( lv_xstring ).
-    DELETE rt_objects WHERE type <> zif_abapgit_git_definitions=>c_type-commit.
+    lt_objects = decode_pack( lv_xstring ).
+    IF lines( lt_objects ) <> 1.
+      zcx_abapgit_exception=>raise( |Blob { iv_sha1 } not found in response.| ).
+    ENDIF.
+
+    READ TABLE lt_objects INTO ls_object INDEX 1.
+    ASSERT sy-subrc = 0.
+    rv_blob = ls_object-data.
 
   ENDMETHOD.
 

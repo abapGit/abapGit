@@ -39,10 +39,10 @@ INTERFACE zif_abapgit_gitv2_porcelain
 
   METHODS fetch_blob
     IMPORTING
-      !iv_url           TYPE string
-      !iv_sha1          TYPE zif_abapgit_git_definitions=>ty_sha1
+      !iv_url        TYPE string
+      !iv_sha1       TYPE zif_abapgit_git_definitions=>ty_sha1
     RETURNING
-      VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
+      VALUE(rv_blob) TYPE xstring
     RAISING
       zcx_abapgit_exception .
 

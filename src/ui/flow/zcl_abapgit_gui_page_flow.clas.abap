@@ -222,8 +222,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ls_object-obj_type = ii_event->query( )->get( 'OBJ_TYPE' ).
     ls_object-obj_name = ii_event->query( )->get( 'OBJ_NAME' ). " unescape ?
 
+* todo
     li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-    BREAK-POINT.
     zcl_abapgit_git_factory=>get_v2_porcelain( )->fetch_blob(
       iv_url = li_repo_online->get_url( )
       iv_sha1 = lv_remote_sha1 ).
