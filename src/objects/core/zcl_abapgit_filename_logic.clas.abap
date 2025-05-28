@@ -312,6 +312,10 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
     " This will trigger class constructor of zcl_abapgit_objects_bridge reading table seometarel
     " which is currently not supported by abaplint test runner
 
+    " TODO: maybe refactor the logic, as currently only 2 object types have own naming
+    " the map_* methods are static, so they cannot reuse ms_item passed to the class
+    " and the "custom" naming is scattered among the large codebase
+
     TRY.
         lv_class = 'ZCL_ABAPGIT_OBJECT_' && is_item-obj_type.
 
@@ -361,15 +365,7 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
     lv_obj_name = to_lower( name_escape( is_item-obj_name ) ).
     lv_obj_type = to_lower( is_item-obj_type ).
 
-    IF iv_extra IS INITIAL.
-      CONCATENATE lv_obj_name '.' lv_obj_type INTO rv_filename.
-    ELSE.
-      CONCATENATE lv_obj_name '.' lv_obj_type '.' iv_extra INTO rv_filename.
-    ENDIF.
-
-    IF iv_ext IS NOT INITIAL.
-      CONCATENATE rv_filename '.' iv_ext INTO rv_filename.
-    ENDIF.
+    rv_filename = lv_obj_name.
 
     " Get mapping specific to object type
     TRY.
@@ -379,9 +375,19 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
             iv_ext      = iv_ext
             iv_extra    = iv_extra
           CHANGING
-            cv_filename = rv_filename ).
+            cv_filename = rv_filename ). " just the object name, not the full name with all the prefixes.
       CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
+
+    CONCATENATE rv_filename '.' lv_obj_type INTO rv_filename.
+
+    IF iv_extra IS NOT INITIAL.
+      CONCATENATE rv_filename '.' iv_extra INTO rv_filename.
+    ENDIF.
+
+    IF iv_ext IS NOT INITIAL.
+      CONCATENATE rv_filename '.' iv_ext INTO rv_filename.
+    ENDIF.
 
     " Handle namespaces
     CREATE OBJECT go_aff_registry TYPE zcl_abapgit_aff_registry.
