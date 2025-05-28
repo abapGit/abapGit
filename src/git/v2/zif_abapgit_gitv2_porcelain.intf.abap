@@ -37,4 +37,13 @@ INTERFACE zif_abapgit_gitv2_porcelain
     RAISING
       zcx_abapgit_exception .
 
+  METHODS fetch_blob
+    IMPORTING
+      !iv_url           TYPE string
+      !iv_sha1          TYPE zif_abapgit_git_definitions=>ty_sha1
+    RETURNING
+      VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
+    RAISING
+      zcx_abapgit_exception .
+
 ENDINTERFACE.
