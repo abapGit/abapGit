@@ -48,17 +48,27 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         !iv_key    TYPE zif_abapgit_persistence=>ty_value
       RAISING
         zcx_abapgit_exception .
+
     METHODS render_table
       IMPORTING
         !is_feature    TYPE zif_abapgit_flow_logic=>ty_feature
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+
     METHODS render_toolbar
       IMPORTING
         !iv_index      TYPE i
         !is_feature    TYPE zif_abapgit_flow_logic=>ty_feature
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+
+    METHODS call_diff
+      IMPORTING
+        !ii_event         TYPE REF TO zif_abapgit_gui_event
+      RETURNING
+        VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -192,6 +202,33 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD call_diff.
+
+    DATA lv_key          TYPE zif_abapgit_persistence=>ty_value.
+    DATA lv_branch       TYPE string.
+    DATA: ls_file   TYPE zif_abapgit_git_definitions=>ty_file,
+          ls_object TYPE zif_abapgit_definitions=>ty_item.
+
+
+    lv_key = ii_event->query( )->get( 'KEY' ).
+    lv_branch = ii_event->query( )->get( 'EXTRA' ).
+    set_branch(
+      iv_branch = lv_branch
+      iv_key    = lv_key ).
+
+    ls_file-path       = ii_event->query( )->get( 'PATH' ).
+    ls_file-filename   = ii_event->query( )->get( 'FILENAME' ). " unescape ?
+    ls_object-obj_type = ii_event->query( )->get( 'OBJ_TYPE' ).
+    ls_object-obj_name = ii_event->query( )->get( 'OBJ_NAME' ). " unescape ?
+
+    rs_handled-page  = zcl_abapgit_gui_page_diff=>create(
+          iv_key    = lv_key
+          is_file   = ls_file
+          is_object = ls_object ).
+    rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
+
+  ENDMETHOD.
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA lv_key          TYPE zif_abapgit_persistence=>ty_value.
@@ -233,12 +270,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
         ENDIF.
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
-        lv_key = ii_event->query( )->get( 'KEY' ).
-        lv_branch = ii_event->query( )->get( 'EXTRA' ).
-        set_branch(
-          iv_branch = lv_branch
-          iv_key    = lv_key ).
-* calling the page is done by the global router
+        rs_handled = call_diff( ii_event ).
       WHEN c_action-stage.
         lv_key = ii_event->query( )->get( 'KEY' ).
         lv_index = ii_event->query( )->get( 'INDEX' ).
