@@ -752,12 +752,12 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       ii_html->add( |<tr>| ).
       LOOP AT is_field-subitems ASSIGNING <ls_subitem>.
         CLEAR lv_value.
-        CLEAR lv_class.
         IF <ls_subitem>-value IS NOT INITIAL.
           lv_value = escape( val    = <ls_subitem>-value
                              format = cl_abap_format=>e_html_attr ).
           lv_value = | width="{ lv_value }"|.
         ENDIF.
+        CLEAR lv_class.
         IF <ls_subitem>-item_class IS NOT INITIAL.
           lv_class = | class="{ <ls_subitem>-item_class }"|.
         ENDIF.
@@ -778,6 +778,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
           IF <ls_subitem>-readonly = abap_true.
             lv_readonly = | readonly|.
           ENDIF.
+          CLEAR lv_class.
           IF <ls_subitem>-item_class IS NOT INITIAL.
             lv_class = | class="{ <ls_subitem>-item_class }"|.
           ENDIF.
