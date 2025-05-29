@@ -826,9 +826,17 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     ri_html->add( '<thead class="nav_line">' ).
     ri_html->add( '<tr>' ).
 
-    render_beacon_begin_of_row(
-      ii_html = ri_html
-      is_diff = is_diff ).
+    IF mi_extra IS BOUND.
+      " Extra interface for rendering the beacon row
+      mi_extra->render_beacon_begin_of_row(
+        ii_html = ri_html
+        is_diff = is_diff ).
+    ELSE.
+      " Default rendering of the beacon row
+      render_beacon_begin_of_row(
+        ii_html = ri_html
+        is_diff = is_diff ).
+    ENDIF.
 
     IF mv_unified = abap_true.
       ri_html->add( '<th class="num"></th>' ).

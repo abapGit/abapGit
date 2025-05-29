@@ -47,7 +47,6 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
       add_menu_begin REDEFINITION,
       add_menu_end REDEFINITION,
       refresh REDEFINITION,
-      render_beacon_begin_of_row REDEFINITION,
       render_diff_head_after_state REDEFINITION,
       render_line_split_row REDEFINITION,
       render_table_head_non_unified REDEFINITION.
@@ -470,7 +469,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_beacon_begin_of_row.
+  METHOD zif_abapgit_gui_diff_extra~render_beacon_begin_of_row.
 
     mv_section_count = mv_section_count + 1.
 
