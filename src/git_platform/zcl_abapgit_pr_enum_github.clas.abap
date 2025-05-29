@@ -183,6 +183,10 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
       iv_method  = zif_abapgit_http_agent=>c_methods-post
       iv_payload = lv_json ).
 
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error creating pull request: { li_response->error( ) }| ).
+    ENDIF.
+
   ENDMETHOD.
 
 
