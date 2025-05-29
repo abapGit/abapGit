@@ -13,6 +13,14 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
         !ii_http_agent    TYPE REF TO zif_abapgit_http_agent
       RAISING
         zcx_abapgit_exception.
+
+    METHODS create_pull_request
+      IMPORTING
+        iv_title       TYPE string
+        iv_branch_name TYPE string
+        iv_base        TYPE string DEFAULT 'main'
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -49,15 +57,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
-
-
-  METHOD clean_url.
-    rv_url = replace(
-      val = iv_url
-      regex = '\{.*\}$'
-      with = '' ).
-  ENDMETHOD.
-
 
   METHOD constructor.
 
@@ -156,5 +155,37 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD create_pull_request.
+
+    DATA lv_url TYPE string.
+    DATA lv_json TYPE string.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+
+    lv_url = mv_repo_url && '/pulls'.
+
+    lv_json = |\{\n| &&
+              |  owner: 'OWNER',\n| &&
+              |  repo: 'REPO',\n| &&
+              |  title: 'Amazing new feature',\n| &&
+              |  body: 'Please pull these awesome changes in!',\n| &&
+              |  head: 'octocat:new-feature',\n| &&
+              |  base: 'master',\n| &&
+              |\}|.
+
+    li_response = mi_http_agent->request(
+      iv_url = lv_url
+      iv_method = 'SDFFDS'
+      iv_payload = lv_json ).
+
+  ENDMETHOD.
+
+
+  METHOD clean_url.
+    rv_url = replace(
+      val = iv_url
+      regex = '\{.*\}$'
+      with = '' ).
   ENDMETHOD.
 ENDCLASS.
