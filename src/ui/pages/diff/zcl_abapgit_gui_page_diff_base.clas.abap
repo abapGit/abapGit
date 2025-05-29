@@ -46,6 +46,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         zcx_abapgit_exception.
 
   PROTECTED SECTION.
+    DATA mi_extra TYPE REF TO zif_abapgit_gui_diff_extra.
 
     CONSTANTS:
       BEGIN OF c_actions,
@@ -117,9 +118,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
       IMPORTING
         !ii_html TYPE REF TO zif_abapgit_html
         !is_diff TYPE ty_file_diff .
-    METHODS insert_nav
-      RETURNING
-        VALUE(rv_insert_nav) TYPE abap_bool .
+
     METHODS render_line_split_row
       IMPORTING
         !ii_html      TYPE REF TO zif_abapgit_html
@@ -674,11 +673,6 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD insert_nav.
-
-  ENDMETHOD.
-
-
   METHOD is_binary.
 
     FIELD-SYMBOLS <lv_data> LIKE iv_d1.
@@ -1006,7 +1000,9 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_insert_nav = insert_nav( ).
+    IF mi_extra IS BOUND.
+      lv_insert_nav = mi_extra->insert_nav( ).
+    ENDIF.
 
     LOOP AT lt_diffs ASSIGNING <ls_diff>.
 

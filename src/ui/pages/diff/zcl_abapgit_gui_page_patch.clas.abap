@@ -5,6 +5,8 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
 
   PUBLIC SECTION.
 
+    INTERFACES zif_abapgit_gui_diff_extra.
+
     CLASS-METHODS create
       IMPORTING
         !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
@@ -44,7 +46,6 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
     METHODS:
       add_menu_begin REDEFINITION,
       add_menu_end REDEFINITION,
-      insert_nav REDEFINITION,
       refresh REDEFINITION,
       render_beacon_begin_of_row REDEFINITION,
       render_diff_head_after_state REDEFINITION,
@@ -147,7 +148,6 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
-
 
   METHOD add_menu_begin.
 
@@ -354,10 +354,13 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Patching is only possible for online repositories.| ).
     ENDIF.
 
+* access "me" after the super constructor has been called
+    mi_extra = me.
+
     mi_repo_online ?= mi_repo.
 
     " While patching we always want to be in split mode
-    CLEAR: mv_unified.
+    CLEAR mv_unified.
     CREATE OBJECT mo_stage.
 
   ENDMETHOD.
@@ -435,7 +438,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD insert_nav.
+  METHOD zif_abapgit_gui_diff_extra~insert_nav.
 
     " add beacon at beginning of file
     rv_insert_nav = abap_true.
