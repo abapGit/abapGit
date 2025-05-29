@@ -77,17 +77,17 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
       RETURNING
         VALUE(rv_page_layout) TYPE string.
 
-    METHODS get_normalized_fname_with_path
+    CLASS-METHODS get_normalized_fname_with_path
       IMPORTING
         !is_diff           TYPE ty_file_diff
       RETURNING
         VALUE(rv_filename) TYPE string .
-    METHODS normalize_path
+    CLASS-METHODS normalize_path
       IMPORTING
         !iv_path             TYPE string
       RETURNING
         VALUE(rv_normalized) TYPE string .
-    METHODS normalize_filename
+    CLASS-METHODS normalize_filename
       IMPORTING
         !iv_filename         TYPE string
       RETURNING
@@ -229,7 +229,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         !is_status TYPE zif_abapgit_definitions=>ty_result
       RAISING
         zcx_abapgit_exception .
-    METHODS is_binary
+    CLASS-METHODS is_binary
       IMPORTING
         !iv_d1        TYPE xstring
         !iv_d2        TYPE xstring
