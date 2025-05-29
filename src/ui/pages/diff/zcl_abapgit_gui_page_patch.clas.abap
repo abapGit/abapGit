@@ -47,7 +47,6 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
       add_menu_begin REDEFINITION,
       add_menu_end REDEFINITION,
       refresh REDEFINITION,
-      render_line_split_row REDEFINITION,
       render_table_head_non_unified REDEFINITION.
 
   PRIVATE SECTION.
@@ -501,21 +500,12 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_line_split_row.
+  METHOD zif_abapgit_gui_diff_extra~render_line_split_row.
 
     render_patch( ii_html      = ii_html
                   iv_filename  = iv_filename
                   is_diff_line = is_diff_line
                   iv_index     = iv_index ).
-
-    super->render_line_split_row(
-        ii_html      = ii_html
-        iv_filename  = iv_filename
-        is_diff_line = is_diff_line
-        iv_index     = iv_index
-        iv_fstate    = iv_fstate
-        iv_new       = iv_new
-        iv_old       = iv_old ).
 
   ENDMETHOD.
 

@@ -110,17 +110,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
       IMPORTING
         !ii_html TYPE REF TO zif_abapgit_html
         !is_diff TYPE ty_file_diff .
-    METHODS render_line_split_row
-      IMPORTING
-        !ii_html      TYPE REF TO zif_abapgit_html
-        !iv_filename  TYPE string
-        !is_diff_line TYPE zif_abapgit_definitions=>ty_diff
-        !iv_index     TYPE sy-tabix
-        !iv_fstate    TYPE char1
-        !iv_new       TYPE string
-        !iv_old       TYPE string
-      RAISING
-        zcx_abapgit_exception .
+
     METHODS refresh
       IMPORTING
         iv_action TYPE clike
@@ -166,6 +156,14 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
     DATA ms_view TYPE ty_view.
 
 
+    METHODS render_line_split_row
+      IMPORTING
+        !ii_html   TYPE REF TO zif_abapgit_html
+        !iv_fstate TYPE char1
+        !iv_new    TYPE string
+        !iv_old    TYPE string
+      RAISING
+        zcx_abapgit_exception .
     METHODS render_diff_head_after_state
       IMPORTING
         !ii_html TYPE REF TO zif_abapgit_html
@@ -1133,14 +1131,22 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     " render line, inverse sides if remote is newer
     ri_html->add( '<tr class="diff_line">' ).
 
+    IF mi_extra IS BOUND.
+      mi_extra->render_line_split_row(
+        ii_html      = ri_html
+        iv_filename  = iv_filename
+        is_diff_line = is_diff_line
+        iv_index     = iv_index
+        iv_fstate    = iv_fstate
+        iv_old       = lv_old
+        iv_new       = lv_new ).
+    ENDIF.
+
     render_line_split_row(
-        ii_html                = ri_html
-        iv_filename            = iv_filename
-        is_diff_line           = is_diff_line
-        iv_index               = iv_index
-        iv_fstate              = iv_fstate
-        iv_old                 = lv_old
-        iv_new                 = lv_new ).
+        ii_html   = ri_html
+        iv_fstate = iv_fstate
+        iv_old    = lv_old
+        iv_new    = lv_new ).
 
     ri_html->add( '</tr>' ).
 

@@ -17,4 +17,17 @@ INTERFACE zif_abapgit_gui_diff_extra PUBLIC.
       !ii_html TYPE REF TO zif_abapgit_html
       !is_diff TYPE zcl_abapgit_gui_page_diff_base=>ty_file_diff .
 
+* extra rendering before the default
+  METHODS render_line_split_row
+    IMPORTING
+      !ii_html      TYPE REF TO zif_abapgit_html
+      !iv_filename  TYPE string
+      !is_diff_line TYPE zif_abapgit_definitions=>ty_diff
+      !iv_index     TYPE sy-tabix
+      !iv_fstate    TYPE char1
+      !iv_new       TYPE string
+      !iv_old       TYPE string
+    RAISING
+      zcx_abapgit_exception .
+
 ENDINTERFACE.
