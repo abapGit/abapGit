@@ -179,7 +179,7 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
               |  "body": "{ iv_body }",\n| &&
               |  "maintainer_can_modify": true,\n| &&
               |  "draft": true,\n| &&
-              |  "base": "{ iv_base }",\n| &&
+              |  "base": "{ iv_base }"\n| &&
               |\}|.
 
     li_response = mi_http_agent->request(
