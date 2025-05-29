@@ -30,4 +30,10 @@ INTERFACE zif_abapgit_gui_diff_extra PUBLIC.
     RAISING
       zcx_abapgit_exception .
 
+* extra rendering after the default
+  METHODS render_table_head_non_unified
+    IMPORTING
+      !ii_html TYPE REF TO zif_abapgit_html
+      !is_diff TYPE zcl_abapgit_gui_page_diff_base=>ty_file_diff .
+
 ENDINTERFACE.

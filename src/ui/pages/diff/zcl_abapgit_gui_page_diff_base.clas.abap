@@ -106,11 +106,6 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
     METHODS add_menu_begin
       IMPORTING
         !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
-    METHODS render_table_head_non_unified
-      IMPORTING
-        !ii_html TYPE REF TO zif_abapgit_html
-        !is_diff TYPE ty_file_diff .
-
     METHODS refresh
       IMPORTING
         iv_action TYPE clike
@@ -156,6 +151,9 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
     DATA ms_view TYPE ty_view.
 
 
+    METHODS render_table_head_non_unified
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html .
     METHODS render_line_split_row
       IMPORTING
         !ii_html   TYPE REF TO zif_abapgit_html
@@ -1260,10 +1258,14 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
       render_table_head_unified( ri_html ).
 
     ELSE.
+      IF mi_extra IS BOUND.
+        " Extra interface for rendering the table head
+        mi_extra->render_table_head_non_unified(
+          is_diff = is_diff
+          ii_html = ri_html ).
+      ENDIF.
 
-      render_table_head_non_unified(
-          ii_html = ri_html
-          is_diff = is_diff ).
+      render_table_head_non_unified( ri_html ).
 
     ENDIF.
 

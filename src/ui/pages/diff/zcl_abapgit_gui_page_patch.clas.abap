@@ -145,6 +145,9 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
+  METHOD render_table_head_non_unified.
+    RETURN. " todo, implement method
+  ENDMETHOD.
 
   METHOD add_menu_begin.
 
@@ -569,14 +572,10 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_table_head_non_unified.
+  METHOD zif_abapgit_gui_diff_extra~render_table_head_non_unified.
 
     render_patch_head( ii_html = ii_html
                        is_diff = is_diff ).
-
-    super->render_table_head_non_unified(
-        ii_html = ii_html
-        is_diff = is_diff ).
 
   ENDMETHOD.
 
