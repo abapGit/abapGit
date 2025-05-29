@@ -36,12 +36,14 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         both   TYPE c LENGTH 1 VALUE 'B',
       END OF c_fstate.
 
-    METHODS constructor
+    CLASS-METHODS create_with_repo
       IMPORTING
-        !iv_key    TYPE zif_abapgit_persistence=>ty_repo-key
-        !is_file   TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
-        !is_object TYPE zif_abapgit_definitions=>ty_item OPTIONAL
-        !it_files  TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
+        !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
+        !is_file       TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
+        !is_object     TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+        !it_files      TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
+      RETURNING
+        VALUE(ro_page) TYPE REF TO zcl_abapgit_gui_page_diff_base
       RAISING
         zcx_abapgit_exception.
 
@@ -612,25 +614,26 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD constructor.
+  METHOD create_with_repo.
 
     DATA lv_ts TYPE timestamp.
 
-    super->constructor( ).
-    mv_unified = zcl_abapgit_persist_factory=>get_user( )->get_diff_unified( ).
-    mi_repo    = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    CREATE OBJECT ro_page.
+
+    ro_page->mv_unified = zcl_abapgit_persist_factory=>get_user( )->get_diff_unified( ).
+    ro_page->mi_repo    = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     GET TIME STAMP FIELD lv_ts.
-    mv_seed = |diff{ lv_ts }|. " Generate based on time
+    ro_page->mv_seed = |diff{ lv_ts }|. " Generate based on time
 
     ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
 
-    calculate_diff(
-        is_file   = is_file
-        is_object = is_object
-        it_files  = it_files ).
+    ro_page->calculate_diff(
+      is_file   = is_file
+      is_object = is_object
+      it_files  = it_files ).
 
-    IF lines( mt_diff_files ) = 0.
+    IF lines( ro_page->mt_diff_files ) = 0.
       zcx_abapgit_exception=>raise(
         'There are no differences to show. The local state completely matches the remote repository.' ).
     ENDIF.
