@@ -46,8 +46,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
     METHODS:
       add_menu_begin REDEFINITION,
       add_menu_end REDEFINITION,
-      refresh REDEFINITION,
-      render_table_head_non_unified REDEFINITION.
+      refresh REDEFINITION.
 
   PRIVATE SECTION.
 
@@ -145,9 +144,6 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
-  METHOD render_table_head_non_unified.
-    RETURN. " todo, implement method
-  ENDMETHOD.
 
   METHOD add_menu_begin.
 
