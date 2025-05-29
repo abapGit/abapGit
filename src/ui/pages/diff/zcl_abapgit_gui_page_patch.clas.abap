@@ -77,7 +77,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
     METHODS render_patch_head
       IMPORTING
         !ii_html TYPE REF TO zif_abapgit_html
-        !is_diff TYPE ty_file_diff .
+        !is_diff TYPE zif_abapgit_gui_diff=>ty_file_diff .
     METHODS start_staging
       IMPORTING
         !ii_event TYPE REF TO zif_abapgit_gui_event
@@ -90,7 +90,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
         zcx_abapgit_exception .
     METHODS restore_patch_flags
       IMPORTING
-        !it_diff_files_old TYPE ty_file_diffs
+        !it_diff_files_old TYPE zif_abapgit_gui_diff=>ty_file_diffs
       RAISING
         zcx_abapgit_exception .
     METHODS add_to_stage
@@ -187,7 +187,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
           lv_patch             TYPE xstring,
           lo_git_add_patch     TYPE REF TO zcl_abapgit_git_add_patch.
 
-    FIELD-SYMBOLS: <ls_diff_file> TYPE ty_file_diff.
+    FIELD-SYMBOLS: <ls_diff_file> LIKE LINE OF mt_diff_files.
 
     LOOP AT mt_diff_files ASSIGNING <ls_diff_file>.
 
@@ -455,7 +455,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
   METHOD refresh.
 
-    DATA: lt_diff_files_old TYPE ty_file_diffs.
+    DATA lt_diff_files_old LIKE mt_diff_files.
 
     lt_diff_files_old = mt_diff_files.
 
@@ -582,8 +582,8 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
       lt_diff_old TYPE zif_abapgit_definitions=>ty_diffs_tt.
 
     FIELD-SYMBOLS:
-      <ls_diff_file>     TYPE ty_file_diff,
-      <ls_diff_file_old> TYPE ty_file_diff,
+      <ls_diff_file>     LIKE LINE OF mt_diff_files,
+      <ls_diff_file_old> LIKE LINE OF it_diff_files_old,
       <ls_diff_old>      TYPE zif_abapgit_definitions=>ty_diff.
 
     LOOP AT mt_diff_files ASSIGNING <ls_diff_file>.

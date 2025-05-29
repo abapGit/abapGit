@@ -10,25 +10,6 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
     INTERFACES zif_abapgit_gui_menu_provider.
     INTERFACES zif_abapgit_gui_renderable.
 
-    TYPES:
-      BEGIN OF ty_file_diff,
-        path       TYPE string,
-        filename   TYPE string,
-        obj_type   TYPE string,
-        obj_name   TYPE string,
-        lstate     TYPE c LENGTH 1,
-        rstate     TYPE c LENGTH 1,
-        fstate     TYPE c LENGTH 1, " FILE state - Abstraction for shorter ifs
-        o_diff     TYPE REF TO zif_abapgit_diff,
-        changed_by TYPE syuname,
-        type       TYPE string,
-      END OF ty_file_diff.
-    TYPES:
-      ty_file_diffs TYPE STANDARD TABLE OF ty_file_diff
-                          WITH NON-UNIQUE DEFAULT KEY
-                          WITH NON-UNIQUE SORTED KEY secondary
-                               COMPONENTS path filename.
-
     CONSTANTS:
       BEGIN OF c_fstate,
         local  TYPE c LENGTH 1 VALUE 'L',
@@ -72,7 +53,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
 
     DATA mv_unified TYPE abap_bool VALUE abap_true ##NO_TEXT.
     DATA mi_repo TYPE REF TO zif_abapgit_repo .
-    DATA mt_diff_files TYPE ty_file_diffs .
+    DATA mt_diff_files TYPE zif_abapgit_gui_diff=>ty_file_diffs .
 
     CLASS-METHODS get_page_layout
       RETURNING
@@ -80,7 +61,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
 
     CLASS-METHODS get_normalized_fname_with_path
       IMPORTING
-        !is_diff           TYPE ty_file_diff
+        !is_diff           TYPE zif_abapgit_gui_diff=>ty_file_diff
       RETURNING
         VALUE(rv_filename) TYPE string .
     CLASS-METHODS normalize_path
@@ -129,7 +110,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         VALUE(rv_is_refrseh) TYPE abap_bool.
     METHODS modify_files_before_diff_calc
       IMPORTING
-        it_diff_files_old TYPE ty_file_diffs
+        it_diff_files_old TYPE zif_abapgit_gui_diff=>ty_file_diffs
       RETURNING
         VALUE(rt_files)   TYPE zif_abapgit_definitions=>ty_stage_tt.
     METHODS add_view_sub_menu
@@ -165,27 +146,27 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
     METHODS render_diff_head_after_state
       IMPORTING
         !ii_html TYPE REF TO zif_abapgit_html
-        !is_diff TYPE ty_file_diff .
+        !is_diff TYPE zif_abapgit_gui_diff=>ty_file_diff .
     METHODS render_beacon_begin_of_row
       IMPORTING
         !ii_html TYPE REF TO zif_abapgit_html.
     METHODS render_diff
       IMPORTING
-        !is_diff       TYPE ty_file_diff
+        !is_diff       TYPE zif_abapgit_gui_diff=>ty_file_diff
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     METHODS render_diff_head
       IMPORTING
-        !is_diff       TYPE ty_file_diff
+        !is_diff       TYPE zif_abapgit_gui_diff=>ty_file_diff
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     METHODS render_table_head
       IMPORTING
-        !is_diff       TYPE ty_file_diff
+        !is_diff       TYPE zif_abapgit_gui_diff=>ty_file_diff
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -193,7 +174,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
     METHODS render_beacon
       IMPORTING
         !is_diff_line  TYPE zif_abapgit_definitions=>ty_diff
-        !is_diff       TYPE ty_file_diff
+        !is_diff       TYPE zif_abapgit_gui_diff=>ty_file_diff
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_line_no_diffs
@@ -237,7 +218,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS render_lines
       IMPORTING
-        !is_diff       TYPE ty_file_diff
+        !is_diff       TYPE zif_abapgit_gui_diff=>ty_file_diff
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -710,7 +691,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
     DATA ls_file LIKE LINE OF rt_files.
 
-    FIELD-SYMBOLS <ls_diff_file_old> TYPE ty_file_diff.
+    FIELD-SYMBOLS <ls_diff_file_old> TYPE zif_abapgit_gui_diff=>ty_file_diff.
 
     " We need to supply files again in calculate_diff. Because
     " we only want to refresh the visible files. Otherwise all
@@ -748,7 +729,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
   METHOD refresh.
 
     DATA:
-      lt_diff_files_old TYPE ty_file_diffs,
+      lt_diff_files_old TYPE zif_abapgit_gui_diff=>ty_file_diffs,
       lt_files          TYPE zif_abapgit_definitions=>ty_stage_tt.
 
 

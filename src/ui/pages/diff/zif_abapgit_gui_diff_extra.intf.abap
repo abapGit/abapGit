@@ -9,13 +9,13 @@ INTERFACE zif_abapgit_gui_diff_extra PUBLIC.
   METHODS render_beacon_begin_of_row
     IMPORTING
       !ii_html TYPE REF TO zif_abapgit_html
-      !is_diff TYPE zcl_abapgit_gui_page_diff_base=>ty_file_diff .
+      !is_diff TYPE zif_abapgit_gui_diff=>ty_file_diff .
 
 * this overrides the default
   METHODS render_diff_head_after_state
     IMPORTING
       !ii_html TYPE REF TO zif_abapgit_html
-      !is_diff TYPE zcl_abapgit_gui_page_diff_base=>ty_file_diff .
+      !is_diff TYPE zif_abapgit_gui_diff=>ty_file_diff .
 
 * extra rendering before the default
   METHODS render_line_split_row
@@ -34,6 +34,6 @@ INTERFACE zif_abapgit_gui_diff_extra PUBLIC.
   METHODS render_table_head_non_unified
     IMPORTING
       !ii_html TYPE REF TO zif_abapgit_html
-      !is_diff TYPE zcl_abapgit_gui_page_diff_base=>ty_file_diff .
+      !is_diff TYPE zif_abapgit_gui_diff=>ty_file_diff .
 
 ENDINTERFACE.
