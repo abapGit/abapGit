@@ -17,7 +17,7 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
     METHODS create_pull_request
       IMPORTING
         iv_title TYPE clike
-        iv_body  TYPE clike
+        iv_body  TYPE clike OPTIONAL
         iv_head  TYPE string
         iv_base  TYPE string DEFAULT 'main'
       RAISING
