@@ -29,6 +29,9 @@ CLASS zcl_abapgit_web_cts_api IMPLEMENTATION.
   METHOD zif_abapgit_cts_api~list_open_requests_by_user.
     RETURN. " todo, implement method
   ENDMETHOD.
+  METHOD zif_abapgit_cts_api~list_open_requests.
+    RETURN. " todo, implement method
+  ENDMETHOD.
   METHOD zif_abapgit_cts_api~list_r3tr_by_request.
     RETURN. " todo, implement method
   ENDMETHOD.
