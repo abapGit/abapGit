@@ -87,6 +87,12 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
       RAISING
         zcx_abapgit_exception.
+
+    METHODS call_consolidate
+      RETURNING
+        VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -353,11 +359,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD call_consolidate.
+
+    DATA lt_repos        TYPE zcl_abapgit_flow_logic=>ty_repos_tt.
+    DATA li_repo         LIKE LINE OF lt_repos.
+
+    lt_repos = zcl_abapgit_flow_logic=>list_repos( abap_false ).
+    IF lines( lt_repos ) <> 1.
+      MESSAGE 'Todo, repository selection popup' TYPE 'S'.
+    ELSE.
+      READ TABLE lt_repos INTO li_repo INDEX 1.
+      ASSERT sy-subrc = 0.
+      rs_handled-page  = zcl_abapgit_gui_page_flowcons=>create( li_repo ).
+      rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+    ENDIF.
+
+  ENDMETHOD.
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA ls_event_result TYPE zif_abapgit_flow_exit=>ty_event_result.
-    DATA lt_repos        TYPE zcl_abapgit_flow_logic=>ty_repos_tt.
-    DATA li_repo         LIKE LINE OF lt_repos.
 
 
     CASE ii_event->mv_action.
@@ -374,15 +395,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-consolidate.
-        lt_repos = zcl_abapgit_flow_logic=>list_repos( abap_false ).
-        IF lines( lt_repos ) <> 1.
-          MESSAGE 'Todo, repository selection popup' TYPE 'S'.
-        ELSE.
-          READ TABLE lt_repos INTO li_repo INDEX 1.
-          ASSERT sy-subrc = 0.
-          rs_handled-page  = zcl_abapgit_gui_page_flowcons=>create( li_repo ).
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-        ENDIF.
+        rs_handled = call_consolidate( ).
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
         rs_handled = call_diff( ii_event ).
       WHEN c_action-stage.
