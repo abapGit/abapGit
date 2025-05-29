@@ -673,7 +673,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
 
   METHOD insert_nav.
-
+* overridden in subclass
   ENDMETHOD.
 
 
