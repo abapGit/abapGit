@@ -60,7 +60,9 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         !iv_index      TYPE i
         !is_feature    TYPE zif_abapgit_flow_logic=>ty_feature
       RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
 
     METHODS call_diff
       IMPORTING
@@ -160,18 +162,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
   METHOD render_toolbar.
 
     DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
-    DATA lv_extra TYPE string.
+    DATA lv_extra   TYPE string.
+    DATA li_repo    TYPE REF TO zif_abapgit_repo.
+    DATA lv_opt     TYPE c LENGTH 1.
 
-* todo: crossout pull if write protected
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-flow'.
+
+    li_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( is_feature-repo-key ).
+    IF li_repo->get_local_settings( )-write_protected = abap_true.
+      lv_opt = zif_abapgit_html=>c_html_opt-crossout.
+    ELSE.
+      lv_opt = zif_abapgit_html=>c_html_opt-strong.
+    ENDIF.
 
     IF is_feature-full_match = abap_false AND is_feature-branch-display_name IS NOT INITIAL.
       lv_extra = |?index={ iv_index }&key={ is_feature-repo-key }&branch={ is_feature-branch-display_name }|.
       lo_toolbar->add( iv_txt = 'Pull'
                        iv_act = |{ c_action-pull }{ lv_extra }|
-                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+                       iv_opt = lv_opt ).
       lo_toolbar->add( iv_txt = 'Stage'
                        iv_act = |{ c_action-stage }{ lv_extra }|
                        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
