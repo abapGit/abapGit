@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_gui_page_diff_base DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_component
-  CREATE PROTECTED.
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -36,14 +36,12 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         both   TYPE c LENGTH 1 VALUE 'B',
       END OF c_fstate.
 
-    CLASS-METHODS create_with_repo
+    METHODS constructor
       IMPORTING
-        !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
-        !is_file       TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
-        !is_object     TYPE zif_abapgit_definitions=>ty_item OPTIONAL
-        !it_files      TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
-      RETURNING
-        VALUE(ro_page) TYPE REF TO zcl_abapgit_gui_page_diff_base
+        !iv_key    TYPE zif_abapgit_persistence=>ty_repo-key
+        !is_file   TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
+        !is_object TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+        !it_files  TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
@@ -173,6 +171,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         ignore_case     TYPE abap_bool,
       END OF ty_view.
     DATA mt_delayed_lines TYPE zif_abapgit_definitions=>ty_diffs_tt .
+    DATA mv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key .
     DATA mv_seed TYPE string .                    " Unique page id to bind JS sessionStorage
     DATA ms_view TYPE ty_view.
 
@@ -614,26 +613,26 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD create_with_repo.
+  METHOD constructor.
 
-    DATA lv_ts TYPE timestamp.
+    DATA: lv_ts TYPE timestamp.
 
-    CREATE OBJECT ro_page.
-
-    ro_page->mv_unified = zcl_abapgit_persist_factory=>get_user( )->get_diff_unified( ).
-    ro_page->mi_repo    = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    super->constructor( ).
+    mv_unified  = zcl_abapgit_persist_factory=>get_user( )->get_diff_unified( ).
+    mv_repo_key = iv_key.
+    mi_repo     = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     GET TIME STAMP FIELD lv_ts.
-    ro_page->mv_seed = |diff{ lv_ts }|. " Generate based on time
+    mv_seed = |diff{ lv_ts }|. " Generate based on time
 
     ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
 
-    ro_page->calculate_diff(
-      is_file   = is_file
-      is_object = is_object
-      it_files  = it_files ).
+    calculate_diff(
+        is_file   = is_file
+        is_object = is_object
+        it_files  = it_files ).
 
-    IF lines( ro_page->mt_diff_files ) = 0.
+    IF lines( mt_diff_files ) = 0.
       zcx_abapgit_exception=>raise(
         'There are no differences to show. The local state completely matches the remote repository.' ).
     ENDIF.
@@ -676,7 +675,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
 
   METHOD insert_nav.
-* overridden in subclass
+
   ENDMETHOD.
 
 
@@ -1399,7 +1398,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mi_repo ) ).
     ri_html->add( `</div>` ).
 
-    ri_html->add( |<div id="diff-list" data-repo-key="{ mi_repo->get_key( ) }">| ).
+    ri_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
     LOOP AT mt_diff_files INTO ls_diff_file.
       li_progress->show(
