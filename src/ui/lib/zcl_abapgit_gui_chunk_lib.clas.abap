@@ -26,15 +26,16 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_repo_top
       IMPORTING
-        !ii_repo               TYPE REF TO zif_abapgit_repo
-        !iv_show_package       TYPE abap_bool DEFAULT abap_true
-        !iv_show_branch        TYPE abap_bool DEFAULT abap_true
-        !iv_show_commit        TYPE abap_bool DEFAULT abap_true
-        !iv_show_edit          TYPE abap_bool DEFAULT abap_false
-        !iv_interactive_branch TYPE abap_bool DEFAULT abap_false
-        !io_news               TYPE REF TO zcl_abapgit_repo_news OPTIONAL
+        !ii_repo                 TYPE REF TO zif_abapgit_repo
+        !iv_show_package         TYPE abap_bool DEFAULT abap_true
+        !iv_show_branch          TYPE abap_bool DEFAULT abap_true
+        !iv_show_commit          TYPE abap_bool DEFAULT abap_true
+        !iv_show_edit            TYPE abap_bool DEFAULT abap_false
+        !iv_interactive_branch   TYPE abap_bool DEFAULT abap_false
+        !iv_interactive_favorite TYPE abap_bool DEFAULT abap_true
+        !io_news                 TYPE REF TO zcl_abapgit_repo_news OPTIONAL
       RETURNING
-        VALUE(ri_html)         TYPE REF TO zif_abapgit_html
+        VALUE(ri_html)           TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS render_item_state
@@ -1018,10 +1019,16 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ELSE.
       lv_icon = 'star/grey'.
     ENDIF.
-    ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?key={ ii_repo->get_key( ) }|
-                    iv_txt = ri_html->icon( iv_name  = lv_icon
-                                            iv_class = 'pad-sides'
-                                            iv_hint  = 'Toggle Favorite' ) ).
+    IF iv_interactive_favorite = abap_true.
+      ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?key={ ii_repo->get_key( ) }|
+                      iv_txt = ri_html->icon( iv_name  = lv_icon
+                                              iv_class = 'pad-sides'
+                                              iv_hint  = 'Toggle Favorite' ) ).
+    ELSE.
+      ri_html->add( ri_html->icon(
+          iv_name  = lv_icon
+          iv_class = 'pad-sides' ) ).
+    ENDIF.
 
     " BG
     IF zcl_abapgit_persist_factory=>get_background( )->exists( ii_repo->get_key( ) ) = abap_true.

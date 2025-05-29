@@ -23,12 +23,21 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
 
     CONSTANTS:
       BEGIN OF c_action,
-        refresh     TYPE string VALUE 'refresh',
-        consolidate TYPE string VALUE 'consolicate',
-        pull        TYPE string VALUE 'pull',
-        stage       TYPE string VALUE 'stage',
+        refresh             TYPE string VALUE 'refresh',
+        consolidate         TYPE string VALUE 'consolicate',
+        pull                TYPE string VALUE 'pull',
+        stage               TYPE string VALUE 'stage',
+        only_my_transports  TYPE string VALUE 'only_my_transports',
+        hide_full_matches   TYPE string VALUE 'hide_full_matches',
+        hide_matching_files TYPE string VALUE 'hide_matching_files',
       END OF c_action .
     DATA mt_features TYPE zif_abapgit_flow_logic=>ty_features .
+
+    DATA: BEGIN OF ms_user_settings,
+            only_my_transports  TYPE abap_bool,
+            hide_full_matches   TYPE abap_bool,
+            hide_matching_files TYPE abap_bool,
+          END OF ms_user_settings.
 
     METHODS refresh
       RAISING
@@ -39,22 +48,32 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         !iv_key    TYPE zif_abapgit_persistence=>ty_value
       RAISING
         zcx_abapgit_exception .
+
     METHODS render_table
       IMPORTING
         !is_feature    TYPE zif_abapgit_flow_logic=>ty_feature
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+
     METHODS render_toolbar
       IMPORTING
         !iv_index      TYPE i
         !is_feature    TYPE zif_abapgit_flow_logic=>ty_feature
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+
+    METHODS call_diff
+      IMPORTING
+        !ii_event         TYPE REF TO zif_abapgit_gui_event
+      RETURNING
+        VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -113,6 +132,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     LOOP AT is_feature-changed_files INTO ls_path_name.
       IF ls_path_name-remote_sha1 = ls_path_name-local_sha1.
+        IF ms_user_settings-hide_matching_files = abap_true.
+          CONTINUE.
+        ENDIF.
         lv_status = 'Match'.
       ELSE.
         ASSERT is_feature-repo-key IS NOT INITIAL.
@@ -122,7 +144,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
           iv_extra = lv_branch ).
         lv_status = ri_html->a(
           iv_txt = 'Diff'
-          iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_param }| ).
+          iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{
+            lv_param }&remote_sha1={ ls_path_name-remote_sha1 }| ).
       ENDIF.
 
       ri_html->add( |<tr><td><tt>{ ls_path_name-path }{ ls_path_name-filename }</tt></td><td>{
@@ -144,7 +167,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-flow'.
 
-    IF is_feature-full_match = abap_false.
+    IF is_feature-full_match = abap_false AND is_feature-branch-display_name IS NOT INITIAL.
       lv_extra = |?index={ iv_index }&key={ is_feature-repo-key }&branch={ is_feature-branch-display_name }|.
       lo_toolbar->add( iv_txt = 'Pull'
                        iv_act = |{ c_action-pull }{ lv_extra }|
@@ -180,35 +203,84 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD call_diff.
+
+    DATA lv_key         TYPE zif_abapgit_persistence=>ty_value.
+    DATA lv_branch      TYPE string.
+    DATA lv_remote_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA ls_file        TYPE zif_abapgit_git_definitions=>ty_file.
+    DATA ls_object      TYPE zif_abapgit_definitions=>ty_item.
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
+
+
+    lv_key = ii_event->query( )->get( 'KEY' ).
+    lv_branch = ii_event->query( )->get( 'EXTRA' ).
+    lv_remote_sha1 = ii_event->query( )->get( 'REMOTE_SHA1' ).
+
+    ls_file-path       = ii_event->query( )->get( 'PATH' ).
+    ls_file-filename   = ii_event->query( )->get( 'FILENAME' ). " unescape ?
+    ls_object-obj_type = ii_event->query( )->get( 'OBJ_TYPE' ).
+    ls_object-obj_name = ii_event->query( )->get( 'OBJ_NAME' ). " unescape ?
+
+* todo
+    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+    zcl_abapgit_git_factory=>get_v2_porcelain( )->fetch_blob(
+      iv_url = li_repo_online->get_url( )
+      iv_sha1 = lv_remote_sha1 ).
+
+    set_branch(
+      iv_branch = lv_branch
+      iv_key    = lv_key ).
+    rs_handled-page = zcl_abapgit_gui_page_diff=>create(
+      iv_key    = lv_key
+      is_file   = ls_file
+      is_object = ls_object ).
+    rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
+
+  ENDMETHOD.
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA lv_key     TYPE zif_abapgit_persistence=>ty_value.
-    DATA lv_branch  TYPE string.
-    DATA lo_filter  TYPE REF TO lcl_filter.
-    DATA lt_filter  TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lv_index   TYPE i.
+    DATA lv_key          TYPE zif_abapgit_persistence=>ty_value.
+    DATA lv_branch       TYPE string.
+    DATA lo_filter       TYPE REF TO lcl_filter.
+    DATA lt_filter       TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lv_index        TYPE i.
     DATA li_repo_online  TYPE REF TO zif_abapgit_repo_online.
-    DATA ls_feature LIKE LINE OF mt_features.
+    DATA ls_feature      LIKE LINE OF mt_features.
     DATA ls_event_result TYPE zif_abapgit_flow_exit=>ty_event_result.
+    DATA lt_repos        TYPE zcl_abapgit_flow_logic=>ty_repos_tt.
+    DATA li_repo         LIKE LINE OF lt_repos.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_feature-changed_objects.
     FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
 
 
     CASE ii_event->mv_action.
+      WHEN c_action-only_my_transports.
+        ms_user_settings-only_my_transports = boolc( ms_user_settings-only_my_transports <> abap_true ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-hide_full_matches.
+        ms_user_settings-hide_full_matches = boolc( ms_user_settings-hide_full_matches <> abap_true ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-hide_matching_files.
+        ms_user_settings-hide_matching_files = boolc( ms_user_settings-hide_matching_files <> abap_true ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-refresh.
         refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-consolidate.
-        MESSAGE 'Todo, consolidate' TYPE 'S'.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        lt_repos = zcl_abapgit_flow_logic=>list_repos( abap_false ).
+        IF lines( lt_repos ) <> 1.
+          MESSAGE 'Todo, repository selection popup' TYPE 'S'.
+        ELSE.
+          READ TABLE lt_repos INTO li_repo INDEX 1.
+          ASSERT sy-subrc = 0.
+          rs_handled-page  = zcl_abapgit_gui_page_flowcons=>create( li_repo ).
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+        ENDIF.
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
-        lv_key = ii_event->query( )->get( 'KEY' ).
-        lv_branch = ii_event->query( )->get( 'EXTRA' ).
-        set_branch(
-          iv_branch = lv_branch
-          iv_key    = lv_key ).
-* calling the page is done by the global router
+        rs_handled = call_diff( ii_event ).
       WHEN c_action-stage.
         lv_key = ii_event->query( )->get( 'KEY' ).
         lv_index = ii_event->query( )->get( 'INDEX' ).
@@ -305,10 +377,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA ls_feature  LIKE LINE OF mt_features.
-    DATA lv_index    TYPE i.
-    DATA lv_rendered TYPE abap_bool.
-    DATA lo_timer    TYPE REF TO zcl_abapgit_timer.
+    DATA ls_feature    LIKE LINE OF mt_features.
+    DATA lv_index      TYPE i.
+    DATA lv_rendered   TYPE abap_bool.
+    DATA lv_icon_class TYPE string.
+    DATA lo_timer      TYPE REF TO zcl_abapgit_timer.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -318,11 +391,55 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ri_html->add( '<div class="repo-overview">' ).
 
     IF mt_features IS INITIAL.
-      mt_features = zcl_abapgit_flow_logic=>get_information( ).
+      mt_features = zcl_abapgit_flow_logic=>get( ).
     ENDIF.
+
+
+
+    ri_html->add( '<span class="toolbar-light pad-sides">' ).
+
+    " todo IF ms_user_settings-only_my_transports = abap_true.
+    " todo   lv_icon_class = `blue`.
+    " todo ELSE.
+    " todo   lv_icon_class = `grey`.
+    " todo ENDIF.
+    " todo ri_html->add( ri_html->a(
+    " todo   iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only my transports|
+    " todo   iv_class = 'command'
+    " todo   iv_act   = |{ c_action-only_my_transports }| ) ).
+
+    IF ms_user_settings-hide_full_matches = abap_true.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide full matches|
+      iv_class = 'command'
+      iv_act   = |{ c_action-hide_full_matches }| ) ).
+
+    IF ms_user_settings-hide_matching_files = abap_true.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide matching files|
+      iv_class = 'command'
+      iv_act   = |{ c_action-hide_matching_files }| ) ).
+
+    ri_html->add( '</span>' ).
+
+    ri_html->add( '<br>' ).
+    ri_html->add( '<br>' ).
 
     LOOP AT mt_features INTO ls_feature.
       lv_index = sy-tabix.
+
+      IF ms_user_settings-hide_full_matches = abap_true
+          AND ls_feature-full_match = abap_true.
+        CONTINUE.
+      ENDIF.
 
       IF lines( ls_feature-changed_files ) = 0.
 * no changes, eg. only files outside of starting folder changed
@@ -400,7 +517,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
           }?url=https://docs.abapgit.org/user-guide/reference/flow.html|
         iv_class = |url| ).
     ELSE.
-      ri_html->add( |<small>{ lines( mt_features ) } transports/features listed in { lo_timer->end( ) }</small>| ).
+      ri_html->add( |<small>{ lines( mt_features ) } features in { lo_timer->end( ) }</small>| ).
     ENDIF.
 
     ri_html->add( '</div>' ).
