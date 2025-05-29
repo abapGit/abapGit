@@ -171,7 +171,6 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         ignore_case     TYPE abap_bool,
       END OF ty_view.
     DATA mt_delayed_lines TYPE zif_abapgit_definitions=>ty_diffs_tt .
-    DATA mv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key .
     DATA mv_seed TYPE string .                    " Unique page id to bind JS sessionStorage
     DATA ms_view TYPE ty_view.
 
@@ -615,12 +614,11 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA: lv_ts TYPE timestamp.
+    DATA lv_ts TYPE timestamp.
 
     super->constructor( ).
-    mv_unified  = zcl_abapgit_persist_factory=>get_user( )->get_diff_unified( ).
-    mv_repo_key = iv_key.
-    mi_repo     = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    mv_unified = zcl_abapgit_persist_factory=>get_user( )->get_diff_unified( ).
+    mi_repo    = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     GET TIME STAMP FIELD lv_ts.
     mv_seed = |diff{ lv_ts }|. " Generate based on time
@@ -1398,7 +1396,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mi_repo ) ).
     ri_html->add( `</div>` ).
 
-    ri_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
+    ri_html->add( |<div id="diff-list" data-repo-key="{ mi_repo->get_key( ) }">| ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
     LOOP AT mt_diff_files INTO ls_diff_file.
       li_progress->show(
