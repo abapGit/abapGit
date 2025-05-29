@@ -265,10 +265,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     set_branch(
       iv_branch = lv_branch
       iv_key    = lv_key ).
+
     rs_handled-page = zcl_abapgit_gui_page_diff=>create(
       iv_key    = lv_key
       is_file   = ls_file
       is_object = ls_object ).
+
     rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
 
   ENDMETHOD.
