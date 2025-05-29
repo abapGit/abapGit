@@ -172,14 +172,14 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
     SPLIT mv_user_and_repo AT '/' INTO lv_owner lv_repo.
 
     lv_json = |\{\n| &&
-              |  owner: '{ lv_owner }',\n| &&
-              |  repo: '{ lv_repo }',\n| &&
-              |  title: '{ iv_title }',\n| &&
-              |  head: '{ iv_head }',\n| &&
-              |  body: '{ iv_body }',\n| &&
-              |  maintainer_can_modify: true,\n| &&
-              |  draft: true,\n| &&
-              |  base: '{ iv_base }',\n| &&
+              |  "owner": "{ lv_owner }",\n| &&
+              |  "repo": "{ lv_repo }",\n| &&
+              |  "title": "{ iv_title }",\n| &&
+              |  "head": "{ iv_head }",\n| &&
+              |  "body": "{ iv_body }",\n| &&
+              |  "maintainer_can_modify": true,\n| &&
+              |  "draft": true,\n| &&
+              |  "base": "{ iv_base }",\n| &&
               |\}|.
 
     li_response = mi_http_agent->request(
