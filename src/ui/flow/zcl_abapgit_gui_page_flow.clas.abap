@@ -79,6 +79,14 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
       RAISING
         zcx_abapgit_exception.
+
+    METHODS call_pull
+      IMPORTING
+        !ii_event         TYPE REF TO zif_abapgit_gui_event
+      RETURNING
+        VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -302,7 +310,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_gui_event_handler~on_event.
+  METHOD call_pull.
 
     DATA lv_key          TYPE zif_abapgit_persistence=>ty_value.
     DATA lv_branch       TYPE string.
@@ -311,12 +319,45 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     DATA lv_index        TYPE i.
     DATA li_repo_online  TYPE REF TO zif_abapgit_repo_online.
     DATA ls_feature      LIKE LINE OF mt_features.
-    DATA ls_event_result TYPE zif_abapgit_flow_exit=>ty_event_result.
-    DATA lt_repos        TYPE zcl_abapgit_flow_logic=>ty_repos_tt.
-    DATA li_repo         LIKE LINE OF lt_repos.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_feature-changed_objects.
     FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
+
+    lv_key = ii_event->query( )->get( 'KEY' ).
+    lv_index = ii_event->query( )->get( 'INDEX' ).
+    lv_branch = ii_event->query( )->get( 'BRANCH' ).
+    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+
+    READ TABLE mt_features INTO ls_feature INDEX lv_index.
+    ASSERT sy-subrc = 0.
+
+    LOOP AT ls_feature-changed_objects ASSIGNING <ls_object>.
+      APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
+      <ls_filter>-object = <ls_object>-obj_type.
+      <ls_filter>-obj_name = <ls_object>-obj_name.
+    ENDLOOP.
+    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+
+    set_branch(
+          iv_branch = lv_branch
+          iv_key    = lv_key ).
+
+    rs_handled-page = zcl_abapgit_gui_page_pull=>create(
+          ii_repo       = li_repo_online
+          iv_trkorr     = ls_feature-transport-trkorr
+          ii_obj_filter = lo_filter ).
+
+    rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+
+    refresh( ).
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_gui_event_handler~on_event.
+
+    DATA ls_event_result TYPE zif_abapgit_flow_exit=>ty_event_result.
+    DATA lt_repos        TYPE zcl_abapgit_flow_logic=>ty_repos_tt.
+    DATA li_repo         LIKE LINE OF lt_repos.
 
 
     CASE ii_event->mv_action.
@@ -347,33 +388,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       WHEN c_action-stage.
         rs_handled = call_stage( ii_event ).
       WHEN c_action-pull.
-        lv_key = ii_event->query( )->get( 'KEY' ).
-        lv_index = ii_event->query( )->get( 'INDEX' ).
-        lv_branch = ii_event->query( )->get( 'BRANCH' ).
-        li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-
-        READ TABLE mt_features INTO ls_feature INDEX lv_index.
-        ASSERT sy-subrc = 0.
-
-        LOOP AT ls_feature-changed_objects ASSIGNING <ls_object>.
-          APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
-          <ls_filter>-object = <ls_object>-obj_type.
-          <ls_filter>-obj_name = <ls_object>-obj_name.
-        ENDLOOP.
-        CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
-
-        set_branch(
-          iv_branch = lv_branch
-          iv_key    = lv_key ).
-
-        rs_handled-page = zcl_abapgit_gui_page_pull=>create(
-          ii_repo       = li_repo_online
-          iv_trkorr     = ls_feature-transport-trkorr
-          ii_obj_filter = lo_filter ).
-
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-
-        refresh( ).
+        rs_handled = call_pull( ii_event ).
       WHEN OTHERS.
         ls_event_result = zcl_abapgit_flow_exit=>get_instance( )->on_event(
          ii_event    = ii_event
