@@ -110,15 +110,6 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
       IMPORTING
         !ii_html TYPE REF TO zif_abapgit_html
         !is_diff TYPE ty_file_diff .
-    METHODS render_beacon_begin_of_row
-      IMPORTING
-        !ii_html TYPE REF TO zif_abapgit_html
-        !is_diff TYPE ty_file_diff .
-    METHODS render_diff_head_after_state
-      IMPORTING
-        !ii_html TYPE REF TO zif_abapgit_html
-        !is_diff TYPE ty_file_diff .
-
     METHODS render_line_split_row
       IMPORTING
         !ii_html      TYPE REF TO zif_abapgit_html
@@ -174,6 +165,14 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
     DATA mv_seed TYPE string .                    " Unique page id to bind JS sessionStorage
     DATA ms_view TYPE ty_view.
 
+
+    METHODS render_diff_head_after_state
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html
+        !is_diff TYPE ty_file_diff .
+    METHODS render_beacon_begin_of_row
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html.
     METHODS render_diff
       IMPORTING
         !is_diff       TYPE ty_file_diff
@@ -832,10 +831,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
         ii_html = ri_html
         is_diff = is_diff ).
     ELSE.
-      " Default rendering of the beacon row
-      render_beacon_begin_of_row(
-        ii_html = ri_html
-        is_diff = is_diff ).
+      render_beacon_begin_of_row( ri_html ).
     ENDIF.
 
     IF mv_unified = abap_true.
@@ -954,9 +950,15 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
       iv_lstate = is_diff-lstate
       iv_rstate = is_diff-rstate ) ).
 
-    render_diff_head_after_state(
-      ii_html = ri_html
-      is_diff = is_diff ).
+    IF mi_extra IS BOUND.
+      mi_extra->render_diff_head_after_state(
+        ii_html = ri_html
+        is_diff = is_diff ).
+    ELSE.
+      render_diff_head_after_state(
+        ii_html = ri_html
+        is_diff = is_diff ).
+    ENDIF.
 
     ri_html->add( '<span class="diff_changed_by">Last Changed by: ' ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name( is_diff-changed_by ) ).
