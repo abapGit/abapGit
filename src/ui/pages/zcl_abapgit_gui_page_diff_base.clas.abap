@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_gui_page_diff_base DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_component
-  CREATE PUBLIC.
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
