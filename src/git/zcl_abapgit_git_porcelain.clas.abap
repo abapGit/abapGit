@@ -626,12 +626,14 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         et_new_objects = rs_result-new_objects
         ev_new_tree    = lv_new_tree ).
 
-    APPEND LINES OF it_old_objects TO rs_result-new_objects.
+    IF rs_result IS REQUESTED.
+      APPEND LINES OF it_old_objects TO rs_result-new_objects.
 
-    walk( EXPORTING it_objects = rs_result-new_objects
-                    iv_sha1    = lv_new_tree
-                    iv_path    = '/'
-          CHANGING  ct_files   = rs_result-new_files ).
+      walk( EXPORTING it_objects = rs_result-new_objects
+                      iv_sha1    = lv_new_tree
+                      iv_path    = '/'
+            CHANGING  ct_files   = rs_result-new_files ).
+    ENDIF.
 
   ENDMETHOD.
 
