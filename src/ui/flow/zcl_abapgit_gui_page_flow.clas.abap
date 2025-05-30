@@ -244,6 +244,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     DATA ls_object      TYPE zif_abapgit_definitions=>ty_item.
     DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
     DATA lv_blob        TYPE xstring.
+    DATA ls_local       TYPE zif_abapgit_git_definitions=>ty_file.
+    DATA ls_remote      TYPE zif_abapgit_git_definitions=>ty_file.
 
 
     lv_key = ii_event->query( )->get( 'KEY' ).
@@ -260,16 +262,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       iv_url = li_repo_online->get_url( )
       iv_sha1 = lv_remote_sha1 ).
 
-* todo
+    ls_remote-path = ls_file-path.
+    ls_remote-filename = ls_file-filename.
+    ls_remote-sha1 = lv_remote_sha1.
+    ls_remote-data = lv_blob.
 
-    set_branch(
-      iv_branch = lv_branch
-      iv_key    = lv_key ).
+    ls_local-path = ls_remote-path.
+    ls_local-filename = ls_remote-filename.
+    ls_local-sha1 = ''.
+    ls_local-data = ''.
 
-    rs_handled-page = zcl_abapgit_gui_page_diff=>create(
-      iv_key    = lv_key
-      is_file   = ls_file
-      is_object = ls_object ).
+    rs_handled-page = zcl_abapgit_gui_page_file=>create(
+      is_local  = ls_local
+      is_remote = ls_remote ).
 
     rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
 
