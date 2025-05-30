@@ -626,7 +626,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         et_new_objects = rs_result-new_objects
         ev_new_tree    = lv_new_tree ).
 
-    IF rs_result IS REQUESTED.
+    IF rs_result IS SUPPLIED.
       APPEND LINES OF it_old_objects TO rs_result-new_objects.
 
       walk( EXPORTING it_objects = rs_result-new_objects
