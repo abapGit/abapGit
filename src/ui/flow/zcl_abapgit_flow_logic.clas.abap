@@ -668,10 +668,10 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
   METHOD serialize_filtered.
 
-    DATA lv_trkorr TYPE trkorr.
-    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lo_filter TYPE REF TO lcl_filter.
-    DATA ls_feature LIKE LINE OF it_features.
+    DATA lv_trkorr         TYPE trkorr.
+    DATA lt_filter         TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lo_filter         TYPE REF TO zcl_abapgit_object_filter_obj.
+    DATA ls_feature        LIKE LINE OF it_features.
     DATA ls_changed_object LIKE LINE OF ls_feature-changed_objects.
 
     FIELD-SYMBOLS <ls_transport> LIKE LINE OF it_all_transports.
