@@ -13,6 +13,15 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
         !ii_http_agent    TYPE REF TO zif_abapgit_http_agent
       RAISING
         zcx_abapgit_exception.
+
+    METHODS create_pull_request
+      IMPORTING
+        iv_title TYPE clike
+        iv_body  TYPE clike OPTIONAL
+        iv_head  TYPE string
+        iv_base  TYPE string DEFAULT 'main'
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -24,6 +33,7 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
 
     DATA mi_http_agent TYPE REF TO zif_abapgit_http_agent.
     DATA mv_repo_url TYPE string.
+    DATA mv_user_and_repo TYPE string.
 
     METHODS fetch_repo_by_url
       IMPORTING
@@ -50,19 +60,11 @@ ENDCLASS.
 
 CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
 
-
-  METHOD clean_url.
-    rv_url = replace(
-      val = iv_url
-      regex = '\{.*\}$'
-      with = '' ).
-  ENDMETHOD.
-
-
   METHOD constructor.
 
     DATA lv_search TYPE string.
 
+    mv_user_and_repo = iv_user_and_repo.
     mv_repo_url   = |https://api.github.com/repos/{ iv_user_and_repo }|.
     mi_http_agent = ii_http_agent.
     mi_http_agent->global_headers( )->set(
@@ -156,5 +158,46 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD create_pull_request.
+
+    DATA lv_owner    TYPE string.
+    DATA lv_repo     TYPE string.
+    DATA lv_url      TYPE string.
+    DATA lv_json     TYPE string.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+
+    lv_url = mv_repo_url && '/pulls'.
+    SPLIT mv_user_and_repo AT '/' INTO lv_owner lv_repo.
+
+    lv_json = |\{\n| &&
+              |  "owner": "{ lv_owner }",\n| &&
+              |  "repo": "{ lv_repo }",\n| &&
+              |  "title": "{ iv_title }",\n| &&
+              |  "head": "{ iv_head }",\n| &&
+              |  "body": "{ iv_body }",\n| &&
+              |  "maintainer_can_modify": true,\n| &&
+              |  "draft": true,\n| &&
+              |  "base": "{ iv_base }"\n| &&
+              |\}|.
+
+    li_response = mi_http_agent->request(
+      iv_url     = lv_url
+      iv_method  = zif_abapgit_http_agent=>c_methods-post
+      iv_payload = lv_json ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error creating pull request: { li_response->error( ) }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD clean_url.
+    rv_url = replace(
+      val = iv_url
+      regex = '\{.*\}$'
+      with = '' ).
   ENDMETHOD.
 ENDCLASS.
