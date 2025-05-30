@@ -68,4 +68,9 @@ INTERFACE zif_abapgit_sap_package
       VALUE(rs_transport_type) TYPE zif_abapgit_definitions=>ty_transport_type
     RAISING
       zcx_abapgit_exception .
+  METHODS get_default_transport_layer
+    RETURNING
+      VALUE(rv_transport_layer) TYPE devlayer
+    RAISING
+       zcx_abapgit_exception.
 ENDINTERFACE.
