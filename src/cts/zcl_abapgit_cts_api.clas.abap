@@ -576,8 +576,34 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 * find all tasks first
     SELECT trkorr trfunction strkorr
       FROM e070 INTO TABLE lt_e070
-      WHERE as4user = sy-uname
+      WHERE as4user = iv_user
       AND trstatus = zif_abapgit_cts_api=>c_transport_status-modifiable
+      AND strkorr <> ''
+      ORDER BY PRIMARY KEY.
+
+    IF lines( lt_e070 ) > 0.
+      SELECT trkorr FROM e070
+        INTO TABLE rt_trkorr
+        FOR ALL ENTRIES IN lt_e070
+        WHERE trkorr = lt_e070-strkorr
+        AND trfunction = zif_abapgit_cts_api=>c_transport_type-wb_request.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_cts_api~list_open_requests.
+
+    TYPES: BEGIN OF ty_e070,
+             trkorr     TYPE e070-trkorr,
+             trfunction TYPE e070-trfunction,
+             strkorr    TYPE e070-strkorr,
+           END OF ty_e070.
+    DATA lt_e070 TYPE STANDARD TABLE OF ty_e070 WITH DEFAULT KEY.
+
+* find all tasks first
+    SELECT trkorr trfunction strkorr
+      FROM e070 INTO TABLE lt_e070
+      WHERE trstatus = zif_abapgit_cts_api=>c_transport_status-modifiable
       AND strkorr <> ''
       ORDER BY PRIMARY KEY.
 
@@ -694,7 +720,13 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     SELECT SINGLE as4text FROM e07t
       INTO rv_description
       WHERE trkorr = iv_trkorr
-      AND langu = sy-langu ##SUBRC_OK.
+      AND langu = sy-langu.
+    IF sy-subrc <> 0.
+* fallback to any language
+      SELECT SINGLE as4text FROM e07t
+        INTO rv_description
+        WHERE trkorr = iv_trkorr ##SUBRC_OK. "#EC CI_NOORDER
+    ENDIF.
 
   ENDMETHOD.
 

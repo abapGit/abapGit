@@ -8,13 +8,14 @@ CLASS zcl_abapgit_object_sajt DEFINITION
 
     METHODS zif_abapgit_object~changed_by
         REDEFINITION .
+    METHODS zif_abapgit_object~get_deserialize_steps REDEFINITION.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SAJT IMPLEMENTATION.
+CLASS zcl_abapgit_object_sajt IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -35,5 +36,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SAJT IMPLEMENTATION.
           AND job_template_version = 'A'.
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 ENDCLASS.

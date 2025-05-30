@@ -10,25 +10,6 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
     INTERFACES zif_abapgit_gui_menu_provider.
     INTERFACES zif_abapgit_gui_renderable.
 
-    TYPES:
-      BEGIN OF ty_file_diff,
-        path       TYPE string,
-        filename   TYPE string,
-        obj_type   TYPE string,
-        obj_name   TYPE string,
-        lstate     TYPE c LENGTH 1,
-        rstate     TYPE c LENGTH 1,
-        fstate     TYPE c LENGTH 1, " FILE state - Abstraction for shorter ifs
-        o_diff     TYPE REF TO zcl_abapgit_diff,
-        changed_by TYPE syuname,
-        type       TYPE string,
-      END OF ty_file_diff.
-    TYPES:
-      ty_file_diffs TYPE STANDARD TABLE OF ty_file_diff
-                          WITH NON-UNIQUE DEFAULT KEY
-                          WITH NON-UNIQUE SORTED KEY secondary
-                               COMPONENTS path filename.
-
     CONSTANTS:
       BEGIN OF c_fstate,
         local  TYPE c LENGTH 1 VALUE 'L',
@@ -46,6 +27,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         zcx_abapgit_exception.
 
   PROTECTED SECTION.
+    DATA mi_extra TYPE REF TO zif_abapgit_gui_diff_extra.
 
     CONSTANTS:
       BEGIN OF c_actions,
@@ -71,23 +53,23 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
 
     DATA mv_unified TYPE abap_bool VALUE abap_true ##NO_TEXT.
     DATA mi_repo TYPE REF TO zif_abapgit_repo .
-    DATA mt_diff_files TYPE ty_file_diffs .
+    DATA mt_diff_files TYPE zif_abapgit_gui_diff=>ty_file_diffs .
 
     CLASS-METHODS get_page_layout
       RETURNING
         VALUE(rv_page_layout) TYPE string.
 
-    METHODS get_normalized_fname_with_path
+    CLASS-METHODS get_normalized_fname_with_path
       IMPORTING
-        !is_diff           TYPE ty_file_diff
+        !is_diff           TYPE zif_abapgit_gui_diff=>ty_file_diff
       RETURNING
         VALUE(rv_filename) TYPE string .
-    METHODS normalize_path
+    CLASS-METHODS normalize_path
       IMPORTING
         !iv_path             TYPE string
       RETURNING
         VALUE(rv_normalized) TYPE string .
-    METHODS normalize_filename
+    CLASS-METHODS normalize_filename
       IMPORTING
         !iv_filename         TYPE string
       RETURNING
@@ -105,32 +87,6 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
     METHODS add_menu_begin
       IMPORTING
         !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
-    METHODS render_table_head_non_unified
-      IMPORTING
-        !ii_html TYPE REF TO zif_abapgit_html
-        !is_diff TYPE ty_file_diff .
-    METHODS render_beacon_begin_of_row
-      IMPORTING
-        !ii_html TYPE REF TO zif_abapgit_html
-        !is_diff TYPE ty_file_diff .
-    METHODS render_diff_head_after_state
-      IMPORTING
-        !ii_html TYPE REF TO zif_abapgit_html
-        !is_diff TYPE ty_file_diff .
-    METHODS insert_nav
-      RETURNING
-        VALUE(rv_insert_nav) TYPE abap_bool .
-    METHODS render_line_split_row
-      IMPORTING
-        !ii_html      TYPE REF TO zif_abapgit_html
-        !iv_filename  TYPE string
-        !is_diff_line TYPE zif_abapgit_definitions=>ty_diff
-        !iv_index     TYPE sy-tabix
-        !iv_fstate    TYPE char1
-        !iv_new       TYPE string
-        !iv_old       TYPE string
-      RAISING
-        zcx_abapgit_exception .
     METHODS refresh
       IMPORTING
         iv_action TYPE clike
@@ -154,7 +110,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         VALUE(rv_is_refrseh) TYPE abap_bool.
     METHODS modify_files_before_diff_calc
       IMPORTING
-        it_diff_files_old TYPE ty_file_diffs
+        it_diff_files_old TYPE zif_abapgit_gui_diff=>ty_file_diffs
       RETURNING
         VALUE(rt_files)   TYPE zif_abapgit_definitions=>ty_stage_tt.
     METHODS add_view_sub_menu
@@ -175,23 +131,42 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
     DATA mv_seed TYPE string .                    " Unique page id to bind JS sessionStorage
     DATA ms_view TYPE ty_view.
 
+
+    METHODS render_table_head_non_unified
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html .
+    METHODS render_line_split_row
+      IMPORTING
+        !ii_html   TYPE REF TO zif_abapgit_html
+        !iv_fstate TYPE char1
+        !iv_new    TYPE string
+        !iv_old    TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_diff_head_after_state
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html
+        !is_diff TYPE zif_abapgit_gui_diff=>ty_file_diff .
+    METHODS render_beacon_begin_of_row
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html.
     METHODS render_diff
       IMPORTING
-        !is_diff       TYPE ty_file_diff
+        !is_diff       TYPE zif_abapgit_gui_diff=>ty_file_diff
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     METHODS render_diff_head
       IMPORTING
-        !is_diff       TYPE ty_file_diff
+        !is_diff       TYPE zif_abapgit_gui_diff=>ty_file_diff
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     METHODS render_table_head
       IMPORTING
-        !is_diff       TYPE ty_file_diff
+        !is_diff       TYPE zif_abapgit_gui_diff=>ty_file_diff
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -199,7 +174,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
     METHODS render_beacon
       IMPORTING
         !is_diff_line  TYPE zif_abapgit_definitions=>ty_diff
-        !is_diff       TYPE ty_file_diff
+        !is_diff       TYPE zif_abapgit_gui_diff=>ty_file_diff
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_line_no_diffs
@@ -229,7 +204,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         !is_status TYPE zif_abapgit_definitions=>ty_result
       RAISING
         zcx_abapgit_exception .
-    METHODS is_binary
+    CLASS-METHODS is_binary
       IMPORTING
         !iv_d1        TYPE xstring
         !iv_d2        TYPE xstring
@@ -243,7 +218,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS render_lines
       IMPORTING
-        !is_diff       TYPE ty_file_diff
+        !is_diff       TYPE zif_abapgit_gui_diff=>ty_file_diff
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -522,21 +497,19 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     " Diff data
     IF <ls_diff>-type <> 'binary'.
       IF <ls_diff>-fstate = c_fstate-remote. " Remote file leading changes
-        CREATE OBJECT <ls_diff>-o_diff
-          EXPORTING
-            iv_new                = <ls_remote>-data
-            iv_old                = <ls_local>-file-data
-            iv_ignore_indentation = ms_view-ignore_indent
-            iv_ignore_comments    = ms_view-ignore_comments
-            iv_ignore_case        = ms_view-ignore_case.
+        <ls_diff>-o_diff = zcl_abapgit_diff_factory=>get( )->create(
+          iv_new                = <ls_remote>-data
+          iv_old                = <ls_local>-file-data
+          iv_ignore_indentation = ms_view-ignore_indent
+          iv_ignore_comments    = ms_view-ignore_comments
+          iv_ignore_case        = ms_view-ignore_case ).
       ELSE.             " Local leading changes or both were modified
-        CREATE OBJECT <ls_diff>-o_diff
-          EXPORTING
-            iv_new                = <ls_local>-file-data
-            iv_old                = <ls_remote>-data
-            iv_ignore_indentation = ms_view-ignore_indent
-            iv_ignore_comments    = ms_view-ignore_comments
-            iv_ignore_case        = ms_view-ignore_case.
+        <ls_diff>-o_diff = zcl_abapgit_diff_factory=>get( )->create(
+          iv_new                = <ls_local>-file-data
+          iv_old                = <ls_remote>-data
+          iv_ignore_indentation = ms_view-ignore_indent
+          iv_ignore_comments    = ms_view-ignore_comments
+          iv_ignore_case        = ms_view-ignore_case ).
       ENDIF.
     ENDIF.
 
@@ -676,11 +649,6 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD insert_nav.
-
-  ENDMETHOD.
-
-
   METHOD is_binary.
 
     FIELD-SYMBOLS <lv_data> LIKE iv_d1.
@@ -723,7 +691,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
     DATA ls_file LIKE LINE OF rt_files.
 
-    FIELD-SYMBOLS <ls_diff_file_old> TYPE ty_file_diff.
+    FIELD-SYMBOLS <ls_diff_file_old> TYPE zif_abapgit_gui_diff=>ty_file_diff.
 
     " We need to supply files again in calculate_diff. Because
     " we only want to refresh the visible files. Otherwise all
@@ -761,7 +729,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
   METHOD refresh.
 
     DATA:
-      lt_diff_files_old TYPE ty_file_diffs,
+      lt_diff_files_old TYPE zif_abapgit_gui_diff=>ty_file_diffs,
       lt_files          TYPE zif_abapgit_definitions=>ty_stage_tt.
 
 
@@ -834,9 +802,14 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     ri_html->add( '<thead class="nav_line">' ).
     ri_html->add( '<tr>' ).
 
-    render_beacon_begin_of_row(
-      ii_html = ri_html
-      is_diff = is_diff ).
+    IF mi_extra IS BOUND.
+      " Extra interface for rendering the beacon row
+      mi_extra->render_beacon_begin_of_row(
+        ii_html = ri_html
+        is_diff = is_diff ).
+    ELSE.
+      render_beacon_begin_of_row( ri_html ).
+    ENDIF.
 
     IF mv_unified = abap_true.
       ri_html->add( '<th class="num"></th>' ).
@@ -954,9 +927,15 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
       iv_lstate = is_diff-lstate
       iv_rstate = is_diff-rstate ) ).
 
-    render_diff_head_after_state(
-      ii_html = ri_html
-      is_diff = is_diff ).
+    IF mi_extra IS BOUND.
+      mi_extra->render_diff_head_after_state(
+        ii_html = ri_html
+        is_diff = is_diff ).
+    ELSE.
+      render_diff_head_after_state(
+        ii_html = ri_html
+        is_diff = is_diff ).
+    ENDIF.
 
     ri_html->add( '<span class="diff_changed_by">Last Changed by: ' ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name( is_diff-changed_by ) ).
@@ -1008,7 +987,9 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_insert_nav = insert_nav( ).
+    IF mi_extra IS BOUND.
+      lv_insert_nav = mi_extra->insert_nav( ).
+    ENDIF.
 
     LOOP AT lt_diffs ASSIGNING <ls_diff>.
 
@@ -1129,14 +1110,22 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     " render line, inverse sides if remote is newer
     ri_html->add( '<tr class="diff_line">' ).
 
+    IF mi_extra IS BOUND.
+      mi_extra->render_line_split_row(
+        ii_html      = ri_html
+        iv_filename  = iv_filename
+        is_diff_line = is_diff_line
+        iv_index     = iv_index
+        iv_fstate    = iv_fstate
+        iv_old       = lv_old
+        iv_new       = lv_new ).
+    ENDIF.
+
     render_line_split_row(
-        ii_html                = ri_html
-        iv_filename            = iv_filename
-        is_diff_line           = is_diff_line
-        iv_index               = iv_index
-        iv_fstate              = iv_fstate
-        iv_old                 = lv_old
-        iv_new                 = lv_new ).
+        ii_html   = ri_html
+        iv_fstate = iv_fstate
+        iv_old    = lv_old
+        iv_new    = lv_new ).
 
     ri_html->add( '</tr>' ).
 
@@ -1250,10 +1239,14 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
       render_table_head_unified( ri_html ).
 
     ELSE.
+      IF mi_extra IS BOUND.
+        " Extra interface for rendering the table head
+        mi_extra->render_table_head_non_unified(
+          is_diff = is_diff
+          ii_html = ri_html ).
+      ENDIF.
 
-      render_table_head_non_unified(
-          ii_html = ri_html
-          is_diff = is_diff ).
+      render_table_head_non_unified( ri_html ).
 
     ENDIF.
 
