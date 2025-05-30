@@ -246,7 +246,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     DATA lv_blob        TYPE xstring.
     DATA ls_local       TYPE zif_abapgit_git_definitions=>ty_file.
     DATA ls_remote      TYPE zif_abapgit_git_definitions=>ty_file.
+    DATA lt_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lo_filter      TYPE REF TO zcl_abapgit_object_filter_obj.
+    DATA lt_files_item  TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA ls_file_item   LIKE LINE OF lt_files_item.
 
+    FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
 
     lv_key = ii_event->query( )->get( 'KEY' ).
     lv_branch = ii_event->query( )->get( 'EXTRA' ).
@@ -258,8 +263,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ls_object-obj_name = ii_event->query( )->get( 'OBJ_NAME' ). " unescape ?
 
     li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+
+    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+    APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
+    <ls_filter>-object = ls_object-obj_type.
+    <ls_filter>-obj_name = ls_object-obj_name.
+    lt_files_item = li_repo_online->zif_abapgit_repo~get_files_local_filtered( lo_filter ).
+    READ TABLE lt_files_item INTO ls_file_item WITH KEY file-path = ls_file-path
+      file-filename = ls_file-filename.
+
     lv_blob = zcl_abapgit_git_factory=>get_v2_porcelain( )->fetch_blob(
-      iv_url = li_repo_online->get_url( )
+      iv_url  = li_repo_online->get_url( )
       iv_sha1 = lv_remote_sha1 ).
 
     ls_remote-path = ls_file-path.
@@ -269,8 +283,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
     ls_local-path = ls_remote-path.
     ls_local-filename = ls_remote-filename.
-    ls_local-sha1 = ''.
-    ls_local-data = ''.
+    ls_local-sha1 = ls_file_item-file-sha1.
+    ls_local-data = ls_file_item-file-data.
 
     rs_handled-page = zcl_abapgit_gui_page_file=>create(
       is_local  = ls_local
