@@ -52,7 +52,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
     CLASS-METHODS create_branch
       IMPORTING
         !iv_url  TYPE string
-        !iv_name TYPE clike
+        !iv_name TYPE csequence
         !iv_from TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
