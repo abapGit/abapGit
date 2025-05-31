@@ -23,4 +23,8 @@ INTERFACE zif_abapgit_i18n_file PUBLIC.
     RETURNING
       VALUE(rv_lang) TYPE laiso.
 
+  METHODS lang_suffix
+    RETURNING
+      VALUE(rv_lang_suffix) TYPE string.
+
 ENDINTERFACE.

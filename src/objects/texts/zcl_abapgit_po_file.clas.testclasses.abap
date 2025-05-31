@@ -6,6 +6,7 @@ CLASS ltcl_po_file DEFINITION FINAL
   PRIVATE SECTION.
 
     METHODS po_body FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS po_body_suppress_comments FOR TESTING RAISING zcx_abapgit_exception.
     METHODS parse_happy_path FOR TESTING RAISING zcx_abapgit_exception.
     METHODS parse_negative FOR TESTING RAISING zcx_abapgit_exception.
     METHODS unquote FOR TESTING RAISING zcx_abapgit_exception.
@@ -59,6 +60,57 @@ CLASS ltcl_po_file IMPLEMENTATION.
       )->add( 'msgstr "Hello DE"'
       )->add( ''
       )->add( '#: T1/OBJ1/K3, maxlen=12'
+      )->add( 'msgid "World"'
+      )->add( 'msgstr "World \"DE\""' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_act
+      exp = lo_buf->join_w_newline_and_flush( ) ).
+
+  ENDMETHOD.
+
+  METHOD po_body_suppress_comments.
+
+    DATA lo_po TYPE REF TO zcl_abapgit_po_file.
+    DATA lt_lxe_pairs TYPE zif_abapgit_lxe_texts=>ty_text_pairs.
+    DATA lv_act TYPE string.
+    DATA lo_buf TYPE REF TO zcl_abapgit_string_buffer.
+
+    FIELD-SYMBOLS <ls_p> LIKE LINE OF lt_lxe_pairs.
+
+    CREATE OBJECT lo_po
+      EXPORTING
+        iv_lang = 'xx'
+        iv_suppress_comments = abap_true.
+
+    APPEND INITIAL LINE TO lt_lxe_pairs ASSIGNING <ls_p>.
+    <ls_p>-textkey = 'K1'.
+    <ls_p>-unitmlt = 10.
+    <ls_p>-s_text  = 'Hello'.
+    <ls_p>-t_text  = 'Hello DE'.
+    APPEND INITIAL LINE TO lt_lxe_pairs ASSIGNING <ls_p>.
+    <ls_p>-textkey = 'K2    X'. " To condense
+    <ls_p>-unitmlt = 11.
+    <ls_p>-s_text  = 'Hello'. " Intentional duplicate !
+    <ls_p>-t_text  = 'Hello DE 2'.
+    APPEND INITIAL LINE TO lt_lxe_pairs ASSIGNING <ls_p>.
+    <ls_p>-textkey = 'K3'.
+    <ls_p>-unitmlt = 12.
+    <ls_p>-s_text  = 'World'.
+    <ls_p>-t_text  = 'World "DE"'.
+
+    lo_po->push_text_pairs(
+      iv_objtype = 'T1'
+      iv_objname = 'OBJ1'
+      it_text_pairs = lt_lxe_pairs ).
+
+    lv_act = lo_po->build_po_body( )->join_w_newline_and_flush( ).
+
+    CREATE OBJECT lo_buf.
+
+    lo_buf->add( 'msgid "Hello"'
+      )->add( 'msgstr "Hello DE"'
+      )->add( ''
       )->add( 'msgid "World"'
       )->add( 'msgstr "World \"DE\""' ).
 

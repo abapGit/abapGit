@@ -71,7 +71,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_devc IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
 
   METHOD adjust_sw_component.
@@ -812,7 +812,9 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
     " Packages have a fixed filename so that the repository can be installed to a different
     " package(-hierarchy) on the client and not show up as a different package in the repo.
-    cv_filename = zcl_abapgit_filename_logic=>c_package_file.
+    cv_filename = zcl_abapgit_filename_logic=>c_package_file-obj_name.
+    " use just obj_name ("package") so that e.g. translation files also have this first part
+    " yet be able to modify the extension e.g. package.i18n.de.po
 
   ENDMETHOD.
 

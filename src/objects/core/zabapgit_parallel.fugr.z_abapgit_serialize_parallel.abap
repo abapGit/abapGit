@@ -10,6 +10,7 @@ FUNCTION z_abapgit_serialize_parallel.
 *"     VALUE(IV_LANGUAGE) TYPE  SY-LANGU
 *"     VALUE(IV_PATH) TYPE  STRING
 *"     VALUE(IV_MAIN_LANGUAGE_ONLY) TYPE  CHAR1
+*"     VALUE(IV_SUPPRESS_PO_COMMENTS) TYPE  CHAR1
 *"     VALUE(IT_TRANSLATION_LANGS) TYPE  TFPLAISO
 *"     VALUE(IV_USE_LXE) TYPE  CHAR1
 *"  EXPORTING
@@ -22,6 +23,7 @@ FUNCTION z_abapgit_serialize_parallel.
   DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item,
         lx_error TYPE REF TO zcx_abapgit_exception,
         lv_text  TYPE c LENGTH 200,
+        ls_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params,
         ls_files TYPE zif_abapgit_objects=>ty_serialization.
 
   TRY.
@@ -31,13 +33,15 @@ FUNCTION z_abapgit_serialize_parallel.
       ls_item-srcsystem = iv_srcsystem.
       ls_item-abap_language_version = iv_abap_language_vers.
 
+      ls_i18n_params-main_language         = iv_language.
+      ls_i18n_params-main_language_only    = iv_main_language_only.
+      ls_i18n_params-suppress_po_comments  = iv_suppress_po_comments.
+      ls_i18n_params-use_lxe               = iv_use_lxe.
+      ls_i18n_params-translation_languages = it_translation_langs.
+
       ls_files = zcl_abapgit_objects=>serialize(
         is_item        = ls_item
-        io_i18n_params = zcl_abapgit_i18n_params=>new(
-          iv_main_language      = iv_language
-          iv_main_language_only = iv_main_language_only
-          iv_use_lxe            = iv_use_lxe
-          it_translation_langs  = it_translation_langs ) ).
+        io_i18n_params = zcl_abapgit_i18n_params=>new( is_params = ls_i18n_params ) ).
 
       EXPORT data = ls_files TO DATA BUFFER ev_result.
       ev_path = iv_path.

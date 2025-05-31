@@ -38,6 +38,7 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
         write_protected              TYPE string VALUE 'write_protected',
         only_local_objects           TYPE string VALUE 'only_local_objects',
         main_language_only           TYPE string VALUE 'main_language_only',
+        suppress_lxe_po_comments     TYPE string VALUE 'suppress_lxe_po_comments',
         checks                       TYPE string VALUE 'checks',
         code_inspector_check_variant TYPE string VALUE 'code_inspector_check_variant',
         block_commit                 TYPE string VALUE 'block_commit',
@@ -104,7 +105,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
 
 
   METHOD choose_check_variant.
@@ -273,7 +274,11 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     )->checkbox(
       iv_name        = c_id-main_language_only
       iv_label       = 'Only Serialize Main Language'
-      iv_hint        = 'Ignore translations; serialize only main language of repository' ).
+      iv_hint        = 'Ignore translations; serialize only main language of repository'
+    )->checkbox(
+      iv_name        = c_id-suppress_lxe_po_comments
+      iv_label       = 'Suppress comments in LXE PO files'
+      iv_hint        = 'Generate "clean" PO files for translation, don''t add metadata comments' ).
 
     ro_form->checkbox(
       iv_name     = c_id-flow
@@ -382,6 +387,9 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       iv_key = c_id-main_language_only
       iv_val = boolc( ms_settings-main_language_only = abap_true ) ) ##TYPE.
     ro_form_data->set(
+      iv_key = c_id-suppress_lxe_po_comments
+      iv_val = boolc( ms_settings-suppress_lxe_po_comments = abap_true ) ) ##TYPE.
+    ro_form_data->set(
       iv_key = c_id-flow
       iv_val = boolc( ms_settings-flow = abap_true ) ) ##TYPE.
     ro_form_data->set(
@@ -415,6 +423,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     ms_settings-labels                       = zcl_abapgit_repo_labels=>normalize( mo_form_data->get( c_id-labels ) ).
     ms_settings-ignore_subpackages           = mo_form_data->get( c_id-ignore_subpackages ).
     ms_settings-main_language_only           = mo_form_data->get( c_id-main_language_only ).
+    ms_settings-suppress_lxe_po_comments     = mo_form_data->get( c_id-suppress_lxe_po_comments ).
     ms_settings-flow                         = mo_form_data->get( c_id-flow ).
     ms_settings-write_protected              = mo_form_data->get( c_id-write_protected ).
     ms_settings-only_local_objects           = mo_form_data->get( c_id-only_local_objects ).
