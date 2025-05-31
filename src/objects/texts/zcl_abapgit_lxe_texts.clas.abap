@@ -50,6 +50,18 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
     " The value for ABAP system translation is always 999999 (from lxecustmnr docs)
 
     TYPES:
+      BEGIN OF ty_lxe_lang_map, " extract from LXE_T002X
+        language  TYPE lxeisolang,
+        r3_lang   TYPE spras,
+        langshort TYPE lxechar2,
+      END OF ty_lxe_lang_map.
+
+    CLASS-DATA gt_lxe_lang_cache TYPE SORTED TABLE OF ty_lxe_lang_map WITH UNIQUE KEY language
+      WITH NON-UNIQUE SORTED KEY iso2 COMPONENTS langshort.
+      " Controversial: we need uniq, but maybe it's better to keep it debuggable
+      " TODO, add r3 key if needed in future
+
+    TYPES:
       BEGIN OF ty_lxe_translation,
         source_lang TYPE lxeisolang,
         target_lang TYPE lxeisolang,
@@ -416,27 +428,28 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
   METHOD get_lang_iso4.
 
-    DATA lv_lang_iso639 TYPE laiso.
-    DATA lv_country     TYPE land1.
-    DATA lv_class       TYPE string.
+    DATA ls_lang LIKE LINE OF gt_lxe_lang_cache.
 
-    lv_class = 'CL_I18N_LANGUAGES'.
+    IF gt_lxe_lang_cache IS INITIAL. " Cache
 
-    " cannot find a way to do this in Steampunk, so dynamic for now,
-    CALL METHOD (lv_class)=>sap2_to_iso639_1
-      EXPORTING
-        im_lang_sap2   = iv_src
-      IMPORTING
-        ex_lang_iso639 = lv_lang_iso639
-        ex_country     = lv_country
-      EXCEPTIONS
-        no_assignment  = 1
-        OTHERS         = 2.
+      SELECT language r3_lang langshort
+        INTO TABLE gt_lxe_lang_cache
+        FROM lxe_t002x
+        WHERE is_r3_lang = 'X'
+        AND r3_lang <> '' " ??? precausion
+        AND langshort <> ''.
+
+      " Alternatively, call LXE_T002_GET_LANGUAGES and then convert language
+      " 4char to 2char => 2char = to_upper( language(2) )
+
+    ENDIF.
+
+    READ TABLE gt_lxe_lang_cache INTO ls_lang WITH TABLE KEY iso2 COMPONENTS langshort = iv_src.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Failed to convert [{ iv_src }] lang to iso639| ).
     ENDIF.
 
-    CONCATENATE lv_lang_iso639 lv_country INTO rv_iso4.
+    rv_iso4 = ls_lang-language.
 
   ENDMETHOD.
 
