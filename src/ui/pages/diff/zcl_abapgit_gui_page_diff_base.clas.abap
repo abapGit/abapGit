@@ -959,7 +959,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF_BASE IMPLEMENTATION.
                  && ' highlighting for MM assumes local file is newer ! </span>' ).
     ENDIF.
 
-    IF is_diff-obj_type IS NOT INITIAL AND is_diff-obj_name IS NOT INITIAL.
+    IF is_diff-obj_type IS NOT INITIAL
+        AND is_diff-obj_name IS NOT INITIAL
+        AND mi_repo IS NOT INITIAL.
       ii_html->add( '<span class="repo_name">' ).
       ii_html->add_a( iv_txt   = ii_html->icon( iv_name  = 'redo-alt-solid'
                                                 iv_class = 'pad-sides'
