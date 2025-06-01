@@ -595,7 +595,9 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     super->constructor( ).
     mv_unified  = zcl_abapgit_persist_factory=>get_user( )->get_diff_unified( ).
     mv_repo_key = iv_key.
-    mi_repo     = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    IF iv_key IS NOT INITIAL.
+      mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    ENDIF.
 
     GET TIME STAMP FIELD lv_ts.
     mv_seed = |diff{ lv_ts }|. " Generate based on time
