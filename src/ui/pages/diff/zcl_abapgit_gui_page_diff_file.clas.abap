@@ -63,8 +63,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF_FILE IMPLEMENTATION.
   METHOD do_diff.
 
     DATA lt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt.
-    DATA lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    DATA ls_local  LIKE LINE OF lt_local.
+    DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA ls_local LIKE LINE OF lt_local.
     DATA ls_status TYPE zif_abapgit_definitions=>ty_result.
 
     ls_status-path = is_remote-path.
@@ -75,7 +75,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF_FILE IMPLEMENTATION.
     INSERT is_remote INTO TABLE lt_remote.
 
     ls_local-file = is_local.
-* todo? ls_local-item
+    ls_local-item-obj_type = iv_obj_type.
+    ls_local-item-obj_name = iv_obj_name.
     INSERT ls_local INTO TABLE lt_local.
 
     append_diff(
