@@ -116,6 +116,13 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
     METHODS add_view_sub_menu
       IMPORTING
         io_menu TYPE REF TO zcl_abapgit_html_toolbar .
+    METHODS append_diff
+      IMPORTING
+        !it_remote TYPE zif_abapgit_git_definitions=>ty_files_tt
+        !it_local  TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !is_status TYPE zif_abapgit_definitions=>ty_result
+      RAISING
+        zcx_abapgit_exception .
 
   PRIVATE SECTION.
     TYPES:
@@ -197,13 +204,6 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         !is_diff_line  TYPE zif_abapgit_definitions=>ty_diff OPTIONAL
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
-    METHODS append_diff
-      IMPORTING
-        !it_remote TYPE zif_abapgit_git_definitions=>ty_files_tt
-        !it_local  TYPE zif_abapgit_definitions=>ty_files_item_tt
-        !is_status TYPE zif_abapgit_definitions=>ty_result
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS is_binary
       IMPORTING
         !iv_d1        TYPE xstring
