@@ -475,11 +475,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA ls_feature    LIKE LINE OF mt_features.
-    DATA lv_index      TYPE i.
-    DATA lv_rendered   TYPE abap_bool.
-    DATA lv_icon_class TYPE string.
-    DATA lo_timer      TYPE REF TO zcl_abapgit_timer.
+    DATA ls_feature       LIKE LINE OF mt_features.
+    DATA lv_index         TYPE i.
+    DATA lv_rendered      TYPE abap_bool.
+    DATA lv_icon_class    TYPE string.
+    DATA lo_timer         TYPE REF TO zcl_abapgit_timer.
+    DATA lt_my_transports TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -496,15 +497,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
     ri_html->add( '<span class="toolbar-light pad-sides">' ).
 
-    " todo IF ms_user_settings-only_my_transports = abap_true.
-    " todo   lv_icon_class = `blue`.
-    " todo ELSE.
-    " todo   lv_icon_class = `grey`.
-    " todo ENDIF.
-    " todo ri_html->add( ri_html->a(
-    " todo   iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only my transports|
-    " todo   iv_class = 'command'
-    " todo   iv_act   = |{ c_action-only_my_transports }| ) ).
+    IF ms_user_settings-only_my_transports = abap_true.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only my transports|
+      iv_class = 'command'
+      iv_act   = |{ c_action-only_my_transports }| ) ).
 
     IF ms_user_settings-hide_full_matches = abap_true.
       lv_icon_class = `blue`.
@@ -531,12 +532,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ri_html->add( '<br>' ).
     ri_html->add( '<br>' ).
 
+    IF ms_user_settings-only_my_transports = abap_true.
+      lt_my_transports = zcl_abapgit_factory=>get_cts_api( )->list_open_requests_by_user( sy-uname ).
+    ENDIF.
+
     LOOP AT mt_features INTO ls_feature.
       lv_index = sy-tabix.
 
       IF ms_user_settings-hide_full_matches = abap_true
           AND ls_feature-full_match = abap_true.
         CONTINUE.
+      ENDIF.
+
+      IF ms_user_settings-only_my_transports = abap_true AND ls_feature-transport-trkorr IS NOT INITIAL.
+        READ TABLE lt_my_transports WITH TABLE KEY ls_feature-transport-trkorr TRANSPORTING NO FIELDS.
+        IF sy-subrc <> 0.
+          CONTINUE.
+        ENDIF.
       ENDIF.
 
       IF lines( ls_feature-changed_files ) = 0.
