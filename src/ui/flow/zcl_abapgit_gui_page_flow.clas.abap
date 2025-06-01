@@ -160,7 +160,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
           CONTINUE.
         ENDIF.
         lv_status = 'Match'.
-      ELSE.
+      ELSEIF ls_path_name-remote_sha1 IS NOT INITIAL
+          AND ls_path_name-local_sha1 IS NOT INITIAL.
+* todo: file added or removed
         ASSERT is_feature-repo-key IS NOT INITIAL.
         lv_param = zcl_abapgit_html_action_utils=>file_encode(
           iv_key   = is_feature-repo-key
