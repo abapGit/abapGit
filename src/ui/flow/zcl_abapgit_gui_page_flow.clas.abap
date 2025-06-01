@@ -32,12 +32,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         hide_matching_files TYPE string VALUE 'hide_matching_files',
       END OF c_action .
     DATA mt_features TYPE zif_abapgit_flow_logic=>ty_features .
-
-    DATA: BEGIN OF ms_user_settings,
-            only_my_transports  TYPE abap_bool,
-            hide_full_matches   TYPE abap_bool,
-            hide_matching_files TYPE abap_bool,
-          END OF ms_user_settings.
+    DATA ms_user_settings TYPE zif_abapgit_persist_user=>ty_flow_settings.
 
     METHODS refresh
       RAISING
@@ -284,7 +279,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
-
+    ms_user_settings = zcl_abapgit_persist_factory=>get_user( )->get_flow_settings( ).
   ENDMETHOD.
 
 
@@ -427,12 +422,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_action-only_my_transports.
         ms_user_settings-only_my_transports = boolc( ms_user_settings-only_my_transports <> abap_true ).
+        zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-hide_full_matches.
         ms_user_settings-hide_full_matches = boolc( ms_user_settings-hide_full_matches <> abap_true ).
+        zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-hide_matching_files.
         ms_user_settings-hide_matching_files = boolc( ms_user_settings-hide_matching_files <> abap_true ).
+        zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-refresh.
         refresh( ).
