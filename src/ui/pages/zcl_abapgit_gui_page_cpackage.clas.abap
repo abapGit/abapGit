@@ -152,6 +152,9 @@ CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
 
         IF mo_validation_log->is_empty( ) = abap_true.
           ls_create-devclass = mo_form_data->get( c_id-package ).
+          IF zcl_abapgit_factory=>get_sap_package( ls_create-devclass )->exists( ) = abap_true.
+            zcx_abapgit_exception=>raise( |Package { ls_create-devclass } already exists| ).
+          ENDIF.
           ls_create-ctext = mo_form_data->get( c_id-description ).
           ls_create-dlvunit = mo_form_data->get( c_id-software_component ).
           ls_create-parentcl = mo_form_data->get( c_id-super_package ).
