@@ -528,7 +528,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     DATA ls_feature LIKE LINE OF mt_features.
     DATA lv_index TYPE i.
     DATA lv_rendered TYPE abap_bool.
-
     DATA lo_timer TYPE REF TO zcl_abapgit_timer.
     DATA lt_my_transports TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
 
