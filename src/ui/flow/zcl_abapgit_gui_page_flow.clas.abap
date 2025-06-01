@@ -100,6 +100,182 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
 
+  METHOD call_consolidate.
+
+    DATA lt_repos        TYPE zcl_abapgit_flow_logic=>ty_repos_tt.
+    DATA li_repo         LIKE LINE OF lt_repos.
+
+    lt_repos = zcl_abapgit_flow_logic=>list_repos( abap_false ).
+    IF lines( lt_repos ) <> 1.
+      MESSAGE 'Todo, repository selection popup' TYPE 'S'.
+    ELSE.
+      READ TABLE lt_repos INTO li_repo INDEX 1.
+      ASSERT sy-subrc = 0.
+      rs_handled-page  = zcl_abapgit_gui_page_flowcons=>create( li_repo ).
+      rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD call_diff.
+
+    DATA lv_key         TYPE zif_abapgit_persistence=>ty_value.
+    DATA lv_remote_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA ls_file        TYPE zif_abapgit_git_definitions=>ty_file.
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
+    DATA li_repo        TYPE REF TO zif_abapgit_repo.
+    DATA lv_blob        TYPE xstring.
+    DATA ls_local       TYPE zif_abapgit_git_definitions=>ty_file.
+    DATA ls_remote      TYPE zif_abapgit_git_definitions=>ty_file.
+    DATA lt_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lo_filter      TYPE REF TO zcl_abapgit_object_filter_obj.
+    DATA lt_files_item  TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA ls_file_item   LIKE LINE OF lt_files_item.
+    DATA ls_item        TYPE zif_abapgit_definitions=>ty_item.
+
+    FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
+
+    lv_key = ii_event->query( )->get( 'KEY' ).
+    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+    li_repo ?= li_repo_online.
+
+    lv_remote_sha1 = ii_event->query( )->get( 'REMOTE_SHA1' ).
+
+    ls_file-path     = ii_event->query( )->get( 'PATH' ).
+    ls_file-filename = ii_event->query( )->get( 'FILENAME' ). " unescape ?
+
+    zcl_abapgit_filename_logic=>file_to_object(
+      EXPORTING
+        iv_filename = ls_file-filename
+        iv_path     = ls_file-path
+        iv_devclass = li_repo->get_package( )
+        io_dot      = li_repo->get_dot_abapgit( )
+      IMPORTING
+        es_item     = ls_item ).
+
+    APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
+    <ls_filter>-object = ls_item-obj_type.
+    <ls_filter>-obj_name = ls_item-obj_name.
+    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+
+    lt_files_item = li_repo_online->zif_abapgit_repo~get_files_local_filtered( lo_filter ).
+    READ TABLE lt_files_item INTO ls_file_item WITH KEY file-path = ls_file-path
+      file-filename = ls_file-filename.
+
+    lv_blob = zcl_abapgit_git_factory=>get_v2_porcelain( )->fetch_blob(
+      iv_url  = li_repo_online->get_url( )
+      iv_sha1 = lv_remote_sha1 ).
+
+    ls_remote-path = ls_file-path.
+    ls_remote-filename = ls_file-filename.
+    ls_remote-sha1 = lv_remote_sha1.
+    ls_remote-data = lv_blob.
+
+    ls_local-path = ls_remote-path.
+    ls_local-filename = ls_remote-filename.
+    ls_local-sha1 = ls_file_item-file-sha1.
+    ls_local-data = ls_file_item-file-data.
+
+    rs_handled-page = zcl_abapgit_gui_page_diff_file=>create(
+      iv_obj_type = ls_item-obj_type
+      iv_obj_name = ls_item-obj_name
+      is_local    = ls_local
+      is_remote   = ls_remote ).
+
+    rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
+
+  ENDMETHOD.
+
+
+  METHOD call_pull.
+
+    DATA lv_key          TYPE zif_abapgit_persistence=>ty_value.
+    DATA lv_branch       TYPE string.
+    DATA lo_filter       TYPE REF TO lcl_filter.
+    DATA lt_filter       TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lv_index        TYPE i.
+    DATA li_repo_online  TYPE REF TO zif_abapgit_repo_online.
+    DATA ls_feature      LIKE LINE OF mt_features.
+
+    FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_feature-changed_objects.
+    FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
+
+    lv_key = ii_event->query( )->get( 'KEY' ).
+    lv_index = ii_event->query( )->get( 'INDEX' ).
+    lv_branch = ii_event->query( )->get( 'BRANCH' ).
+    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+
+    READ TABLE mt_features INTO ls_feature INDEX lv_index.
+    ASSERT sy-subrc = 0.
+
+    LOOP AT ls_feature-changed_objects ASSIGNING <ls_object>.
+      APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
+      <ls_filter>-object = <ls_object>-obj_type.
+      <ls_filter>-obj_name = <ls_object>-obj_name.
+    ENDLOOP.
+    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+
+    set_branch(
+          iv_branch = lv_branch
+          iv_key    = lv_key ).
+
+    rs_handled-page = zcl_abapgit_gui_page_pull=>create(
+          ii_repo       = li_repo_online
+          iv_trkorr     = ls_feature-transport-trkorr
+          ii_obj_filter = lo_filter ).
+
+    rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+
+    refresh( ).
+
+  ENDMETHOD.
+
+
+  METHOD call_stage.
+
+    DATA lv_key          TYPE zif_abapgit_persistence=>ty_value.
+    DATA lv_branch       TYPE string.
+    DATA lo_filter       TYPE REF TO lcl_filter.
+    DATA lt_filter       TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lv_index        TYPE i.
+    DATA li_repo_online  TYPE REF TO zif_abapgit_repo_online.
+    DATA ls_feature      LIKE LINE OF mt_features.
+
+    FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_feature-changed_objects.
+    FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
+
+    lv_key = ii_event->query( )->get( 'KEY' ).
+    lv_index = ii_event->query( )->get( 'INDEX' ).
+    lv_branch = ii_event->query( )->get( 'BRANCH' ).
+    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+
+    READ TABLE mt_features INTO ls_feature INDEX lv_index.
+    ASSERT sy-subrc = 0.
+
+    LOOP AT ls_feature-changed_objects ASSIGNING <ls_object>.
+      APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
+      <ls_filter>-object = <ls_object>-obj_type.
+      <ls_filter>-obj_name = <ls_object>-obj_name.
+    ENDLOOP.
+    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+
+    set_branch(
+      iv_branch = lv_branch
+      iv_key    = lv_key ).
+
+    rs_handled-page = zcl_abapgit_gui_page_stage=>create(
+      ii_force_refresh = abap_false
+      ii_repo_online   = li_repo_online
+      ii_obj_filter    = lo_filter ).
+
+    rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
+
+    refresh( ).
+
+  ENDMETHOD.
+
+
   METHOD constructor.
     super->constructor( ).
 
@@ -237,178 +413,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD call_diff.
-
-    DATA lv_key         TYPE zif_abapgit_persistence=>ty_value.
-    DATA lv_remote_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
-    DATA ls_file        TYPE zif_abapgit_git_definitions=>ty_file.
-    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
-    DATA li_repo        TYPE REF TO zif_abapgit_repo.
-    DATA lv_blob        TYPE xstring.
-    DATA ls_local       TYPE zif_abapgit_git_definitions=>ty_file.
-    DATA ls_remote      TYPE zif_abapgit_git_definitions=>ty_file.
-    DATA lt_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lo_filter      TYPE REF TO zcl_abapgit_object_filter_obj.
-    DATA lt_files_item  TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    DATA ls_file_item   LIKE LINE OF lt_files_item.
-    DATA ls_item        TYPE zif_abapgit_definitions=>ty_item.
-
-    FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
-
-    lv_key = ii_event->query( )->get( 'KEY' ).
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-    li_repo ?= li_repo_online.
-
-    lv_remote_sha1 = ii_event->query( )->get( 'REMOTE_SHA1' ).
-
-    ls_file-path     = ii_event->query( )->get( 'PATH' ).
-    ls_file-filename = ii_event->query( )->get( 'FILENAME' ). " unescape ?
-
-    zcl_abapgit_filename_logic=>file_to_object(
-      EXPORTING
-        iv_filename = ls_file-filename
-        iv_path     = ls_file-path
-        iv_devclass = li_repo->get_package( )
-        io_dot      = li_repo->get_dot_abapgit( )
-      IMPORTING
-        es_item     = ls_item ).
-
-    APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
-    <ls_filter>-object = ls_item-obj_type.
-    <ls_filter>-obj_name = ls_item-obj_name.
-    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
-
-    lt_files_item = li_repo_online->zif_abapgit_repo~get_files_local_filtered( lo_filter ).
-    READ TABLE lt_files_item INTO ls_file_item WITH KEY file-path = ls_file-path
-      file-filename = ls_file-filename.
-
-    lv_blob = zcl_abapgit_git_factory=>get_v2_porcelain( )->fetch_blob(
-      iv_url  = li_repo_online->get_url( )
-      iv_sha1 = lv_remote_sha1 ).
-
-    ls_remote-path = ls_file-path.
-    ls_remote-filename = ls_file-filename.
-    ls_remote-sha1 = lv_remote_sha1.
-    ls_remote-data = lv_blob.
-
-    ls_local-path = ls_remote-path.
-    ls_local-filename = ls_remote-filename.
-    ls_local-sha1 = ls_file_item-file-sha1.
-    ls_local-data = ls_file_item-file-data.
-
-    rs_handled-page = zcl_abapgit_gui_page_diff_file=>create(
-      iv_obj_type = ls_item-obj_type
-      iv_obj_name = ls_item-obj_name
-      is_local    = ls_local
-      is_remote   = ls_remote ).
-
-    rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
-
-  ENDMETHOD.
-
-  METHOD call_stage.
-
-    DATA lv_key          TYPE zif_abapgit_persistence=>ty_value.
-    DATA lv_branch       TYPE string.
-    DATA lo_filter       TYPE REF TO lcl_filter.
-    DATA lt_filter       TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lv_index        TYPE i.
-    DATA li_repo_online  TYPE REF TO zif_abapgit_repo_online.
-    DATA ls_feature      LIKE LINE OF mt_features.
-
-    FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_feature-changed_objects.
-    FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
-
-    lv_key = ii_event->query( )->get( 'KEY' ).
-    lv_index = ii_event->query( )->get( 'INDEX' ).
-    lv_branch = ii_event->query( )->get( 'BRANCH' ).
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-
-    READ TABLE mt_features INTO ls_feature INDEX lv_index.
-    ASSERT sy-subrc = 0.
-
-    LOOP AT ls_feature-changed_objects ASSIGNING <ls_object>.
-      APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
-      <ls_filter>-object = <ls_object>-obj_type.
-      <ls_filter>-obj_name = <ls_object>-obj_name.
-    ENDLOOP.
-    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
-
-    set_branch(
-      iv_branch = lv_branch
-      iv_key    = lv_key ).
-
-    rs_handled-page = zcl_abapgit_gui_page_stage=>create(
-      ii_force_refresh = abap_false
-      ii_repo_online   = li_repo_online
-      ii_obj_filter    = lo_filter ).
-
-    rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
-
-    refresh( ).
-
-  ENDMETHOD.
-
-  METHOD call_pull.
-
-    DATA lv_key          TYPE zif_abapgit_persistence=>ty_value.
-    DATA lv_branch       TYPE string.
-    DATA lo_filter       TYPE REF TO lcl_filter.
-    DATA lt_filter       TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lv_index        TYPE i.
-    DATA li_repo_online  TYPE REF TO zif_abapgit_repo_online.
-    DATA ls_feature      LIKE LINE OF mt_features.
-
-    FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_feature-changed_objects.
-    FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
-
-    lv_key = ii_event->query( )->get( 'KEY' ).
-    lv_index = ii_event->query( )->get( 'INDEX' ).
-    lv_branch = ii_event->query( )->get( 'BRANCH' ).
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-
-    READ TABLE mt_features INTO ls_feature INDEX lv_index.
-    ASSERT sy-subrc = 0.
-
-    LOOP AT ls_feature-changed_objects ASSIGNING <ls_object>.
-      APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
-      <ls_filter>-object = <ls_object>-obj_type.
-      <ls_filter>-obj_name = <ls_object>-obj_name.
-    ENDLOOP.
-    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
-
-    set_branch(
-          iv_branch = lv_branch
-          iv_key    = lv_key ).
-
-    rs_handled-page = zcl_abapgit_gui_page_pull=>create(
-          ii_repo       = li_repo_online
-          iv_trkorr     = ls_feature-transport-trkorr
-          ii_obj_filter = lo_filter ).
-
-    rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-
-    refresh( ).
-
-  ENDMETHOD.
-
-  METHOD call_consolidate.
-
-    DATA lt_repos        TYPE zcl_abapgit_flow_logic=>ty_repos_tt.
-    DATA li_repo         LIKE LINE OF lt_repos.
-
-    lt_repos = zcl_abapgit_flow_logic=>list_repos( abap_false ).
-    IF lines( lt_repos ) <> 1.
-      MESSAGE 'Todo, repository selection popup' TYPE 'S'.
-    ELSE.
-      READ TABLE lt_repos INTO li_repo INDEX 1.
-      ASSERT sy-subrc = 0.
-      rs_handled-page  = zcl_abapgit_gui_page_flowcons=>create( li_repo ).
-      rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-    ENDIF.
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA ls_event_result TYPE zif_abapgit_flow_exit=>ty_event_result.
@@ -475,11 +479,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA ls_feature       LIKE LINE OF mt_features.
-    DATA lv_index         TYPE i.
-    DATA lv_rendered      TYPE abap_bool.
-    DATA lv_icon_class    TYPE string.
-    DATA lo_timer         TYPE REF TO zcl_abapgit_timer.
+    DATA ls_feature LIKE LINE OF mt_features.
+    DATA lv_index TYPE i.
+    DATA lv_rendered TYPE abap_bool.
+    DATA lv_icon_class TYPE string.
+    DATA lo_timer TYPE REF TO zcl_abapgit_timer.
     DATA lt_my_transports TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
 
 
@@ -545,7 +549,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       ENDIF.
 
       IF ms_user_settings-only_my_transports = abap_true AND ls_feature-transport-trkorr IS NOT INITIAL.
-        READ TABLE lt_my_transports WITH TABLE KEY ls_feature-transport-trkorr TRANSPORTING NO FIELDS.
+        READ TABLE lt_my_transports WITH KEY table_line = ls_feature-transport-trkorr TRANSPORTING NO FIELDS.
         IF sy-subrc <> 0.
           CONTINUE.
         ENDIF.
