@@ -349,19 +349,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF_BASE IMPLEMENTATION.
 
   METHOD add_menu_begin.
 
-    io_menu->add(
+    IF mi_repo IS NOT INITIAL.
+      io_menu->add(
         iv_txt   = c_action_texts-refresh_local
         iv_typ   = zif_abapgit_html=>c_action_type-sapevent
         iv_act   = c_actions-refresh_local
         iv_id    = c_actions-refresh_local
         iv_title = c_action_titles-refresh_local ).
 
-    io_menu->add(
+      io_menu->add(
         iv_txt   = c_action_texts-refresh_all
         iv_typ   = zif_abapgit_html=>c_action_type-sapevent
         iv_act   = c_actions-refresh_all
         iv_id    = c_actions-refresh_all
         iv_title = c_action_titles-refresh_all ).
+    ENDIF.
 
   ENDMETHOD.
 
