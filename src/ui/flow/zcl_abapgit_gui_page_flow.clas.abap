@@ -264,10 +264,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
     li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
 
-    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
     APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
     <ls_filter>-object = ls_object-obj_type.
     <ls_filter>-obj_name = ls_object-obj_name.
+    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+
     lt_files_item = li_repo_online->zif_abapgit_repo~get_files_local_filtered( lo_filter ).
     READ TABLE lt_files_item INTO ls_file_item WITH KEY file-path = ls_file-path
       file-filename = ls_file-filename.
