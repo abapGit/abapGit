@@ -1401,9 +1401,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF_BASE IMPLEMENTATION.
       ri_html->add( `<div class="repo">` ).
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mi_repo ) ).
       ri_html->add( `</div>` ).
-
-      ri_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
     ENDIF.
+
+    ri_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
 
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
     LOOP AT mt_diff_files INTO ls_diff_file.
