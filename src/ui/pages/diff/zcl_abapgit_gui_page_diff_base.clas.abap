@@ -246,7 +246,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF_BASE IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -604,14 +604,16 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
     ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
 
-    calculate_diff(
-        is_file   = is_file
-        is_object = is_object
-        it_files  = it_files ).
+    IF mi_repo IS NOT INITIAL.
+      calculate_diff(
+          is_file   = is_file
+          is_object = is_object
+          it_files  = it_files ).
 
-    IF lines( mt_diff_files ) = 0.
-      zcx_abapgit_exception=>raise(
-        'There are no differences to show. The local state completely matches the remote repository.' ).
+      IF lines( mt_diff_files ) = 0.
+        zcx_abapgit_exception=>raise(
+          'There are no differences to show. The local state completely matches the remote repository.' ).
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -1385,17 +1387,20 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
 
     DATA: ls_diff_file LIKE LINE OF mt_diff_files,
-          li_progress  TYPE REF TO zif_abapgit_progress.
+          li_progress  TYPE REF TO  zif_abapgit_progress.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     li_progress = zcl_abapgit_progress=>get_instance( lines( mt_diff_files ) ).
 
-    ri_html->add( `<div class="repo">` ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mi_repo ) ).
-    ri_html->add( `</div>` ).
+    IF mi_repo IS NOT INITIAL.
+      ri_html->add( `<div class="repo">` ).
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mi_repo ) ).
+      ri_html->add( `</div>` ).
 
-    ri_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
+      ri_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
+    ENDIF.
+
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
     LOOP AT mt_diff_files INTO ls_diff_file.
       li_progress->show(
