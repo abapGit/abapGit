@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_gui_page_file DEFINITION
+CLASS zcl_abapgit_gui_page_diff_file DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_page_diff_base
   CREATE PUBLIC.
@@ -22,11 +22,11 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_file IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_diff_file IMPLEMENTATION.
 
   METHOD create.
 
-    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_patch.
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_diff_base.
 
     ASSERT is_local IS NOT INITIAL.
     ASSERT is_remote IS NOT INITIAL.

@@ -287,7 +287,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ls_local-sha1 = ls_file_item-file-sha1.
     ls_local-data = ls_file_item-file-data.
 
-    rs_handled-page = zcl_abapgit_gui_page_file=>create(
+    rs_handled-page = zcl_abapgit_gui_page_diff_file=>create(
       is_local  = ls_local
       is_remote = ls_remote ).
 
