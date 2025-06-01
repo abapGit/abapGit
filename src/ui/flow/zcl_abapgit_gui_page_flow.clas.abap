@@ -93,6 +93,12 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
       RAISING
         zcx_abapgit_exception.
+
+    METHODS render_user_settings
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -476,29 +482,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD render_user_settings.
 
-  METHOD zif_abapgit_gui_renderable~render.
-
-    DATA ls_feature LIKE LINE OF mt_features.
-    DATA lv_index TYPE i.
-    DATA lv_rendered TYPE abap_bool.
     DATA lv_icon_class TYPE string.
-    DATA lo_timer TYPE REF TO zcl_abapgit_timer.
-    DATA lt_my_transports TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
 
-
-    lo_timer = zcl_abapgit_timer=>create( )->start( ).
-
-    register_handlers( ).
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    ri_html->add( '<div class="repo-overview">' ).
-
-    IF mt_features IS INITIAL.
-      mt_features = zcl_abapgit_flow_logic=>get( ).
-    ENDIF.
-
-
-
     ri_html->add( '<span class="toolbar-light pad-sides">' ).
 
     IF ms_user_settings-only_my_transports = abap_true.
@@ -532,6 +520,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       iv_act   = |{ c_action-hide_matching_files }| ) ).
 
     ri_html->add( '</span>' ).
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_gui_renderable~render.
+
+    DATA ls_feature LIKE LINE OF mt_features.
+    DATA lv_index TYPE i.
+    DATA lv_rendered TYPE abap_bool.
+
+    DATA lo_timer TYPE REF TO zcl_abapgit_timer.
+    DATA lt_my_transports TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
+
+
+    lo_timer = zcl_abapgit_timer=>create( )->start( ).
+
+    register_handlers( ).
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( '<div class="repo-overview">' ).
+
+    IF mt_features IS INITIAL.
+      mt_features = zcl_abapgit_flow_logic=>get( ).
+    ENDIF.
+
+    ri_html->add( render_user_settings( ) ).
 
     ri_html->add( '<br>' ).
     ri_html->add( '<br>' ).
