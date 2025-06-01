@@ -153,7 +153,7 @@ CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
         IF mo_validation_log->is_empty( ) = abap_true.
           ls_create-devclass = mo_form_data->get( c_id-package ).
           ls_create-ctext = mo_form_data->get( c_id-description ).
-          ls_create-component = mo_form_data->get( c_id-software_component ).
+          ls_create-dlvunit = mo_form_data->get( c_id-software_component ).
           ls_create-parentcl = mo_form_data->get( c_id-super_package ).
           ls_create-pdevclass = mo_form_data->get( c_id-transport_layer ).
           ls_create-as4user = sy-uname.
