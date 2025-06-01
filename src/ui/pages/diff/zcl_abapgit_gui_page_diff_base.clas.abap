@@ -1225,10 +1225,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF_BASE IMPLEMENTATION.
 
     ri_html->add( 'addMarginBottom();' ).
 
-    ri_html->add( 'var gGoJumpPalette = new CommandPalette(enumerateJumpAllFiles, {' ).
-    ri_html->add( '  toggleKey: "F2",' ).
-    ri_html->add( '  hotkeyDescription: "Jump to File ..."' ).
-    ri_html->add( '});' ).
+    IF mi_repo IS NOT INITIAL.
+      ri_html->add( 'var gGoJumpPalette = new CommandPalette(enumerateJumpAllFiles, {' ).
+      ri_html->add( '  toggleKey: "F2",' ).
+      ri_html->add( '  hotkeyDescription: "Jump to File ..."' ).
+      ri_html->add( '});' ).
+    ENDIF.
 
     " Feature for selecting ABAP code by column and copy to clipboard
     ri_html->add( 'var columnSelection = new DiffColumnSelection();' ).
