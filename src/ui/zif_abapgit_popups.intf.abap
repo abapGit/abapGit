@@ -87,14 +87,6 @@ INTERFACE zif_abapgit_popups
       VALUE(rv_answer)          TYPE ty_char1
     RAISING
       zcx_abapgit_exception .
-  METHODS popup_to_create_package
-    IMPORTING
-      is_package_data  TYPE zif_abapgit_sap_package=>ty_create OPTIONAL
-    EXPORTING
-      !es_package_data TYPE zif_abapgit_sap_package=>ty_create
-      !ev_create       TYPE abap_bool
-    RAISING
-      zcx_abapgit_exception .
   METHODS popup_to_create_transp_branch
     IMPORTING
       !iv_trkorr                 TYPE trkorr
