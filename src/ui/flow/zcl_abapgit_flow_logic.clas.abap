@@ -196,6 +196,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         ls_changed_file-filename   = <ls_local>-file-filename.
         ls_changed_file-local_sha1 = <ls_local>-file-sha1.
 
+* todo: this looks like a bug?
         READ TABLE it_main_expanded ASSIGNING <ls_main_expanded>
           WITH TABLE KEY path_name COMPONENTS
           path = ls_changed_file-path
