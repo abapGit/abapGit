@@ -87,6 +87,8 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
 
 
+    CLEAR et_main_expanded.
+
     li_repo = ii_repo_online.
 
     LOOP AT it_branches INTO ls_branch WHERE is_head = abap_false.
@@ -126,17 +128,22 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
 
   METHOD map_files_to_objects.
 
-    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA ls_item    TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_package TYPE devclass.
+    DATA lo_dot     TYPE REF TO zcl_abapgit_dot_abapgit.
 
     FIELD-SYMBOLS <ls_file> LIKE LINE OF it_files.
+
+    lv_package = ii_repo->get_package( ).
+    lo_dot = ii_repo->get_dot_abapgit( ).
 
     LOOP AT it_files ASSIGNING <ls_file>.
       zcl_abapgit_filename_logic=>file_to_object(
         EXPORTING
           iv_filename = <ls_file>-filename
           iv_path     = <ls_file>-path
-          iv_devclass = ii_repo->get_package( )
-          io_dot      = ii_repo->get_dot_abapgit( )
+          iv_devclass = lv_package
+          io_dot      = lo_dot
         IMPORTING
           es_item     = ls_item ).
       INSERT ls_item INTO TABLE rt_changed_objects.
