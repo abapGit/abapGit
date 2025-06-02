@@ -607,29 +607,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_popups~popup_to_create_package.
-
-    DATA ls_data TYPE scompkdtln.
-
-    MOVE-CORRESPONDING is_package_data TO ls_data.
-
-    IF zcl_abapgit_factory=>get_function_module( )->function_exists( 'PB_POPUP_PACKAGE_CREATE' ) = abap_false.
-* looks like the function module used does not exist on all
-* versions since 702, so show an error
-      zcx_abapgit_exception=>raise( 'Your system does not support automatic creation of packages.' &&
-        'Please, create the package manually.' ).
-    ENDIF.
-
-    CALL FUNCTION 'PB_POPUP_PACKAGE_CREATE'
-      CHANGING
-        p_object_data    = ls_data
-      EXCEPTIONS
-        action_cancelled = 1.
-    ev_create = boolc( sy-subrc = 0 ).
-    MOVE-CORRESPONDING ls_data TO es_package_data.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_popups~popup_to_create_transp_branch.
     DATA: lt_fields             TYPE TABLE OF sval,
           lv_transports_as_text TYPE string,

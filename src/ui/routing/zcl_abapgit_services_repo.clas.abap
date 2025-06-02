@@ -70,13 +70,6 @@ CLASS zcl_abapgit_services_repo DEFINITION
         VALUE(ri_log) TYPE REF TO zif_abapgit_log
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS create_package
-      IMPORTING
-        !iv_prefill_package TYPE devclass OPTIONAL
-      RETURNING
-        VALUE(rv_package)   TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS delete_unnecessary_objects
       IMPORTING
         !ii_repo   TYPE REF TO zif_abapgit_repo
@@ -121,11 +114,6 @@ CLASS zcl_abapgit_services_repo DEFINITION
     CLASS-METHODS check_package
       IMPORTING
         !is_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS raise_error_if_package_exists
-      IMPORTING
-        !iv_devclass TYPE devclass
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS check_for_restart
@@ -262,34 +250,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
           iv_text     = |Package { iv_package } does not exist and there's no package included in the repository|
           iv_longtext = 'Either select an existing package, create a new one, or add a package to the repository' ).
       ENDIF.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD create_package.
-
-    DATA ls_package_data TYPE zif_abapgit_sap_package=>ty_create.
-    DATA lv_create       TYPE abap_bool.
-    DATA li_popup        TYPE REF TO zif_abapgit_popups.
-
-    ls_package_data-devclass = condense( to_upper( iv_prefill_package ) ).
-
-    raise_error_if_package_exists( ls_package_data-devclass ).
-
-    li_popup = zcl_abapgit_ui_factory=>get_popups( ).
-
-    li_popup->popup_to_create_package(
-      EXPORTING
-        is_package_data = ls_package_data
-      IMPORTING
-        es_package_data = ls_package_data
-        ev_create       = lv_create ).
-
-    IF lv_create = abap_true.
-      zcl_abapgit_factory=>get_sap_package( ls_package_data-devclass )->create( ls_package_data ).
-      rv_package = ls_package_data-devclass.
-      COMMIT WORK AND WAIT.
     ENDIF.
 
   ENDMETHOD.
@@ -769,19 +729,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     lv_message = |Repository { lv_repo_name } successfully uninstalled from Package { lv_package }. |.
     MESSAGE lv_message TYPE 'S'.
-
-  ENDMETHOD.
-
-
-  METHOD raise_error_if_package_exists.
-
-    IF iv_devclass IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    IF zcl_abapgit_factory=>get_sap_package( iv_devclass )->exists( ) = abap_true.
-      zcx_abapgit_exception=>raise( |Package { iv_devclass } already exists| ).
-    ENDIF.
 
   ENDMETHOD.
 
