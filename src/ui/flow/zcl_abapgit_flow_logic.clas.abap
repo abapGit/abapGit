@@ -245,7 +245,9 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         ls_result-devclass = zcl_abapgit_factory=>get_tadir( )->read_single(
           iv_object   = ls_result-object
           iv_obj_name = lv_obj_name )-devclass.
-        INSERT ls_result INTO TABLE rt_transports.
+        IF ls_result-devclass IS NOT INITIAL.
+          INSERT ls_result INTO TABLE rt_transports.
+        ENDIF.
       ENDLOOP.
 
     ENDLOOP.
