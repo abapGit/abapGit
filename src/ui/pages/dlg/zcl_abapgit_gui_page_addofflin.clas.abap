@@ -241,6 +241,9 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_event-create_package.
         lv_package = mo_form_data->get( c_id-package ).
+        IF zcl_abapgit_factory=>get_sap_package( lv_package )->exists( ) = abap_true.
+          zcx_abapgit_exception=>raise( |Package { lv_package } already exists| ).
+        ENDIF.
         rs_handled-page  = zcl_abapgit_gui_page_cpackage=>create( lv_package ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
