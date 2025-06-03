@@ -5,19 +5,23 @@ ENDCLASS.
 
 CLASS lcl_branch_list IMPLEMENTATION.
   METHOD zif_abapgit_git_branch_list~find_by_name.
-    RETURN. " todo, implement method
+    ASSERT 1 = 2.
   ENDMETHOD.
   METHOD zif_abapgit_git_branch_list~get_head_symref.
-    RETURN. " todo, implement method
+    ASSERT 1 = 2.
   ENDMETHOD.
   METHOD zif_abapgit_git_branch_list~get_all.
-    RETURN. " todo, implement method
+    DATA ls_branch LIKE LINE OF rt_branches.
+
+    ls_branch-display_name = zif_abapgit_flow_logic=>c_main.
+    ls_branch-sha1 = '11111111111111111111111111111111'.
+    INSERT ls_branch INTO TABLE rt_branches.
   ENDMETHOD.
   METHOD zif_abapgit_git_branch_list~get_branches_only.
-    RETURN. " todo, implement method
+    ASSERT 1 = 2.
   ENDMETHOD.
   METHOD zif_abapgit_git_branch_list~get_tags_only.
-    RETURN. " todo, implement method
+    ASSERT 1 = 2.
   ENDMETHOD.
 ENDCLASS.
 
@@ -134,7 +138,10 @@ CLASS lcl_repo IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
   METHOD zif_abapgit_repo~get_dot_abapgit.
-    RETURN.
+    DATA ls_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
+    CREATE OBJECT ro_dot_abapgit
+      EXPORTING
+        is_data = ls_data.
   ENDMETHOD.
   METHOD zif_abapgit_repo~set_dot_abapgit.
     RETURN.
@@ -295,6 +302,7 @@ CLASS ltcl_flow_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT 
   PUBLIC SECTION.
     METHODS setup.
     METHODS teardown.
+    METHODS nothing FOR TESTING RAISING cx_static_check.
     METHODS only_transport FOR TESTING RAISING cx_static_check.
     METHODS only_branch FOR TESTING RAISING cx_static_check.
     METHODS branch_and_transport FOR TESTING RAISING cx_static_check.
@@ -335,15 +343,19 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     zcl_abapgit_git_injector=>set_v2_porcelain( ).
   ENDMETHOD.
 
-  METHOD only_transport.
+  METHOD nothing.
 
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
 
     lt_features = zcl_abapgit_flow_logic=>get( ).
-    cl_abap_unit_assert=>assert_not_initial( lt_features ).
+    cl_abap_unit_assert=>assert_initial( lt_features ).
 
 * todo
 
+  ENDMETHOD.
+
+  METHOD only_transport.
+    RETURN. " todo, implement method
   ENDMETHOD.
 
   METHOD only_branch.
