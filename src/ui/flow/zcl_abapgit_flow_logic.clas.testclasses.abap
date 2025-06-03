@@ -1,3 +1,54 @@
+CLASS lcl_sap_package DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_sap_package.
+
+ENDCLASS.
+
+CLASS lcl_sap_package IMPLEMENTATION.
+  METHOD zif_abapgit_sap_package~get.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_sap_package~validate_name.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_sap_package~create.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_sap_package~create_local.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_sap_package~list_subpackages.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_sap_package~list_superpackages.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_sap_package~read_parent.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_sap_package~read_description.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_sap_package~read_responsible.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_sap_package~create_child.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_sap_package~exists.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req.
+    rv_are_changes_rec_in_tr_req = abap_true.
+  ENDMETHOD.
+  METHOD zif_abapgit_sap_package~get_transport_type.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_sap_package~get_default_transport_layer.
+    RETURN.
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS lcl_repo DEFINITION FINAL.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_repo.
@@ -205,13 +256,19 @@ ENDCLASS.
 CLASS ltcl_flow_logic IMPLEMENTATION.
 
   METHOD setup.
-    DATA lo_repo TYPE REF TO lcl_repo.
-    DATA li_repo_srv TYPE REF TO zif_abapgit_repo_srv.
+    DATA lo_repo        TYPE REF TO lcl_repo.
+    DATA lo_repo_srv    TYPE REF TO lcl_repo_srv.
+    DATA lo_sap_package TYPE REF TO lcl_sap_package.
 
-    CREATE OBJECT lo_repo TYPE lcl_repo.
-    CREATE OBJECT li_repo_srv TYPE lcl_repo_srv EXPORTING io_repo = lo_repo.
+    CREATE OBJECT lo_repo.
+    CREATE OBJECT lo_sap_package.
+    CREATE OBJECT lo_repo_srv EXPORTING io_repo = lo_repo.
 
-    zcl_abapgit_repo_srv=>inject_instance( li_repo_srv ).
+    zcl_abapgit_repo_srv=>inject_instance( lo_repo_srv ).
+
+    zcl_abapgit_injector=>set_sap_package(
+      iv_package     = lcl_repo=>c_package
+      ii_sap_package = lo_sap_package ).
   ENDMETHOD.
 
   METHOD teardown.
