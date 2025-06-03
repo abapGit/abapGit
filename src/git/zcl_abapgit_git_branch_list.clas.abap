@@ -3,36 +3,14 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES zif_abapgit_git_branch_list.
+
     METHODS constructor
       IMPORTING
         !iv_data TYPE string
       RAISING
         zcx_abapgit_exception .
-    METHODS find_by_name
-      IMPORTING
-        !iv_branch_name  TYPE clike
-      RETURNING
-        VALUE(rs_branch) TYPE zif_abapgit_git_definitions=>ty_git_branch
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_head_symref
-      RETURNING
-        VALUE(rv_head_symref) TYPE string .
-    METHODS get_all
-      RETURNING
-        VALUE(rt_branches) TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_branches_only
-      RETURNING
-        VALUE(rt_branches) TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_tags_only             " For potential future use
-      RETURNING
-        VALUE(rt_tags) TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
-      RAISING
-        zcx_abapgit_exception .
+
     CLASS-METHODS get_display_name
       IMPORTING
         !iv_branch_name        TYPE clike
@@ -121,7 +99,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD find_by_name.
+  METHOD zif_abapgit_git_branch_list~find_by_name.
 
     IF iv_branch_name IS INITIAL.
       zcx_abapgit_exception=>raise( 'Branch name empty' ).
@@ -162,14 +140,14 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_all.
+  METHOD zif_abapgit_git_branch_list~get_all.
 
     rt_branches = mt_branches.
 
   ENDMETHOD.
 
 
-  METHOD get_branches_only.
+  METHOD zif_abapgit_git_branch_list~get_branches_only.
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF mt_branches.
 
     LOOP AT mt_branches ASSIGNING <ls_branch>.
@@ -210,12 +188,12 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_head_symref.
+  METHOD zif_abapgit_git_branch_list~get_head_symref.
     rv_head_symref = mv_head_symref.
   ENDMETHOD.
 
 
-  METHOD get_tags_only.
+  METHOD zif_abapgit_git_branch_list~get_tags_only.
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF mt_branches.
 
     LOOP AT mt_branches ASSIGNING <ls_branch>
