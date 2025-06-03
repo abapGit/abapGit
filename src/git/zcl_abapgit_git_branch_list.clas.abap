@@ -1,6 +1,6 @@
 CLASS zcl_abapgit_git_branch_list DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PUBLIC FINAL.
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_git_branch_list.

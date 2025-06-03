@@ -352,14 +352,14 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
   METHOD delete_annotated_tag.
 
     DATA:
-      lo_branches TYPE REF TO zcl_abapgit_git_branch_list,
+      li_branches TYPE REF TO zif_abapgit_git_branch_list,
       lv_tag      TYPE string,
       ls_tag      TYPE zif_abapgit_git_definitions=>ty_git_branch,
       lt_tags     TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
 
     " For annotated tags, find the correct commit
-    lo_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( iv_url ).
-    lt_tags     = lo_branches->get_tags_only( ).
+    li_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( iv_url ).
+    lt_tags     = li_branches->get_tags_only( ).
     lv_tag      = zcl_abapgit_git_tag=>remove_peel( is_tag-name ).
 
     READ TABLE lt_tags INTO ls_tag WITH KEY name_key COMPONENTS name = lv_tag.

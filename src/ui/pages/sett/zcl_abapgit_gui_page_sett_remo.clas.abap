@@ -879,7 +879,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     DATA:
       lx_error                 TYPE REF TO zcx_abapgit_exception,
-      lo_branch_list           TYPE REF TO zcl_abapgit_git_branch_list,
+      lo_branch_list           TYPE REF TO zif_abapgit_git_branch_list,
       lo_url                   TYPE REF TO zcl_abapgit_git_url,
       lv_offline               TYPE abap_bool,
       lv_head_type             TYPE ty_head_type,

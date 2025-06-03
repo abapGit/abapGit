@@ -167,7 +167,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   METHOD zif_abapgit_popups~branch_list_popup.
 
-    DATA: lo_branches    TYPE REF TO zcl_abapgit_git_branch_list,
+    DATA: lo_branches    TYPE REF TO zif_abapgit_git_branch_list,
           lt_branches    TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
           lv_answer      TYPE c LENGTH 1,
           lv_default     TYPE i,
@@ -814,7 +814,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   METHOD zif_abapgit_popups~tag_list_popup.
 
-    DATA: lo_branches  TYPE REF TO zcl_abapgit_git_branch_list,
+    DATA: lo_branches  TYPE REF TO zif_abapgit_git_branch_list,
           lt_tags      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
           ls_branch    TYPE zif_abapgit_git_definitions=>ty_git_branch,
           lv_answer    TYPE c LENGTH 1,
