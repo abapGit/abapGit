@@ -297,8 +297,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       ENDIF.
       ASSERT <ls_branch> IS ASSIGNED.
       rs_branch = lo_branches->find_by_name( <ls_branch>-name ).
-      lv_text = |Branch switched from { zcl_abapgit_git_branch_list=>get_display_name( iv_default_branch ) } to {
-        zcl_abapgit_git_branch_list=>get_display_name( rs_branch-name ) } |.
+      lv_text = |Branch switched from { zcl_abapgit_git_branch_utils=>get_display_name( iv_default_branch ) } to {
+        zcl_abapgit_git_branch_utils=>get_display_name( rs_branch-name ) } |.
       MESSAGE lv_text TYPE 'S'.
     ENDIF.
 
@@ -412,12 +412,12 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
         _popup_3_get_values(
           EXPORTING iv_popup_title = |Create branch from {
-            zcl_abapgit_git_branch_list=>get_display_name( iv_source_branch_name ) }|
+            zcl_abapgit_git_branch_utils=>get_display_name( iv_source_branch_name ) }|
           IMPORTING ev_value_1     = lv_name
           CHANGING  ct_fields      = lt_fields ).
 
-        ev_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
-              zcl_abapgit_git_branch_list=>normalize_branch_name( lv_name ) ).
+        ev_name = zcl_abapgit_git_branch_utils=>complete_heads_branch_name(
+              zcl_abapgit_git_branch_utils=>normalize_branch_name( lv_name ) ).
 
       CATCH zcx_abapgit_cancel.
         ev_cancel = abap_true.

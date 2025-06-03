@@ -158,7 +158,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
                            COMPONENTS name = iv_name
                            TRANSPORTING NO FIELDS.
     IF sy-subrc = 0.
-      lv_display_name = zcl_abapgit_git_branch_list=>get_display_name( iv_name ).
+      lv_display_name = zcl_abapgit_git_branch_utils=>get_display_name( iv_name ).
       zcx_abapgit_exception=>raise( |Branch '{ lv_display_name }' already exists| ).
     ENDIF.
 
@@ -189,7 +189,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
         CATCH zcx_abapgit_exception INTO lx_error.
           " branch does not exist, fallback to head
           lv_head = li_branch_list->get_head_symref( ).
-          lv_msg = |{ lx_error->get_text( ) }. Switched to { zcl_abapgit_git_branch_list=>get_display_name( lv_head ) }|.
+          lv_msg = |{ lx_error->get_text( ) }. Switched to { zcl_abapgit_git_branch_utils=>get_display_name( lv_head ) }|.
           MESSAGE lv_msg TYPE 'S'.
           select_branch( lv_head ).
       ENDTRY.

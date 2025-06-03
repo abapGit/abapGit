@@ -255,10 +255,10 @@ CLASS zcl_abapgit_merge IMPLEMENTATION.
     li_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( ms_merge-repo_online->get_url( ) ).
 
     ms_merge-source = li_branch_list->find_by_name(
-      zcl_abapgit_git_branch_list=>complete_heads_branch_name( mv_source_branch ) ).
+      zcl_abapgit_git_branch_utils=>complete_heads_branch_name( mv_source_branch ) ).
 
     ms_merge-target = li_branch_list->find_by_name(
-      zcl_abapgit_git_branch_list=>complete_heads_branch_name( mi_repo_online->get_selected_branch( ) ) ).
+      zcl_abapgit_git_branch_utils=>complete_heads_branch_name( mi_repo_online->get_selected_branch( ) ) ).
 
     APPEND ms_merge-source TO lt_upload.
     APPEND ms_merge-target TO lt_upload.
