@@ -1,7 +1,29 @@
+CLASS lcl_gitv2 DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_gitv2_porcelain.
+ENDCLASS.
+
+CLASS lcl_gitv2 IMPLEMENTATION.
+  METHOD zif_abapgit_gitv2_porcelain~list_branches.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_gitv2_porcelain~list_no_blobs.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_gitv2_porcelain~list_no_blobs_multi.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_gitv2_porcelain~commits_last_year.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_gitv2_porcelain~fetch_blob.
+    RETURN.
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS lcl_sap_package DEFINITION FINAL.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_sap_package.
-
 ENDCLASS.
 
 CLASS lcl_sap_package IMPLEMENTATION.
@@ -259,9 +281,11 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     DATA lo_repo        TYPE REF TO lcl_repo.
     DATA lo_repo_srv    TYPE REF TO lcl_repo_srv.
     DATA lo_sap_package TYPE REF TO lcl_sap_package.
+    DATA lo_gitv2       TYPE REF TO lcl_gitv2.
 
     CREATE OBJECT lo_repo.
     CREATE OBJECT lo_sap_package.
+    CREATE OBJECT lo_gitv2.
     CREATE OBJECT lo_repo_srv EXPORTING io_repo = lo_repo.
 
     zcl_abapgit_repo_srv=>inject_instance( lo_repo_srv ).
@@ -269,12 +293,21 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     zcl_abapgit_injector=>set_sap_package(
       iv_package     = lcl_repo=>c_package
       ii_sap_package = lo_sap_package ).
+
+    zcl_abapgit_git_injector=>set_v2_porcelain( lo_gitv2 ).
   ENDMETHOD.
 
   METHOD teardown.
     DATA li_repo_srv TYPE REF TO zif_abapgit_repo_srv.
-* empty value, clear the injected instance
+    DATA lo_sap_package TYPE REF TO zif_abapgit_sap_package.
+
     zcl_abapgit_repo_srv=>inject_instance( li_repo_srv ).
+
+    zcl_abapgit_injector=>set_sap_package(
+      iv_package     = lcl_repo=>c_package
+      ii_sap_package = lo_sap_package ).
+
+    zcl_abapgit_git_injector=>set_v2_porcelain( ).
   ENDMETHOD.
 
   METHOD test1.
