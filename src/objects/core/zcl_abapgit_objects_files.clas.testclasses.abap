@@ -32,6 +32,7 @@ CLASS ltcl_objects_files DEFINITION FOR TESTING
     METHODS is_json_metadata FOR TESTING.
     METHODS is_not_json_metadata FOR TESTING.
     METHODS read_i18n_files FOR TESTING RAISING cx_static_check.
+    METHODS read_i18n_files_neg FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 
 CLASS ltcl_objects_files IMPLEMENTATION.
@@ -52,9 +53,7 @@ CLASS ltcl_objects_files IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
     <ls_files>-filename = 'zlf.prog.i18n.de.po'.
     APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
-    <ls_files>-filename = 'zlf.prog.i18n.es.po'.
-    APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
-    <ls_files>-filename = 'zlf.prog.i18n.cs.other'.
+    <ls_files>-filename = 'zlf.prog.i18n.es.properties'.
 
     " object type and name are upper case
     ls_item-obj_type = 'PROG'.
@@ -206,13 +205,40 @@ CLASS ltcl_objects_files IMPLEMENTATION.
         WHEN 2.
           cl_abap_unit_assert=>assert_equals(
             act = li_f->lang( )
-            exp = 'es' ).
+            exp = 'ES' ). " Upper case in properties files
       ENDCASE.
     ENDLOOP.
 
     cl_abap_unit_assert=>assert_equals(
       act = lines( mo_cut->get_accessed_files( ) )
       exp = 2 ).
+
+  ENDMETHOD.
+
+  METHOD read_i18n_files_neg.
+
+    DATA lo_x TYPE REF TO zcx_abapgit_exception.
+    DATA lt_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
+    DATA ls_item  TYPE zif_abapgit_definitions=>ty_item.
+    FIELD-SYMBOLS <ls_files> LIKE LINE OF lt_files.
+
+    APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
+    <ls_files>-filename = 'zlf.prog.i18n.cs.other'.
+
+    ls_item-obj_type = 'PROG'.
+    ls_item-obj_name = 'ZLF'.
+
+    mo_cut = zcl_abapgit_objects_files=>new( ls_item ).
+    mo_cut->set_files( lt_files ).
+
+    TRY.
+        mo_cut->read_i18n_files( ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception INTO lo_x.
+        cl_abap_unit_assert=>assert_char_cp(
+          act = lo_x->get_text( )
+          exp = 'Unexpected translation file format*' ).
+    ENDTRY.
 
   ENDMETHOD.
 
