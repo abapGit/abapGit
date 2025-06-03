@@ -32,7 +32,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD list_branches.
 
-    DATA lo_list     TYPE REF TO zcl_abapgit_git_branch_list.
+    DATA lo_list     TYPE REF TO zif_abapgit_git_branch_list.
     DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
 
     lo_list = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(

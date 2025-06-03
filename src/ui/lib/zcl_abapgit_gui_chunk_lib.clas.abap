@@ -367,7 +367,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     IF iv_branch IS NOT INITIAL.
       lv_branch = iv_branch.
-      lv_text = zcl_abapgit_git_branch_list=>get_display_name( lv_branch ).
+      lv_text = zcl_abapgit_git_branch_utils=>get_display_name( lv_branch ).
     ELSEIF ii_repo_online IS BOUND.
       lv_selected_commit = ii_repo_online->get_selected_commit( ).
       IF lv_selected_commit IS NOT INITIAL.
@@ -376,13 +376,13 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
         lv_text = |({ lv_commit_short_sha }...)|.
       ELSE.
         lv_branch = ii_repo_online->get_selected_branch( ).
-        lv_text = zcl_abapgit_git_branch_list=>get_display_name( lv_branch ).
+        lv_text = zcl_abapgit_git_branch_utils=>get_display_name( lv_branch ).
       ENDIF.
     ELSE.
       zcx_abapgit_exception=>raise( 'Either iv_branch or ii_repo_online must be supplied' ).
     ENDIF.
 
-    CASE zcl_abapgit_git_branch_list=>get_type( lv_branch ).
+    CASE zcl_abapgit_git_branch_utils=>get_type( lv_branch ).
       WHEN zif_abapgit_git_definitions=>c_git_branch_type-branch.
         lv_class = 'branch branch_branch'.
         lv_icon  = 'code-branch/grey70'.

@@ -7,18 +7,10 @@ CLASS ltd_git_transport DEFINITION FINAL FOR TESTING.
 ENDCLASS.
 
 
-CLASS ltd_branch_list DEFINITION FINAL FOR TESTING INHERITING FROM zcl_abapgit_git_branch_list.
+CLASS ltd_branch_list DEFINITION FINAL FOR TESTING.
 
   PUBLIC SECTION.
-    METHODS:
-      constructor
-        IMPORTING
-          iv_data TYPE string
-        RAISING
-          zcx_abapgit_exception,
-
-      find_by_name REDEFINITION.
-
+    INTERFACES zif_abapgit_git_branch_list.
 ENDCLASS.
 
 
@@ -86,11 +78,7 @@ CLASS ltd_git_transport IMPLEMENTATION.
 
   METHOD zif_abapgit_git_transport~branches.
 
-    CONSTANTS: lc_dummy_data TYPE string VALUE '0000'.
-
-    CREATE OBJECT ro_branch_list TYPE ltd_branch_list
-      EXPORTING
-        iv_data = lc_dummy_data.
+    CREATE OBJECT ri_branch_list TYPE ltd_branch_list.
 
   ENDMETHOD.
 
@@ -99,14 +87,7 @@ ENDCLASS.
 
 CLASS ltd_branch_list IMPLEMENTATION.
 
-  METHOD constructor.
-
-    super->constructor( iv_data ).
-
-  ENDMETHOD.
-
-
-  METHOD find_by_name.
+  METHOD zif_abapgit_git_branch_list~find_by_name.
 
     IF iv_branch_name CS 'feature'
     OR iv_branch_name CS 'inv_tag'
@@ -115,6 +96,19 @@ CLASS ltd_branch_list IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_exception.
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_git_branch_list~get_head_symref.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_git_branch_list~get_all.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_git_branch_list~get_branches_only.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_git_branch_list~get_tags_only.
+    RETURN.
   ENDMETHOD.
 
 ENDCLASS.
