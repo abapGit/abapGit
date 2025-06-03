@@ -56,10 +56,10 @@ CLASS lcl_data IMPLEMENTATION.
   METHOD encode.
 * assume: for all current branches
 
-    DATA ls_file   LIKE LINE OF ls_branch-files.
+    DATA ls_file   TYPE ty_file.
     DATA lt_nodes  TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
     DATA ls_node   LIKE LINE OF lt_nodes.
-    DATA ls_object LIKE LINE OF rt_objects.
+    DATA ls_object TYPE zif_abapgit_definitions=>ty_object.
     DATA ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
 
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF mt_branches.
@@ -85,6 +85,7 @@ CLASS lcl_data IMPLEMENTATION.
 
       ls_commit-tree = ls_object-sha1.
       ls_commit-author = 'John Doe'.
+      ls_commit-committer = 'John Doe'.
       ls_commit-body = 'hello world'.
 
       ls_object-type = zif_abapgit_git_definitions=>c_type-commit.
