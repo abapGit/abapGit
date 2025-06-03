@@ -198,10 +198,12 @@ ENDCLASS.
 CLASS ltcl_flow_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
   PUBLIC SECTION.
     METHODS setup.
+    METHODS teardown.
     METHODS test1 FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 
 CLASS ltcl_flow_logic IMPLEMENTATION.
+
   METHOD setup.
     DATA lo_repo TYPE REF TO lcl_repo.
     DATA li_repo_srv TYPE REF TO zif_abapgit_repo_srv.
@@ -209,6 +211,12 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     CREATE OBJECT lo_repo TYPE lcl_repo.
     CREATE OBJECT li_repo_srv TYPE lcl_repo_srv EXPORTING io_repo = lo_repo.
 
+    zcl_abapgit_repo_srv=>inject_instance( li_repo_srv ).
+  ENDMETHOD.
+
+  METHOD teardown.
+    DATA li_repo_srv TYPE REF TO zif_abapgit_repo_srv.
+* empty value, clear the injected instance
     zcl_abapgit_repo_srv=>inject_instance( li_repo_srv ).
   ENDMETHOD.
 
