@@ -389,7 +389,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
       lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
         iv_url    = li_repo_online->get_url( )
-        iv_prefix = 'refs/heads/' )->get_all( ).
+        iv_prefix = zif_abapgit_git_definitions=>c_git_branch-heads_prefix )->get_all( ).
 
       CLEAR lt_features.
       LOOP AT lt_branches INTO ls_branch WHERE display_name <> zif_abapgit_flow_logic=>c_main.

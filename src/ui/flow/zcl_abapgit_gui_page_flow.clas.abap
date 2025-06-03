@@ -404,7 +404,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
 
     IF iv_branch IS NOT INITIAL.
-      lv_branch = 'refs/heads/' && iv_branch.
+      lv_branch = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && iv_branch.
       li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
       IF li_repo_online->get_selected_branch( ) <> lv_branch.
         li_repo_online->select_branch( lv_branch ).
