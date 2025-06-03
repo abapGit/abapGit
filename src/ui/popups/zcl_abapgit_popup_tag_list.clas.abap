@@ -49,7 +49,7 @@ CLASS zcl_abapgit_popup_tag_list IMPLEMENTATION.
 
   METHOD fetch_tag_list.
 
-    DATA lo_branches  TYPE REF TO zcl_abapgit_git_branch_list.
+    DATA lo_branches  TYPE REF TO zif_abapgit_git_branch_list.
 
     lo_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( mv_repo_url ).
     rt_tags     = lo_branches->get_tags_only( ).
