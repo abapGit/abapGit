@@ -133,7 +133,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_files IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
 
   METHOD add.
@@ -175,7 +175,7 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
     ls_file-path     = '/'.
     ls_file-filename = zcl_abapgit_filename_logic=>object_to_i18n_file(
       is_item  = ms_item
-      iv_lang  = ii_i18n_file->lang( )
+      iv_lang_suffix = ii_i18n_file->lang_suffix( )
       iv_ext   = ii_i18n_file->ext( ) ).
 
     APPEND ls_file TO mt_files.
@@ -403,6 +403,9 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
     FIELD-SYMBOLS <ls_file> LIKE LINE OF mt_files.
 
     LOOP AT mt_files ASSIGNING <ls_file>.
+
+      CHECK find( val = <ls_file>-filename
+                  sub = '.i18n.' ) > 0. " Only i18n files are relevant
 
       zcl_abapgit_filename_logic=>i18n_file_to_object(
         EXPORTING
