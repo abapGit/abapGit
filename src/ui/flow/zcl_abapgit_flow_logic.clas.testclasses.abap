@@ -3,10 +3,11 @@ CLASS lcl_data DEFINITION FINAL.
     METHODS constructor.
     METHODS list_no_blobs_multi
       RETURNING
-        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt.
+        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
+      RAISING
+        zcx_abapgit_exception.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_file,
-            path     TYPE string,
             filename TYPE string,
             data     TYPE xstring,
           END OF ty_file.
@@ -22,19 +23,35 @@ CLASS lcl_data IMPLEMENTATION.
 * assume: for all current branches
 
     DATA ls_branch LIKE LINE OF mt_branches.
-    DATA lt_paths TYPE SORTED TABLE OF string WITH UNIQUE KEY table_line.
     DATA ls_file LIKE LINE OF ls_branch-files.
+    DATA lt_nodes TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA ls_node LIKE LINE OF lt_nodes.
+    DATA ls_object LIKE LINE OF rt_objects.
+    DATA ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
+
 
     LOOP AT mt_branches INTO ls_branch.
-      CLEAR lt_paths.
-      LOOP AT ls_branch-files INTO ls_file.
-        INSERT ls_file-path INTO TABLE lt_paths.
-      ENDLOOP.
-      INSERT |/| INTO TABLE lt_paths.
 
-      LOOP AT lt_paths INTO lv_path.
-* todo
+      LOOP AT ls_branch-files INTO ls_file.
+        ls_node-chmod = zif_abapgit_git_definitions=>c_chmod-file.
+        ls_node-name = ls_file-filename.
+        ls_node-sha1 = zcl_abapgit_hash=>sha1_raw( ls_file-data ).
       ENDLOOP.
+
+      ls_object-type = zif_abapgit_git_definitions=>c_type-tree.
+      ls_object-data = zcl_abapgit_git_pack=>encode_tree( lt_nodes ).
+      ls_object-sha1 = zcl_abapgit_hash=>sha1_raw( ls_object-data ).
+      INSERT ls_object INTO TABLE rt_objects.
+
+      ls_commit-tree = ls_object-sha1.
+      ls_commit-author = 'John Doe'.
+      ls_commit-body = 'hello world'.
+
+      ls_object-type = zif_abapgit_git_definitions=>c_type-commit.
+      ls_object-data = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
+      ls_object-sha1 = zcl_abapgit_hash=>sha1_raw( ls_object-data ).
+      INSERT ls_object INTO TABLE rt_objects.
+
     ENDLOOP.
 
   ENDMETHOD.
@@ -45,7 +62,6 @@ CLASS lcl_data IMPLEMENTATION.
 
     ls_main-branch = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && zif_abapgit_flow_logic=>c_main.
 
-    ls_file-path = '/'.
     ls_file-filename = 'README.md'.
     ls_file-data = '001122333'.
     INSERT ls_file INTO TABLE ls_main-files.
