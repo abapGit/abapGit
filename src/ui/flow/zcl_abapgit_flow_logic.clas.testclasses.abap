@@ -331,10 +331,9 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD teardown.
-    DATA li_repo_srv TYPE REF TO zif_abapgit_repo_srv.
     DATA lo_sap_package TYPE REF TO zif_abapgit_sap_package.
 
-    zcl_abapgit_repo_srv=>inject_instance( li_repo_srv ).
+    zcl_abapgit_repo_srv=>inject_instance( ).
 
     zcl_abapgit_injector=>set_sap_package(
       iv_package     = lcl_repo=>c_package
