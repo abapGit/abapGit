@@ -2,6 +2,8 @@ CLASS lcl_repo DEFINITION FINAL.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_repo.
     INTERFACES zif_abapgit_repo_online.
+
+    CONSTANTS c_package TYPE string VALUE 'ZFLOWTESTTEST'.
 ENDCLASS.
 
 CLASS lcl_repo IMPLEMENTATION.
@@ -15,7 +17,7 @@ CLASS lcl_repo IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
   METHOD zif_abapgit_repo~get_package.
-    RETURN.
+    rv_package = c_package.
   ENDMETHOD.
   METHOD zif_abapgit_repo~get_local_settings.
     rs_settings-flow = abap_true.
