@@ -13,7 +13,7 @@ CLASS zcl_abapgit_repo_srv DEFINITION
         VALUE(ri_srv) TYPE REF TO zif_abapgit_repo_srv .
     CLASS-METHODS inject_instance
       IMPORTING
-        ii_srv TYPE REF TO zif_abapgit_repo_srv.
+        ii_srv TYPE REF TO zif_abapgit_repo_srv OPTIONAL.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
