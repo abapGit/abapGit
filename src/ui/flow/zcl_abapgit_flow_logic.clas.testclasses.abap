@@ -5,7 +5,7 @@ ENDCLASS.
 
 CLASS lcl_gitv2 IMPLEMENTATION.
   METHOD zif_abapgit_gitv2_porcelain~list_branches.
-    RETURN.
+    ASSERT 1 = 'todo'.
   ENDMETHOD.
   METHOD zif_abapgit_gitv2_porcelain~list_no_blobs.
     RETURN.
@@ -315,7 +315,6 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
 
     lt_features = zcl_abapgit_flow_logic=>get( ).
-
     cl_abap_unit_assert=>assert_not_initial( lt_features ).
 
 * todo
