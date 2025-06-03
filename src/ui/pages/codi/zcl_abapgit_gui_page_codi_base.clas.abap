@@ -52,10 +52,6 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         !it_result TYPE zif_abapgit_code_inspector=>ty_results
       RAISING
         zcx_abapgit_exception.
-    METHODS render_success
-      IMPORTING
-        ii_html    TYPE REF TO zif_abapgit_html
-        iv_message TYPE string.
     METHODS build_base_menu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
@@ -404,9 +400,7 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
       iv_summary = mv_summary ).
 
     IF lines( mt_result ) = 0.
-      render_success(
-        ii_html    = ii_html
-        iv_message = iv_success_msg ).
+      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_success( iv_success_msg ) ).
     ELSE.
       render_stats(
         ii_html   = ii_html
@@ -558,16 +552,6 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
       iv_type  = 'all'
       iv_title = 'all' ).
 
-    ii_html->add( '</div>' ).
-
-  ENDMETHOD.
-
-
-  METHOD render_success.
-
-    ii_html->add( '<div class="dummydiv success">' ).
-    ii_html->add( ii_html->icon( 'check' ) ).
-    ii_html->add( iv_message ).
     ii_html->add( '</div>' ).
 
   ENDMETHOD.
