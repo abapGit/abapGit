@@ -1,9 +1,14 @@
 CLASS lcl_data DEFINITION FINAL.
   PUBLIC SECTION.
-    METHODS constructor.
+    METHODS constructor RAISING zcx_abapgit_exception.
     METHODS list_no_blobs_multi
       RETURNING
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
+      RAISING
+        zcx_abapgit_exception.
+    METHODS list_branches
+      RETURNING
+        VALUE(rt_branches) TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       RAISING
         zcx_abapgit_exception.
   PRIVATE SECTION.
@@ -12,36 +17,71 @@ CLASS lcl_data DEFINITION FINAL.
             data     TYPE xstring,
           END OF ty_file.
     TYPES: BEGIN OF ty_branches,
-             branch TYPE string,
-             files  TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY,
+             display_name TYPE string,
+             files        TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY,
+             sha1         TYPE zif_abapgit_git_definitions=>ty_sha1,
+             objects      TYPE zif_abapgit_definitions=>ty_objects_tt,
            END OF ty_branches.
     DATA mt_branches TYPE STANDARD TABLE OF ty_branches WITH DEFAULT KEY.
+
+    METHODS encode RAISING zcx_abapgit_exception.
 ENDCLASS.
 
 CLASS lcl_data IMPLEMENTATION.
+  METHOD list_branches.
+    DATA ls_result LIKE LINE OF rt_branches.
+    DATA ls_branch LIKE LINE OF mt_branches.
+
+    LOOP AT mt_branches INTO ls_branch.
+      ls_result-display_name = ls_branch-display_name.
+      ls_result-sha1 = ls_branch-sha1.
+      INSERT ls_result INTO TABLE rt_branches.
+    ENDLOOP.
+  ENDMETHOD.
+
   METHOD list_no_blobs_multi.
-* assume: for all current branches
+* assume: all branches
 
     DATA ls_branch LIKE LINE OF mt_branches.
-    DATA ls_file LIKE LINE OF ls_branch-files.
-    DATA lt_nodes TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
-    DATA ls_node LIKE LINE OF lt_nodes.
+    DATA ls_object LIKE LINE OF rt_objects.
+
+    LOOP AT mt_branches INTO ls_branch.
+      LOOP AT ls_branch-objects INTO ls_object WHERE type <> zif_abapgit_git_definitions=>c_type-blob.
+        INSERT ls_object INTO TABLE rt_objects.
+      ENDLOOP.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD encode.
+* assume: for all current branches
+
+    DATA ls_file   LIKE LINE OF ls_branch-files.
+    DATA lt_nodes  TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA ls_node   LIKE LINE OF lt_nodes.
     DATA ls_object LIKE LINE OF rt_objects.
     DATA ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
 
+    FIELD-SYMBOLS <ls_branch> LIKE LINE OF mt_branches.
 
-    LOOP AT mt_branches INTO ls_branch.
+    LOOP AT mt_branches ASSIGNING <ls_branch>.
+      CLEAR <ls_branch>-objects.
 
-      LOOP AT ls_branch-files INTO ls_file.
+      LOOP AT <ls_branch>-files INTO ls_file.
         ls_node-chmod = zif_abapgit_git_definitions=>c_chmod-file.
         ls_node-name = ls_file-filename.
         ls_node-sha1 = zcl_abapgit_hash=>sha1_raw( ls_file-data ).
+
+        ls_object-type = zif_abapgit_git_definitions=>c_type-blob.
+        ls_object-data = ls_file-data.
+        ls_object-sha1 = ls_node-sha1.
+        INSERT ls_object INTO TABLE <ls_branch>-objects.
       ENDLOOP.
 
       ls_object-type = zif_abapgit_git_definitions=>c_type-tree.
       ls_object-data = zcl_abapgit_git_pack=>encode_tree( lt_nodes ).
       ls_object-sha1 = zcl_abapgit_hash=>sha1_raw( ls_object-data ).
-      INSERT ls_object INTO TABLE rt_objects.
+      INSERT ls_object INTO TABLE <ls_branch>-objects.
 
       ls_commit-tree = ls_object-sha1.
       ls_commit-author = 'John Doe'.
@@ -50,8 +90,9 @@ CLASS lcl_data IMPLEMENTATION.
       ls_object-type = zif_abapgit_git_definitions=>c_type-commit.
       ls_object-data = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
       ls_object-sha1 = zcl_abapgit_hash=>sha1_raw( ls_object-data ).
-      INSERT ls_object INTO TABLE rt_objects.
+      INSERT ls_object INTO TABLE <ls_branch>-objects.
 
+      <ls_branch>-sha1 = ls_object-sha1.
     ENDLOOP.
 
   ENDMETHOD.
@@ -60,22 +101,32 @@ CLASS lcl_data IMPLEMENTATION.
     DATA ls_main TYPE ty_branches.
     DATA ls_file LIKE LINE OF ls_main-files.
 
-    ls_main-branch = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && zif_abapgit_flow_logic=>c_main.
+    ls_main-display_name = zif_abapgit_flow_logic=>c_main.
 
     ls_file-filename = 'README.md'.
     ls_file-data = '001122333'.
     INSERT ls_file INTO TABLE ls_main-files.
 
     INSERT ls_main INTO TABLE mt_branches.
+
+    encode( ).
   ENDMETHOD.
 ENDCLASS.
 
 CLASS lcl_branch_list DEFINITION FINAL.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_git_branch_list.
+    METHODS constructor
+      IMPORTING
+        io_data TYPE REF TO lcl_data.
+  PRIVATE SECTION.
+    DATA mo_data TYPE REF TO lcl_data.
 ENDCLASS.
 
 CLASS lcl_branch_list IMPLEMENTATION.
+  METHOD constructor.
+    mo_data = io_data.
+  ENDMETHOD.
   METHOD zif_abapgit_git_branch_list~find_by_name.
     ASSERT 1 = 2.
   ENDMETHOD.
@@ -83,11 +134,7 @@ CLASS lcl_branch_list IMPLEMENTATION.
     ASSERT 1 = 2.
   ENDMETHOD.
   METHOD zif_abapgit_git_branch_list~get_all.
-    DATA ls_branch LIKE LINE OF rt_branches.
-
-    ls_branch-display_name = zif_abapgit_flow_logic=>c_main.
-    ls_branch-sha1 = '11111111111111111111111111111111'.
-    INSERT ls_branch INTO TABLE rt_branches.
+    rt_branches = mo_data->list_branches( ).
   ENDMETHOD.
   METHOD zif_abapgit_git_branch_list~get_branches_only.
     ASSERT 1 = 2.
@@ -100,11 +147,9 @@ ENDCLASS.
 CLASS lcl_gitv2 DEFINITION FINAL.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_gitv2_porcelain.
-
     METHODS constructor
       IMPORTING
         io_data TYPE REF TO lcl_data.
-
   PRIVATE SECTION.
     DATA mo_data TYPE REF TO lcl_data.
 ENDCLASS.
@@ -114,7 +159,7 @@ CLASS lcl_gitv2 IMPLEMENTATION.
     mo_data = io_data.
   ENDMETHOD.
   METHOD zif_abapgit_gitv2_porcelain~list_branches.
-    CREATE OBJECT ro_list TYPE lcl_branch_list.
+    CREATE OBJECT ro_list TYPE lcl_branch_list EXPORTING io_data = mo_data.
   ENDMETHOD.
   METHOD zif_abapgit_gitv2_porcelain~list_no_blobs.
     RETURN.
