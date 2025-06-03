@@ -415,6 +415,7 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
 
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
 
+    inject( ).
     lt_features = zcl_abapgit_flow_logic=>get( ).
     cl_abap_unit_assert=>assert_initial( lt_features ).
 
@@ -423,15 +424,21 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD only_transport.
-    RETURN. " todo, implement method
+    DATA lo_data TYPE REF TO lcl_data.
+    lo_data = inject( ).
+    " todo, implement method
   ENDMETHOD.
 
   METHOD only_branch.
-    RETURN. " todo, implement method
+    DATA lo_data TYPE REF TO lcl_data.
+    lo_data = inject( ).
+    " todo, implement method
   ENDMETHOD.
 
   METHOD branch_and_transport.
-    RETURN. " todo, implement method
+    DATA lo_data TYPE REF TO lcl_data.
+    lo_data = inject( ).
+    " todo, implement method
   ENDMETHOD.
 
 ENDCLASS.
