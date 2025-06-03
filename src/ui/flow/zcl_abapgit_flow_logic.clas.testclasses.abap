@@ -1,3 +1,26 @@
+CLASS lcl_branch_list DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_git_branch_list.
+ENDCLASS.
+
+CLASS lcl_branch_list IMPLEMENTATION.
+  METHOD zif_abapgit_git_branch_list~find_by_name.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_git_branch_list~get_head_symref.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_git_branch_list~get_all.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_git_branch_list~get_branches_only.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_git_branch_list~get_tags_only.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS lcl_gitv2 DEFINITION FINAL.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_gitv2_porcelain.
@@ -5,7 +28,7 @@ ENDCLASS.
 
 CLASS lcl_gitv2 IMPLEMENTATION.
   METHOD zif_abapgit_gitv2_porcelain~list_branches.
-    ASSERT 1 = 'todo'.
+    CREATE OBJECT ro_list TYPE lcl_branch_list.
   ENDMETHOD.
   METHOD zif_abapgit_gitv2_porcelain~list_no_blobs.
     RETURN.
@@ -272,7 +295,9 @@ CLASS ltcl_flow_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT 
   PUBLIC SECTION.
     METHODS setup.
     METHODS teardown.
-    METHODS test1 FOR TESTING RAISING cx_static_check.
+    METHODS only_transport FOR TESTING RAISING cx_static_check.
+    METHODS only_branch FOR TESTING RAISING cx_static_check.
+    METHODS branch_and_transport FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 
 CLASS ltcl_flow_logic IMPLEMENTATION.
@@ -310,7 +335,7 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     zcl_abapgit_git_injector=>set_v2_porcelain( ).
   ENDMETHOD.
 
-  METHOD test1.
+  METHOD only_transport.
 
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
 
@@ -319,6 +344,14 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
 
 * todo
 
+  ENDMETHOD.
+
+  METHOD only_branch.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+
+  METHOD branch_and_transport.
+    RETURN. " todo, implement method
   ENDMETHOD.
 
 ENDCLASS.
