@@ -150,9 +150,17 @@ ENDCLASS.
 CLASS lcl_cts DEFINITION FINAL.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_cts_api.
+    METHODS constructor
+      IMPORTING
+        io_data TYPE REF TO lcl_data.
+  PRIVATE SECTION.
+    DATA mo_data TYPE REF TO lcl_data.
 ENDCLASS.
 
 CLASS lcl_cts IMPLEMENTATION.
+  METHOD constructor.
+    mo_data = io_data.
+  ENDMETHOD.
   METHOD zif_abapgit_cts_api~confirm_transport_messages.
     RETURN. " todo, implement method
   ENDMETHOD.
@@ -537,7 +545,7 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     CREATE OBJECT ro_data.
     CREATE OBJECT lo_repo.
     CREATE OBJECT lo_sap_package.
-    CREATE OBJECT lo_cts.
+    CREATE OBJECT lo_cts EXPORTING io_data = ro_data.
     CREATE OBJECT lo_gitv2 EXPORTING io_data = ro_data.
     CREATE OBJECT lo_repo_srv EXPORTING io_repo = lo_repo.
 
