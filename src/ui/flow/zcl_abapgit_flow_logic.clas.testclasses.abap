@@ -1,11 +1,13 @@
 CLASS lcl_data DEFINITION FINAL.
   PUBLIC SECTION.
     CONSTANTS c_branch_name TYPE string VALUE 'branch'.
+    CONSTANTS c_filename TYPE string VALUE 'zcl_foobar.clas.abap'.
 
     METHODS constructor RAISING zcx_abapgit_exception.
 
     METHODS add_branch RAISING zcx_abapgit_exception.
     METHODS add_main RAISING zcx_abapgit_exception.
+    METHODS add_transport RAISING zcx_abapgit_exception.
 
     METHODS list_no_blobs_multi
       RETURNING
@@ -35,6 +37,9 @@ CLASS lcl_data DEFINITION FINAL.
 ENDCLASS.
 
 CLASS lcl_data IMPLEMENTATION.
+  METHOD add_transport.
+    RETURN. " todo, implement method
+  ENDMETHOD.
   METHOD list_branches.
     DATA ls_result LIKE LINE OF rt_branches.
     DATA ls_branch LIKE LINE OF mt_branches.
@@ -69,7 +74,7 @@ CLASS lcl_data IMPLEMENTATION.
 
     ls_main-display_name = c_branch_name.
 
-    ls_file-filename = 'README.md'.
+    ls_file-filename = c_filename.
     ls_file-data = '33221100'.
     INSERT ls_file INTO TABLE ls_main-files.
 
@@ -535,8 +540,16 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD only_transport.
-    DATA lo_data TYPE REF TO lcl_data.
+    DATA lo_data     TYPE REF TO lcl_data.
+    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
+
     lo_data = inject( ).
+    lo_data->add_transport( ).
+
+    lt_features = zcl_abapgit_flow_logic=>get( ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_features )
+      exp = 1 ).
     " todo, implement method
   ENDMETHOD.
 
