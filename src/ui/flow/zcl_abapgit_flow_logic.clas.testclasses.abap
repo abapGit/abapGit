@@ -482,8 +482,6 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     lt_features = zcl_abapgit_flow_logic=>get( ).
     cl_abap_unit_assert=>assert_initial( lt_features ).
 
-* todo
-
   ENDMETHOD.
 
   METHOD only_transport.
