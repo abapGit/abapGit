@@ -431,6 +431,7 @@ CLASS ltcl_flow_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT 
   PUBLIC SECTION.
     METHODS inject RETURNING VALUE(ro_data) TYPE REF TO lcl_data.
     METHODS teardown.
+
     METHODS no_transports_no_branches FOR TESTING RAISING cx_static_check.
     METHODS only_transport FOR TESTING RAISING cx_static_check.
     METHODS only_branch FOR TESTING RAISING cx_static_check.
