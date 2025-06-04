@@ -1,11 +1,18 @@
 CLASS lcl_data DEFINITION FINAL.
   PUBLIC SECTION.
+    CONSTANTS c_branch_name TYPE string VALUE 'branch'.
+
     METHODS constructor RAISING zcx_abapgit_exception.
+
+    METHODS add_branch RAISING zcx_abapgit_exception.
+    METHODS add_main RAISING zcx_abapgit_exception.
+
     METHODS list_no_blobs_multi
       RETURNING
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception.
+
     METHODS list_branches
       RETURNING
         VALUE(rt_branches) TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
@@ -37,6 +44,38 @@ CLASS lcl_data IMPLEMENTATION.
       ls_result-sha1 = ls_branch-sha1.
       INSERT ls_result INTO TABLE rt_branches.
     ENDLOOP.
+  ENDMETHOD.
+
+  METHOD add_main.
+
+    DATA ls_main TYPE ty_branches.
+    DATA ls_file LIKE LINE OF ls_main-files.
+
+    ls_main-display_name = zif_abapgit_flow_logic=>c_main.
+
+    ls_file-filename = 'README.md'.
+    ls_file-data = '001122333'.
+    INSERT ls_file INTO TABLE ls_main-files.
+
+    INSERT ls_main INTO TABLE mt_branches.
+
+    encode( ).
+  ENDMETHOD.
+
+  METHOD add_branch.
+
+    DATA ls_main TYPE ty_branches.
+    DATA ls_file LIKE LINE OF ls_main-files.
+
+    ls_main-display_name = c_branch_name.
+
+    ls_file-filename = 'README.md'.
+    ls_file-data = '33221100'.
+    INSERT ls_file INTO TABLE ls_main-files.
+
+    INSERT ls_main INTO TABLE mt_branches.
+
+    encode( ).
   ENDMETHOD.
 
   METHOD list_no_blobs_multi.
@@ -99,18 +138,7 @@ CLASS lcl_data IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD constructor.
-    DATA ls_main TYPE ty_branches.
-    DATA ls_file LIKE LINE OF ls_main-files.
-
-    ls_main-display_name = zif_abapgit_flow_logic=>c_main.
-
-    ls_file-filename = 'README.md'.
-    ls_file-data = '001122333'.
-    INSERT ls_file INTO TABLE ls_main-files.
-
-    INSERT ls_main INTO TABLE mt_branches.
-
-    encode( ).
+    add_main( ).
   ENDMETHOD.
 ENDCLASS.
 
@@ -484,13 +512,29 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD only_transport.
+  METHOD only_branch.
     DATA lo_data TYPE REF TO lcl_data.
+    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
+    DATA ls_feature LIKE LINE OF lt_features.
+
     lo_data = inject( ).
-    " todo, implement method
+    lo_data->add_branch( ).
+
+    lt_features = zcl_abapgit_flow_logic=>get( ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_features )
+      exp = 1 ).
+
+    READ TABLE lt_features INDEX 1 INTO ls_feature.
+    cl_abap_unit_assert=>assert_subrc( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_feature-branch-display_name
+      exp = lcl_data=>c_branch_name ).
+    cl_abap_unit_assert=>assert_initial( ls_feature-transport-trkorr ).
   ENDMETHOD.
 
-  METHOD only_branch.
+  METHOD only_transport.
     DATA lo_data TYPE REF TO lcl_data.
     lo_data = inject( ).
     " todo, implement method
