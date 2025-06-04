@@ -513,9 +513,9 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD only_branch.
-    DATA lo_data TYPE REF TO lcl_data.
+    DATA lo_data     TYPE REF TO lcl_data.
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
-    DATA ls_feature LIKE LINE OF lt_features.
+    DATA ls_feature  LIKE LINE OF lt_features.
 
     lo_data = inject( ).
     lo_data->add_branch( ).
