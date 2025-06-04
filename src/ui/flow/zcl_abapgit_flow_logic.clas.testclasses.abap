@@ -109,7 +109,7 @@ CLASS lcl_data IMPLEMENTATION.
 
     ls_main-display_name = zif_abapgit_flow_logic=>c_main.
 
-    ls_file-filename = 'README.md'.
+    ls_file-filename = c_filename.
     ls_file-data = '001122333'.
     INSERT ls_file INTO TABLE ls_main-files.
 
@@ -410,7 +410,7 @@ CLASS lcl_repo IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_repo~get_dot_abapgit.
     DATA ls_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
-    ls_data-starting_folder = '/src/'.
+    ls_data-starting_folder = '/'.
     CREATE OBJECT ro_dot_abapgit
       EXPORTING
         is_data = ls_data.
