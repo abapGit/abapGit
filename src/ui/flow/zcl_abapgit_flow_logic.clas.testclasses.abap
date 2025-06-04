@@ -2,12 +2,15 @@ CLASS lcl_data DEFINITION FINAL.
   PUBLIC SECTION.
     CONSTANTS c_branch_name TYPE string VALUE 'branch'.
     CONSTANTS c_filename TYPE string VALUE 'zcl_foobar.clas.abap'.
+    CONSTANTS c_devclass TYPE devclass VALUE 'ZFOOBAR'.
 
     METHODS constructor RAISING zcx_abapgit_exception.
 
     METHODS add_branch RAISING zcx_abapgit_exception.
     METHODS add_main RAISING zcx_abapgit_exception.
     METHODS add_transport RAISING zcx_abapgit_exception.
+
+*******************************
 
     METHODS list_no_blobs_multi
       RETURNING
@@ -20,6 +23,20 @@ CLASS lcl_data DEFINITION FINAL.
         VALUE(rt_branches) TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       RAISING
         zcx_abapgit_exception.
+
+    METHODS list_open_requests
+      RETURNING
+        VALUE(rt_trkorr) TYPE zif_abapgit_cts_api=>ty_trkorr_tt
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS list_r3tr_by_request
+      IMPORTING
+        !iv_request    TYPE trkorr
+      RETURNING
+        VALUE(rt_list) TYPE zif_abapgit_cts_api=>ty_transport_obj_tt
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_file,
             filename TYPE string,
@@ -33,13 +50,46 @@ CLASS lcl_data DEFINITION FINAL.
            END OF ty_branches.
     DATA mt_branches TYPE STANDARD TABLE OF ty_branches WITH DEFAULT KEY.
 
+    TYPES: BEGIN OF ty_transports,
+             trkorr  TYPE trkorr,
+             objects TYPE zif_abapgit_cts_api=>ty_transport_obj_tt,
+           END OF ty_transports.
+    DATA mt_transports TYPE STANDARD TABLE OF ty_transports WITH DEFAULT KEY.
+
     METHODS encode RAISING zcx_abapgit_exception.
 ENDCLASS.
 
 CLASS lcl_data IMPLEMENTATION.
-  METHOD add_transport.
-    RETURN. " todo, implement method
+  METHOD list_r3tr_by_request.
+    DATA ls_transport LIKE LINE OF mt_transports.
+    READ TABLE mt_transports INTO ls_transport WITH KEY trkorr = iv_request.
+    ASSERT sy-subrc = 0.
+
+    rt_list = ls_transport-objects.
   ENDMETHOD.
+
+  METHOD list_open_requests.
+    DATA lv_trkorr LIKE LINE OF rt_trkorr.
+    DATA ls_transport LIKE LINE OF mt_transports.
+
+    LOOP AT mt_transports INTO ls_transport.
+      lv_trkorr = ls_transport-trkorr.
+      INSERT lv_trkorr INTO TABLE rt_trkorr.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD add_transport.
+    DATA ls_transport LIKE LINE OF mt_transports.
+    DATA ls_object    LIKE LINE OF ls_transport-objects.
+
+    ls_transport-trkorr = 'ABC0123456'.
+
+    ls_object-object = 'CLAS'.
+    ls_object-obj_name = 'ZCL_FOOBAR'.
+
+    INSERT ls_transport INTO TABLE mt_transports.
+  ENDMETHOD.
+
   METHOD list_branches.
     DATA ls_result LIKE LINE OF rt_branches.
     DATA ls_branch LIKE LINE OF mt_branches.
@@ -186,7 +236,7 @@ CLASS lcl_cts IMPLEMENTATION.
     RETURN. " todo, implement method
   ENDMETHOD.
   METHOD zif_abapgit_cts_api~list_open_requests.
-    RETURN. " todo, implement method
+    rt_trkorr = mo_data->list_open_requests( ).
   ENDMETHOD.
   METHOD zif_abapgit_cts_api~list_r3tr_by_request.
     RETURN. " todo, implement method
@@ -324,8 +374,6 @@ CLASS lcl_repo DEFINITION FINAL.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_repo.
     INTERFACES zif_abapgit_repo_online.
-
-    CONSTANTS c_package TYPE string VALUE 'ZFLOWTESTTEST'.
 ENDCLASS.
 
 CLASS lcl_repo IMPLEMENTATION.
@@ -339,7 +387,7 @@ CLASS lcl_repo IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
   METHOD zif_abapgit_repo~get_package.
-    rv_package = c_package.
+    rv_package = lcl_data=>c_devclass.
   ENDMETHOD.
   METHOD zif_abapgit_repo~get_local_settings.
     rs_settings-flow = abap_true.
@@ -519,6 +567,34 @@ CLASS lcl_repo_srv IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+CLASS lcl_tadir DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_tadir.
+    METHODS constructor
+      IMPORTING
+        io_data TYPE REF TO lcl_data.
+  PRIVATE SECTION.
+    DATA mo_data TYPE REF TO lcl_data.
+ENDCLASS.
+
+CLASS lcl_tadir IMPLEMENTATION.
+
+  METHOD constructor.
+    mo_data = io_data.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_tadir~get_object_package.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_tadir~read.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_tadir~read_single.
+    rs_tadir-devclass = lcl_data=>c_devclass.
+  ENDMETHOD.
+
+ENDCLASS.
+
 ************************************************
 
 CLASS ltcl_flow_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
@@ -539,12 +615,14 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     DATA lo_repo_srv    TYPE REF TO lcl_repo_srv.
     DATA lo_sap_package TYPE REF TO lcl_sap_package.
     DATA lo_gitv2       TYPE REF TO lcl_gitv2.
+    DATA lo_tadir       TYPE REF TO lcl_tadir.
     DATA lo_cts         TYPE REF TO lcl_cts.
 
 
     CREATE OBJECT ro_data.
     CREATE OBJECT lo_repo.
     CREATE OBJECT lo_sap_package.
+    CREATE OBJECT lo_tadir EXPORTING io_data = ro_data.
     CREATE OBJECT lo_cts EXPORTING io_data = ro_data.
     CREATE OBJECT lo_gitv2 EXPORTING io_data = ro_data.
     CREATE OBJECT lo_repo_srv EXPORTING io_repo = lo_repo.
@@ -552,10 +630,11 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     zcl_abapgit_repo_srv=>inject_instance( lo_repo_srv ).
 
     zcl_abapgit_injector=>set_sap_package(
-      iv_package     = lcl_repo=>c_package
+      iv_package     = lcl_data=>c_devclass
       ii_sap_package = lo_sap_package ).
 
     zcl_abapgit_injector=>set_cts_api( lo_cts ).
+    zcl_abapgit_injector=>set_tadir( lo_tadir ).
 
     zcl_abapgit_git_injector=>set_v2_porcelain( lo_gitv2 ).
   ENDMETHOD.
@@ -566,7 +645,7 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     zcl_abapgit_repo_srv=>inject_instance( ).
 
     zcl_abapgit_injector=>set_sap_package(
-      iv_package     = lcl_repo=>c_package
+      iv_package     = lcl_data=>c_devclass
       ii_sap_package = lo_sap_package ).
 
     zcl_abapgit_git_injector=>set_v2_porcelain( ).
