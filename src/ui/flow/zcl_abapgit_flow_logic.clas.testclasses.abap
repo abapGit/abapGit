@@ -86,6 +86,7 @@ CLASS lcl_data IMPLEMENTATION.
 
     ls_object-object = 'CLAS'.
     ls_object-obj_name = 'ZCL_FOOBAR'.
+    INSERT ls_object INTO TABLE ls_transport-objects.
 
     INSERT ls_transport INTO TABLE mt_transports.
   ENDMETHOD.
@@ -239,7 +240,7 @@ CLASS lcl_cts IMPLEMENTATION.
     rt_trkorr = mo_data->list_open_requests( ).
   ENDMETHOD.
   METHOD zif_abapgit_cts_api~list_r3tr_by_request.
-    RETURN. " todo, implement method
+    rt_list = mo_data->list_r3tr_by_request( iv_request ).
   ENDMETHOD.
   METHOD zif_abapgit_cts_api~read.
     RETURN. " todo, implement method
