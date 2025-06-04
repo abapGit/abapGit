@@ -147,6 +147,59 @@ CLASS lcl_data IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+CLASS lcl_cts DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_cts_api.
+ENDCLASS.
+
+CLASS lcl_cts IMPLEMENTATION.
+  METHOD zif_abapgit_cts_api~confirm_transport_messages.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_cts_api~create_transport_entries.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_cts_api~get_r3tr_obj_for_limu_obj.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_cts_api~get_transports_for_list.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_cts_api~get_transport_for_object.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_cts_api~insert_transport_object.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_cts_api~is_chrec_possible_for_package.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_cts_api~list_open_requests_by_user.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_cts_api~list_open_requests.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_cts_api~list_r3tr_by_request.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_cts_api~read.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_cts_api~read_description.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_cts_api~read_user.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_cts_api~validate_transport_request.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+  METHOD zif_abapgit_cts_api~change_transport_type.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS lcl_branch_list DEFINITION FINAL.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_git_branch_list.
@@ -466,8 +519,8 @@ CLASS ltcl_flow_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT 
     METHODS teardown.
 
     METHODS no_transports_no_branches FOR TESTING RAISING cx_static_check.
-    METHODS only_transport FOR TESTING RAISING cx_static_check.
     METHODS only_branch FOR TESTING RAISING cx_static_check.
+    METHODS only_transport FOR TESTING RAISING cx_static_check.
     METHODS branch_and_transport FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 
@@ -478,11 +531,13 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     DATA lo_repo_srv    TYPE REF TO lcl_repo_srv.
     DATA lo_sap_package TYPE REF TO lcl_sap_package.
     DATA lo_gitv2       TYPE REF TO lcl_gitv2.
+    DATA lo_cts         TYPE REF TO lcl_cts.
 
 
     CREATE OBJECT ro_data.
     CREATE OBJECT lo_repo.
     CREATE OBJECT lo_sap_package.
+    CREATE OBJECT lo_cts.
     CREATE OBJECT lo_gitv2 EXPORTING io_data = ro_data.
     CREATE OBJECT lo_repo_srv EXPORTING io_repo = lo_repo.
 
@@ -491,6 +546,8 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     zcl_abapgit_injector=>set_sap_package(
       iv_package     = lcl_repo=>c_package
       ii_sap_package = lo_sap_package ).
+
+    zcl_abapgit_injector=>set_cts_api( lo_cts ).
 
     zcl_abapgit_git_injector=>set_v2_porcelain( lo_gitv2 ).
   ENDMETHOD.
