@@ -383,9 +383,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       lo_toolbar->add( iv_txt = 'Pull'
                        iv_act = |{ c_action-pull }{ lv_extra }|
                        iv_opt = lv_opt ).
-      lo_toolbar->add( iv_txt = 'Stage'
-                       iv_act = |{ c_action-stage }{ lv_extra }|
-                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      IF is_feature-transport-trkorr IS NOT INITIAL.
+* its only remote, so there is no changes to stage
+        lo_toolbar->add( iv_txt = 'Stage'
+                         iv_act = |{ c_action-stage }{ lv_extra }|
+                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      ENDIF.
     ENDIF.
 
     zcl_abapgit_flow_exit=>get_instance( )->toolbar_extras(
