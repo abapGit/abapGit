@@ -600,13 +600,19 @@ ENDCLASS.
 
 CLASS ltcl_flow_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
   PUBLIC SECTION.
-    METHODS inject RETURNING VALUE(ro_data) TYPE REF TO lcl_data.
-    METHODS teardown.
-
     METHODS no_transports_no_branches FOR TESTING RAISING cx_static_check.
     METHODS only_branch FOR TESTING RAISING cx_static_check.
     METHODS only_transport FOR TESTING RAISING cx_static_check.
     METHODS branch_and_transport FOR TESTING RAISING cx_static_check.
+
+  PRIVATE SECTION.
+    METHODS inject
+      RETURNING
+        VALUE(ro_data) TYPE REF TO lcl_data
+      RAISING
+        cx_static_check.
+
+    METHODS teardown.
 ENDCLASS.
 
 CLASS ltcl_flow_logic IMPLEMENTATION.
@@ -618,7 +624,6 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     DATA lo_gitv2       TYPE REF TO lcl_gitv2.
     DATA lo_tadir       TYPE REF TO lcl_tadir.
     DATA lo_cts         TYPE REF TO lcl_cts.
-
 
     CREATE OBJECT ro_data.
     CREATE OBJECT lo_repo.
