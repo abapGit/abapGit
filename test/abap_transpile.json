@@ -28,6 +28,7 @@
     "zcl_abapgit_l",
     "zcl_abapgit_n",
     "zcl_abapgit_object_devc",
+    "zcl_abapgit_object_filter_obj",
     "zcl_abapgit_object_intf",
     "zcl_abapgit_object_zag",
     "zcl_abapgit_objects_bridge",

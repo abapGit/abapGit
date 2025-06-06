@@ -196,6 +196,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         ls_changed_file-filename   = <ls_local>-file-filename.
         ls_changed_file-local_sha1 = <ls_local>-file-sha1.
 
+* todo: this looks like a bug?
         READ TABLE it_main_expanded ASSIGNING <ls_main_expanded>
           WITH TABLE KEY path_name COMPONENTS
           path = ls_changed_file-path
@@ -245,7 +246,9 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         ls_result-devclass = zcl_abapgit_factory=>get_tadir( )->read_single(
           iv_object   = ls_result-object
           iv_obj_name = lv_obj_name )-devclass.
-        INSERT ls_result INTO TABLE rt_transports.
+        IF ls_result-devclass IS NOT INITIAL.
+          INSERT ls_result INTO TABLE rt_transports.
+        ENDIF.
       ENDLOOP.
 
     ENDLOOP.
@@ -386,7 +389,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
       lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
         iv_url    = li_repo_online->get_url( )
-        iv_prefix = 'refs/heads/' )->get_all( ).
+        iv_prefix = zif_abapgit_git_definitions=>c_git_branch-heads_prefix )->get_all( ).
 
       CLEAR lt_features.
       LOOP AT lt_branches INTO ls_branch WHERE display_name <> zif_abapgit_flow_logic=>c_main.
