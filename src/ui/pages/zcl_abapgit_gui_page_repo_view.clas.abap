@@ -201,7 +201,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -431,14 +431,15 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     IF mi_repo->is_offline( ) = abap_false.
       " online repo
 
+      ro_toolbar->add( iv_txt = 'Pull'
+                       iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?key={ mv_key }|
+                       iv_opt = get_crossout( iv_protected = abap_true
+                                              iv_strong    = abap_true ) ).
+      ro_toolbar->add( iv_txt = 'Stage'
+                       iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }|
+                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+
       IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " Any changes
-        ro_toolbar->add( iv_txt = 'Pull'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?key={ mv_key }|
-                         iv_opt = get_crossout( iv_protected = abap_true
-                                                iv_strong    = abap_true ) ).
-        ro_toolbar->add( iv_txt = 'Stage'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }|
-                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
         ro_toolbar->add( iv_txt = 'Patch'
                          iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
