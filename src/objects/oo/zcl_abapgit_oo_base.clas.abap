@@ -25,7 +25,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_oo_base IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
 
 
   METHOD convert_attrib_to_vseoattrib.
@@ -285,10 +285,6 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~update_descriptions_class.
     DATA lt_descriptions LIKE it_descriptions.
     DATA ls_description LIKE LINE OF it_descriptions.
-
-    IF it_descriptions IS INITIAL.
-      RETURN.
-    ENDIF.
 
     " Make sure we keep main language
     SELECT * FROM seoclasstx INTO TABLE lt_descriptions
