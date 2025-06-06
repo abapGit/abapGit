@@ -145,7 +145,7 @@ CLASS lcl_selected IMPLEMENTATION.
       ls_file-filename = to_lower( ls_file-filename ).
 
       " Skip packages since they all have identical filenames
-      IF ls_file-filename <> 'package.devc.xml'.
+      IF NOT ls_file-filename CP 'package.devc.*'.
         lv_pattern = '*/' && to_upper( ls_file-filename ).
         REPLACE ALL OCCURRENCES OF '#' IN lv_pattern WITH '##'. " for CP
 
