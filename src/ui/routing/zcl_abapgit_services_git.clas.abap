@@ -124,8 +124,8 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     li_repo_online->create_branch( lv_name ).
 
-    lv_msg = |Branch switched from { zcl_abapgit_git_branch_list=>get_display_name( lv_source_branch_name )
-      } to new branch { zcl_abapgit_git_branch_list=>get_display_name( lv_name ) }|.
+    lv_msg = |Branch switched from { zcl_abapgit_git_branch_utils=>get_display_name( lv_source_branch_name )
+      } to new branch { zcl_abapgit_git_branch_utils=>get_display_name( lv_name ) }|.
     MESSAGE lv_msg TYPE 'S'.
 
   ENDMETHOD.

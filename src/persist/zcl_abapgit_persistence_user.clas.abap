@@ -37,6 +37,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         settings         TYPE zif_abapgit_persist_user=>ty_s_user_settings,
         show_folders     TYPE abap_bool,
         list_settings    TYPE zif_abapgit_persist_user=>ty_list_settings,
+        flow_settings    TYPE zif_abapgit_persist_user=>ty_flow_settings,
       END OF ty_user .
 
     DATA mv_user TYPE sy-uname .
@@ -228,6 +229,10 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_persist_user~get_flow_settings.
+    rs_flow_settings = ms_user-flow_settings.
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_persist_user~get_order_by.
     rv_order_by = ms_user-order_by.
@@ -338,6 +343,11 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_user~set_list_settings.
     ms_user-list_settings = is_list_settings.
+    update( ).
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_user~set_flow_settings.
+    ms_user-flow_settings = is_flow_settings.
     update( ).
   ENDMETHOD.
 

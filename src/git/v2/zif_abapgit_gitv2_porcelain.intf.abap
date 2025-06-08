@@ -6,7 +6,7 @@ INTERFACE zif_abapgit_gitv2_porcelain
       !iv_url        TYPE string
       !iv_prefix     TYPE string OPTIONAL
     RETURNING
-      VALUE(ro_list) TYPE REF TO zcl_abapgit_git_branch_list
+      VALUE(ro_list) TYPE REF TO zif_abapgit_git_branch_list
     RAISING
       zcx_abapgit_exception .
 

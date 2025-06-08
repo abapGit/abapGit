@@ -28,6 +28,12 @@ INTERFACE zif_abapgit_persist_user
       order_descending TYPE abap_bool,
     END OF ty_list_settings.
 
+  TYPES: BEGIN OF ty_flow_settings,
+            only_my_transports  TYPE abap_bool,
+            hide_full_matches   TYPE abap_bool,
+            hide_matching_files TYPE abap_bool,
+          END OF ty_flow_settings.
+
   METHODS get_changes_only
     RETURNING
       VALUE(rv_changes_only) TYPE abap_bool
@@ -221,6 +227,16 @@ INTERFACE zif_abapgit_persist_user
   METHODS set_list_settings
     IMPORTING
       is_list_settings TYPE ty_list_settings
+    RAISING
+      zcx_abapgit_exception.
+  METHODS get_flow_settings
+    RETURNING
+      VALUE(rs_flow_settings) TYPE ty_flow_settings
+    RAISING
+      zcx_abapgit_exception.
+  METHODS set_flow_settings
+    IMPORTING
+      is_flow_settings TYPE ty_flow_settings
     RAISING
       zcx_abapgit_exception.
 

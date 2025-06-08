@@ -139,7 +139,7 @@ CLASS zcl_abapgit_gui_page_merge_sel IMPLEMENTATION.
 
   METHOD read_branches.
 
-    DATA lo_branches TYPE REF TO zcl_abapgit_git_branch_list.
+    DATA lo_branches TYPE REF TO zif_abapgit_git_branch_list.
 
     lo_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( mi_repo_online->get_url( ) ).
     mt_branches = lo_branches->get_branches_only( ).
