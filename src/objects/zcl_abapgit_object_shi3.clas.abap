@@ -52,7 +52,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
 
 
   METHOD clear_fields.
@@ -484,7 +484,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
     SORT lt_titles BY id.
     DELETE ADJACENT DUPLICATES FROM lt_titles COMPARING spras id.
 
-    SORT lt_texts BY spras.
+    SORT lt_texts BY spras node_id.
     DELETE ADJACENT DUPLICATES FROM lt_texts COMPARING spras node_id.
 
     mo_i18n_params->trim_saplang_keyed_table(
