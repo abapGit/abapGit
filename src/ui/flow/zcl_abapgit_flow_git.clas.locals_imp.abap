@@ -2,7 +2,7 @@ CLASS lcl_find_changes DEFINITION.
   PUBLIC SECTION.
     METHODS constructor
       IMPORTING
-      it_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
+        it_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
 
     METHODS find_changes
       IMPORTING
