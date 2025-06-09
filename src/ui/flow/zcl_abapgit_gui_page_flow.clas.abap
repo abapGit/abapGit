@@ -401,6 +401,48 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_user_settings.
+
+    DATA lv_icon_class TYPE string.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( '<span class="toolbar-light pad-sides">' ).
+
+    IF ms_user_settings-only_my_transports = abap_true.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only my transports|
+      iv_class = 'command'
+      iv_act   = |{ c_action-only_my_transports }| ) ).
+
+    IF ms_user_settings-hide_full_matches = abap_true.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide full matches|
+      iv_class = 'command'
+      iv_act   = |{ c_action-hide_full_matches }| ) ).
+
+    IF ms_user_settings-hide_matching_files = abap_true.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide matching files|
+      iv_class = 'command'
+      iv_act   = |{ c_action-hide_matching_files }| ) ).
+
+    ri_html->add( '</span>' ).
+
+  ENDMETHOD.
+
+
   METHOD set_branch.
 
     DATA lv_branch TYPE string.
@@ -483,46 +525,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD render_user_settings.
-
-    DATA lv_icon_class TYPE string.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    ri_html->add( '<span class="toolbar-light pad-sides">' ).
-
-    IF ms_user_settings-only_my_transports = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only my transports|
-      iv_class = 'command'
-      iv_act   = |{ c_action-only_my_transports }| ) ).
-
-    IF ms_user_settings-hide_full_matches = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide full matches|
-      iv_class = 'command'
-      iv_act   = |{ c_action-hide_full_matches }| ) ).
-
-    IF ms_user_settings-hide_matching_files = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide matching files|
-      iv_class = 'command'
-      iv_act   = |{ c_action-hide_matching_files }| ) ).
-
-    ri_html->add( '</span>' ).
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_gui_renderable~render.
 
@@ -616,14 +618,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         ri_html->add( |No corresponding transport found<br>| ).
       ENDIF.
 
+      ri_html->add( render_toolbar(
+        iv_index   = lv_index
+        is_feature = ls_feature ) ).
+
       IF ls_feature-branch IS NOT INITIAL AND ls_feature-branch-up_to_date = abap_false.
         ri_html->add( '<b>Branch not up to date</b><br><br>' ).
         CONTINUE.
       ENDIF.
-
-      ri_html->add( render_toolbar(
-        iv_index   = lv_index
-        is_feature = ls_feature ) ).
 
       IF ls_feature-full_match = abap_true.
         ri_html->add( |Full Match, {
