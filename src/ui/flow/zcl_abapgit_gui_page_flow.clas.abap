@@ -554,7 +554,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner( lv_warning ) ).
       ENDLOOP.
       ri_html->add( '<br>' ).
-      ri_html->add( '<br>' ).
     ENDIF.
 
     IF ms_user_settings-only_my_transports = abap_true.

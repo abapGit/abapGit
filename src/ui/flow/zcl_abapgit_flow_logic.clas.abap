@@ -128,10 +128,30 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
   METHOD warnings_from_transports.
 
-    DATA lv_warning TYPE string.
+    DATA lv_warning    TYPE string.
+    DATA lt_transports LIKE it_transports.
+    DATA lv_index      TYPE i.
+    DATA ls_next       LIKE LINE OF lt_transports.
+    DATA ls_transport  LIKE LINE OF lt_transports.
 
-    lv_warning = |hello world, { lines( it_transports ) }|.
-    INSERT lv_warning INTO TABLE ct_warnings.
+    lt_transports = it_transports.
+    SORT lt_transports BY object obj_name trkorr.
+
+    LOOP AT lt_transports INTO ls_transport.
+      lv_index = sy-tabix + 1.
+      READ TABLE lt_transports INTO ls_next INDEX lv_index.
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
+
+      IF ls_next-object = ls_transport-object
+          AND ls_next-trkorr <> ls_transport-trkorr
+          AND ls_next-obj_name = ls_transport-obj_name.
+        lv_warning = |Object { ls_transport-object } { ls_transport-obj_name
+          } is in multiple transports: { ls_transport-trkorr } and { ls_next-trkorr }|.
+        INSERT lv_warning INTO TABLE ct_warnings.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
