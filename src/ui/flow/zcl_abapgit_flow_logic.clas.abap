@@ -53,6 +53,12 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS warnings_from_transports
+      IMPORTING
+        it_transports TYPE ty_transports_tt
+      CHANGING
+        ct_warnings   TYPE string_table.
+
     CLASS-METHODS add_objects_and_files_from_tr
       IMPORTING
         iv_trkorr        TYPE trkorr
@@ -120,6 +126,14 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
+  METHOD warnings_from_transports.
+
+    DATA lv_warning TYPE string.
+
+    lv_warning = |hello world, { lines( it_transports ) }|.
+    INSERT lv_warning INTO TABLE ct_warnings.
+
+  ENDMETHOD.
 
   METHOD consolidate.
 
@@ -425,6 +439,12 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         CHANGING
           ct_transports    = lt_all_transports
           ct_features      = lt_features ).
+
+      warnings_from_transports(
+        EXPORTING
+          it_transports = lt_all_transports
+        CHANGING
+          ct_warnings   = rs_information-warnings ).
 
       find_prs(
         EXPORTING

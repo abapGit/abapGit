@@ -191,13 +191,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   METHOD call_pull.
 
-    DATA lv_key          TYPE zif_abapgit_persistence=>ty_value.
-    DATA lv_branch       TYPE string.
-    DATA lo_filter       TYPE REF TO lcl_filter.
-    DATA lt_filter       TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lv_index        TYPE i.
-    DATA li_repo_online  TYPE REF TO zif_abapgit_repo_online.
-    DATA ls_feature      LIKE LINE OF ms_information-features.
+    DATA lv_key         TYPE zif_abapgit_persistence=>ty_value.
+    DATA lv_branch      TYPE string.
+    DATA lo_filter      TYPE REF TO lcl_filter.
+    DATA lt_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lv_index       TYPE i.
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
+    DATA ls_feature     LIKE LINE OF ms_information-features.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_feature-changed_objects.
     FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
@@ -531,6 +531,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     DATA lv_rendered TYPE abap_bool.
     DATA lo_timer TYPE REF TO zcl_abapgit_timer.
     DATA lt_my_transports TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
+    DATA lv_warning LIKE LINE OF ms_information-warnings.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -547,6 +548,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
     ri_html->add( '<br>' ).
     ri_html->add( '<br>' ).
+
+    IF lines( ms_information-warnings ) > 0.
+      LOOP AT ms_information-warnings INTO lv_warning.
+        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner( lv_warning ) ).
+      ENDLOOP.
+      ri_html->add( '<br>' ).
+      ri_html->add( '<br>' ).
+    ENDIF.
 
     IF ms_user_settings-only_my_transports = abap_true.
       lt_my_transports = zcl_abapgit_factory=>get_cts_api( )->list_open_requests_by_user( sy-uname ).

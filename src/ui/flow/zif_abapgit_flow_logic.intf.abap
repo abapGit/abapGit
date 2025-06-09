@@ -40,7 +40,7 @@ INTERFACE zif_abapgit_flow_logic
   TYPES ty_features TYPE STANDARD TABLE OF ty_feature WITH DEFAULT KEY.
   TYPES: BEGIN OF ty_information,
             features TYPE ty_features,
-            warnings TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+            warnings TYPE string_table,
          END OF ty_information.
 
   CONSTANTS c_main TYPE string VALUE 'main'.
