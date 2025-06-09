@@ -132,7 +132,6 @@ CLASS lcl_find_changes IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD decode_tree.
-    DATA lt_nodes TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
     DATA ls_cache LIKE LINE OF mt_tree_cache.
     DATA ls_object LIKE LINE OF mt_objects.
 
@@ -149,7 +148,7 @@ CLASS lcl_find_changes IMPLEMENTATION.
       rt_nodes = zcl_abapgit_git_pack=>decode_tree( ls_object-data ).
 
       ls_cache-sha1 = iv_tree.
-      ls_cache-nodes = lt_nodes.
+      ls_cache-nodes = rt_nodes.
       INSERT ls_cache INTO TABLE mt_tree_cache.
     ENDIF.
 
