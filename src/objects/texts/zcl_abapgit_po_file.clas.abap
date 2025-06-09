@@ -356,7 +356,7 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
         && cl_abap_char_utilities=>newline
         && lv_str
         && cl_abap_char_utilities=>newline. " Trailing LF
-      rv_data = zcl_abapgit_convert=>string_to_xstring_utf8_bom( lv_str ).
+      rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_str ).
     ENDIF.
 
   ENDMETHOD.
