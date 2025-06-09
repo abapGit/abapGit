@@ -79,6 +79,7 @@ CLASS lcl_find_changes IMPLEMENTATION.
     DATA ls_node_main LIKE LINE OF lt_main.
     DATA ls_node_branch LIKE LINE OF lt_branch.
     DATA ls_file LIKE LINE OF rt_files.
+    DATA lt_files LIKE rt_files.
 
     IF iv_tree_main IS NOT INITIAL.
       lt_main = decode_tree( iv_tree_main ).
@@ -90,18 +91,22 @@ CLASS lcl_find_changes IMPLEMENTATION.
 
     LOOP AT lt_main INTO ls_node_main.
       READ TABLE lt_branch INTO ls_node_branch WITH KEY name = ls_node_main-name.
-      IF sy-subrc = 0 AND ls_node_branch-sha1 = ls_node_main-sha1.
+      IF sy-subrc = 0.
         DELETE lt_branch INDEX sy-tabix.
-        CONTINUE.
+        IF ls_node_branch-sha1 = ls_node_main-sha1.
+          CONTINUE.
+        ENDIF.
       ENDIF.
 
-      ASSERT ls_node_main-chmod = ls_node_branch-chmod.
       CASE ls_node_main-chmod.
-        WHEN zif_abapgit_git_definitions=>c_type-tree.
-          rt_files = walk(
+        WHEN zif_abapgit_git_definitions=>c_chmod-dir.
+          lt_files = walk(
             iv_path         = iv_path && ls_node_main-name && '/'
-            iv_tree_main    = ls_node_main-sha1 ).
-        WHEN zif_abapgit_git_definitions=>c_type-blob.
+            iv_tree_main    = ls_node_main-sha1
+            iv_tree_branch  = ls_node_branch-sha1 ).
+          INSERT LINES OF lt_files INTO TABLE rt_files.
+        WHEN zif_abapgit_git_definitions=>c_chmod-file.
+          CLEAR ls_file.
           ls_file-path = iv_path.
           ls_file-filename = ls_node_main-name.
           ls_file-remote_sha1 = ls_node_main-sha1.
@@ -114,12 +119,13 @@ CLASS lcl_find_changes IMPLEMENTATION.
 * new in branch, not in main
     LOOP AT lt_branch INTO ls_node_branch.
       CASE ls_node_branch-chmod.
-        WHEN zif_abapgit_git_definitions=>c_type-tree.
-          rt_files = walk(
+        WHEN zif_abapgit_git_definitions=>c_chmod-dir.
+          lt_files = walk(
             iv_path         = iv_path && ls_node_branch-name && '/'
             iv_tree_branch  = ls_node_branch-sha1 ).
-          CONTINUE.
-        WHEN zif_abapgit_git_definitions=>c_type-blob.
+          INSERT LINES OF lt_files INTO TABLE rt_files.
+        WHEN zif_abapgit_git_definitions=>c_chmod-file.
+          CLEAR ls_file.
           ls_file-path = iv_path.
           ls_file-filename = ls_node_branch-name.
           ls_file-remote_sha1 = ls_node_branch-sha1.
