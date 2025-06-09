@@ -54,11 +54,13 @@ CLASS lcl_find_changes IMPLEMENTATION.
     DATA lv_tree_main TYPE zif_abapgit_git_definitions=>ty_sha1.
     DATA lv_tree_branch TYPE zif_abapgit_git_definitions=>ty_sha1.
 
-    READ TABLE mt_objects WITH TABLE KEY type COMPONENTS sha1 = iv_main type = zif_abapgit_git_definitions=>c_type-commit INTO ls_object.
+    READ TABLE mt_objects WITH TABLE KEY type
+      COMPONENTS sha1 = iv_main type = zif_abapgit_git_definitions=>c_type-commit INTO ls_object.
     ASSERT sy-subrc = 0.
     lv_tree_main = zcl_abapgit_git_pack=>decode_commit( ls_object-data )-tree.
 
-    READ TABLE mt_objects WITH TABLE KEY type COMPONENTS sha1 = iv_branch type = zif_abapgit_git_definitions=>c_type-commit INTO ls_object.
+    READ TABLE mt_objects WITH TABLE KEY type
+      COMPONENTS sha1 = iv_branch type = zif_abapgit_git_definitions=>c_type-commit INTO ls_object.
     ASSERT sy-subrc = 0.
     lv_tree_branch = zcl_abapgit_git_pack=>decode_commit( ls_object-data )-tree.
 
@@ -140,7 +142,8 @@ CLASS lcl_find_changes IMPLEMENTATION.
     IF sy-subrc = 0.
       rt_nodes = <ls_cache>-nodes.
     ELSE.
-      READ TABLE mt_objects INTO ls_object WITH TABLE KEY type COMPONENTS sha1 = iv_tree type = zif_abapgit_git_definitions=>c_type-tree.
+      READ TABLE mt_objects INTO ls_object WITH TABLE KEY type
+        COMPONENTS sha1 = iv_tree type = zif_abapgit_git_definitions=>c_type-tree.
       ASSERT sy-subrc = 0.
 
       rt_nodes = zcl_abapgit_git_pack=>decode_tree( ls_object-data ).
