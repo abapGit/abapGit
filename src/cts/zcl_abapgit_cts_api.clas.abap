@@ -419,26 +419,39 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     CLEAR ev_object.
     CLEAR ev_obj_name.
 
-    IF iv_object = 'MESS'.
-      ev_object = 'MSAG'.
-      ev_obj_name = substring( val = iv_obj_name
-                               len = strlen( iv_obj_name ) - 3 ).
-      RETURN.
-    ENDIF.
+    CASE iv_object.
+      WHEN 'MESS'.
+        ev_object = 'MSAG'.
+        ev_obj_name = substring( val = iv_obj_name
+                                 len = strlen( iv_obj_name ) - 3 ).
+      WHEN 'TABT'.
+* Technical Attributes of a Table
+        ev_object = 'TABL'.
+        ev_obj_name = iv_obj_name.
+      WHEN 'DTED'.
+* Data Element Definition
+        ev_object = 'DTEL'.
+        ev_obj_name = iv_obj_name.
+      WHEN 'DOMD'.
+* Domain Definition
+        ev_object = 'DOMA'.
+        ev_obj_name = iv_obj_name.
+      WHEN OTHERS.
+        CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
+          EXPORTING
+            p_limu_objtype = iv_object
+            p_limu_objname = iv_obj_name
+          IMPORTING
+            p_r3tr_objtype = ev_object
+            p_r3tr_objname = ev_obj_name
+          EXCEPTIONS
+            no_mapping     = 1
+            OTHERS         = 2.
+        IF sy-subrc <> 0 OR ev_obj_name IS INITIAL.
+          zcx_abapgit_exception=>raise( |No R3TR Object found for { iv_object } { iv_obj_name }| ).
+        ENDIF.
+    ENDCASE.
 
-    CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
-      EXPORTING
-        p_limu_objtype = iv_object
-        p_limu_objname = iv_obj_name
-      IMPORTING
-        p_r3tr_objtype = ev_object
-        p_r3tr_objname = ev_obj_name
-      EXCEPTIONS
-        no_mapping     = 1
-        OTHERS         = 2.
-    IF sy-subrc <> 0 OR ev_obj_name IS INITIAL.
-      zcx_abapgit_exception=>raise( |No R3TR Object found for { iv_object } { iv_obj_name }| ).
-    ENDIF.
   ENDMETHOD.
 
 
