@@ -126,63 +126,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
-  METHOD warnings_from_transports.
-
-    DATA lv_warning    TYPE string.
-    DATA lt_transports LIKE it_transports.
-    DATA lv_index      TYPE i.
-    DATA ls_next       LIKE LINE OF lt_transports.
-    DATA ls_transport  LIKE LINE OF lt_transports.
-
-    lt_transports = it_transports.
-    SORT lt_transports BY object obj_name trkorr.
-
-    LOOP AT lt_transports INTO ls_transport.
-      lv_index = sy-tabix + 1.
-      READ TABLE lt_transports INTO ls_next INDEX lv_index.
-      IF sy-subrc <> 0.
-        CONTINUE.
-      ENDIF.
-
-      IF ls_next-object = ls_transport-object
-          AND ls_next-trkorr <> ls_transport-trkorr
-          AND ls_next-obj_name = ls_transport-obj_name.
-        lv_warning = |Object { ls_transport-object } { ls_transport-obj_name
-          } is in multiple transports: { ls_transport-trkorr } and { ls_next-trkorr }|.
-        INSERT lv_warning INTO TABLE ct_warnings.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-  METHOD consolidate.
-
-    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
-    DATA ls_feature  LIKE LINE OF lt_features.
-    DATA lv_string   TYPE string.
-
-    lt_features = get( )-features.
-
-    LOOP AT lt_features INTO ls_feature.
-      IF ls_feature-branch-display_name IS NOT INITIAL
-          AND ls_feature-branch-up_to_date = abap_false.
-        lv_string = |Branch { ls_feature-branch-display_name } is not up to date|.
-        INSERT lv_string INTO TABLE rs_consolidate-errors.
-      ELSEIF ls_feature-branch-display_name IS NOT INITIAL
-          AND ls_feature-transport-trkorr IS INITIAL.
-        lv_string = |Branch { ls_feature-branch-display_name } has no transport|.
-        INSERT lv_string INTO TABLE rs_consolidate-errors.
-      ELSEIF ls_feature-transport-trkorr IS NOT INITIAL
-          AND ls_feature-branch-display_name IS INITIAL
-          AND ls_feature-full_match = abap_false.
-        lv_string = |Transport { ls_feature-transport-trkorr } has no branch|.
-        INSERT lv_string INTO TABLE rs_consolidate-errors.
-      ENDIF.
-    ENDLOOP.
-
-* todo
-
-  ENDMETHOD.
 
 
   METHOD add_local_status.
@@ -250,6 +193,36 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     rs_data-name = ii_repo->get_name( ).
     rs_data-key = ii_repo->get_key( ).
     rs_data-package = ii_repo->get_package( ).
+  ENDMETHOD.
+
+
+  METHOD consolidate.
+
+    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
+    DATA ls_feature  LIKE LINE OF lt_features.
+    DATA lv_string   TYPE string.
+
+    lt_features = get( )-features.
+
+    LOOP AT lt_features INTO ls_feature.
+      IF ls_feature-branch-display_name IS NOT INITIAL
+          AND ls_feature-branch-up_to_date = abap_false.
+        lv_string = |Branch <tt>{ ls_feature-branch-display_name }</tt> is not up to date|.
+        INSERT lv_string INTO TABLE rs_consolidate-errors.
+      ELSEIF ls_feature-branch-display_name IS NOT INITIAL
+          AND ls_feature-transport-trkorr IS INITIAL.
+        lv_string = |Branch <tt>{ ls_feature-branch-display_name }</tt> has no transport|.
+        INSERT lv_string INTO TABLE rs_consolidate-errors.
+      ELSEIF ls_feature-transport-trkorr IS NOT INITIAL
+          AND ls_feature-branch-display_name IS INITIAL
+          AND ls_feature-full_match = abap_false.
+        lv_string = |Transport <tt>{ ls_feature-transport-trkorr }</tt> has no branch|.
+        INSERT lv_string INTO TABLE rs_consolidate-errors.
+      ENDIF.
+    ENDLOOP.
+
+* todo
+
   ENDMETHOD.
 
 
@@ -530,7 +503,6 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
   ENDMETHOD.
 
 
-
   METHOD relevant_transports_via_devc.
 
     DATA ls_trkorr   LIKE LINE OF it_transports.
@@ -684,6 +656,36 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
           cs_feature       = ls_result ).
 
       INSERT ls_result INTO TABLE ct_features.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD warnings_from_transports.
+
+    DATA lv_warning    TYPE string.
+    DATA lt_transports LIKE it_transports.
+    DATA lv_index      TYPE i.
+    DATA ls_next       LIKE LINE OF lt_transports.
+    DATA ls_transport  LIKE LINE OF lt_transports.
+
+    lt_transports = it_transports.
+    SORT lt_transports BY object obj_name trkorr.
+
+    LOOP AT lt_transports INTO ls_transport.
+      lv_index = sy-tabix + 1.
+      READ TABLE lt_transports INTO ls_next INDEX lv_index.
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
+
+      IF ls_next-object = ls_transport-object
+          AND ls_next-trkorr <> ls_transport-trkorr
+          AND ls_next-obj_name = ls_transport-obj_name.
+        lv_warning = |Object <tt>{ ls_transport-object }</tt> <tt>{ ls_transport-obj_name
+          }</tt> is in multiple transports: <tt>{ ls_transport-trkorr }</tt> and <tt>{ ls_next-trkorr }</tt>|.
+        INSERT lv_warning INTO TABLE ct_warnings.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
