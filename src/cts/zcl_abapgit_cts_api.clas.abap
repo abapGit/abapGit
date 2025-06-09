@@ -427,6 +427,14 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 * Technical Attributes of a Table
       ev_object = 'TABL'.
       ev_obj_name = iv_obj_name.
+    ELSEIF iv_object = 'DTED'.
+* Data Element Definition
+      ev_object = 'DTEL'.
+      ev_obj_name = iv_obj_name.
+    ELSEIF iv_object = 'DOMD'.
+* Domain Definition
+      ev_object = 'DOMA'.
+      ev_obj_name = iv_obj_name.
     ELSE.
       CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
         EXPORTING
