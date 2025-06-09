@@ -81,8 +81,8 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
     DATA lt_objects         TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA lv_starting_folder TYPE string.
     DATA ls_main            LIKE LINE OF it_branches.
-    DATA lt_expanded        TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
     DATA li_repo            TYPE REF TO zif_abapgit_repo.
+    DATA lo_find            TYPE REF TO lcl_find_changes.
 
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
 
@@ -109,15 +109,23 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       iv_parent  = ls_main-sha1 ).
     DELETE et_main_expanded WHERE path NP lv_starting_folder.
 
-    LOOP AT ct_features ASSIGNING <ls_branch> WHERE branch-display_name <> zif_abapgit_flow_logic=>c_main.
-      lt_expanded = zcl_abapgit_git_porcelain=>full_tree(
-        it_objects = lt_objects
-        iv_parent  = <ls_branch>-branch-sha1 ).
-      DELETE lt_expanded WHERE path NP lv_starting_folder.
+    CREATE OBJECT lo_find EXPORTING it_objects = lt_objects.
 
-      <ls_branch>-changed_files = find_changed_files(
-        it_expanded1 = lt_expanded
-        it_expanded2 = et_main_expanded ).
+    LOOP AT ct_features ASSIGNING <ls_branch> WHERE branch-display_name <> zif_abapgit_flow_logic=>c_main.
+      <ls_branch>-changed_files = lo_find->find_changes(
+        iv_main            = ls_main-sha1
+        iv_branch          = <ls_branch>-branch-sha1
+        iv_starting_folder = lv_starting_folder ).
+
+      " wip, lt_expanded = zcl_abapgit_git_porcelain=>full_tree(
+      "   it_objects = lt_objects
+      "   iv_parent  = <ls_branch>-branch-sha1 ).
+
+      " wip, DELETE lt_expanded WHERE path NP lv_starting_folder.
+
+      " wip, <ls_branch>-changed_files = find_changed_files(
+      "   it_expanded1 = lt_expanded
+      "   it_expanded2 = et_main_expanded ).
 
       <ls_branch>-changed_objects = map_files_to_objects(
         ii_repo  = li_repo
