@@ -2,7 +2,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
   PUBLIC SECTION.
     CLASS-METHODS get
       RETURNING
-        VALUE(rt_features) TYPE zif_abapgit_flow_logic=>ty_features
+        VALUE(rs_information) TYPE zif_abapgit_flow_logic=>ty_information
       RAISING
         zcx_abapgit_exception.
 
@@ -127,7 +127,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA ls_feature  LIKE LINE OF lt_features.
     DATA lv_string   TYPE string.
 
-    lt_features = get( ).
+    lt_features = get( )-features.
 
     LOOP AT lt_features INTO ls_feature.
       IF ls_feature-branch-display_name IS NOT INITIAL
@@ -368,9 +368,9 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
     DATA lt_branches            TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
     DATA ls_branch              LIKE LINE OF lt_branches.
-    DATA ls_result              LIKE LINE OF rt_features.
+    DATA ls_result              LIKE LINE OF rs_information-features.
     DATA li_repo_online         TYPE REF TO zif_abapgit_repo_online.
-    DATA lt_features            LIKE rt_features.
+    DATA lt_features            LIKE rs_information-features.
     DATA lt_all_transports      TYPE ty_transports_tt.
     DATA lt_relevant_transports TYPE ty_trkorr_tt.
     DATA lt_repos               TYPE ty_repos_tt.
@@ -456,10 +456,10 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         ENDLOOP.
       ENDLOOP.
 
-      INSERT LINES OF lt_features INTO TABLE rt_features.
+      INSERT LINES OF lt_features INTO TABLE rs_information-features.
     ENDLOOP.
 
-    SORT rt_features BY full_match transport-trkorr DESCENDING.
+    SORT rs_information-features BY full_match transport-trkorr DESCENDING.
 
   ENDMETHOD.
 

@@ -662,7 +662,7 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
 
     inject( ).
-    lt_features = zcl_abapgit_flow_logic=>get( ).
+    lt_features = zcl_abapgit_flow_logic=>get( )-features.
     cl_abap_unit_assert=>assert_initial( lt_features ).
 
   ENDMETHOD.
@@ -675,7 +675,7 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     lo_data = inject( ).
     lo_data->add_branch( ).
 
-    lt_features = zcl_abapgit_flow_logic=>get( ).
+    lt_features = zcl_abapgit_flow_logic=>get( )-features.
     cl_abap_unit_assert=>assert_equals(
       act = lines( lt_features )
       exp = 1 ).
@@ -697,7 +697,7 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     lo_data = inject( ).
     lo_data->add_transport( ).
 
-    lt_features = zcl_abapgit_flow_logic=>get( ).
+    lt_features = zcl_abapgit_flow_logic=>get( )-features.
     cl_abap_unit_assert=>assert_equals(
       act = lines( lt_features )
       exp = 1 ).
@@ -718,7 +718,7 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
     lo_data->add_transport( ).
     lo_data->add_branch( ).
 
-    lt_features = zcl_abapgit_flow_logic=>get( ).
+    lt_features = zcl_abapgit_flow_logic=>get( )-features.
     " todo, cl_abap_unit_assert=>assert_equals(
     "   act = lines( lt_features )
     "   exp = 1 ).
