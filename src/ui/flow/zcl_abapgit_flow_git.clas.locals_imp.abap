@@ -89,10 +89,9 @@ CLASS lcl_find_changes IMPLEMENTATION.
     LOOP AT lt_main INTO ls_node_main.
       READ TABLE lt_branch INTO ls_node_branch WITH KEY sha1 = ls_node_main-sha1 name = ls_node_main-name.
       IF sy-subrc = 0.
+        DELETE lt_branch INDEX sy-tabix.
         CONTINUE.
       ENDIF.
-
-      DELETE lt_branch INDEX sy-tabix.
 
       ASSERT ls_node_main-chmod = ls_node_branch-chmod.
       CASE ls_node_main-chmod.
