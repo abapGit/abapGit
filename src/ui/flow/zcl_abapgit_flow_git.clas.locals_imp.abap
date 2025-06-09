@@ -109,7 +109,7 @@ CLASS lcl_find_changes IMPLEMENTATION.
           CLEAR ls_file.
           ls_file-path = iv_path.
           ls_file-filename = ls_node_main-name.
-          ls_file-remote_sha1 = ls_node_main-sha1.
+          ls_file-remote_sha1 = ls_node_branch-sha1.
           INSERT ls_file INTO TABLE rt_files.
         WHEN OTHERS.
           " ignore other types
