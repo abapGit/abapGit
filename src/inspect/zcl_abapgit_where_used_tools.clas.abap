@@ -8,6 +8,7 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
     TYPES ty_devc_range TYPE RANGE OF tadir-devclass.
     TYPES:
       BEGIN OF ty_dependency,
+        root_package  TYPE devclass,
         package       TYPE devclass,
         obj_type      TYPE tadir-object,
         obj_prog_type TYPE trdir-subc,
@@ -120,11 +121,17 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
       RETURNING
         VALUE(rv_type) TYPE ty_dev_object-tadir.
 
+    METHODS find_root_packages
+      CHANGING
+        ct_objs TYPE ty_dependency_tt
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
 
 
   METHOD build_package_scope.
@@ -268,6 +275,42 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
     IF sy-subrc = 0.
       rv_type = <ls_devobj>-tadir.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD find_root_packages.
+
+    DATA:
+      BEGIN OF ls_root,
+        pkg  TYPE devclass,
+        root TYPE devclass,
+      END OF ls_root,
+      lt_roots LIKE HASHED TABLE OF ls_root WITH UNIQUE KEY pkg.
+    DATA lv_pkg_tmp TYPE devclass.
+
+    FIELD-SYMBOLS <ls_obj> LIKE LINE OF ct_objs.
+
+    LOOP AT ct_objs ASSIGNING <ls_obj>.
+      READ TABLE lt_roots INTO ls_root WITH KEY pkg = <ls_obj>-package.
+      IF sy-subrc <> 0.
+        ls_root-pkg  = <ls_obj>-package.
+        ls_root-root = <ls_obj>-package. " Self by default
+
+        DO 10 TIMES. " Actually should be safe to run infinitely ...
+          lv_pkg_tmp = zcl_abapgit_factory=>get_sap_package( <ls_obj>-package )->read_parent( ).
+          IF lv_pkg_tmp IS INITIAL.
+            EXIT.
+          ELSE.
+            ls_root-root = lv_pkg_tmp.
+          ENDIF.
+        ENDDO.
+
+        INSERT ls_root INTO TABLE lt_roots.
+      ENDIF.
+
+      <ls_obj>-root_package = ls_root-root.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -437,6 +480,8 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
     " However here this functionality aggregates them to the object
     " These are not true duplicates, so if ever the method name (or any other duplicate cause)
     " will be extracted, this sort can be removed
+
+    find_root_packages( CHANGING ct_objs = rt_objs ).
 
   ENDMETHOD.
 ENDCLASS.
