@@ -44,7 +44,7 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
 
   PRIVATE SECTION.
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo.
+    DATA mi_repo TYPE REF TO zif_abapgit_repo.
 
     DATA mo_form TYPE REF TO zcl_abapgit_html_form.
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
@@ -201,8 +201,8 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     mo_form = get_form_schema( ).
     mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
 
-    mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    mi_config = mo_repo->get_data_config( ).
+    mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    mi_config = mi_repo->get_data_config( ).
 
   ENDMETHOD.
 
@@ -360,20 +360,20 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ELSE.
           event_add( ii_event ).
-          mo_repo->refresh( ).
+          mi_repo->refresh( ).
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ENDIF.
       WHEN c_event-update.
         event_update( ii_event ).
-        mo_repo->refresh( ).
+        mi_repo->refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_event-remove.
         event_remove( ii_event ).
-        mo_repo->refresh( ).
+        mi_repo->refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_event-add_via_transport.
         add_via_transport( ).
-        mo_repo->refresh( ).
+        mi_repo->refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 

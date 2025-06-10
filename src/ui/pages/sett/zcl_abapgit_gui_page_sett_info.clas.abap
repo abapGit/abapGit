@@ -11,14 +11,14 @@ CLASS zcl_abapgit_gui_page_sett_info DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        !io_repo       TYPE REF TO zcl_abapgit_repo
+        !ii_repo       TYPE REF TO zif_abapgit_repo
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo
+        !ii_repo TYPE REF TO zif_abapgit_repo
       RAISING
         zcx_abapgit_exception .
 
@@ -51,7 +51,7 @@ CLASS zcl_abapgit_gui_page_sett_info DEFINITION
 
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+    DATA mi_repo TYPE REF TO zif_abapgit_repo .
     DATA:
       mt_stats TYPE STANDARD TABLE OF ty_stats WITH KEY measure .
 
@@ -121,7 +121,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
 
     super->constructor( ).
     CREATE OBJECT mo_form_data.
-    mo_repo = io_repo.
+    mi_repo = ii_repo.
     mo_form = get_form_schema( ).
 
   ENDMETHOD.
@@ -133,12 +133,12 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        io_repo = io_repo.
+        ii_repo = ii_repo.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Repository Stats'
       io_page_menu       = zcl_abapgit_gui_menus=>repo_settings(
-                             iv_key = io_repo->get_key( )
+                             iv_key = ii_repo->get_key( )
                              iv_act = zif_abapgit_definitions=>c_action-repo_infos )
       ii_child_component = lo_component ).
 
@@ -194,7 +194,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     ENDIF.
 
     IF iv_username <> zcl_abapgit_objects_super=>c_user_unknown.
-      lv_title = zcl_abapgit_user_record=>get_title( iv_username ).
+      lv_title = zcl_abapgit_env_factory=>get_user_record( )->get_title( iv_username ).
     ENDIF.
 
     rv_user = iv_username.
@@ -213,7 +213,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
                 iv_form_id   = 'repo-infos-form'
                 iv_help_page = 'https://docs.abapgit.org/settings-stats.html' ).
 
-    IF mo_repo->is_offline( ) = abap_true.
+    IF mi_repo->is_offline( ) = abap_true.
       lv_label = 'ZIP File'.
     ELSE.
       lv_label = 'Remote'.
@@ -271,9 +271,9 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
 
     " Get infos from DB
     TRY.
-        ls_repo = zcl_abapgit_persist_factory=>get_repo( )->read( mo_repo->get_key( ) ).
+        ls_repo = zcl_abapgit_persist_factory=>get_repo( )->read( mi_repo->get_key( ) ).
       CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( |Repo not found, key { mo_repo->get_key( ) }| ).
+        zcx_abapgit_exception=>raise( |Repo not found, key { mi_repo->get_key( ) }| ).
     ENDTRY.
 
     read_stats( ).
@@ -394,15 +394,15 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     DATA ls_stats TYPE ty_stats.
     DATA lt_remote_wo_ignored TYPE zif_abapgit_git_definitions=>ty_files_tt.
 
-    et_local = mo_repo->get_files_local( ).
+    et_local = mi_repo->get_files_local( ).
 
     ls_stats-measure = 'Number of Files'.
     ls_stats-local   = lines( et_local ).
 
-    IF mo_repo->has_remote_source( ) = abap_true.
-      et_remote = mo_repo->get_files_remote( ).
+    IF mi_repo->has_remote_source( ) = abap_true.
+      et_remote = mi_repo->get_files_remote( ).
       ls_stats-remote = lines( et_remote ).
-      lt_remote_wo_ignored = mo_repo->get_files_remote( iv_ignore_files = abap_true ).
+      lt_remote_wo_ignored = mi_repo->get_files_remote( iv_ignore_files = abap_true ).
     ENDIF.
 
     APPEND ls_stats TO mt_stats.
@@ -436,7 +436,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
 
     CLEAR ls_stats.
     ls_stats-measure = 'Number of Unsupported Objects'.
-    ls_stats-local   = lines( mo_repo->get_unsupported_objects_local( ) ).
+    ls_stats-local   = lines( mi_repo->get_unsupported_objects_local( ) ).
 
     lt_supported_types = zcl_abapgit_objects=>supported_list( ).
 
@@ -476,9 +476,9 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
       COLLECT <ls_local>-item INTO et_local_items.
     ENDLOOP.
 
-    IF mo_repo->has_remote_source( ) = abap_true.
+    IF mi_repo->has_remote_source( ) = abap_true.
       LOOP AT it_remote ASSIGNING <ls_remote> WHERE filename IS NOT INITIAL.
-        lv_ignored = mo_repo->get_dot_abapgit( )->is_ignored(
+        lv_ignored = mi_repo->get_dot_abapgit( )->is_ignored(
                        iv_filename = <ls_remote>-filename
                        iv_path     = <ls_remote>-path ).
 
@@ -494,8 +494,8 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
                 EXPORTING
                   iv_filename = <ls_remote>-filename
                   iv_path     = <ls_remote>-path
-                  iv_devclass = mo_repo->get_package( )
-                  io_dot      = mo_repo->get_dot_abapgit( )
+                  iv_devclass = mi_repo->get_package( )
+                  io_dot      = mi_repo->get_dot_abapgit( )
                 IMPORTING
                   es_item     = ls_item ).
               COLLECT ls_item INTO et_remote_items.
@@ -532,7 +532,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     FIELD-SYMBOLS:
       <ls_result> LIKE LINE OF lt_results.
 
-    lt_results = zcl_abapgit_repo_status=>calculate( mo_repo ).
+    lt_results = zcl_abapgit_repo_status=>calculate( mi_repo ).
 
     DO 3 TIMES.
       CLEAR ls_stats.
@@ -553,7 +553,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
         IF <ls_result>-lstate = lv_state.
           ls_stats-local = ls_stats-local + 1.
         ENDIF.
-        IF <ls_result>-rstate = lv_state AND mo_repo->has_remote_source( ) = abap_true.
+        IF <ls_result>-rstate = lv_state AND mi_repo->has_remote_source( ) = abap_true.
           ls_stats-remote = ls_stats-remote + 1.
         ENDIF.
       ENDLOOP.
@@ -584,7 +584,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     ri_html->add( `<div class="repo">` ).
 
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-                    io_repo               = mo_repo
+                    ii_repo               = mi_repo
                     iv_show_commit        = abap_false
                     iv_interactive_branch = abap_true ) ).
 

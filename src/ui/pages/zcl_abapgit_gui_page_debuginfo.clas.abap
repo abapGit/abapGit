@@ -62,6 +62,10 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
         !iv_obj_name   TYPE csequence
       RETURNING
         VALUE(rv_html) TYPE string .
+    METHODS resolve_exit_include
+      CHANGING
+        !cv_clsname TYPE seoclsname
+        !ct_source  TYPE string_table.
 ENDCLASS.
 
 
@@ -187,10 +191,16 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
       " Standalone version
       lt_source = zcl_abapgit_factory=>get_sap_report( )->read_report( c_exit_standalone ).
       IF sy-subrc = 0.
+        resolve_exit_include(
+          CHANGING
+            cv_clsname = ls_class_key-clsname
+            ct_source  = lt_source ).
         ri_html->add( |<div>User exits are active (include { get_jump_object(
           iv_obj_type = 'PROG'
           iv_obj_name = c_exit_standalone ) } found)</div><br>| ).
-        ri_html->add( render_exit_info_methods( lt_source ) ).
+        ri_html->add( render_exit_info_methods(
+                        it_source  = lt_source
+                        iv_clsname = to_upper( ls_class_key-clsname ) ) ).
       ELSE.
         ri_html->add( |<div>No user exits implemented (include { c_exit_standalone } not found)</div><br>| ).
       ENDIF.
@@ -388,6 +398,8 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
             lv_step = |{ lv_step } (3)|.
           WHEN zif_abapgit_object=>gc_step_id-late.
             lv_step = |<i>{ lv_step } (4)</i>|.
+          WHEN zif_abapgit_object=>gc_step_id-lxe.
+            lv_step = |<i>{ lv_step } (5)</i>|.
           WHEN OTHERS.
             ASSERT 1 = 2.
         ENDCASE.
@@ -406,6 +418,32 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     rv_html = rv_html && |</tbody></table>|.
     rv_html = rv_html && |<br>|.
+
+  ENDMETHOD.
+
+
+  METHOD resolve_exit_include.
+
+    DATA lv_include TYPE progname.
+
+    cv_clsname = c_exit_class.
+
+    DO.
+      FIND REGEX 'CLASS\s+(.*)\s+DEFINITION' IN TABLE ct_source SUBMATCHES cv_clsname IGNORING CASE.
+      IF sy-subrc = 0.
+        RETURN.
+      ENDIF.
+      FIND REGEX 'INCLUDE\s+(.*)\s*\.' IN TABLE ct_source SUBMATCHES lv_include IGNORING CASE.
+      IF sy-subrc = 0.
+        TRY.
+            ct_source = zcl_abapgit_factory=>get_sap_report( )->read_report( lv_include ).
+          CATCH zcx_abapgit_exception.
+            RETURN. " rely on original include
+        ENDTRY.
+      ELSE.
+        RETURN.
+      ENDIF.
+    ENDDO.
 
   ENDMETHOD.
 

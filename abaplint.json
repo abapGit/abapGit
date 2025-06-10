@@ -118,6 +118,7 @@
     "class_attribute_names": {
       "constants": "^C_.*$",
       "exclude": [
+        "/deps/",
         "/json/",
         "zif_abapgit_objects"
       ],
@@ -225,8 +226,8 @@
         "^if_adt_lock_handle$",
         "^if_aff_",
         "^if_satc_ci_variant_access$",
-        "^if_saunit_internal_result$",
         "^if_saunit_internal_result_type$",
+        "^if_saunit_internal_result$",
         "^if_srvd_types$",
         "^if_wb_adt_plugin_resource_co$",
         "^if_wb_object_data_selection_co$",
@@ -234,6 +235,7 @@
         "^if_xco_",
         "^int4$",
         "^numc2$",
+        "^pgmid$",
         "^sabp_t_tadir_keys$",
         "^sap_bool$",
         "^srcsystem$",
@@ -318,6 +320,9 @@
     "message_exists": true,
     "method_implemented_twice": true,
     "method_length": {
+      "exclude": [
+        "zcl_abapgit_convert.clas.locals_imp.abap"
+      ],
       "checkForms": true,
       "errorWhenEmpty": false,
       "ignoreTestClasses": false,
@@ -332,6 +337,7 @@
     "method_parameter_names": {
       "changing": "^C._.*$",
       "exclude": [
+        "/deps/",
         "/json/"
       ],
       "exporting": "^E._.*$",
@@ -402,6 +408,7 @@
     "prefer_raise_exception_new": true,
     "prefer_returning_to_exporting": {
       "exclude": [
+        "/deps/",
         "/json/"
       ]
     },

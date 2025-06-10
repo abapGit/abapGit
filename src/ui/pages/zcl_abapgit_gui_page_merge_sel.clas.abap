@@ -41,7 +41,7 @@ CLASS zcl_abapgit_gui_page_merge_sel DEFINITION
     DATA mo_form TYPE REF TO zcl_abapgit_html_form.
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
     DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online.
+    DATA mi_repo_online TYPE REF TO zif_abapgit_repo_online.
     DATA mt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
 
     METHODS read_branches
@@ -64,7 +64,7 @@ CLASS zcl_abapgit_gui_page_merge_sel IMPLEMENTATION.
 
     super->constructor( ).
     CREATE OBJECT mo_form_data.
-    mo_repo ?= ii_repo.
+    mi_repo_online ?= ii_repo.
 
     read_branches( ).
 
@@ -105,7 +105,7 @@ CLASS zcl_abapgit_gui_page_merge_sel IMPLEMENTATION.
       iv_name          = c_id-source
       iv_label         = 'Source Branch'
       iv_default_value = substring(
-                           val = mo_repo->get_selected_branch( )
+                           val = mi_repo_online->get_selected_branch( )
                            off = 11 )
       iv_condense      = abap_true ).
 
@@ -139,9 +139,9 @@ CLASS zcl_abapgit_gui_page_merge_sel IMPLEMENTATION.
 
   METHOD read_branches.
 
-    DATA lo_branches TYPE REF TO zcl_abapgit_git_branch_list.
+    DATA lo_branches TYPE REF TO zif_abapgit_git_branch_list.
 
-    lo_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( mo_repo->get_url( ) ).
+    lo_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( mi_repo_online->get_url( ) ).
     mt_branches = lo_branches->get_branches_only( ).
 
     DELETE mt_branches WHERE name = zif_abapgit_git_definitions=>c_head_name.
@@ -161,9 +161,9 @@ CLASS zcl_abapgit_gui_page_merge_sel IMPLEMENTATION.
         ENDIF.
 
         rs_handled-page  = zcl_abapgit_gui_page_merge=>create(
-          io_repo   = mo_repo
-          iv_source = mo_form_data->get( c_id-source )
-          iv_target = mo_form_data->get( c_id-target ) ).
+            ii_repo_online = mi_repo_online
+            iv_source      = mo_form_data->get( c_id-source )
+            iv_target      = mo_form_data->get( c_id-target ) ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
@@ -183,7 +183,7 @@ CLASS zcl_abapgit_gui_page_merge_sel IMPLEMENTATION.
     ri_html->add( `<div class="repo">` ).
 
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-                    io_repo               = mo_repo
+                    ii_repo               = mi_repo_online
                     iv_show_commit        = abap_false
                     iv_interactive_branch = abap_false ) ).
 

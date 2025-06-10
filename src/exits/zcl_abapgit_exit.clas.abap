@@ -317,8 +317,8 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
       TRY.
           gi_exit->determine_transport_request(
             EXPORTING
-              io_repo              = io_repo
-              iv_transport_type    = iv_transport_type
+              ii_repo           = ii_repo
+              iv_transport_type = iv_transport_type
             CHANGING
               cv_transport_request = cv_transport_request ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
@@ -452,9 +452,9 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
     IF gi_exit IS NOT INITIAL.
       TRY.
           gi_exit->validate_before_push(
-            is_comment = is_comment
-            io_stage   = io_stage
-            io_repo    = io_repo ).
+            is_comment     = is_comment
+            io_stage       = io_stage
+            ii_repo_online = ii_repo_online ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
@@ -481,6 +481,22 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
           gi_exit->wall_message_repo(
             is_repo_meta = is_repo_meta
             ii_html      = ii_html ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~change_committer_info.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->change_committer_info(
+            EXPORTING
+              iv_repo_url = iv_repo_url
+            CHANGING
+              cv_name     = cv_name
+              cv_email    = cv_email ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.

@@ -7,6 +7,14 @@ CLASS zcl_abapgit_object_http DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_object.
+    METHODS constructor
+      IMPORTING
+        is_item        TYPE zif_abapgit_definitions=>ty_item
+        iv_language    TYPE spras
+        io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_type_not_supported.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -45,17 +53,31 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_http IMPLEMENTATION.
 
+  METHOD constructor.
+
+    DATA: lr_dummy TYPE REF TO data.
+
+    super->constructor(
+        is_item        = is_item
+        iv_language    = iv_language
+        io_files       = io_files
+        io_i18n_params = io_i18n_params ).
+
+    TRY.
+        CREATE DATA lr_dummy TYPE ('UCONHTTPSERVHEAD').
+      CATCH cx_root.
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
+    ENDTRY.
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~changed_by.
 
-    TRY.
-        SELECT SINGLE changedby FROM ('UCONHTTPSERVHEAD') INTO rv_user WHERE id = ms_item-obj_name.
-        IF sy-subrc <> 0.
-          rv_user = c_user_unknown.
-        ENDIF.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'HTTP not supported' ).
-    ENDTRY.
+    SELECT SINGLE changedby FROM ('UCONHTTPSERVHEAD') INTO rv_user WHERE id = ms_item-obj_name.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -65,14 +87,11 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
     DATA lv_name TYPE c LENGTH 30.
 
     lv_name = ms_item-obj_name.
-    TRY.
-        CALL METHOD ('CL_UCON_API_FACTORY')=>('DELETE_HTTP_SERVICE')
-          EXPORTING
-            name     = lv_name
-            devclass = iv_package.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'HTTP not supported' ).
-    ENDTRY.
+
+    CALL METHOD ('CL_UCON_API_FACTORY')=>('DELETE_HTTP_SERVICE')
+      EXPORTING
+        name     = lv_name
+        devclass = iv_package.
 
   ENDMETHOD.
 
@@ -85,7 +104,6 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
           ls_description       TYPE ty_uconhttpservtext,
           lv_check_object_name TYPE c LENGTH 40,
           lx_root              TYPE REF TO cx_root,
-          lv_id                TYPE c LENGTH 30,
           lo_http              TYPE REF TO object,
           ls_abap_lang         TYPE ty_gs_object_version,
           lo_instance          TYPE REF TO object,
@@ -110,8 +128,8 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
           CATCH cx_root.
         ENDTRY.
 
-        SELECT SINGLE id FROM ('UCONHTTPSERVHEAD') INTO lv_id WHERE id = lv_http_servid AND version = 'A'.
-        IF sy-subrc = 0.
+        SELECT COUNT(*) FROM ('UCONHTTPSERVHEAD') WHERE id = lv_http_servid.
+        IF sy-dbcnt > 0.
           "update
           CALL METHOD ('CL_UCON_API_FACTORY')=>('GET_HTTP_SERVICE')
             EXPORTING
@@ -167,6 +185,7 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
         CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SET_ICF_SERVICE')
           EXPORTING
             iv_icfservice = lv_icfnode.
+        CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~ACTIVATE').
         CALL METHOD lo_http->('IF_UCON_API_HTTP_SERVICE~SAVE')
           EXPORTING
             run_dark  = abap_true
@@ -183,14 +202,8 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA lv_id TYPE c LENGTH 30.
-
-    TRY.
-        SELECT SINGLE id FROM ('UCONHTTPSERVHEAD') INTO lv_id WHERE id = ms_item-obj_name AND version = 'A'.
-        rv_bool = boolc( sy-subrc = 0 ).
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'HTTP not supported' ).
-    ENDTRY.
+    SELECT COUNT(*) FROM ('UCONHTTPSERVHEAD') WHERE id = ms_item-obj_name.
+    rv_bool = boolc( sy-dbcnt > 0 ).
 
   ENDMETHOD.
 

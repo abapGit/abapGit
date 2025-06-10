@@ -5,11 +5,12 @@
     "test": "npm run eslint && npm run abaplint",
     "merge": "abapmerge -f src/zabapgit.prog.abap -c zabapgit_standalone -o zabapgit.abap",
     "merge.ci": "cp zabapgit.abap ci/zabapgit_standalone.prog.abap && cd ci && abaplint --format codeframe && cd ..",
-    "build": "rm -rf output && abap_transpile test/abap_transpile.json",
-    "unit": "npm run build && echo RUNNING && node output/index.mjs",
-    "coverage": "npm run unit && c8 node output/index.mjs && c8 report --reporter=html",
-    "integration": "rm -rf output && cp test/abap_transpile.json test/abap_transpile_int.json && sed -i 's/src,deps/test\\/src,src,deps/g' test/abap_transpile_int.json && abap_transpile test/abap_transpile_int.json && cp -f src/ui/zabapgit_icon_font.w3mi.data.woff output/ && echo RUNNING && node output/index.mjs",
+    "build": "rm -rf output && abap_transpile test/abap_transpile.json && cp -f src/ui/zabapgit_icon_font.w3mi.data.woff output/",
+    "unit": "npm run build && echo RUNNING && node output/index.mjs --skip-critical",
+    "coverage": "npm run unit && c8 node output/index.mjs --skip-critical && c8 report --reporter=html",
+    "integration": "npm run build && echo RUNNING && node output/index.mjs --only-critical",
     "abaplint": "abaplint --format codeframe",
+    "express": "npm run build && node test/express.mjs",
     "eslint": "eslint src"
   },
   "repository": {
@@ -23,14 +24,14 @@
     ]
   },
   "devDependencies": {
-    "@abaplint/cli": "^2.113.105",
+    "@abaplint/cli": "^2.113.126",
     "@abaplint/database-sqlite": "^2.10.24",
-    "@abaplint/runtime": "^2.10.26",
+    "@abaplint/runtime": "^2.10.59",
     "express": "^4.21.2",
-    "@abaplint/transpiler-cli": "^2.10.26",
-    "globals": "^16.0.0",
+    "@abaplint/transpiler-cli": "^2.10.59",
+    "globals": "^16.2.0",
     "abapmerge": "^0.16.6",
     "c8": "^10.1.3",
-    "eslint": "^9.22.0"
+    "eslint": "^9.28.0"
   }
 }

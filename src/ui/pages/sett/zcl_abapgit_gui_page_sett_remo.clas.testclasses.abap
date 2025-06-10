@@ -7,17 +7,18 @@ CLASS ltd_git_transport DEFINITION FINAL FOR TESTING.
 ENDCLASS.
 
 
-CLASS ltd_branch_list DEFINITION FINAL FOR TESTING INHERITING FROM zcl_abapgit_git_branch_list.
+CLASS ltd_branch_list DEFINITION FINAL FOR TESTING.
 
   PUBLIC SECTION.
-    METHODS:
-      constructor
-        IMPORTING
-          iv_data TYPE string
-        RAISING
-          zcx_abapgit_exception,
+    INTERFACES zif_abapgit_git_branch_list.
+ENDCLASS.
 
-      find_by_name REDEFINITION.
+
+CLASS ltd_repo_online DEFINITION FINAL FOR TESTING.
+
+  PUBLIC SECTION.
+    INTERFACES:
+      zif_abapgit_repo_online.
 
 ENDCLASS.
 
@@ -33,7 +34,6 @@ CLASS ltcl_validate_form DEFINITION FINAL FOR TESTING
     DATA:
       mo_cut                    TYPE REF TO zcl_abapgit_gui_page_sett_remo,
 
-      mo_repo                   TYPE REF TO zcl_abapgit_repo_online,
       mo_given_form_data        TYPE REF TO zcl_abapgit_string_map,
       mo_act_validation_log     TYPE REF TO zcl_abapgit_string_map,
 
@@ -78,11 +78,7 @@ CLASS ltd_git_transport IMPLEMENTATION.
 
   METHOD zif_abapgit_git_transport~branches.
 
-    CONSTANTS: lc_dummy_data TYPE string VALUE '0000'.
-
-    CREATE OBJECT ro_branch_list TYPE ltd_branch_list
-      EXPORTING
-        iv_data = lc_dummy_data.
+    CREATE OBJECT ri_branch_list TYPE ltd_branch_list.
 
   ENDMETHOD.
 
@@ -91,14 +87,7 @@ ENDCLASS.
 
 CLASS ltd_branch_list IMPLEMENTATION.
 
-  METHOD constructor.
-
-    super->constructor( iv_data ).
-
-  ENDMETHOD.
-
-
-  METHOD find_by_name.
+  METHOD zif_abapgit_git_branch_list~find_by_name.
 
     IF iv_branch_name CS 'feature'
     OR iv_branch_name CS 'inv_tag'
@@ -109,6 +98,150 @@ CLASS ltd_branch_list IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_git_branch_list~get_head_symref.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_git_branch_list~get_all.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_git_branch_list~get_branches_only.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_git_branch_list~get_tags_only.
+    RETURN.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+CLASS ltd_repo_online IMPLEMENTATION.
+
+  METHOD zif_abapgit_repo~bind_listener.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~checksums.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_online~check_for_valid_branch.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_online~create_branch.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~create_new_log.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~delete_checks.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~deserialize.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~deserialize_checks.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~find_remote_dot_abapgit.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_online~get_current_remote.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_data_config.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_dot_abapgit.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_dot_apack.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_files_local.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_files_local_filtered.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_files_remote.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_key.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_local_settings.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_log.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_name.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_package.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_online~get_selected_branch.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_online~get_selected_commit.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_online~get_switched_origin.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_tadir_objects.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_unsupported_objects_local.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_online~get_url.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~has_remote_source.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~is_offline.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_online~push.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~refresh.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~refresh_local_object.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~refresh_local_objects.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~remove_ignored_files.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_online~select_branch.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_online~select_commit.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~set_dot_abapgit.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~set_files_remote.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~set_local_settings.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_online~set_url.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_online~switch_origin.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~switch_repo_type.
+  ENDMETHOD.
+
 ENDCLASS.
 
 
@@ -117,6 +250,7 @@ CLASS ltcl_validate_form IMPLEMENTATION.
   METHOD setup.
 
     DATA: ls_data TYPE zif_abapgit_persistence=>ty_repo.
+    DATA: li_repo_online TYPE REF TO zif_abapgit_repo_online.
 
     CREATE OBJECT mo_git_transport_mock TYPE ltd_git_transport.
     zcl_abapgit_git_injector=>set_git_transport( mo_git_transport_mock ).
@@ -127,14 +261,14 @@ CLASS ltcl_validate_form IMPLEMENTATION.
     ls_data-key = 1.
     ls_data-branch_name = 'main'.
 
-    CREATE OBJECT mo_repo EXPORTING is_data = ls_data.
+    CREATE OBJECT li_repo_online TYPE ltd_repo_online.
 
     CREATE OBJECT mo_given_form_data.
     mo_given_form_data->set(
         iv_key = zcl_abapgit_gui_page_sett_remo=>c_id-branch
         iv_val = 'main' ).
 
-    CREATE OBJECT mo_cut EXPORTING io_repo = mo_repo.
+    CREATE OBJECT mo_cut EXPORTING ii_repo = li_repo_online.
 
   ENDMETHOD.
 

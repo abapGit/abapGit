@@ -4,6 +4,13 @@ CLASS zcl_abapgit_object_ttyp DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    " Fields that are not part of dd40v
+    TYPES:
+      BEGIN OF ty_extra,
+        abap_language_version TYPE uccheck,
+      END OF ty_extra.
+
     CONSTANTS c_longtext_id_ttyp TYPE dokil-id VALUE 'TT'.
 ENDCLASS.
 
@@ -41,6 +48,7 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
           lt_dd42v TYPE dd42v_tab,
           lt_dd43v TYPE dd43v_tab,
           ls_dd40v TYPE dd40v,
+          ls_extra TYPE ty_extra,
           lv_msg   TYPE string.
 
     io_xml->read( EXPORTING iv_name = 'DD40V'
@@ -91,6 +99,17 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
       zcx_abapgit_exception=>raise( lv_msg ).
     ENDIF.
 
+    " Fields that are not part of dd40v
+    io_xml->read( EXPORTING iv_name = 'DD40L_EXTRA'
+                  CHANGING  cg_data = ls_extra ).
+
+    TRY.
+        set_abap_language_version( CHANGING cv_abap_language_version = ls_extra-abap_language_version ).
+
+        UPDATE ('DD40L') SET abap_language_version = ls_extra-abap_language_version WHERE typename = lv_name.
+      CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
+    ENDTRY.
+
     deserialize_longtexts( ii_xml         = io_xml
                            iv_longtext_id = c_longtext_id_ttyp ).
 
@@ -122,6 +141,7 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
   ENDMETHOD.
 
 
@@ -164,8 +184,8 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
           lv_state TYPE ddgotstate,
           lt_dd42v TYPE dd42v_tab,
           lt_dd43v TYPE dd43v_tab,
+          ls_extra TYPE ty_extra,
           ls_dd40v TYPE dd40v.
-
 
     lv_name = ms_item-obj_name.
 
@@ -206,6 +226,11 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
                  ig_data = lt_dd42v ).
     io_xml->add( iv_name = 'DD43V'
                  ig_data = lt_dd43v ).
+
+    ls_extra-abap_language_version = get_abap_language_version( ).
+
+    io_xml->add( iv_name = 'DD40L_EXTRA'
+                 ig_data = ls_extra ).
 
     serialize_longtexts( ii_xml         = io_xml
                          iv_longtext_id = c_longtext_id_ttyp ).

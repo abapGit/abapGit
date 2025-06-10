@@ -11,14 +11,14 @@ CLASS zcl_abapgit_gui_page_sett_bckg DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        !io_repo       TYPE REF TO zcl_abapgit_repo
+        !ii_repo       TYPE REF TO zif_abapgit_repo
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo
+        !ii_repo TYPE REF TO zif_abapgit_repo
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -41,7 +41,7 @@ CLASS zcl_abapgit_gui_page_sett_bckg DEFINITION
       END OF c_event .
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+    DATA mi_repo TYPE REF TO zif_abapgit_repo .
     DATA mv_settings_count TYPE i .
 
     METHODS get_form_schema
@@ -56,7 +56,7 @@ CLASS zcl_abapgit_gui_page_sett_bckg DEFINITION
         zcx_abapgit_exception .
     METHODS read_persist
       RETURNING
-        VALUE(rs_persist) TYPE zcl_abapgit_persist_background=>ty_background
+        VALUE(rs_persist) TYPE zif_abapgit_persist_background=>ty_background
       RAISING
         zcx_abapgit_exception .
     METHODS save_settings
@@ -66,14 +66,14 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_bckg IMPLEMENTATION.
 
 
   METHOD constructor.
 
     super->constructor( ).
     CREATE OBJECT mo_form_data.
-    mo_repo = io_repo.
+    mi_repo = ii_repo.
     mo_form = get_form_schema( ).
     mo_form_data = read_settings( ).
 
@@ -86,12 +86,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        io_repo = io_repo.
+        ii_repo = ii_repo.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Background Mode'
       io_page_menu       = zcl_abapgit_gui_menus=>repo_settings(
-                             iv_key = io_repo->get_key( )
+                             iv_key = ii_repo->get_key( )
                              iv_act = zif_abapgit_definitions=>c_action-repo_background )
       ii_child_component = lo_component ).
 
@@ -173,12 +173,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
 
   METHOD read_persist.
 
-    DATA lo_per TYPE REF TO zcl_abapgit_persist_background.
-
-    CREATE OBJECT lo_per.
-
     TRY.
-        rs_persist = lo_per->get_by_key( mo_repo->get_key( ) ).
+        zcl_abapgit_persist_factory=>get_background( )->get_by_key( mi_repo->get_key( ) ).
       CATCH zcx_abapgit_not_found.
         CLEAR rs_persist.
     ENDTRY.
@@ -189,7 +185,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
   METHOD read_settings.
 
     DATA:
-      ls_per      TYPE zcl_abapgit_persist_background=>ty_background,
+      ls_per      TYPE zif_abapgit_persist_background=>ty_background,
       lv_row      TYPE i,
       lv_val      TYPE string,
       lt_settings LIKE ls_per-settings,
@@ -256,14 +252,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
   METHOD save_settings.
 
     DATA:
-      lo_persistence TYPE REF TO zcl_abapgit_persist_background,
-      ls_per         TYPE zcl_abapgit_persist_background=>ty_background,
+      ls_per         TYPE zif_abapgit_persist_background=>ty_background,
       lt_settings    LIKE ls_per-settings.
 
     FIELD-SYMBOLS:
       <ls_settings> LIKE LINE OF ls_per-settings.
 
-    ls_per-key = mo_repo->get_key( ).
+    ls_per-key = mi_repo->get_key( ).
 
     " Mode Selection
     ls_per-method = mo_form_data->get( c_id-method ).
@@ -292,12 +287,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
     ls_per-username = mo_form_data->get( c_id-username ).
     ls_per-password = mo_form_data->get( c_id-password ).
 
-    CREATE OBJECT lo_persistence.
-
     IF ls_per-method IS INITIAL.
-      lo_persistence->delete( ls_per-key ).
+      zcl_abapgit_persist_factory=>get_background( )->delete( ls_per-key ).
     ELSE.
-      lo_persistence->modify( ls_per ).
+      zcl_abapgit_persist_factory=>get_background( )->modify( ls_per ).
     ENDIF.
 
     COMMIT WORK AND WAIT.
@@ -337,7 +330,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
     ri_html->add( `<div class="repo">` ).
 
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-                    io_repo               = mo_repo
+                    ii_repo               = mi_repo
                     iv_show_commit        = abap_false
                     iv_interactive_branch = abap_true ) ).
 

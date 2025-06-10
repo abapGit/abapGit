@@ -1,8 +1,6 @@
-version: "2"
-
 services:
   gitea:
-    image: gitea/gitea:1.20.5-rootless
+    image: gitea/gitea:1.23.8-rootless
     restart: always
     ports:
       - "3050:3000"

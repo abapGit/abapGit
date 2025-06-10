@@ -1,18 +1,38 @@
 CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL CRITICAL FINAL.
 
   PRIVATE SECTION.
+    INTERFACES if_ftd_invocation_answer.
+    METHODS setup.
+    METHODS teardown.
     METHODS list_branches FOR TESTING RAISING cx_static_check.
     METHODS list_no_blobs FOR TESTING RAISING cx_static_check.
     METHODS commits_last_year FOR TESTING RAISING cx_static_check.
 
+    DATA mi_env TYPE REF TO if_function_test_environment.
 ENDCLASS.
 
 
 CLASS ltcl_test IMPLEMENTATION.
+  METHOD setup.
+    DATA lt_deps TYPE if_function_test_environment=>tt_function_dependencies.
+
+    INSERT 'SAPGUI_PROGRESS_INDICATOR' INTO TABLE lt_deps.
+    mi_env = cl_function_test_environment=>create( lt_deps ).
+
+    mi_env->get_double( 'SAPGUI_PROGRESS_INDICATOR' )->configure_call( )->ignore_all_parameters( )->then_answer( me ).
+  ENDMETHOD.
+
+  METHOD teardown.
+    mi_env->clear_doubles( ).
+  ENDMETHOD.
+
+  METHOD if_ftd_invocation_answer~answer.
+    RETURN.
+  ENDMETHOD.
 
   METHOD list_branches.
 
-    DATA lo_list     TYPE REF TO zcl_abapgit_git_branch_list.
+    DATA lo_list     TYPE REF TO zif_abapgit_git_branch_list.
     DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
 
     lo_list = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(

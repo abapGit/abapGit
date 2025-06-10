@@ -67,9 +67,8 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
       EXCEPTIONS
         type_not_found = 1
         OTHERS         = 2 ).
-
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |SMTG not supported| ).
+      RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = ms_item-obj_type.
     ENDIF.
 
     ls_component-name = iv_fielname.
@@ -373,6 +372,7 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
   ENDMETHOD.
 
 

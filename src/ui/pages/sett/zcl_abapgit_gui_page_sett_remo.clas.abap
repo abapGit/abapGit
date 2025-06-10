@@ -12,14 +12,14 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        !io_repo       TYPE REF TO zcl_abapgit_repo
+        !ii_repo       TYPE REF TO zif_abapgit_repo
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo
+        !ii_repo TYPE REF TO zif_abapgit_repo
       RAISING
         zcx_abapgit_exception.
   PROTECTED SECTION.
@@ -74,7 +74,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
         change_head_type    TYPE string VALUE 'change_head_type',
       END OF c_event .
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+    DATA mi_repo TYPE REF TO zif_abapgit_repo .
     DATA ms_settings_snapshot TYPE ty_remote_settings.
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
@@ -86,7 +86,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
 
     METHODS get_remote_settings_from_repo
       IMPORTING
-        io_repo            TYPE REF TO zcl_abapgit_repo
+        ii_repo            TYPE REF TO zif_abapgit_repo
       RETURNING
         VALUE(rs_settings) TYPE ty_remote_settings
       RAISING
@@ -205,10 +205,10 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
   METHOD check_protection.
 
-    IF mo_repo->is_offline( ) = abap_true.
+    IF mi_repo->is_offline( ) = abap_true.
       zcx_abapgit_exception=>raise( 'Unexpected switch for offline repo' ).
     ENDIF.
-    IF mo_repo->get_local_settings( )-write_protected = abap_true.
+    IF mi_repo->get_local_settings( )-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot switch. Repository is write-protected in local settings' ).
     ENDIF.
 
@@ -324,7 +324,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
       IF mo_form_data->get( c_id-offline ) = abap_true.
         RETURN.
-      ELSEIF mo_repo->is_offline( ) = abap_true.
+      ELSEIF mi_repo->is_offline( ) = abap_true.
         MESSAGE 'Please save conversion to online repository before choosing a tag' TYPE 'S'.
         RETURN.
       ENDIF.
@@ -363,8 +363,8 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor( ).
-    mo_repo              = io_repo.
-    ms_settings_snapshot = get_remote_settings_from_repo( mo_repo ).
+    mi_repo              = ii_repo.
+    ms_settings_snapshot = get_remote_settings_from_repo( mi_repo ).
     mo_form              = get_form_schema( ).
     mo_form_data         = initialize_form_data( ).
     CREATE OBJECT mo_validation_log.
@@ -378,12 +378,12 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        io_repo = io_repo.
+        ii_repo = ii_repo.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Remote Settings'
       io_page_menu       = zcl_abapgit_gui_menus=>repo_settings(
-                             iv_key = io_repo->get_key( )
+                             iv_key = ii_repo->get_key( )
                              iv_act = zif_abapgit_definitions=>c_action-repo_remote_settings )
       ii_child_component = lo_component ).
 
@@ -539,39 +539,39 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
   METHOD get_remote_settings_from_repo.
 
-    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
+    DATA: li_repo_online TYPE REF TO zif_abapgit_repo_online,
           lv_branch      TYPE ty_remote_settings-branch.
 
-    IF io_repo->is_offline( ) = abap_false.
-      lo_repo_online ?= io_repo.
+    IF ii_repo->is_offline( ) = abap_false.
+      li_repo_online ?= ii_repo.
 
-      rs_settings-url = lo_repo_online->get_url( ).
+      rs_settings-url = li_repo_online->get_url( ).
       rs_settings-offline = abap_false.
-      rs_settings-switched_origin = lo_repo_online->get_switched_origin( ).
+      rs_settings-switched_origin = li_repo_online->get_switched_origin( ).
 
-      IF lo_repo_online->get_selected_commit( ) IS NOT INITIAL.
-        rs_settings-commit = lo_repo_online->get_selected_commit( ).
-        rs_settings-branch = lo_repo_online->get_selected_branch( ).
+      IF li_repo_online->get_selected_commit( ) IS NOT INITIAL.
+        rs_settings-commit = li_repo_online->get_selected_commit( ).
+        rs_settings-branch = li_repo_online->get_selected_branch( ).
         rs_settings-head_type = c_head_types-commit.
-      ELSEIF lo_repo_online->get_switched_origin( ) IS NOT INITIAL.
+      ELSEIF li_repo_online->get_switched_origin( ) IS NOT INITIAL.
         " get_switched_origin( ) returns the original repo url + HEAD concatenated with @
         " get_branch( ) returns the branch of the PR in the source repo
         " get_url( ) returns the source repo of the PR branch
 
-        rs_settings-switched_origin = lo_repo_online->get_switched_origin( ).
+        rs_settings-switched_origin = li_repo_online->get_switched_origin( ).
         SPLIT rs_settings-switched_origin AT '@' INTO rs_settings-url rs_settings-branch.
         IF rs_settings-branch CP zif_abapgit_git_definitions=>c_git_branch-tags.
           rs_settings-tag = rs_settings-branch.
           CLEAR rs_settings-branch.
         ENDIF.
 
-        lv_branch = lo_repo_online->get_selected_branch( ).
+        lv_branch = li_repo_online->get_selected_branch( ).
         REPLACE FIRST OCCURRENCE OF zif_abapgit_git_definitions=>c_git_branch-heads_prefix IN lv_branch WITH space.
         CONDENSE lv_branch.
-        rs_settings-pull_request = |{ lo_repo_online->get_url( ) }@{ lv_branch }|.
+        rs_settings-pull_request = |{ li_repo_online->get_url( ) }@{ lv_branch }|.
         rs_settings-head_type = c_head_types-pull_request.
       ELSE.
-        rs_settings-branch = lo_repo_online->get_selected_branch( ).
+        rs_settings-branch = li_repo_online->get_selected_branch( ).
         rs_settings-head_type = c_head_types-branch.
 
         IF rs_settings-branch CP zif_abapgit_git_definitions=>c_git_branch-tags.
@@ -642,12 +642,12 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         iv_val = ms_settings_snapshot-head_type ).
 
       " When pull request is selected the previously selected branch/tag is also loaded to be able to switch back to it
-      lv_head = zcl_abapgit_git_branch_list=>get_display_name( ms_settings_snapshot-branch ).
+      lv_head = zcl_abapgit_git_branch_utils=>get_display_name( ms_settings_snapshot-branch ).
       ro_form_data->set(
         iv_key = c_id-branch
         iv_val = lv_head ).
 
-      lv_head = zcl_abapgit_git_branch_list=>get_display_name( ms_settings_snapshot-tag ).
+      lv_head = zcl_abapgit_git_branch_utils=>get_display_name( ms_settings_snapshot-tag ).
       ro_form_data->set(
         iv_key = c_id-tag
         iv_val = lv_head ).
@@ -707,7 +707,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-      io_repo               = mo_repo
+      ii_repo               = mi_repo
       iv_show_commit        = abap_false
       iv_interactive_branch = abap_false ) ).
 
@@ -721,7 +721,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   METHOD save_settings.
 
     DATA:
-      lo_repo_online  TYPE REF TO zcl_abapgit_repo_online,
+      li_repo_online  TYPE REF TO zif_abapgit_repo_online,
       ls_settings_new TYPE ty_remote_settings.
 
     ls_settings_new = get_remote_settings_from_form( mo_form_data ).
@@ -729,14 +729,14 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     " Switch online / offline
     IF ls_settings_new-offline <> ms_settings_snapshot-offline.
       " Remember key, switch, retrieve new instance (todo, refactor #2244)
-      mo_repo->switch_repo_type( ls_settings_new-offline ).
-      mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
+      mi_repo->switch_repo_type( ls_settings_new-offline ).
+      mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mi_repo->get_key( ) ).
     ENDIF.
 
-    IF mo_repo->is_offline( ) = abap_false.
+    IF mi_repo->is_offline( ) = abap_false.
       " Online: Save url
-      lo_repo_online ?= mo_repo.
-      lo_repo_online->set_url( ls_settings_new-url ).
+      li_repo_online ?= mi_repo.
+      li_repo_online->set_url( ls_settings_new-url ).
     ENDIF.
 
     CASE ls_settings_new-head_type.
@@ -756,10 +756,10 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         switch_to_pull_req( iv_pull = ls_settings_new-pull_request ).
     ENDCASE.
 
-    IF mo_repo->is_offline( ) = abap_false AND ls_settings_new-head_type <> c_head_types-pull_request.
+    IF mi_repo->is_offline( ) = abap_false AND ls_settings_new-head_type <> c_head_types-pull_request.
       " Switching from PR to something else will reset the URL in repo->switch_origin( space )
       " -> set URL again
-      lo_repo_online->set_url( ls_settings_new-url ).
+      li_repo_online->set_url( ls_settings_new-url ).
     ENDIF.
 
     COMMIT WORK AND WAIT.
@@ -767,7 +767,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     MESSAGE 'Settings successfully saved' TYPE 'S'.
 
     mv_refresh_on_back = abap_true.
-    ms_settings_snapshot = get_remote_settings_from_repo( mo_repo ).
+    ms_settings_snapshot = get_remote_settings_from_repo( mi_repo ).
 
   ENDMETHOD.
 
@@ -825,27 +825,27 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
   METHOD switch_to_branch_tag.
 
-    DATA lo_repo TYPE REF TO zcl_abapgit_repo_online.
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
 
     check_protection( ).
-    lo_repo ?= mo_repo.
-    lo_repo->select_branch( iv_name ).
+    li_repo_online ?= mi_repo.
+    li_repo_online->select_branch( iv_name ).
 
   ENDMETHOD.
 
 
   METHOD switch_to_commit.
 
-    DATA lo_repo TYPE REF TO zcl_abapgit_repo_online.
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
 
     check_protection( ).
 
-    lo_repo ?= mo_repo.
+    li_repo_online ?= mi_repo.
 
     IF iv_revert = abap_true.
-      lo_repo->select_commit( '' ).
+      li_repo_online->select_commit( '' ).
     ELSE.
-      lo_repo->select_commit( iv_commit ).
+      li_repo_online->select_commit( iv_commit ).
     ENDIF.
 
   ENDMETHOD.
@@ -854,20 +854,20 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   METHOD switch_to_pull_req.
 
     DATA:
-      lo_repo   TYPE REF TO zcl_abapgit_repo_online,
-      lv_url    TYPE ty_remote_settings-url,
-      lv_branch TYPE ty_remote_settings-branch.
+      li_repo_online TYPE REF TO zif_abapgit_repo_online,
+      lv_url         TYPE ty_remote_settings-url,
+      lv_branch      TYPE ty_remote_settings-branch.
 
     check_protection( ).
 
-    lo_repo ?= mo_repo.
+    li_repo_online ?= mi_repo.
 
     " Switching twice does not work so reset to original repo first
-    lo_repo->switch_origin( '' ).
+    li_repo_online->switch_origin( '' ).
 
     IF iv_revert = abap_false.
       SPLIT iv_pull AT '@' INTO lv_url lv_branch.
-      lo_repo->switch_origin(
+      li_repo_online->switch_origin(
         iv_url    = lv_url
         iv_branch = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && lv_branch ).
     ENDIF.
@@ -879,7 +879,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     DATA:
       lx_error                 TYPE REF TO zcx_abapgit_exception,
-      lo_branch_list           TYPE REF TO zcl_abapgit_git_branch_list,
+      lo_branch_list           TYPE REF TO zif_abapgit_git_branch_list,
       lo_url                   TYPE REF TO zcl_abapgit_git_url,
       lv_offline               TYPE abap_bool,
       lv_head_type             TYPE ty_head_type,
@@ -981,7 +981,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-go_back.
         IF mv_refresh_on_back = abap_true.
           " Note this doesn't trigger if the tab is switched first
-          mo_repo->refresh( ).
+          mi_repo->refresh( ).
         ENDIF.
 
         rs_handled-state = zcl_abapgit_html_form_utils=>create( mo_form )->exit(

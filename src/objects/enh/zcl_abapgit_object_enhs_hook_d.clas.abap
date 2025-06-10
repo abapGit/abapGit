@@ -6,7 +6,7 @@ CLASS zcl_abapgit_object_enhs_hook_d DEFINITION PUBLIC.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_hook_defifnition,
-             pgmid     TYPE pgmid,
+             pgmid     TYPE tadir-pgmid,
              obj_name  TYPE trobj_name,
              obj_type  TYPE trobjtype,
              main_type TYPE trobjtype,

@@ -1,23 +1,15 @@
 CLASS zcl_abapgit_persistence_user DEFINITION
   PUBLIC
-  CREATE PRIVATE .
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_persist_factory.
 
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_persist_user .
 
-    CLASS-METHODS get_instance
-      IMPORTING
-        !iv_user       TYPE sy-uname DEFAULT sy-uname
-      RETURNING
-        VALUE(ri_user) TYPE REF TO zif_abapgit_persist_user
-      RAISING
-        zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
-        !iv_user TYPE sy-uname DEFAULT sy-uname
-      RAISING
-        zcx_abapgit_exception .
+        !iv_user TYPE sy-uname DEFAULT sy-uname.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -42,25 +34,21 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         diff_unified     TYPE abap_bool,
         favorites        TYPE zif_abapgit_persist_user=>ty_favorites,
         repo_config      TYPE ty_repo_configs,
-        settings         TYPE zif_abapgit_definitions=>ty_s_user_settings,
+        settings         TYPE zif_abapgit_persist_user=>ty_s_user_settings,
         show_folders     TYPE abap_bool,
-        list_settings    TYPE zif_abapgit_definitions=>ty_list_settings,
+        list_settings    TYPE zif_abapgit_persist_user=>ty_list_settings,
+        flow_settings    TYPE zif_abapgit_persist_user=>ty_flow_settings,
       END OF ty_user .
 
     DATA mv_user TYPE sy-uname .
     DATA ms_user TYPE ty_user.
-    CLASS-DATA gi_current_user TYPE REF TO zif_abapgit_persist_user .
 
     METHODS from_xml
       IMPORTING
         !iv_xml        TYPE string
       RETURNING
-        VALUE(rs_user) TYPE ty_user
-      RAISING
-        zcx_abapgit_exception .
-    METHODS read
-      RAISING
-        zcx_abapgit_exception .
+        VALUE(rs_user) TYPE ty_user.
+    METHODS read.
     METHODS read_repo_config
       IMPORTING
         !iv_url               TYPE zif_abapgit_persistence=>ty_repo-url
@@ -109,22 +97,6 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
       OPTIONS value_handling = 'accept_data_loss'
       SOURCE XML lv_xml
       RESULT user = rs_user.
-  ENDMETHOD.
-
-
-  METHOD get_instance.
-
-    IF iv_user = sy-uname ##USER_OK.
-      IF gi_current_user IS NOT BOUND.
-        CREATE OBJECT gi_current_user TYPE zcl_abapgit_persistence_user.
-      ENDIF.
-      ri_user = gi_current_user.
-    ELSE.
-      CREATE OBJECT ri_user TYPE zcl_abapgit_persistence_user
-        EXPORTING
-          iv_user = iv_user.
-    ENDIF.
-
   ENDMETHOD.
 
 
@@ -257,6 +229,10 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_persist_user~get_flow_settings.
+    rs_flow_settings = ms_user-flow_settings.
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_persist_user~get_order_by.
     rv_order_by = ms_user-order_by.
@@ -367,6 +343,11 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_user~set_list_settings.
     ms_user-list_settings = is_list_settings.
+    update( ).
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_user~set_flow_settings.
+    ms_user-flow_settings = is_flow_settings.
     update( ).
   ENDMETHOD.
 

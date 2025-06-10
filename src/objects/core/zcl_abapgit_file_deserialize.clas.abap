@@ -6,7 +6,7 @@ CLASS zcl_abapgit_file_deserialize DEFINITION
 
     CLASS-METHODS get_results
       IMPORTING
-        !io_repo          TYPE REF TO zcl_abapgit_repo
+        !ii_repo          TYPE REF TO zif_abapgit_repo
         !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
@@ -139,7 +139,7 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
     DATA lt_results TYPE zif_abapgit_definitions=>ty_results_tt.
 
     lt_results = filter_files_to_deserialize(
-      it_results = zcl_abapgit_repo_status=>calculate( io_repo )
+      it_results = zcl_abapgit_repo_status=>calculate( ii_repo )
       ii_log     = ii_log ).
 
     rt_results = prioritize_deser(
@@ -203,6 +203,9 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
           lt_requires = lt_items.
           DELETE lt_requires WHERE obj_type <> 'SPRX'
             AND obj_type <> 'XSLT'.
+        WHEN 'HTTP'.
+          lt_requires = lt_items.
+          DELETE lt_requires WHERE obj_type <> 'CLAS' AND obj_type <> 'INTF'.
         WHEN 'TABL'.
           lt_requires = lt_items.
           DELETE lt_requires WHERE obj_type <> 'SPRX'.

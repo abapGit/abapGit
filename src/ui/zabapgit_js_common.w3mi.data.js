@@ -254,7 +254,7 @@ function RepoOverViewHelper(opts) {
     this.focusFilterKey = opts.focusFilterKey;
   }
   this.setHooks();
-  this.pageId                   = "RepoOverViewHelperState"; // constant is OK for this case
+  this.pageId                   = (opts && opts.pageId) ? opts.pageId : "RepoOverViewHelperState";
   this.isDetailsDisplayed       = false;
   this.isOnlyFavoritesDisplayed = false;
   this.detailCssClass           = findStyleSheetByName(".repo-overview .ro-detail");

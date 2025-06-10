@@ -13,7 +13,7 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        io_repo        TYPE REF TO zcl_abapgit_repo_online
+        ii_repo_online TYPE REF TO zif_abapgit_repo_online
         io_merge_page  TYPE REF TO zcl_abapgit_gui_page_merge
         io_merge       TYPE REF TO zif_abapgit_merge
       RETURNING
@@ -23,9 +23,9 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
 
     METHODS constructor
       IMPORTING
-        io_repo       TYPE REF TO zcl_abapgit_repo_online
-        io_merge_page TYPE REF TO zcl_abapgit_gui_page_merge
-        io_merge      TYPE REF TO zif_abapgit_merge
+        ii_repo_online TYPE REF TO zif_abapgit_repo_online
+        io_merge_page  TYPE REF TO zcl_abapgit_gui_page_merge
+        io_merge       TYPE REF TO zif_abapgit_merge
       RAISING
         zcx_abapgit_exception.
 
@@ -39,7 +39,7 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
         lstate     TYPE char1,
         rstate     TYPE char1,
         fstate     TYPE char1, " FILE state - Abstraction for shorter ifs
-        o_diff     TYPE REF TO zcl_abapgit_diff,
+        o_diff     TYPE REF TO zif_abapgit_diff,
         changed_by TYPE syuname,
         type       TYPE string,
       END OF ty_file_diff .
@@ -59,7 +59,7 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
       END OF c_merge_mode .
     DATA mo_merge TYPE REF TO zif_abapgit_merge .
     DATA mo_merge_page TYPE REF TO zcl_abapgit_gui_page_merge .
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
+    DATA mi_repo_online TYPE REF TO zif_abapgit_repo_online .
     DATA ms_diff_file TYPE ty_file_diff .
     DATA mv_current_conflict_index TYPE sy-tabix .
     DATA mv_merge_mode TYPE string .
@@ -146,7 +146,7 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
 
     super->constructor( ).
 
-    mo_repo = io_repo.
+    mi_repo_online = ii_repo_online.
 
     mo_merge_page = io_merge_page.
     mo_merge = io_merge.
@@ -163,9 +163,9 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        io_repo       = io_repo
-        io_merge_page = io_merge_page
-        io_merge      = io_merge.
+        ii_repo_online = ii_repo_online
+        io_merge_page  = io_merge_page
+        io_merge       = io_merge.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title         = 'Resolve Merge Conflicts'
@@ -415,7 +415,7 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
 
     IF mv_merge_mode = c_merge_mode-selection.
       ri_html->add( '<form id="target_form" method="post" action="sapevent:apply_target">' ).
-      ri_html->add( '<th>Target - ' && mo_repo->get_selected_branch( ) && ' - ' ).
+      ri_html->add( '<th>Target - ' && mi_repo_online->get_selected_branch( ) && ' - ' ).
       ri_html->add_a( iv_act = 'submitFormById(''target_form'');'
                       iv_txt = 'Apply'
                       iv_typ = zif_abapgit_html=>c_action_type-onclick
@@ -432,7 +432,7 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
       ri_html->add( '</th> ' ).
       ri_html->add( '</form>' ).
     ELSE.
-      ri_html->add( '<th>Target - ' && mo_repo->get_selected_branch( ) && '</th> ' ).
+      ri_html->add( '<th>Target - ' && mi_repo_online->get_selected_branch( ) && '</th> ' ).
       ri_html->add( '<th class="num"></th>' ).
       ri_html->add( '<th>Source - ' && mo_merge->get_source_branch( ) && '</th> ' ).
     ENDIF.
@@ -474,10 +474,9 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
     ENDIF.
 
     IF ms_diff_file-type <> 'binary'.
-      CREATE OBJECT ms_diff_file-o_diff
-        EXPORTING
-          iv_new = <ls_conflict>-source_data
-          iv_old = <ls_conflict>-target_data.
+      ms_diff_file-o_diff = zcl_abapgit_diff_factory=>get( )->create(
+        iv_new = <ls_conflict>-source_data
+        iv_old = <ls_conflict>-target_data ).
     ENDIF.
 
   ENDMETHOD.
@@ -557,6 +556,10 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
+    DATA: li_repo TYPE REF TO zif_abapgit_repo.
+
+    li_repo = mi_repo_online.
+
     register_handlers( ).
 
     resolve_diff( ).
@@ -566,7 +569,7 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
     ENDIF.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    ri_html->add( |<div id="diff-list" data-repo-key="{ mo_repo->get_key( ) }">| ).
+    ri_html->add( |<div id="diff-list" data-repo-key="{ li_repo->get_key( ) }">| ).
     ri_html->add( render_diff( ms_diff_file ) ).
     ri_html->add( '</div>' ).
 

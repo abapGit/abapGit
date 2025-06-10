@@ -3,6 +3,37 @@ INTERFACE zif_abapgit_persist_user
 
   TYPES ty_favorites TYPE zif_abapgit_persistence=>ty_repo_keys .
 
+  TYPES:
+    BEGIN OF ty_s_user_settings,
+      max_lines              TYPE i,
+      adt_jump_enabled       TYPE abap_bool,
+      show_default_repo      TYPE abap_bool,
+      link_hints_enabled     TYPE abap_bool,
+      link_hint_key          TYPE c LENGTH 1,
+      parallel_proc_disabled TYPE abap_bool,
+      icon_scaling           TYPE c LENGTH 1,
+      ui_theme               TYPE string,
+      hide_sapgui_hint       TYPE abap_bool,
+      activate_wo_popup      TYPE abap_bool,
+      label_colors           TYPE string,
+      default_git_uname      TYPE string,
+      default_git_email      TYPE string,
+    END OF ty_s_user_settings .
+  TYPES:
+    BEGIN OF ty_list_settings,
+      filter           TYPE string,
+      only_favorites   TYPE abap_bool,
+      show_details     TYPE abap_bool,
+      order_by         TYPE string,
+      order_descending TYPE abap_bool,
+    END OF ty_list_settings.
+
+  TYPES: BEGIN OF ty_flow_settings,
+            only_my_transports  TYPE abap_bool,
+            hide_full_matches   TYPE abap_bool,
+            hide_matching_files TYPE abap_bool,
+          END OF ty_flow_settings.
+
   METHODS get_changes_only
     RETURNING
       VALUE(rv_changes_only) TYPE abap_bool
@@ -180,22 +211,32 @@ INTERFACE zif_abapgit_persist_user
       zcx_abapgit_exception.
   METHODS get_settings
     RETURNING
-      VALUE(rs_user_settings) TYPE zif_abapgit_definitions=>ty_s_user_settings
+      VALUE(rs_user_settings) TYPE ty_s_user_settings
     RAISING
       zcx_abapgit_exception.
   METHODS set_settings
     IMPORTING
-      is_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings
+      is_user_settings TYPE ty_s_user_settings
     RAISING
       zcx_abapgit_exception.
   METHODS get_list_settings
     RETURNING
-      VALUE(rs_list_settings) TYPE zif_abapgit_definitions=>ty_list_settings
+      VALUE(rs_list_settings) TYPE ty_list_settings
     RAISING
       zcx_abapgit_exception.
   METHODS set_list_settings
     IMPORTING
-      is_list_settings TYPE zif_abapgit_definitions=>ty_list_settings
+      is_list_settings TYPE ty_list_settings
+    RAISING
+      zcx_abapgit_exception.
+  METHODS get_flow_settings
+    RETURNING
+      VALUE(rs_flow_settings) TYPE ty_flow_settings
+    RAISING
+      zcx_abapgit_exception.
+  METHODS set_flow_settings
+    IMPORTING
+      is_flow_settings TYPE ty_flow_settings
     RAISING
       zcx_abapgit_exception.
 

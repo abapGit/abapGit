@@ -17,6 +17,12 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     TYPES:
       ty_dd04_texts TYPE STANDARD TABLE OF ty_dd04_text .
 
+    " Fields that are not part of dd04v
+    TYPES:
+      BEGIN OF ty_extra,
+        abap_language_version TYPE uccheck,
+      END OF ty_extra.
+
     CONSTANTS c_longtext_id_dtel TYPE dokil-id VALUE 'DE' ##NO_TEXT.
     CONSTANTS c_longtext_id_dtel_suppl TYPE dokil-id VALUE 'DZ' ##NO_TEXT.
 
@@ -182,8 +188,8 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_dd04v TYPE dd04v,
+          ls_extra TYPE ty_extra,
           lv_name  TYPE ddobjname.
-
 
     io_xml->read( EXPORTING iv_name = 'DD04V'
                   CHANGING cg_data = ls_dd04v ).
@@ -207,6 +213,17 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
+    " Fields that are not part of dd04v
+    io_xml->read( EXPORTING iv_name = 'DD04L_EXTRA'
+                  CHANGING  cg_data = ls_extra ).
+
+    TRY.
+        set_abap_language_version( CHANGING cv_abap_language_version = ls_extra-abap_language_version ).
+
+        UPDATE ('DD04L') SET abap_language_version = ls_extra-abap_language_version WHERE rollname = lv_name.
+      CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
+    ENDTRY.
 
     IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       deserialize_texts(
@@ -261,6 +278,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
   ENDMETHOD.
 
 
@@ -300,6 +318,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 * done directly from here
 
     DATA: lv_name  TYPE ddobjname,
+          ls_extra TYPE ty_extra,
           ls_dd04v TYPE dd04v.
 
     lv_name = ms_item-obj_name.
@@ -347,6 +366,11 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 
     io_xml->add( iv_name = 'DD04V'
                  ig_data = ls_dd04v ).
+
+    ls_extra-abap_language_version = get_abap_language_version( ).
+
+    io_xml->add( iv_name = 'DD04L_EXTRA'
+                 ig_data = ls_extra ).
 
     IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts( io_xml ).

@@ -27,6 +27,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
       code_inspector_check_variant TYPE sci_chkv,
       block_commit                 TYPE abap_bool,
       main_language_only           TYPE abap_bool,
+      suppress_lxe_po_comments     TYPE abap_bool,
       labels                       TYPE string,
       transport_request            TYPE trkorr,
       customizing_request          TYPE trkorr,

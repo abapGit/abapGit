@@ -25,6 +25,12 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     TYPES:
       ty_dd07_texts TYPE STANDARD TABLE OF ty_dd07_text .
 
+    " Fields that are not part of dd01v
+    TYPES:
+      BEGIN OF ty_extra,
+        abap_language_version TYPE c LENGTH 1,
+      END OF ty_extra.
+
     CONSTANTS c_longtext_id_doma TYPE dokil-id VALUE 'DO' ##NO_TEXT.
 
     METHODS serialize_texts
@@ -338,6 +344,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     DATA: lv_name  TYPE ddobjname,
           lv_done  TYPE abap_bool,
           ls_dd01v TYPE dd01v,
+          ls_extra TYPE ty_extra,
           lt_dd07v TYPE TABLE OF dd07v.
 
     FIELD-SYMBOLS <ls_dd07v> TYPE dd07v.
@@ -385,6 +392,17 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
+    " Fields that are not part of dd01v
+    io_xml->read( EXPORTING iv_name = 'DD01L_EXTRA'
+                  CHANGING  cg_data = ls_extra ).
+
+    TRY.
+        set_abap_language_version( CHANGING cv_abap_language_version = ls_extra-abap_language_version ).
+
+        UPDATE ('DD01L') SET abap_language_version = ls_extra-abap_language_version WHERE domname = lv_name.
+      CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
+    ENDTRY.
+
     IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       deserialize_texts(
         ii_xml   = io_xml
@@ -424,6 +442,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
     APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
   ENDMETHOD.
 
 
@@ -463,6 +482,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     DATA: lv_name    TYPE ddobjname,
           lv_state   TYPE ddgotstate,
           ls_dd01v   TYPE dd01v,
+          ls_extra   TYPE ty_extra,
           lv_masklen TYPE c LENGTH 4,
           lt_dd07v   TYPE TABLE OF dd07v.
 
@@ -520,6 +540,11 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
                  ig_data = ls_dd01v ).
     io_xml->add( iv_name = 'DD07V_TAB'
                  ig_data = lt_dd07v ).
+
+    ls_extra-abap_language_version = get_abap_language_version( ).
+
+    io_xml->add( iv_name = 'DD01L_EXTRA'
+                 ig_data = ls_extra ).
 
     IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts(

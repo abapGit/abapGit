@@ -12,13 +12,15 @@ CLASS zcl_abapgit_object_tabl DEFINITION
     "! get additional data like table authorization group
     "! @parameter iv_tabname | name of the table
     METHODS read_extras IMPORTING iv_tabname            TYPE ddobjname
-                        RETURNING VALUE(rs_tabl_extras) TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
+                        RETURNING VALUE(rs_tabl_extras) TYPE zif_abapgit_object_tabl=>ty_tabl_extras
+                        RAISING   zcx_abapgit_exception.
 
     "! Update additional data
     "! @parameter iv_tabname | name of the table
     "! @parameter is_tabl_extras | additional table data
     METHODS update_extras IMPORTING iv_tabname     TYPE ddobjname
-                                    is_tabl_extras TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
+                                    is_tabl_extras TYPE zif_abapgit_object_tabl=>ty_tabl_extras
+                          RAISING   zcx_abapgit_exception.
 
     "! Delete additional data
     "! @parameter iv_tabname | name of the table
@@ -478,6 +480,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     SELECT SINGLE * FROM tddat INTO rs_tabl_extras-tddat WHERE tabname = iv_tabname.
 
+    rs_tabl_extras-abap_language_version = get_abap_language_version( ).
+
   ENDMETHOD.
 
 
@@ -596,11 +600,23 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
   METHOD update_extras.
 
+    DATA lv_abap_language_version TYPE uccheck.
+
     IF is_tabl_extras-tddat IS INITIAL.
       delete_extras( iv_tabname ).
     ELSE.
       MODIFY tddat FROM is_tabl_extras-tddat.
     ENDIF.
+
+    " Fields that are not part of dd02v
+    TRY.
+        lv_abap_language_version = is_tabl_extras-abap_language_version.
+
+        set_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+
+        UPDATE ('DD02L') SET abap_language_version = lv_abap_language_version WHERE tabname = iv_tabname.
+      CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -850,24 +866,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_comparator.
-
-    DATA: li_local_version_output TYPE REF TO zif_abapgit_xml_output,
-          li_local_version_input  TYPE REF TO zif_abapgit_xml_input.
-
-
-    CREATE OBJECT li_local_version_output TYPE zcl_abapgit_xml_output.
-
-    zif_abapgit_object~serialize( li_local_version_output ).
-
-    CREATE OBJECT li_local_version_input
-      TYPE zcl_abapgit_xml_input
-      EXPORTING
-        iv_xml = li_local_version_output->render( ).
-
-    CREATE OBJECT ri_comparator TYPE zcl_abapgit_object_tabl_compar
-      EXPORTING
-        ii_local = li_local_version_input.
-
+    " Moved to zcl_abapgit_objects_compare
+    RETURN.
   ENDMETHOD.
 
 
@@ -878,6 +878,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
   ENDMETHOD.
 
 

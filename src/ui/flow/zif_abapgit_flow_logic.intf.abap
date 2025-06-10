@@ -1,4 +1,4 @@
-INTERFACE zif_abapgit_gui_page_flow
+INTERFACE zif_abapgit_flow_logic
   PUBLIC .
 
   TYPES:
@@ -11,17 +11,19 @@ INTERFACE zif_abapgit_gui_page_flow
   TYPES:
     ty_path_name_tt TYPE HASHED TABLE OF ty_path_name WITH UNIQUE KEY path filename.
 
+  TYPES: BEGIN OF ty_branch,
+           display_name TYPE string,
+           sha1         TYPE zif_abapgit_git_definitions=>ty_sha1,
+           up_to_date   TYPE abap_bool,
+         END OF ty_branch.
+
   TYPES: BEGIN OF ty_feature,
            BEGIN OF repo,
              name    TYPE string,
              key     TYPE zif_abapgit_persistence=>ty_repo-key,
              package TYPE devclass,
            END OF repo,
-           BEGIN OF branch,
-             display_name TYPE string,
-             sha1         TYPE zif_abapgit_git_definitions=>ty_sha1,
-             up_to_date   TYPE abap_bool,
-           END OF branch,
+           branch          TYPE ty_branch,
            BEGIN OF pr,
              title TYPE string,
              url   TYPE string,
@@ -36,5 +38,17 @@ INTERFACE zif_abapgit_gui_page_flow
            changed_objects TYPE zif_abapgit_definitions=>ty_items_ts,
          END OF ty_feature.
   TYPES ty_features TYPE STANDARD TABLE OF ty_feature WITH DEFAULT KEY.
+  TYPES: BEGIN OF ty_information,
+            features TYPE ty_features,
+            warnings TYPE string_table,
+         END OF ty_information.
+
+  CONSTANTS c_main TYPE string VALUE 'main'.
+
+**************************************
+
+  TYPES: BEGIN OF ty_consolidate,
+           errors TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+         END OF ty_consolidate.
 
 ENDINTERFACE.

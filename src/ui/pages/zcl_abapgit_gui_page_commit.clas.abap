@@ -11,18 +11,18 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        !io_repo       TYPE REF TO zcl_abapgit_repo_online
-        !io_stage      TYPE REF TO zcl_abapgit_stage
-        !iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
+        !ii_repo_online TYPE REF TO zif_abapgit_repo_online
+        !io_stage       TYPE REF TO zcl_abapgit_stage
+        !iv_sci_result  TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
       RETURNING
-        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+        VALUE(ri_page)  TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception.
     METHODS constructor
       IMPORTING
-        !io_repo       TYPE REF TO zcl_abapgit_repo_online
-        !io_stage      TYPE REF TO zcl_abapgit_stage
-        !iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result
+        !ii_repo_online TYPE REF TO zif_abapgit_repo_online
+        !io_stage       TYPE REF TO zcl_abapgit_stage
+        !iv_sci_result  TYPE zif_abapgit_definitions=>ty_sci_result
       RAISING
         zcx_abapgit_exception.
 
@@ -53,7 +53,7 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
     DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
     DATA mo_settings TYPE REF TO zcl_abapgit_settings.
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online.
+    DATA mi_repo_online TYPE REF TO zif_abapgit_repo_online.
     DATA mo_stage TYPE REF TO zcl_abapgit_stage.
     DATA mt_stage TYPE zif_abapgit_definitions=>ty_stage_tt.
     DATA ms_commit TYPE zif_abapgit_services_git=>ty_commit_fields.
@@ -118,8 +118,8 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
 
   METHOD branch_name_to_internal.
-    rv_new_branch_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
-      zcl_abapgit_git_branch_list=>normalize_branch_name( iv_branch_name ) ).
+    rv_new_branch_name = zcl_abapgit_git_branch_utils=>complete_heads_branch_name(
+      zcl_abapgit_git_branch_utils=>normalize_branch_name( iv_branch_name ) ).
   ENDMETHOD.
 
 
@@ -127,10 +127,10 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     super->constructor( ).
 
-    mo_repo       = io_repo.
-    mo_stage      = io_stage.
-    mt_stage      = mo_stage->get_all( ).
-    mv_sci_result = iv_sci_result.
+    mi_repo_online = ii_repo_online.
+    mo_stage       = io_stage.
+    mt_stage       = mo_stage->get_all( ).
+    mv_sci_result  = iv_sci_result.
 
     " Get settings from DB
     mo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
@@ -149,9 +149,9 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        io_repo       = io_repo
-        io_stage      = io_stage
-        iv_sci_result = iv_sci_result.
+        ii_repo_online = ii_repo_online
+        io_stage       = io_stage
+        iv_sci_result  = iv_sci_result.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Commit'
@@ -233,15 +233,15 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     DATA li_user TYPE REF TO zif_abapgit_persist_user.
 
-    li_user = zcl_abapgit_persistence_user=>get_instance( ).
+    li_user = zcl_abapgit_persist_factory=>get_user( ).
 
-    rv_email = li_user->get_repo_git_user_email( mo_repo->get_url( ) ).
+    rv_email = li_user->get_repo_git_user_email( mi_repo_online->get_url( ) ).
     IF rv_email IS INITIAL.
       rv_email = li_user->get_default_git_user_email( ).
     ENDIF.
     IF rv_email IS INITIAL.
       " get default from user record
-      rv_email = zcl_abapgit_user_record=>get_instance( sy-uname )->get_email( ).
+      rv_email = zcl_abapgit_env_factory=>get_user_record( )->get_email( sy-uname ).
     ENDIF.
 
   ENDMETHOD.
@@ -251,15 +251,15 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     DATA li_user TYPE REF TO zif_abapgit_persist_user.
 
-    li_user = zcl_abapgit_persistence_user=>get_instance( ).
+    li_user = zcl_abapgit_persist_factory=>get_user( ).
 
-    rv_user  = li_user->get_repo_git_user_name( mo_repo->get_url( ) ).
+    rv_user = li_user->get_repo_git_user_name( mi_repo_online->get_url( ) ).
     IF rv_user IS INITIAL.
-      rv_user  = li_user->get_default_git_user_name( ).
+      rv_user = li_user->get_default_git_user_name( ).
     ENDIF.
     IF rv_user IS INITIAL.
       " get default from user record
-      rv_user = zcl_abapgit_user_record=>get_instance( sy-uname )->get_name( ).
+      rv_user = zcl_abapgit_env_factory=>get_user_record( )->get_name( sy-uname ).
     ENDIF.
 
   ENDMETHOD.
@@ -267,9 +267,19 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
   METHOD get_defaults.
 
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
+
     ms_commit-committer_name  = get_committer_name( ).
     ms_commit-committer_email = get_committer_email( ).
     ms_commit-comment         = get_comment_default( ).
+
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->change_committer_info(
+      EXPORTING
+        iv_repo_url = mi_repo_online->get_url( )
+      CHANGING
+        cv_name     = ms_commit-committer_name
+        cv_email    = ms_commit-committer_email ).
 
     " Committer
     mo_form_data->set(
@@ -453,7 +463,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     IF lv_new_branch_name IS NOT INITIAL.
       " check if branch already exists
       lt_branches = zcl_abapgit_git_factory=>get_git_transport(
-                                          )->branches( mo_repo->get_url( )
+                                          )->branches( mi_repo_online->get_url( )
                                           )->get_branches_only( ).
       READ TABLE lt_branches TRANSPORTING NO FIELDS WITH TABLE KEY name_key
         COMPONENTS name = branch_name_to_internal( lv_new_branch_name ).
@@ -494,13 +504,13 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
           IF lv_new_branch_name IS NOT INITIAL.
             lv_new_branch_name = branch_name_to_internal( lv_new_branch_name ).
             " creates a new branch and automatically switches to it
-            mo_repo->create_branch( lv_new_branch_name ).
+            mi_repo_online->create_branch( lv_new_branch_name ).
           ENDIF.
 
           zcl_abapgit_services_git=>commit(
-            is_commit = ms_commit
-            io_repo   = mo_repo
-            io_stage  = mo_stage ).
+            is_commit      = ms_commit
+            ii_repo_online = mi_repo_online
+            io_stage       = mo_stage ).
 
 
           MESSAGE 'Commit was successful' TYPE 'S'.
@@ -528,7 +538,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     ri_html->add( '<div class="repo">' ).
     ri_html->add( '<div id="top" class="paddings">' ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mi_repo_online ) ).
     ri_html->add( '</div>' ).
 
     ri_html->add( '<div id="stage-summary" class="dialog w800px paddings">' ).

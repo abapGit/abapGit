@@ -32,10 +32,10 @@ CLASS lcl_startup IMPLEMENTATION.
 
     DATA:
       lv_answer           TYPE char1,
-      ls_settings         TYPE zif_abapgit_definitions=>ty_s_user_settings,
+      ls_settings         TYPE zif_abapgit_persist_user=>ty_s_user_settings,
       li_user_persistence TYPE REF TO zif_abapgit_persist_user.
 
-    li_user_persistence = zcl_abapgit_persistence_user=>get_instance( ).
+    li_user_persistence = zcl_abapgit_persist_factory=>get_user( ).
 
     ls_settings = li_user_persistence->get_settings( ).
 
@@ -72,7 +72,7 @@ CLASS lcl_startup IMPLEMENTATION.
 
     IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_show_default_repo( ) = abap_false.
       " Don't show the last seen repo at startup
-      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).
+      zcl_abapgit_persist_factory=>get_user( )->set_repo_show( || ).
     ENDIF.
 
     " We have three special cases for gui startup
@@ -88,7 +88,7 @@ CLASS lcl_startup IMPLEMENTATION.
     IF lv_repo_key IS NOT INITIAL.
 
       SET PARAMETER ID zif_abapgit_definitions=>c_spagpa_param_repo_key FIELD '' ##EXISTS.
-      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_repo_key ).
+      zcl_abapgit_persist_factory=>get_user( )->set_repo_show( lv_repo_key ).
 
     ELSEIF lv_package IS NOT INITIAL.
 
@@ -103,14 +103,14 @@ CLASS lcl_startup IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD set_start_repo_from_package.
-    DATA: lo_repo          TYPE REF TO zcl_abapgit_repo,
+    DATA: li_repo          TYPE REF TO zif_abapgit_repo,
           lt_r_package     TYPE RANGE OF devclass,
           ls_r_package     LIKE LINE OF lt_r_package,
           lt_superpackages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
           li_package       TYPE REF TO zif_abapgit_sap_package,
           lt_repo_list     TYPE zif_abapgit_repo_srv=>ty_repo_list.
 
-    FIELD-SYMBOLS: <lo_repo>         TYPE LINE OF zif_abapgit_repo_srv=>ty_repo_list,
+    FIELD-SYMBOLS: <li_repo>         TYPE LINE OF zif_abapgit_repo_srv=>ty_repo_list,
                    <lv_superpackage> LIKE LINE OF lt_superpackages.
 
     li_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
@@ -134,17 +134,17 @@ CLASS lcl_startup IMPLEMENTATION.
 
     lt_repo_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
 
-    LOOP AT lt_repo_list ASSIGNING <lo_repo>.
+    LOOP AT lt_repo_list ASSIGNING <li_repo>.
 
-      IF <lo_repo>->get_package( ) IN lt_r_package.
-        lo_repo ?= <lo_repo>.
+      IF <li_repo>->get_package( ) IN lt_r_package.
+        li_repo = <li_repo>.
         EXIT.
       ENDIF.
 
     ENDLOOP.
 
-    IF lo_repo IS BOUND.
-      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ).
+    IF li_repo IS BOUND.
+      zcl_abapgit_persist_factory=>get_user( )->set_repo_show( li_repo->get_key( ) ).
     ENDIF.
   ENDMETHOD.
 

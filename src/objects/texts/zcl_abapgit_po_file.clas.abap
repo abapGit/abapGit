@@ -8,7 +8,8 @@ CLASS zcl_abapgit_po_file DEFINITION
 
     METHODS constructor
       IMPORTING
-        iv_lang TYPE laiso.
+        iv_lang              TYPE laiso
+        iv_suppress_comments TYPE abap_bool DEFAULT abap_false.
 
     METHODS parse
       IMPORTING
@@ -48,6 +49,7 @@ CLASS zcl_abapgit_po_file DEFINITION
       END OF ty_msg_pair.
 
     DATA mv_lang TYPE laiso.
+    DATA mv_suppress_comments TYPE abap_bool.
     DATA mt_pairs TYPE SORTED TABLE OF ty_msg_pair WITH UNIQUE KEY source.
 
     METHODS build_po_body
@@ -85,7 +87,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_po_file IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
 
 
   METHOD build_po_body.
@@ -135,6 +137,7 @@ CLASS zcl_abapgit_po_file IMPLEMENTATION.
 
   METHOD constructor.
     mv_lang = to_lower( iv_lang ).
+    mv_suppress_comments = iv_suppress_comments.
   ENDMETHOD.
 
 
@@ -260,11 +263,13 @@ CLASS zcl_abapgit_po_file IMPLEMENTATION.
         <ls_out>-target = <ls_in>-t_text.
       ENDIF.
 
-      ls_comment-kind = c_comment-reference.
-      ls_comment-text = condense( |{ iv_objtype }/{ iv_objname }/{ <ls_in>-textkey }| )
-        && |, maxlen={ <ls_in>-unitmlt }|.
-      APPEND ls_comment TO <ls_out>-comments.
-      ASSERT sy-subrc = 0.
+      IF mv_suppress_comments = abap_false.
+        ls_comment-kind = c_comment-reference.
+        ls_comment-text = condense( |{ iv_objtype }/{ iv_objname }/{ <ls_in>-textkey }| )
+          && |, maxlen={ <ls_in>-unitmlt }|.
+        APPEND ls_comment TO <ls_out>-comments.
+        ASSERT sy-subrc = 0.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
@@ -335,6 +340,11 @@ CLASS zcl_abapgit_po_file IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_i18n_file~lang_suffix.
+    rv_lang_suffix = mv_lang.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_i18n_file~render.
 
     DATA lv_str TYPE string.
@@ -346,7 +356,7 @@ CLASS zcl_abapgit_po_file IMPLEMENTATION.
         && cl_abap_char_utilities=>newline
         && lv_str
         && cl_abap_char_utilities=>newline. " Trailing LF
-      rv_data = zcl_abapgit_convert=>string_to_xstring_utf8_bom( lv_str ).
+      rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_str ).
     ENDIF.
 
   ENDMETHOD.
@@ -364,9 +374,13 @@ CLASS zcl_abapgit_po_file IMPLEMENTATION.
 
       READ TABLE mt_pairs ASSIGNING <ls_tr> WITH KEY source = <ls_lxe>-s_text.
       IF sy-subrc = 0 AND <ls_tr>-target IS NOT INITIAL.
-        <ls_lxe>-t_text = <ls_tr>-target.
+        IF <ls_lxe>-t_text <> <ls_tr>-target.
+          cv_changed = abap_true.
+          <ls_lxe>-t_text = <ls_tr>-target.
+        ENDIF.
       ELSE.
         DELETE ct_text_pairs INDEX lv_idx. " Otherwise error in LXE FMs for empty translation
+        cv_changed = abap_true.
       ENDIF.
     ENDLOOP.
 

@@ -60,7 +60,7 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
 
   METHOD fetch_branch_list.
 
-    DATA lo_branches    TYPE REF TO zcl_abapgit_git_branch_list.
+    DATA lo_branches    TYPE REF TO zif_abapgit_git_branch_list.
     DATA lv_head_symref TYPE string.
 
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF rt_branches.

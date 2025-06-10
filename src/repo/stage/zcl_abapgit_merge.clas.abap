@@ -8,7 +8,7 @@ CLASS zcl_abapgit_merge DEFINITION
 
     METHODS constructor
       IMPORTING
-        !io_repo          TYPE REF TO zcl_abapgit_repo_online
+        !ii_repo_online   TYPE REF TO zif_abapgit_repo_online
         !iv_source_branch TYPE string
       RAISING
         zcx_abapgit_exception .
@@ -20,7 +20,7 @@ CLASS zcl_abapgit_merge DEFINITION
     TYPES:
       ty_visit_tt TYPE STANDARD TABLE OF zif_abapgit_git_definitions=>ty_sha1 WITH DEFAULT KEY .
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
+    DATA mi_repo_online TYPE REF TO zif_abapgit_repo_online .
     DATA ms_merge TYPE zif_abapgit_merge=>ty_merge .
     DATA mt_conflicts TYPE zif_abapgit_merge=>ty_merge_conflict_tt .
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
@@ -237,11 +237,11 @@ CLASS zcl_abapgit_merge IMPLEMENTATION.
 
   METHOD constructor.
 
-    IF iv_source_branch = io_repo->get_selected_branch( ).
+    IF iv_source_branch = ii_repo_online->get_selected_branch( ).
       zcx_abapgit_exception=>raise( 'source = target' ).
     ENDIF.
 
-    mo_repo = io_repo.
+    mi_repo_online = ii_repo_online.
     mv_source_branch = iv_source_branch.
 
   ENDMETHOD.
@@ -249,24 +249,24 @@ CLASS zcl_abapgit_merge IMPLEMENTATION.
 
   METHOD fetch_git.
 
-    DATA: lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list,
+    DATA: li_branch_list TYPE REF TO zif_abapgit_git_branch_list,
           lt_upload      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
 
-    lo_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( ms_merge-repo->get_url( ) ).
+    li_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( ms_merge-repo_online->get_url( ) ).
 
-    ms_merge-source = lo_branch_list->find_by_name(
-      zcl_abapgit_git_branch_list=>complete_heads_branch_name( mv_source_branch ) ).
+    ms_merge-source = li_branch_list->find_by_name(
+      zcl_abapgit_git_branch_utils=>complete_heads_branch_name( mv_source_branch ) ).
 
-    ms_merge-target = lo_branch_list->find_by_name(
-      zcl_abapgit_git_branch_list=>complete_heads_branch_name( mo_repo->get_selected_branch( ) ) ).
+    ms_merge-target = li_branch_list->find_by_name(
+      zcl_abapgit_git_branch_utils=>complete_heads_branch_name( mi_repo_online->get_selected_branch( ) ) ).
 
     APPEND ms_merge-source TO lt_upload.
     APPEND ms_merge-target TO lt_upload.
 
     zcl_abapgit_git_transport=>upload_pack_by_branch(
       EXPORTING
-        iv_url          = ms_merge-repo->get_url( )
-        iv_branch_name  = ms_merge-repo->get_selected_branch( )
+        iv_url          = ms_merge-repo_online->get_url( )
+        iv_branch_name  = ms_merge-repo_online->get_selected_branch( )
         iv_deepen_level = 0
         it_branches     = lt_upload
       IMPORTING
@@ -419,7 +419,7 @@ CLASS zcl_abapgit_merge IMPLEMENTATION.
 
     CLEAR: ms_merge, mt_objects, mt_conflicts.
 
-    ms_merge-repo = mo_repo.
+    ms_merge-repo_online = mi_repo_online.
     mt_objects = fetch_git( ).
 
     lt_asource = find_ancestors( ms_merge-source-sha1 ).

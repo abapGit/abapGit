@@ -27,12 +27,12 @@ CLASS ltcl_user IMPLEMENTATION.
 
     DATA: lv_user TYPE string.
 
-    mi_user = zcl_abapgit_persistence_user=>get_instance( c_abap_user ).
+    mi_user = zcl_abapgit_persist_factory=>get_user( c_abap_user ).
     mi_user->set_default_git_user_name( c_git_user ).
 
     FREE mi_user.
 
-    mi_user = zcl_abapgit_persistence_user=>get_instance( c_abap_user ).
+    mi_user = zcl_abapgit_persist_factory=>get_user( c_abap_user ).
     lv_user = mi_user->get_default_git_user_name( ).
 
     cl_abap_unit_assert=>assert_equals(
@@ -52,12 +52,12 @@ CLASS ltcl_user IMPLEMENTATION.
       RETURN. " can't test
     ENDIF.
 
-    mi_user = zcl_abapgit_persistence_user=>get_instance( c_abap_user ).
+    mi_user = zcl_abapgit_persist_factory=>get_user( c_abap_user ).
     mi_user->set_repo_show( lv_repo_key ).
 
     FREE mi_user.
 
-    mi_user = zcl_abapgit_persistence_user=>get_instance( c_abap_user ).
+    mi_user = zcl_abapgit_persist_factory=>get_user( c_abap_user ).
     lv_key = mi_user->get_repo_show( ).
 
     cl_abap_unit_assert=>assert_equals(
@@ -70,13 +70,13 @@ CLASS ltcl_user IMPLEMENTATION.
 
     DATA: lv_login TYPE string.
 
-    mi_user = zcl_abapgit_persistence_user=>get_instance( c_abap_user ).
+    mi_user = zcl_abapgit_persist_factory=>get_user( c_abap_user ).
     mi_user->set_repo_login( iv_url = c_repo_url
                              iv_login = c_git_user ).
 
     FREE mi_user.
 
-    mi_user = zcl_abapgit_persistence_user=>get_instance( c_abap_user ).
+    mi_user = zcl_abapgit_persist_factory=>get_user( c_abap_user ).
     lv_login = mi_user->get_repo_login( c_repo_url ).
 
     cl_abap_unit_assert=>assert_equals(
@@ -87,16 +87,16 @@ CLASS ltcl_user IMPLEMENTATION.
 
   METHOD set_get_settings.
 
-    DATA: ls_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+    DATA: ls_settings TYPE zif_abapgit_persist_user=>ty_s_user_settings.
 
     ls_settings-show_default_repo = abap_true.
 
-    mi_user = zcl_abapgit_persistence_user=>get_instance( c_abap_user ).
+    mi_user = zcl_abapgit_persist_factory=>get_user( c_abap_user ).
     mi_user->set_settings( ls_settings ).
 
     FREE mi_user.
 
-    mi_user = zcl_abapgit_persistence_user=>get_instance( c_abap_user ).
+    mi_user = zcl_abapgit_persist_factory=>get_user( c_abap_user ).
     ls_settings = mi_user->get_settings( ).
 
     cl_abap_unit_assert=>assert_equals(

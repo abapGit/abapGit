@@ -167,7 +167,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   METHOD zif_abapgit_popups~branch_list_popup.
 
-    DATA: lo_branches    TYPE REF TO zcl_abapgit_git_branch_list,
+    DATA: lo_branches    TYPE REF TO zif_abapgit_git_branch_list,
           lt_branches    TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
           lv_answer      TYPE c LENGTH 1,
           lv_default     TYPE i,
@@ -297,8 +297,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       ENDIF.
       ASSERT <ls_branch> IS ASSIGNED.
       rs_branch = lo_branches->find_by_name( <ls_branch>-name ).
-      lv_text = |Branch switched from { zcl_abapgit_git_branch_list=>get_display_name( iv_default_branch ) } to {
-        zcl_abapgit_git_branch_list=>get_display_name( rs_branch-name ) } |.
+      lv_text = |Branch switched from { zcl_abapgit_git_branch_utils=>get_display_name( iv_default_branch ) } to {
+        zcl_abapgit_git_branch_utils=>get_display_name( rs_branch-name ) } |.
       MESSAGE lv_text TYPE 'S'.
     ENDIF.
 
@@ -412,12 +412,12 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
         _popup_3_get_values(
           EXPORTING iv_popup_title = |Create branch from {
-            zcl_abapgit_git_branch_list=>get_display_name( iv_source_branch_name ) }|
+            zcl_abapgit_git_branch_utils=>get_display_name( iv_source_branch_name ) }|
           IMPORTING ev_value_1     = lv_name
           CHANGING  ct_fields      = lt_fields ).
 
-        ev_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
-              zcl_abapgit_git_branch_list=>normalize_branch_name( lv_name ) ).
+        ev_name = zcl_abapgit_git_branch_utils=>complete_heads_branch_name(
+              zcl_abapgit_git_branch_utils=>normalize_branch_name( lv_name ) ).
 
       CATCH zcx_abapgit_cancel.
         ev_cancel = abap_true.
@@ -604,29 +604,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_popups~popup_to_create_package.
-
-    DATA ls_data TYPE scompkdtln.
-
-    MOVE-CORRESPONDING is_package_data TO ls_data.
-
-    IF zcl_abapgit_factory=>get_function_module( )->function_exists( 'PB_POPUP_PACKAGE_CREATE' ) = abap_false.
-* looks like the function module used does not exist on all
-* versions since 702, so show an error
-      zcx_abapgit_exception=>raise( 'Your system does not support automatic creation of packages.' &&
-        'Please, create the package manually.' ).
-    ENDIF.
-
-    CALL FUNCTION 'PB_POPUP_PACKAGE_CREATE'
-      CHANGING
-        p_object_data    = ls_data
-      EXCEPTIONS
-        action_cancelled = 1.
-    ev_create = boolc( sy-subrc = 0 ).
-    MOVE-CORRESPONDING ls_data TO es_package_data.
   ENDMETHOD.
 
 
@@ -837,7 +814,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   METHOD zif_abapgit_popups~tag_list_popup.
 
-    DATA: lo_branches  TYPE REF TO zcl_abapgit_git_branch_list,
+    DATA: lo_branches  TYPE REF TO zif_abapgit_git_branch_list,
           lt_tags      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
           ls_branch    TYPE zif_abapgit_git_definitions=>ty_git_branch,
           lv_answer    TYPE c LENGTH 1,

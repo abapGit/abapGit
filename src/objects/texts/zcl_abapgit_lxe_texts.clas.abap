@@ -7,7 +7,6 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
 
     INTERFACES zif_abapgit_lxe_texts .
 
-    CLASS-METHODS class_constructor.
     CLASS-METHODS get_translation_languages
       IMPORTING
         !iv_main_language   TYPE spras
@@ -43,17 +42,24 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         VALUE(rt_unsupported_languages) TYPE zif_abapgit_definitions=>ty_languages
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS is_object_supported
-      IMPORTING
-        iv_object_type TYPE tadir-object
-      RETURNING
-        VALUE(rv_yes)  TYPE abap_bool.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     CONSTANTS c_custmnr TYPE lxecustmnr VALUE '999999' ##NEEDED.
     " The value for ABAP system translation is always 999999 (from lxecustmnr docs)
+
+    TYPES:
+      BEGIN OF ty_lxe_lang_map, " extract from LXE_T002X
+        language  TYPE lxeisolang,
+        r3_lang   TYPE spras,
+        langshort TYPE lxechar2,
+      END OF ty_lxe_lang_map.
+
+    CLASS-DATA gt_lxe_lang_cache TYPE SORTED TABLE OF ty_lxe_lang_map WITH UNIQUE KEY language
+      WITH NON-UNIQUE SORTED KEY iso2 COMPONENTS langshort.
+      " Controversial: we need uniq, but maybe it's better to keep it debuggable
+      " TODO, add r3 key if needed in future
 
     TYPES:
       BEGIN OF ty_lxe_translation,
@@ -68,7 +74,6 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
       ty_lxe_translations TYPE STANDARD TABLE OF ty_lxe_translation WITH DEFAULT KEY .
 
     CLASS-DATA gt_installed_languages_cache TYPE zif_abapgit_definitions=>ty_languages.
-    CLASS-DATA gt_supported_obj_types TYPE STANDARD TABLE OF tadir-object.
 
     DATA mo_i18n_params TYPE REF TO zcl_abapgit_i18n_params.
     DATA mi_xml_out     TYPE REF TO zif_abapgit_xml_output.
@@ -101,8 +106,10 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
 
     METHODS deserialize_from_po
       IMPORTING
-        !iv_object_type TYPE tadir-object
-        !iv_object_name TYPE tadir-obj_name
+        !iv_object_type   TYPE tadir-object
+        !iv_object_name   TYPE tadir-obj_name
+      RETURNING
+        VALUE(rv_changed) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
 
@@ -176,7 +183,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
 
   METHOD check_langs_versus_installed.
@@ -195,23 +202,6 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
         APPEND <lv_lang> TO et_missfits.
       ENDIF.
     ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD class_constructor.
-
-    APPEND 'CLAS' TO gt_supported_obj_types.
-    APPEND 'DOMA' TO gt_supported_obj_types.
-    APPEND 'DTEL' TO gt_supported_obj_types.
-    APPEND 'FUGR' TO gt_supported_obj_types.
-    APPEND 'MSAG' TO gt_supported_obj_types.
-    APPEND 'PARA' TO gt_supported_obj_types.
-    APPEND 'PROG' TO gt_supported_obj_types.
-    APPEND 'SHI3' TO gt_supported_obj_types.
-    APPEND 'TABL' TO gt_supported_obj_types.
-    APPEND 'TRAN' TO gt_supported_obj_types.
-    APPEND 'VIEW' TO gt_supported_obj_types.
 
   ENDMETHOD.
 
@@ -287,6 +277,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
     DATA lt_obj_list TYPE lxe_tt_colob.
     DATA lv_main_lang TYPE lxeisolang.
     DATA lv_target_lang TYPE lxeisolang.
+    DATA lv_changed TYPE abap_bool.
 
     FIELD-SYMBOLS <lv_lxe_object> LIKE LINE OF lt_obj_list.
 
@@ -324,17 +315,22 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
           iv_objname   = <lv_lxe_object>-objname
           iv_read_only = abap_false ).
 
-        li_po->translate( CHANGING ct_text_pairs = lt_text_pairs_tmp ).
-        " TODO maybe optimize, check if values have changed
+        li_po->translate(
+          CHANGING
+            cv_changed    = lv_changed
+            ct_text_pairs = lt_text_pairs_tmp ).
 
-        write_lxe_object_text_pair(
-          iv_s_lang  = lv_main_lang
-          iv_t_lang  = lv_target_lang
-          iv_custmnr = <lv_lxe_object>-custmnr
-          iv_objtype = <lv_lxe_object>-objtype
-          iv_objname = <lv_lxe_object>-objname
-          it_pcx_s1  = lt_text_pairs_tmp ).
+        IF lv_changed = abap_true.
+          write_lxe_object_text_pair(
+            iv_s_lang  = lv_main_lang
+            iv_t_lang  = lv_target_lang
+            iv_custmnr = <lv_lxe_object>-custmnr
+            iv_objtype = <lv_lxe_object>-objtype
+            iv_objname = <lv_lxe_object>-objname
+            it_pcx_s1  = lt_text_pairs_tmp ).
 
+          rv_changed = abap_true.
+        ENDIF.
       ENDLOOP.
 
     ENDLOOP.
@@ -432,27 +428,28 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
   METHOD get_lang_iso4.
 
-    DATA lv_lang_iso639 TYPE laiso.
-    DATA lv_country     TYPE land1.
-    DATA lv_class       TYPE string.
+    DATA ls_lang LIKE LINE OF gt_lxe_lang_cache.
 
-    lv_class = 'CL_I18N_LANGUAGES'.
+    IF gt_lxe_lang_cache IS INITIAL. " Cache
 
-" cannot find a way to do this in Steampunk, so dynamic for now,
-    CALL METHOD (lv_class)=>sap2_to_iso639_1
-      EXPORTING
-        im_lang_sap2   = iv_src
-      IMPORTING
-        ex_lang_iso639 = lv_lang_iso639
-        ex_country     = lv_country
-      EXCEPTIONS
-        no_assignment  = 1
-        OTHERS         = 2.
+      SELECT language r3_lang langshort
+        INTO TABLE gt_lxe_lang_cache
+        FROM lxe_t002x
+        WHERE is_r3_lang = 'X'
+        AND r3_lang <> '' " ??? precausion
+        AND langshort <> ''.
+
+      " Alternatively, call LXE_T002_GET_LANGUAGES and then convert language
+      " 4char to 2char => 2char = to_upper( language(2) )
+
+    ENDIF.
+
+    READ TABLE gt_lxe_lang_cache INTO ls_lang WITH TABLE KEY iso2 COMPONENTS langshort = iv_src.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Failed to convert [{ iv_src }] lang to iso639| ).
     ENDIF.
 
-    CONCATENATE lv_lang_iso639 lv_country INTO rv_iso4.
+    rv_iso4 = ls_lang-language.
 
   ENDMETHOD.
 
@@ -513,12 +510,6 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
   METHOD iso4_to_iso2.
     rv_laiso = iv_lxe_lang+0(2).
-  ENDMETHOD.
-
-
-  METHOD is_object_supported.
-    READ TABLE gt_supported_obj_types TRANSPORTING NO FIELDS WITH KEY table_line = iv_object_type.
-    rv_yes = boolc( sy-subrc = 0 ).
   ENDMETHOD.
 
 
@@ -645,6 +636,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
       lv_lang = to_lower( lv_lang ).
       CREATE OBJECT lo_po_file
         EXPORTING
+          iv_suppress_comments = mo_i18n_params->ms_params-suppress_po_comments
           iv_lang = lv_lang.
       LOOP AT lt_lxe_texts ASSIGNING <ls_translation>.
         IF iso4_to_iso2( <ls_translation>-target_lang ) = lv_lang.
@@ -680,7 +672,8 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
   METHOD write_lxe_object_text_pair.
 
     DATA:
-      lv_error TYPE lxestring.
+      lv_status TYPE lxestatprc,
+      lv_error  TYPE lxestring.
 
     TRY.
         CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_WRITE'
@@ -691,6 +684,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
             objtype   = iv_objtype
             objname   = iv_objname
           IMPORTING
+            pstatus   = lv_status
             err_msg   = lv_error  " doesn't exist in NW <= 750
           TABLES
             lt_pcx_s1 = it_pcx_s1.
@@ -707,19 +701,23 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
             custmnr   = iv_custmnr
             objtype   = iv_objtype
             objname   = iv_objname
+          IMPORTING
+            pstatus   = lv_status
           TABLES
             lt_pcx_s1 = it_pcx_s1.
 
     ENDTRY.
+
+    IF lv_status <> 'S'.
+      zcx_abapgit_exception=>raise( 'Error updating translations' ).
+    ENDIF.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_lxe_texts~deserialize.
 
-    IF is_object_supported( iv_object_type ) = abap_false.
-      RETURN.
-    ENDIF.
+    DATA lv_changed TYPE abap_bool.
 
     mo_i18n_params = io_i18n_params.
     mi_xml_in      = ii_xml.
@@ -728,9 +726,17 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
     " MAYBE TODO: see comment in serialize
 
     IF 1 = 1.
-      deserialize_from_po(
+      lv_changed = deserialize_from_po(
         iv_object_type = iv_object_type
         iv_object_name = iv_object_name ).
+
+      IF lv_changed = abap_true.
+        zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
+          iv_object   = iv_object_type
+          iv_obj_name = iv_object_name
+          iv_package  = iv_package
+          iv_language = mo_i18n_params->ms_params-main_language ).
+      ENDIF.
     ELSE.
       deserialize_xml(
         iv_object_type = iv_object_type
@@ -741,10 +747,6 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
 
   METHOD zif_abapgit_lxe_texts~serialize.
-
-    IF is_object_supported( iv_object_type ) = abap_false.
-      RETURN.
-    ENDIF.
 
     mo_i18n_params = io_i18n_params.
     mi_xml_out     = ii_xml.

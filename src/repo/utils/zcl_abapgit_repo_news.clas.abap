@@ -20,7 +20,7 @@ CLASS zcl_abapgit_repo_news DEFINITION
 
     CLASS-METHODS create     " TODO REFACTOR
       IMPORTING
-        !io_repo           TYPE REF TO zcl_abapgit_repo
+        !ii_repo           TYPE REF TO zif_abapgit_repo
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_repo_news
       RAISING
@@ -113,27 +113,27 @@ CLASS zcl_abapgit_repo_news IMPLEMENTATION.
           lv_version          TYPE string,
           lv_last_seen        TYPE string,
           lv_url              TYPE string,
-          lo_repo_online      TYPE REF TO zcl_abapgit_repo_online,
+          li_repo_online      TYPE REF TO zif_abapgit_repo_online,
           lv_version_constant TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit-version_constant.
 
     FIELD-SYMBOLS <ls_file> LIKE LINE OF lt_remote.
 
 
-    IF io_repo->is_offline( ) = abap_true.
+    IF ii_repo->is_offline( ) = abap_true.
       RETURN.
     ENDIF.
 
-    lo_repo_online ?= io_repo.
-    lv_url          = lo_repo_online->get_url( ).
+    li_repo_online ?= ii_repo.
+    lv_url          = li_repo_online->get_url( ).
 
-    lo_apack = io_repo->get_dot_apack( ).
+    lo_apack = ii_repo->get_dot_apack( ).
     IF lo_apack IS BOUND.
       lv_version = lo_apack->get_manifest_descriptor( )-version.
     ENDIF.
 
     IF lv_version IS INITIAL.
       TRY.
-          lv_version_constant = io_repo->get_dot_abapgit( )->get_version_constant( ).
+          lv_version_constant = ii_repo->get_dot_abapgit( )->get_version_constant( ).
           IF lv_version_constant IS NOT INITIAL.
             lv_version = zcl_abapgit_version=>get_version_constant_value( lv_version_constant ).
           ENDIF.
@@ -146,10 +146,10 @@ CLASS zcl_abapgit_repo_news IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_last_seen = zcl_abapgit_persistence_user=>get_instance( )->get_repo_last_change_seen( lv_url ).
+    lv_last_seen = zcl_abapgit_persist_factory=>get_user( )->get_repo_last_change_seen( lv_url ).
 
     TRY. " Find changelog
-        lt_remote = io_repo->get_files_remote( ).
+        lt_remote = ii_repo->get_files_remote( ).
       CATCH zcx_abapgit_exception.
         RETURN.
     ENDTRY.
@@ -170,7 +170,7 @@ CLASS zcl_abapgit_repo_news IMPLEMENTATION.
     ENDLOOP.
 
     IF ro_instance IS BOUND AND lv_last_seen <> ro_instance->latest_version( ).
-      zcl_abapgit_persistence_user=>get_instance( )->set_repo_last_change_seen(
+      zcl_abapgit_persist_factory=>get_user( )->set_repo_last_change_seen(
         iv_url     = lv_url
         iv_version = ro_instance->latest_version( ) ).
     ENDIF.

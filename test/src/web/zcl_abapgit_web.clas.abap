@@ -20,9 +20,6 @@ CLASS zcl_abapgit_web DEFINITION
     CLASS-DATA gi_request  TYPE REF TO zif_abapgit_web_request.
     CLASS-DATA gi_response TYPE REF TO zif_abapgit_web_response.
 
-    CLASS-METHODS initialize
-      RAISING
-        zcx_abapgit_exception.
     CLASS-METHODS sapevent.
     CLASS-METHODS redirect.
     CLASS-METHODS search_asset
@@ -46,7 +43,15 @@ CLASS zcl_abapgit_web IMPLEMENTATION.
     gi_response = ii_response.
 
     IF go_viewer IS INITIAL.
-      initialize( ).
+      zcl_abapgit_web_setup=>setup( ).
+
+      CREATE OBJECT go_viewer
+        EXPORTING
+          ii_request  = ii_request
+          ii_response = ii_response.
+      zcl_abapgit_ui_core_injector=>set_html_viewer( go_viewer ).
+
+      go_gui = zcl_abapgit_ui_factory=>get_gui( ).
     ENDIF.
 
     lv_found = search_asset( ).
@@ -69,21 +74,6 @@ CLASS zcl_abapgit_web IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-
-  METHOD initialize.
-
-    CREATE OBJECT go_viewer
-      EXPORTING
-        ii_request  = gi_request
-        ii_response = gi_response.
-
-    zcl_abapgit_ui_injector=>set_html_viewer( go_viewer ).
-
-    go_gui = zcl_abapgit_ui_factory=>get_gui( ).
-
-  ENDMETHOD.
-
 
   METHOD redirect.
 

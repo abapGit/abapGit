@@ -5,6 +5,8 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
 
   PUBLIC SECTION.
 
+    INTERFACES zif_abapgit_gui_diff_extra.
+
     CLASS-METHODS create
       IMPORTING
         !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
@@ -44,12 +46,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
     METHODS:
       add_menu_begin REDEFINITION,
       add_menu_end REDEFINITION,
-      insert_nav REDEFINITION,
-      refresh REDEFINITION,
-      render_beacon_begin_of_row REDEFINITION,
-      render_diff_head_after_state REDEFINITION,
-      render_line_split_row REDEFINITION,
-      render_table_head_non_unified REDEFINITION.
+      refresh REDEFINITION.
 
   PRIVATE SECTION.
 
@@ -67,7 +64,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
     DATA mo_stage TYPE REF TO zcl_abapgit_stage .
     DATA mv_section_count TYPE i .
     DATA mv_pushed TYPE abap_bool .
-    DATA mo_repo_online TYPE REF TO zcl_abapgit_repo_online .
+    DATA mi_repo_online TYPE REF TO zif_abapgit_repo_online .
 
     METHODS render_patch
       IMPORTING
@@ -80,7 +77,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
     METHODS render_patch_head
       IMPORTING
         !ii_html TYPE REF TO zif_abapgit_html
-        !is_diff TYPE ty_file_diff .
+        !is_diff TYPE zif_abapgit_gui_diff=>ty_file_diff .
     METHODS start_staging
       IMPORTING
         !ii_event TYPE REF TO zif_abapgit_gui_event
@@ -93,7 +90,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
         zcx_abapgit_exception .
     METHODS restore_patch_flags
       IMPORTING
-        !it_diff_files_old TYPE ty_file_diffs
+        !it_diff_files_old TYPE zif_abapgit_gui_diff=>ty_file_diffs
       RAISING
         zcx_abapgit_exception .
     METHODS add_to_stage
@@ -121,12 +118,12 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
       IMPORTING
         !iv_filename   TYPE string
       RETURNING
-        VALUE(ro_diff) TYPE REF TO zcl_abapgit_diff
+        VALUE(ro_diff) TYPE REF TO zif_abapgit_diff
       RAISING
         zcx_abapgit_exception .
     METHODS get_diff_line
       IMPORTING
-        !io_diff       TYPE REF TO zcl_abapgit_diff
+        !io_diff       TYPE REF TO zif_abapgit_diff
         !iv_line_index TYPE string
       RETURNING
         VALUE(rs_diff) TYPE zif_abapgit_definitions=>ty_diff
@@ -147,7 +144,6 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
-
 
   METHOD add_menu_begin.
 
@@ -177,6 +173,9 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
     add_view_sub_menu( io_menu ).
 
+    io_menu->add( iv_txt = 'Back'
+                  iv_act = zif_abapgit_definitions=>c_action-go_back ).
+
   ENDMETHOD.
 
 
@@ -188,7 +187,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
           lv_patch             TYPE xstring,
           lo_git_add_patch     TYPE REF TO zcl_abapgit_git_add_patch.
 
-    FIELD-SYMBOLS: <ls_diff_file> TYPE ty_file_diff.
+    FIELD-SYMBOLS: <ls_diff_file> LIKE LINE OF mt_diff_files.
 
     LOOP AT mt_diff_files ASSIGNING <ls_diff_file>.
 
@@ -275,7 +274,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
   METHOD apply_patch_for.
 
-    DATA: lo_diff      TYPE REF TO zcl_abapgit_diff,
+    DATA: lo_diff      TYPE REF TO zif_abapgit_diff,
           ls_diff_line TYPE zif_abapgit_definitions=>ty_diff,
           lv_line      TYPE i.
 
@@ -347,14 +346,17 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
       is_object = is_object
       it_files  = it_files ).
 
-    IF mo_repo->is_offline( ) = abap_true.
+    IF mi_repo->is_offline( ) = abap_true.
       zcx_abapgit_exception=>raise( |Patching is only possible for online repositories.| ).
     ENDIF.
 
-    mo_repo_online ?= mo_repo.
+* access "me" after the super constructor has been called
+    mi_extra = me.
+
+    mi_repo_online ?= mi_repo.
 
     " While patching we always want to be in split mode
-    CLEAR: mv_unified.
+    CLEAR mv_unified.
     CREATE OBJECT mo_stage.
 
   ENDMETHOD.
@@ -432,7 +434,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD insert_nav.
+  METHOD zif_abapgit_gui_diff_extra~insert_nav.
 
     " add beacon at beginning of file
     rv_insert_nav = abap_true.
@@ -453,7 +455,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
   METHOD refresh.
 
-    DATA: lt_diff_files_old TYPE ty_file_diffs.
+    DATA lt_diff_files_old LIKE mt_diff_files.
 
     lt_diff_files_old = mt_diff_files.
 
@@ -464,7 +466,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_beacon_begin_of_row.
+  METHOD zif_abapgit_gui_diff_extra~render_beacon_begin_of_row.
 
     mv_section_count = mv_section_count + 1.
 
@@ -475,7 +477,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_diff_head_after_state.
+  METHOD zif_abapgit_gui_diff_extra~render_diff_head_after_state.
 
     DATA: lv_act_id TYPE string.
 
@@ -497,21 +499,12 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_line_split_row.
+  METHOD zif_abapgit_gui_diff_extra~render_line_split_row.
 
     render_patch( ii_html      = ii_html
                   iv_filename  = iv_filename
                   is_diff_line = is_diff_line
                   iv_index     = iv_index ).
-
-    super->render_line_split_row(
-        ii_html      = ii_html
-        iv_filename  = iv_filename
-        is_diff_line = is_diff_line
-        iv_index     = iv_index
-        iv_fstate    = iv_fstate
-        iv_new       = iv_new
-        iv_old       = iv_old ).
 
   ENDMETHOD.
 
@@ -575,14 +568,10 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_table_head_non_unified.
+  METHOD zif_abapgit_gui_diff_extra~render_table_head_non_unified.
 
     render_patch_head( ii_html = ii_html
                        is_diff = is_diff ).
-
-    super->render_table_head_non_unified(
-        ii_html = ii_html
-        is_diff = is_diff ).
 
   ENDMETHOD.
 
@@ -593,8 +582,8 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
       lt_diff_old TYPE zif_abapgit_definitions=>ty_diffs_tt.
 
     FIELD-SYMBOLS:
-      <ls_diff_file>     TYPE ty_file_diff,
-      <ls_diff_file_old> TYPE ty_file_diff,
+      <ls_diff_file>     LIKE LINE OF mt_diff_files,
+      <ls_diff_file_old> LIKE LINE OF it_diff_files_old,
       <ls_diff_old>      TYPE zif_abapgit_definitions=>ty_diff.
 
     LOOP AT mt_diff_files ASSIGNING <ls_diff_file>.
@@ -643,8 +632,8 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
         start_staging( ii_event ).
 
         rs_handled-page = zcl_abapgit_gui_page_commit=>create(
-          io_repo  = mo_repo_online
-          io_stage = mo_stage ).
+          ii_repo_online = mi_repo_online
+          io_stage       = mo_stage ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 

@@ -21,7 +21,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        io_repo          TYPE REF TO zcl_abapgit_repo_online
+        ii_repo_online   TYPE REF TO zif_abapgit_repo_online
         iv_seed          TYPE string OPTIONAL
         iv_sci_result    TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
         ii_obj_filter    TYPE REF TO zif_abapgit_object_filter OPTIONAL
@@ -33,7 +33,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
 
     METHODS constructor
       IMPORTING
-        io_repo          TYPE REF TO zcl_abapgit_repo_online
+        ii_repo_online   TYPE REF TO zif_abapgit_repo_online
         iv_seed          TYPE string OPTIONAL
         iv_sci_result    TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
         ii_obj_filter    TYPE REF TO zif_abapgit_object_filter OPTIONAL
@@ -54,7 +54,8 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     TYPES:
       ty_changed_by_tt TYPE SORTED TABLE OF ty_changed_by WITH UNIQUE KEY item filename.
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
+    DATA mi_repo TYPE REF TO zif_abapgit_repo.
+    DATA mi_repo_online TYPE REF TO zif_abapgit_repo_online.
     DATA ms_files TYPE zif_abapgit_definitions=>ty_stage_files .
     DATA mv_seed TYPE string .               " Unique page id to bind JS sessionStorage
     DATA mv_filter_value TYPE string .
@@ -134,21 +135,23 @@ ENDCLASS.
 
 CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
+
   METHOD constructor.
 
     DATA lv_ts TYPE timestamp.
 
     super->constructor( ).
 
+    mi_repo        = ii_repo_online.
+    mi_repo_online = ii_repo_online.
+    mv_seed        = iv_seed.
+    mv_sci_result  = iv_sci_result.
+    mi_obj_filter  = ii_obj_filter.
+
     " force refresh on stage, to make sure the latest local and remote files are used
     IF ii_force_refresh = abap_true.
-      io_repo->refresh( ).
+      ii_repo_online->zif_abapgit_repo~refresh( ).
     ENDIF.
-
-    mo_repo               = io_repo.
-    mv_seed               = iv_seed.
-    mv_sci_result         = iv_sci_result.
-    mi_obj_filter         = ii_obj_filter.
 
     IF mv_seed IS INITIAL. " Generate based on time unless obtained from diff page
       GET TIME STAMP FIELD lv_ts.
@@ -189,7 +192,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        io_repo          = io_repo
+        ii_repo_online   = ii_repo_online
         iv_seed          = iv_seed
         iv_sci_result    = iv_sci_result
         ii_force_refresh = ii_force_refresh
@@ -230,7 +233,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
             EXPORTING
               iv_filename = ls_remote-filename
               iv_path     = ls_remote-path
-              io_dot      = mo_repo->get_dot_abapgit( )
+              io_dot      = mi_repo->get_dot_abapgit( )
             IMPORTING
               es_item     = ls_item ).
           ls_changed_by-item = ls_item.
@@ -282,7 +285,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
           APPEND <ls_local>-item TO lt_items.
         ENDLOOP.
 
-        lo_dot = mo_repo->get_dot_abapgit( ).
+        lo_dot = mi_repo->get_dot_abapgit( ).
         LOOP AT it_files-remote ASSIGNING <ls_remote> WHERE filename IS NOT INITIAL.
           zcl_abapgit_filename_logic=>file_to_object(
             EXPORTING
@@ -313,7 +316,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     DATA: lv_key   TYPE zif_abapgit_persistence=>ty_repo-key,
           lt_files TYPE zif_abapgit_definitions=>ty_stage_tt.
 
-    lv_key = mo_repo->get_key( ).
+    lv_key = mi_repo->get_key( ).
     lt_files = io_stage->get_all( ).
 
     DELETE lt_files WHERE method <> zif_abapgit_definitions=>c_method-add
@@ -327,11 +330,11 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD init_files.
-    ms_files = zcl_abapgit_stage_logic=>get_stage_logic( )->get( io_repo       = mo_repo
-                                                                 ii_obj_filter = mi_obj_filter ).
+    ms_files = zcl_abapgit_stage_logic=>get_stage_logic( )->get( ii_repo_online = mi_repo_online
+                                                                 ii_obj_filter  = mi_obj_filter ).
 
     IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.
-      mo_repo->refresh( ).
+      mi_repo->refresh( ).
       zcx_abapgit_exception=>raise( 'There are no changes that could be staged' ).
     ENDIF.
   ENDMETHOD.
@@ -420,7 +423,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     CASE iv_context.
       WHEN 'local'.
         lv_param = zcl_abapgit_html_action_utils=>file_encode(
-          iv_key  = mo_repo->get_key( )
+          iv_key  = mi_repo->get_key( )
           ig_file = is_file ).
 
         lv_filename = ri_html->a(
@@ -439,7 +442,10 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ri_html->add( '</td>' ).
 
     ri_html->add( '<td class="transport">' ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( iv_transport ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport(
+      iv_transport = iv_transport
+      iv_obj_type  = is_item-obj_type
+      iv_obj_name  = is_item-obj_name ) ).
     ri_html->add( '</td>' ).
 
     ri_html->add( '<td class="status">?</td>' ).
@@ -545,7 +551,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
             EXPORTING
               iv_filename = <ls_remote>-filename
               iv_path     = <ls_remote>-path
-              io_dot      = mo_repo->get_dot_abapgit( )
+              io_dot      = mi_repo->get_dot_abapgit( )
             IMPORTING
               es_item     = ls_item_remote ).
           READ TABLE lt_transports INTO ls_transport WITH KEY
@@ -586,7 +592,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    lv_main_language = mo_repo->get_dot_abapgit( )->get_main_language( ).
+    lv_main_language = mi_repo->get_dot_abapgit( )->get_main_language( ).
 
     IF lv_main_language <> sy-langu.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
@@ -688,9 +694,9 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         lo_stage = stage_all( ).
 
         rs_handled-page = zcl_abapgit_gui_page_commit=>create(
-          io_repo       = mo_repo
-          io_stage      = lo_stage
-          iv_sci_result = mv_sci_result ).
+          ii_repo_online = mi_repo_online
+          io_stage       = lo_stage
+          iv_sci_result  = mv_sci_result ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
@@ -699,9 +705,9 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         lo_stage = stage_selected( ii_event ).
 
         rs_handled-page = zcl_abapgit_gui_page_commit=>create(
-          io_repo       = mo_repo
-          io_stage      = lo_stage
-          iv_sci_result = mv_sci_result ).
+          ii_repo_online = mi_repo_online
+          io_stage       = lo_stage
+          iv_sci_result  = mv_sci_result ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
@@ -717,12 +723,12 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_action-stage_refresh.
-        mo_repo->refresh( abap_true ).
+        mi_repo->refresh( abap_true ).
         init_files( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-git_branch_switch.
         zcl_abapgit_services_git=>switch_branch( |{ ii_event->query( )->get( 'KEY' ) }| ).
-        mo_repo->refresh( abap_true ).
+        mi_repo->refresh( abap_true ).
         init_files( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
@@ -770,7 +776,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         iv_opt = zif_abapgit_html=>c_html_opt-strong
       )->add(
         iv_txt = |Diff|
-        iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mo_repo->get_key( ) }|
+        iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mi_repo->get_key( ) }|
       )->add(
         iv_txt = |Patch|
         iv_typ = zif_abapgit_html=>c_action_type-onclick
@@ -791,7 +797,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     ri_html->add( '<div class="repo">' ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-      io_repo = mo_repo
+      ii_repo = mi_repo
       iv_interactive_branch = abap_true ) ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
     ri_html->add( render_main_language_warning( ) ).

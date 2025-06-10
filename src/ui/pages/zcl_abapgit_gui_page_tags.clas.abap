@@ -52,7 +52,7 @@ CLASS zcl_abapgit_gui_page_tags DEFINITION
     DATA mo_form TYPE REF TO zcl_abapgit_html_form.
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online.
+    DATA mi_repo_online TYPE REF TO zif_abapgit_repo_online.
     DATA mo_settings TYPE REF TO zcl_abapgit_settings.
     DATA ms_tag TYPE zif_abapgit_git_definitions=>ty_git_tag.
 
@@ -108,8 +108,8 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
 
     rv_commit = li_popups->commit_list_popup(
-      iv_repo_url    = mo_repo->get_url( )
-      iv_branch_name = mo_repo->get_selected_branch( ) )-sha1.
+      iv_repo_url    = mi_repo_online->get_url( )
+      iv_branch_name = mi_repo_online->get_selected_branch( ) )-sha1.
 
   ENDMETHOD.
 
@@ -119,7 +119,7 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
     super->constructor( ).
     CREATE OBJECT mo_form_data.
     CREATE OBJECT mo_validation_log.
-    mo_repo ?= ii_repo.
+    mi_repo_online ?= ii_repo.
 
     " Get settings from DB
     mo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
@@ -229,15 +229,15 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
 
     DATA li_user TYPE REF TO zif_abapgit_persist_user.
 
-    li_user = zcl_abapgit_persistence_user=>get_instance( ).
+    li_user = zcl_abapgit_persist_factory=>get_user( ).
 
-    rv_email = li_user->get_repo_git_user_email( mo_repo->get_url( ) ).
+    rv_email = li_user->get_repo_git_user_email( mi_repo_online->get_url( ) ).
     IF rv_email IS INITIAL.
       rv_email = li_user->get_default_git_user_email( ).
     ENDIF.
     IF rv_email IS INITIAL.
       " get default from user record
-      rv_email = zcl_abapgit_user_record=>get_instance( sy-uname )->get_email( ).
+      rv_email = zcl_abapgit_env_factory=>get_user_record( )->get_email( sy-uname ).
     ENDIF.
 
   ENDMETHOD.
@@ -247,15 +247,15 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
 
     DATA li_user TYPE REF TO zif_abapgit_persist_user.
 
-    li_user = zcl_abapgit_persistence_user=>get_instance( ).
+    li_user = zcl_abapgit_persist_factory=>get_user( ).
 
-    rv_user  = li_user->get_repo_git_user_name( mo_repo->get_url( ) ).
+    rv_user  = li_user->get_repo_git_user_name( mi_repo_online->get_url( ) ).
     IF rv_user IS INITIAL.
       rv_user  = li_user->get_default_git_user_name( ).
     ENDIF.
     IF rv_user IS INITIAL.
       " get default from user record
-      rv_user = zcl_abapgit_user_record=>get_instance( sy-uname )->get_name( ).
+      rv_user = zcl_abapgit_env_factory=>get_user_record( )->get_name( sy-uname ).
     ENDIF.
 
   ENDMETHOD.
@@ -300,7 +300,7 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
 
     IF lv_new_tag_name IS NOT INITIAL.
       " Check if tag already exists
-      lt_tags = zcl_abapgit_git_factory=>get_git_transport( )->branches( mo_repo->get_url( ) )->get_tags_only( ).
+      lt_tags = zcl_abapgit_git_factory=>get_git_transport( )->branches( mi_repo_online->get_url( ) )->get_tags_only( ).
 
       READ TABLE lt_tags TRANSPORTING NO FIELDS WITH TABLE KEY name_key
         COMPONENTS name = zcl_abapgit_git_tag=>add_tag_prefix( lv_new_tag_name ).
@@ -360,7 +360,7 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
 
           TRY.
               zcl_abapgit_git_porcelain=>create_tag(
-                iv_url = mo_repo->get_url( )
+                iv_url = mi_repo_online->get_url( )
                 is_tag = ms_tag ).
             CATCH zcx_abapgit_exception INTO lx_error.
               zcx_abapgit_exception=>raise( |Cannot create tag { ms_tag-name }: { lx_error->get_text( ) }| ).
@@ -393,7 +393,7 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
     ri_html->add( `<div class="repo">` ).
 
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-                    io_repo               = mo_repo
+                    ii_repo               = mi_repo_online
                     iv_show_commit        = abap_false
                     iv_interactive_branch = abap_false ) ).
 

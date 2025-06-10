@@ -2,18 +2,50 @@ CLASS zcl_abapgit_object_dcls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
+    METHODS constructor
+      IMPORTING
+        is_item        TYPE zif_abapgit_definitions=>ty_item
+        iv_language    TYPE spras
+        io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_type_not_supported.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    DATA: mo_dcl_handler TYPE REF TO object.  " CL_ACM_DCL_HANDLER
+    METHODS clear_fields
+      CHANGING
+        !cg_data TYPE any
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
 
+  METHOD constructor.
+
+    super->constructor(
+        is_item        = is_item
+        iv_language    = iv_language
+        io_files       = io_files
+        io_i18n_params = io_i18n_params ).
+
+    TRY.
+        CALL METHOD ('CL_ACM_DCL_HANDLER_FACTORY')=>('CREATE')
+          RECEIVING
+            ro_handler = mo_dcl_handler.
+
+      CATCH cx_root.
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
+    ENDTRY.
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~changed_by.
     DATA: lr_data  TYPE REF TO data,
-          lo_dcl   TYPE REF TO object,
           lx_error TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
@@ -23,39 +55,31 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
     ASSIGN lr_data->* TO <lg_data>.
 
     TRY.
-        CALL METHOD ('CL_ACM_DCL_HANDLER_FACTORY')=>('CREATE')
-          RECEIVING
-            ro_handler = lo_dcl.
-
-        CALL METHOD lo_dcl->('READ')
+        CALL METHOD mo_dcl_handler->('READ')
           EXPORTING
             iv_dclname = ms_item-obj_name
           IMPORTING
             es_dclsrc  = <lg_data>.
-
-        ASSIGN COMPONENT 'AS4USER' OF STRUCTURE <lg_data> TO <lg_field>.
-        IF sy-subrc = 0.
-          rv_user = <lg_field>.
-        ELSE.
-          rv_user = c_user_unknown.
-        ENDIF.
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
+
+    ASSIGN COMPONENT 'AS4USER' OF STRUCTURE <lg_data> TO <lg_field>.
+    IF sy-subrc = 0.
+      rv_user = <lg_field>.
+    ELSE.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lo_dcl   TYPE REF TO object,
-          lx_error TYPE REF TO cx_root.
+    DATA: lx_error TYPE REF TO cx_root.
 
     TRY.
-        CALL METHOD ('CL_ACM_DCL_HANDLER_FACTORY')=>('CREATE')
-          RECEIVING
-            ro_handler = lo_dcl.
-
-        CALL METHOD lo_dcl->('DELETE')
+        CALL METHOD mo_dcl_handler->('DELETE')
           EXPORTING
             iv_dclname = ms_item-obj_name.
 
@@ -71,7 +95,6 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: lr_data                  TYPE REF TO data,
-          lo_dcl                   TYPE REF TO object,
           lx_error                 TYPE REF TO cx_root,
           lv_abap_language_version TYPE uccheck.
 
@@ -98,15 +121,11 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
       set_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
     ENDIF.
 
+    tadir_insert( iv_package ).
+
     TRY.
-        tadir_insert( iv_package ).
-
-        CALL METHOD ('CL_ACM_DCL_HANDLER_FACTORY')=>('CREATE')
-          RECEIVING
-            ro_handler = lo_dcl.
-
         TRY.
-            CALL METHOD lo_dcl->('SAVE')
+            CALL METHOD mo_dcl_handler->('SAVE')
               EXPORTING
                 iv_dclname               = ms_item-obj_name
                 iv_put_state             = 'I'
@@ -115,7 +134,7 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
                 iv_access_mode           = 'INSERT'
                 iv_abap_language_version = lv_abap_language_version.
           CATCH cx_sy_dyn_call_param_not_found.
-            CALL METHOD lo_dcl->('SAVE')
+            CALL METHOD mo_dcl_handler->('SAVE')
               EXPORTING
                 iv_dclname     = ms_item-obj_name
                 iv_put_state   = 'I'
@@ -135,23 +154,11 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lo_dcl   TYPE REF TO object,
-          lx_error TYPE REF TO cx_root.
-
-    TRY.
-        CALL METHOD ('CL_ACM_DCL_HANDLER_FACTORY')=>('CREATE')
-          RECEIVING
-            ro_handler = lo_dcl.
-
-        CALL METHOD lo_dcl->('CHECK_EXISTENCE')
-          EXPORTING
-            iv_objectname = ms_item-obj_name
-          RECEIVING
-            rv_exists     = rv_bool.
-
-      CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise_with_text( lx_error ).
-    ENDTRY.
+    CALL METHOD mo_dcl_handler->('CHECK_EXISTENCE')
+      EXPORTING
+        iv_objectname = ms_item-obj_name
+      RECEIVING
+        rv_exists     = rv_bool.
 
   ENDMETHOD.
 
@@ -207,7 +214,6 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: lr_data  TYPE REF TO data,
-          lo_dcl   TYPE REF TO object,
           lx_error TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
@@ -218,60 +224,55 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
     ASSIGN lr_data->* TO <lg_data>.
 
     TRY.
-        CALL METHOD ('CL_ACM_DCL_HANDLER_FACTORY')=>('CREATE')
-          RECEIVING
-            ro_handler = lo_dcl.
-
-        CALL METHOD lo_dcl->('READ')
+        CALL METHOD mo_dcl_handler->('READ')
           EXPORTING
             iv_dclname = ms_item-obj_name
           IMPORTING
             es_dclsrc  = <lg_data>.
 
-        ASSIGN COMPONENT 'AS4USER' OF STRUCTURE <lg_data> TO <lg_field>.
-        ASSERT sy-subrc = 0.
-        CLEAR <lg_field>.
-
-        ASSIGN COMPONENT 'AS4DATE' OF STRUCTURE <lg_data> TO <lg_field>.
-        ASSERT sy-subrc = 0.
-        CLEAR <lg_field>.
-
-        ASSIGN COMPONENT 'AS4TIME' OF STRUCTURE <lg_data> TO <lg_field>.
-        ASSERT sy-subrc = 0.
-        CLEAR <lg_field>.
-
-        ASSIGN COMPONENT 'CREATED_BY' OF STRUCTURE <lg_data> TO <lg_field>.
-        ASSERT sy-subrc = 0.
-        CLEAR <lg_field>.
-
-        ASSIGN COMPONENT 'CREATED_DATE' OF STRUCTURE <lg_data> TO <lg_field>.
-        ASSERT sy-subrc = 0.
-        CLEAR <lg_field>.
-
-        ASSIGN COMPONENT 'AS4LOCAL' OF STRUCTURE <lg_data> TO <lg_field>.
-        ASSERT sy-subrc = 0.
-        CLEAR <lg_field>.
-
-        ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <lg_data> TO <lg_field>.
-        IF sy-subrc = 0.
-          clear_abap_language_version( CHANGING cv_abap_language_version = <lg_field> ).
-        ENDIF.
-
-        ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
-        ASSERT sy-subrc = 0.
-
-        mo_files->add_string(
-          iv_ext    = 'asdcls'
-          iv_string = <lg_field> ).
-
-        CLEAR <lg_field>.
-
-        io_xml->add( iv_name = 'DCLS'
-                     ig_data = <lg_data> ).
-
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
+    clear_fields( CHANGING cg_data = <lg_data> ).
+
+    ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
+    ASSERT sy-subrc = 0.
+
+    mo_files->add_string(
+      iv_ext    = 'asdcls'
+      iv_string = <lg_field> ).
+
+    CLEAR <lg_field>.
+
+    io_xml->add( iv_name = 'DCLS'
+                 ig_data = <lg_data> ).
+
   ENDMETHOD.
+
+
+  METHOD clear_fields.
+
+    DATA:
+      BEGIN OF ls_fields_to_clear,
+        as4user      TYPE c,
+        as4date      TYPE d,
+        as4time      TYPE t,
+        created_by   TYPE c,
+        created_date TYPE d,
+        as4local     TYPE c,
+      END OF ls_fields_to_clear.
+
+    FIELD-SYMBOLS:
+      <lg_abap_language_version> TYPE any.
+
+    MOVE-CORRESPONDING ls_fields_to_clear TO cg_data.
+
+    ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE cg_data TO <lg_abap_language_version>.
+    IF sy-subrc = 0.
+      clear_abap_language_version( CHANGING cv_abap_language_version = <lg_abap_language_version> ).
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

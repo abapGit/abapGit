@@ -31,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
+CLASS zcl_abapgit_background IMPLEMENTATION.
 
 
   METHOD dequeue.
@@ -135,13 +135,14 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
 
   METHOD run.
 
-    DATA: lo_per        TYPE REF TO zcl_abapgit_persist_background,
-          lo_repo       TYPE REF TO zcl_abapgit_repo_online,
-          lt_list       TYPE zcl_abapgit_persist_background=>ty_background_keys,
-          li_background TYPE REF TO zif_abapgit_background,
-          li_log        TYPE REF TO zif_abapgit_log,
-          lx_error      TYPE REF TO zcx_abapgit_exception,
-          lv_repo_name  TYPE string.
+    DATA:
+      li_repo        TYPE REF TO zif_abapgit_repo,
+      li_repo_online TYPE REF TO zif_abapgit_repo_online,
+      lt_list        TYPE zif_abapgit_persist_background=>ty_background_keys,
+      li_background  TYPE REF TO zif_abapgit_background,
+      li_log         TYPE REF TO zif_abapgit_log,
+      lx_error       TYPE REF TO zcx_abapgit_exception,
+      lv_repo_name   TYPE string.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
 
@@ -152,8 +153,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    CREATE OBJECT lo_per.
-    lt_list = lo_per->list( ).
+    lt_list = zcl_abapgit_persist_factory=>get_background( )->list( ).
 
     WRITE: / 'Background mode'.
 
@@ -161,12 +161,13 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
       CREATE OBJECT li_log TYPE zcl_abapgit_log.
 
       TRY.
-          lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( <ls_list>-key ).
-          lv_repo_name = lo_repo->get_name( ).
+          li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( <ls_list>-key ).
+          li_repo_online ?= li_repo.
+          lv_repo_name = li_repo->get_name( ).
           WRITE: / <ls_list>-method, lv_repo_name.
 
           zcl_abapgit_login_manager=>set(
-            iv_uri      = lo_repo->get_url( )
+            iv_uri      = li_repo_online->get_url( )
             iv_username = <ls_list>-username
             iv_password = <ls_list>-password ).
 
@@ -174,16 +175,16 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
               CREATE OBJECT li_background TYPE (<ls_list>-method).
 
               li_background->run(
-                io_repo     = lo_repo
-                ii_log      = li_log
-                it_settings = <ls_list>-settings ).
+                ii_repo_online = li_repo_online
+                ii_log         = li_log
+                it_settings    = <ls_list>-settings ).
             CATCH cx_sy_create_object_error.
               li_log->add_warning( |{ <ls_list>-method } could not be executed,|
                                  & | as it is not accessible (local/global class).| ).
           ENDTRY.
 
           " Decrease memory usage for repository already processed (but keep log)
-          lo_repo->refresh(
+          li_repo->refresh(
             iv_drop_cache = abap_true
             iv_drop_log   = abap_false ).
         CATCH zcx_abapgit_exception INTO lx_error.

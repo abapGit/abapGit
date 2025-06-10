@@ -11,6 +11,7 @@ INTERFACE zif_abapgit_objects PUBLIC.
       xml     TYPE REF TO zif_abapgit_xml_input,
       package TYPE devclass,
       item    TYPE zif_abapgit_definitions=>ty_item,
+      files   TYPE REF TO zcl_abapgit_objects_files,
     END OF ty_deserialization .
   TYPES:
     ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY .
@@ -43,6 +44,7 @@ INTERFACE zif_abapgit_objects PUBLIC.
       delete     TYPE i VALUE 4,
       delete_add TYPE i VALUE 5,
       packmove   TYPE i VALUE 6,
+      data_loss  TYPE i VALUE 7,
     END OF c_deserialize_action.
 
 ENDINTERFACE.

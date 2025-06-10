@@ -9,7 +9,7 @@ CLASS zcl_abapgit_object_cmpt DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_type_not_supported.
 
     INTERFACES zif_abapgit_object.
   PROTECTED SECTION.
@@ -38,7 +38,7 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
             r_ref_db_access = mo_cmp_db.
 
       CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'CMPT not supported' ).
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDTRY.
 
     mv_name = ms_item-obj_name.
@@ -50,21 +50,16 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
 
     DATA: lo_cmp_template TYPE REF TO object.
 
-    TRY.
-        CALL METHOD ('CL_CMP_TEMPLATE')=>('S_CREATE_FROM_DB')
-          EXPORTING
-            i_name         = mv_name
-            i_version      = 'A'
-          RECEIVING
-            r_ref_template = lo_cmp_template.
+    CALL METHOD ('CL_CMP_TEMPLATE')=>('S_CREATE_FROM_DB')
+      EXPORTING
+        i_name         = mv_name
+        i_version      = 'A'
+      RECEIVING
+        r_ref_template = lo_cmp_template.
 
-        CALL METHOD lo_cmp_template->('IF_CMP_TEMPLATE_EDIT~GET_CHANGE_USER')
-          RECEIVING
-            r_user = rv_user.
-
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'CMPT not supported' ).
-    ENDTRY.
+    CALL METHOD lo_cmp_template->('IF_CMP_TEMPLATE_EDIT~GET_CHANGE_USER')
+      RECEIVING
+        r_user = rv_user.
 
   ENDMETHOD.
 
@@ -73,19 +68,14 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
 
     DATA: lv_deleted TYPE abap_bool.
 
-    TRY.
-        CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~DELETE_TEMPLATE')
-          EXPORTING
-            i_name        = mv_name
-            i_version     = 'A'
-            i_flg_header  = abap_true
-            i_flg_lines   = abap_true
-          RECEIVING
-            r_flg_deleted = lv_deleted.
-
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'CMPT not supported' ).
-    ENDTRY.
+    CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~DELETE_TEMPLATE')
+      EXPORTING
+        i_name        = mv_name
+        i_version     = 'A'
+        i_flg_header  = abap_true
+        i_flg_lines   = abap_true
+      RECEIVING
+        r_flg_deleted = lv_deleted.
 
     IF lv_deleted = abap_false.
       zcx_abapgit_exception=>raise( |Error deleting CMPT { ms_item-obj_name }| ).
@@ -103,37 +93,32 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
                    <lg_header>   TYPE any,
                    <lg_field>    TYPE any.
 
-    TRY.
-        CREATE DATA lr_template TYPE ('IF_CMP_TEMPLATE_DB=>TYP_TEMPLATE').
-        ASSIGN lr_template->* TO <lg_template>.
+    CREATE DATA lr_template TYPE ('IF_CMP_TEMPLATE_DB=>TYP_TEMPLATE').
+    ASSIGN lr_template->* TO <lg_template>.
 
-        io_xml->read(
-          EXPORTING
-            iv_name = 'CMPT'
-          CHANGING
-            cg_data = <lg_template> ).
+    io_xml->read(
+      EXPORTING
+        iv_name = 'CMPT'
+      CHANGING
+        cg_data = <lg_template> ).
 
-        ASSIGN COMPONENT 'STR_HEADER' OF STRUCTURE <lg_template> TO <lg_header>.
-        IF sy-subrc = 0.
-          ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_header> TO <lg_field>.
-          IF sy-subrc = 0.
-            <lg_field> = ms_item-obj_name.
-          ENDIF.
-          ASSIGN COMPONENT 'VERSION' OF STRUCTURE <lg_header> TO <lg_field>.
-          IF sy-subrc = 0.
-            <lg_field> = 'A'.
-          ENDIF.
-        ENDIF.
+    ASSIGN COMPONENT 'STR_HEADER' OF STRUCTURE <lg_template> TO <lg_header>.
+    IF sy-subrc = 0.
+      ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_header> TO <lg_field>.
+      IF sy-subrc = 0.
+        <lg_field> = ms_item-obj_name.
+      ENDIF.
+      ASSIGN COMPONENT 'VERSION' OF STRUCTURE <lg_header> TO <lg_field>.
+      IF sy-subrc = 0.
+        <lg_field> = 'A'.
+      ENDIF.
+    ENDIF.
 
-        CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~SAVE_TEMPLATE')
-          EXPORTING
-            i_template_db = <lg_template>
-            i_flg_header  = abap_true
-            i_flg_lines   = abap_true.
-
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'CMPT not supported' ).
-    ENDTRY.
+    CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~SAVE_TEMPLATE')
+      EXPORTING
+        i_template_db = <lg_template>
+        i_flg_header  = abap_true
+        i_flg_lines   = abap_true.
 
     corr_insert( iv_package ).
 
@@ -142,24 +127,20 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    TRY.
-        CALL METHOD ('CL_CMP_TEMPLATE')=>('S_TEMPLATE_EXISTS')
-          EXPORTING
-            i_name       = mv_name
-            i_version    = 'A'
-          RECEIVING
-            r_flg_exists = rv_bool.
-        IF rv_bool = abap_false.
-          CALL METHOD ('CL_CMP_TEMPLATE')=>('S_TEMPLATE_EXISTS')
-            EXPORTING
-              i_name       = mv_name
-              i_version    = 'I'
-            RECEIVING
-              r_flg_exists = rv_bool.
-        ENDIF.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'CMPT not supported' ).
-    ENDTRY.
+    CALL METHOD ('CL_CMP_TEMPLATE')=>('S_TEMPLATE_EXISTS')
+      EXPORTING
+        i_name       = mv_name
+        i_version    = 'A'
+      RECEIVING
+        r_flg_exists = rv_bool.
+    IF rv_bool = abap_false.
+      CALL METHOD ('CL_CMP_TEMPLATE')=>('S_TEMPLATE_EXISTS')
+        EXPORTING
+          i_name       = mv_name
+          i_version    = 'I'
+        RECEIVING
+          r_flg_exists = rv_bool.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -218,47 +199,42 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
                    <lg_header>   TYPE any,
                    <lg_field>    TYPE any.
 
-    TRY.
-        CREATE DATA lr_template TYPE ('IF_CMP_TEMPLATE_DB=>TYP_TEMPLATE').
-        ASSIGN lr_template->* TO <lg_template>.
+    CREATE DATA lr_template TYPE ('IF_CMP_TEMPLATE_DB=>TYP_TEMPLATE').
+    ASSIGN lr_template->* TO <lg_template>.
 
-        CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~READ_TEMPLATE')
-          EXPORTING
-            i_name     = |{ ms_item-obj_name }|
-            i_version  = 'A'
-          RECEIVING
-            r_template = <lg_template>.
+    CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~READ_TEMPLATE')
+      EXPORTING
+        i_name     = |{ ms_item-obj_name }|
+        i_version  = 'A'
+      RECEIVING
+        r_template = <lg_template>.
 
-        ASSIGN COMPONENT 'STR_HEADER' OF STRUCTURE <lg_template> TO <lg_header>.
-        IF sy-subrc = 0.
-          ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_header> TO <lg_field>.
-          IF sy-subrc = 0.
-            CLEAR <lg_field>.
-          ENDIF.
-          ASSIGN COMPONENT 'VERSION' OF STRUCTURE <lg_header> TO <lg_field>.
-          IF sy-subrc = 0.
-            CLEAR <lg_field>.
-          ENDIF.
-          ASSIGN COMPONENT 'CHANGED_ON' OF STRUCTURE <lg_header> TO <lg_field>.
-          IF sy-subrc = 0.
-            CLEAR <lg_field>.
-          ENDIF.
-          ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <lg_header> TO <lg_field>.
-          IF sy-subrc = 0.
-            CLEAR <lg_field>.
-          ENDIF.
-          ASSIGN COMPONENT 'CHANGED_TS' OF STRUCTURE <lg_header> TO <lg_field>.
-          IF sy-subrc = 0.
-            CLEAR <lg_field>.
-          ENDIF.
-        ENDIF.
+    ASSIGN COMPONENT 'STR_HEADER' OF STRUCTURE <lg_template> TO <lg_header>.
+    IF sy-subrc = 0.
+      ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_header> TO <lg_field>.
+      IF sy-subrc = 0.
+        CLEAR <lg_field>.
+      ENDIF.
+      ASSIGN COMPONENT 'VERSION' OF STRUCTURE <lg_header> TO <lg_field>.
+      IF sy-subrc = 0.
+        CLEAR <lg_field>.
+      ENDIF.
+      ASSIGN COMPONENT 'CHANGED_ON' OF STRUCTURE <lg_header> TO <lg_field>.
+      IF sy-subrc = 0.
+        CLEAR <lg_field>.
+      ENDIF.
+      ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <lg_header> TO <lg_field>.
+      IF sy-subrc = 0.
+        CLEAR <lg_field>.
+      ENDIF.
+      ASSIGN COMPONENT 'CHANGED_TS' OF STRUCTURE <lg_header> TO <lg_field>.
+      IF sy-subrc = 0.
+        CLEAR <lg_field>.
+      ENDIF.
+    ENDIF.
 
-        io_xml->add( iv_name = 'CMPT'
-                     ig_data = <lg_template> ).
-
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'CMPT not supported' ).
-    ENDTRY.
+    io_xml->add( iv_name = 'CMPT'
+                 ig_data = <lg_template> ).
 
   ENDMETHOD.
 ENDCLASS.

@@ -7,9 +7,9 @@ CLASS zcl_abapgit_services_repo DEFINITION
 
     CLASS-METHODS new_online
       IMPORTING
-        !is_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params
+        !is_repo_params       TYPE zif_abapgit_services_repo=>ty_repo_params
       RETURNING
-        VALUE(ro_repo)  TYPE REF TO zcl_abapgit_repo_online
+        VALUE(ri_repo_online) TYPE REF TO zif_abapgit_repo_online
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS refresh
@@ -34,7 +34,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
       IMPORTING
         !is_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params
       RETURNING
-        VALUE(ro_repo)  TYPE REF TO zcl_abapgit_repo_offline
+        VALUE(ri_repo)  TYPE REF TO zif_abapgit_repo
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS refresh_local_checksums
@@ -54,12 +54,12 @@ CLASS zcl_abapgit_services_repo DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS gui_deserialize
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo
+        !ii_repo TYPE REF TO zif_abapgit_repo
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS real_deserialize
       IMPORTING
-        !io_repo   TYPE REF TO zcl_abapgit_repo
+        !ii_repo   TYPE REF TO zif_abapgit_repo
         !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
         zcx_abapgit_exception .
@@ -70,16 +70,9 @@ CLASS zcl_abapgit_services_repo DEFINITION
         VALUE(ri_log) TYPE REF TO zif_abapgit_log
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS create_package
-      IMPORTING
-        !iv_prefill_package TYPE devclass OPTIONAL
-      RETURNING
-        VALUE(rv_package)   TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS delete_unnecessary_objects
       IMPORTING
-        !io_repo   TYPE REF TO zcl_abapgit_repo
+        !ii_repo   TYPE REF TO zif_abapgit_repo
         !ii_log    TYPE REF TO zif_abapgit_log
         !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
@@ -95,7 +88,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS popup_decisions
       IMPORTING
-        !io_repo   TYPE REF TO zcl_abapgit_repo
+        !ii_repo   TYPE REF TO zif_abapgit_repo
       CHANGING
         !cs_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
@@ -104,6 +97,13 @@ CLASS zcl_abapgit_services_repo DEFINITION
     CLASS-METHODS popup_objects_overwrite
       CHANGING
         !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS popup_data_loss_overwrite
+      IMPORTING
+        !it_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      CHANGING
+        !ct_data_loss TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS popup_package_overwrite
@@ -116,25 +116,20 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !is_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS raise_error_if_package_exists
-      IMPORTING
-        !iv_devclass TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS check_for_restart
       IMPORTING
-        !io_repo TYPE REF TO zif_abapgit_repo .
+        !ii_repo TYPE REF TO zif_abapgit_repo .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
 
   METHOD activate_objects.
 
     DATA:
-      lo_repo       TYPE REF TO zcl_abapgit_repo,
+      li_repo       TYPE REF TO zif_abapgit_repo,
       lo_browser    TYPE REF TO zcl_abapgit_repo_content_list,
       lt_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt,
       lv_count      TYPE i,
@@ -142,15 +137,15 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     CREATE OBJECT lo_browser
       EXPORTING
-        io_repo = lo_repo.
+        ii_repo = li_repo.
 
     lt_repo_items = lo_browser->list( '/' ).
 
-    ri_log = lo_repo->create_new_log( 'Activation Log' ).
+    ri_log = li_repo->create_new_log( 'Activation Log' ).
 
     " Add all inactive objects to activation queue
     zcl_abapgit_objects_activation=>clear( ).
@@ -181,7 +176,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       MESSAGE lv_message TYPE 'S'.
     ENDIF.
 
-    lo_repo->refresh( iv_drop_log = abap_false ).
+    li_repo->refresh( iv_drop_log = abap_false ).
 
   ENDMETHOD.
 
@@ -191,18 +186,18 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     CONSTANTS:
       lc_abapgit_prog TYPE progname VALUE `ZABAPGIT`.
 
-    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
 
-    IF io_repo->is_offline( ) = abap_true.
+    IF ii_repo->is_offline( ) = abap_true.
       RETURN.
     ENDIF.
 
-    lo_repo_online ?= io_repo.
+    li_repo_online ?= ii_repo.
 
     " If abapGit was used to update itself, then restart to avoid LOAD_PROGRAM_&_MISMATCH dumps
     " because abapGit code was changed at runtime
     IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true AND
-       zcl_abapgit_url=>is_abapgit_repo( lo_repo_online->get_url( ) ) = abap_true AND
+       zcl_abapgit_url=>is_abapgit_repo( li_repo_online->get_url( ) ) = abap_true AND
        sy-batch = abap_false AND
        sy-cprog = lc_abapgit_prog.
 
@@ -260,34 +255,6 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD create_package.
-
-    DATA ls_package_data TYPE zif_abapgit_sap_package=>ty_create.
-    DATA lv_create       TYPE abap_bool.
-    DATA li_popup        TYPE REF TO zif_abapgit_popups.
-
-    ls_package_data-devclass = condense( to_upper( iv_prefill_package ) ).
-
-    raise_error_if_package_exists( ls_package_data-devclass ).
-
-    li_popup = zcl_abapgit_ui_factory=>get_popups( ).
-
-    li_popup->popup_to_create_package(
-      EXPORTING
-        is_package_data = ls_package_data
-      IMPORTING
-        es_package_data = ls_package_data
-        ev_create       = lv_create ).
-
-    IF lv_create = abap_true.
-      zcl_abapgit_factory=>get_sap_package( ls_package_data-devclass )->create( ls_package_data ).
-      rv_package = ls_package_data-devclass.
-      COMMIT WORK AND WAIT.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD delete_unnecessary_objects.
 
     DATA:
@@ -321,7 +288,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
                                    is_checks = ls_checks
                                    ii_log    = ii_log ).
 
-      io_repo->refresh( iv_drop_log = abap_false ).
+      ii_repo->refresh( iv_drop_log = abap_false ).
     ENDIF.
 
   ENDMETHOD.
@@ -332,7 +299,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     DATA ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
 
     " find troublesome objects
-    ls_checks = io_repo->deserialize_checks( ).
+    ls_checks = ii_repo->deserialize_checks( ).
 
     IF ls_checks-overwrite IS INITIAL.
       zcx_abapgit_exception=>raise(
@@ -343,7 +310,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     TRY.
         popup_decisions(
           EXPORTING
-            io_repo   = io_repo
+            ii_repo   = ii_repo
           CHANGING
             cs_checks = ls_checks ).
 
@@ -352,7 +319,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     ENDTRY.
 
     real_deserialize(
-      io_repo   = io_repo
+      ii_repo   = ii_repo
       is_checks = ls_checks ).
 
   ENDMETHOD.
@@ -365,7 +332,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     check_package( is_repo_params ).
 
     " create new repo and add to favorites
-    ro_repo ?= zcl_abapgit_repo_srv=>get_instance( )->new_offline(
+    ri_repo = zcl_abapgit_repo_srv=>get_instance( )->new_offline(
       iv_name           = is_repo_params-name
       iv_package        = is_repo_params-package
       iv_folder_logic   = is_repo_params-folder_logic
@@ -377,34 +344,34 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     TRY.
         check_package_exists(
           iv_package = is_repo_params-package
-          it_remote  = ro_repo->get_files_remote( ) ).
+          it_remote  = ri_repo->get_files_remote( ) ).
       CATCH zcx_abapgit_exception INTO lx_error.
-        zcl_abapgit_repo_srv=>get_instance( )->delete( ro_repo ).
+        zcl_abapgit_repo_srv=>get_instance( )->delete( ri_repo ).
         COMMIT WORK.
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
     " Make sure there're no leftovers from previous repos
-    ro_repo->zif_abapgit_repo~checksums( )->rebuild( ).
+    ri_repo->checksums( )->rebuild( ).
 
-    toggle_favorite( ro_repo->get_key( ) ).
+    toggle_favorite( ri_repo->get_key( ) ).
 
     " Set default repo for user
-    zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( ro_repo->get_key( ) ).
+    zcl_abapgit_persist_factory=>get_user( )->set_repo_show( ri_repo->get_key( ) ).
 
     COMMIT WORK AND WAIT.
-
 
   ENDMETHOD.
 
 
   METHOD new_online.
 
+    DATA li_repo TYPE REF TO zif_abapgit_repo.
     DATA lx_error TYPE REF TO zcx_abapgit_exception.
 
     check_package( is_repo_params ).
 
-    ro_repo ?= zcl_abapgit_repo_srv=>get_instance( )->new_online(
+    li_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
       iv_url            = is_repo_params-url
       iv_branch_name    = is_repo_params-branch_name
       iv_name           = is_repo_params-name
@@ -419,22 +386,87 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     TRY.
         check_package_exists(
           iv_package = is_repo_params-package
-          it_remote  = ro_repo->get_files_remote( ) ).
+          it_remote  = li_repo->get_files_remote( ) ).
       CATCH zcx_abapgit_exception INTO lx_error.
-        zcl_abapgit_repo_srv=>get_instance( )->delete( ro_repo ).
+        zcl_abapgit_repo_srv=>get_instance( )->delete( li_repo ).
         COMMIT WORK.
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
     " Make sure there're no leftovers from previous repos
-    ro_repo->zif_abapgit_repo~checksums( )->rebuild( ).
+    li_repo->checksums( )->rebuild( ).
 
-    toggle_favorite( ro_repo->get_key( ) ).
+    toggle_favorite( li_repo->get_key( ) ).
 
     " Set default repo for user
-    zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( ro_repo->get_key( ) ).
+    zcl_abapgit_persist_factory=>get_user( )->set_repo_show( li_repo->get_key( ) ).
 
     COMMIT WORK AND WAIT.
+
+    ri_repo_online ?= li_repo.
+
+  ENDMETHOD.
+
+
+  METHOD popup_data_loss_overwrite.
+
+    DATA: lt_columns  TYPE zif_abapgit_popups=>ty_alv_column_tt,
+          lt_selected LIKE ct_data_loss,
+          li_popups   TYPE REF TO zif_abapgit_popups.
+    DATA lt_preselected_rows TYPE zif_abapgit_popups=>ty_rows.
+
+    FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF it_overwrite,
+                   <ls_data_loss> LIKE LINE OF ct_data_loss,
+                   <ls_column>    TYPE zif_abapgit_popups=>ty_alv_column.
+
+    LOOP AT it_overwrite ASSIGNING <ls_overwrite> WHERE decision <> zif_abapgit_definitions=>c_yes.
+      DELETE ct_data_loss WHERE obj_type = <ls_overwrite>-obj_type AND obj_name = <ls_overwrite>-obj_name.
+    ENDLOOP.
+
+    IF lines( ct_data_loss ) = 0.
+      RETURN.
+    ENDIF.
+
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'OBJ_TYPE'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'OBJ_NAME'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'ICON'.
+    <ls_column>-text = 'Action'.
+    <ls_column>-show_icon = abap_true.
+    <ls_column>-length = 5.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'TEXT'.
+    <ls_column>-text = 'Description'.
+
+    LOOP AT ct_data_loss ASSIGNING <ls_data_loss> WHERE decision = zif_abapgit_definitions=>c_yes.
+      INSERT sy-tabix INTO TABLE lt_preselected_rows.
+    ENDLOOP.
+
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->popup_to_select_from_list(
+      EXPORTING
+        it_list               = ct_data_loss
+        iv_header_text        = |Changes to the following objects could lead to DATA LOSS!|
+                             && | Select the objects which should be changed to the remote version, anyway.|
+        iv_select_column_text = 'Overwrite?'
+        it_columns_to_display = lt_columns
+        it_preselected_rows   = lt_preselected_rows
+      IMPORTING
+        et_list               = lt_selected ).
+
+    LOOP AT ct_data_loss ASSIGNING <ls_data_loss>.
+      READ TABLE lt_selected WITH TABLE KEY object_type_and_name
+                             COMPONENTS obj_type = <ls_data_loss>-obj_type
+                                        obj_name = <ls_data_loss>-obj_name
+                             TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        <ls_data_loss>-decision = zif_abapgit_definitions=>c_yes.
+      ELSE.
+        <ls_data_loss>-decision = zif_abapgit_definitions=>c_no.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -465,18 +497,25 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     " Ask user what to do
     IF cs_checks-requirements-met = zif_abapgit_definitions=>c_no.
-      lt_requirements = io_repo->get_dot_abapgit( )->get_data( )-requirements.
+      lt_requirements = ii_repo->get_dot_abapgit( )->get_data( )-requirements.
       zcl_abapgit_repo_requirements=>requirements_popup( lt_requirements ).
       cs_checks-requirements-decision = zif_abapgit_definitions=>c_yes.
     ENDIF.
 
     IF cs_checks-dependencies-met = zif_abapgit_definitions=>c_no.
-      lt_dependencies = io_repo->get_dot_apack( )->get_manifest_descriptor( )-dependencies.
+      lt_dependencies = ii_repo->get_dot_apack( )->get_manifest_descriptor( )-dependencies.
       zcl_abapgit_apack_helper=>dependencies_popup( lt_dependencies ).
       cs_checks-dependencies-decision = zif_abapgit_definitions=>c_yes.
     ENDIF.
 
     popup_objects_overwrite( CHANGING ct_overwrite = lt_decision ).
+
+    popup_data_loss_overwrite(
+      EXPORTING
+        it_overwrite = lt_decision
+      CHANGING
+        ct_data_loss = cs_checks-data_loss ).
+
     popup_package_overwrite( CHANGING ct_overwrite = cs_checks-warning_package ).
 
     IF cs_checks-transport-required = abap_true AND cs_checks-transport-transport IS INITIAL.
@@ -625,7 +664,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     DATA: lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lv_answer    TYPE c LENGTH 1,
-          lo_repo      TYPE REF TO zcl_abapgit_repo,
+          li_repo      TYPE REF TO zif_abapgit_repo,
           lv_package   TYPE devclass,
           lv_title     TYPE c LENGTH 20,
           lv_question  TYPE c LENGTH 150,
@@ -634,11 +673,11 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
           lv_message   TYPE string.
 
 
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    lv_repo_name = lo_repo->get_name( ).
+    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lv_repo_name = li_repo->get_name( ).
 
-    lv_package = lo_repo->get_package( ).
-    lt_tadir   = lo_repo->get_tadir_objects( ).
+    lv_package = li_repo->get_package( ).
+    lt_tadir   = li_repo->get_tadir_objects( ).
 
     IF lines( lt_tadir ) > 0.
 
@@ -670,14 +709,14 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     ENDIF.
 
-    ls_checks = lo_repo->delete_checks( ).
+    ls_checks = li_repo->delete_checks( ).
     IF ls_checks-transport-required = abap_true.
       ls_checks-transport-transport = zcl_abapgit_ui_factory=>get_popups(
                                         )->popup_transport_request( ls_checks-transport-type ).
     ENDIF.
 
     ri_log = zcl_abapgit_repo_srv=>get_instance( )->purge(
-      ii_repo      = lo_repo
+      ii_repo      = li_repo
       is_checks    = ls_checks
       iv_keep_repo = iv_keep_repo ).
 
@@ -694,43 +733,30 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD raise_error_if_package_exists.
-
-    IF iv_devclass IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    IF zcl_abapgit_factory=>get_sap_package( iv_devclass )->exists( ) = abap_true.
-      zcx_abapgit_exception=>raise( |Package { iv_devclass } already exists| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD real_deserialize.
 
     DATA li_log TYPE REF TO zif_abapgit_log.
     DATA lv_msg TYPE string.
 
-    li_log = io_repo->create_new_log( 'Pull Log' ).
+    li_log = ii_repo->create_new_log( 'Pull Log' ).
 
     " pass decisions to delete
     delete_unnecessary_objects(
-      io_repo   = io_repo
+      ii_repo   = ii_repo
       is_checks = is_checks
       ii_log    = li_log ).
 
     " pass decisions to deserialize
-    io_repo->deserialize(
+    ii_repo->deserialize(
       is_checks = is_checks
       ii_log    = li_log ).
 
     IF li_log->get_status( ) = zif_abapgit_log=>c_status-ok.
-      lv_msg = |Repository { io_repo->get_name( ) } successfully pulled for package { io_repo->get_package( ) }|.
+      lv_msg = |Repository { ii_repo->get_name( ) } successfully pulled for package { ii_repo->get_package( ) }|.
       MESSAGE lv_msg TYPE 'S'.
     ENDIF.
 
-    check_for_restart( io_repo ).
+    check_for_restart( ii_repo ).
 
   ENDMETHOD.
 
@@ -746,18 +772,18 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     DATA: lv_answer   TYPE c,
           lv_question TYPE string,
-          lo_repo     TYPE REF TO zcl_abapgit_repo.
+          li_repo     TYPE REF TO zif_abapgit_repo.
 
 
     IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-update_local_checksum ) = abap_false.
       zcx_abapgit_exception=>raise( 'Not authorized' ).
     ENDIF.
 
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     lv_question = 'This will rebuild and overwrite local repo checksums.'.
 
-    IF lo_repo->is_offline( ) = abap_false.
+    IF li_repo->is_offline( ) = abap_false.
       lv_question = lv_question
                 && ' The logic: if local and remote file differs then:'
                 && ' if remote branch is ahead then assume changes are remote,'
@@ -780,7 +806,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    lo_repo->zif_abapgit_repo~checksums( )->rebuild( ).
+    li_repo->checksums( )->rebuild( ).
 
     COMMIT WORK AND WAIT.
 
@@ -829,7 +855,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD toggle_favorite.
 
-    zcl_abapgit_persistence_user=>get_instance( )->toggle_favorite( iv_key ).
+    zcl_abapgit_persist_factory=>get_user( )->toggle_favorite( iv_key ).
 
   ENDMETHOD.
 
@@ -837,7 +863,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
   METHOD transport_to_branch.
 
     DATA:
-      lo_repository          TYPE REF TO zcl_abapgit_repo_online,
+      li_repo_online         TYPE REF TO zif_abapgit_repo_online,
       lo_transport_to_branch TYPE REF TO zcl_abapgit_transport_2_branch,
       lt_transport_objects   TYPE zif_abapgit_definitions=>ty_tadir_tt,
       lv_trkorr              TYPE trkorr,
@@ -848,7 +874,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Not authorized' ).
     ENDIF.
 
-    lo_repository ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
+    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
 
     lv_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transport( ).
     " Also include deleted objects that are included in transport
@@ -863,7 +889,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     CREATE OBJECT lo_transport_to_branch.
     lo_transport_to_branch->create(
-      io_repository          = lo_repository
+      ii_repo_online         = li_repo_online
       is_transport_to_branch = ls_transport_to_branch
       it_transport_objects   = lt_transport_objects ).
 

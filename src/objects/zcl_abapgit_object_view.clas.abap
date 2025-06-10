@@ -9,7 +9,9 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING
         iv_name               TYPE ddobjname
       RETURNING
-        VALUE(rs_tabl_extras) TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
+        VALUE(rs_tabl_extras) TYPE zif_abapgit_object_tabl=>ty_tabl_extras
+      RAISING
+        zcx_abapgit_exception.
 
     "! Update additional data
     "! @parameter iv_name | name of the table
@@ -182,6 +184,16 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
 
     SELECT SINGLE * FROM tddat INTO rs_tabl_extras-tddat WHERE tabname = iv_name.
 
+    " Fields that are not part of dd25v
+    TRY.
+        SELECT SINGLE abap_language_version FROM ('DD25L') INTO CORRESPONDING FIELDS OF rs_tabl_extras
+          WHERE viewname = iv_name AND as4local = 'A' AND as4vers = '0000'.
+        IF sy-subrc = 0.
+          clear_abap_language_version( CHANGING cv_abap_language_version = rs_tabl_extras-abap_language_version ).
+        ENDIF.
+      CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
+    ENDTRY.
+
   ENDMETHOD.
 
 
@@ -285,6 +297,8 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
 
   METHOD update_extras.
 
+    DATA lv_abap_language_version TYPE uccheck.
+
     IF is_tabl_extras-tddat IS INITIAL.
       delete_extras(
         iv_name      = iv_name
@@ -296,6 +310,16 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
         iv_name      = iv_name
         iv_transport = iv_transport ).
     ENDIF.
+
+    " Fields that are not part of dd25v
+    TRY.
+        lv_abap_language_version = is_tabl_extras-abap_language_version.
+
+        set_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+
+        UPDATE ('DD25L') SET abap_language_version = lv_abap_language_version WHERE viewname = iv_name.
+      CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -361,56 +385,61 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
 
     lv_name = ms_item-obj_name. " type conversion
 
-    LOOP AT lt_dd27p ASSIGNING <ls_dd27p>.
-      <ls_dd27p>-objpos = sy-tabix.
-      <ls_dd27p>-viewname = lv_name.
-      " rollname seems to be mandatory in the API, but is typically not defined in the VIEW
-      SELECT SINGLE rollname FROM dd03l INTO <ls_dd27p>-rollname
-        WHERE tabname = <ls_dd27p>-tabname
-        AND fieldname = <ls_dd27p>-fieldname.
-      IF <ls_dd27p>-rollnamevi IS INITIAL.
-        <ls_dd27p>-rollnamevi = <ls_dd27p>-rollname.
+    IF iv_step = zif_abapgit_object=>gc_step_id-ddic.
+
+      LOOP AT lt_dd27p ASSIGNING <ls_dd27p>.
+        <ls_dd27p>-objpos = sy-tabix.
+        <ls_dd27p>-viewname = lv_name.
+        " rollname seems to be mandatory in the API, but is typically not defined in the VIEW
+        SELECT SINGLE rollname FROM dd03l INTO <ls_dd27p>-rollname
+          WHERE tabname = <ls_dd27p>-tabname
+          AND fieldname = <ls_dd27p>-fieldname.
+        IF <ls_dd27p>-rollnamevi IS INITIAL.
+          <ls_dd27p>-rollnamevi = <ls_dd27p>-rollname.
+        ENDIF.
+      ENDLOOP.
+
+      corr_insert( iv_package = iv_package
+                   ig_object_class = 'DICT' ).
+
+      CALL FUNCTION 'DDIF_VIEW_PUT'
+        EXPORTING
+          name              = lv_name
+          dd25v_wa          = ls_dd25v
+          dd09l_wa          = ls_dd09l
+        TABLES
+          dd26v_tab         = lt_dd26v
+          dd27p_tab         = lt_dd27p
+          dd28j_tab         = lt_dd28j
+          dd28v_tab         = lt_dd28v
+        EXCEPTIONS
+          view_not_found    = 1
+          name_inconsistent = 2
+          view_inconsistent = 3
+          put_failure       = 4
+          put_refused       = 5
+          OTHERS            = 6.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
-    ENDLOOP.
 
-    corr_insert( iv_package = iv_package
-                 ig_object_class = 'DICT' ).
+      IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
+        deserialize_texts(
+          ii_xml   = io_xml
+          is_dd25v = ls_dd25v ).
+      ENDIF.
 
-    CALL FUNCTION 'DDIF_VIEW_PUT'
-      EXPORTING
-        name              = lv_name
-        dd25v_wa          = ls_dd25v
-        dd09l_wa          = ls_dd09l
-      TABLES
-        dd26v_tab         = lt_dd26v
-        dd27p_tab         = lt_dd27p
-        dd28j_tab         = lt_dd28j
-        dd28v_tab         = lt_dd28v
-      EXCEPTIONS
-        view_not_found    = 1
-        name_inconsistent = 2
-        view_inconsistent = 3
-        put_failure       = 4
-        put_refused       = 5
-        OTHERS            = 6.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
+      deserialize_longtexts( ii_xml         = io_xml
+                             iv_longtext_id = c_longtext_id_view ).
+
+      zcl_abapgit_objects_activation=>add_item( ms_item ).
+
+    ELSE.
+      " Late update after activation because activation removes ABAP Language Version (in lower releases?)
+      update_extras( iv_name        = lv_name
+                     iv_transport   = iv_transport
+                     is_tabl_extras = ls_extras ).
     ENDIF.
-
-    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
-      deserialize_texts(
-        ii_xml   = io_xml
-        is_dd25v = ls_dd25v ).
-    ENDIF.
-
-    deserialize_longtexts( ii_xml         = io_xml
-                           iv_longtext_id = c_longtext_id_view ).
-
-    update_extras( iv_name        = lv_name
-                   iv_transport   = iv_transport
-                   is_tabl_extras = ls_extras ).
-
-    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.
 
@@ -454,6 +483,8 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 

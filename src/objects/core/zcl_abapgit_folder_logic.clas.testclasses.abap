@@ -72,6 +72,10 @@ CLASS ltcl_folder_logic_package IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~get_default_transport_layer.
+    RETURN.
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~read_responsible.
     RETURN.
   ENDMETHOD.
@@ -144,6 +148,9 @@ CLASS ltcl_folder_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHOR
 ENDCLASS.
 
 CLASS ltcl_folder_logic IMPLEMENTATION.
+  METHOD zif_abapgit_sap_package~get_default_transport_layer.
+    RETURN. " todo, implement method
+  ENDMETHOD.
 
   " Test packages:
   "
@@ -367,6 +374,9 @@ CLASS ltcl_folder_logic_namespaces DEFINITION FOR TESTING RISK LEVEL HARMLESS DU
 ENDCLASS.
 
 CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
+  METHOD zif_abapgit_sap_package~get_default_transport_layer.
+    RETURN. " todo, implement method
+  ENDMETHOD.
 
   " Test packages:
   "
@@ -519,6 +529,9 @@ CLASS ltcl_folder_logic_no_parent DEFINITION FOR TESTING RISK LEVEL HARMLESS DUR
 ENDCLASS.
 
 CLASS ltcl_folder_logic_no_parent IMPLEMENTATION.
+  METHOD zif_abapgit_sap_package~get_default_transport_layer.
+    RETURN. " todo, implement method
+  ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~validate_name.
     RETURN.

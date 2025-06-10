@@ -8,7 +8,7 @@ INTERFACE zif_abapgit_exit PUBLIC.
 
   TYPES ty_ci_repos TYPE STANDARD TABLE OF ty_ci_repo WITH DEFAULT KEY.
 
-  TYPES ty_object_types TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY.
+  TYPES ty_object_types TYPE HASHED TABLE OF tadir-object WITH UNIQUE KEY table_line.
 
   TYPES:
     BEGIN OF ty_class_key,
@@ -111,7 +111,7 @@ INTERFACE zif_abapgit_exit PUBLIC.
 
   METHODS determine_transport_request
     IMPORTING
-      !io_repo              TYPE REF TO zcl_abapgit_repo
+      !ii_repo              TYPE REF TO zif_abapgit_repo
       !iv_transport_type    TYPE zif_abapgit_definitions=>ty_transport_type
     CHANGING
       !cv_transport_request TYPE trkorr.
@@ -167,9 +167,9 @@ INTERFACE zif_abapgit_exit PUBLIC.
 
   METHODS validate_before_push
     IMPORTING
-      !is_comment TYPE zif_abapgit_git_definitions=>ty_comment
-      !io_stage   TYPE REF TO zcl_abapgit_stage
-      !io_repo    TYPE REF TO zcl_abapgit_repo_online
+      !is_comment     TYPE zif_abapgit_git_definitions=>ty_comment
+      !io_stage       TYPE REF TO zcl_abapgit_stage
+      !ii_repo_online TYPE REF TO zif_abapgit_repo_online
     RAISING
       zcx_abapgit_exception.
 
@@ -181,4 +181,11 @@ INTERFACE zif_abapgit_exit PUBLIC.
     IMPORTING
       !is_repo_meta TYPE zif_abapgit_persistence=>ty_repo
       !ii_html      TYPE REF TO zif_abapgit_html.
+
+  METHODS change_committer_info
+    IMPORTING
+      iv_repo_url TYPE csequence
+    CHANGING
+      cv_name     TYPE csequence
+      cv_email    TYPE csequence.
 ENDINTERFACE.

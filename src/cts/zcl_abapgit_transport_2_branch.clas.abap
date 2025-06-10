@@ -7,7 +7,7 @@ CLASS zcl_abapgit_transport_2_branch DEFINITION
 
     METHODS create
       IMPORTING
-        !io_repository          TYPE REF TO zcl_abapgit_repo_online
+        !ii_repo_online         TYPE REF TO zif_abapgit_repo_online
         !is_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch
         !it_transport_objects   TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
@@ -43,16 +43,16 @@ CLASS zcl_abapgit_transport_2_branch IMPLEMENTATION.
       ls_stage_objects   TYPE zif_abapgit_definitions=>ty_stage_files,
       lt_object_statuses TYPE zif_abapgit_definitions=>ty_results_tt.
 
-    lv_branch_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
-        zcl_abapgit_git_branch_list=>normalize_branch_name( is_transport_to_branch-branch_name ) ).
+    lv_branch_name = zcl_abapgit_git_branch_utils=>complete_heads_branch_name(
+        zcl_abapgit_git_branch_utils=>normalize_branch_name( is_transport_to_branch-branch_name ) ).
 
-    io_repository->create_branch( lv_branch_name ).
+    ii_repo_online->create_branch( lv_branch_name ).
 
     CREATE OBJECT lo_stage.
 
-    ls_stage_objects = zcl_abapgit_stage_logic=>get_stage_logic( )->get( io_repository ).
+    ls_stage_objects = zcl_abapgit_stage_logic=>get_stage_logic( )->get( ii_repo_online ).
 
-    lt_object_statuses = zcl_abapgit_repo_status=>calculate( io_repository ).
+    lt_object_statuses = zcl_abapgit_repo_status=>calculate( ii_repo_online ).
 
     stage_transport_objects(
        it_transport_objects = it_transport_objects
@@ -62,8 +62,8 @@ CLASS zcl_abapgit_transport_2_branch IMPLEMENTATION.
 
     ls_comment = generate_commit_message( is_transport_to_branch ).
 
-    io_repository->push( is_comment = ls_comment
-                         io_stage   = lo_stage ).
+    ii_repo_online->push( is_comment = ls_comment
+                          io_stage   = lo_stage ).
   ENDMETHOD.
 
 

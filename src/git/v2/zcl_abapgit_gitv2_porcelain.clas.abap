@@ -1,6 +1,7 @@
 CLASS zcl_abapgit_gitv2_porcelain DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_git_factory .
 
   PUBLIC SECTION.
 
@@ -164,6 +165,39 @@ CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_gitv2_porcelain~fetch_blob.
+
+    DATA lv_xstring   TYPE xstring.
+    DATA lt_arguments TYPE string_table.
+    DATA lv_argument  TYPE string.
+    DATA lt_objects   TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA ls_object    LIKE LINE OF lt_objects.
+
+
+    ASSERT iv_sha1 IS NOT INITIAL.
+
+    lv_argument = |want { iv_sha1 }|.
+    APPEND lv_argument TO lt_arguments.
+    APPEND 'no-progress' TO lt_arguments.
+    APPEND 'done' TO lt_arguments.
+
+    lv_xstring = send_command(
+      iv_url       = iv_url
+      iv_service   = c_service-upload
+      iv_command   = |fetch|
+      it_arguments = lt_arguments ).
+
+    lt_objects = decode_pack( lv_xstring ).
+    IF lines( lt_objects ) <> 1.
+      zcx_abapgit_exception=>raise( |Blob { iv_sha1 } not found in response.| ).
+    ENDIF.
+
+    READ TABLE lt_objects INTO ls_object INDEX 1.
+    ASSERT sy-subrc = 0.
+    rv_blob = ls_object-data.
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_gitv2_porcelain~list_branches.
     DATA lv_xstring   TYPE xstring.
@@ -185,7 +219,7 @@ CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
     " add dummy packet so the v1 branch parsing can be reused
     lv_data = |0004\n{ zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ) }|.
 
-    CREATE OBJECT ro_list
+    CREATE OBJECT ro_list TYPE zcl_abapgit_git_branch_list
       EXPORTING
         iv_data = lv_data.
 
