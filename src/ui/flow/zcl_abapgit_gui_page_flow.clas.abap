@@ -383,7 +383,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       lo_toolbar->add( iv_txt = 'Pull'
                        iv_act = |{ c_action-pull }{ lv_extra }|
                        iv_opt = lv_opt ).
-      IF is_feature-transport-trkorr IS NOT INITIAL.
+      IF is_feature-transport-trkorr IS NOT INITIAL
+          AND ( is_feature-branch-up_to_date = abap_undefined OR is_feature-branch-up_to_date = abap_true ).
 * its only remote, so there is no changes to stage
         lo_toolbar->add( iv_txt = 'Stage'
                          iv_act = |{ c_action-stage }{ lv_extra }|
