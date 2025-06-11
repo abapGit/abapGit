@@ -13,7 +13,7 @@ CLASS zcl_abapgit_repo_srv DEFINITION
         VALUE(ri_srv) TYPE REF TO zif_abapgit_repo_srv .
     CLASS-METHODS inject_instance
       IMPORTING
-        ii_srv TYPE REF TO zif_abapgit_repo_srv.
+        ii_srv TYPE REF TO zif_abapgit_repo_srv OPTIONAL.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -101,7 +101,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
   METHOD determine_branch_name.
 
-    DATA lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list.
+    DATA lo_branch_list TYPE REF TO zif_abapgit_git_branch_list.
 
     rv_name = iv_name.
     IF rv_name IS INITIAL.

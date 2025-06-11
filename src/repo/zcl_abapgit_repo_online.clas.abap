@@ -158,7 +158,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
                            COMPONENTS name = iv_name
                            TRANSPORTING NO FIELDS.
     IF sy-subrc = 0.
-      lv_display_name = zcl_abapgit_git_branch_list=>get_display_name( iv_name ).
+      lv_display_name = zcl_abapgit_git_branch_utils=>get_display_name( iv_name ).
       zcx_abapgit_exception=>raise( |Branch '{ lv_display_name }' already exists| ).
     ENDIF.
 
@@ -173,7 +173,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   METHOD zif_abapgit_repo_online~check_for_valid_branch.
 
     DATA:
-      lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list,
+      li_branch_list TYPE REF TO zif_abapgit_git_branch_list,
       lx_error       TYPE REF TO zcx_abapgit_exception,
       lv_branch      TYPE string,
       lv_head        TYPE string,
@@ -182,14 +182,14 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     lv_branch = get_selected_branch( ).
 
     IF lv_branch IS NOT INITIAL.
-      lo_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( get_url( ) ).
+      li_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( get_url( ) ).
 
       TRY.
-          lo_branch_list->find_by_name( lv_branch ).
+          li_branch_list->find_by_name( lv_branch ).
         CATCH zcx_abapgit_exception INTO lx_error.
           " branch does not exist, fallback to head
-          lv_head = lo_branch_list->get_head_symref( ).
-          lv_msg = |{ lx_error->get_text( ) }. Switched to { lo_branch_list->get_display_name( lv_head ) }|.
+          lv_head = li_branch_list->get_head_symref( ).
+          lv_msg = |{ lx_error->get_text( ) }. Switched to { zcl_abapgit_git_branch_utils=>get_display_name( lv_head ) }|.
           MESSAGE lv_msg TYPE 'S'.
           select_branch( lv_head ).
       ENDTRY.

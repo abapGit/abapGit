@@ -118,8 +118,8 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
 
   METHOD branch_name_to_internal.
-    rv_new_branch_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
-      zcl_abapgit_git_branch_list=>normalize_branch_name( iv_branch_name ) ).
+    rv_new_branch_name = zcl_abapgit_git_branch_utils=>complete_heads_branch_name(
+      zcl_abapgit_git_branch_utils=>normalize_branch_name( iv_branch_name ) ).
   ENDMETHOD.
 
 

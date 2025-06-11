@@ -2,7 +2,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
   PUBLIC SECTION.
     CLASS-METHODS get
       RETURNING
-        VALUE(rt_features) TYPE zif_abapgit_flow_logic=>ty_features
+        VALUE(rs_information) TYPE zif_abapgit_flow_logic=>ty_information
       RAISING
         zcx_abapgit_exception.
 
@@ -23,7 +23,6 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
         zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS c_main TYPE string VALUE 'main'.
 
     TYPES: BEGIN OF ty_transport,
              trkorr   TYPE trkorr,
@@ -43,26 +42,6 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       RETURNING
         VALUE(rs_data) TYPE zif_abapgit_flow_logic=>ty_feature-repo.
 
-    CLASS-METHODS map_files_to_objects
-      IMPORTING
-        it_files                  TYPE zif_abapgit_flow_logic=>ty_path_name_tt
-        ii_repo                   TYPE REF TO zif_abapgit_repo
-      RETURNING
-        VALUE(rt_changed_objects) TYPE zif_abapgit_definitions=>ty_items_ts
-      RAISING
-        zcx_abapgit_exception.
-
-    CLASS-METHODS find_changes_in_git
-      IMPORTING
-        ii_repo_online   TYPE REF TO zif_abapgit_repo_online
-        it_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
-      EXPORTING
-        et_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
-      CHANGING
-        ct_features      TYPE zif_abapgit_flow_logic=>ty_features
-      RAISING
-        zcx_abapgit_exception.
-
     CLASS-METHODS try_matching_transports
       IMPORTING
         ii_repo          TYPE REF TO zif_abapgit_repo
@@ -73,6 +52,12 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
         ct_transports    TYPE ty_transports_tt
       RAISING
         zcx_abapgit_exception.
+
+    CLASS-METHODS warnings_from_transports
+      IMPORTING
+        it_transports TYPE ty_transports_tt
+      CHANGING
+        ct_warnings   TYPE string_table.
 
     CLASS-METHODS add_objects_and_files_from_tr
       IMPORTING
@@ -136,46 +121,11 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
-    CLASS-METHODS find_changed_files
-      IMPORTING
-        it_expanded1    TYPE zif_abapgit_git_definitions=>ty_expanded_tt
-        it_expanded2    TYPE zif_abapgit_git_definitions=>ty_expanded_tt
-      RETURNING
-        VALUE(rt_files) TYPE zif_abapgit_flow_logic=>ty_path_name_tt.
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
-
-  METHOD consolidate.
-
-    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
-    DATA ls_feature  LIKE LINE OF lt_features.
-    DATA lv_string   TYPE string.
-
-    lt_features = get( ).
-
-    LOOP AT lt_features INTO ls_feature.
-      IF ls_feature-branch-display_name IS NOT INITIAL
-          AND ls_feature-branch-up_to_date = abap_false.
-        lv_string = |Branch { ls_feature-branch-display_name } is not up to date|.
-        INSERT lv_string INTO TABLE rs_consolidate-errors.
-      ELSEIF ls_feature-branch-display_name IS NOT INITIAL
-          AND ls_feature-transport-trkorr IS INITIAL.
-        lv_string = |Branch { ls_feature-branch-display_name } has no transport|.
-        INSERT lv_string INTO TABLE rs_consolidate-errors.
-      ELSEIF ls_feature-transport-trkorr IS NOT INITIAL
-          AND ls_feature-branch-display_name IS INITIAL
-          AND ls_feature-full_match = abap_false.
-        lv_string = |Transport { ls_feature-transport-trkorr } has no branch|.
-        INSERT lv_string INTO TABLE rs_consolidate-errors.
-      ENDIF.
-    ENDLOOP.
-
-* todo
-
-  ENDMETHOD.
 
 
   METHOD add_local_status.
@@ -246,95 +196,32 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD find_changed_files.
-* don't care if its added or removed or changed, just remove identical
-* also list identical moved files
+  METHOD consolidate.
 
-    DATA ls_path_name LIKE LINE OF rt_files.
+    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
+    DATA ls_feature  LIKE LINE OF lt_features.
+    DATA lv_string   TYPE string.
 
-    FIELD-SYMBOLS <ls_expanded1> LIKE LINE OF it_expanded1.
-    FIELD-SYMBOLS <ls_expanded2> LIKE LINE OF it_expanded1.
+    lt_features = get( )-features.
 
-    LOOP AT it_expanded1 ASSIGNING <ls_expanded1>.
-      READ TABLE it_expanded2 ASSIGNING <ls_expanded2>
-        WITH TABLE KEY path_name COMPONENTS
-        path = <ls_expanded1>-path
-        name = <ls_expanded1>-name.
-      IF sy-subrc = 0 AND <ls_expanded1>-sha1 = <ls_expanded2>-sha1.
-        CONTINUE.
+    LOOP AT lt_features INTO ls_feature.
+      IF ls_feature-branch-display_name IS NOT INITIAL
+          AND ls_feature-branch-up_to_date = abap_false.
+        lv_string = |Branch <tt>{ ls_feature-branch-display_name }</tt> is not up to date|.
+        INSERT lv_string INTO TABLE rs_consolidate-errors.
+      ELSEIF ls_feature-branch-display_name IS NOT INITIAL
+          AND ls_feature-transport-trkorr IS INITIAL.
+        lv_string = |Branch <tt>{ ls_feature-branch-display_name }</tt> has no transport|.
+        INSERT lv_string INTO TABLE rs_consolidate-errors.
+      ELSEIF ls_feature-transport-trkorr IS NOT INITIAL
+          AND ls_feature-branch-display_name IS INITIAL
+          AND ls_feature-full_match = abap_false.
+        lv_string = |Transport <tt>{ ls_feature-transport-trkorr }</tt> has no branch|.
+        INSERT lv_string INTO TABLE rs_consolidate-errors.
       ENDIF.
-
-      MOVE-CORRESPONDING <ls_expanded1> TO ls_path_name.
-      ls_path_name-filename = <ls_expanded1>-name.
-      ls_path_name-remote_sha1 = <ls_expanded1>-sha1.
-      INSERT ls_path_name INTO TABLE rt_files.
     ENDLOOP.
 
-    LOOP AT it_expanded2 ASSIGNING <ls_expanded2>.
-      READ TABLE it_expanded1 ASSIGNING <ls_expanded1>
-        WITH TABLE KEY path_name COMPONENTS
-        path = <ls_expanded2>-path
-        name = <ls_expanded2>-name.
-      IF sy-subrc = 0 AND <ls_expanded1>-sha1 = <ls_expanded2>-sha1.
-        CONTINUE.
-      ENDIF.
-
-      MOVE-CORRESPONDING <ls_expanded2> TO ls_path_name.
-      ls_path_name-filename = <ls_expanded2>-name.
-      ls_path_name-remote_sha1 = <ls_expanded2>-sha1.
-      INSERT ls_path_name INTO TABLE rt_files.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD find_changes_in_git.
-
-    DATA ls_branch          LIKE LINE OF it_branches.
-    DATA lt_sha1            TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
-    DATA lt_objects         TYPE zif_abapgit_definitions=>ty_objects_tt.
-    DATA lv_starting_folder TYPE string.
-    DATA ls_main            LIKE LINE OF it_branches.
-    DATA lt_expanded        TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
-    DATA li_repo            TYPE REF TO zif_abapgit_repo.
-
-    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
-
-
-    li_repo = ii_repo_online.
-
-    LOOP AT it_branches INTO ls_branch WHERE is_head = abap_false.
-      APPEND ls_branch-sha1 TO lt_sha1.
-    ENDLOOP.
-
-    lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_no_blobs_multi(
-      iv_url  = ii_repo_online->get_url( )
-      it_sha1 = lt_sha1 ).
-
-    lv_starting_folder = li_repo->get_dot_abapgit( )->get_starting_folder( ) && '*'.
-
-    READ TABLE it_branches INTO ls_main WITH KEY display_name = c_main.
-    ASSERT sy-subrc = 0.
-
-    et_main_expanded = zcl_abapgit_git_porcelain=>full_tree(
-      it_objects = lt_objects
-      iv_parent  = ls_main-sha1 ).
-    DELETE et_main_expanded WHERE path NP lv_starting_folder.
-
-    LOOP AT ct_features ASSIGNING <ls_branch> WHERE branch-display_name <> c_main.
-      lt_expanded = zcl_abapgit_git_porcelain=>full_tree(
-        it_objects = lt_objects
-        iv_parent  = <ls_branch>-branch-sha1 ).
-      DELETE lt_expanded WHERE path NP lv_starting_folder.
-
-      <ls_branch>-changed_files = find_changed_files(
-        it_expanded1 = lt_expanded
-        it_expanded2 = et_main_expanded ).
-
-      <ls_branch>-changed_objects = map_files_to_objects(
-        ii_repo  = li_repo
-        it_files = <ls_branch>-changed_files ).
-    ENDLOOP.
+* todo
 
   ENDMETHOD.
 
@@ -365,7 +252,9 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         ls_result-devclass = zcl_abapgit_factory=>get_tadir( )->read_single(
           iv_object   = ls_result-object
           iv_obj_name = lv_obj_name )-devclass.
-        INSERT ls_result INTO TABLE rt_transports.
+        IF ls_result-devclass IS NOT INITIAL.
+          INSERT ls_result INTO TABLE rt_transports.
+        ENDIF.
       ENDLOOP.
 
     ENDLOOP.
@@ -391,6 +280,9 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     LOOP AT ct_features ASSIGNING <ls_branch>.
       READ TABLE lt_pulls INTO ls_pull WITH KEY head_branch = <ls_branch>-branch-display_name.
       IF sy-subrc = 0.
+        " remove markdown formatting,
+        REPLACE ALL OCCURRENCES OF '`' IN ls_pull-title WITH ''.
+
         <ls_branch>-pr-title = |{ ls_pull-title } #{ ls_pull-number }|.
         <ls_branch>-pr-url = ls_pull-html_url.
         <ls_branch>-pr-draft = ls_pull-draft.
@@ -421,7 +313,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    READ TABLE it_branches INTO ls_main WITH KEY display_name = c_main.
+    READ TABLE it_branches INTO ls_main WITH KEY display_name = zif_abapgit_flow_logic=>c_main.
     ASSERT sy-subrc = 0.
 
     LOOP AT it_branches INTO ls_branch WHERE is_head = abap_false.
@@ -483,9 +375,9 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
     DATA lt_branches            TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
     DATA ls_branch              LIKE LINE OF lt_branches.
-    DATA ls_result              LIKE LINE OF rt_features.
+    DATA ls_result              LIKE LINE OF rs_information-features.
     DATA li_repo_online         TYPE REF TO zif_abapgit_repo_online.
-    DATA lt_features            LIKE rt_features.
+    DATA lt_features            LIKE rs_information-features.
     DATA lt_all_transports      TYPE ty_transports_tt.
     DATA lt_relevant_transports TYPE ty_trkorr_tt.
     DATA lt_repos               TYPE ty_repos_tt.
@@ -503,17 +395,17 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
       lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
         iv_url    = li_repo_online->get_url( )
-        iv_prefix = 'refs/heads/' )->get_all( ).
+        iv_prefix = zif_abapgit_git_definitions=>c_git_branch-heads_prefix )->get_all( ).
 
       CLEAR lt_features.
-      LOOP AT lt_branches INTO ls_branch WHERE display_name <> c_main.
+      LOOP AT lt_branches INTO ls_branch WHERE display_name <> zif_abapgit_flow_logic=>c_main.
         ls_result-repo = build_repo_data( li_repo_online ).
         ls_result-branch-display_name = ls_branch-display_name.
         ls_result-branch-sha1 = ls_branch-sha1.
         INSERT ls_result INTO TABLE lt_features.
       ENDLOOP.
 
-      find_changes_in_git(
+      zcl_abapgit_flow_git=>find_changes_in_git(
         EXPORTING
           ii_repo_online   = li_repo_online
           it_branches      = lt_branches
@@ -540,6 +432,12 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         CHANGING
           ct_transports    = lt_all_transports
           ct_features      = lt_features ).
+
+      warnings_from_transports(
+        EXPORTING
+          it_transports = lt_all_transports
+        CHANGING
+          ct_warnings   = rs_information-warnings ).
 
       find_prs(
         EXPORTING
@@ -571,10 +469,10 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         ENDLOOP.
       ENDLOOP.
 
-      INSERT LINES OF lt_features INTO TABLE rt_features.
+      INSERT LINES OF lt_features INTO TABLE rs_information-features.
     ENDLOOP.
 
-    SORT rt_features BY full_match transport-trkorr DESCENDING.
+    SORT rs_information-features BY full_match transport-trkorr DESCENDING.
 
   ENDMETHOD.
 
@@ -602,27 +500,6 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
       li_online ?= li_repo.
       INSERT li_online INTO TABLE rt_repos.
     ENDLOOP.
-  ENDMETHOD.
-
-
-  METHOD map_files_to_objects.
-
-    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
-
-    FIELD-SYMBOLS <ls_file> LIKE LINE OF it_files.
-
-    LOOP AT it_files ASSIGNING <ls_file>.
-      zcl_abapgit_filename_logic=>file_to_object(
-        EXPORTING
-          iv_filename = <ls_file>-filename
-          iv_path     = <ls_file>-path
-          iv_devclass = ii_repo->get_package( )
-          io_dot      = ii_repo->get_dot_abapgit( )
-        IMPORTING
-          es_item     = ls_item ).
-      INSERT ls_item INTO TABLE rt_changed_objects.
-    ENDLOOP.
-
   ENDMETHOD.
 
 
@@ -779,6 +656,36 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
           cs_feature       = ls_result ).
 
       INSERT ls_result INTO TABLE ct_features.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD warnings_from_transports.
+
+    DATA lv_warning    TYPE string.
+    DATA lt_transports LIKE it_transports.
+    DATA lv_index      TYPE i.
+    DATA ls_next       LIKE LINE OF lt_transports.
+    DATA ls_transport  LIKE LINE OF lt_transports.
+
+    lt_transports = it_transports.
+    SORT lt_transports BY object obj_name trkorr.
+
+    LOOP AT lt_transports INTO ls_transport.
+      lv_index = sy-tabix + 1.
+      READ TABLE lt_transports INTO ls_next INDEX lv_index.
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
+
+      IF ls_next-object = ls_transport-object
+          AND ls_next-trkorr <> ls_transport-trkorr
+          AND ls_next-obj_name = ls_transport-obj_name.
+        lv_warning = |Object <tt>{ ls_transport-object }</tt> <tt>{ ls_transport-obj_name
+          }</tt> is in multiple transports: <tt>{ ls_transport-trkorr }</tt> and <tt>{ ls_next-trkorr }</tt>|.
+        INSERT lv_warning INTO TABLE ct_warnings.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.

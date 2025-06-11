@@ -249,16 +249,16 @@ CLASS zcl_abapgit_merge IMPLEMENTATION.
 
   METHOD fetch_git.
 
-    DATA: lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list,
+    DATA: li_branch_list TYPE REF TO zif_abapgit_git_branch_list,
           lt_upload      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
 
-    lo_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( ms_merge-repo_online->get_url( ) ).
+    li_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( ms_merge-repo_online->get_url( ) ).
 
-    ms_merge-source = lo_branch_list->find_by_name(
-      zcl_abapgit_git_branch_list=>complete_heads_branch_name( mv_source_branch ) ).
+    ms_merge-source = li_branch_list->find_by_name(
+      zcl_abapgit_git_branch_utils=>complete_heads_branch_name( mv_source_branch ) ).
 
-    ms_merge-target = lo_branch_list->find_by_name(
-      zcl_abapgit_git_branch_list=>complete_heads_branch_name( mi_repo_online->get_selected_branch( ) ) ).
+    ms_merge-target = li_branch_list->find_by_name(
+      zcl_abapgit_git_branch_utils=>complete_heads_branch_name( mi_repo_online->get_selected_branch( ) ) ).
 
     APPEND ms_merge-source TO lt_upload.
     APPEND ms_merge-target TO lt_upload.

@@ -138,7 +138,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_serialize IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
 
   METHOD add_apack.
@@ -277,6 +277,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       ms_i18n_params-main_language      = sy-langu.
       ms_i18n_params-main_language_only = is_local_settings-main_language_only.
     ENDIF.
+    ms_i18n_params-suppress_po_comments = is_local_settings-suppress_lxe_po_comments.
 
     IF mo_dot_abapgit IS NOT INITIAL.
       CREATE OBJECT mo_abap_language_version
@@ -618,6 +619,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           iv_abap_language_vers = lv_abap_language_version
           iv_language           = ms_i18n_params-main_language
           iv_main_language_only = ms_i18n_params-main_language_only
+          iv_suppress_po_comments = ms_i18n_params-suppress_po_comments
           it_translation_langs  = ms_i18n_params-translation_languages
           iv_use_lxe            = ms_i18n_params-use_lxe
         EXCEPTIONS

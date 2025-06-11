@@ -642,12 +642,12 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         iv_val = ms_settings_snapshot-head_type ).
 
       " When pull request is selected the previously selected branch/tag is also loaded to be able to switch back to it
-      lv_head = zcl_abapgit_git_branch_list=>get_display_name( ms_settings_snapshot-branch ).
+      lv_head = zcl_abapgit_git_branch_utils=>get_display_name( ms_settings_snapshot-branch ).
       ro_form_data->set(
         iv_key = c_id-branch
         iv_val = lv_head ).
 
-      lv_head = zcl_abapgit_git_branch_list=>get_display_name( ms_settings_snapshot-tag ).
+      lv_head = zcl_abapgit_git_branch_utils=>get_display_name( ms_settings_snapshot-tag ).
       ro_form_data->set(
         iv_key = c_id-tag
         iv_val = lv_head ).
@@ -879,7 +879,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     DATA:
       lx_error                 TYPE REF TO zcx_abapgit_exception,
-      lo_branch_list           TYPE REF TO zcl_abapgit_git_branch_list,
+      lo_branch_list           TYPE REF TO zif_abapgit_git_branch_list,
       lo_url                   TYPE REF TO zcl_abapgit_git_url,
       lv_offline               TYPE abap_bool,
       lv_head_type             TYPE ty_head_type,
