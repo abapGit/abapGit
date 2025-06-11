@@ -305,7 +305,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         READ TABLE rt_overwrite TRANSPORTING NO FIELDS WITH KEY object_type_and_name COMPONENTS
           obj_type = <ls_result>-obj_type
           obj_name = <ls_result>-obj_name.
-        IF sy-subrc = 0.
+        IF sy-subrc <> 0.
           CLEAR ls_overwrite.
           MOVE-CORRESPONDING <ls_result> TO ls_overwrite.
           ls_overwrite-devclass = <ls_result>-package.
