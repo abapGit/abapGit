@@ -53,14 +53,6 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    METHODS call_diff
-      IMPORTING
-        !ii_event         TYPE REF TO zif_abapgit_gui_event
-      RETURNING
-        VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
-      RAISING
-        zcx_abapgit_exception.
-
     METHODS call_stage
       IMPORTING
         !ii_event         TYPE REF TO zif_abapgit_gui_event
@@ -112,77 +104,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  METHOD call_diff.
-
-    DATA lv_key         TYPE zif_abapgit_persistence=>ty_value.
-    DATA lv_remote_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
-    DATA ls_file        TYPE zif_abapgit_git_definitions=>ty_file.
-    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
-    DATA li_repo        TYPE REF TO zif_abapgit_repo.
-    DATA lv_blob        TYPE xstring.
-    DATA ls_local       TYPE zif_abapgit_git_definitions=>ty_file.
-    DATA ls_remote      TYPE zif_abapgit_git_definitions=>ty_file.
-    DATA lt_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lo_filter      TYPE REF TO zcl_abapgit_object_filter_obj.
-    DATA lt_files_item  TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    DATA ls_file_item   LIKE LINE OF lt_files_item.
-    DATA ls_item        TYPE zif_abapgit_definitions=>ty_item.
-
-    FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
-
-    lv_key = ii_event->query( )->get( 'KEY' ).
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-    li_repo ?= li_repo_online.
-
-    lv_remote_sha1 = ii_event->query( )->get( 'REMOTE_SHA1' ).
-
-    ls_file-path     = ii_event->query( )->get( 'PATH' ).
-    ls_file-filename = ii_event->query( )->get( 'FILENAME' ). " unescape ?
-
-    zcl_abapgit_filename_logic=>file_to_object(
-      EXPORTING
-        iv_filename = ls_file-filename
-        iv_path     = ls_file-path
-        iv_devclass = li_repo->get_package( )
-        io_dot      = li_repo->get_dot_abapgit( )
-      IMPORTING
-        es_item     = ls_item ).
-
-    APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
-    <ls_filter>-object = ls_item-obj_type.
-    <ls_filter>-obj_name = ls_item-obj_name.
-    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
-
-    lt_files_item = li_repo_online->zif_abapgit_repo~get_files_local_filtered( lo_filter ).
-    READ TABLE lt_files_item INTO ls_file_item WITH KEY file-path = ls_file-path
-      file-filename = ls_file-filename.
-
-    lv_blob = zcl_abapgit_git_factory=>get_v2_porcelain( )->fetch_blob(
-      iv_url  = li_repo_online->get_url( )
-      iv_sha1 = lv_remote_sha1 ).
-
-    ls_remote-path = ls_file-path.
-    ls_remote-filename = ls_file-filename.
-    ls_remote-sha1 = lv_remote_sha1.
-    ls_remote-data = lv_blob.
-
-    ls_local-path = ls_remote-path.
-    ls_local-filename = ls_remote-filename.
-    ls_local-sha1 = ls_file_item-file-sha1.
-    ls_local-data = ls_file_item-file-data.
-
-    rs_handled-page = zcl_abapgit_gui_page_diff_file=>create(
-      iv_obj_type = ls_item-obj_type
-      iv_obj_name = ls_item-obj_name
-      is_local    = ls_local
-      is_remote   = ls_remote ).
-
-    rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
-
-  ENDMETHOD.
-
-
   METHOD call_pull.
 
     DATA lv_key         TYPE zif_abapgit_persistence=>ty_value.
@@ -212,13 +133,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
 
     set_branch(
-          iv_branch = lv_branch
-          iv_key    = lv_key ).
+      iv_branch = lv_branch
+      iv_key    = lv_key ).
 
     rs_handled-page = zcl_abapgit_gui_page_pull=>create(
-          ii_repo       = li_repo_online
-          iv_trkorr     = ls_feature-transport-trkorr
-          ii_obj_filter = lo_filter ).
+      ii_repo       = li_repo_online
+      iv_trkorr     = ls_feature-transport-trkorr
+      ii_obj_filter = lo_filter ).
 
     rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
@@ -431,7 +352,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       WHEN c_action-consolidate.
         rs_handled = call_consolidate( ).
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
-        rs_handled = call_diff( ii_event ).
+        rs_handled = zcl_abapgit_flow_page_utils=>call_diff( ii_event ).
       WHEN c_action-stage.
         rs_handled = call_stage( ii_event ).
       WHEN c_action-pull.

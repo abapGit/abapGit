@@ -29,10 +29,12 @@ CLASS zcl_abapgit_gui_page_flowcons DEFINITION
 
     CONSTANTS:
       BEGIN OF c_action,
-        refresh             TYPE string VALUE 'refresh',
+        refresh TYPE string VALUE 'refresh',
+        stage   TYPE string VALUE 'stage',
       END OF c_action .
 
     DATA mo_repo TYPE REF TO zif_abapgit_repo_online.
+    DATA ms_consolidate TYPE zif_abapgit_flow_logic=>ty_consolidate.
 
 ENDCLASS.
 
@@ -65,8 +67,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN c_action-refresh.
-* just re-render the page to trigger a refresh
+        CLEAR ms_consolidate.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-go_file_diff.
+        rs_handled = zcl_abapgit_flow_page_utils=>call_diff( ii_event ).
       WHEN OTHERS.
 * the back button is handled in the default router
         RETURN.
@@ -92,10 +96,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA ls_consolidate TYPE zif_abapgit_flow_logic=>ty_consolidate.
-    DATA lv_text        TYPE string.
-    DATA lo_timer       TYPE REF TO zcl_abapgit_timer.
-    DATA li_repo        TYPE REF TO zif_abapgit_repo.
+    DATA lv_text    TYPE string.
+    DATA lo_timer   TYPE REF TO zcl_abapgit_timer.
+    DATA li_repo    TYPE REF TO zif_abapgit_repo.
+    DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
 
     register_handlers( ).
 
@@ -111,21 +115,32 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
       iv_show_commit          = abap_false
       iv_show_branch          = abap_false ) ).
 
-    ls_consolidate = zcl_abapgit_flow_logic=>consolidate( mo_repo ).
+    IF ms_consolidate IS INITIAL.
+      ms_consolidate = zcl_abapgit_flow_logic=>consolidate( mo_repo ).
+    ENDIF.
 
-    LOOP AT ls_consolidate-errors INTO lv_text.
+    LOOP AT ms_consolidate-errors INTO lv_text.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( iv_error = lv_text ) ).
     ENDLOOP.
-    LOOP AT ls_consolidate-warnings INTO lv_text.
+    LOOP AT ms_consolidate-warnings INTO lv_text.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner( lv_text ) ).
     ENDLOOP.
-    LOOP AT ls_consolidate-success INTO lv_text.
+    LOOP AT ms_consolidate-success INTO lv_text.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_success( lv_text ) ).
     ENDLOOP.
 
-    ri_html->add( zcl_abapgit_flow_page_utils=>render_table(
-      it_files    = ls_consolidate-missing_remote
-      iv_repo_key = li_repo->get_key( ) ) ).
+    IF lines( ms_consolidate-missing_remote ) > 0.
+      ri_html->add( '<h2>Missing Remote Files</h2>' ).
+      CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-flow-cons'.
+      lo_toolbar->add( iv_txt = 'Stage'
+                       iv_act = c_action-stage
+                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      ri_html->add( lo_toolbar->render( ) ).
+
+      ri_html->add( zcl_abapgit_flow_page_utils=>render_table(
+        it_files    = ms_consolidate-missing_remote
+        iv_repo_key = li_repo->get_key( ) ) ).
+    ENDIF.
 
     ri_html->add( |<br><br><small>{ lo_timer->end( ) }</small><br>| ).
 
