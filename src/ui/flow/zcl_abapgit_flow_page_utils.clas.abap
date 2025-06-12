@@ -35,6 +35,7 @@ CLASS zcl_abapgit_flow_page_utils IMPLEMENTATION.
     ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote</u></td><td><u>Local</u></td><td></td></tr>| ).
 
     LOOP AT it_files INTO ls_path_name.
+      CLEAR lv_status.
       IF ls_path_name-remote_sha1 = ls_path_name-local_sha1.
         IF is_user_settings-hide_matching_files = abap_true.
           CONTINUE.
