@@ -359,8 +359,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         rs_handled = call_pull( ii_event ).
       WHEN OTHERS.
         ls_event_result = zcl_abapgit_flow_exit=>get_instance( )->on_event(
-         ii_event    = ii_event
-         it_features = ms_information-features ).
+          ii_event    = ii_event
+          it_features = ms_information-features ).
 
         rs_handled = ls_event_result-handled.
 
