@@ -29,8 +29,8 @@ CLASS zcl_abapgit_gui_page_flowcons DEFINITION
 
     CONSTANTS:
       BEGIN OF c_action,
-        refresh TYPE string VALUE 'refresh',
-        stage   TYPE string VALUE 'stage',
+        refresh              TYPE string VALUE 'refresh',
+        stage_missing_remote TYPE string VALUE 'stage_missing_remote',
       END OF c_action .
 
     DATA mo_repo TYPE REF TO zif_abapgit_repo_online.
@@ -133,7 +133,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
       ri_html->add( '<h2>Missing Remote Files</h2>' ).
       CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-flow-cons'.
       lo_toolbar->add( iv_txt = |Stage and commit { lines( ms_consolidate-missing_remote ) } files to new branch|
-                       iv_act = c_action-stage
+                       iv_act = c_action-stage_missing_remote
                        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ri_html->add( lo_toolbar->render( ) ).
 
