@@ -122,6 +122,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_success( lv_text ) ).
     ENDLOOP.
 
+*    sdf
     LOOP AT ls_consolidate-missing_remote INTO ls_missing.
       ri_html->add( |<tt>{ ls_missing-filename }</tt><br>| ).
     ENDLOOP.

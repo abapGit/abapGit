@@ -44,12 +44,6 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    METHODS render_table
-      IMPORTING
-        !is_feature    TYPE zif_abapgit_flow_logic=>ty_feature
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
-
     METHODS render_toolbar
       IMPORTING
         !iv_index      TYPE i
@@ -309,45 +303,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ENDLOOP.
 
     CLEAR ms_information.
-
-  ENDMETHOD.
-
-
-  METHOD render_table.
-
-    DATA ls_path_name LIKE LINE OF is_feature-changed_files.
-    DATA lv_status    TYPE string.
-    DATA lv_param     TYPE string.
-
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    ri_html->add( |<table>| ).
-    ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote</u></td><td><u>Local</u></td><td></td></tr>| ).
-
-    LOOP AT is_feature-changed_files INTO ls_path_name.
-      IF ls_path_name-remote_sha1 = ls_path_name-local_sha1.
-        IF ms_user_settings-hide_matching_files = abap_true.
-          CONTINUE.
-        ENDIF.
-        lv_status = 'Match'.
-      ELSEIF ls_path_name-remote_sha1 IS NOT INITIAL
-          AND ls_path_name-local_sha1 IS NOT INITIAL.
-        ASSERT is_feature-repo-key IS NOT INITIAL.
-        lv_param = zcl_abapgit_html_action_utils=>file_encode(
-          iv_key   = is_feature-repo-key
-          ig_file  = ls_path_name ).
-        lv_status = ri_html->a(
-          iv_txt = 'Diff'
-          iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{
-            lv_param }&remote_sha1={ ls_path_name-remote_sha1 }| ).
-      ENDIF.
-
-      ri_html->add( |<tr><td><tt>{ ls_path_name-path }{ ls_path_name-filename }</tt></td><td>{
-        ls_path_name-remote_sha1(7) }</td><td>{
-        ls_path_name-local_sha1(7) }</td><td>{ lv_status }</td></tr>| ).
-    ENDLOOP.
-    ri_html->add( |</table>| ).
 
   ENDMETHOD.
 
@@ -625,7 +580,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
           lines( ls_feature-changed_files ) } files, {
           lines( ls_feature-changed_objects ) } objects<br>| ).
       ELSE.
-        ri_html->add( render_table( ls_feature ) ).
+        ri_html->add( zcl_abapgit_flow_page_utils=>render_table(
+          it_files         = ls_feature-changed_files
+          is_user_settings = ms_user_settings
+          iv_repo_key      = ls_feature-repo-key ) ).
       ENDIF.
 
 * todo      LOOP AT ls_feature-changed_objects INTO ls_item.
