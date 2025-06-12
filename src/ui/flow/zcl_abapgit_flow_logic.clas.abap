@@ -305,12 +305,16 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
             it_main_expanded  = lt_main_expanded
           CHANGING
             ct_missing_remote = cs_information-missing_remote ).
+        IF lines( cs_information-missing_remote ) > 1000.
+          INSERT `Only first 1000 missing files shown` INTO TABLE cs_information-warnings.
+        ENDIF.
       ENDIF.
     ENDLOOP.
 
     IF lines( lt_filter ) > 0.
       CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
       lt_local = li_repo->get_files_local_filtered( lo_filter ).
+      CLEAR lt_filter.
       check_files(
         EXPORTING
           it_local          = lt_local
