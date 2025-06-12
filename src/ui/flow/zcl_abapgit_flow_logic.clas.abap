@@ -205,6 +205,11 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA lv_string   TYPE string.
     DATA li_repo     TYPE REF TO zif_abapgit_repo.
     DATA lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lo_filter TYPE REF TO zcl_abapgit_object_filter_obj.
+    DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
+
+    FIELD-SYMBOLS <ls_tadir> LIKE LINE OF lt_tadir.
 
 * todo: handling multiple repositories
 
@@ -228,10 +233,21 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+* find all that exists local, serialize these, skip if no changes or if in any branch
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package      = li_repo->get_package( )
       io_dot          = li_repo->get_dot_abapgit( )
       iv_check_exists = abap_true ).
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      INSERT <ls_tadir> INTO TABLE lt_filter.
+
+      IF lines( lt_filter ) >= 100.
+        CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+        lt_local = li_repo->get_files_local_filtered( lo_filter ).
+        CLEAR lt_filter.
+      ENDIF.
+    ENDLOOP.
+
 
     INSERT `todo` INTO TABLE rs_consolidate-success.
 * todo: branches without pull requests?
