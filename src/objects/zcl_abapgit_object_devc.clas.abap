@@ -794,7 +794,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
   METHOD zif_abapgit_object~map_filename_to_object.
 
-    IF iv_filename <> zcl_abapgit_filename_logic=>c_package_file.
+    IF to_lower( iv_filename ) <> zcl_abapgit_filename_logic=>c_package_file-obj_name.
       zcx_abapgit_exception=>raise( |Unexpected filename for package { cs_item-obj_name }| ).
     ENDIF.
 

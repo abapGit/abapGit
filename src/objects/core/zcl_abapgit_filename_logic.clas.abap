@@ -171,7 +171,7 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
     " Get mapping specific to object type
     map_filename_to_object(
       EXPORTING
-        iv_filename = iv_filename
+        iv_filename = to_lower( lv_name ) " object name part only
         iv_path     = iv_path
         io_dot      = io_dot
         iv_package  = iv_devclass
