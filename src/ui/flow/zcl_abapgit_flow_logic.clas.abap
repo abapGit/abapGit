@@ -322,13 +322,15 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
   METHOD check_files.
 
+    DATA ls_missing LIKE LINE OF ct_missing_remote.
     FIELD-SYMBOLS <ls_local> LIKE LINE OF it_local.
     FIELD-SYMBOLS <ls_expanded> LIKE LINE OF it_main_expanded.
 
     LOOP AT it_local ASSIGNING <ls_local>.
       READ TABLE it_main_expanded WITH KEY name = <ls_local>-file-filename ASSIGNING <ls_expanded>.
       IF sy-subrc <> 0.
-        INSERT <ls_local>-file-filename INTO TABLE ct_missing_remote.
+        ls_missing-filename = <ls_local>-file-filename.
+        INSERT ls_missing INTO TABLE ct_missing_remote.
 * todo: not in main, but it might be in one of the branches
       ELSEIF <ls_expanded>-path <> <ls_local>-file-path.
 * todo
