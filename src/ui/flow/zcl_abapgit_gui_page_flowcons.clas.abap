@@ -54,21 +54,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
 * Stage and commit "ms_consolidate-missing_remote" files to new branch
 
     DATA lt_branches    TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA ls_main_branch      LIKE LINE OF lt_branches.
+    DATA ls_main_branch LIKE LINE OF lt_branches.
     DATA lv_branch_name TYPE string.
     DATA lt_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA ls_filter LIKE LINE OF lt_filter.
+    DATA ls_filter      LIKE LINE OF lt_filter.
     DATA ls_file        LIKE LINE OF ms_consolidate-missing_remote.
-    DATA lv_package TYPE devclass.
-    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
-    DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    DATA ls_local LIKE LINE OF lt_local.
-    DATA lo_filter TYPE REF TO zcl_abapgit_object_filter_obj.
-    DATA lo_dot     TYPE REF TO zcl_abapgit_dot_abapgit.
-    DATA lo_stage   TYPE REF TO zcl_abapgit_stage.
-    DATA ls_comment TYPE zif_abapgit_git_definitions=>ty_comment.
-    DATA lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
-    DATA lt_sha1            TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
+    DATA lv_package     TYPE devclass.
+    DATA ls_item        TYPE zif_abapgit_definitions=>ty_item.
+    DATA lt_local       TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA ls_local       LIKE LINE OF lt_local.
+    DATA lo_filter      TYPE REF TO zcl_abapgit_object_filter_obj.
+    DATA lo_dot         TYPE REF TO zcl_abapgit_dot_abapgit.
+    DATA lo_stage       TYPE REF TO zcl_abapgit_stage.
+    DATA ls_comment     TYPE zif_abapgit_git_definitions=>ty_comment.
+    DATA lt_objects     TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA lt_sha1        TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
 
 
     lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
