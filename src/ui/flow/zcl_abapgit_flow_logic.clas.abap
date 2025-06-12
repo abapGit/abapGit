@@ -326,7 +326,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     FIELD-SYMBOLS <ls_local> LIKE LINE OF it_local.
     FIELD-SYMBOLS <ls_expanded> LIKE LINE OF it_main_expanded.
 
-    LOOP AT it_local ASSIGNING <ls_local>.
+    LOOP AT it_local ASSIGNING <ls_local> WHERE file-filename <> zif_abapgit_definitions=>c_dot_abapgit.
       READ TABLE it_main_expanded WITH KEY name = <ls_local>-file-filename ASSIGNING <ls_expanded>.
       IF sy-subrc <> 0.
         ls_missing-filename = <ls_local>-file-filename.

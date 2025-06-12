@@ -123,10 +123,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
     ENDLOOP.
 
     LOOP AT ls_consolidate-missing_remote INTO ls_missing.
-      ri_html->add( |<tt>{ ls_missing-filename }</tt>| ).
+      ri_html->add( |<tt>{ ls_missing-filename }</tt><br>| ).
     ENDLOOP.
 
-    ri_html->add( |<small>{ lo_timer->end( ) }</small>| ).
+    ri_html->add( |<small>{ lo_timer->end( ) }</small><br>| ).
 
     ri_html->add( '</div>' ).
 
