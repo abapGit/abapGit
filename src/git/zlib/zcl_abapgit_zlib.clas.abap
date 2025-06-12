@@ -85,16 +85,14 @@ CLASS zcl_abapgit_zlib IMPLEMENTATION.
           lv_count TYPE i,
           lv_code  TYPE i,
           lv_index TYPE i,
-          lv_first TYPE i,
-          lv_bits  TYPE string.
+          lv_first TYPE i.
 
 
     DO zcl_abapgit_zlib_huffman=>c_maxbits TIMES.
       lv_len = sy-index.
 
       lv_bit = go_stream->take_bits( 1 ).
-      CONCATENATE lv_bits lv_bit INTO lv_bits.
-      lv_code = zcl_abapgit_zlib_convert=>bits_to_int( lv_bits ).
+      lv_code = lv_bit + lv_code * 2.
       lv_count = io_huffman->get_count( lv_len ).
 
       IF lv_code - lv_count < lv_first.
