@@ -106,13 +106,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
       iv_show_commit          = abap_false
       iv_show_branch          = abap_false ) ).
 
-    ls_consolidate = zcl_abapgit_flow_logic=>consolidate( ).
+    ls_consolidate = zcl_abapgit_flow_logic=>consolidate( mo_repo ).
 
     LOOP AT ls_consolidate-errors INTO lv_text.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( iv_error = lv_text ) ).
     ENDLOOP.
     LOOP AT ls_consolidate-warnings INTO lv_text.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner( lv_text ) ).
+    ENDLOOP.
+    LOOP AT ls_consolidate-success INTO lv_text.
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_success( lv_text ) ).
     ENDLOOP.
 
     ri_html->add( 'todo' ).

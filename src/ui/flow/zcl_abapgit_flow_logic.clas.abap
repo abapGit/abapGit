@@ -7,6 +7,8 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
         zcx_abapgit_exception.
 
     CLASS-METHODS consolidate
+      IMPORTING
+        ii_online             TYPE REF TO zif_abapgit_repo_online
       RETURNING
         VALUE(rs_consolidate) TYPE zif_abapgit_flow_logic=>ty_consolidate
       RAISING
@@ -201,10 +203,15 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
     DATA ls_feature  LIKE LINE OF lt_features.
     DATA lv_string   TYPE string.
+    DATA li_repo     TYPE REF TO zif_abapgit_repo.
+    DATA lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
+* todo: handling multiple repositories
+
+    li_repo ?= ii_online.
     lt_features = get( )-features.
 
-    LOOP AT lt_features INTO ls_feature.
+    LOOP AT lt_features INTO ls_feature WHERE repo-key = li_repo->get_key( ).
       IF ls_feature-branch-display_name IS NOT INITIAL
           AND ls_feature-branch-up_to_date = abap_false.
         lv_string = |Branch <tt>{ ls_feature-branch-display_name }</tt> is not up to date|.
@@ -221,9 +228,13 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-* todo: branches without pull requests?
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
+      iv_package      = li_repo->get_package( )
+      io_dot          = li_repo->get_dot_abapgit( )
+      iv_check_exists = abap_true ).
 
-* todo
+    INSERT `todo` INTO TABLE rs_consolidate-success.
+* todo: branches without pull requests?
 
   ENDMETHOD.
 
