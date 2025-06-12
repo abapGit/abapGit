@@ -76,7 +76,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
 
     DATA ls_consolidate TYPE zif_abapgit_flow_logic=>ty_consolidate.
-    DATA lv_error       TYPE string.
+    DATA lv_text       TYPE string.
 
     register_handlers( ).
 
@@ -90,8 +90,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
       iv_show_branch          = abap_false ) ).
 
     ls_consolidate = zcl_abapgit_flow_logic=>consolidate( ).
-    LOOP AT ls_consolidate-errors INTO lv_error.
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( iv_error = lv_error ) ).
+
+    LOOP AT ls_consolidate-errors INTO lv_text.
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( iv_error = lv_text ) ).
+    ENDLOOP.
+    LOOP AT ls_consolidate-warnings INTO lv_text.
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner( lv_text ) ).
     ENDLOOP.
 
     ri_html->add( 'todo' ).
