@@ -132,7 +132,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
     IF lines( ms_consolidate-missing_remote ) > 0.
       ri_html->add( '<h2>Missing Remote Files</h2>' ).
       CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-flow-cons'.
-      lo_toolbar->add( iv_txt = 'Stage'
+      lo_toolbar->add( iv_txt = 'Stage to which branch?'
                        iv_act = c_action-stage
                        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ri_html->add( lo_toolbar->render( ) ).
