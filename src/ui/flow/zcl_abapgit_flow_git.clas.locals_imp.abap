@@ -90,6 +90,7 @@ CLASS lcl_find_changes IMPLEMENTATION.
     ENDIF.
 
     LOOP AT lt_main INTO ls_node_main.
+      CLEAR ls_node_branch.
       READ TABLE lt_branch INTO ls_node_branch WITH KEY name = ls_node_main-name.
       IF sy-subrc = 0.
         DELETE lt_branch INDEX sy-tabix.
