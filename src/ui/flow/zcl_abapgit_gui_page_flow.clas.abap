@@ -317,7 +317,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
     DATA ls_path_name LIKE LINE OF is_feature-changed_files.
     DATA lv_status    TYPE string.
-    DATA lv_branch    TYPE string.
     DATA lv_param     TYPE string.
 
 
@@ -325,11 +324,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
     ri_html->add( |<table>| ).
     ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote</u></td><td><u>Local</u></td><td></td></tr>| ).
-
-    lv_branch = is_feature-branch-display_name.
-    IF lv_branch IS INITIAL.
-      lv_branch = 'main'.
-    ENDIF.
 
     LOOP AT is_feature-changed_files INTO ls_path_name.
       IF ls_path_name-remote_sha1 = ls_path_name-local_sha1.
@@ -339,12 +333,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         lv_status = 'Match'.
       ELSEIF ls_path_name-remote_sha1 IS NOT INITIAL
           AND ls_path_name-local_sha1 IS NOT INITIAL.
-* todo: file added or removed
         ASSERT is_feature-repo-key IS NOT INITIAL.
         lv_param = zcl_abapgit_html_action_utils=>file_encode(
           iv_key   = is_feature-repo-key
-          ig_file  = ls_path_name
-          iv_extra = lv_branch ).
+          ig_file  = ls_path_name ).
         lv_status = ri_html->a(
           iv_txt = 'Diff'
           iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{

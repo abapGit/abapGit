@@ -48,18 +48,11 @@ INTERFACE zif_abapgit_flow_logic
 
 **************************************
 
-  TYPES: BEGIN OF ty_missing,
-           path        TYPE string,
-           filename    TYPE string,
-           local_sha1  TYPE zif_abapgit_git_definitions=>ty_sha1,
-           remote_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1,
-         END OF ty_missing.
-
   TYPES: BEGIN OF ty_consolidate,
            errors         TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
            warnings       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
            success        TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-           missing_remote TYPE STANDARD TABLE OF ty_missing WITH DEFAULT KEY,
+           missing_remote TYPE ty_path_name_tt,
          END OF ty_consolidate.
 
 ENDINTERFACE.
