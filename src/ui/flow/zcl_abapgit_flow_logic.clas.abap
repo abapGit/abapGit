@@ -285,6 +285,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
         <ls_branch>-pr-title = |{ ls_pull-title } #{ ls_pull-number }|.
         <ls_branch>-pr-url = ls_pull-html_url.
+        <ls_branch>-pr-number = ls_pull-number.
         <ls_branch>-pr-draft = ls_pull-draft.
       ENDIF.
     ENDLOOP.
