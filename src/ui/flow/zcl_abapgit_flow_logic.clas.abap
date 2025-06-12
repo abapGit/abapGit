@@ -265,6 +265,8 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
     DATA li_repo     TYPE REF TO zif_abapgit_repo.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+    DATA ls_branch   LIKE LINE OF lt_branches.
+    DATA ls_result   LIKE LINE OF lt_features.
 
     FIELD-SYMBOLS <ls_tadir> LIKE LINE OF lt_tadir.
 
@@ -274,6 +276,14 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
       iv_url    = ii_online->get_url( )
       iv_prefix = zif_abapgit_git_definitions=>c_git_branch-heads_prefix )->get_all( ).
+
+    CLEAR lt_features.
+    LOOP AT lt_branches INTO ls_branch WHERE display_name <> zif_abapgit_flow_logic=>c_main.
+      ls_result-repo = build_repo_data( ii_online ).
+      ls_result-branch-display_name = ls_branch-display_name.
+      ls_result-branch-sha1 = ls_branch-sha1.
+      INSERT ls_result INTO TABLE lt_features.
+    ENDLOOP.
 
     zcl_abapgit_flow_git=>find_changes_in_git(
       EXPORTING
