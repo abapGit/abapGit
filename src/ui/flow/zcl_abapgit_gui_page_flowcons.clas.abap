@@ -36,18 +36,103 @@ CLASS zcl_abapgit_gui_page_flowcons DEFINITION
     DATA mo_repo TYPE REF TO zif_abapgit_repo_online.
     DATA ms_consolidate TYPE zif_abapgit_flow_logic=>ty_consolidate.
 
+    METHODS stage_missing_remote
+      RAISING zcx_abapgit_exception.
+
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
 
-
   METHOD constructor.
     super->constructor( ).
     mo_repo = ii_repo.
   ENDMETHOD.
 
+  METHOD stage_missing_remote.
+* Stage and commit "ms_consolidate-missing_remote" files to new branch
+
+    DATA lt_branches    TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA ls_main_branch      LIKE LINE OF lt_branches.
+    DATA lv_branch_name TYPE string.
+    DATA lt_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA ls_filter LIKE LINE OF lt_filter.
+    DATA ls_file        LIKE LINE OF ms_consolidate-missing_remote.
+    DATA lv_package TYPE devclass.
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA ls_local LIKE LINE OF lt_local.
+    DATA lo_filter TYPE REF TO zcl_abapgit_object_filter_obj.
+    DATA lo_dot     TYPE REF TO zcl_abapgit_dot_abapgit.
+    DATA lo_stage   TYPE REF TO zcl_abapgit_stage.
+    DATA ls_comment TYPE zif_abapgit_git_definitions=>ty_comment.
+    DATA lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA lt_sha1            TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
+
+
+    lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
+      iv_url    = mo_repo->get_url( )
+      iv_prefix = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && zif_abapgit_flow_logic=>c_main )->get_all( ).
+    ASSERT lines( lt_branches ) = 1.
+
+    READ TABLE lt_branches INDEX 1 INTO ls_main_branch.
+    ASSERT sy-subrc = 0.
+
+    lv_branch_name = |consolidate{ sy-datum }|.
+    zcl_abapgit_git_porcelain=>create_branch(
+      iv_url  = mo_repo->get_url( )
+      iv_name = |{ zif_abapgit_git_definitions=>c_git_branch-heads_prefix }{ lv_branch_name }|
+      iv_from = ls_main_branch-sha1 ).
+
+    lv_package = mo_repo->zif_abapgit_repo~get_package( ).
+    lo_dot = mo_repo->zif_abapgit_repo~get_dot_abapgit( ).
+
+    LOOP AT ms_consolidate-missing_remote INTO ls_file.
+      zcl_abapgit_filename_logic=>file_to_object(
+        EXPORTING
+          iv_filename = ls_file-filename
+          iv_path     = ls_file-path
+          iv_devclass = lv_package
+          io_dot      = lo_dot
+        IMPORTING
+          es_item     = ls_item ).
+      ls_filter-object = ls_item-obj_type.
+      ls_filter-obj_name = ls_item-obj_name.
+      INSERT ls_filter INTO TABLE lt_filter.
+    ENDLOOP.
+    SORT lt_filter BY object obj_name.
+    DELETE ADJACENT DUPLICATES FROM lt_filter COMPARING object obj_name.
+
+    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+    lt_local = mo_repo->zif_abapgit_repo~get_files_local_filtered( lo_filter ).
+
+* just add all files, some will match, but its okay
+    CREATE OBJECT lo_stage.
+    LOOP AT lt_local INTO ls_local.
+      lo_stage->add( iv_path     = ls_local-file-path
+                     iv_filename = ls_local-file-filename
+                     iv_data     = ls_local-file-data ).
+    ENDLOOP.
+
+    ls_comment-committer-name  = 'consolidate'.
+    ls_comment-committer-email = 'consolidate@localhost'.
+    ls_comment-comment         = 'consolidate'.
+
+    INSERT ls_main_branch-sha1 INTO TABLE lt_sha1.
+    lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_no_blobs_multi(
+      iv_url  = mo_repo->get_url( )
+      it_sha1 = lt_sha1 ).
+
+    zcl_abapgit_git_porcelain=>push(
+      is_comment     = ls_comment
+      io_stage       = lo_stage
+      iv_branch_name = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && lv_branch_name
+      iv_url         = mo_repo->get_url( )
+      iv_parent      = ls_main_branch-sha1
+      it_old_objects = lt_objects ).
+
+  ENDMETHOD.
 
   METHOD create.
 
@@ -66,6 +151,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     CASE ii_event->mv_action.
+      WHEN c_action-stage_missing_remote.
+        stage_missing_remote( ).
+        CLEAR ms_consolidate.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-refresh.
         CLEAR ms_consolidate.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
