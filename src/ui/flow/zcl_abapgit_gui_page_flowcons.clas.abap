@@ -132,6 +132,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
       iv_parent      = ls_main_branch-sha1
       it_old_objects = lt_objects ).
 
+    MESSAGE 'Done, commited' TYPE 'S'.
+
   ENDMETHOD.
 
   METHOD create.

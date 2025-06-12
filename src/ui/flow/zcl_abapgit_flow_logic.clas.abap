@@ -253,8 +253,6 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
       CHANGING
         cs_information = rs_consolidate ).
 
-    INSERT `todo` INTO TABLE rs_consolidate-success.
-
   ENDMETHOD.
 
   METHOD consolidate_files.
