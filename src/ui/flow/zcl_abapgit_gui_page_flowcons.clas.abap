@@ -93,7 +93,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
 
     DATA ls_consolidate TYPE zif_abapgit_flow_logic=>ty_consolidate.
-    DATA lv_text       TYPE string.
+    DATA lv_text        TYPE string.
+    DATA ls_missing     LIKE LINE OF ls_consolidate-missing_remote.
 
     register_handlers( ).
 
@@ -118,7 +119,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_success( lv_text ) ).
     ENDLOOP.
 
-    ri_html->add( 'todo' ).
+    LOOP AT ls_consolidate-missing_remote INTO lv_text.
+      ri_html->add( |<tt>{ ls_missing-filename }</tt>| ).
+    ENDLOOP.
 
     ri_html->add( '</div>' ).
 

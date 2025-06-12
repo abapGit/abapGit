@@ -38,6 +38,23 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
 
     TYPES ty_trkorr_tt TYPE STANDARD TABLE OF trkorr WITH DEFAULT KEY.
 
+    CLASS-METHODS consolidate_files
+      IMPORTING
+        ii_online      TYPE REF TO zif_abapgit_repo_online
+      CHANGING
+        cs_information TYPE zif_abapgit_flow_logic=>ty_consolidate
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS check_files
+      IMPORTING
+        it_local          TYPE zif_abapgit_definitions=>ty_files_item_tt
+        it_main_expanded  TYPE zif_abapgit_git_definitions=>ty_expanded_tt
+      CHANGING
+        ct_missing_remote TYPE zif_abapgit_flow_logic=>ty_consolidate-missing_remote
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS build_repo_data
       IMPORTING
         ii_repo        TYPE REF TO zif_abapgit_repo
@@ -204,12 +221,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA ls_feature  LIKE LINE OF lt_features.
     DATA lv_string   TYPE string.
     DATA li_repo     TYPE REF TO zif_abapgit_repo.
-    DATA lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lo_filter TYPE REF TO zcl_abapgit_object_filter_obj.
-    DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
 
-    FIELD-SYMBOLS <ls_tadir> LIKE LINE OF lt_tadir.
 
 * todo: handling multiple repositories
 
@@ -231,29 +243,101 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         lv_string = |Transport <tt>{ ls_feature-transport-trkorr }</tt> has no branch|.
         INSERT lv_string INTO TABLE rs_consolidate-errors.
       ENDIF.
+* todo: branches without pull requests?
     ENDLOOP.
 
+    consolidate_files(
+      EXPORTING
+        ii_online      = ii_online
+      CHANGING
+        cs_information = rs_consolidate ).
+
+    INSERT `todo` INTO TABLE rs_consolidate-success.
+
+  ENDMETHOD.
+
+  METHOD consolidate_files.
+
+    DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lt_filter   TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lo_filter   TYPE REF TO zcl_abapgit_object_filter_obj.
+    DATA lt_local    TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
+    DATA li_repo     TYPE REF TO zif_abapgit_repo.
+    DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+
+    FIELD-SYMBOLS <ls_tadir> LIKE LINE OF lt_tadir.
+
+    li_repo ?= ii_online.
+
 * find all that exists local, serialize these, skip if no changes or if in any branch
+    lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
+      iv_url    = ii_online->get_url( )
+      iv_prefix = zif_abapgit_git_definitions=>c_git_branch-heads_prefix )->get_all( ).
+
+    zcl_abapgit_flow_git=>find_changes_in_git(
+      EXPORTING
+        ii_repo_online   = ii_online
+        it_branches      = lt_branches
+      IMPORTING
+        et_main_expanded = lt_main_expanded
+      CHANGING
+        ct_features      = lt_features ).
+
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package      = li_repo->get_package( )
       io_dot          = li_repo->get_dot_abapgit( )
       iv_check_exists = abap_true ).
+
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       INSERT <ls_tadir> INTO TABLE lt_filter.
 
-      IF lines( lt_filter ) >= 100.
+      IF lines( lt_filter ) >= 500.
         CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
         lt_local = li_repo->get_files_local_filtered( lo_filter ).
         CLEAR lt_filter.
+        check_files(
+          EXPORTING
+            it_local          = lt_local
+            it_main_expanded  = lt_main_expanded
+          CHANGING
+            ct_missing_remote = cs_information-missing_remote ).
       ENDIF.
     ENDLOOP.
 
-
-    INSERT `todo` INTO TABLE rs_consolidate-success.
-* todo: branches without pull requests?
+    IF lines( lt_filter ) > 0.
+      CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+      lt_local = li_repo->get_files_local_filtered( lo_filter ).
+      check_files(
+        EXPORTING
+          it_local          = lt_local
+          it_main_expanded  = lt_main_expanded
+        CHANGING
+          ct_missing_remote = cs_information-missing_remote ).
+    ENDIF.
 
   ENDMETHOD.
 
+
+  METHOD check_files.
+
+    FIELD-SYMBOLS <ls_local> LIKE LINE OF it_local.
+    FIELD-SYMBOLS <ls_expanded> LIKE LINE OF it_main_expanded.
+
+    LOOP AT it_local ASSIGNING <ls_local>.
+      READ TABLE it_main_expanded WITH KEY name = <ls_local>-file-filename ASSIGNING <ls_expanded>.
+      IF sy-subrc <> 0.
+        INSERT <ls_local>-file-filename INTO TABLE ct_missing_remote.
+* todo: not in main, but it might be in one of the branches
+      ELSEIF <ls_expanded>-path <> <ls_local>-file-path.
+* todo
+      ELSEIF <ls_expanded>-sha1 <> <ls_local>-file-sha1.
+* todo
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
 
   METHOD find_open_transports.
 
