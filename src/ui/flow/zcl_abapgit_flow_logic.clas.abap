@@ -50,6 +50,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       IMPORTING
         it_local          TYPE zif_abapgit_definitions=>ty_files_item_tt
         it_main_expanded  TYPE zif_abapgit_git_definitions=>ty_expanded_tt
+        it_features       TYPE zif_abapgit_flow_logic=>ty_features
       CHANGING
         ct_missing_remote TYPE zif_abapgit_flow_logic=>ty_consolidate-missing_remote
       RAISING
@@ -300,6 +301,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         check_files(
           EXPORTING
             it_local          = lt_local
+            it_features       = lt_features
             it_main_expanded  = lt_main_expanded
           CHANGING
             ct_missing_remote = cs_information-missing_remote ).
@@ -312,6 +314,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
       check_files(
         EXPORTING
           it_local          = lt_local
+          it_features       = lt_features
           it_main_expanded  = lt_main_expanded
         CHANGING
           ct_missing_remote = cs_information-missing_remote ).
@@ -322,20 +325,43 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
   METHOD check_files.
 
-    DATA ls_missing LIKE LINE OF ct_missing_remote.
+    DATA ls_missing      LIKE LINE OF ct_missing_remote.
+    DATA lv_found_main   TYPE abap_bool.
+    DATA ls_feature      LIKE LINE OF it_features.
+    DATA lv_found_branch TYPE abap_bool.
+
     FIELD-SYMBOLS <ls_local> LIKE LINE OF it_local.
     FIELD-SYMBOLS <ls_expanded> LIKE LINE OF it_main_expanded.
 
     LOOP AT it_local ASSIGNING <ls_local> WHERE file-filename <> zif_abapgit_definitions=>c_dot_abapgit.
       READ TABLE it_main_expanded WITH KEY name = <ls_local>-file-filename ASSIGNING <ls_expanded>.
-      IF sy-subrc <> 0.
+      lv_found_main = boolc( sy-subrc = 0 ).
+
+      lv_found_branch = abap_false.
+      LOOP AT it_features INTO ls_feature.
+        READ TABLE ls_feature-changed_files TRANSPORTING NO FIELDS
+          WITH KEY filename = <ls_local>-file-filename.
+        IF sy-subrc = 0.
+          lv_found_branch = abap_true.
+          EXIT.
+        ENDIF.
+      ENDLOOP.
+
+      IF lv_found_main = abap_false AND lv_found_branch = abap_false.
+        CLEAR ls_missing.
+        ls_missing-path = <ls_local>-file-path.
         ls_missing-filename = <ls_local>-file-filename.
+        ls_missing-local_sha1 = <ls_local>-file-sha1.
         INSERT ls_missing INTO TABLE ct_missing_remote.
-* todo: not in main, but it might be in one of the branches
-      ELSEIF <ls_expanded>-path <> <ls_local>-file-path.
+      ELSEIF lv_found_branch = abap_false AND <ls_expanded>-path <> <ls_local>-file-path.
 * todo
-      ELSEIF <ls_expanded>-sha1 <> <ls_local>-file-sha1.
-* todo
+      ELSEIF lv_found_branch = abap_false AND <ls_expanded>-sha1 <> <ls_local>-file-sha1.
+        CLEAR ls_missing.
+        ls_missing-path = <ls_local>-file-path.
+        ls_missing-filename = <ls_local>-file-filename.
+        ls_missing-local_sha1 = <ls_local>-file-sha1.
+        ls_missing-remote_sha1 = <ls_expanded>-sha1.
+        INSERT ls_missing INTO TABLE ct_missing_remote.
       ENDIF.
     ENDLOOP.
 
