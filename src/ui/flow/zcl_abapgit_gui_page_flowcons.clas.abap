@@ -95,10 +95,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
     DATA ls_consolidate TYPE zif_abapgit_flow_logic=>ty_consolidate.
     DATA lv_text        TYPE string.
     DATA lo_timer       TYPE REF TO zcl_abapgit_timer.
-    DATA ls_missing     LIKE LINE OF ls_consolidate-missing_remote.
+    DATA li_repo        TYPE REF TO zif_abapgit_repo.
 
     register_handlers( ).
 
+    li_repo ?= mo_repo.
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -122,10 +123,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_success( lv_text ) ).
     ENDLOOP.
 
-*    sdf
-    LOOP AT ls_consolidate-missing_remote INTO ls_missing.
-      ri_html->add( |<tt>{ ls_missing-filename }</tt><br>| ).
-    ENDLOOP.
+    ri_html->add( zcl_abapgit_flow_page_utils=>render_table(
+      it_files    = ls_consolidate-missing_remote
+      iv_repo_key = li_repo->get_key( ) ) ).
 
     ri_html->add( |<br><br><small>{ lo_timer->end( ) }</small><br>| ).
 
