@@ -221,7 +221,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-* todo, branches without pull requests?
+* todo: branches without pull requests?
 
 * todo
 

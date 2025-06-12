@@ -27,6 +27,11 @@ CLASS zcl_abapgit_gui_page_flowcons DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    CONSTANTS:
+      BEGIN OF c_action,
+        refresh             TYPE string VALUE 'refresh',
+      END OF c_action .
+
     DATA mo_repo TYPE REF TO zif_abapgit_repo_online.
 
 ENDCLASS.
@@ -57,14 +62,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
+
+    CASE ii_event->mv_action.
+      WHEN c_action-refresh.
+* just re-render the page to trigger a refresh
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN OTHERS.
 * the back button is handled in the default router
-    RETURN.
+        RETURN.
+    ENDCASE.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
     ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-flow' ).
+
+    ro_toolbar->add(
+      iv_txt = 'Refresh'
+      iv_act = c_action-refresh ).
 
     ro_toolbar->add(
       iv_txt = 'Back'
