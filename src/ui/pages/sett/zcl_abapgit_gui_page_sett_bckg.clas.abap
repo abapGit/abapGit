@@ -174,7 +174,7 @@ CLASS zcl_abapgit_gui_page_sett_bckg IMPLEMENTATION.
   METHOD read_persist.
 
     TRY.
-        zcl_abapgit_persist_factory=>get_background( )->get_by_key( mi_repo->get_key( ) ).
+        rs_persist = zcl_abapgit_persist_factory=>get_background( )->get_by_key( mi_repo->get_key( ) ).
       CATCH zcx_abapgit_not_found.
         CLEAR rs_persist.
     ENDTRY.
