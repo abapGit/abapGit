@@ -274,16 +274,18 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     DATA:
       ls_item       TYPE zif_abapgit_definitions=>ty_item,
       li_comparator TYPE REF TO zif_abapgit_comparator,
+      ls_overwrite  LIKE LINE OF rt_overwrite,
       lv_result     TYPE string.
 
-    FIELD-SYMBOLS:
-      <ls_result>    LIKE LINE OF it_results,
-      <ls_overwrite> LIKE LINE OF rt_overwrite.
+    FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
 
     " For optimal performance, we limit here by object type since we know that only TABL has a comparator
     " If there are other object types in the future, extend the where clause or remove the check on object type.
-    LOOP AT it_results ASSIGNING <ls_result> WHERE match IS INITIAL AND filename CP '*.xml'
-      AND obj_type = 'TABL' ##PRIMKEY[SEC_KEY].
+    LOOP AT it_results ASSIGNING <ls_result>
+      WHERE match IS INITIAL
+        AND packmove IS INITIAL
+        AND filename CP '*.xml'
+        AND obj_type = 'TABL' ##PRIMKEY[SEC_KEY].
 
       CLEAR ls_item.
       MOVE-CORRESPONDING <ls_result> TO ls_item.
@@ -300,12 +302,18 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         it_remote     = ii_repo->get_files_remote( iv_ignore_files = abap_true ) ).
 
       IF lv_result IS NOT INITIAL.
-        APPEND INITIAL LINE TO rt_overwrite ASSIGNING <ls_overwrite>.
-        MOVE-CORRESPONDING <ls_result> TO <ls_overwrite>.
-        <ls_overwrite>-devclass = <ls_result>-package.
-        <ls_overwrite>-action   = zif_abapgit_objects=>c_deserialize_action-data_loss.
-        <ls_overwrite>-icon     = icon_warning.
-        <ls_overwrite>-text     = lv_result.
+        READ TABLE rt_overwrite TRANSPORTING NO FIELDS WITH KEY object_type_and_name COMPONENTS
+          obj_type = <ls_result>-obj_type
+          obj_name = <ls_result>-obj_name.
+        IF sy-subrc <> 0.
+          CLEAR ls_overwrite.
+          MOVE-CORRESPONDING <ls_result> TO ls_overwrite.
+          ls_overwrite-devclass = <ls_result>-package.
+          ls_overwrite-action   = zif_abapgit_objects=>c_deserialize_action-data_loss.
+          ls_overwrite-icon     = icon_warning.
+          ls_overwrite-text     = lv_result.
+          INSERT ls_overwrite INTO TABLE rt_overwrite.
+        ENDIF.
       ENDIF.
 
     ENDLOOP.
