@@ -327,8 +327,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD new_offline.
 
-    DATA lx_error TYPE REF TO zcx_abapgit_exception.
-
     check_package( is_repo_params ).
 
     " create new repo and add to favorites
