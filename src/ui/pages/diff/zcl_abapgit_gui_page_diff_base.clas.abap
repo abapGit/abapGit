@@ -524,7 +524,6 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
           lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_status TYPE zif_abapgit_definitions=>ty_results_tt.
 
-    DATA li_exit TYPE REF TO zif_abapgit_exit.
 
     FIELD-SYMBOLS: <ls_status> LIKE LINE OF lt_status.
 
