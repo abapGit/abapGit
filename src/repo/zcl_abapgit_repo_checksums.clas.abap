@@ -54,11 +54,20 @@ CLASS zcl_abapgit_repo_checksums DEFINITION
       CHANGING
 *        co_string_map - return string map with meta when it is needed
         cv_cs_blob TYPE string.
+
+    METHODS get_latest_local_files
+      IMPORTING
+        it_updated_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
+      RETURNING
+        VALUE(rt_files)  TYPE zif_abapgit_definitions=>ty_files_item_tt
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
+CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
 
 
   METHOD add_meta.
@@ -130,6 +139,45 @@ CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
     " for migration only for the moment
 
     save_checksums( it_checksums ).
+
+  ENDMETHOD.
+
+
+  METHOD get_latest_local_files.
+
+    DATA:
+      lv_package TYPE devclass,
+      lo_dot     TYPE REF TO zcl_abapgit_dot_abapgit,
+      ls_item    TYPE zif_abapgit_definitions=>ty_item,
+      lo_filter  TYPE REF TO lcl_filter,
+      lt_filter  TYPE zif_abapgit_definitions=>ty_tadir_tt.
+
+    FIELD-SYMBOLS:
+      <ls_file>   LIKE LINE OF it_updated_files,
+      <ls_filter> LIKE LINE OF lt_filter.
+
+    lo_dot     = mi_repo->get_dot_abapgit( ).
+    lv_package = mi_repo->get_package( ).
+
+    LOOP AT it_updated_files ASSIGNING <ls_file>.
+
+      zcl_abapgit_filename_logic=>file_to_object(
+        EXPORTING
+          iv_filename = <ls_file>-filename
+          iv_path     = <ls_file>-path
+          io_dot      = lo_dot
+          iv_devclass = lv_package
+        IMPORTING
+          es_item     = ls_item ).
+
+      APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
+      <ls_filter>-object   = ls_item-obj_type.
+      <ls_filter>-obj_name = ls_item-obj_name.
+    ENDLOOP.
+
+    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+
+    rt_files = mi_repo->get_files_local_filtered( lo_filter ).
 
   ENDMETHOD.
 
@@ -210,7 +258,10 @@ CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
     DATA lt_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt.
 
     lt_checksums   = zif_abapgit_repo_checksums~get( ).
-    lt_local_files = mi_repo->get_files_local( ).
+
+    " Checksum update does not need full repo serialized
+    " Getting the latest files of objects that changed is sufficient
+    lt_local_files = get_latest_local_files( it_updated_files ).
 
     lt_checksums = lcl_update_calculator=>calculate_updated(
       it_current_checksums = lt_checksums
