@@ -327,8 +327,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD new_offline.
 
-    DATA lx_error TYPE REF TO zcx_abapgit_exception.
-
     check_package( is_repo_params ).
 
     " create new repo and add to favorites
@@ -340,16 +338,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       iv_ign_subpkg     = is_repo_params-ignore_subpackages
       iv_main_lang_only = is_repo_params-main_lang_only
       iv_abap_lang_vers = is_repo_params-abap_lang_vers ).
-
-    TRY.
-        check_package_exists(
-          iv_package = is_repo_params-package
-          it_remote  = ri_repo->get_files_remote( ) ).
-      CATCH zcx_abapgit_exception INTO lx_error.
-        zcl_abapgit_repo_srv=>get_instance( )->delete( ri_repo ).
-        COMMIT WORK.
-        RAISE EXCEPTION lx_error.
-    ENDTRY.
 
     " Make sure there're no leftovers from previous repos
     ri_repo->checksums( )->rebuild( ).
