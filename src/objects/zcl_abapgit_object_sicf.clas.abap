@@ -631,7 +631,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
     FIELD-SYMBOLS <ls_tadir> LIKE LINE OF lt_tadir.
 
     lv_obj_name = to_upper( iv_filename(15) ) && '%'.
-    lv_hash     = iv_filename+15(25).
+    lv_hash     = to_lower( iv_filename+15(25) ). " get_hash_from_object also returns lowercased
 
     SELECT * FROM tadir INTO CORRESPONDING FIELDS OF TABLE lt_tadir
       WHERE pgmid = 'R3TR'
