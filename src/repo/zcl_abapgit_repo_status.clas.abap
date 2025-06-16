@@ -29,7 +29,7 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
     DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
     DATA lt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt.
     DATA li_exit TYPE REF TO zif_abapgit_exit.
-    data li_instance TYPE REF TO zif_abapgit_status_calc.
+    DATA li_instance TYPE REF TO zif_abapgit_status_calc.
     DATA lo_consistency_checks TYPE REF TO lcl_status_consistency_checks.
 
     IF ii_obj_filter IS INITIAL.
