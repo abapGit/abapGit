@@ -822,7 +822,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA lv_index      TYPE i.
     DATA ls_next       LIKE LINE OF lt_transports.
     DATA ls_transport  LIKE LINE OF lt_transports.
-    sdf
+
     lt_transports = it_transports.
     SORT lt_transports BY object obj_name trkorr.
 
