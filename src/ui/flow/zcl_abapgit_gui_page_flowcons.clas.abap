@@ -117,7 +117,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
 
     ls_comment-committer-name  = 'consolidate'.
     ls_comment-committer-email = 'consolidate@localhost'.
-    ls_comment-comment         = 'consolidate'.
+    ls_comment-comment         = |Consolidate { sy-datum } { sy-uzeit }|.
 
     INSERT ls_main_branch-sha1 INTO TABLE lt_sha1.
     lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_no_blobs_multi(
