@@ -578,6 +578,12 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         it_features            = lt_features
         it_all_transports      = lt_all_transports ).
 
+      warnings_from_transports(
+        EXPORTING
+          it_transports = lt_all_transports
+        CHANGING
+          ct_warnings   = rs_information-warnings ).
+
       try_matching_transports(
         EXPORTING
           ii_repo          = li_repo_online
@@ -586,12 +592,6 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         CHANGING
           ct_transports    = lt_all_transports
           ct_features      = lt_features ).
-
-      warnings_from_transports(
-        EXPORTING
-          it_transports = lt_all_transports
-        CHANGING
-          ct_warnings   = rs_information-warnings ).
 
       find_prs(
         EXPORTING
@@ -822,7 +822,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA lv_index      TYPE i.
     DATA ls_next       LIKE LINE OF lt_transports.
     DATA ls_transport  LIKE LINE OF lt_transports.
-
+    sdf
     lt_transports = it_transports.
     SORT lt_transports BY object obj_name trkorr.
 
