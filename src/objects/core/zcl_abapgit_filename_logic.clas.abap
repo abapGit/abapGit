@@ -144,7 +144,9 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
       lv_ext  TYPE string.
 
     " Guess object type and name
-    SPLIT to_upper( iv_filename ) AT '.' INTO lv_name lv_type lv_ext.
+    SPLIT iv_filename AT '.' INTO lv_name lv_type lv_ext.
+    lv_type = to_upper( lv_type ).
+    lv_ext  = to_upper( lv_ext ).
 
     " Handle namespaces
     REPLACE ALL OCCURRENCES OF '#' IN lv_name WITH '/'.
@@ -166,12 +168,12 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
 
     CLEAR es_item.
     es_item-obj_type = lv_type.
-    es_item-obj_name = lv_name.
+    es_item-obj_name = to_upper( lv_name ).
 
     " Get mapping specific to object type
     map_filename_to_object(
       EXPORTING
-        iv_filename = to_lower( lv_name ) " object name part only
+        iv_filename = lv_name " original-cased object name part only
         iv_path     = iv_path
         io_dot      = io_dot
         iv_package  = iv_devclass
