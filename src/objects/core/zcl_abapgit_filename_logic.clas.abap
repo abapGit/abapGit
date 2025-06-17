@@ -93,7 +93,7 @@ CLASS zcl_abapgit_filename_logic DEFINITION
 
     CLASS-METHODS map_filename_to_object
       IMPORTING
-        !iv_filename TYPE string
+        !iv_item_part_of_filename TYPE string
         !iv_path     TYPE string
         !iv_package  TYPE devclass
         !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
@@ -108,7 +108,7 @@ CLASS zcl_abapgit_filename_logic DEFINITION
         !iv_ext     TYPE string
         !iv_extra   TYPE clike
       CHANGING
-        cv_filename TYPE string
+        cv_item_part_of_filename TYPE string
       RAISING
         zcx_abapgit_exception.
 
@@ -173,7 +173,7 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
     " Get mapping specific to object type
     map_filename_to_object(
       EXPORTING
-        iv_filename = lv_name " original-cased object name part only
+        iv_item_part_of_filename = lv_name " original-cased object name part only
         iv_path     = iv_path
         io_dot      = io_dot
         iv_package  = iv_devclass
@@ -289,7 +289,7 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
 
         CALL METHOD (lv_class)=>('ZIF_ABAPGIT_OBJECT~MAP_FILENAME_TO_OBJECT')
           EXPORTING
-            iv_filename = iv_filename
+            iv_filename = iv_item_part_of_filename
             iv_path     = iv_path
             io_dot      = io_dot
             iv_package  = iv_package
@@ -327,7 +327,7 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
             iv_ext      = iv_ext
             iv_extra    = iv_extra
           CHANGING
-            cv_filename = cv_filename.
+            cv_filename = cv_item_part_of_filename.
       CATCH cx_sy_dyn_call_illegal_class ##NO_HANDLER.
     ENDTRY.
 
@@ -377,7 +377,7 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
             iv_ext      = iv_ext
             iv_extra    = iv_extra
           CHANGING
-            cv_filename = rv_filename ). " just the object name, not the full name with all the prefixes.
+            cv_item_part_of_filename = rv_filename ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
 
