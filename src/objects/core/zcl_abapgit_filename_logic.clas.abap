@@ -94,19 +94,19 @@ CLASS zcl_abapgit_filename_logic DEFINITION
     CLASS-METHODS map_filename_to_object
       IMPORTING
         !iv_item_part_of_filename TYPE string
-        !iv_path     TYPE string
-        !iv_package  TYPE devclass
-        !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
+        !iv_path                  TYPE string
+        !iv_package               TYPE devclass
+        !io_dot                   TYPE REF TO zcl_abapgit_dot_abapgit
       CHANGING
-        cs_item      TYPE zif_abapgit_definitions=>ty_item
+        cs_item                   TYPE zif_abapgit_definitions=>ty_item
       RAISING
         zcx_abapgit_exception.
 
     CLASS-METHODS map_object_to_filename
       IMPORTING
-        !is_item    TYPE zif_abapgit_definitions=>ty_item
-        !iv_ext     TYPE string
-        !iv_extra   TYPE clike
+        !is_item                 TYPE zif_abapgit_definitions=>ty_item
+        !iv_ext                  TYPE string
+        !iv_extra                TYPE clike
       CHANGING
         cv_item_part_of_filename TYPE string
       RAISING
