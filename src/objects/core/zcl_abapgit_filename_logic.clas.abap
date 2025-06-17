@@ -289,7 +289,7 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
 
         CALL METHOD (lv_class)=>('ZIF_ABAPGIT_OBJECT~MAP_FILENAME_TO_OBJECT')
           EXPORTING
-            iv_filename = iv_item_part_of_filename
+            iv_item_part_of_filename = iv_item_part_of_filename
             iv_path     = iv_path
             io_dot      = io_dot
             iv_package  = iv_package
@@ -327,7 +327,7 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
             iv_ext      = iv_ext
             iv_extra    = iv_extra
           CHANGING
-            cv_filename = cv_item_part_of_filename.
+            cv_item_part_of_filename = cv_item_part_of_filename.
       CATCH cx_sy_dyn_call_illegal_class ##NO_HANDLER.
     ENDTRY.
 

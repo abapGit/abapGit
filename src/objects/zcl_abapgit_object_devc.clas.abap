@@ -794,7 +794,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
   METHOD zif_abapgit_object~map_filename_to_object.
 
-    IF iv_filename <> zcl_abapgit_filename_logic=>c_package_file-obj_name.
+    IF iv_item_part_of_filename <> zcl_abapgit_filename_logic=>c_package_file-obj_name.
       zcx_abapgit_exception=>raise( |Unexpected filename for package { cs_item-obj_name }| ).
     ENDIF.
 
@@ -812,7 +812,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
     " Packages have a fixed filename so that the repository can be installed to a different
     " package(-hierarchy) on the client and not show up as a different package in the repo.
-    cv_filename = zcl_abapgit_filename_logic=>c_package_file-obj_name.
+    cv_item_part_of_filename = zcl_abapgit_filename_logic=>c_package_file-obj_name.
     " use just obj_name ("package") so that e.g. translation files also have this first part
     " yet be able to modify the extension e.g. package.i18n.de.po
 
