@@ -93,22 +93,22 @@ CLASS zcl_abapgit_filename_logic DEFINITION
 
     CLASS-METHODS map_filename_to_object
       IMPORTING
-        !iv_filename TYPE string
-        !iv_path     TYPE string
-        !iv_package  TYPE devclass
-        !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
+        !iv_item_part_of_filename TYPE string
+        !iv_path                  TYPE string
+        !iv_package               TYPE devclass
+        !io_dot                   TYPE REF TO zcl_abapgit_dot_abapgit
       CHANGING
-        cs_item      TYPE zif_abapgit_definitions=>ty_item
+        cs_item                   TYPE zif_abapgit_definitions=>ty_item
       RAISING
         zcx_abapgit_exception.
 
     CLASS-METHODS map_object_to_filename
       IMPORTING
-        !is_item    TYPE zif_abapgit_definitions=>ty_item
-        !iv_ext     TYPE string
-        !iv_extra   TYPE clike
+        !is_item                 TYPE zif_abapgit_definitions=>ty_item
+        !iv_ext                  TYPE string
+        !iv_extra                TYPE clike
       CHANGING
-        cv_filename TYPE string
+        cv_item_part_of_filename TYPE string
       RAISING
         zcx_abapgit_exception.
 
@@ -144,7 +144,9 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
       lv_ext  TYPE string.
 
     " Guess object type and name
-    SPLIT to_upper( iv_filename ) AT '.' INTO lv_name lv_type lv_ext.
+    SPLIT iv_filename AT '.' INTO lv_name lv_type lv_ext.
+    lv_type = to_upper( lv_type ).
+    lv_ext  = to_upper( lv_ext ).
 
     " Handle namespaces
     REPLACE ALL OCCURRENCES OF '#' IN lv_name WITH '/'.
@@ -166,12 +168,12 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
 
     CLEAR es_item.
     es_item-obj_type = lv_type.
-    es_item-obj_name = lv_name.
+    es_item-obj_name = to_upper( lv_name ).
 
     " Get mapping specific to object type
     map_filename_to_object(
       EXPORTING
-        iv_filename = iv_filename
+        iv_item_part_of_filename = lv_name " original-cased object name part only
         iv_path     = iv_path
         io_dot      = io_dot
         iv_package  = iv_devclass
@@ -287,7 +289,7 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
 
         CALL METHOD (lv_class)=>('ZIF_ABAPGIT_OBJECT~MAP_FILENAME_TO_OBJECT')
           EXPORTING
-            iv_filename = iv_filename
+            iv_item_part_of_filename = iv_item_part_of_filename
             iv_path     = iv_path
             io_dot      = io_dot
             iv_package  = iv_package
@@ -325,7 +327,7 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
             iv_ext      = iv_ext
             iv_extra    = iv_extra
           CHANGING
-            cv_filename = cv_filename.
+            cv_item_part_of_filename = cv_item_part_of_filename.
       CATCH cx_sy_dyn_call_illegal_class ##NO_HANDLER.
     ENDTRY.
 
@@ -375,7 +377,7 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
             iv_ext      = iv_ext
             iv_extra    = iv_extra
           CHANGING
-            cv_filename = rv_filename ). " just the object name, not the full name with all the prefixes.
+            cv_item_part_of_filename = rv_filename ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
 
