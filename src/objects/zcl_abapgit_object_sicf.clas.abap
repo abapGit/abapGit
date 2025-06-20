@@ -630,8 +630,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_tadir> LIKE LINE OF lt_tadir.
 
-    lv_obj_name = to_upper( iv_filename(15) ) && '%'.
-    lv_hash     = iv_filename+15(25).
+    lv_obj_name = to_upper( iv_item_part_of_filename(15) ) && '%'.
+    lv_hash     = iv_item_part_of_filename+15(25).
 
     SELECT * FROM tadir INTO CORRESPONDING FIELDS OF TABLE lt_tadir
       WHERE pgmid = 'R3TR'
@@ -651,7 +651,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
 
   METHOD zif_abapgit_object~map_object_to_filename.
 
-    cv_filename = |{ cv_filename(15) }{ get_hash_from_object( is_item-obj_name ) }|.
+    cv_item_part_of_filename = |{ cv_item_part_of_filename(15) }{ get_hash_from_object( is_item-obj_name ) }|.
 
   ENDMETHOD.
 
