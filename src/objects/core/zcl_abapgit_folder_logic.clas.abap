@@ -78,6 +78,11 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       WITH TABLE KEY devclass = iv_package.
     IF sy-subrc <> 0.
       rv_parent = zcl_abapgit_factory=>get_sap_package( iv_package )->read_parent( ).
+
+*      IF rv_parent IS INITIAL.
+*        rv_parent = iv_top.
+*      ENDIF.
+
       ls_parent-devclass = iv_package.
       ls_parent-parentcl = rv_parent.
       INSERT ls_parent INTO TABLE mt_parent.
@@ -112,7 +117,17 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
 
       " If the parent package can not be determined, we return an initial path and handle
       " it outside of this class (in zcl_abapgit_file_status)
-      IF lv_parentcl IS NOT INITIAL.
+      IF lv_parentcl IS INITIAL AND iv_top = '$GET-ALL-Z'.
+        "Slot it under the repo package
+        lv_path = iv_package.
+        TRANSLATE lv_path USING '/#'.
+        TRANSLATE lv_path TO LOWER CASE.
+        CONCATENATE lv_path '/' INTO lv_path.
+
+        rv_path = io_dot->get_starting_folder( ).
+        CONCATENATE rv_path lv_path INTO rv_path.
+
+      ELSEIF lv_parentcl IS NOT INITIAL.
         lv_folder_logic = io_dot->get_folder_logic( ).
         CASE lv_folder_logic.
           WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.

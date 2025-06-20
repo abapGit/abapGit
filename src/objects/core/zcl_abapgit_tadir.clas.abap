@@ -204,6 +204,8 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
+    rt_tadir = it_tadir.
+    RETURN.
 
     li_progress = zcl_abapgit_progress=>get_instance( lines( it_tadir ) ).
 
