@@ -8,7 +8,7 @@ Legend
 + : added
 - : removed
 
-2025-06-13 v1.132.0
+2025-06-20 v1.132.0
 -------------------
 
 + Enable ABAP Language Version support for DDLS (#7134)
@@ -76,6 +76,11 @@ Legend
 * Fix maintaining background settings (#7290)
 * zlib/deflate optimization (#7291)
 * Fix dump in data loss check (#7289)
+* Remove duplicate exit call from diff page (#7296)
+* Remove package check when creating offline repo (#7297)
+* Reduce runtime for single file or object diff (#7299)
+* Reduce runtime of checksum update (#7298)
+* Fix file_to_object to use filename part only (#7294)
 
 2025-01-01 v1.131.0
 -------------------
