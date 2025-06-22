@@ -35,6 +35,7 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
         main_language    TYPE string VALUE 'main_language',
         i18n_langs       TYPE string VALUE 'i18n_langs',
         use_lxe          TYPE string VALUE 'use_lxe',
+        master_lang_only_objs TYPE string VALUE 'master_lang_only_objs',
         starting_folder  TYPE string VALUE 'starting_folder',
         folder_logic     TYPE string VALUE 'folder_logic',
         ignore           TYPE string VALUE 'ignore',
@@ -86,7 +87,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -160,6 +161,13 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_name        = c_id-use_lxe
       iv_label       = 'Use LXE Approach for Translations'
       iv_hint        = 'It''s mandatory to specify the list of languages above in addition to this setting'
+    )->textarea(
+      iv_name        = c_id-master_lang_only_objs
+      iv_label       = 'Keep these objects in master language only (no translation)'
+      iv_hint        = |List of patterns to exclude from translation, can be:|
+                    && | `object.obj_type` (e.g. zcl_xy.clas) - for specific object;|
+                    && | `*.obj_type` (e.g. *.devc) - for all objects of specific type;|
+                    && | `pkg/*` (e.g. sub1/sub2/*) - for all objects in specific package (uses prefix logic)|
     )->start_group(
       iv_name        = c_id-file_system
       iv_label       = 'Files'
@@ -275,6 +283,11 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_key = c_id-use_lxe
       iv_val = boolc( lo_dot->use_lxe( ) = abap_true ) ) ##TYPE.
     ro_form_data->set(
+      iv_key = c_id-master_lang_only_objs
+      iv_val = concat_lines_of(
+        table = lo_dot->get_master_lang_only_objects( )
+        sep   = cl_abap_char_utilities=>newline ) ).
+    ro_form_data->set(
       iv_key = c_id-folder_logic
       iv_val = ls_dot-folder_logic ).
     ro_form_data->set(
@@ -352,6 +365,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       lo_dot          TYPE REF TO zcl_abapgit_dot_abapgit,
       lv_ignore       TYPE string,
       lt_ignore       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+      lt_mlang_objs   TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
       ls_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
 
@@ -372,6 +386,10 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
         iv_langs              = mo_form_data->get( c_id-i18n_langs )
         iv_skip_main_language = lo_dot->get_main_language( ) ) ).
     lo_dot->use_lxe( boolc( mo_form_data->get( c_id-use_lxe ) = abap_true ) ).
+
+    lt_mlang_objs = zcl_abapgit_i18n_params=>normalize_obj_patterns(
+      zcl_abapgit_convert=>split_string( mo_form_data->get( c_id-master_lang_only_objs ) ) ).
+    lo_dot->set_master_lang_only_objects( lt_mlang_objs ).
 
     " Remove all ignores
     lt_ignore = lo_dot->get_data( )-ignore.
@@ -485,6 +503,15 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
         iv_key = c_id-i18n_langs
         iv_val = 'LXE approach requires a non-empty list of languages' ).
     ENDIF.
+
+    TRY.
+        zcl_abapgit_i18n_params=>normalize_obj_patterns(
+          zcl_abapgit_convert=>split_string( mo_form_data->get( c_id-master_lang_only_objs ) ) ).
+      CATCH zcx_abapgit_exception INTO lx_exception.
+        ro_validation_log->set(
+          iv_key = c_id-master_lang_only_objs
+          iv_val = lx_exception->get_text( ) ).
+    ENDTRY.
 
     lv_original_system = io_form_data->get( c_id-original_system ).
     IF lv_original_system CN lc_allowed.

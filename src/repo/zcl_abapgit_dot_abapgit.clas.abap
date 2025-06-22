@@ -116,6 +116,12 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS set_original_system
       IMPORTING
         !iv_original_system TYPE csequence .
+    METHODS get_master_lang_only_objects
+      RETURNING
+        VALUE(rt_list) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit-master_lang_only_objs.
+    METHODS set_master_lang_only_objects
+      IMPORTING
+        !it_list TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit-master_lang_only_objs.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -138,7 +144,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
 
   METHOD add_ignore.
@@ -258,6 +264,11 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_master_lang_only_objects.
+    rt_list = ms_data-master_lang_only_objs.
+  ENDMETHOD.
+
+
   METHOD get_name.
     rv_name = ms_data-name.
   ENDMETHOD.
@@ -369,6 +380,11 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
   METHOD set_i18n_languages.
     ms_data-i18n_languages = it_languages.
+  ENDMETHOD.
+
+
+  METHOD set_master_lang_only_objects.
+    ms_data-master_lang_only_objs = it_list.
   ENDMETHOD.
 
 

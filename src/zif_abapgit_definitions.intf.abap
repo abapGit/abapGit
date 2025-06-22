@@ -389,6 +389,7 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_i18n_params,
       main_language         TYPE sy-langu,
       main_language_only    TYPE abap_bool,
+      main_lang_only_objs   TYPE string_table,
       translation_languages TYPE ty_languages,
       use_lxe               TYPE abap_bool,
       suppress_po_comments  TYPE abap_bool,

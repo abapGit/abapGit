@@ -8,6 +8,7 @@ CLASS ltcl_i18n_params_test DEFINITION FINAL
     METHODS iso_langs_to_lang_filter FOR TESTING.
     METHODS filter_sap_langs FOR TESTING RAISING zcx_abapgit_exception.
     METHODS filter_sap_langs_tab FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS normalize_obj_patterns FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -168,6 +169,61 @@ CLASS ltcl_i18n_params_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lt_act
       exp = lt_exp ).
+
+  ENDMETHOD.
+
+  METHOD normalize_obj_patterns.
+
+    DATA lt_patterns TYPE string_table.
+    DATA lv_pattern TYPE string.
+
+    APPEND '  zcl_XY.clas' TO lt_patterns.
+    lt_patterns = zcl_abapgit_i18n_params=>normalize_obj_patterns( lt_patterns ).
+    READ TABLE lt_patterns INDEX 1 INTO lv_pattern.
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_pattern
+      exp = 'zcl_xy.clas' ).
+
+    APPEND '*.devc' TO lt_patterns.
+    zcl_abapgit_i18n_params=>normalize_obj_patterns( lt_patterns ).
+
+    APPEND 'pkg/*' TO lt_patterns.
+    zcl_abapgit_i18n_params=>normalize_obj_patterns( lt_patterns ).
+
+    APPEND 'pkg/sub/*' TO lt_patterns.
+    zcl_abapgit_i18n_params=>normalize_obj_patterns( lt_patterns ).
+
+    TRY.
+        CLEAR lt_patterns.
+        APPEND 'pkg/sub/ooo' TO lt_patterns.
+        zcl_abapgit_i18n_params=>normalize_obj_patterns( lt_patterns ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        CLEAR lt_patterns.
+        APPEND 'obj.badtype' TO lt_patterns.
+        zcl_abapgit_i18n_params=>normalize_obj_patterns( lt_patterns ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        CLEAR lt_patterns.
+        APPEND '/stuff' TO lt_patterns.
+        zcl_abapgit_i18n_params=>normalize_obj_patterns( lt_patterns ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        CLEAR lt_patterns.
+        APPEND '*.*' TO lt_patterns.
+        zcl_abapgit_i18n_params=>normalize_obj_patterns( lt_patterns ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
 
   ENDMETHOD.
 
