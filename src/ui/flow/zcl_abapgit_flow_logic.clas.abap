@@ -822,6 +822,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA lv_index      TYPE i.
     DATA ls_next       LIKE LINE OF lt_transports.
     DATA ls_transport  LIKE LINE OF lt_transports.
+    DATA ls_duplicate  LIKE LINE OF cs_information-transport_duplicates.
 
     lt_transports = it_transports.
     SORT lt_transports BY object obj_name trkorr.
@@ -839,6 +840,11 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         lv_message = |Object <tt>{ ls_transport-object }</tt> <tt>{ ls_transport-obj_name
           }</tt> is in multiple transports: <tt>{ ls_transport-trkorr }</tt> and <tt>{ ls_next-trkorr }</tt>|.
         INSERT lv_message INTO TABLE cs_information-errors.
+
+        CLEAR ls_duplicate.
+        ls_duplicate-obj_type = ls_transport-object.
+        ls_duplicate-obj_name = ls_transport-obj_name.
+        INSERT ls_duplicate INTO TABLE cs_information-transport_duplicates.
       ENDIF.
     ENDLOOP.
 
