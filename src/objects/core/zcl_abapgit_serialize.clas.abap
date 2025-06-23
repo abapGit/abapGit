@@ -274,7 +274,8 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     IF io_dot_abapgit IS BOUND.
       ms_i18n_params = io_dot_abapgit->determine_i18n_parameters( is_local_settings-main_language_only ).
-      mt_wo_translation_patterns = zcl_abapgit_i18n_params=>normalize_obj_patterns( io_dot_abapgit->get_objs_without_translation( ) ).
+      mt_wo_translation_patterns =
+        zcl_abapgit_i18n_params=>normalize_obj_patterns( io_dot_abapgit->get_objs_without_translation( ) ).
     ELSE.
       ms_i18n_params-main_language      = sy-langu.
       ms_i18n_params-main_language_only = is_local_settings-main_language_only.
