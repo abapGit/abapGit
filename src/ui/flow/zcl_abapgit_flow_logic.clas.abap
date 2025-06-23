@@ -73,11 +73,11 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
-    CLASS-METHODS warnings_from_transports
+    CLASS-METHODS errors_from_transports
       IMPORTING
-        it_transports TYPE ty_transports_tt
+        it_transports  TYPE ty_transports_tt
       CHANGING
-        ct_warnings   TYPE string_table.
+        cs_information TYPE zif_abapgit_flow_logic=>ty_information.
 
     CLASS-METHODS add_objects_and_files_from_tr
       IMPORTING
@@ -543,11 +543,11 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
     lt_all_transports = find_open_transports( ).
 
-    warnings_from_transports(
+    errors_from_transports(
       EXPORTING
-        it_transports = lt_all_transports
+        it_transports  = lt_all_transports
       CHANGING
-        ct_warnings   = rs_information-warnings ).
+        cs_information = rs_information ).
 
 * list branches on favorite + flow enabled + transported repos
     lt_repos = list_repos( ).
@@ -815,9 +815,9 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD warnings_from_transports.
+  METHOD errors_from_transports.
 
-    DATA lv_warning    TYPE string.
+    DATA lv_message    TYPE string.
     DATA lt_transports LIKE it_transports.
     DATA lv_index      TYPE i.
     DATA ls_next       LIKE LINE OF lt_transports.
@@ -836,9 +836,9 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
       IF ls_next-object = ls_transport-object
           AND ls_next-trkorr <> ls_transport-trkorr
           AND ls_next-obj_name = ls_transport-obj_name.
-        lv_warning = |Object <tt>{ ls_transport-object }</tt> <tt>{ ls_transport-obj_name
+        lv_message = |Object <tt>{ ls_transport-object }</tt> <tt>{ ls_transport-obj_name
           }</tt> is in multiple transports: <tt>{ ls_transport-trkorr }</tt> and <tt>{ ls_next-trkorr }</tt>|.
-        INSERT lv_warning INTO TABLE ct_warnings.
+        INSERT lv_message INTO TABLE cs_information-errors.
       ENDIF.
     ENDLOOP.
 

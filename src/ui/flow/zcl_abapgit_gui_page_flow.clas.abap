@@ -397,14 +397,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA ls_feature LIKE LINE OF ms_information-features.
-    DATA lv_index TYPE i.
-    DATA lv_rendered TYPE abap_bool.
-    DATA lo_timer TYPE REF TO zcl_abapgit_timer.
+    DATA ls_feature       LIKE LINE OF ms_information-features.
+    DATA lv_index         TYPE i.
+    DATA lv_rendered      TYPE abap_bool.
+    DATA lo_timer         TYPE REF TO zcl_abapgit_timer.
     DATA lt_my_transports TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
-    DATA lv_warning LIKE LINE OF ms_information-warnings.
-    DATA lt_user TYPE zif_abapgit_cts_api=>ty_user_range.
-    DATA ls_user LIKE LINE OF lt_user.
+    DATA lv_message       LIKE LINE OF ms_information-errors.
+    DATA lt_user          TYPE zif_abapgit_cts_api=>ty_user_range.
+    DATA ls_user          LIKE LINE OF lt_user.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -422,9 +422,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ri_html->add( '<br>' ).
     ri_html->add( '<br>' ).
 
-    IF lines( ms_information-warnings ) > 0.
-      LOOP AT ms_information-warnings INTO lv_warning.
-        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner( lv_warning ) ).
+    IF lines( ms_information-errors ) > 0.
+      LOOP AT ms_information-errors INTO lv_message.
+        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( iv_error = lv_message ) ).
       ENDLOOP.
       ri_html->add( '<br>' ).
     ENDIF.
