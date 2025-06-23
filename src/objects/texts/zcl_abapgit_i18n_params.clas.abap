@@ -46,7 +46,7 @@ CLASS zcl_abapgit_i18n_params DEFINITION
 
     CLASS-METHODS normalize_obj_patterns
       IMPORTING
-        it_wo_translation_patterns TYPE string_table
+        it_wo_translation_patterns     TYPE string_table
       RETURNING
         VALUE(rt_wo_translation_clean) TYPE string_table
       RAISING
@@ -55,9 +55,9 @@ CLASS zcl_abapgit_i18n_params DEFINITION
     CLASS-METHODS match_obj_patterns
       IMPORTING
         it_wo_translation_patterns TYPE string_table
-        is_tadir TYPE zif_abapgit_definitions=>ty_tadir
+        is_tadir                   TYPE zif_abapgit_definitions=>ty_tadir
       RETURNING
-        VALUE(rv_yes) TYPE abap_bool
+        VALUE(rv_yes)              TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
 
