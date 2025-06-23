@@ -75,7 +75,12 @@ CLASS zcl_abapgit_flow_page_utils IMPLEMENTATION.
 
       ri_html->add( |<tr><td><tt>{ ls_path_name-path }{ ls_path_name-filename }</tt></td><td>{
         ls_path_name-remote_sha1(7) }</td><td>{
-        ls_path_name-local_sha1(7) }</td><td>{ lv_status }</td><td>{ lv_duplicate }</td></tr>| ).
+        ls_path_name-local_sha1(7) }</td><td>{ lv_status }</td><td>| ).
+      IF lv_duplicate = abap_true.
+        ri_html->add_icon( iv_name = 'exclamation-triangle'
+                           iv_hint = 'In duplicate transports' ).
+      ENDIF.
+      ri_html->add( |</td></tr>| ).
     ENDLOOP.
     ri_html->add( |</table>| ).
 
