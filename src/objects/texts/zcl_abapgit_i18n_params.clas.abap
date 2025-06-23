@@ -11,24 +11,18 @@ CLASS zcl_abapgit_i18n_params DEFINITION
       IMPORTING
         !iv_main_language      TYPE spras DEFAULT zif_abapgit_definitions=>c_english
         !iv_main_language_only TYPE abap_bool DEFAULT abap_false
-        !it_main_lang_only_objs TYPE string_table OPTIONAL
         !it_translation_langs  TYPE zif_abapgit_definitions=>ty_languages OPTIONAL
         !iv_use_lxe            TYPE abap_bool DEFAULT abap_false
         !is_params             TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL
       RETURNING
-        VALUE(ro_instance)     TYPE REF TO zcl_abapgit_i18n_params
-      RAISING
-        zcx_abapgit_exception.
+        VALUE(ro_instance)     TYPE REF TO zcl_abapgit_i18n_params.
     METHODS constructor
       IMPORTING
         !iv_main_language      TYPE spras DEFAULT zif_abapgit_definitions=>c_english
         !iv_main_language_only TYPE abap_bool DEFAULT abap_false
-        !it_main_lang_only_objs TYPE string_table OPTIONAL
         !it_translation_langs  TYPE zif_abapgit_definitions=>ty_languages OPTIONAL
         !iv_use_lxe            TYPE abap_bool DEFAULT abap_false
-        !is_params             TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL
-      RAISING
-        zcx_abapgit_exception.
+        !is_params             TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL.
 
     METHODS is_lxe_applicable
       RETURNING
@@ -52,9 +46,18 @@ CLASS zcl_abapgit_i18n_params DEFINITION
 
     CLASS-METHODS normalize_obj_patterns
       IMPORTING
-        it_main_lang_only_objs TYPE string_table
+        it_wo_translation_patterns TYPE string_table
       RETURNING
-        VALUE(rt_main_lang_only_objs_clean) TYPE string_table
+        VALUE(rt_wo_translation_clean) TYPE string_table
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS match_obj_patterns
+      IMPORTING
+        it_wo_translation_patterns TYPE string_table
+        is_tadir TYPE zif_abapgit_definitions=>ty_tadir
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
 
@@ -94,11 +97,9 @@ CLASS ZCL_ABAPGIT_I18N_PARAMS IMPLEMENTATION.
     ELSE.
       ms_params-main_language         = iv_main_language.
       ms_params-main_language_only    = iv_main_language_only.
-      ms_params-main_lang_only_objs   = it_main_lang_only_objs.
       ms_params-translation_languages = it_translation_langs.
       ms_params-use_lxe               = iv_use_lxe.
     ENDIF.
-    normalize_obj_patterns( it_main_lang_only_objs ).
     ASSERT ms_params-main_language IS NOT INITIAL.
   ENDMETHOD.
 
@@ -143,12 +144,37 @@ CLASS ZCL_ABAPGIT_I18N_PARAMS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD match_obj_patterns.
+
+    DATA lv_pattern TYPE string.
+    DATA lv_path TYPE string.
+
+    LOOP AT it_wo_translation_patterns INTO lv_pattern.
+      CHECK lv_pattern IS NOT INITIAL.
+      IF NOT lv_pattern+0(1) CA '*/'.
+        " The idea is to simplify entering package paths e.g. subpkg/* instead of /src/subpkg/* or */subpkg/*
+        " or object names: zcl.clas instead of */zcl.clas
+        " But maybe it is a bad idea ... to see on practice
+        lv_pattern = `*/` && lv_pattern.
+      ENDIF.
+
+      " Compose simplified file path
+      lv_path = is_tadir-path && to_lower( is_tadir-obj_name ) && `.` && to_lower( is_tadir-object ).
+
+      IF lv_path CP lv_pattern.
+        rv_yes = abap_true.
+        EXIT.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD new.
     CREATE OBJECT ro_instance
       EXPORTING
         iv_main_language      = iv_main_language
         iv_main_language_only = iv_main_language_only
-        it_main_lang_only_objs = it_main_lang_only_objs
         it_translation_langs  = it_translation_langs
         iv_use_lxe            = iv_use_lxe
         is_params             = is_params.
@@ -159,25 +185,12 @@ CLASS ZCL_ABAPGIT_I18N_PARAMS IMPLEMENTATION.
 
     DATA lv_pattern TYPE string.
 
-    LOOP AT it_main_lang_only_objs INTO lv_pattern.
+    LOOP AT it_wo_translation_patterns INTO lv_pattern.
       CONDENSE lv_pattern.
       CHECK lv_pattern IS NOT INITIAL.
       lv_pattern = to_lower( lv_pattern ).
-
-      IF NOT (
-          find( " object.type
-            val   = lv_pattern
-            regex = '^\w+\.\w{4}$' ) = 0 OR
-          find( " *.type
-            val   = lv_pattern
-            regex = '^\*\.\w{4}$' ) = 0 OR
-          find( " pkg/*
-            val   = lv_pattern
-            regex = '^(\w+\/)+\*$' ) = 0 ).
-        zcx_abapgit_exception=>raise( |Incorrect object pattern: { lv_pattern }| ).
-      ENDIF.
-
-      APPEND lv_pattern TO rt_main_lang_only_objs_clean.
+      " TODO validation if needed
+      APPEND lv_pattern TO rt_wo_translation_clean.
     ENDLOOP.
 
   ENDMETHOD.

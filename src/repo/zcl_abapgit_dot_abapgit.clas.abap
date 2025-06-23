@@ -116,12 +116,12 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS set_original_system
       IMPORTING
         !iv_original_system TYPE csequence .
-    METHODS get_master_lang_only_objects
+    METHODS get_objs_without_translation
       RETURNING
-        VALUE(rt_list) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit-master_lang_only_objs.
-    METHODS set_master_lang_only_objects
+        VALUE(rt_list) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit-without_translation.
+    METHODS set_objs_without_translation
       IMPORTING
-        !it_list TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit-master_lang_only_objs.
+        !it_list TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit-without_translation.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -264,13 +264,13 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_master_lang_only_objects.
-    rt_list = ms_data-master_lang_only_objs.
+  METHOD get_name.
+    rv_name = ms_data-name.
   ENDMETHOD.
 
 
-  METHOD get_name.
-    rv_name = ms_data-name.
+  METHOD get_objs_without_translation.
+    rt_list = ms_data-without_translation.
   ENDMETHOD.
 
 
@@ -383,13 +383,13 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_master_lang_only_objects.
-    ms_data-master_lang_only_objs = it_list.
+  METHOD set_name.
+    ms_data-name = iv_name.
   ENDMETHOD.
 
 
-  METHOD set_name.
-    ms_data-name = iv_name.
+  METHOD set_objs_without_translation.
+    ms_data-without_translation = it_list.
   ENDMETHOD.
 
 

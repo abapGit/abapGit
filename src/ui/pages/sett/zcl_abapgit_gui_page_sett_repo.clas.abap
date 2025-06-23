@@ -35,7 +35,7 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
         main_language    TYPE string VALUE 'main_language',
         i18n_langs       TYPE string VALUE 'i18n_langs',
         use_lxe          TYPE string VALUE 'use_lxe',
-        master_lang_only_objs TYPE string VALUE 'master_lang_only_objs',
+        wo_transaltion   TYPE string VALUE 'wo_translation',
         starting_folder  TYPE string VALUE 'starting_folder',
         folder_logic     TYPE string VALUE 'folder_logic',
         ignore           TYPE string VALUE 'ignore',
@@ -162,12 +162,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       iv_label       = 'Use LXE Approach for Translations'
       iv_hint        = 'It''s mandatory to specify the list of languages above in addition to this setting'
     )->textarea(
-      iv_name        = c_id-master_lang_only_objs
-      iv_label       = 'Keep these objects in master language only (no translation)'
-      iv_hint        = |List of patterns to exclude from translation, can be:|
-                    && | `object.obj_type` (e.g. zcl_xy.clas) - for specific object;|
-                    && | `*.obj_type` (e.g. *.devc) - for all objects of specific type;|
-                    && | `pkg/*` (e.g. sub1/sub2/*) - for all objects in specific package (uses prefix logic)|
+      iv_name        = c_id-wo_transaltion
+      iv_label       = 'Objects (wildcard) to keep in master language only (without translation)'
+      iv_hint        = |List of patterns to exclude from translation. The check builds a simplified path to object:|
+                    && | like `/src/pkg/subpkg/obj.type` which is then checked versus patterns with CP.|
+                    && | So to exclude specific object use `*/zcl_xy.clas`, object of the specific type - `*.clas`,|
+                    && | all objects in the package `*/pkg/*`. For additional compatibility, if line does NOT start|
+                    && | wildcard `*` or `/` - then `*/` is prepended. So `zcl_xy.clas` = `*/zcl_xy.clas`|
     )->start_group(
       iv_name        = c_id-file_system
       iv_label       = 'Files'
@@ -283,9 +284,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       iv_key = c_id-use_lxe
       iv_val = boolc( lo_dot->use_lxe( ) = abap_true ) ) ##TYPE.
     ro_form_data->set(
-      iv_key = c_id-master_lang_only_objs
+      iv_key = c_id-wo_transaltion
       iv_val = concat_lines_of(
-        table = lo_dot->get_master_lang_only_objects( )
+        table = lo_dot->get_objs_without_translation( )
         sep   = cl_abap_char_utilities=>newline ) ).
     ro_form_data->set(
       iv_key = c_id-folder_logic
@@ -365,7 +366,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       lo_dot          TYPE REF TO zcl_abapgit_dot_abapgit,
       lv_ignore       TYPE string,
       lt_ignore       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-      lt_mlang_objs   TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+      lt_wo_transl    TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
       ls_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
 
@@ -387,9 +388,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
         iv_skip_main_language = lo_dot->get_main_language( ) ) ).
     lo_dot->use_lxe( boolc( mo_form_data->get( c_id-use_lxe ) = abap_true ) ).
 
-    lt_mlang_objs = zcl_abapgit_i18n_params=>normalize_obj_patterns(
-      zcl_abapgit_convert=>split_string( mo_form_data->get( c_id-master_lang_only_objs ) ) ).
-    lo_dot->set_master_lang_only_objects( lt_mlang_objs ).
+    lt_wo_transl = zcl_abapgit_i18n_params=>normalize_obj_patterns(
+      zcl_abapgit_convert=>split_string( mo_form_data->get( c_id-wo_transaltion ) ) ).
+    lo_dot->set_objs_without_translation( lt_wo_transl ).
 
     " Remove all ignores
     lt_ignore = lo_dot->get_data( )-ignore.
@@ -506,10 +507,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
 
     TRY.
         zcl_abapgit_i18n_params=>normalize_obj_patterns(
-          zcl_abapgit_convert=>split_string( mo_form_data->get( c_id-master_lang_only_objs ) ) ).
+          zcl_abapgit_convert=>split_string( mo_form_data->get( c_id-wo_transaltion ) ) ).
       CATCH zcx_abapgit_exception INTO lx_exception.
         ro_validation_log->set(
-          iv_key = c_id-master_lang_only_objs
+          iv_key = c_id-wo_transaltion
           iv_val = lx_exception->get_text( ) ).
     ENDTRY.
 
