@@ -507,9 +507,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
           lines( ls_feature-changed_objects ) } objects<br>| ).
       ELSE.
         ri_html->add( zcl_abapgit_flow_page_utils=>render_table(
-          it_files         = ls_feature-changed_files
-          is_user_settings = ms_user_settings
-          iv_repo_key      = ls_feature-repo-key ) ).
+          it_files                = ls_feature-changed_files
+          it_transport_duplicates = ms_information-transport_duplicates
+          is_user_settings        = ms_user_settings
+          iv_repo_key             = ls_feature-repo-key ) ).
       ENDIF.
 
 * todo      LOOP AT ls_feature-changed_objects INTO ls_item.
