@@ -386,11 +386,18 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA ls_result   LIKE LINE OF rt_transports.
     DATA lt_objects  TYPE zif_abapgit_cts_api=>ty_transport_obj_tt.
     DATA lv_obj_name TYPE tadir-obj_name.
+    DATA lt_date     TYPE zif_abapgit_cts_api=>ty_date_range.
+    DATA ls_date     LIKE LINE OF lt_date.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
 
+* only look for transports that are created/changed in the last two years
+    ls_date-sign = 'I'.
+    ls_date-option = 'GE'.
+    ls_date-low = sy-datum - 730.
+    INSERT ls_date INTO TABLE lt_date.
 
-    lt_trkorr = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( ).
+    lt_trkorr = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( it_date = lt_date ).
 
     LOOP AT lt_trkorr INTO lv_trkorr.
       ls_result-trkorr = lv_trkorr.
