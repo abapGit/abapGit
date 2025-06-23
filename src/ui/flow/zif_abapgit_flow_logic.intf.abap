@@ -40,10 +40,12 @@ INTERFACE zif_abapgit_flow_logic
          END OF ty_feature.
   TYPES ty_features TYPE STANDARD TABLE OF ty_feature WITH DEFAULT KEY.
 
+  TYPES: ty_transport_duplicates_tt TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_item_signature WITH DEFAULT KEY.
+
   TYPES: BEGIN OF ty_information,
             features             TYPE ty_features,
             errors               TYPE string_table,
-            transport_duplicates TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_item_signature WITH DEFAULT KEY,
+            transport_duplicates TYPE ty_transport_duplicates_tt,
          END OF ty_information.
 
   CONSTANTS c_main TYPE string VALUE 'main'.
