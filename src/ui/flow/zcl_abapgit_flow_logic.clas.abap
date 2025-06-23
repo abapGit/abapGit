@@ -538,10 +538,16 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA lt_main_expanded       TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
     DATA lt_local               TYPE zif_abapgit_definitions=>ty_files_item_tt.
 
-    FIELD-SYMBOLS <ls_feature> LIKE LINE OF lt_features.
+    FIELD-SYMBOLS <ls_feature>   LIKE LINE OF lt_features.
     FIELD-SYMBOLS <ls_path_name> LIKE LINE OF <ls_feature>-changed_files.
 
     lt_all_transports = find_open_transports( ).
+
+    warnings_from_transports(
+      EXPORTING
+        it_transports = lt_all_transports
+      CHANGING
+        ct_warnings   = rs_information-warnings ).
 
 * list branches on favorite + flow enabled + transported repos
     lt_repos = list_repos( ).
@@ -577,12 +583,6 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         ii_repo                = li_repo_online
         it_features            = lt_features
         it_all_transports      = lt_all_transports ).
-
-      warnings_from_transports(
-        EXPORTING
-          it_transports = lt_all_transports
-        CHANGING
-          ct_warnings   = rs_information-warnings ).
 
       try_matching_transports(
         EXPORTING
