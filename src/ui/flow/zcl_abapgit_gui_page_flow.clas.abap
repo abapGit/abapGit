@@ -403,6 +403,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     DATA lo_timer TYPE REF TO zcl_abapgit_timer.
     DATA lt_my_transports TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
     DATA lv_warning LIKE LINE OF ms_information-warnings.
+    DATA lt_user TYPE zif_abapgit_cts_api=>ty_user_range.
+    DATA ls_user LIKE LINE OF lt_user.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -428,7 +430,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ENDIF.
 
     IF ms_user_settings-only_my_transports = abap_true.
-      lt_my_transports = zcl_abapgit_factory=>get_cts_api( )->list_open_requests_by_user( sy-uname ).
+      ls_user-low = sy-uname.
+      ls_user-sign = 'I'.
+      ls_user-option = 'EW'.
+      lt_my_transports = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( it_user = lt_user ).
     ENDIF.
 
     LOOP AT ms_information-features INTO ls_feature.
