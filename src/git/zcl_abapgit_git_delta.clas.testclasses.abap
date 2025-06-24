@@ -6,35 +6,9 @@ CLASS ltcl_git_delta_test DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SH
       test_decode_deltas_no_delta FOR TESTING RAISING cx_static_check,
       test_decode_deltas_success FOR TESTING RAISING cx_static_check.
 
-    METHODS create_test_objects
-      RETURNING
-        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
-      RAISING
-        cx_static_check.
-
 ENDCLASS.
 
 CLASS ltcl_git_delta_test IMPLEMENTATION.
-
-  METHOD create_test_objects.
-    DATA ls_object TYPE zif_abapgit_definitions=>ty_object.
-
-    " Create a base blob object
-    ls_object-sha1 = '1234567890123456789012345678901234567890'.
-    ls_object-type = zif_abapgit_git_definitions=>c_type-blob.
-    ls_object-data = zcl_abapgit_convert=>string_to_xstring_utf8( `Hello World` ).
-    ls_object-index = 1.
-    APPEND ls_object TO rt_objects.
-
-    " Create a delta object that references the base blob
-    CLEAR ls_object.
-    ls_object-sha1 = '1234567890123456789012345678901234567890'. " same as base for reference
-    ls_object-type = zif_abapgit_git_definitions=>c_type-ref_d.
-    " Create simple delta data: base size (11), result size (13), copy 11 bytes from offset 0, insert "!!"
-    ls_object-data = '0B0D90' && zcl_abapgit_convert=>string_to_xstring_utf8( `!!` ).
-    ls_object-index = 2.
-    APPEND ls_object TO rt_objects.
-  ENDMETHOD.
 
   METHOD test_decode_deltas_empty.
     DATA lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
@@ -81,7 +55,21 @@ CLASS ltcl_git_delta_test IMPLEMENTATION.
     DATA lv_original_count TYPE i.
     DATA ls_object         TYPE zif_abapgit_definitions=>ty_object.
 
-    lt_objects = create_test_objects( ).
+    " Create a base blob object
+    ls_object-sha1 = '1234567890123456789012345678901234567890'.
+    ls_object-type = zif_abapgit_git_definitions=>c_type-blob.
+    ls_object-data = zcl_abapgit_convert=>string_to_xstring_utf8( `Hello World` ).
+    ls_object-index = 1.
+    APPEND ls_object TO lt_objects.
+
+    " Create a delta object that references the base blob
+    CLEAR ls_object.
+    ls_object-sha1 = '1234567890123456789012345678901234567890'. " same as base for reference
+    ls_object-type = zif_abapgit_git_definitions=>c_type-ref_d.
+    " Create simple delta data: base size (11), result size (13), copy 11 bytes from offset 0, insert "!!"
+    ls_object-data = '0B0D90' && zcl_abapgit_convert=>string_to_xstring_utf8( `!!` ).
+    ls_object-index = 2.
+    APPEND ls_object TO lt_objects.
 
     " Store original count
     lv_original_count = lines( lt_objects ).
