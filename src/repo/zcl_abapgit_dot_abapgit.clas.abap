@@ -116,6 +116,12 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS set_original_system
       IMPORTING
         !iv_original_system TYPE csequence .
+    METHODS get_objs_without_translation
+      RETURNING
+        VALUE(rt_list) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit-without_translation.
+    METHODS set_objs_without_translation
+      IMPORTING
+        !it_list TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit-without_translation.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -138,7 +144,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
 
   METHOD add_ignore.
@@ -263,6 +269,11 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_objs_without_translation.
+    rt_list = ms_data-without_translation.
+  ENDMETHOD.
+
+
   METHOD get_original_system.
     rv_original_system = ms_data-original_system.
   ENDMETHOD.
@@ -374,6 +385,11 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
   METHOD set_name.
     ms_data-name = iv_name.
+  ENDMETHOD.
+
+
+  METHOD set_objs_without_translation.
+    ms_data-without_translation = it_list.
   ENDMETHOD.
 
 
