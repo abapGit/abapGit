@@ -15,6 +15,7 @@ CLASS zcl_abapgit_git_delta DEFINITION PUBLIC.
         !ct_objects TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception .
+
     CLASS-METHODS delta_header
       IMPORTING
         !io_stream       TYPE REF TO lcl_stream
