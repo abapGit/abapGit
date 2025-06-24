@@ -24,9 +24,9 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
     CONSTANTS:
       BEGIN OF c_action,
         refresh             TYPE string VALUE 'refresh',
-        consolidate         TYPE string VALUE 'consolicate',
+        consolidate         TYPE string VALUE 'consolidate',
         pull                TYPE string VALUE 'pull',
-        stage               TYPE string VALUE 'stage',
+        stage_and_commit    TYPE string VALUE 'stage_and_commit',
         only_my_transports  TYPE string VALUE 'only_my_transports',
         hide_full_matches   TYPE string VALUE 'hide_full_matches',
         hide_matching_files TYPE string VALUE 'hide_matching_files',
@@ -53,7 +53,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    METHODS call_stage
+    METHODS call_stage_commit
       IMPORTING
         !ii_event         TYPE REF TO zif_abapgit_gui_event
       RETURNING
@@ -148,7 +148,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD call_stage.
+  METHOD call_stage_commit.
 
     DATA lv_key          TYPE zif_abapgit_persistence=>ty_value.
     DATA lv_branch       TYPE string.
@@ -254,8 +254,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       IF is_feature-transport-trkorr IS NOT INITIAL
           AND ( is_feature-branch-up_to_date = abap_undefined OR is_feature-branch-up_to_date = abap_true ).
 * its only remote, so there is no changes to stage
-        lo_toolbar->add( iv_txt = 'Stage'
-                         iv_act = |{ c_action-stage }{ lv_extra }|
+        lo_toolbar->add( iv_txt = 'Stage and Commit'
+                         iv_act = |{ c_action-stage_and_commit }{ lv_extra }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
     ENDIF.
@@ -353,8 +353,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         rs_handled = call_consolidate( ).
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
         rs_handled = zcl_abapgit_flow_page_utils=>call_diff( ii_event ).
-      WHEN c_action-stage.
-        rs_handled = call_stage( ii_event ).
+      WHEN c_action-stage_and_commit.
+        rs_handled = call_stage_commit( ii_event ).
       WHEN c_action-pull.
         rs_handled = call_pull( ii_event ).
       WHEN OTHERS.
