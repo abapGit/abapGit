@@ -15,6 +15,7 @@ INTERFACE zif_abapgit_dot_abapgit PUBLIC.
       master_language       TYPE spras,
       i18n_languages        TYPE zif_abapgit_definitions=>ty_languages,
       use_lxe               TYPE abap_bool,
+      without_translation   TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
       starting_folder       TYPE string,
       folder_logic          TYPE string,
       ignore                TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
