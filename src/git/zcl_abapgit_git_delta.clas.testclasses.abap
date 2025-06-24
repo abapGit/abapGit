@@ -66,8 +66,7 @@ CLASS ltcl_git_delta_test IMPLEMENTATION.
     CLEAR ls_object.
     ls_object-sha1 = '1234567890123456789012345678901234567890'. " same as base for reference
     ls_object-type = zif_abapgit_git_definitions=>c_type-ref_d.
-    " Create simple delta data: base size (11), result size (13), copy 11 bytes from offset 0, insert "!!"
-    ls_object-data = '0B0D90' && zcl_abapgit_convert=>string_to_xstring_utf8( `!!` ).
+    ls_object-data = '0B0D900B'.
     ls_object-index = 2.
     APPEND ls_object TO lt_objects.
 
