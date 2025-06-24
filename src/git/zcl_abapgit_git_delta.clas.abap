@@ -2,8 +2,10 @@ CLASS zcl_abapgit_git_delta DEFINITION PUBLIC.
   PUBLIC SECTION.
 
     CLASS-METHODS decode_deltas
+      IMPORTING
+        iv_show_progress TYPE abap_bool DEFAULT abap_true
       CHANGING
-        !ct_objects TYPE zif_abapgit_definitions=>ty_objects_tt
+        !ct_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception .
 
@@ -46,11 +48,15 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
     "Restore correct Delta Order
     SORT lt_deltas BY index.
 
-    li_progress = zcl_abapgit_progress=>get_instance( lines( lt_deltas ) ).
+    IF iv_show_progress = abap_true.
+      li_progress = zcl_abapgit_progress=>get_instance( lines( lt_deltas ) ).
+    ENDIF.
 
     LOOP AT lt_deltas INTO ls_object.
-      li_progress->show( iv_current = sy-tabix
-                         iv_text    = 'Decode deltas' ).
+      IF li_progress IS NOT INITIAL.
+        li_progress->show( iv_current = sy-tabix
+                           iv_text    = 'Decode deltas' ).
+      ENDIF.
 
       delta( EXPORTING is_object = ls_object
              CHANGING ct_objects = ct_objects ).

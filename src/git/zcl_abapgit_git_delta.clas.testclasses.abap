@@ -11,7 +11,9 @@ CLASS ltcl_git_delta_test DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SH
 
     METHODS create_test_objects
       RETURNING
-        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt.
+        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
+      RAISING
+        cx_static_check.
 
 ENDCLASS.
 
@@ -23,7 +25,7 @@ CLASS ltcl_git_delta_test IMPLEMENTATION.
     " Create a base blob object
     ls_object-sha1 = '1234567890123456789012345678901234567890'.
     ls_object-type = zif_abapgit_git_definitions=>c_type-blob.
-    ls_object-data = cl_abap_conv_codepage=>create_in( )->convert( `Hello World` ).
+    ls_object-data = zcl_abapgit_convert=>string_to_xstring_utf8( `Hello World` ).
     ls_object-index = 1.
     APPEND ls_object TO rt_objects.
 
@@ -32,7 +34,7 @@ CLASS ltcl_git_delta_test IMPLEMENTATION.
     ls_object-sha1 = '1234567890123456789012345678901234567890'. " same as base for reference
     ls_object-type = zif_abapgit_git_definitions=>c_type-ref_d.
     " Create simple delta data: base size (11), result size (13), copy 11 bytes from offset 0, insert "!!"
-    ls_object-data = '0B0D90' && cl_abap_conv_codepage=>create_in( )->convert( `!!` ).
+    ls_object-data = '0B0D90' && zcl_abapgit_convert=>string_to_xstring_utf8( `!!` ).
     ls_object-index = 2.
     APPEND ls_object TO rt_objects.
   ENDMETHOD.
@@ -40,7 +42,9 @@ CLASS ltcl_git_delta_test IMPLEMENTATION.
   METHOD test_decode_deltas_empty.
     DATA lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
 
-    zcl_abapgit_git_delta=>decode_deltas( CHANGING ct_objects = lt_objects ).
+    zcl_abapgit_git_delta=>decode_deltas(
+      EXPORTING iv_show_progress = abap_false
+      CHANGING ct_objects = lt_objects ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lines( lt_objects )
@@ -55,11 +59,13 @@ CLASS ltcl_git_delta_test IMPLEMENTATION.
     " Create a non-delta object
     ls_object-sha1 = '1234567890123456789012345678901234567890'.
     ls_object-type = zif_abapgit_git_definitions=>c_type-blob.
-    ls_object-data = cl_abap_conv_codepage=>create_in( )->convert( `Hello World` ).
+    ls_object-data = zcl_abapgit_convert=>string_to_xstring_utf8( `Hello World` ).
     ls_object-index = 1.
     APPEND ls_object TO lt_objects.
 
-    zcl_abapgit_git_delta=>decode_deltas( CHANGING ct_objects = lt_objects ).
+    zcl_abapgit_git_delta=>decode_deltas(
+      EXPORTING iv_show_progress = abap_false
+      CHANGING ct_objects = lt_objects ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lines( lt_objects )
@@ -83,7 +89,9 @@ CLASS ltcl_git_delta_test IMPLEMENTATION.
     " Store original count
     lv_original_count = lines( lt_objects ).
 
-    zcl_abapgit_git_delta=>decode_deltas( CHANGING ct_objects = lt_objects ).
+    zcl_abapgit_git_delta=>decode_deltas(
+      EXPORTING iv_show_progress = abap_false
+      CHANGING ct_objects = lt_objects ).
 
     " Should have same number of objects after delta processing
     cl_abap_unit_assert=>assert_equals(
@@ -105,15 +113,17 @@ CLASS ltcl_git_delta_test IMPLEMENTATION.
     " Create a delta object without its base
     ls_object-sha1 = 'missing_base_sha1_234567890123456789012'.
     ls_object-type = zif_abapgit_git_definitions=>c_type-ref_d.
-    ls_object-data = '0B0D90' && cl_abap_conv_codepage=>create_in( )->convert( `!!` ).
+    ls_object-data = '0B0D90' && zcl_abapgit_convert=>string_to_xstring_utf8( `!!` ).
     ls_object-index = 1.
     APPEND ls_object TO lt_objects.
 
     TRY.
-        zcl_abapgit_git_delta=>decode_deltas( CHANGING ct_objects = lt_objects ).
+        zcl_abapgit_git_delta=>decode_deltas(
+          EXPORTING iv_show_progress = abap_false
+          CHANGING ct_objects = lt_objects ).
         cl_abap_unit_assert=>fail( 'Should raise exception for missing base' ).
       CATCH zcx_abapgit_exception INTO lx_error.
-        cl_abap_unit_assert=>assert_cp(
+        cl_abap_unit_assert=>assert_char_cp(
           act = lx_error->get_text( )
           exp = '*Base not found*'
           msg = 'Should indicate base not found' ).
@@ -131,7 +141,7 @@ CLASS ltcl_git_delta_test IMPLEMENTATION.
     " Create base object
     ls_base-sha1 = 'base_sha1_234567890123456789012345678'.
     ls_base-type = zif_abapgit_git_definitions=>c_type-blob.
-    ls_base-data = cl_abap_conv_codepage=>create_in( )->convert( `Test` ).
+    ls_base-data = zcl_abapgit_convert=>string_to_xstring_utf8( `Test` ).
     ls_base-index = 1.
     APPEND ls_base TO lt_objects.
 
@@ -144,13 +154,16 @@ CLASS ltcl_git_delta_test IMPLEMENTATION.
     APPEND ls_delta TO lt_objects.
 
     " This should not raise an exception if header parsing works
-    zcl_abapgit_git_delta=>decode_deltas( CHANGING ct_objects = lt_objects ).
+    zcl_abapgit_git_delta=>decode_deltas(
+      EXPORTING iv_show_progress = abap_false
+      CHANGING ct_objects = lt_objects ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lines( lt_objects )
       exp = 2
       msg = 'Delta processing should complete successfully' ).
   ENDMETHOD.
+
   METHOD test_delta_header_multi_byte.
     " Test multi-byte header through decode_deltas
     DATA lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
@@ -165,7 +178,7 @@ CLASS ltcl_git_delta_test IMPLEMENTATION.
     DO 128 TIMES.
       lv_large_text = lv_large_text && 'X'.
     ENDDO.
-    ls_base-data = cl_abap_conv_codepage=>create_in( )->convert( lv_large_text ).
+    ls_base-data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_large_text ).
     ls_base-index = 1.
     APPEND ls_base TO lt_objects.
 
@@ -178,7 +191,9 @@ CLASS ltcl_git_delta_test IMPLEMENTATION.
     APPEND ls_delta TO lt_objects.
 
     " This should not raise an exception if multi-byte header parsing works
-    zcl_abapgit_git_delta=>decode_deltas( CHANGING ct_objects = lt_objects ).
+    zcl_abapgit_git_delta=>decode_deltas(
+      EXPORTING iv_show_progress = abap_false
+      CHANGING ct_objects = lt_objects ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lines( lt_objects )
