@@ -163,7 +163,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       iv_hint        = 'It''s mandatory to specify the list of languages above in addition to this setting'
     )->textarea(
       iv_name        = c_id-wo_transaltion
-      iv_label       = 'Objects (wildcard) to keep in master language only (without translation)'
+      iv_label       = 'Objects (wildcard) to keep in main language only (without translation)'
       iv_hint        = |List of patterns to exclude from translation. The check builds a simplified path to object:|
                     && | like `/src/pkg/subpkg/obj.type` which is then checked versus patterns with CP.|
                     && | So to exclude specific object use `*/zcl_xy.clas`, object of the specific type - `*.clas`,|
