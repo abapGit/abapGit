@@ -86,9 +86,9 @@ CLASS ltcl_git_delta_test IMPLEMENTATION.
 
     " Check that no delta objects remain
     LOOP AT lt_objects INTO ls_object.
-      if ls_object-type = zif_abapgit_git_definitions=>c_type-ref_d.
-      cl_abap_unit_assert=>fail( 'No delta objects should remain after processing' ).
-      endif.
+      IF ls_object-type = zif_abapgit_git_definitions=>c_type-ref_d.
+        cl_abap_unit_assert=>fail( 'No delta objects should remain after processing' ).
+      ENDIF.
     ENDLOOP.
   ENDMETHOD.
 
