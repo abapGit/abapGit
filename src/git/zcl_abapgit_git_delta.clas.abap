@@ -141,8 +141,7 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
           lv_len = 65536.
         ENDIF.
 
-        CONCATENATE lv_result lv_base+lv_offset(lv_len)
-          INTO lv_result IN BYTE MODE.
+        CONCATENATE lv_result lv_base+lv_offset(lv_len) INTO lv_result IN BYTE MODE.
       ELSE. " lv_bitbyte(1) = '0'
 * insert from delta
         lv_len = lv_org. " convert to int
