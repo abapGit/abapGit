@@ -64,15 +64,6 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
 
   METHOD delta.
 
-    CONSTANTS: lc_1   TYPE x VALUE '01',
-               lc_2   TYPE x VALUE '02',
-               lc_4   TYPE x VALUE '04',
-               lc_8   TYPE x VALUE '08',
-               lc_16  TYPE x VALUE '10',
-               lc_32  TYPE x VALUE '20',
-               lc_64  TYPE x VALUE '40',
-               lc_128 TYPE x VALUE '80'.
-
     DATA: lv_base   TYPE xstring,
           lv_result TYPE xstring,
           lv_offset TYPE i,
@@ -81,7 +72,7 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
           ls_object LIKE LINE OF ct_objects,
           lv_len    TYPE i,
           lv_tmp    TYPE xstring,
-          lv_org    TYPE x.
+          lv_org    TYPE i.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF ct_objects.
 
@@ -110,30 +101,30 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
 
       lv_org = lo_stream->eat_byte( ).
 
-      IF lv_org BIT-AND lc_128 = lc_128. " MSB = 1
+      IF lv_org >= 128. " MSB = 1
 
         lv_offset = 0.
-        IF lv_org BIT-AND lc_1 = lc_1.
+        IF lv_org >= 1.
           lv_offset = lo_stream->eat_byte( ).
         ENDIF.
-        IF lv_org BIT-AND lc_2 = lc_2.
+        IF lv_org >= 2.
           lv_offset = lv_offset + lo_stream->eat_byte( ) * 256.
         ENDIF.
-        IF lv_org BIT-AND lc_4 = lc_4.
+        IF lv_org >= 4.
           lv_offset = lv_offset + lo_stream->eat_byte( ) * 65536.
         ENDIF.
-        IF lv_org BIT-AND lc_8 = lc_8.
+        IF lv_org >= 8.
           lv_offset = lv_offset + lo_stream->eat_byte( ) * 16777216. " hmm, overflow?
         ENDIF.
 
         lv_len = 0.
-        IF lv_org BIT-AND lc_16 = lc_16.
+        IF lv_org >= 16.
           lv_len = lo_stream->eat_byte( ).
         ENDIF.
-        IF lv_org BIT-AND lc_32 = lc_32.
+        IF lv_org >= 32.
           lv_len = lv_len + lo_stream->eat_byte( ) * 256.
         ENDIF.
-        IF lv_org BIT-AND lc_64 = lc_64.
+        IF lv_org >= 64.
           lv_len = lv_len + lo_stream->eat_byte( ) * 65536.
         ENDIF.
 
@@ -144,8 +135,7 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
         CONCATENATE lv_result lv_base+lv_offset(lv_len) INTO lv_result IN BYTE MODE.
       ELSE. " lv_bitbyte(1) = '0'
 * insert from delta
-        lv_len = lv_org. " convert to int
-        lv_tmp = lo_stream->eat_bytes( lv_len ).
+        lv_tmp = lo_stream->eat_bytes( lv_org ).
         CONCATENATE lv_result lv_tmp INTO lv_result IN BYTE MODE.
       ENDIF.
 
