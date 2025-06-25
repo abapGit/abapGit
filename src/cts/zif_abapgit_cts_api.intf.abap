@@ -124,15 +124,13 @@ INTERFACE zif_abapgit_cts_api
     RAISING
       zcx_abapgit_exception .
 
-  METHODS list_open_requests_by_user
-    IMPORTING
-      !iv_user         TYPE sy-uname DEFAULT sy-uname
-    RETURNING
-      VALUE(rt_trkorr) TYPE ty_trkorr_tt
-    RAISING
-      zcx_abapgit_exception .
+  TYPES ty_user_range TYPE RANGE OF sy-uname.
+  TYPES ty_date_range TYPE RANGE OF sy-datum.
 
   METHODS list_open_requests
+    IMPORTING
+      !it_user         TYPE ty_user_range OPTIONAL
+      !it_date         TYPE ty_date_range OPTIONAL
     RETURNING
       VALUE(rt_trkorr) TYPE ty_trkorr_tt
     RAISING

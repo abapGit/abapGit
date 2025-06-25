@@ -233,9 +233,6 @@ CLASS lcl_cts IMPLEMENTATION.
   METHOD zif_abapgit_cts_api~is_chrec_possible_for_package.
     RETURN. " todo, implement method
   ENDMETHOD.
-  METHOD zif_abapgit_cts_api~list_open_requests_by_user.
-    RETURN. " todo, implement method
-  ENDMETHOD.
   METHOD zif_abapgit_cts_api~list_open_requests.
     rt_trkorr = mo_data->list_open_requests( ).
   ENDMETHOD.
