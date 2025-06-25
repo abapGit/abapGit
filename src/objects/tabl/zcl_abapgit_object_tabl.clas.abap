@@ -216,7 +216,6 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     DATA lv_result              LIKE sy-subrc.
     DATA lv_package             TYPE devclass.
-    DATA lv_uname               TYPE sy-uname.
     DATA lv_transport           TYPE trkorr.
     DATA ls_edisdef             TYPE edisdef.
     DATA ls_segment_definition  TYPE zif_abapgit_object_tabl=>ty_segment_definition.
