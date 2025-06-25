@@ -16,6 +16,10 @@ CLASS lcl_stream DEFINITION FINAL.
         RETURNING
           VALUE(rv_x) TYPE xstring.
 
+    METHODS has_data
+      RETURNING
+        VALUE(rv_data) TYPE abap_bool.
+
   PRIVATE SECTION.
-    DATA: mv_data TYPE xstring.
+    DATA mv_data TYPE xstring.
 ENDCLASS.

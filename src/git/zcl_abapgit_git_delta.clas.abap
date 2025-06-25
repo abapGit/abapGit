@@ -106,7 +106,7 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
     delta_header( lo_stream ).
     delta_header( lo_stream ).
 
-    WHILE xstrlen( lo_stream->get( ) ) > 0.
+    WHILE lo_stream->has_data( ) = abap_true.
 
       lv_org = lo_stream->eat_byte( ).
 

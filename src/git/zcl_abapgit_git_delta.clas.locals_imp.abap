@@ -18,4 +18,8 @@ CLASS lcl_stream IMPLEMENTATION.
     mv_data = mv_data+iv_length.
   ENDMETHOD.
 
+  METHOD has_data.
+    rv_data = boolc( xstrlen( mv_data ) > 0 ).
+  ENDMETHOD.
+
 ENDCLASS.
