@@ -3,6 +3,7 @@ CLASS lcl_stream IMPLEMENTATION.
   METHOD constructor.
     mv_data = iv_data.
     mv_position = 0.
+    mv_length = xstrlen( mv_data ).
   ENDMETHOD.
 
   METHOD eat_byte.
@@ -16,7 +17,7 @@ CLASS lcl_stream IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD has_data.
-    rv_data = boolc( mv_position < xstrlen( mv_data ) ).
+    rv_data = boolc( mv_position < mv_length ).
   ENDMETHOD.
 
 ENDCLASS.

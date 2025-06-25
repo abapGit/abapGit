@@ -21,4 +21,5 @@ CLASS lcl_stream DEFINITION FINAL.
   PRIVATE SECTION.
     DATA mv_data TYPE xstring.
     DATA mv_position TYPE i.
+    DATA mv_length TYPE i.
 ENDCLASS.
