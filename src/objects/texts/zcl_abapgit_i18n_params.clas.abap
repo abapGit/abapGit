@@ -15,14 +15,14 @@ CLASS zcl_abapgit_i18n_params DEFINITION
         !iv_use_lxe            TYPE abap_bool DEFAULT abap_false
         !is_params             TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL
       RETURNING
-        VALUE(ro_instance)     TYPE REF TO zcl_abapgit_i18n_params .
+        VALUE(ro_instance)     TYPE REF TO zcl_abapgit_i18n_params.
     METHODS constructor
       IMPORTING
         !iv_main_language      TYPE spras DEFAULT zif_abapgit_definitions=>c_english
         !iv_main_language_only TYPE abap_bool DEFAULT abap_false
         !it_translation_langs  TYPE zif_abapgit_definitions=>ty_languages OPTIONAL
         !iv_use_lxe            TYPE abap_bool DEFAULT abap_false
-        !is_params             TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL .
+        !is_params             TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL.
 
     METHODS is_lxe_applicable
       RETURNING
@@ -44,6 +44,23 @@ CLASS zcl_abapgit_i18n_params DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS normalize_obj_patterns
+      IMPORTING
+        it_wo_translation_patterns     TYPE string_table
+      RETURNING
+        VALUE(rt_wo_translation_clean) TYPE string_table
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS match_obj_patterns
+      IMPORTING
+        it_wo_translation_patterns TYPE string_table
+        is_tadir                   TYPE zif_abapgit_definitions=>ty_tadir
+      RETURNING
+        VALUE(rv_yes)              TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA mt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
@@ -58,7 +75,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_i18n_params IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_I18N_PARAMS IMPLEMENTATION.
 
 
   METHOD build_language_filter.
@@ -127,6 +144,32 @@ CLASS zcl_abapgit_i18n_params IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD match_obj_patterns.
+
+    DATA lv_pattern TYPE string.
+    DATA lv_path TYPE string.
+
+    LOOP AT it_wo_translation_patterns INTO lv_pattern.
+      CHECK lv_pattern IS NOT INITIAL.
+      IF NOT lv_pattern+0(1) CA '*/'.
+        " The idea is to simplify entering package paths e.g. subpkg/* instead of /src/subpkg/* or */subpkg/*
+        " or object names: zcl.clas instead of */zcl.clas
+        " But maybe it is a bad idea ... to see on practice
+        lv_pattern = `*/` && lv_pattern.
+      ENDIF.
+
+      " Compose simplified file path
+      lv_path = is_tadir-path && to_lower( is_tadir-obj_name ) && `.` && to_lower( is_tadir-object ).
+
+      IF lv_path CP lv_pattern.
+        rv_yes = abap_true.
+        EXIT.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD new.
     CREATE OBJECT ro_instance
       EXPORTING
@@ -135,6 +178,21 @@ CLASS zcl_abapgit_i18n_params IMPLEMENTATION.
         it_translation_langs  = it_translation_langs
         iv_use_lxe            = iv_use_lxe
         is_params             = is_params.
+  ENDMETHOD.
+
+
+  METHOD normalize_obj_patterns.
+
+    DATA lv_pattern TYPE string.
+
+    LOOP AT it_wo_translation_patterns INTO lv_pattern.
+      CONDENSE lv_pattern.
+      CHECK lv_pattern IS NOT INITIAL.
+      lv_pattern = to_lower( lv_pattern ).
+      " TODO validation if needed
+      APPEND lv_pattern TO rt_wo_translation_clean.
+    ENDLOOP.
+
   ENDMETHOD.
 
 
