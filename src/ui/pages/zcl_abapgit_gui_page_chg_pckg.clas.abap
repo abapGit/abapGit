@@ -180,18 +180,10 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
 
       ls_tadir-devclass = <ls_map>-new_package.
 
-      CALL FUNCTION 'TR_TADIR_INTERFACE'
-        EXPORTING
-          wi_tadir_pgmid    = ls_tadir-pgmid
-          wi_tadir_object   = ls_tadir-object
-          wi_tadir_obj_name = ls_tadir-obj_name
-          wi_tadir_devclass = ls_tadir-devclass
-          wi_test_modus     = abap_false
-        EXCEPTIONS
-          OTHERS            = 1.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
+      zcl_abapgit_factory=>get_tadir( )->insert_single(
+        iv_object   = ls_tadir-object
+        iv_obj_name = ls_tadir-obj_name
+        iv_package  = ls_tadir-devclass ).
     ENDLOOP.
 
   ENDMETHOD.

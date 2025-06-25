@@ -36,7 +36,10 @@ CLASS ltcl_abapgit_tadir_mock IMPLEMENTATION.
   METHOD zif_abapgit_tadir~read_single.
 
   ENDMETHOD.
-
+  METHOD zif_abapgit_tadir~delete_single.
+  ENDMETHOD.
+  METHOD zif_abapgit_tadir~insert_single.
+  ENDMETHOD.
 ENDCLASS.
 
 CLASS ltcl_no_dependency_injection IMPLEMENTATION.

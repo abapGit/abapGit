@@ -349,7 +349,8 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         change_of_class_not_allowed    = 23
         no_change_from_sap_to_tmp      = 24
         OTHERS                         = 25.
-    IF sy-subrc <> 0.
+    IF sy-subrc > 1.
+      " No error if entry does not exist
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
@@ -394,6 +395,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         wi_tadir_author                = sy-uname
         wi_tadir_devclass              = iv_package
         wi_tadir_masterlang            = iv_language
+        wi_tadir_srcsystem             = iv_srcsystem
         iv_delflag                     = abap_false
       EXCEPTIONS
         tadir_entry_not_existing       = 1

@@ -36,11 +36,12 @@ INTERFACE zif_abapgit_tadir
 
   METHODS insert_single
     IMPORTING
-      !iv_pgmid    TYPE tadir-pgmid DEFAULT 'R3TR'
-      !iv_object   TYPE tadir-object
-      !iv_obj_name TYPE tadir-obj_name
-      !iv_package  TYPE devclass
-      !iv_language TYPE sy-langu
+      !iv_pgmid     TYPE tadir-pgmid DEFAULT 'R3TR'
+      !iv_object    TYPE tadir-object
+      !iv_obj_name  TYPE tadir-obj_name
+      !iv_package   TYPE tadir-devclass OPTIONAL
+      !iv_language  TYPE tadir-masterlang OPTIONAL
+      !iv_srcsystem TYPE tadir-srcsystem OPTIONAL
     RAISING
       zcx_abapgit_exception.
 
