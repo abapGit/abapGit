@@ -1302,9 +1302,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       lv_srcsystem           TYPE tadir-srcsystem,
       lv_transport_type_from TYPE trfunction,
       lv_transport_type_to   TYPE trfunction,
-      lx_error               TYPE REF TO zcx_abapgit_exception,
       lv_errors              TYPE abap_bool,
-      lv_msg                 TYPE string.
+      lx_error               TYPE REF TO zcx_abapgit_exception.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF it_items.
 
