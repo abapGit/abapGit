@@ -36,20 +36,22 @@ INTERFACE zif_abapgit_tadir
 
   METHODS insert_single
     IMPORTING
-      !iv_pgmid     TYPE tadir-pgmid DEFAULT 'R3TR'
-      !iv_object    TYPE tadir-object
-      !iv_obj_name  TYPE tadir-obj_name
-      !iv_package   TYPE tadir-devclass OPTIONAL
-      !iv_language  TYPE tadir-masterlang OPTIONAL
-      !iv_srcsystem TYPE tadir-srcsystem OPTIONAL
+      !iv_pgmid       TYPE csequence DEFAULT 'R3TR'
+      !iv_object      TYPE csequence
+      !iv_obj_name    TYPE csequence
+      !iv_package     TYPE csequence OPTIONAL
+      !iv_language    TYPE tadir-masterlang OPTIONAL
+      !iv_srcsystem   TYPE tadir-srcsystem OPTIONAL
+      !iv_set_genflag TYPE abap_bool DEFAULT abap_false
+      !iv_set_edtflag TYPE abap_bool DEFAULT abap_false
     RAISING
       zcx_abapgit_exception.
 
   METHODS delete_single
     IMPORTING
-      !iv_pgmid    TYPE tadir-pgmid DEFAULT 'R3TR'
-      !iv_object   TYPE tadir-object
-      !iv_obj_name TYPE tadir-obj_name
+      !iv_pgmid    TYPE csequence DEFAULT 'R3TR'
+      !iv_object   TYPE csequence
+      !iv_obj_name TYPE csequence
     RAISING
       zcx_abapgit_exception.
 

@@ -92,46 +92,34 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
   METHOD delete_tadir_cdnames.
 
-    DATA: lv_obj_name TYPE sobj_name.
-
     IF is_cdnames-repnamec IS NOT INITIAL.
-      lv_obj_name = is_cdnames-repnamec.
-
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'PROG'
-        iv_obj_name  = lv_obj_name ).
+        iv_obj_name  = is_cdnames-repnamec ).
     ENDIF.
 
     IF is_cdnames-repnamet IS NOT INITIAL.
-      lv_obj_name = is_cdnames-repnamet.
-
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'PROG'
-        iv_obj_name  = lv_obj_name ).
+        iv_obj_name  = is_cdnames-repnamet ).
     ENDIF.
 
     IF is_cdnames-repnamefix IS NOT INITIAL.
-      lv_obj_name = is_cdnames-repnamefix.
-
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'PROG'
-        iv_obj_name  = lv_obj_name ).
+        iv_obj_name  = is_cdnames-repnamefix ).
     ENDIF.
 
     IF is_cdnames-repnamevar IS NOT INITIAL.
-      lv_obj_name = is_cdnames-repnamevar.
-
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'PROG'
-        iv_obj_name  = lv_obj_name ).
+        iv_obj_name  = is_cdnames-repnamevar ).
     ENDIF.
 
     IF is_cdnames-fgrp IS NOT INITIAL.
-      lv_obj_name = is_cdnames-fgrp.
-
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'FUGR'
-        iv_obj_name  = lv_obj_name ).
+        iv_obj_name  = is_cdnames-fgrp ).
     ENDIF.
 
   ENDMETHOD.
@@ -139,14 +127,10 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
   METHOD delete_tadir_tabl.
 
-    DATA: lv_obj_name TYPE sobj_name.
-
     IF is_tcdrs-tabname IS NOT INITIAL.
-      lv_obj_name = is_tcdrs-tabname.
-
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'TABL'
-        iv_obj_name  = lv_obj_name ).
+        iv_obj_name  = is_tcdrs-tabname ).
     ENDIF.
 
   ENDMETHOD.

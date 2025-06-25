@@ -178,12 +178,11 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
       READ TABLE it_mapping ASSIGNING <ls_map> WITH KEY old_package = ls_tadir-devclass.
       ASSERT sy-subrc = 0.
 
-      ls_tadir-devclass = <ls_map>-new_package.
-
       zcl_abapgit_factory=>get_tadir( )->insert_single(
+        iv_pgmid    = ls_tadir-pgmid
         iv_object   = ls_tadir-object
         iv_obj_name = ls_tadir-obj_name
-        iv_package  = ls_tadir-devclass ).
+        iv_package  = <ls_map>-new_package ).
     ENDLOOP.
 
   ENDMETHOD.
