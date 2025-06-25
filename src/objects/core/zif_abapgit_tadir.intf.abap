@@ -11,6 +11,7 @@ INTERFACE zif_abapgit_tadir
       VALUE(rv_devclass) TYPE tadir-devclass
     RAISING
       zcx_abapgit_exception .
+
   METHODS read
     IMPORTING
       !iv_package            TYPE tadir-devclass
@@ -24,6 +25,7 @@ INTERFACE zif_abapgit_tadir
       VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
     RAISING
       zcx_abapgit_exception .
+
   METHODS read_single
     IMPORTING
       !iv_pgmid       TYPE tadir-pgmid DEFAULT 'R3TR'
@@ -31,4 +33,23 @@ INTERFACE zif_abapgit_tadir
       !iv_obj_name    TYPE tadir-obj_name
     RETURNING
       VALUE(rs_tadir) TYPE zif_abapgit_definitions=>ty_tadir.
+
+  METHODS insert_single
+    IMPORTING
+      !iv_pgmid    TYPE tadir-pgmid DEFAULT 'R3TR'
+      !iv_object   TYPE tadir-object
+      !iv_obj_name TYPE tadir-obj_name
+      !iv_package  TYPE devclass
+      !iv_language TYPE sy-langu
+    RAISING
+      zcx_abapgit_exception.
+
+  METHODS delete_single
+    IMPORTING
+      !iv_pgmid    TYPE tadir-pgmid DEFAULT 'R3TR'
+      !iv_object   TYPE tadir-object
+      !iv_obj_name TYPE tadir-obj_name
+    RAISING
+      zcx_abapgit_exception.
+
 ENDINTERFACE.
