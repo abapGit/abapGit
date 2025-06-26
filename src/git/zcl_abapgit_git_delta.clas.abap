@@ -20,9 +20,7 @@ CLASS zcl_abapgit_git_delta DEFINITION PUBLIC.
 
     CLASS-METHODS delta_header
       IMPORTING
-        !io_stream       TYPE REF TO lcl_stream
-      RETURNING
-        VALUE(rv_header) TYPE i .
+        !io_stream TYPE REF TO lcl_stream.
 
 ENDCLASS.
 
@@ -108,7 +106,7 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
     delta_header( lo_stream ).
     delta_header( lo_stream ).
 
-    WHILE xstrlen( lo_stream->get( ) ) > 0.
+    WHILE lo_stream->has_data( ) = abap_true.
 
       lv_org = lo_stream->eat_byte( ).
 
@@ -143,8 +141,7 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
           lv_len = 65536.
         ENDIF.
 
-        CONCATENATE lv_result lv_base+lv_offset(lv_len)
-          INTO lv_result IN BYTE MODE.
+        CONCATENATE lv_result lv_base+lv_offset(lv_len) INTO lv_result IN BYTE MODE.
       ELSE. " lv_bitbyte(1) = '0'
 * insert from delta
         lv_len = lv_org. " convert to int
@@ -169,21 +166,17 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
 
   METHOD delta_header.
 
-    DATA: lv_bitbyte TYPE zif_abapgit_git_definitions=>ty_bitbyte,
-          lv_bits    TYPE string,
-          lv_x       TYPE x.
+    DATA lv_x   TYPE x.
+    DATA lv_bit TYPE c LENGTH 1.
 
-
-    lv_bits = ''.
+* header is skipped for performance reasons
     DO.
       lv_x = io_stream->eat_byte( ).
-      lv_bitbyte = zcl_abapgit_convert=>x_to_bitbyte( lv_x ).
-      CONCATENATE lv_bitbyte+1 lv_bits INTO lv_bits.
-      IF lv_bitbyte(1) = '0'.
+      GET BIT 1 OF lv_x INTO lv_bit.
+      IF lv_bit = '0'.
         EXIT. " current loop
       ENDIF.
     ENDDO.
-    rv_header = zcl_abapgit_convert=>bitbyte_to_int( lv_bits ).
 
   ENDMETHOD.
 
