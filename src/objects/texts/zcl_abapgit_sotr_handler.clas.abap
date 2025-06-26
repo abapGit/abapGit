@@ -305,15 +305,9 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
       SELECT SINGLE obj_name FROM tadir INTO lv_obj_name
         WHERE pgmid = 'R3TR' AND object = 'SOTR' AND obj_name = iv_package.
       IF sy-subrc = 0.
-        CALL FUNCTION 'TR_TADIR_INTERFACE'
-          EXPORTING
-            wi_delete_tadir_entry = abap_true
-            wi_test_modus         = abap_false
-            wi_tadir_pgmid        = 'R3TR'
-            wi_tadir_object       = 'SOTR'
-            wi_tadir_obj_name     = lv_obj_name
-          EXCEPTIONS
-            OTHERS                = 1 ##FM_SUBRC_OK.
+        zcl_abapgit_factory=>get_tadir( )->delete_single(
+          iv_object   = 'SOTR'
+          iv_obj_name = lv_obj_name ).
 
         IF zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ) = abap_true.
 

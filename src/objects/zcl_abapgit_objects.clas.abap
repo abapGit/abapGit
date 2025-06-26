@@ -248,22 +248,18 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD change_package_assignments.
 
-    CALL FUNCTION 'TR_TADIR_INTERFACE'
-      EXPORTING
-        wi_tadir_pgmid    = 'R3TR'
-        wi_tadir_object   = is_item-obj_type
-        wi_tadir_obj_name = is_item-obj_name
-        wi_tadir_devclass = is_item-devclass
-        wi_test_modus     = abap_false
-      EXCEPTIONS
-        OTHERS            = 1.
-    IF sy-subrc = 0.
-      ii_log->add_success( iv_msg  = |Object { is_item-obj_name } assigned to package { is_item-devclass }|
+    TRY.
+        zcl_abapgit_factory=>get_tadir( )->insert_single(
+          iv_object   = is_item-obj_type
+          iv_obj_name = is_item-obj_name
+          iv_package  = is_item-devclass ).
+
+        ii_log->add_success( iv_msg  = |Object { is_item-obj_name } assigned to package { is_item-devclass }|
+                             is_item = is_item ).
+      CATCH zcx_abapgit_exception.
+        ii_log->add_error( iv_msg  = |Package change of object { is_item-obj_name } failed|
                            is_item = is_item ).
-    ELSE.
-      ii_log->add_error( iv_msg  = |Package change of object { is_item-obj_name } failed|
-                         is_item = is_item ).
-    ENDIF.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -1307,7 +1303,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       lv_transport_type_from TYPE trfunction,
       lv_transport_type_to   TYPE trfunction,
       lv_errors              TYPE abap_bool,
-      lv_msg                 TYPE string.
+      lx_error               TYPE REF TO zcx_abapgit_exception.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF it_items.
 
@@ -1334,47 +1330,17 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         CONTINUE.
       ENDIF.
       IF exists( <ls_item> ) = abap_true.
-        CALL FUNCTION 'TR_TADIR_INTERFACE'
-          EXPORTING
-            wi_tadir_pgmid                 = 'R3TR'
-            wi_tadir_object                = <ls_item>-obj_type
-            wi_tadir_obj_name              = <ls_item>-obj_name
-            wi_tadir_srcsystem             = lv_srcsystem
-            wi_test_modus                  = abap_false
-          EXCEPTIONS
-            tadir_entry_not_existing       = 1
-            tadir_entry_ill_type           = 2
-            no_systemname                  = 3
-            no_systemtype                  = 4
-            original_system_conflict       = 5
-            object_reserved_for_devclass   = 6
-            object_exists_global           = 7
-            object_exists_local            = 8
-            object_is_distributed          = 9
-            obj_specification_not_unique   = 10
-            no_authorization_to_delete     = 11
-            devclass_not_existing          = 12
-            simultanious_set_remove_repair = 13
-            order_missing                  = 14
-            no_modification_of_head_syst   = 15
-            pgmid_object_not_allowed       = 16
-            masterlanguage_not_specified   = 17
-            devclass_not_specified         = 18
-            specify_owner_unique           = 19
-            loc_priv_objs_no_repair        = 20
-            gtadir_not_reached             = 21
-            object_locked_for_order        = 22
-            change_of_class_not_allowed    = 23
-            no_change_from_sap_to_tmp      = 24
-            OTHERS                         = 25.
-        IF sy-subrc <> 0.
-          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_msg.
-          ii_log->add_error(
-            iv_msg  = lv_msg
-            is_item = <ls_item> ).
-          lv_errors = abap_true.
-        ENDIF.
+        TRY.
+            zcl_abapgit_factory=>get_tadir( )->insert_single(
+              iv_object    = <ls_item>-obj_type
+              iv_obj_name  = <ls_item>-obj_name
+              iv_srcsystem = lv_srcsystem ).
+          CATCH zcx_abapgit_exception INTO lx_error.
+            ii_log->add_error(
+              iv_msg  = lx_error->get_text( )
+              is_item = <ls_item> ).
+            lv_errors = abap_true.
+        ENDTRY.
       ENDIF.
     ENDLOOP.
 
