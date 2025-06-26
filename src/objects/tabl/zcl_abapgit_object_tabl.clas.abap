@@ -216,7 +216,6 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     DATA lv_result              LIKE sy-subrc.
     DATA lv_package             TYPE devclass.
-    DATA lv_uname               TYPE sy-uname.
     DATA lv_transport           TYPE trkorr.
     DATA ls_edisdef             TYPE edisdef.
     DATA ls_segment_definition  TYPE zif_abapgit_object_tabl=>ty_segment_definition.
@@ -309,24 +308,12 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    lv_uname = sy-uname.
-
-    CALL FUNCTION 'TR_TADIR_INTERFACE'
-      EXPORTING
-        wi_test_modus       = abap_false
-        wi_tadir_pgmid      = 'R3TR'
-        wi_tadir_object     = ms_item-obj_type
-        wi_tadir_obj_name   = ms_item-obj_name
-        wi_tadir_author     = lv_uname
-        wi_tadir_devclass   = iv_package
-        wi_tadir_masterlang = mv_language
-        iv_set_edtflag      = abap_true
-        iv_delflag          = abap_false
-      EXCEPTIONS
-        OTHERS              = 1.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    zcl_abapgit_factory=>get_tadir( )->insert_single(
+      iv_object      = ms_item-obj_type
+      iv_obj_name    = ms_item-obj_name
+      iv_package     = iv_package
+      iv_language    = mv_language
+      iv_set_edtflag = abap_true ).
   ENDMETHOD.
 
 

@@ -590,7 +590,10 @@ CLASS lcl_tadir IMPLEMENTATION.
   METHOD zif_abapgit_tadir~read_single.
     rs_tadir-devclass = lcl_data=>c_devclass.
   ENDMETHOD.
-
+  METHOD zif_abapgit_tadir~delete_single.
+  ENDMETHOD.
+  METHOD zif_abapgit_tadir~insert_single.
+  ENDMETHOD.
 ENDCLASS.
 
 ************************************************

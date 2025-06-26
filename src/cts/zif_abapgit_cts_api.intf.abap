@@ -100,15 +100,16 @@ INTERFACE zif_abapgit_cts_api
 
   METHODS insert_transport_object
     IMPORTING
-      !iv_pgmid    TYPE tadir-pgmid DEFAULT 'R3TR'
-      !iv_object   TYPE tadir-object
-      !iv_obj_name TYPE csequence
-      !iv_package  TYPE devclass
-      !iv_language TYPE sy-langu DEFAULT sy-langu
-      !iv_mode     TYPE c DEFAULT 'I'
+      !iv_pgmid     TYPE tadir-pgmid DEFAULT 'R3TR'
+      !iv_object    TYPE tadir-object
+      !iv_obj_name  TYPE csequence
+      !iv_package   TYPE devclass
+      !iv_transport TYPE trkorr OPTIONAL
+      !iv_language  TYPE sy-langu DEFAULT sy-langu
+      !iv_mode      TYPE c DEFAULT 'I'
     EXPORTING
-      !ev_object   TYPE tadir-object
-      !ev_obj_name TYPE trobj_name
+      !ev_object    TYPE tadir-object
+      !ev_obj_name  TYPE trobj_name
     RAISING
       zcx_abapgit_exception .
 

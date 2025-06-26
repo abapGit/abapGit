@@ -6,8 +6,6 @@ CLASS lcl_stream DEFINITION FINAL.
       constructor
         IMPORTING
           iv_data TYPE xstring,
-      get
-        RETURNING VALUE(rv_data) TYPE xstring,
       eat_byte
         RETURNING VALUE(rv_x) TYPE ty_hex,
       eat_bytes
@@ -16,6 +14,12 @@ CLASS lcl_stream DEFINITION FINAL.
         RETURNING
           VALUE(rv_x) TYPE xstring.
 
+    METHODS has_data
+      RETURNING
+        VALUE(rv_data) TYPE abap_bool.
+
   PRIVATE SECTION.
-    DATA: mv_data TYPE xstring.
+    DATA mv_data TYPE xstring.
+    DATA mv_position TYPE i.
+    DATA mv_length TYPE i.
 ENDCLASS.
