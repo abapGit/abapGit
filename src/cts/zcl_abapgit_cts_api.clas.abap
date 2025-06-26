@@ -555,6 +555,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
         object_class        = iv_object
         devclass            = iv_package
         master_language     = iv_language
+        korrnum             = iv_transport
         mode                = iv_mode
         global_lock         = abap_true
         suppress_dialog     = abap_true
@@ -575,6 +576,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       rv_possible = zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ).
     ENDIF.
   ENDMETHOD.
+
 
   METHOD zif_abapgit_cts_api~list_open_requests.
 
