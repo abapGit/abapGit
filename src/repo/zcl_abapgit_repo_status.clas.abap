@@ -40,7 +40,7 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
         ii_obj_filter = ii_obj_filter ).
     ENDIF.
 
-    IF lines( lt_local ) <= 2.
+    IF lines( lt_local ) <= 2 AND ii_obj_filter IS INITIAL.
       " Less equal two means that we have only the .abapgit.xml and the package in
       " our local repository. In this case we have to update our local .abapgit.xml
       " from the remote one. Otherwise we get errors when e.g. the folder starting
