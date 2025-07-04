@@ -917,6 +917,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
                    <ls_dd08v>      LIKE LINE OF ls_internal-dd08v,
                    <ls_dd35v>      LIKE LINE OF ls_internal-dd35v,
                    <ls_dd36m>      LIKE LINE OF ls_internal-dd36m,
+                   <ls_dd03p>      LIKE LINE OF ls_internal-dd03p,
+                   <lg_field>      TYPE any,
                    <lg_roworcolst> TYPE any.
 
     lv_name = ms_item-obj_name.
@@ -976,6 +978,12 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       CLEAR <lg_roworcolst>. "To avoid diff errors. This field doesn't exist in all releases
     ENDIF.
 
+    LOOP AT ls_internal-dd03p ASSIGNING <ls_dd03p>.
+      ASSIGN COMPONENT 'ACTFLAG' OF STRUCTURE <ls_dd03p> TO <lg_field>.
+      IF sy-subrc = 0.
+        CLEAR <lg_field>. "To avoid diffs. This field doesn't exist in all releases
+      ENDIF.
+    ENDLOOP.
 
     LOOP AT ls_internal-dd12v ASSIGNING <ls_dd12v>.
       CLEAR: <ls_dd12v>-as4user,

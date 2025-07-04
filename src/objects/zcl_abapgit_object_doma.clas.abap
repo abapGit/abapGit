@@ -487,6 +487,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
           lt_dd07v   TYPE TABLE OF dd07v.
 
     FIELD-SYMBOLS <ls_dd07v> TYPE dd07v.
+    FIELD-SYMBOLS <lg_field> TYPE any.
 
     lv_name = ms_item-obj_name.
 
@@ -515,6 +516,11 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
            ls_dd01v-as4date,
            ls_dd01v-as4time,
            ls_dd01v-appexist.
+
+    ASSIGN COMPONENT 'ACTFLAG' OF STRUCTURE ls_dd01v TO <lg_field>.
+    IF sy-subrc = 0.
+      CLEAR <lg_field>.
+    ENDIF.
 
 * make sure XML serialization does not dump if the field contains invalid data
 * note that this is a N field, so '' is not valid

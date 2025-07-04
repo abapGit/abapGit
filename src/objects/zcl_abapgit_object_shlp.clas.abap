@@ -231,7 +231,7 @@ CLASS zcl_abapgit_object_shlp IMPLEMENTATION.
           lt_dd33v TYPE TABLE OF dd33v.
 
     FIELD-SYMBOLS: <ls_dd32p> LIKE LINE OF lt_dd32p.
-
+    FIELD-SYMBOLS <lg_field> TYPE any.
 
     lv_name = ms_item-obj_name.
 
@@ -261,6 +261,11 @@ CLASS zcl_abapgit_object_shlp IMPLEMENTATION.
     CLEAR: ls_dd30v-as4user,
            ls_dd30v-as4date,
            ls_dd30v-as4time.
+
+    ASSIGN COMPONENT 'ACTFLAG' OF STRUCTURE ls_dd30v TO <lg_field>.
+    IF sy-subrc = 0.
+      CLEAR <lg_field>.
+    ENDIF.
 
     LOOP AT lt_dd32p ASSIGNING <ls_dd32p>.
 * clear information inherited from domain
