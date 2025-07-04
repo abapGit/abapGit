@@ -203,7 +203,7 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
   METHOD get_version_constant_value.
     DATA: lv_version_class     TYPE seoclsname,
           lv_version_component TYPE string.
-    FIELD-SYMBOLS: <lv_version> TYPE string.
+    FIELD-SYMBOLS: <lv_version> TYPE simple.
 
     IF iv_version_constant NP '*=>*'.
       zcx_abapgit_exception=>raise( 'Version constant needs to use the format CLASS/INTERFACE=>CONSTANT' ).
