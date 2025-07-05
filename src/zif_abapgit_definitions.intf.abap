@@ -157,13 +157,6 @@ INTERFACE zif_abapgit_definitions
       remote TYPE zif_abapgit_git_definitions=>ty_files_tt,
       status TYPE ty_results_ts_path,
     END OF ty_stage_files .
-  TYPES:
-    BEGIN OF ty_tpool.
-      INCLUDE TYPE textpool.
-  TYPES: split TYPE c LENGTH 8.
-  TYPES: END OF ty_tpool .
-  TYPES:
-    ty_tpool_tt TYPE STANDARD TABLE OF ty_tpool WITH DEFAULT KEY .
 
   TYPES:
     BEGIN OF ty_transport_to_branch,

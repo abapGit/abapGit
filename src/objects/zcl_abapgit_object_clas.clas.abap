@@ -391,7 +391,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
   METHOD deserialize_tpool.
 
     DATA: lv_clsname   TYPE seoclsname,
-          lt_tpool_ext TYPE zif_abapgit_definitions=>ty_tpool_tt,
+          lt_tpool_ext TYPE zif_abapgit_lang_definitions=>ty_tpool_tt,
           lt_tpool     TYPE textpool_table.
 
     ii_xml->read( EXPORTING iv_name = 'TPOOL'

@@ -36,13 +36,6 @@ CLASS zcl_abapgit_object_fugr DEFINITION
       ty_function_tt TYPE STANDARD TABLE OF ty_function WITH DEFAULT KEY .
     TYPES:
       ty_sobj_name_tt TYPE STANDARD TABLE OF sobj_name  WITH DEFAULT KEY .
-    TYPES:
-      BEGIN OF ty_tpool_i18n,
-        language TYPE langu,
-        textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,
-      END OF ty_tpool_i18n .
-    TYPES:
-      ty_tpools_i18n TYPE STANDARD TABLE OF ty_tpool_i18n .
 
     DATA mt_includes_cache TYPE ty_sobj_name_tt .
     DATA mt_includes_all TYPE ty_sobj_name_tt .
@@ -365,7 +358,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           ls_progdir   TYPE zif_abapgit_sap_report=>ty_progdir,
           lt_includes  TYPE ty_sobj_name_tt,
           lt_tpool     TYPE textpool_table,
-          lt_tpool_ext TYPE zif_abapgit_definitions=>ty_tpool_tt,
+          lt_tpool_ext TYPE zif_abapgit_lang_definitions=>ty_tpool_tt,
           lt_source    TYPE TABLE OF abaptxt255,
           lx_exc       TYPE REF TO zcx_abapgit_exception.
 
@@ -424,7 +417,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
-    DATA: lt_tpool_i18n TYPE ty_tpools_i18n,
+    DATA: lt_tpool_i18n TYPE zif_abapgit_lang_definitions=>ty_i18n_tpools,
           lt_tpool      TYPE textpool_table.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
@@ -996,7 +989,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 
   METHOD serialize_texts.
-    DATA: lt_tpool_i18n TYPE ty_tpools_i18n,
+    DATA: lt_tpool_i18n TYPE zif_abapgit_lang_definitions=>ty_i18n_tpools,
           lt_tpool      TYPE textpool_table.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
