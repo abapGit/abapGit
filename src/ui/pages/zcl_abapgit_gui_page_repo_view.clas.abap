@@ -201,7 +201,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -1038,8 +1038,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
   METHOD render_table_header.
 
     DATA:
-      lt_col_spec TYPE zif_abapgit_definitions=>ty_col_spec_tt,
-      ls_col_spec TYPE zif_abapgit_definitions=>ty_col_spec.
+      lt_col_spec TYPE zcl_abapgit_gui_chunk_lib=>ty_col_spec_tt,
+      ls_col_spec TYPE zcl_abapgit_gui_chunk_lib=>ty_col_spec.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
