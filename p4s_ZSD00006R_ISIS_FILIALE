@@ -1,0 +1,190 @@
+*-----------------------------------------------------------------*
+*          C R E A T I O N                                        *
+*-----------------------------------------------------------------*
+* Program      : ZSD00006R_ISIS_FILIALE
+* Created By   : Sapna
+* Creation Date: 10/11/2019
+* Change No.   : I126
+* Description  : Program for transaction FB01 , FB05, ABZON
+*               I126 NV ISIS Accoutning Integration flow
+* The aim of this interface is to receive a file from ISIS to S4
+* to generate the postings of sales,stock & also asset posting for 6i Channel
+* Modification history:
+*
+* Date:    Programmer:    Description:              Change No.         *
+* -------- -------------- -------------------------------------------- *
+******************************************************************************
+* Changed  By   : Sapna chandy                                          *
+* Changed  Date: 15/01/2020
+* Change No.   :   CR 4211                                              *
+* Description  :
+* ISIS will send EURECA VAT codes to S4 for those old invoices.
+*If VAT code ( Movement code line 1, Consider the tax code from 33 and 34 digits)
+*receive in the ISIS file is present in the new mapping table ZFI00043T_ISISTC
+* as EURECA VAT Code, then replace it by S4 VAT Code from table ZFI00043T_ISISTC. Else keep VAT Codes from ISIS file.
+******************************************************************************
+* Changed  By   : Sapna chandy
+* Changed  Date: 18/01/2020
+* Description  : Update partner cost center ZZPCC
+* Change No.  :  CR 4271
+****************************************************
+* Changed  By   : Sapna chandy
+* Changed  Date: 18/01/2020
+* Change No.  :  CR 4657
+* Description  :WBS Element for ISIS flows:
+*Case 1: Add the prefix  M  to the code received from file
+*Case 2: The WBS element will be determined from the ZFI00003T_PARAM table
+*&---------------------------------------------------------------------*
+* Changed  By   : Sapna chandy
+* Changed  Date:  23/03/2020
+* Change No.  :  CR 5275
+*Tax code to be picked up from the file .
+* In case if there is no tax code in file then fetch from is  param.
+*&---------------------------------------------------------------------*
+* Changed  By   : Sapna chandy
+* Changed  Date : 02/04/2020
+* Change No.   :  CR 5290
+*New columns added to store asset number and amount
+* to reprocess the acquisition posting only to stop creating duplicate asset.
+*Stagingt table gets updated with  No, Posting Error  against Immobilization column
+*For 6i Channel , IMMOBILIZATION executed for codmouv <> 'F550'
+*&---------------------------------------------------------------------*
+* Modification history:
+*
+* Date:    Programmer:    Description:              Change No.         *
+* -------- -------------- -------------------------------------------- *
+* 18/05/20  E569429        ( D714 -timestamp                           *
+*                           2hr differance)           003              *
+* 19/05/20  E569429        CR 5884 - posting date     004              *
+* 26/05/20  E569429        D775 - Payment term        005              *
+* 08/07/20  E569429        INCI09545807 update 10                      *
+*                          in status instead of 99    006/007          *
+* 21/09/20  E569429        D942 - new Tax code        008              *
+*                          ISIS- VDVS INCI09687132                     *
+* 24/11/20 E569429        D1261 - Add "O" in the code                  *
+*                         to fetch OV brand details                    *
+*                         from Z*PARAM table.         009              *
+* 17/12/20  E569429        INCI09857298                                *
+*                          Due date not populated     010              *
+* 01/03/21  E598492        I126 NV ISIS Interface     011              *
+* 30/08/21  E569429       D2750 blank tax code should be pass       012*
+* 31/08/21  E569429       11350 Internal sales VDVS - new schema    013*
+* 22/10/21  E569429       11798 Add brand in ZSD00006T_CANAUX       014*
+* 03/12/21  E569429       INCI10485663 ISIS_Interface Asset         015*
+* 13/12/21  E569429       INCI10564645 CR 12364 - 6J canal          016*
+* 22/02/2022 SC74056  I126-ISIS Net Due Date to be updated in document - NL, PT, IT  018*
+* 02/05/2022 SC74056 INCI10840164 - I126 ISIS Net due date          019*
+* 11/08/22  E604120       S4H-14673/14641/15275 use data from       020*
+*                         ZSD14673T_ASSET for Asset creation           *
+* 06/03/24  SD65697       S4H-17974-ISIS NL Complementary Invoices  031*
+* 20/03/24  SD65697       S4H-17974-ISIS NL Comple exclude 500000K  032*
+* 24/04/24  SE83217       INCI12211966-ISIS I126-ERROR IN BALANCE   033*
+* 25/04/24  SE83217       INCI12223326 - ERROR MESSAGES BAD PROCESS 034*
+* 09/05/24  SE83217       INCI12257476 - ERROR MESSAGES BAD PROCESS 035*
+* 24/06/24  SD65697       S4H-17351-I126-Tour_number_control        037*
+* 28/06/24  SD65697       CR-17465-NRM - Conversion Cost  field     038*
+* 20/02/25  SF19477       INCI12730891 - Error in ISIS Interface    039*
+
+************************************************************************
+
+REPORT zsd00006r_isis_filiale LINE-SIZE 180.
+*Data Declarationl
+INCLUDE zsd00006r_isis_filiale_top.
+
+DATA: gt_stage TYPE STANDARD TABLE OF zsd00006_stag,
+      gv_ts    TYPE char14.                         "INS003(+)
+*Selection Screen
+INCLUDE zsd00006r_isis_filiale_sel.
+
+INCLUDE zs400001i_interface_panel.
+
+*Form Routines
+INCLUDE zsd00006r_isis_filiale_f01.
+
+INCLUDE zs400002i_interface_f01.
+
+*AT SELECTION-SCREEN OUTPUT.
+INITIALIZATION.
+  PERFORM screen_initialization.
+
+  PERFORM f_set_file_from_server USING 'ZSD00006R_ACDOCUMENT_IN'.
+  PERFORM f_set_interface        USING 'I126'.
+
+START-OF-SELECTION.
+*--------------------------------------------------------------------*
+  PERFORM f_load_new_functionality USING 'ZSD00006_STAG'.
+
+* start INS003
+  CONCATENATE sy-datum sy-uzeit INTO gv_ts.
+  MOVE gv_ts TO ts.
+* end of INS003
+
+  MOVE gt_stage[] TO gt_input[].
+  SELECT SINGLE land1 FROM t001
+    INTO gv_land1
+   WHERE bukrs EQ so_bukrs-low.
+
+  DELETE gt_input
+   WHERE intf_bukrs NE so_bukrs-low
+      OR intf_brand NE p_brand.
+
+  SORT gt_input BY intf_runno intf_record_no.
+*--------------------------------------------------------------------*
+* read Constant value from param table
+  PERFORM f_read_constant_value. "INS011(+)
+
+*Search for physical files
+  PERFORM fichiers_ouverture.
+*Read file
+  PERFORM read_fichier CHANGING gt_fich_ent.
+* Check last sequence
+  PERFORM check_last_sequence USING gt_fich_ent. "INS037
+*Get data
+  PERFORM get_db_data USING gt_fich_ent.
+*process data - movement code
+  PERFORM parse_fichier USING gt_fich_ent
+                     CHANGING gt_movs.
+
+  PERFORM f_load_process_data CHANGING gt_movs.
+
+  PERFORM f_obtain_knb1 USING gt_movs.
+*  process data - param entries
+  PERFORM form_fichier CHANGING gt_movs
+                                i_bi_file.
+
+*  PERFORM process_fichier USING i_bi_file
+*                               ps_temp.
+
+  IF ( gt_hdr IS NOT INITIAL AND gt_itm IS NOT INITIAL ) OR ( gt_elog IS NOT INITIAL )   OR ( gt_ret IS NOT INITIAL ).
+    PERFORM process_data.   " Call FM for posting
+
+*--------------------------------------------------------------------*
+    IF p_test IS INITIAL .
+* Final Total Message to ZS4ERR Table
+      ADD 1 TO gt_zs4err-keyfield.
+      MOVE: gv_interface TO gt_zs4err-interfaceid,
+            ts           TO gt_zs4err-timestamp.
+
+      MOVE: 'C'    TO gt_zs4err-errtype,
+            'ZS4E' TO gt_zs4err-msgclass,
+            '200'  TO gt_zs4err-msgnumber,
+            gv_tot TO gt_zs4err-var1,
+            gv_err TO gt_zs4err-var2,
+            gv_ok  TO gt_zs4err-var3.
+
+      MOVE gv_land1 TO gt_zs4err-country.
+      MOVE so_bukrs-low TO gt_zs4err-bukrs.
+      MOVE p_brand      TO gt_zs4err-brand.
+      MOVE 'Totals' TO gt_zs4err-recordid.
+      PERFORM f_add_error_to_cockpit
+        USING gt_zs4err.
+
+      CLEAR: gv_tot, gv_ok, gv_err.
+*--------------------------------------------------------------------*
+    ENDIF.
+  ENDIF.
+*Error Log
+*  PERFORM write_error_message USING gt_log .   " Commented 24.03.2020 " DEL011(-)
+
+*Display log in alv
+  PERFORM display_log_alv. "INS011(+}
