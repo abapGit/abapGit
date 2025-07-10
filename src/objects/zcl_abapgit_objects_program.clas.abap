@@ -117,12 +117,12 @@ CLASS zcl_abapgit_objects_program DEFINITION
       IMPORTING
         !it_tpool       TYPE textpool_table
       RETURNING
-        VALUE(rt_tpool) TYPE zif_abapgit_definitions=>ty_tpool_tt .
+        VALUE(rt_tpool) TYPE zif_abapgit_lang_definitions=>ty_tpool_tt.
     CLASS-METHODS read_tpool
       IMPORTING
-        !it_tpool       TYPE zif_abapgit_definitions=>ty_tpool_tt
+        !it_tpool       TYPE zif_abapgit_lang_definitions=>ty_tpool_tt
       RETURNING
-        VALUE(rt_tpool) TYPE zif_abapgit_definitions=>ty_tpool_tt .
+        VALUE(rt_tpool) TYPE textpool_table.
   PRIVATE SECTION.
 
     CONSTANTS:
