@@ -104,6 +104,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD call_pull.
 
     DATA lv_key         TYPE zif_abapgit_persistence=>ty_value.
@@ -440,6 +441,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       lv_index = sy-tabix.
 
       IF ms_user_settings-hide_full_matches = abap_true
+          AND NOT ls_feature-transport IS INITIAL
           AND ls_feature-full_match = abap_true.
         CONTINUE.
       ENDIF.
