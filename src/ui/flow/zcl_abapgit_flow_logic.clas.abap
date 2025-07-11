@@ -343,7 +343,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
       ls_only_remote-path = ls_expanded-path.
       ls_only_remote-filename = ls_expanded-name.
       ls_only_remote-remote_sha1 = ls_expanded-sha1.
-      INSERT ls_only_remote INTO cs_information-only_remote.
+      INSERT ls_only_remote INTO TABLE cs_information-only_remote.
     ENDLOOP.
 
   ENDMETHOD.
