@@ -31,12 +31,16 @@ CLASS zcl_abapgit_gui_page_flowcons DEFINITION
       BEGIN OF c_action,
         refresh              TYPE string VALUE 'refresh',
         stage_missing_remote TYPE string VALUE 'stage_missing_remote',
+        stage_only_remote    TYPE string VALUE 'stage_only_remote',
       END OF c_action .
 
     DATA mo_repo TYPE REF TO zif_abapgit_repo_online.
     DATA ms_consolidate TYPE zif_abapgit_flow_logic=>ty_consolidate.
 
     METHODS stage_missing_remote
+      RAISING zcx_abapgit_exception.
+
+    METHODS stage_only_remote
       RAISING zcx_abapgit_exception.
 
 ENDCLASS.
@@ -136,6 +140,67 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD stage_only_remote.
+* remove and commit "ms_consolidate-only_remote" files to new branch
+
+    DATA lt_branches    TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA ls_main_branch LIKE LINE OF lt_branches.
+    DATA lv_branch_name TYPE string.
+    DATA ls_file        LIKE LINE OF ms_consolidate-missing_remote.
+    DATA lv_package     TYPE devclass.
+    DATA lt_local       TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA ls_local       LIKE LINE OF lt_local.
+    DATA lo_dot         TYPE REF TO zcl_abapgit_dot_abapgit.
+    DATA lo_stage       TYPE REF TO zcl_abapgit_stage.
+    DATA ls_comment     TYPE zif_abapgit_git_definitions=>ty_comment.
+    DATA lt_objects     TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA lt_sha1        TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
+
+
+    lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
+      iv_url    = mo_repo->get_url( )
+      iv_prefix = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && zif_abapgit_flow_logic=>c_main )->get_all( ).
+    ASSERT lines( lt_branches ) = 1.
+
+    READ TABLE lt_branches INDEX 1 INTO ls_main_branch.
+    ASSERT sy-subrc = 0.
+
+    lv_branch_name = |consolidate{ sy-datum }|.
+    zcl_abapgit_git_porcelain=>create_branch(
+      iv_url  = mo_repo->get_url( )
+      iv_name = |{ zif_abapgit_git_definitions=>c_git_branch-heads_prefix }{ lv_branch_name }|
+      iv_from = ls_main_branch-sha1 ).
+
+    lv_package = mo_repo->zif_abapgit_repo~get_package( ).
+    lo_dot = mo_repo->zif_abapgit_repo~get_dot_abapgit( ).
+
+    CREATE OBJECT lo_stage.
+    LOOP AT ms_consolidate-only_remote INTO ls_file.
+      lo_stage->rm( iv_path     = ls_local-file-path
+                    iv_filename = ls_local-file-filename ).
+    ENDLOOP.
+
+    ls_comment-committer-name  = 'consolidate'.
+    ls_comment-committer-email = 'consolidate@localhost'.
+    ls_comment-comment         = |Consolidate { sy-datum } { sy-uzeit }|.
+
+    INSERT ls_main_branch-sha1 INTO TABLE lt_sha1.
+    lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_no_blobs_multi(
+      iv_url  = mo_repo->get_url( )
+      it_sha1 = lt_sha1 ).
+
+    zcl_abapgit_git_porcelain=>push(
+      is_comment     = ls_comment
+      io_stage       = lo_stage
+      iv_branch_name = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && lv_branch_name
+      iv_url         = mo_repo->get_url( )
+      iv_parent      = ls_main_branch-sha1
+      it_old_objects = lt_objects ).
+
+    MESSAGE 'Done, commited' TYPE 'S'.
+
+  ENDMETHOD.
+
   METHOD create.
 
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_flowcons.
@@ -155,6 +220,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_action-stage_missing_remote.
         stage_missing_remote( ).
+        CLEAR ms_consolidate.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-stage_only_remote.
+        stage_only_remote( ).
         CLEAR ms_consolidate.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-refresh.
@@ -230,6 +299,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
 
       ri_html->add( zcl_abapgit_flow_page_utils=>render_table(
         it_files    = ms_consolidate-missing_remote
+        iv_repo_key = li_repo->get_key( ) ) ).
+    ENDIF.
+
+    IF lines( ms_consolidate-only_remote ) > 0.
+      ri_html->add( '<h2>Files Only Remote</h2>' ).
+      CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-flow-cons'.
+      lo_toolbar->add( iv_txt = |Remove and commit { lines( ms_consolidate-only_remote ) } files to new branch|
+                       iv_act = c_action-stage_only_remote
+                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      ri_html->add( lo_toolbar->render( ) ).
+
+      ri_html->add( zcl_abapgit_flow_page_utils=>render_table(
+        it_files    = ms_consolidate-only_remote
         iv_repo_key = li_repo->get_key( ) ) ).
     ENDIF.
 

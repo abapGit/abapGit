@@ -265,7 +265,9 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
     DATA li_repo     TYPE REF TO zif_abapgit_repo.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+    DATA ls_expanded LIKE LINE OF lt_main_expanded.
     DATA ls_branch   LIKE LINE OF lt_branches.
+    DATA ls_only_remote TYPE zif_abapgit_flow_logic=>ty_path_name.
     DATA ls_result   LIKE LINE OF lt_features.
 
     FIELD-SYMBOLS <ls_tadir> LIKE LINE OF lt_tadir.
@@ -332,8 +334,16 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
           ct_missing_remote = cs_information-missing_remote ).
     ENDIF.
 
+* todo: double check, there might have been changes while consolidation is running
+
 * those left in lt_main_expanded are only in remote, not local
-* todo
+    LOOP AT lt_main_expanded INTO ls_expanded.
+      CLEAR ls_only_remote.
+      ls_only_remote-path = ls_expanded-path.
+      ls_only_remote-filename = ls_expanded-name.
+      ls_only_remote-remote_sha1 = ls_expanded-sha1.
+      INSERT ls_only_remote INTO cs_information-only_remote.
+    ENDLOOP.
 
   ENDMETHOD.
 
