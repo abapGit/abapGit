@@ -83,7 +83,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
     READ TABLE lt_branches INDEX 1 INTO ls_main_branch.
     ASSERT sy-subrc = 0.
 
-    lv_branch_name = |consolidate{ sy-datum }|.
+    lv_branch_name = |consolidate{ sy-datum }{ sy-uzeit }|.
     zcl_abapgit_git_porcelain=>create_branch(
       iv_url  = mo_repo->get_url( )
       iv_name = |{ zif_abapgit_git_definitions=>c_git_branch-heads_prefix }{ lv_branch_name }|
@@ -163,7 +163,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
     READ TABLE lt_branches INDEX 1 INTO ls_main_branch.
     ASSERT sy-subrc = 0.
 
-    lv_branch_name = |consolidate{ sy-datum }|.
+    lv_branch_name = |consolidate{ sy-datum }{ sy-uzeit }|.
     zcl_abapgit_git_porcelain=>create_branch(
       iv_url  = mo_repo->get_url( )
       iv_name = |{ zif_abapgit_git_definitions=>c_git_branch-heads_prefix }{ lv_branch_name }|
