@@ -148,8 +148,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
     DATA lv_branch_name TYPE string.
     DATA ls_file        LIKE LINE OF ms_consolidate-missing_remote.
     DATA lv_package     TYPE devclass.
-    DATA lt_local       TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    DATA ls_local       LIKE LINE OF lt_local.
     DATA lo_dot         TYPE REF TO zcl_abapgit_dot_abapgit.
     DATA lo_stage       TYPE REF TO zcl_abapgit_stage.
     DATA ls_comment     TYPE zif_abapgit_git_definitions=>ty_comment.
@@ -176,8 +174,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
 
     CREATE OBJECT lo_stage.
     LOOP AT ms_consolidate-only_remote INTO ls_file.
-      lo_stage->rm( iv_path     = ls_local-file-path
-                    iv_filename = ls_local-file-filename ).
+      lo_stage->rm( iv_path     = ls_file-path
+                    iv_filename = ls_file-filename ).
     ENDLOOP.
 
     ls_comment-committer-name  = 'consolidate'.
