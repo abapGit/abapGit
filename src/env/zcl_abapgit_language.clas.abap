@@ -1,13 +1,13 @@
+CLASS zcl_abapgit_language DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
+
 *----------------------------------------------------------------------*
 * This helper class is used to set and restore the current language.
 * As some of the SAP functions used rely on SY-LANGU containing the
 * main language, this class is used to temporarily change and then
 * restore the value of SY-LANGU.
 *----------------------------------------------------------------------*
-CLASS zcl_abapgit_language DEFINITION
-  PUBLIC
-  CREATE PUBLIC .
-
   PUBLIC SECTION.
 
     CLASS-METHODS class_constructor .
