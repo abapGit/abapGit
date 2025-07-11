@@ -1,5 +1,6 @@
 {
   "recommendations": [
-    "larshp.vscode-abaplint"
+    "larshp.vscode-abaplint",
+    "editorconfig.editorconfig"
   ]
 }
