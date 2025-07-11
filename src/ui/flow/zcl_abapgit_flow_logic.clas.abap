@@ -335,6 +335,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     ENDIF.
 
 * todo: double check, there might have been changes while consolidation is running
+* or do smaller batches?
 
 * those left in lt_main_expanded are only in remote, not local
     LOOP AT lt_main_expanded INTO ls_expanded.
