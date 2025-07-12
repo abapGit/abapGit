@@ -19,7 +19,7 @@ CLASS zcl_abapgit_object_ssfo DEFINITION
     METHODS fix_ids
       IMPORTING
         !ii_xml_doc TYPE REF TO if_ixml_document .
-    METHODS sort_texts
+    CLASS-METHODS sort_texts
       IMPORTING
         !ii_xml_doc TYPE REF TO if_ixml_document
       RAISING
