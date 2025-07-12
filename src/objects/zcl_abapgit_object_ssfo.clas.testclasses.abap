@@ -82,7 +82,7 @@ CLASS ltcl_test_sort_texts IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_char_cp(
       act = lv_result
-      exp = '﻿*<T_CAPTION/>*' ).
+      exp = '*<T_CAPTION/>*' ).
 
   ENDMETHOD.
 
@@ -101,7 +101,7 @@ CLASS ltcl_test_sort_texts IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_char_cp(
       act = lv_result
-      exp = '﻿*<T_CAPTION/>*' ).
+      exp = '*<T_CAPTION/>*' ).
 
   ENDMETHOD.
 
