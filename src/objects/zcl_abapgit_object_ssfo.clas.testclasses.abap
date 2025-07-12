@@ -8,6 +8,7 @@ CLASS ltcl_test_sort_texts DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARM
 
     METHODS empty_list FOR TESTING RAISING cx_static_check.
     METHODS basic FOR TESTING RAISING cx_static_check.
+    METHODS field_omitted FOR TESTING RAISING cx_static_check.
 
     METHODS parse
       IMPORTING
@@ -117,6 +118,41 @@ CLASS ltcl_test_sort_texts IMPLEMENTATION.
     cl_abap_unit_assert=>assert_char_cp(
       act = lv_result
       exp = '*<T_CAPTION><item><LANGU>A</LANGU>*' ).
+
+  ENDMETHOD.
+
+  METHOD field_omitted.
+
+    DATA lv_xml     TYPE string.
+    DATA lv_result  TYPE string.
+    DATA li_xml_doc TYPE REF TO if_ixml_document.
+
+* CAPTION is omitted in the first item,
+    lv_xml =
+      |<T_CAPTION>| &&
+      |  <item>| &&
+      |   <LANGU>B</LANGU>| &&
+      |   <FORMNAME>ZFOOBAR</FORMNAME>| &&
+      |   <OBJTYPE>CD</OBJTYPE>| &&
+      |   <INAME>%CONDITION125</INAME>| &&
+      |  </item>| &&
+      |  <item>| &&
+      |   <LANGU>A</LANGU>| &&
+      |   <FORMNAME>ZFOOBAR</FORMNAME>| &&
+      |   <OBJTYPE>CD</OBJTYPE>| &&
+      |   <INAME>%CONDITION125</INAME>| &&
+      |   <CAPTION>New Alternative 114</CAPTION>| &&
+      |  </item>| &&
+      |</T_CAPTION>|.
+    li_xml_doc = parse( lv_xml ).
+    zcl_abapgit_object_ssfo=>sort_texts( li_xml_doc ).
+    lv_result = render( li_xml_doc ).
+
+break-point.
+
+*    cl_abap_unit_assert=>assert_char_cp(
+*      act = lv_result
+*      exp = '*<T_CAPTION><item><LANGU>A</LANGU>*' ).
 
   ENDMETHOD.
 
