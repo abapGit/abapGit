@@ -7,6 +7,7 @@ CLASS ltcl_test_sort_texts DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARM
   PRIVATE SECTION.
 
     METHODS empty_list FOR TESTING RAISING cx_static_check.
+    METHODS basic FOR TESTING RAISING cx_static_check.
 
     METHODS parse
       IMPORTING
@@ -26,11 +27,11 @@ CLASS ltcl_test_sort_texts IMPLEMENTATION.
 
   METHOD parse.
 
-    DATA li_factory  TYPE REF TO if_ixml_stream_factory.
-    DATA li_istream  TYPE REF TO if_ixml_istream.
-    DATA li_parser   TYPE REF TO if_ixml_parser.
-    DATA lv_subrc    TYPE i.
-    DATA li_ixml     TYPE REF TO if_ixml.
+    DATA li_factory TYPE REF TO if_ixml_stream_factory.
+    DATA li_istream TYPE REF TO if_ixml_istream.
+    DATA li_parser  TYPE REF TO if_ixml_parser.
+    DATA lv_subrc   TYPE i.
+    DATA li_ixml    TYPE REF TO if_ixml.
 
     li_ixml = cl_ixml=>create( ).
     ri_doc = li_ixml->create_document( ).
@@ -47,13 +48,14 @@ CLASS ltcl_test_sort_texts IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_subrc
       exp = 0 ).
+
   ENDMETHOD.
 
   METHOD render.
+
     DATA li_ostream  TYPE REF TO if_ixml_ostream.
     DATA li_renderer TYPE REF TO if_ixml_renderer.
     DATA li_factory  TYPE REF TO if_ixml_stream_factory.
-
     DATA li_ixml     TYPE REF TO if_ixml.
 
     li_ixml = cl_ixml=>create( ).
@@ -74,6 +76,25 @@ CLASS ltcl_test_sort_texts IMPLEMENTATION.
     DATA li_xml_doc TYPE REF TO if_ixml_document.
 
     lv_xml = '<T_CAPTION></T_CAPTION>'.
+    li_xml_doc = parse( lv_xml ).
+    zcl_abapgit_object_ssfo=>sort_texts( li_xml_doc ).
+    lv_result = render( li_xml_doc ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = lv_result
+      exp = '﻿*<T_CAPTION/>*' ).
+
+  ENDMETHOD.
+
+  METHOD basic.
+
+    DATA lv_xml     TYPE string.
+    DATA lv_result  TYPE string.
+    DATA li_xml_doc TYPE REF TO if_ixml_document.
+
+    lv_xml =
+      |<T_CAPTION>| &&
+      |</T_CAPTION>|.
     li_xml_doc = parse( lv_xml ).
     zcl_abapgit_object_ssfo=>sort_texts( li_xml_doc ).
     lv_result = render( li_xml_doc ).
