@@ -43,6 +43,15 @@ CLASS zcl_abapgit_gui_page_flowcons DEFINITION
     METHODS stage_only_remote
       RAISING zcx_abapgit_exception.
 
+    METHODS push
+      IMPORTING
+        io_stage       TYPE REF TO zcl_abapgit_stage
+        iv_sha1        TYPE zif_abapgit_git_definitions=>ty_sha1
+        iv_branch_name TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
+
 ENDCLASS.
 
 
@@ -70,9 +79,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
     DATA lo_filter      TYPE REF TO zcl_abapgit_object_filter_obj.
     DATA lo_dot         TYPE REF TO zcl_abapgit_dot_abapgit.
     DATA lo_stage       TYPE REF TO zcl_abapgit_stage.
-    DATA ls_comment     TYPE zif_abapgit_git_definitions=>ty_comment.
-    DATA lt_objects     TYPE zif_abapgit_definitions=>ty_objects_tt.
-    DATA lt_sha1        TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
 
 
     lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
@@ -119,24 +125,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
                      iv_data     = ls_local-file-data ).
     ENDLOOP.
 
-    ls_comment-committer-name  = 'consolidate'.
-    ls_comment-committer-email = 'consolidate@localhost'.
-    ls_comment-comment         = |Consolidate { sy-datum } { sy-uzeit }|.
-
-    INSERT ls_main_branch-sha1 INTO TABLE lt_sha1.
-    lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_no_blobs_multi(
-      iv_url  = mo_repo->get_url( )
-      it_sha1 = lt_sha1 ).
-
-    zcl_abapgit_git_porcelain=>push(
-      is_comment     = ls_comment
+    push(
       io_stage       = lo_stage
-      iv_branch_name = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && lv_branch_name
-      iv_url         = mo_repo->get_url( )
-      iv_parent      = ls_main_branch-sha1
-      it_old_objects = lt_objects ).
-
-    MESSAGE 'Done, commited' TYPE 'S'.
+      iv_branch_name = lv_branch_name
+      iv_sha1        = ls_main_branch-sha1 ).
 
   ENDMETHOD.
 
@@ -147,12 +139,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
     DATA ls_main_branch LIKE LINE OF lt_branches.
     DATA lv_branch_name TYPE string.
     DATA ls_file        LIKE LINE OF ms_consolidate-missing_remote.
-    DATA lv_package     TYPE devclass.
     DATA lo_dot         TYPE REF TO zcl_abapgit_dot_abapgit.
     DATA lo_stage       TYPE REF TO zcl_abapgit_stage.
-    DATA ls_comment     TYPE zif_abapgit_git_definitions=>ty_comment.
-    DATA lt_objects     TYPE zif_abapgit_definitions=>ty_objects_tt.
-    DATA lt_sha1        TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
 
 
     lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
@@ -169,7 +157,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
       iv_name = |{ zif_abapgit_git_definitions=>c_git_branch-heads_prefix }{ lv_branch_name }|
       iv_from = ls_main_branch-sha1 ).
 
-    lv_package = mo_repo->zif_abapgit_repo~get_package( ).
     lo_dot = mo_repo->zif_abapgit_repo~get_dot_abapgit( ).
 
     CREATE OBJECT lo_stage.
@@ -178,21 +165,34 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
                     iv_filename = ls_file-filename ).
     ENDLOOP.
 
+    push(
+      io_stage       = lo_stage
+      iv_branch_name = lv_branch_name
+      iv_sha1        = ls_main_branch-sha1 ).
+
+  ENDMETHOD.
+
+  METHOD push.
+
+    DATA ls_comment TYPE zif_abapgit_git_definitions=>ty_comment.
+    DATA lt_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
+    DATA lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
+
     ls_comment-committer-name  = 'consolidate'.
     ls_comment-committer-email = 'consolidate@localhost'.
-    ls_comment-comment         = |Consolidate { sy-datum } { sy-uzeit }|.
+    ls_comment-comment         = |Consolidate { sy-datum DATE = ISO } { sy-uzeit TIME = ISO }|.
 
-    INSERT ls_main_branch-sha1 INTO TABLE lt_sha1.
+    INSERT iv_sha1 INTO TABLE lt_sha1.
     lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_no_blobs_multi(
       iv_url  = mo_repo->get_url( )
       it_sha1 = lt_sha1 ).
 
     zcl_abapgit_git_porcelain=>push(
       is_comment     = ls_comment
-      io_stage       = lo_stage
-      iv_branch_name = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && lv_branch_name
+      io_stage       = io_stage
+      iv_branch_name = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && iv_branch_name
       iv_url         = mo_repo->get_url( )
-      iv_parent      = ls_main_branch-sha1
+      iv_parent      = iv_sha1
       it_old_objects = lt_objects ).
 
     MESSAGE 'Done, commited' TYPE 'S'.
