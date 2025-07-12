@@ -113,9 +113,10 @@ CLASS ltcl_test_sort_texts IMPLEMENTATION.
     zcl_abapgit_object_ssfo=>sort_texts( li_xml_doc ).
     lv_result = render( li_xml_doc ).
 
+* check LANGU = A is sorted first
     cl_abap_unit_assert=>assert_char_cp(
       act = lv_result
-      exp = '*<T_CAPTION/>*' ).
+      exp = '*<T_CAPTION><item><LANGU>A</LANGU>*' ).
 
   ENDMETHOD.
 
