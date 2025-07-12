@@ -48,7 +48,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
+CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
 
 
   METHOD deserialize_sources.
