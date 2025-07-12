@@ -303,6 +303,15 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
             li_field->set_value( |{ <lv_field> }| ).
             li_field = li_field->get_next( ).
           ENDWHILE.
+
+* guess this can only happen for CAPTION field, as other are key fields
+          IF lv_field <> 'CAPTION' AND ls_item-caption IS NOT INITIAL.
+            ii_xml_doc->create_simple_element(
+              name   = 'CAPTION'
+              value  = |{ ls_item-caption }|
+              parent = li_item ).
+          ENDIF.
+
           lv_index = lv_index + 1.
         ENDDO.
 

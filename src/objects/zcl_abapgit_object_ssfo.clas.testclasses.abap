@@ -148,11 +148,9 @@ CLASS ltcl_test_sort_texts IMPLEMENTATION.
     zcl_abapgit_object_ssfo=>sort_texts( li_xml_doc ).
     lv_result = render( li_xml_doc ).
 
-break-point.
-
-*    cl_abap_unit_assert=>assert_char_cp(
-*      act = lv_result
-*      exp = '*<T_CAPTION><item><LANGU>A</LANGU>*' ).
+    cl_abap_unit_assert=>assert_char_cp(
+      act = lv_result
+      exp = '*New Alternative 114*' ).
 
   ENDMETHOD.
 
