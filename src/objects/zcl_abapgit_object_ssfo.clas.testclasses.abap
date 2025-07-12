@@ -94,6 +94,20 @@ CLASS ltcl_test_sort_texts IMPLEMENTATION.
 
     lv_xml =
       |<T_CAPTION>| &&
+      |  <item>| &&
+      |   <LANGU>B</LANGU>| &&
+      |   <FORMNAME>ZFOOBAR</FORMNAME>| &&
+      |   <OBJTYPE>CD</OBJTYPE>| &&
+      |   <INAME>%CONDITION125</INAME>| &&
+      |   <CAPTION>New Alternative 114</CAPTION>| &&
+      |  </item>| &&
+      |  <item>| &&
+      |   <LANGU>A</LANGU>| &&
+      |   <FORMNAME>ZFOOBAR</FORMNAME>| &&
+      |   <OBJTYPE>CD</OBJTYPE>| &&
+      |   <INAME>%CONDITION125</INAME>| &&
+      |   <CAPTION>New Alternative 114</CAPTION>| &&
+      |  </item>| &&
       |</T_CAPTION>|.
     li_xml_doc = parse( lv_xml ).
     zcl_abapgit_object_ssfo=>sort_texts( li_xml_doc ).
