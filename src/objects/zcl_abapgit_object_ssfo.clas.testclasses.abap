@@ -64,12 +64,13 @@ CLASS ltcl_test_sort_texts IMPLEMENTATION.
       ostream  = li_ostream
       document = ii_doc ).
     li_renderer->render( ).
+
   ENDMETHOD.
 
   METHOD empty_list.
 
-    DATA lv_xml TYPE string.
-    DATA lv_result TYPE string.
+    DATA lv_xml     TYPE string.
+    DATA lv_result  TYPE string.
     DATA li_xml_doc TYPE REF TO if_ixml_document.
 
     lv_xml = '<T_CAPTION></T_CAPTION>'.
@@ -77,6 +78,9 @@ CLASS ltcl_test_sort_texts IMPLEMENTATION.
     zcl_abapgit_object_ssfo=>sort_texts( li_xml_doc ).
     lv_result = render( li_xml_doc ).
 
+    cl_abap_unit_assert=>assert_char_cp(
+      act = lv_result
+      exp = '﻿*<T_CAPTION/>*' ).
 
   ENDMETHOD.
 
