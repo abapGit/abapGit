@@ -57,6 +57,7 @@ INTERFACE zif_abapgit_flow_logic
            warnings       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
            success        TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
            missing_remote TYPE ty_path_name_tt,
+           only_remote    TYPE ty_path_name_tt,
          END OF ty_consolidate.
 
 ENDINTERFACE.

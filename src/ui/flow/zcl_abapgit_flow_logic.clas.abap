@@ -49,9 +49,9 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
     CLASS-METHODS check_files
       IMPORTING
         it_local          TYPE zif_abapgit_definitions=>ty_files_item_tt
-        it_main_expanded  TYPE zif_abapgit_git_definitions=>ty_expanded_tt
         it_features       TYPE zif_abapgit_flow_logic=>ty_features
       CHANGING
+        ct_main_expanded  TYPE zif_abapgit_git_definitions=>ty_expanded_tt
         ct_missing_remote TYPE zif_abapgit_flow_logic=>ty_consolidate-missing_remote
       RAISING
         zcx_abapgit_exception.
@@ -265,7 +265,9 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
     DATA li_repo     TYPE REF TO zif_abapgit_repo.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+    DATA ls_expanded LIKE LINE OF lt_main_expanded.
     DATA ls_branch   LIKE LINE OF lt_branches.
+    DATA ls_only_remote TYPE zif_abapgit_flow_logic=>ty_path_name.
     DATA ls_result   LIKE LINE OF lt_features.
 
     FIELD-SYMBOLS <ls_tadir> LIKE LINE OF lt_tadir.
@@ -310,8 +312,8 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
           EXPORTING
             it_local          = lt_local
             it_features       = lt_features
-            it_main_expanded  = lt_main_expanded
           CHANGING
+            ct_main_expanded  = lt_main_expanded
             ct_missing_remote = cs_information-missing_remote ).
         IF lines( cs_information-missing_remote ) > 1000.
           INSERT `Only first 1000 missing files shown` INTO TABLE cs_information-warnings.
@@ -327,10 +329,22 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         EXPORTING
           it_local          = lt_local
           it_features       = lt_features
-          it_main_expanded  = lt_main_expanded
         CHANGING
+          ct_main_expanded  = lt_main_expanded
           ct_missing_remote = cs_information-missing_remote ).
     ENDIF.
+
+* todo: double check, there might have been changes while consolidation is running
+* or do smaller batches?
+
+* those left in lt_main_expanded are only in remote, not local
+    LOOP AT lt_main_expanded INTO ls_expanded.
+      CLEAR ls_only_remote.
+      ls_only_remote-path = ls_expanded-path.
+      ls_only_remote-filename = ls_expanded-name.
+      ls_only_remote-remote_sha1 = ls_expanded-sha1.
+      INSERT ls_only_remote INTO TABLE cs_information-only_remote.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -343,10 +357,10 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA lv_found_branch TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_local> LIKE LINE OF it_local.
-    FIELD-SYMBOLS <ls_expanded> LIKE LINE OF it_main_expanded.
+    FIELD-SYMBOLS <ls_expanded> LIKE LINE OF ct_main_expanded.
 
     LOOP AT it_local ASSIGNING <ls_local> WHERE file-filename <> zif_abapgit_definitions=>c_dot_abapgit.
-      READ TABLE it_main_expanded WITH KEY name = <ls_local>-file-filename ASSIGNING <ls_expanded>.
+      READ TABLE ct_main_expanded WITH KEY name = <ls_local>-file-filename ASSIGNING <ls_expanded>.
       lv_found_main = boolc( sy-subrc = 0 ).
 
       lv_found_branch = abap_false.
@@ -374,6 +388,10 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         ls_missing-local_sha1 = <ls_local>-file-sha1.
         ls_missing-remote_sha1 = <ls_expanded>-sha1.
         INSERT ls_missing INTO TABLE ct_missing_remote.
+      ENDIF.
+
+      IF lv_found_main = abap_true.
+        DELETE ct_main_expanded WHERE name = <ls_local>-file-filename.
       ENDIF.
     ENDLOOP.
 
