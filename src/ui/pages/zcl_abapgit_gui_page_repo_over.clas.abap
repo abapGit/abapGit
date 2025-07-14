@@ -155,7 +155,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
     METHODS build_table_scheme
       RETURNING
-        VALUE(rt_tab_scheme) TYPE zif_abapgit_definitions=>ty_col_spec_tt.
+        VALUE(rt_tab_scheme) TYPE zcl_abapgit_gui_chunk_lib=>ty_col_spec_tt.
 
     METHODS collect_all_labels
       IMPORTING

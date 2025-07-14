@@ -187,6 +187,8 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
           ls_extra TYPE ty_extra,
           ls_dd40v TYPE dd40v.
 
+    FIELD-SYMBOLS <lg_field> TYPE any.
+
     lv_name = ms_item-obj_name.
 
     CALL FUNCTION 'DDIF_TTYP_GET'
@@ -218,6 +220,11 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
 
     IF NOT ls_dd40v-rowkind IS INITIAL.
       CLEAR ls_dd40v-typelen.
+    ENDIF.
+
+    ASSIGN COMPONENT 'ACTFLAG' OF STRUCTURE ls_dd40v TO <lg_field>.
+    IF sy-subrc = 0.
+      CLEAR <lg_field>.
     ENDIF.
 
     io_xml->add( iv_name = 'DD40V'
