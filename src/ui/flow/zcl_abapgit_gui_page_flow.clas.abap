@@ -480,8 +480,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
           iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ ls_feature-pr-url }|
           iv_class = |url| ).
 
+        ri_html->add( |<br>| ).
         IF ls_feature-pr-draft = abap_true.
-          ri_html->add( 'DRAFT' ).
+          ri_html->add( 'Status: Draft' ).
+        ELSE.
+          ri_html->add( 'Status: Ready for Review' ).
         ENDIF.
       ELSE.
         ri_html->add( |No PR found| ).
