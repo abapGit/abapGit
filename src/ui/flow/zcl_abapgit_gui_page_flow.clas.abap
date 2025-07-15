@@ -492,7 +492,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       ri_html->add( |<br>| ).
 
       IF ls_feature-transport IS NOT INITIAL.
-        ri_html->add( |<tt>{ ls_feature-transport-trkorr }</tt> - { ls_feature-transport-title }<br>| ).
+        ri_html->add( |Transport: <tt>{ ls_feature-transport-trkorr }</tt> - { ls_feature-transport-title }<br>| ).
       ELSE.
         ri_html->add( |No corresponding transport found<br>| ).
       ENDIF.
