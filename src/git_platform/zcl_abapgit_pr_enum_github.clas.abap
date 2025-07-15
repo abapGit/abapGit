@@ -247,12 +247,6 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error setting to ready: { li_response->error( ) }| ).
     ENDIF.
 
-    TRY.
-        lv_json = li_response->json( )->stringify( ).
-      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
-        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
-    ENDTRY.
-
   ENDMETHOD.
 
   METHOD update_pull_request_branch.
