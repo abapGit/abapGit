@@ -475,13 +475,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       IF ls_feature-branch-display_name IS INITIAL.
         ri_html->add( |No branch found, comparing with <tt>main</tt>| ).
       ELSEIF ls_feature-pr IS NOT INITIAL.
+        ri_html->add( 'Pull Request: ' ).
         ri_html->add_a(
           iv_txt   = ls_feature-pr-title
           iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ ls_feature-pr-url }|
           iv_class = |url| ).
 
+        ri_html->add( |<br>| ).
         IF ls_feature-pr-draft = abap_true.
-          ri_html->add( 'DRAFT' ).
+          ri_html->add( 'Status: Draft' ).
+        ELSE.
+          ri_html->add( 'Status: Ready for Review' ).
         ENDIF.
       ELSE.
         ri_html->add( |No PR found| ).
@@ -489,7 +493,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       ri_html->add( |<br>| ).
 
       IF ls_feature-transport IS NOT INITIAL.
-        ri_html->add( |<tt>{ ls_feature-transport-trkorr }</tt> - { ls_feature-transport-title }<br>| ).
+        ri_html->add( |Transport: <tt>{ ls_feature-transport-trkorr }</tt> - { ls_feature-transport-title }<br>| ).
       ELSE.
         ri_html->add( |No corresponding transport found<br>| ).
       ENDIF.

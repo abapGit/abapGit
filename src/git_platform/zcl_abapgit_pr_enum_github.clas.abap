@@ -29,6 +29,12 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
         iv_expected_head_sha TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception.
+
+    METHODS ready_for_review
+      IMPORTING
+        iv_pull_number TYPE i
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -197,6 +203,46 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
 
     IF li_response->is_ok( ) = abap_false.
       zcx_abapgit_exception=>raise( |Error creating pull request: { li_response->error( ) }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD ready_for_review.
+* https://docs.github.com/en/graphql/reference/mutations#markpullrequestreadyforreview
+* https://gist.github.com/jeromepl/02e70f3ea4a4e8103da6f96f14eb213c
+
+    DATA lv_url      TYPE string.
+    DATA lv_json     TYPE string.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+    DATA lx_ajson    TYPE REF TO zcx_abapgit_ajson_error.
+    DATA lv_node_id  TYPE string.
+
+    lv_url = mv_repo_url && '/pulls/' && iv_pull_number.
+
+    li_response = mi_http_agent->request(
+      iv_url     = lv_url
+      iv_method  = zif_abapgit_http_agent=>c_methods-get ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error getting pull request information: { li_response->error( ) }| ).
+    ENDIF.
+
+    TRY.
+        lv_node_id = li_response->json( )->get( |/node_id| ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+    ENDTRY.
+
+    lv_json = |\{"query": "mutation \{ markPullRequestReadyForReview(input: | &&
+      |\{ pullRequestId: \\"{ lv_node_id }\\" \}) \{ pullRequest \{ id \} \} \}" \}|.
+
+    li_response = mi_http_agent->request(
+      iv_url     = 'https://api.github.com/graphql'
+      iv_method  = zif_abapgit_http_agent=>c_methods-post
+      iv_payload = lv_json ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error setting to ready: { li_response->error( ) }| ).
     ENDIF.
 
   ENDMETHOD.
