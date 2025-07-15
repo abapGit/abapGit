@@ -475,6 +475,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       IF ls_feature-branch-display_name IS INITIAL.
         ri_html->add( |No branch found, comparing with <tt>main</tt>| ).
       ELSEIF ls_feature-pr IS NOT INITIAL.
+        ri_html->add( 'Pull Request: ' ).
         ri_html->add_a(
           iv_txt   = ls_feature-pr-title
           iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ ls_feature-pr-url }|
