@@ -243,8 +243,14 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
       iv_payload = lv_json ).
 
     IF li_response->is_ok( ) = abap_false.
-      zcx_abapgit_exception=>raise( |Error setting tor eady: { li_response->error( ) }| ).
+      zcx_abapgit_exception=>raise( |Error setting to ready: { li_response->error( ) }| ).
     ENDIF.
+
+    TRY.
+        lv_json = li_response->json( )->stringify( ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+    ENDTRY.
 
   ENDMETHOD.
 
