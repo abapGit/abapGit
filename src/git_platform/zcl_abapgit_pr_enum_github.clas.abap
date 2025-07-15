@@ -235,7 +235,7 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
     ENDTRY.
 
     lv_json = |\{"query": "mutation \{ markPullRequestReadyForReview(input: | &&
-      |\{ pullRequestId: "{ lv_node_id }" \}) \{ pullRequest \{ id \} \} \}" \}|.
+      |\{ pullRequestId: \\"{ lv_node_id }\\" \}) \{ pullRequest \{ id \} \} \}" \}|.
 
     li_response = mi_http_agent->request(
       iv_url     = 'https://api.github.com/graphql'
