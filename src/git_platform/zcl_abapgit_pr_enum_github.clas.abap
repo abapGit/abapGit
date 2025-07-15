@@ -215,6 +215,7 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
     DATA lv_url      TYPE string.
     DATA lv_json     TYPE string.
     DATA li_response TYPE REF TO zif_abapgit_http_response.
+    DATA lx_ajson    TYPE REF TO zcx_abapgit_ajson_error.
 
     lv_url = mv_repo_url && '/pulls/' && iv_pull_number.
 
@@ -227,8 +228,11 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error getting pull request information: { li_response->error( ) }| ).
     ENDIF.
 
-    lv_json = li_response->json( )->stringify( ).
-    break-point.
+    TRY.
+        lv_json = li_response->json( )->stringify( ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+    ENDTRY.
 
   ENDMETHOD.
 
