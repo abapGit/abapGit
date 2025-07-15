@@ -229,7 +229,6 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        lv_json = li_response->json( )->stringify( ).
         lv_node_id = li_response->json( )->get( |/node_id| ).
       CATCH zcx_abapgit_ajson_error INTO lx_ajson.
         zcx_abapgit_exception=>raise_with_text( lx_ajson ).
