@@ -211,7 +211,6 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
 * https://docs.github.com/en/graphql/reference/mutations#markpullrequestreadyforreview
 * https://gist.github.com/jeromepl/02e70f3ea4a4e8103da6f96f14eb213c
 
-
     DATA lv_url      TYPE string.
     DATA lv_json     TYPE string.
     DATA li_response TYPE REF TO zif_abapgit_http_response.
