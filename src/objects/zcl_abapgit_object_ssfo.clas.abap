@@ -305,7 +305,8 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
           ENDWHILE.
 
 * guess this can only happen for CAPTION field, as other are key fields
-          IF lv_field <> 'CAPTION' AND ls_item-caption IS NOT INITIAL.
+* always add the empty values or they will cause diffs
+          IF lv_field <> 'CAPTION'.
             ii_xml_doc->create_simple_element(
               name   = 'CAPTION'
               value  = |{ ls_item-caption }|
