@@ -222,8 +222,7 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
 
     li_response = mi_http_agent->request(
       iv_url     = lv_url
-      iv_method  = zif_abapgit_http_agent=>c_methods-get
-      iv_payload = lv_json ).
+      iv_method  = zif_abapgit_http_agent=>c_methods-get ).
 
     IF li_response->is_ok( ) = abap_false.
       zcx_abapgit_exception=>raise( |Error getting pull request information: { li_response->error( ) }| ).
@@ -234,6 +233,18 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
       CATCH zcx_abapgit_ajson_error INTO lx_ajson.
         zcx_abapgit_exception=>raise_with_text( lx_ajson ).
     ENDTRY.
+
+    lv_json = |\{"query": "mutation \{ markPullRequestReadyForReview(input: | &&
+      |\{ pullRequestId: "{ lv_node_id }" \}) \{ pullRequest \{ id \} \} \}" \}|.
+
+    li_response = mi_http_agent->request(
+      iv_url     = 'https://api.github.com/graphql'
+      iv_method  = zif_abapgit_http_agent=>c_methods-post
+      iv_payload = lv_json ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error setting tor eady: { li_response->error( ) }| ).
+    ENDIF.
 
   ENDMETHOD.
 
