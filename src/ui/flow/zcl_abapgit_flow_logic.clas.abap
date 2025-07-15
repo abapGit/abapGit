@@ -390,9 +390,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         INSERT ls_missing INTO TABLE ct_missing_remote.
       ENDIF.
 
-      IF lv_found_main = abap_true.
-        DELETE ct_main_expanded WHERE name = <ls_local>-file-filename AND path = <ls_local>-file-path.
-      ELSEIF lv_found_branch = abap_true.
+      IF lv_found_main = abap_true OR lv_found_branch = abap_true.
         DELETE ct_main_expanded WHERE name = <ls_local>-file-filename AND path = <ls_local>-file-path.
       ENDIF.
     ENDLOOP.
