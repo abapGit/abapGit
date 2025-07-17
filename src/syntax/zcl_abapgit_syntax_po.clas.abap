@@ -1,4 +1,4 @@
-CLASS ZCL_ABAPGIT_SYNTAX_PO DEFINITION
+CLASS zcl_abapgit_syntax_po DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_syntax_highlighter
   CREATE PUBLIC.
