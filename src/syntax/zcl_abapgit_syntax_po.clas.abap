@@ -29,10 +29,6 @@ CLASS zcl_abapgit_syntax_po DEFINITION
         comment  TYPE string VALUE '^#.*',
       END OF c_regex.
 
-    DATA mv_over_first_line TYPE abap_bool.
-    DATA mv_in_meta_comment TYPE abap_bool.
-    DATA mv_meta_msgid_captured TYPE abap_bool.
-
 ENDCLASS.
 
 
