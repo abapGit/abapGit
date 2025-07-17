@@ -256,7 +256,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF_BASE IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -496,7 +496,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     FIND FIRST OCCURRENCE OF '.' IN <ls_diff>-type MATCH OFFSET lv_offs.
     <ls_diff>-type = reverse( substring( val = <ls_diff>-type
                                          len = lv_offs ) ).
-    IF <ls_diff>-type <> 'xml' AND <ls_diff>-type <> 'abap'.
+    IF <ls_diff>-type <> 'xml' AND <ls_diff>-type <> 'abap' AND <ls_diff>-type <> 'po'.
       <ls_diff>-type = 'other'.
     ENDIF.
 

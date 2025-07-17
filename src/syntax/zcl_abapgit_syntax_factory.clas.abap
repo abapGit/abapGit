@@ -17,7 +17,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_syntax_factory IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SYNTAX_FACTORY IMPLEMENTATION.
 
 
   METHOD create.
@@ -35,6 +35,8 @@ CLASS zcl_abapgit_syntax_factory IMPLEMENTATION.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_json.
     ELSEIF iv_filename CP '*.txt' OR iv_filename CP '*.ini'  OR iv_filename CP '*.text'.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_txt.
+    ELSEIF iv_filename CP '*.po'.
+      CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_po.
     ELSE.
       CLEAR ro_instance.
     ENDIF.
