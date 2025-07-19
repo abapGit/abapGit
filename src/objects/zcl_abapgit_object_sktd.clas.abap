@@ -246,6 +246,9 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
     DATA li_object_data_model  TYPE REF TO if_wb_object_data_model.
 
     FIELD-SYMBOLS <ls_data> TYPE any.
+    FIELD-SYMBOLS <ls_metadata> TYPE any.
+    FIELD-SYMBOLS <lv_created_by> TYPE syuname.
+    FIELD-SYMBOLS <lv_created_at> TYPE p.
 
     ASSIGN mr_data->* TO <ls_data>.
     ASSERT sy-subrc = 0.
@@ -255,6 +258,19 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
         iv_name = 'SKTD'
       CHANGING
         cg_data = <ls_data> ).
+
+    " update( ) requires created_at and created_by to be set
+    ASSIGN COMPONENT 'METADATA' OF STRUCTURE <ls_data> TO <ls_metadata>.
+    IF sy-subrc = 0.
+      ASSIGN COMPONENT 'CREATED_AT' OF STRUCTURE <ls_metadata> TO <lv_created_at>.
+      IF sy-subrc = 0 AND <lv_created_at> IS INITIAL.
+        GET TIME STAMP FIELD <lv_created_at>.
+      ENDIF.
+      ASSIGN COMPONENT 'CREATED_BY' OF STRUCTURE <ls_metadata> TO <lv_created_by>.
+      IF sy-subrc = 0 AND <lv_created_by> IS INITIAL.
+        <lv_created_by> = sy-uname.
+      ENDIF.
+    ENDIF.
 
     li_wb_object_operator = get_wb_object_operator( ).
 
