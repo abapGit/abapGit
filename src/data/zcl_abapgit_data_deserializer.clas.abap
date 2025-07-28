@@ -223,6 +223,8 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       <lt_del> TYPE ANY TABLE,
       <lt_upd> TYPE ANY TABLE.
 
+    li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
+
     LOOP AT it_result INTO ls_result.
       ASSERT ls_result-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
       ASSERT ls_result-name IS NOT INITIAL.
@@ -253,12 +255,15 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       ASSIGN ls_result-updates->* TO <lt_upd>.
 
       IF zcl_abapgit_data_utils=>is_customizing_table( ls_result-name ) = abap_true.
-        IF li_cts_api IS INITIAL.
-          li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
-        ENDIF.
-
         li_cts_api->create_transport_entries(
           iv_transport = is_checks-customizing-transport
+          it_table_ins = <lt_ins>
+          it_table_upd = <lt_upd>
+          it_table_del = <lt_del>
+          iv_tabname   = |{ ls_result-name }| ).
+      ELSEIF zcl_abapgit_data_utils=>is_application_table( ls_result-name ) = abap_true.
+        li_cts_api->create_transport_entries(
+          iv_transport = is_checks-transport-transport
           it_table_ins = <lt_ins>
           it_table_upd = <lt_upd>
           it_table_del = <lt_del>
