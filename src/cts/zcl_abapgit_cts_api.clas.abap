@@ -143,11 +143,13 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
   METHOD get_current_transport_from_db.
 
     " This method is used for objects that are included in transports but not locked
-    " for example, namespaces (NSPC)
+    " for example, namespaces (NSPC) or table entries (TABU)
+    " Ignore unreleased SAP piece lists
     SELECT SINGLE a~trkorr FROM e070 AS a JOIN e071 AS b ON a~trkorr = b~trkorr
       INTO rv_transport
       WHERE ( a~trstatus = 'D' OR a~trstatus = 'L' )
         AND a~trfunction <> 'G'
+        AND NOT ( a~trfunction = 'F' AND ( a~tarsystem = '' OR a~tarsystem = 'SAP' ) )
         AND b~pgmid = iv_program_id AND b~object = iv_object_type AND b~obj_name = iv_object_name.
 
   ENDMETHOD.
