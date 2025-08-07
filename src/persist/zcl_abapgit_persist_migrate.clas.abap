@@ -103,10 +103,10 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
 
   METHOD lock_create.
 
-    DATA: lv_obj_name TYPE tadir-obj_name,
-          ls_dd25v    TYPE dd25v,
-          lt_dd26e    TYPE STANDARD TABLE OF dd26e WITH DEFAULT KEY,
-          lt_dd27p    TYPE STANDARD TABLE OF dd27p WITH DEFAULT KEY.
+    DATA:
+      ls_dd25v TYPE dd25v,
+      lt_dd26e TYPE STANDARD TABLE OF dd26e WITH DEFAULT KEY,
+      lt_dd27p TYPE STANDARD TABLE OF dd27p WITH DEFAULT KEY.
 
     FIELD-SYMBOLS: <ls_dd26e> LIKE LINE OF lt_dd26e,
                    <ls_dd27p> LIKE LINE OF lt_dd27p.
@@ -159,20 +159,11 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    lv_obj_name = zcl_abapgit_persistence_db=>c_lock.
-    CALL FUNCTION 'TR_TADIR_INTERFACE'
-      EXPORTING
-        wi_tadir_pgmid    = 'R3TR'
-        wi_tadir_object   = 'ENQU'
-        wi_tadir_obj_name = lv_obj_name
-        wi_set_genflag    = abap_true
-        wi_test_modus     = abap_false
-        wi_tadir_devclass = '$TMP'
-      EXCEPTIONS
-        OTHERS            = 1.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    zcl_abapgit_factory=>get_tadir( )->insert_single(
+      iv_object      = 'ENQU'
+      iv_obj_name    = zcl_abapgit_persistence_db=>c_lock
+      iv_package     = '$TMP'
+      iv_set_genflag = abap_true ).
 
     CALL FUNCTION 'DDIF_ENQU_ACTIVATE'
       EXPORTING
@@ -216,11 +207,10 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
 
   METHOD table_create.
 
-    DATA: lv_rc       LIKE sy-subrc,
-          lv_obj_name TYPE tadir-obj_name,
-          ls_dd02v    TYPE dd02v,
-          ls_dd09l    TYPE dd09l,
-          lt_dd03p    TYPE STANDARD TABLE OF dd03p WITH DEFAULT KEY.
+    DATA: lv_rc    LIKE sy-subrc,
+          ls_dd02v TYPE dd02v,
+          ls_dd09l TYPE dd09l,
+          lt_dd03p TYPE STANDARD TABLE OF dd03p WITH DEFAULT KEY.
 
     FIELD-SYMBOLS: <ls_dd03p> LIKE LINE OF lt_dd03p.
 
@@ -277,20 +267,11 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    lv_obj_name = zcl_abapgit_persistence_db=>c_tabname.
-    CALL FUNCTION 'TR_TADIR_INTERFACE'
-      EXPORTING
-        wi_tadir_pgmid    = 'R3TR'
-        wi_tadir_object   = 'TABL'
-        wi_tadir_obj_name = lv_obj_name
-        wi_set_genflag    = abap_true
-        wi_test_modus     = abap_false
-        wi_tadir_devclass = '$TMP'
-      EXCEPTIONS
-        OTHERS            = 1.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    zcl_abapgit_factory=>get_tadir( )->insert_single(
+      iv_object      = 'TABL'
+      iv_obj_name    = zcl_abapgit_persistence_db=>c_tabname
+      iv_package     = '$TMP'
+      iv_set_genflag = abap_true ).
 
     CALL FUNCTION 'DDIF_TABL_ACTIVATE'
       EXPORTING

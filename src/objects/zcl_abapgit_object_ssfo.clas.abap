@@ -5,7 +5,6 @@ CLASS zcl_abapgit_object_ssfo DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
-
     INTERFACES zif_abapgit_object.
 
   PROTECTED SECTION.
@@ -20,7 +19,7 @@ CLASS zcl_abapgit_object_ssfo DEFINITION
     METHODS fix_ids
       IMPORTING
         !ii_xml_doc TYPE REF TO if_ixml_document .
-    METHODS sort_texts
+    CLASS-METHODS sort_texts
       IMPORTING
         !ii_xml_doc TYPE REF TO if_ixml_document
       RAISING
@@ -304,6 +303,16 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
             li_field->set_value( |{ <lv_field> }| ).
             li_field = li_field->get_next( ).
           ENDWHILE.
+
+* guess this can only happen for CAPTION field, as other are key fields
+* always add the empty values or they will cause diffs
+          IF lv_field <> 'CAPTION'.
+            ii_xml_doc->create_simple_element(
+              name   = 'CAPTION'
+              value  = |{ ls_item-caption }|
+              parent = li_item ).
+          ENDIF.
+
           lv_index = lv_index + 1.
         ENDDO.
 

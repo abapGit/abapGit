@@ -55,6 +55,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         select       TYPE string VALUE 'select',
         apply_filter TYPE string VALUE 'apply_filter',
         label_filter TYPE string VALUE 'label_filter',
+        clear_filter TYPE string VALUE 'clear_filter',
         refresh_list TYPE string VALUE 'refresh_list',
       END OF c_action,
       c_label_filter_prefix TYPE string VALUE `label:`,
@@ -155,7 +156,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
     METHODS build_table_scheme
       RETURNING
-        VALUE(rt_tab_scheme) TYPE zif_abapgit_definitions=>ty_col_spec_tt.
+        VALUE(rt_tab_scheme) TYPE zcl_abapgit_gui_chunk_lib=>ty_col_spec_tt.
 
     METHODS collect_all_labels
       IMPORTING
@@ -571,13 +572,21 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ri_html->add( |<input type="submit" class="hidden-submit" title="Filter">| ).
     ri_html->add( |</form>| ).
 
+    ri_html->add( '<span class="toolbar-light pad-sides">' ).
+
+    IF ms_list_settings-filter IS NOT INITIAL.
+      ri_html->add( ri_html->a(
+        iv_txt   = |<i id="icon-clear-filter" class="icon icon-times-solid"></i>|
+        iv_class = 'command'
+        iv_act   = |{ c_action-clear_filter }| ) ).
+    ENDIF.
+
     IF ms_list_settings-only_favorites = abap_true.
       lv_icon_class = `blue`.
     ELSE.
       lv_icon_class = `grey`.
     ENDIF.
 
-    ri_html->add( '<span class="toolbar-light pad-sides">' ).
     ri_html->add( ri_html->a(
       iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only Favorites|
       iv_class = 'command'
@@ -927,6 +936,12 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         ELSE.
           CLEAR ms_list_settings-filter. " Unexpected request
         ENDIF.
+        save_settings( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN c_action-clear_filter.
+
+        CLEAR ms_list_settings-filter.
         save_settings( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 

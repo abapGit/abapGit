@@ -100,15 +100,16 @@ INTERFACE zif_abapgit_cts_api
 
   METHODS insert_transport_object
     IMPORTING
-      !iv_pgmid    TYPE tadir-pgmid DEFAULT 'R3TR'
-      !iv_object   TYPE tadir-object
-      !iv_obj_name TYPE csequence
-      !iv_package  TYPE devclass
-      !iv_language TYPE sy-langu DEFAULT sy-langu
-      !iv_mode     TYPE c DEFAULT 'I'
+      !iv_pgmid     TYPE tadir-pgmid DEFAULT 'R3TR'
+      !iv_object    TYPE tadir-object
+      !iv_obj_name  TYPE csequence
+      !iv_package   TYPE devclass
+      !iv_transport TYPE trkorr OPTIONAL
+      !iv_language  TYPE sy-langu DEFAULT sy-langu
+      !iv_mode      TYPE c DEFAULT 'I'
     EXPORTING
-      !ev_object   TYPE tadir-object
-      !ev_obj_name TYPE trobj_name
+      !ev_object    TYPE tadir-object
+      !ev_obj_name  TYPE trobj_name
     RAISING
       zcx_abapgit_exception .
 
@@ -124,15 +125,13 @@ INTERFACE zif_abapgit_cts_api
     RAISING
       zcx_abapgit_exception .
 
-  METHODS list_open_requests_by_user
-    IMPORTING
-      !iv_user         TYPE sy-uname DEFAULT sy-uname
-    RETURNING
-      VALUE(rt_trkorr) TYPE ty_trkorr_tt
-    RAISING
-      zcx_abapgit_exception .
+  TYPES ty_user_range TYPE RANGE OF sy-uname.
+  TYPES ty_date_range TYPE RANGE OF sy-datum.
 
   METHODS list_open_requests
+    IMPORTING
+      !it_user         TYPE ty_user_range OPTIONAL
+      !it_date         TYPE ty_date_range OPTIONAL
     RETURNING
       VALUE(rt_trkorr) TYPE ty_trkorr_tt
     RAISING

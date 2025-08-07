@@ -530,6 +530,7 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
           ls_extras TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
 
     FIELD-SYMBOLS: <ls_dd27p> LIKE LINE OF lt_dd27p.
+    FIELD-SYMBOLS <lg_field> TYPE any.
 
     read_view(
       EXPORTING
@@ -551,6 +552,11 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
     CLEAR: ls_dd25v-as4user,
            ls_dd25v-as4date,
            ls_dd25v-as4time.
+
+    ASSIGN COMPONENT 'ACTFLAG' OF STRUCTURE ls_dd25v TO <lg_field>.
+    IF sy-subrc = 0.
+      CLEAR <lg_field>.
+    ENDIF.
 
     CLEAR: ls_dd09l-as4user,
            ls_dd09l-as4date,

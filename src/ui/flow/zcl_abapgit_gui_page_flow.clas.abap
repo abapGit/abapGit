@@ -24,9 +24,9 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
     CONSTANTS:
       BEGIN OF c_action,
         refresh             TYPE string VALUE 'refresh',
-        consolidate         TYPE string VALUE 'consolicate',
+        consolidate         TYPE string VALUE 'consolidate',
         pull                TYPE string VALUE 'pull',
-        stage               TYPE string VALUE 'stage',
+        stage_and_commit    TYPE string VALUE 'stage_and_commit',
         only_my_transports  TYPE string VALUE 'only_my_transports',
         hide_full_matches   TYPE string VALUE 'hide_full_matches',
         hide_matching_files TYPE string VALUE 'hide_matching_files',
@@ -44,12 +44,6 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    METHODS render_table
-      IMPORTING
-        !is_feature    TYPE zif_abapgit_flow_logic=>ty_feature
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
-
     METHODS render_toolbar
       IMPORTING
         !iv_index      TYPE i
@@ -59,15 +53,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    METHODS call_diff
-      IMPORTING
-        !ii_event         TYPE REF TO zif_abapgit_gui_event
-      RETURNING
-        VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
-      RAISING
-        zcx_abapgit_exception.
-
-    METHODS call_stage
+    METHODS call_stage_commit
       IMPORTING
         !ii_event         TYPE REF TO zif_abapgit_gui_event
       RETURNING
@@ -119,76 +105,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD call_diff.
-
-    DATA lv_key         TYPE zif_abapgit_persistence=>ty_value.
-    DATA lv_remote_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
-    DATA ls_file        TYPE zif_abapgit_git_definitions=>ty_file.
-    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
-    DATA li_repo        TYPE REF TO zif_abapgit_repo.
-    DATA lv_blob        TYPE xstring.
-    DATA ls_local       TYPE zif_abapgit_git_definitions=>ty_file.
-    DATA ls_remote      TYPE zif_abapgit_git_definitions=>ty_file.
-    DATA lt_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lo_filter      TYPE REF TO zcl_abapgit_object_filter_obj.
-    DATA lt_files_item  TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    DATA ls_file_item   LIKE LINE OF lt_files_item.
-    DATA ls_item        TYPE zif_abapgit_definitions=>ty_item.
-
-    FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
-
-    lv_key = ii_event->query( )->get( 'KEY' ).
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-    li_repo ?= li_repo_online.
-
-    lv_remote_sha1 = ii_event->query( )->get( 'REMOTE_SHA1' ).
-
-    ls_file-path     = ii_event->query( )->get( 'PATH' ).
-    ls_file-filename = ii_event->query( )->get( 'FILENAME' ). " unescape ?
-
-    zcl_abapgit_filename_logic=>file_to_object(
-      EXPORTING
-        iv_filename = ls_file-filename
-        iv_path     = ls_file-path
-        iv_devclass = li_repo->get_package( )
-        io_dot      = li_repo->get_dot_abapgit( )
-      IMPORTING
-        es_item     = ls_item ).
-
-    APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
-    <ls_filter>-object = ls_item-obj_type.
-    <ls_filter>-obj_name = ls_item-obj_name.
-    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
-
-    lt_files_item = li_repo_online->zif_abapgit_repo~get_files_local_filtered( lo_filter ).
-    READ TABLE lt_files_item INTO ls_file_item WITH KEY file-path = ls_file-path
-      file-filename = ls_file-filename.
-
-    lv_blob = zcl_abapgit_git_factory=>get_v2_porcelain( )->fetch_blob(
-      iv_url  = li_repo_online->get_url( )
-      iv_sha1 = lv_remote_sha1 ).
-
-    ls_remote-path = ls_file-path.
-    ls_remote-filename = ls_file-filename.
-    ls_remote-sha1 = lv_remote_sha1.
-    ls_remote-data = lv_blob.
-
-    ls_local-path = ls_remote-path.
-    ls_local-filename = ls_remote-filename.
-    ls_local-sha1 = ls_file_item-file-sha1.
-    ls_local-data = ls_file_item-file-data.
-
-    rs_handled-page = zcl_abapgit_gui_page_diff_file=>create(
-      iv_obj_type = ls_item-obj_type
-      iv_obj_name = ls_item-obj_name
-      is_local    = ls_local
-      is_remote   = ls_remote ).
-
-    rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
-
-  ENDMETHOD.
-
-
   METHOD call_pull.
 
     DATA lv_key         TYPE zif_abapgit_persistence=>ty_value.
@@ -218,13 +134,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
 
     set_branch(
-          iv_branch = lv_branch
-          iv_key    = lv_key ).
+      iv_branch = lv_branch
+      iv_key    = lv_key ).
 
     rs_handled-page = zcl_abapgit_gui_page_pull=>create(
-          ii_repo       = li_repo_online
-          iv_trkorr     = ls_feature-transport-trkorr
-          ii_obj_filter = lo_filter ).
+      ii_repo       = li_repo_online
+      iv_trkorr     = ls_feature-transport-trkorr
+      ii_obj_filter = lo_filter ).
 
     rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
@@ -233,7 +149,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD call_stage.
+  METHOD call_stage_commit.
 
     DATA lv_key          TYPE zif_abapgit_persistence=>ty_value.
     DATA lv_branch       TYPE string.
@@ -313,53 +229,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_table.
-
-    DATA ls_path_name LIKE LINE OF is_feature-changed_files.
-    DATA lv_status    TYPE string.
-    DATA lv_branch    TYPE string.
-    DATA lv_param     TYPE string.
-
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    ri_html->add( |<table>| ).
-    ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote</u></td><td><u>Local</u></td><td></td></tr>| ).
-
-    lv_branch = is_feature-branch-display_name.
-    IF lv_branch IS INITIAL.
-      lv_branch = 'main'.
-    ENDIF.
-
-    LOOP AT is_feature-changed_files INTO ls_path_name.
-      IF ls_path_name-remote_sha1 = ls_path_name-local_sha1.
-        IF ms_user_settings-hide_matching_files = abap_true.
-          CONTINUE.
-        ENDIF.
-        lv_status = 'Match'.
-      ELSEIF ls_path_name-remote_sha1 IS NOT INITIAL
-          AND ls_path_name-local_sha1 IS NOT INITIAL.
-* todo: file added or removed
-        ASSERT is_feature-repo-key IS NOT INITIAL.
-        lv_param = zcl_abapgit_html_action_utils=>file_encode(
-          iv_key   = is_feature-repo-key
-          ig_file  = ls_path_name
-          iv_extra = lv_branch ).
-        lv_status = ri_html->a(
-          iv_txt = 'Diff'
-          iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{
-            lv_param }&remote_sha1={ ls_path_name-remote_sha1 }| ).
-      ENDIF.
-
-      ri_html->add( |<tr><td><tt>{ ls_path_name-path }{ ls_path_name-filename }</tt></td><td>{
-        ls_path_name-remote_sha1(7) }</td><td>{
-        ls_path_name-local_sha1(7) }</td><td>{ lv_status }</td></tr>| ).
-    ENDLOOP.
-    ri_html->add( |</table>| ).
-
-  ENDMETHOD.
-
-
   METHOD render_toolbar.
 
     DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
@@ -383,10 +252,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       lo_toolbar->add( iv_txt = 'Pull'
                        iv_act = |{ c_action-pull }{ lv_extra }|
                        iv_opt = lv_opt ).
-      IF is_feature-transport-trkorr IS NOT INITIAL.
+      IF is_feature-transport-trkorr IS NOT INITIAL
+          AND ( is_feature-branch-up_to_date = abap_undefined OR is_feature-branch-up_to_date = abap_true ).
 * its only remote, so there is no changes to stage
-        lo_toolbar->add( iv_txt = 'Stage'
-                         iv_act = |{ c_action-stage }{ lv_extra }|
+        lo_toolbar->add( iv_txt = 'Stage and Commit'
+                         iv_act = |{ c_action-stage_and_commit }{ lv_extra }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
     ENDIF.
@@ -397,6 +267,48 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       is_feature = is_feature ).
 
     ri_html->add( lo_toolbar->render( ) ).
+
+  ENDMETHOD.
+
+
+  METHOD render_user_settings.
+
+    DATA lv_icon_class TYPE string.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( '<span class="toolbar-light pad-sides">' ).
+
+    IF ms_user_settings-only_my_transports = abap_true.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only my transports|
+      iv_class = 'command'
+      iv_act   = |{ c_action-only_my_transports }| ) ).
+
+    IF ms_user_settings-hide_full_matches = abap_true.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide full matches|
+      iv_class = 'command'
+      iv_act   = |{ c_action-hide_full_matches }| ) ).
+
+    IF ms_user_settings-hide_matching_files = abap_true.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide matching files|
+      iv_class = 'command'
+      iv_act   = |{ c_action-hide_matching_files }| ) ).
+
+    ri_html->add( '</span>' ).
 
   ENDMETHOD.
 
@@ -441,15 +353,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       WHEN c_action-consolidate.
         rs_handled = call_consolidate( ).
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
-        rs_handled = call_diff( ii_event ).
-      WHEN c_action-stage.
-        rs_handled = call_stage( ii_event ).
+        rs_handled = zcl_abapgit_flow_page_utils=>call_diff( ii_event ).
+      WHEN c_action-stage_and_commit.
+        rs_handled = call_stage_commit( ii_event ).
       WHEN c_action-pull.
         rs_handled = call_pull( ii_event ).
       WHEN OTHERS.
         ls_event_result = zcl_abapgit_flow_exit=>get_instance( )->on_event(
-         ii_event    = ii_event
-         it_features = ms_information-features ).
+          ii_event    = ii_event
+          it_features = ms_information-features ).
 
         rs_handled = ls_event_result-handled.
 
@@ -483,55 +395,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD render_user_settings.
-
-    DATA lv_icon_class TYPE string.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    ri_html->add( '<span class="toolbar-light pad-sides">' ).
-
-    IF ms_user_settings-only_my_transports = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only my transports|
-      iv_class = 'command'
-      iv_act   = |{ c_action-only_my_transports }| ) ).
-
-    IF ms_user_settings-hide_full_matches = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide full matches|
-      iv_class = 'command'
-      iv_act   = |{ c_action-hide_full_matches }| ) ).
-
-    IF ms_user_settings-hide_matching_files = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide matching files|
-      iv_class = 'command'
-      iv_act   = |{ c_action-hide_matching_files }| ) ).
-
-    ri_html->add( '</span>' ).
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA ls_feature LIKE LINE OF ms_information-features.
-    DATA lv_index TYPE i.
-    DATA lv_rendered TYPE abap_bool.
-    DATA lo_timer TYPE REF TO zcl_abapgit_timer.
+    DATA ls_feature       LIKE LINE OF ms_information-features.
+    DATA lv_index         TYPE i.
+    DATA lv_rendered      TYPE abap_bool.
+    DATA lo_timer         TYPE REF TO zcl_abapgit_timer.
     DATA lt_my_transports TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
-    DATA lv_warning LIKE LINE OF ms_information-warnings.
+    DATA lv_message       LIKE LINE OF ms_information-errors.
+    DATA lt_user          TYPE zif_abapgit_cts_api=>ty_user_range.
+    DATA ls_user          LIKE LINE OF lt_user.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -549,21 +423,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ri_html->add( '<br>' ).
     ri_html->add( '<br>' ).
 
-    IF lines( ms_information-warnings ) > 0.
-      LOOP AT ms_information-warnings INTO lv_warning.
-        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner( lv_warning ) ).
+    IF lines( ms_information-errors ) > 0.
+      LOOP AT ms_information-errors INTO lv_message.
+        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( iv_error = lv_message ) ).
       ENDLOOP.
       ri_html->add( '<br>' ).
     ENDIF.
 
     IF ms_user_settings-only_my_transports = abap_true.
-      lt_my_transports = zcl_abapgit_factory=>get_cts_api( )->list_open_requests_by_user( sy-uname ).
+      ls_user-low = sy-uname.
+      ls_user-sign = 'I'.
+      ls_user-option = 'EW'.
+      lt_my_transports = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( it_user = lt_user ).
     ENDIF.
 
     LOOP AT ms_information-features INTO ls_feature.
       lv_index = sy-tabix.
 
       IF ms_user_settings-hide_full_matches = abap_true
+          AND NOT ls_feature-transport IS INITIAL
           AND ls_feature-full_match = abap_true.
         CONTINUE.
       ENDIF.
@@ -597,13 +475,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       IF ls_feature-branch-display_name IS INITIAL.
         ri_html->add( |No branch found, comparing with <tt>main</tt>| ).
       ELSEIF ls_feature-pr IS NOT INITIAL.
+        ri_html->add( 'Pull Request: ' ).
         ri_html->add_a(
           iv_txt   = ls_feature-pr-title
           iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ ls_feature-pr-url }|
           iv_class = |url| ).
 
+        ri_html->add( |<br>| ).
         IF ls_feature-pr-draft = abap_true.
-          ri_html->add( 'DRAFT' ).
+          ri_html->add( 'Status: Draft' ).
+        ELSE.
+          ri_html->add( 'Status: Ready for Review' ).
         ENDIF.
       ELSE.
         ri_html->add( |No PR found| ).
@@ -611,26 +493,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       ri_html->add( |<br>| ).
 
       IF ls_feature-transport IS NOT INITIAL.
-        ri_html->add( |<tt>{ ls_feature-transport-trkorr }</tt> - { ls_feature-transport-title }<br>| ).
+        ri_html->add( |Transport: <tt>{ ls_feature-transport-trkorr }</tt> - { ls_feature-transport-title }<br>| ).
       ELSE.
         ri_html->add( |No corresponding transport found<br>| ).
-      ENDIF.
-
-      IF ls_feature-branch IS NOT INITIAL AND ls_feature-branch-up_to_date = abap_false.
-        ri_html->add( '<b>Branch not up to date</b><br><br>' ).
-        CONTINUE.
       ENDIF.
 
       ri_html->add( render_toolbar(
         iv_index   = lv_index
         is_feature = ls_feature ) ).
 
+      IF ls_feature-branch IS NOT INITIAL AND ls_feature-branch-up_to_date = abap_false.
+        ri_html->add( '<b>Branch not up to date</b><br><br>' ).
+        CONTINUE.
+      ENDIF.
+
       IF ls_feature-full_match = abap_true.
         ri_html->add( |Full Match, {
           lines( ls_feature-changed_files ) } files, {
           lines( ls_feature-changed_objects ) } objects<br>| ).
       ELSE.
-        ri_html->add( render_table( ls_feature ) ).
+        ri_html->add( zcl_abapgit_flow_page_utils=>render_table(
+          it_files                = ls_feature-changed_files
+          it_transport_duplicates = ms_information-transport_duplicates
+          is_user_settings        = ms_user_settings
+          iv_repo_key             = ls_feature-repo-key ) ).
       ENDIF.
 
 * todo      LOOP AT ls_feature-changed_objects INTO ls_item.

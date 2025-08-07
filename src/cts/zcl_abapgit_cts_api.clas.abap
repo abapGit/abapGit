@@ -555,6 +555,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
         object_class        = iv_object
         devclass            = iv_package
         master_language     = iv_language
+        korrnum             = iv_transport
         mode                = iv_mode
         global_lock         = abap_true
         suppress_dialog     = abap_true
@@ -577,33 +578,6 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_cts_api~list_open_requests_by_user.
-
-    TYPES: BEGIN OF ty_e070,
-             trkorr     TYPE e070-trkorr,
-             trfunction TYPE e070-trfunction,
-             strkorr    TYPE e070-strkorr,
-           END OF ty_e070.
-    DATA lt_e070 TYPE STANDARD TABLE OF ty_e070 WITH DEFAULT KEY.
-
-* find all tasks first
-    SELECT trkorr trfunction strkorr
-      FROM e070 INTO TABLE lt_e070
-      WHERE as4user = iv_user
-      AND trstatus = zif_abapgit_cts_api=>c_transport_status-modifiable
-      AND strkorr <> ''
-      ORDER BY PRIMARY KEY.
-
-    IF lines( lt_e070 ) > 0.
-      SELECT trkorr FROM e070
-        INTO TABLE rt_trkorr
-        FOR ALL ENTRIES IN lt_e070
-        WHERE trkorr = lt_e070-strkorr
-        AND trfunction = zif_abapgit_cts_api=>c_transport_type-wb_request.
-    ENDIF.
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_cts_api~list_open_requests.
 
     TYPES: BEGIN OF ty_e070,
@@ -617,6 +591,8 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     SELECT trkorr trfunction strkorr
       FROM e070 INTO TABLE lt_e070
       WHERE trstatus = zif_abapgit_cts_api=>c_transport_status-modifiable
+      AND as4user IN it_user
+      AND as4date IN it_date
       AND strkorr <> ''
       ORDER BY PRIMARY KEY.
 

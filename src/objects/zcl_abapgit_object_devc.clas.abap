@@ -63,7 +63,9 @@ CLASS zcl_abapgit_object_devc DEFINITION PUBLIC
         VALUE(rv_is_local) TYPE abap_bool .
     METHODS remove_obsolete_tadir
       IMPORTING
-        !iv_package_name TYPE devclass .
+        !iv_package_name TYPE devclass
+      RAISING
+        zcx_abapgit_exception.
     METHODS adjust_sw_component
       CHANGING
         cv_dlvunit TYPE dlvunit.
@@ -71,7 +73,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
+CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
 
   METHOD adjust_sw_component.
@@ -214,15 +216,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
       ls_item-obj_name = ls_tadir-obj_name.
 
       IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
-        CALL FUNCTION 'TR_TADIR_INTERFACE'
-          EXPORTING
-            wi_delete_tadir_entry = abap_true
-            wi_tadir_pgmid        = 'R3TR'
-            wi_tadir_object       = ls_tadir-object
-            wi_tadir_obj_name     = ls_tadir-obj_name
-            wi_test_modus         = abap_false
-          EXCEPTIONS
-            OTHERS                = 1 ##FM_SUBRC_OK.
+        zcl_abapgit_factory=>get_tadir( )->delete_single(
+          iv_object    = ls_tadir-object
+          iv_obj_name  = ls_tadir-obj_name ).
       ENDIF.
     ENDLOOP.
 
@@ -794,7 +790,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
   METHOD zif_abapgit_object~map_filename_to_object.
 
-    IF iv_filename <> zcl_abapgit_filename_logic=>c_package_file.
+    IF iv_item_part_of_filename <> zcl_abapgit_filename_logic=>c_package_file-obj_name.
       zcx_abapgit_exception=>raise( |Unexpected filename for package { cs_item-obj_name }| ).
     ENDIF.
 
@@ -812,7 +808,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
     " Packages have a fixed filename so that the repository can be installed to a different
     " package(-hierarchy) on the client and not show up as a different package in the repo.
-    cv_filename = zcl_abapgit_filename_logic=>c_package_file-obj_name.
+    cv_item_part_of_filename = zcl_abapgit_filename_logic=>c_package_file-obj_name.
     " use just obj_name ("package") so that e.g. translation files also have this first part
     " yet be able to modify the extension e.g. package.i18n.de.po
 

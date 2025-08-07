@@ -1,9 +1,15 @@
-INTERFACE zif_abapgit_lang_definitions
-  PUBLIC .
+INTERFACE zif_abapgit_lang_definitions PUBLIC.
+
+  TYPES:
+    BEGIN OF ty_tpool.
+      INCLUDE TYPE textpool.
+  TYPES: split TYPE c LENGTH 8,
+    END OF ty_tpool,
+    ty_tpool_tt TYPE STANDARD TABLE OF ty_tpool WITH DEFAULT KEY.
 
   TYPES: BEGIN OF ty_i18n_tpool,
            language TYPE langu,
-           textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,
+           textpool TYPE ty_tpool_tt,
          END OF ty_i18n_tpool,
          ty_i18n_tpools TYPE STANDARD TABLE OF ty_i18n_tpool.
 

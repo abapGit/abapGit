@@ -321,6 +321,8 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
           ls_extra TYPE ty_extra,
           ls_dd04v TYPE dd04v.
 
+    FIELD-SYMBOLS <lg_field> TYPE any.
+
     lv_name = ms_item-obj_name.
 
     SELECT SINGLE * FROM dd04l
@@ -354,6 +356,15 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
              ls_dd04v-signflag,
              ls_dd04v-convexit,
              ls_dd04v-entitytab.
+    ENDIF.
+
+    ASSIGN COMPONENT 'ACTFLAG' OF STRUCTURE ls_dd04v TO <lg_field>.
+    IF sy-subrc = 0.
+      CLEAR <lg_field>.
+    ENDIF.
+    ASSIGN COMPONENT 'RESERVEDTE' OF STRUCTURE ls_dd04v TO <lg_field>.
+    IF sy-subrc = 0.
+      CLEAR <lg_field>.
     ENDIF.
 
     IF ls_dd04v-routputlen = ''.

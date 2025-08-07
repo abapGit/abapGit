@@ -8,6 +8,8 @@ CLASS ltcl_i18n_params_test DEFINITION FINAL
     METHODS iso_langs_to_lang_filter FOR TESTING.
     METHODS filter_sap_langs FOR TESTING RAISING zcx_abapgit_exception.
     METHODS filter_sap_langs_tab FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS normalize_obj_patterns FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS match_obj_patterns FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -168,6 +170,88 @@ CLASS ltcl_i18n_params_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lt_act
       exp = lt_exp ).
+
+  ENDMETHOD.
+
+  METHOD normalize_obj_patterns.
+
+    DATA lt_patterns TYPE string_table.
+    DATA lv_pattern TYPE string.
+
+    APPEND '  zcl_XY.clas' TO lt_patterns.
+    APPEND 'pkg/*' TO lt_patterns.
+    lt_patterns = zcl_abapgit_i18n_params=>normalize_obj_patterns( lt_patterns ).
+    READ TABLE lt_patterns INDEX 1 INTO lv_pattern.
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_pattern
+      exp = 'zcl_xy.clas' ).
+
+  ENDMETHOD.
+
+  METHOD match_obj_patterns.
+
+    DATA lt_patterns TYPE string_table.
+    DATA ls_tadir TYPE zif_abapgit_definitions=>ty_tadir.
+
+    APPEND '*/no_tran/*' TO lt_patterns.
+    APPEND 'no_tran2/*' TO lt_patterns. " Arguable feature
+    APPEND '*/c1.clas' TO lt_patterns.
+    APPEND 'c2.clas' TO lt_patterns.
+    APPEND '*.devc' TO lt_patterns.
+
+    ls_tadir-path     = '/src/'.
+    ls_tadir-object   = 'TABL'.
+    ls_tadir-obj_name = 'T1'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_false
+      act = zcl_abapgit_i18n_params=>match_obj_patterns(
+        it_wo_translation_patterns = lt_patterns
+        is_tadir = ls_tadir ) ).
+
+    ls_tadir-path     = '/src/'.
+    ls_tadir-object   = 'CLAS'.
+    ls_tadir-obj_name = 'C1'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_true
+      act = zcl_abapgit_i18n_params=>match_obj_patterns(
+        it_wo_translation_patterns = lt_patterns
+        is_tadir = ls_tadir ) ).
+
+    ls_tadir-path     = '/src/'.
+    ls_tadir-object   = 'CLAS'.
+    ls_tadir-obj_name = 'C2'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_true
+      act = zcl_abapgit_i18n_params=>match_obj_patterns(
+        it_wo_translation_patterns = lt_patterns
+        is_tadir = ls_tadir ) ).
+
+    ls_tadir-path     = '/src/'.
+    ls_tadir-object   = 'DEVC'.
+    ls_tadir-obj_name = 'PACKAGE'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_true
+      act = zcl_abapgit_i18n_params=>match_obj_patterns(
+        it_wo_translation_patterns = lt_patterns
+        is_tadir = ls_tadir ) ).
+
+    ls_tadir-path     = '/src/no_tran/'.
+    ls_tadir-object   = 'TABL'.
+    ls_tadir-obj_name = 'T1'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_true
+      act = zcl_abapgit_i18n_params=>match_obj_patterns(
+        it_wo_translation_patterns = lt_patterns
+        is_tadir = ls_tadir ) ).
+
+    ls_tadir-path     = '/src/no_tran2/'.
+    ls_tadir-object   = 'TABL'.
+    ls_tadir-obj_name = 'T2'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_true
+      act = zcl_abapgit_i18n_params=>match_obj_patterns(
+        it_wo_translation_patterns = lt_patterns
+        is_tadir = ls_tadir ) ).
 
   ENDMETHOD.
 

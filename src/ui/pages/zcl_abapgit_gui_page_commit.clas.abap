@@ -538,7 +538,9 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     ri_html->add( '<div class="repo">' ).
     ri_html->add( '<div id="top" class="paddings">' ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mi_repo_online ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
+      iv_show_commit = abap_false
+      ii_repo        = mi_repo_online ) ).
     ri_html->add( '</div>' ).
 
     ri_html->add( '<div id="stage-summary" class="dialog w800px paddings">' ).

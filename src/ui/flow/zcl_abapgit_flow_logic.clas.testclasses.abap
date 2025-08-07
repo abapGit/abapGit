@@ -233,9 +233,6 @@ CLASS lcl_cts IMPLEMENTATION.
   METHOD zif_abapgit_cts_api~is_chrec_possible_for_package.
     RETURN. " todo, implement method
   ENDMETHOD.
-  METHOD zif_abapgit_cts_api~list_open_requests_by_user.
-    RETURN. " todo, implement method
-  ENDMETHOD.
   METHOD zif_abapgit_cts_api~list_open_requests.
     rt_trkorr = mo_data->list_open_requests( ).
   ENDMETHOD.
@@ -593,7 +590,10 @@ CLASS lcl_tadir IMPLEMENTATION.
   METHOD zif_abapgit_tadir~read_single.
     rs_tadir-devclass = lcl_data=>c_devclass.
   ENDMETHOD.
-
+  METHOD zif_abapgit_tadir~delete_single.
+  ENDMETHOD.
+  METHOD zif_abapgit_tadir~insert_single.
+  ENDMETHOD.
 ENDCLASS.
 
 ************************************************

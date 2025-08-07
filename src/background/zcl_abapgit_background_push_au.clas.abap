@@ -99,15 +99,16 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
 
     DATA: ls_comment    TYPE zif_abapgit_git_definitions=>ty_comment,
           ls_files      TYPE zif_abapgit_definitions=>ty_stage_files,
-          lt_changed    TYPE STANDARD TABLE OF ty_changed WITH DEFAULT KEY,
+          lt_changed    TYPE HASHED TABLE OF ty_changed WITH UNIQUE KEY filename path changed_by,
+          ls_changed    TYPE ty_changed,
           lt_users      TYPE STANDARD TABLE OF syuname WITH DEFAULT KEY,
           ls_user_files LIKE ls_files,
           lv_changed_by LIKE LINE OF lt_users,
           lo_stage      TYPE REF TO zcl_abapgit_stage.
 
-    FIELD-SYMBOLS: <ls_changed> LIKE LINE OF lt_changed,
-                   <ls_remote>  LIKE LINE OF ls_files-remote,
-                   <ls_local>   LIKE LINE OF ls_files-local.
+    FIELD-SYMBOLS:
+      <ls_remote> LIKE LINE OF ls_files-remote,
+      <ls_local>  LIKE LINE OF ls_files-local.
 
 
     ls_files = zcl_abapgit_stage_logic=>get_stage_logic( )->get( ii_repo_online ).
@@ -117,10 +118,12 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
         is_item     = <ls_local>-item
         iv_filename = <ls_local>-file-filename ).
       APPEND lv_changed_by TO lt_users.
-      APPEND INITIAL LINE TO lt_changed ASSIGNING <ls_changed>.
-      <ls_changed>-changed_by = lv_changed_by.
-      <ls_changed>-filename   = <ls_local>-file-filename.
-      <ls_changed>-path       = <ls_local>-file-path.
+
+      CLEAR ls_changed.
+      ls_changed-changed_by = lv_changed_by.
+      ls_changed-filename   = <ls_local>-file-filename.
+      ls_changed-path       = <ls_local>-file-path.
+      INSERT ls_changed INTO TABLE lt_changed.
     ENDLOOP.
 
     SORT lt_users ASCENDING.

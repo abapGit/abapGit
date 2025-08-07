@@ -84,6 +84,16 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         !it_files  TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
       RAISING
         zcx_abapgit_exception .
+    METHODS get_files_and_status
+      IMPORTING
+        !is_file   TYPE zif_abapgit_git_definitions=>ty_file
+        !is_object TYPE zif_abapgit_definitions=>ty_item
+      EXPORTING
+        et_remote  TYPE zif_abapgit_git_definitions=>ty_files_tt
+        et_local   TYPE zif_abapgit_definitions=>ty_files_item_tt
+        et_status  TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception.
     METHODS add_menu_begin
       IMPORTING
         !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
@@ -486,7 +496,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF_BASE IMPLEMENTATION.
     FIND FIRST OCCURRENCE OF '.' IN <ls_diff>-type MATCH OFFSET lv_offs.
     <ls_diff>-type = reverse( substring( val = <ls_diff>-type
                                          len = lv_offs ) ).
-    IF <ls_diff>-type <> 'xml' AND <ls_diff>-type <> 'abap'.
+    IF <ls_diff>-type <> 'xml' AND <ls_diff>-type <> 'abap' AND <ls_diff>-type <> 'po'.
       <ls_diff>-type = 'other'.
     ENDIF.
 
@@ -524,24 +534,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF_BASE IMPLEMENTATION.
           lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_status TYPE zif_abapgit_definitions=>ty_results_tt.
 
-    DATA li_exit TYPE REF TO zif_abapgit_exit.
-
     FIELD-SYMBOLS: <ls_status> LIKE LINE OF lt_status.
 
     CLEAR: mt_diff_files.
 
-    lt_remote = mi_repo->get_files_remote( ).
-    lt_local  = mi_repo->get_files_local( ).
-
-    lt_status = zcl_abapgit_repo_status=>calculate( mi_repo ).
-
-    li_exit = zcl_abapgit_exit=>get_instance( ).
-    li_exit->pre_calculate_repo_status(
+    get_files_and_status(
       EXPORTING
-        is_repo_meta = mi_repo->ms_data
-      CHANGING
-        ct_local  = lt_local
-        ct_remote = lt_remote ).
+        is_file    = is_file
+        is_object  = is_object
+      IMPORTING
+        et_local   = lt_local
+        et_remote  = lt_remote
+        et_status  = lt_status ).
 
     IF is_file IS NOT INITIAL.        " Diff for one file
 
@@ -616,6 +620,46 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF_BASE IMPLEMENTATION.
         zcx_abapgit_exception=>raise(
           'There are no differences to show. The local state completely matches the remote repository.' ).
       ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_files_and_status.
+
+    DATA ls_item   TYPE zif_abapgit_definitions=>ty_item.
+    DATA lo_filter TYPE REF TO lcl_filter.
+
+    " For single file or object, use a filter instead of processing complete repo
+    IF is_file IS NOT INITIAL.
+      zcl_abapgit_filename_logic=>file_to_object(
+        EXPORTING
+          iv_filename = is_file-filename
+          iv_path     = is_file-path
+          io_dot      = mi_repo->get_dot_abapgit( )
+          iv_devclass = mi_repo->get_package( )
+        IMPORTING
+          es_item     = ls_item ).
+    ELSEIF is_object IS NOT INITIAL.
+      ls_item = is_object.
+    ENDIF.
+
+    IF ls_item IS NOT INITIAL.
+      CREATE OBJECT lo_filter EXPORTING is_item = ls_item.
+
+      et_local  = mi_repo->get_files_local_filtered( lo_filter ).
+      et_remote = mi_repo->get_files_remote(
+        iv_ignore_files = abap_true
+        ii_obj_filter   = lo_filter ).
+
+      et_status = zcl_abapgit_repo_status=>calculate(
+        ii_repo       = mi_repo
+        ii_obj_filter = lo_filter ).
+    ELSE.
+      et_remote = mi_repo->get_files_remote( ).
+      et_local  = mi_repo->get_files_local( ).
+
+      et_status = zcl_abapgit_repo_status=>calculate( mi_repo ).
     ENDIF.
 
   ENDMETHOD.

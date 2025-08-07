@@ -55,6 +55,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     DATA ms_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings.
     DATA ms_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
     DATA mo_abap_language_version TYPE REF TO zcl_abapgit_abap_language_vers.
+    DATA mt_wo_translation_patterns TYPE string_table.
 
     METHODS add_apack
       IMPORTING
@@ -273,6 +274,8 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     IF io_dot_abapgit IS BOUND.
       ms_i18n_params = io_dot_abapgit->determine_i18n_parameters( is_local_settings-main_language_only ).
+      mt_wo_translation_patterns =
+        zcl_abapgit_i18n_params=>normalize_obj_patterns( io_dot_abapgit->get_objs_without_translation( ) ).
     ELSE.
       ms_i18n_params-main_language      = sy-langu.
       ms_i18n_params-main_language_only = is_local_settings-main_language_only.
@@ -598,10 +601,18 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
           lv_task TYPE c LENGTH 32,
           lv_free LIKE mv_free.
     DATA lv_abap_language_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
+    DATA lv_main_language_only TYPE abap_bool.
 
     ASSERT mv_free > 0.
 
     lv_abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
+
+    lv_main_language_only = ms_i18n_params-main_language_only.
+    IF lv_main_language_only = abap_false AND mt_wo_translation_patterns IS NOT INITIAL.
+      lv_main_language_only = zcl_abapgit_i18n_params=>match_obj_patterns(
+        is_tadir                   = is_tadir
+        it_wo_translation_patterns = mt_wo_translation_patterns ).
+    ENDIF.
 
     DO.
       lv_task = |{ iv_task }-{ sy-index }|.
@@ -618,7 +629,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
           iv_srcsystem          = is_tadir-srcsystem
           iv_abap_language_vers = lv_abap_language_version
           iv_language           = ms_i18n_params-main_language
-          iv_main_language_only = ms_i18n_params-main_language_only
+          iv_main_language_only = lv_main_language_only
           iv_suppress_po_comments = ms_i18n_params-suppress_po_comments
           it_translation_langs  = ms_i18n_params-translation_languages
           iv_use_lxe            = ms_i18n_params-use_lxe
@@ -645,6 +656,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
   METHOD run_sequential.
 
     DATA: lx_error     TYPE REF TO zcx_abapgit_exception,
+          ls_i18n_params LIKE ms_i18n_params,
           ls_file_item TYPE zif_abapgit_objects=>ty_serialization.
 
     ls_file_item-item-obj_type  = is_tadir-object.
@@ -653,10 +665,17 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     ls_file_item-item-srcsystem = is_tadir-srcsystem.
     ls_file_item-item-abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
 
+    ls_i18n_params = ms_i18n_params.
+    IF ls_i18n_params-main_language_only = abap_false AND mt_wo_translation_patterns IS NOT INITIAL.
+      ls_i18n_params-main_language_only = zcl_abapgit_i18n_params=>match_obj_patterns(
+        is_tadir                   = is_tadir
+        it_wo_translation_patterns = mt_wo_translation_patterns ).
+    ENDIF.
+
     TRY.
         ls_file_item = zcl_abapgit_objects=>serialize(
           is_item        = ls_file_item-item
-          io_i18n_params = zcl_abapgit_i18n_params=>new( is_params = ms_i18n_params ) ).
+          io_i18n_params = zcl_abapgit_i18n_params=>new( is_params = ls_i18n_params ) ).
 
         add_to_return( is_file_item = ls_file_item
                        iv_path      = is_tadir-path ).

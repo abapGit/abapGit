@@ -25,9 +25,10 @@ INTERFACE zif_abapgit_flow_logic
            END OF repo,
            branch          TYPE ty_branch,
            BEGIN OF pr,
-             title TYPE string,
-             url   TYPE string,
-             draft TYPE abap_bool,
+             title  TYPE string,
+             url    TYPE string,
+             number TYPE i,
+             draft  TYPE abap_bool,
            END OF pr,
            BEGIN OF transport,
              trkorr TYPE trkorr,
@@ -38,9 +39,13 @@ INTERFACE zif_abapgit_flow_logic
            changed_objects TYPE zif_abapgit_definitions=>ty_items_ts,
          END OF ty_feature.
   TYPES ty_features TYPE STANDARD TABLE OF ty_feature WITH DEFAULT KEY.
+
+  TYPES: ty_transport_duplicates_tt TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_item_signature WITH DEFAULT KEY.
+
   TYPES: BEGIN OF ty_information,
-            features TYPE ty_features,
-            warnings TYPE string_table,
+            features             TYPE ty_features,
+            errors               TYPE string_table,
+            transport_duplicates TYPE ty_transport_duplicates_tt,
          END OF ty_information.
 
   CONSTANTS c_main TYPE string VALUE 'main'.
@@ -48,7 +53,11 @@ INTERFACE zif_abapgit_flow_logic
 **************************************
 
   TYPES: BEGIN OF ty_consolidate,
-           errors TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+           errors         TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+           warnings       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+           success        TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+           missing_remote TYPE ty_path_name_tt,
+           only_remote    TYPE ty_path_name_tt,
          END OF ty_consolidate.
 
 ENDINTERFACE.

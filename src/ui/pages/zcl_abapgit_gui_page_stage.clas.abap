@@ -797,7 +797,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     ri_html->add( '<div class="repo">' ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-      ii_repo = mi_repo
+      ii_repo               = mi_repo
+      iv_show_commit        = abap_false
       iv_interactive_branch = abap_true ) ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
     ri_html->add( render_main_language_warning( ) ).
