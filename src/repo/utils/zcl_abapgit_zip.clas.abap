@@ -27,6 +27,8 @@ CLASS zcl_abapgit_zip DEFINITION
         !iv_object_type        TYPE trobjtype
         !iv_object_name        TYPE sobj_name
         !iv_main_language_only TYPE abap_bool DEFAULT abap_false
+        !it_translation_langs  TYPE zif_abapgit_definitions=>ty_languages OPTIONAL
+        !iv_use_lxe            TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS export_package
@@ -77,7 +79,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_zip IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
 
   METHOD encode_files.
@@ -161,6 +163,8 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
     ls_files_item = zcl_abapgit_objects=>serialize(
       is_item        = ls_files_item-item
       io_i18n_params = zcl_abapgit_i18n_params=>new(
+        iv_use_lxe            = iv_use_lxe
+        it_translation_langs  = it_translation_langs
         iv_main_language_only = iv_main_language_only
         iv_main_language      = sy-langu ) ).
 
