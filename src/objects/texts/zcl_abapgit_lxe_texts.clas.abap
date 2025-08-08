@@ -320,7 +320,8 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
             cv_changed    = lv_changed
             ct_text_pairs = lt_text_pairs_tmp ).
 
-        IF lv_changed = abap_true.
+        IF lv_changed = abap_true AND lines( lt_text_pairs_tmp ) > 0.
+          " If lt_text_pairs_tmp is empty it raises error, while this is a practical case
           write_lxe_object_text_pair(
             iv_s_lang  = lv_main_lang
             iv_t_lang  = lv_target_lang
