@@ -1067,6 +1067,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     DATA lt_overview TYPE ty_overviews.
     DATA ls_settings TYPE zif_abapgit_persist_user=>ty_s_user_settings.
 
+    register_handlers( ).
+
     ls_settings = zcl_abapgit_persist_factory=>get_settings( )->read( )->get_user_settings( ).
     mo_label_colors = zcl_abapgit_repo_labels=>split_colors_into_map( ls_settings-label_colors ).
 
@@ -1086,7 +1088,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     register_deferred_script( render_scripts( ) ).
     register_deferred_script( zcl_abapgit_gui_chunk_lib=>render_repo_palette( c_action-select ) ).
-    register_handlers( ).
 
   ENDMETHOD.
 ENDCLASS.
