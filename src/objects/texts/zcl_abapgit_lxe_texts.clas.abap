@@ -128,7 +128,7 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         VALUE(rt_obj_list) TYPE lxe_tt_colob .
     METHODS remove_irrelevant
       IMPORTING
-        iv_objtype               TYPE trobjtype
+        iv_objtype        TYPE trobjtype
       CHANGING
         ct_text_pairs_tmp TYPE ty_lxe_translation-text_pairs.
     METHODS read_lxe_object_text_pair
