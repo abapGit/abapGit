@@ -635,10 +635,10 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
   METHOD remove_irrelevant.
 
-    CASE iv_objtype.
-      WHEN 'RPT4'.
-        DELETE ct_text_pairs_tmp WHERE textkey = 'DUMMY KEY FOR DDIC FLAG COPY'. " see #7314
-    ENDCASE.
+    IF iv_objtype = 'RPT4'.
+      DELETE ct_text_pairs_tmp WHERE textkey = 'DUMMY KEY FOR DDIC FLAG COPY'. " see #7314
+    ENDIF.
+    " Add more when identified ...
 
   ENDMETHOD.
 
