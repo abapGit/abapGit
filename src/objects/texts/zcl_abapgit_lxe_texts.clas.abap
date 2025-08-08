@@ -126,6 +126,11 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         iv_object_name     TYPE sobj_name
       RETURNING
         VALUE(rt_obj_list) TYPE lxe_tt_colob .
+    METHODS remove_irrelevant
+      IMPORTING
+        iv_objtype               TYPE trobjtype
+      CHANGING
+        ct_text_pairs_tmp TYPE ty_lxe_translation-text_pairs.
     METHODS read_lxe_object_text_pair
       IMPORTING
         iv_s_lang                TYPE lxeisolang
@@ -568,6 +573,12 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
     ENDTRY.
 
+    remove_irrelevant(
+      EXPORTING
+        iv_objtype        = iv_objtype
+      CHANGING
+        ct_text_pairs_tmp = rt_text_pairs_tmp ).
+
   ENDMETHOD.
 
 
@@ -618,6 +629,16 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
         ENDIF.
       ENDLOOP.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD remove_irrelevant.
+
+    CASE iv_objtype.
+      WHEN 'RPT4'.
+        DELETE ct_text_pairs_tmp WHERE textkey = 'DUMMY KEY FOR DDIC FLAG COPY'. " see #7314
+    ENDCASE.
 
   ENDMETHOD.
 
