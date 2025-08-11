@@ -1,7 +1,7 @@
 INTERFACE zif_abapgit_ajson
   PUBLIC.
 
-  CONSTANTS version TYPE string VALUE 'v1.1.11'. "#EC NOTEXT
+  CONSTANTS version TYPE string VALUE 'v1.1.12'. "#EC NOTEXT
   CONSTANTS origin TYPE string VALUE 'https://github.com/sbcgua/ajson'. "#EC NOTEXT
   CONSTANTS license TYPE string VALUE 'MIT'. "#EC NOTEXT
 
@@ -133,9 +133,10 @@ INTERFACE zif_abapgit_ajson
 
   METHODS to_abap
     IMPORTING
-      iv_corresponding TYPE abap_bool DEFAULT abap_false
+      iv_corresponding  TYPE abap_bool DEFAULT abap_false
+      ii_refs_initiator TYPE REF TO zif_abapgit_ajson_ref_init OPTIONAL
     EXPORTING
-      ev_container     TYPE any
+      ev_container      TYPE any
     RAISING
       zcx_abapgit_ajson_error.
 
@@ -212,6 +213,15 @@ INTERFACE zif_abapgit_ajson
     IMPORTING
       iv_path        TYPE string
       iv_val         TYPE timestamp
+    RETURNING
+      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
+    RAISING
+      zcx_abapgit_ajson_error.
+
+  METHODS set_timestampl
+    IMPORTING
+      iv_path        TYPE string
+      iv_val         TYPE timestampl
     RETURNING
       VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
     RAISING
