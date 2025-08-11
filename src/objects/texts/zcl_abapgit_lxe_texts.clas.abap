@@ -126,6 +126,11 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         iv_object_name     TYPE sobj_name
       RETURNING
         VALUE(rt_obj_list) TYPE lxe_tt_colob .
+    METHODS remove_irrelevant
+      IMPORTING
+        iv_objtype        TYPE trobjtype
+      CHANGING
+        ct_text_pairs_tmp TYPE ty_lxe_translation-text_pairs.
     METHODS read_lxe_object_text_pair
       IMPORTING
         iv_s_lang                TYPE lxeisolang
@@ -320,7 +325,8 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
             cv_changed    = lv_changed
             ct_text_pairs = lt_text_pairs_tmp ).
 
-        IF lv_changed = abap_true.
+        IF lv_changed = abap_true AND lines( lt_text_pairs_tmp ) > 0.
+          " If lt_text_pairs_tmp is empty it raises error, while this is a practical case
           write_lxe_object_text_pair(
             iv_s_lang  = lv_main_lang
             iv_t_lang  = lv_target_lang
@@ -567,6 +573,12 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
     ENDTRY.
 
+    remove_irrelevant(
+      EXPORTING
+        iv_objtype        = iv_objtype
+      CHANGING
+        ct_text_pairs_tmp = rt_text_pairs_tmp ).
+
   ENDMETHOD.
 
 
@@ -617,6 +629,16 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
         ENDIF.
       ENDLOOP.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD remove_irrelevant.
+
+    IF iv_objtype = 'RPT4'.
+      DELETE ct_text_pairs_tmp WHERE textkey = 'DUMMY KEY FOR DDIC FLAG COPY'. " see #7314
+    ENDIF.
+    " Add more when identified ...
 
   ENDMETHOD.
 

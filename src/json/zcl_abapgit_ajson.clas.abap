@@ -188,7 +188,7 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
     DATA lr_parent LIKE ir_parent.
 
     READ TABLE mt_json_tree INTO rs_top_node
-      WITH KEY
+      WITH TABLE KEY
         path = iv_path
         name = iv_name.
     IF sy-subrc <> 0.
@@ -275,7 +275,7 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
     DO.
       lr_node_parent = rr_end_node.
       READ TABLE mt_json_tree REFERENCE INTO rr_end_node
-        WITH KEY
+        WITH TABLE KEY
           path = lv_cur_path
           name = lv_cur_name.
       IF sy-subrc <> 0. " New node, assume it is always object as it has a named child, use touch_array to init array
@@ -838,6 +838,21 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_ajson~set_timestampl.
+
+    ri_json = me.
+
+    DATA lv_timestamp_iso TYPE string.
+    lv_timestamp_iso = lcl_abap_to_json=>format_timestampl( iv_val ).
+
+    zif_abapgit_ajson~set(
+      iv_ignore_empty = abap_false
+      iv_path = iv_path
+      iv_val  = lv_timestamp_iso ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_ajson~slice.
 
     DATA lo_section         TYPE REF TO zcl_abapgit_ajson.
@@ -953,7 +968,8 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
     CREATE OBJECT lo_to_abap
       EXPORTING
         iv_corresponding  = boolc( iv_corresponding = abap_true OR ms_opts-to_abap_corresponding_only = abap_true )
-        ii_custom_mapping = mi_custom_mapping.
+        ii_custom_mapping = mi_custom_mapping
+        ii_refs_initiator = ii_refs_initiator.
 
     lo_to_abap->to_abap(
       EXPORTING
