@@ -143,6 +143,9 @@
     "contains_tab": true,
     "cyclic_oo": false,
     "cyclomatic_complexity": {
+      "exclude": [
+        "/json/"
+      ],      
       "max": 25
     },
     "dangerous_statement": false,
