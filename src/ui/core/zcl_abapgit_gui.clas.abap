@@ -17,6 +17,7 @@ CLASS zcl_abapgit_gui DEFINITION
         go_back_to_bookmark TYPE i VALUE 6,
         new_page_replacing  TYPE i VALUE 7,
       END OF c_event_state .
+
     METHODS go_home
       IMPORTING
         iv_action TYPE string
@@ -347,7 +348,8 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
         IF li_gui_error_handler IS BOUND AND li_gui_error_handler->handle_error( ix_exception ) = abap_true.
           " If login to repo fails, go back to previous page
           " Otherwise, re-render the current page to display the error box
-          IF ix_exception->get_text( ) CP 'Unauthorized*'.
+          IF ix_exception->get_text( ) = zcl_abapgit_http=>c_not_authorized OR
+             ix_exception->get_text( ) = zcl_abapgit_http_client=>c_not_authorized.
             MESSAGE ix_exception TYPE 'S' DISPLAY LIKE 'E'.
             back( ).
           ELSE.
