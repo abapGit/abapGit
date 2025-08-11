@@ -36,6 +36,11 @@ CLASS zcl_abapgit_data_utils DEFINITION
         !iv_name              TYPE tadir-obj_name
       RETURNING
         VALUE(rv_customizing) TYPE abap_bool.
+    CLASS-METHODS is_application_table
+      IMPORTING
+        !iv_name              TYPE tadir-obj_name
+      RETURNING
+        VALUE(rv_application) TYPE abap_bool.
     CLASS-METHODS list_key_fields
       IMPORTING
         !iv_name        TYPE tadir-obj_name
@@ -45,6 +50,15 @@ CLASS zcl_abapgit_data_utils DEFINITION
         zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    TYPES ty_contflag TYPE c LENGTH 1.
+
+    CLASS-METHODS get_table_contflag
+      IMPORTING
+        !iv_name           TYPE csequence
+      RETURNING
+        VALUE(rv_contflag) TYPE ty_contflag.
+
 ENDCLASS.
 
 
@@ -144,9 +158,8 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_customizing_table.
+  METHOD get_table_contflag.
 
-    DATA lv_contflag       TYPE c LENGTH 1.
     DATA lo_table          TYPE REF TO object.
     DATA lo_content        TYPE REF TO object.
     DATA lo_delivery_class TYPE REF TO object.
@@ -165,13 +178,39 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
           RECEIVING
             ro_delivery_class = lo_delivery_class.
         ASSIGN lo_delivery_class->('VALUE') TO <ls_any>.
-        lv_contflag = <ls_any>.
+        rv_contflag = <ls_any>.
       CATCH cx_sy_dyn_call_illegal_class cx_no_check.
         " Catching SAP standard exception CX_NO_CHECK,
         " because of the expected exception CX_XCO_RUNTIME_EXCEPTION
         " could not be used here directly to keep the indirect usage approach.
-        SELECT SINGLE contflag FROM ('DD02L') INTO lv_contflag WHERE tabname = iv_name.
+        SELECT SINGLE contflag FROM ('DD02L') INTO rv_contflag WHERE tabname = iv_name.
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD is_application_table.
+
+    DATA lv_contflag TYPE ty_contflag.
+
+    lv_contflag = get_table_contflag( iv_name ).
+
+    IF lv_contflag CA 'AEL'.
+      rv_application = abap_true.
+    ELSEIF lv_contflag IS NOT INITIAL.
+      rv_application = abap_false.
+    ELSE.
+      rv_application = abap_undefined. " table does not exist
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD is_customizing_table.
+
+    DATA lv_contflag TYPE ty_contflag.
+
+    lv_contflag = get_table_contflag( iv_name ).
 
     IF lv_contflag = 'C'.
       rv_customizing = abap_true.
@@ -196,7 +235,7 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
         db_not_exists      = 3
         no_permission      = 4
         no_change_allowed  = 5
-*        table_is_gtt       = 6 " not in lower releases
+*       table_is_gtt       = 6 " not in lower releases
         OTHERS             = 7.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Table { is_item-obj_name } cannot be displayed| ).
