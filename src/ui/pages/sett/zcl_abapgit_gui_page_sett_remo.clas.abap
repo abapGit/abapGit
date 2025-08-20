@@ -25,30 +25,13 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    TYPES:
-      ty_head_type TYPE c LENGTH 1,
-      BEGIN OF ty_remote_settings,
-        offline         TYPE zif_abapgit_persistence=>ty_repo-offline,
-        url             TYPE zif_abapgit_persistence=>ty_repo-url,
-        branch          TYPE zif_abapgit_git_definitions=>ty_git_branch-name,
-        tag             TYPE zif_abapgit_git_definitions=>ty_git_tag-name,
-        commit          TYPE zif_abapgit_git_definitions=>ty_commit-sha1,
-        pull_request    TYPE string,
-        head_type       TYPE ty_head_type,
-        switched_origin TYPE zif_abapgit_persistence=>ty_repo-switched_origin,
-      END OF ty_remote_settings.
+    TYPES ty_remote_settings TYPE zif_abapgit_persistence=>ty_remote_settings.
+
     CONSTANTS:
       BEGIN OF c_repo_type,
         online  TYPE string VALUE 'Online Repository',
         offline TYPE string VALUE 'Offline Repository',
       END OF c_repo_type.
-    CONSTANTS:
-      BEGIN OF c_head_types,
-        branch       TYPE ty_head_type VALUE 'B',
-        tag          TYPE ty_head_type VALUE 'T',
-        commit       TYPE ty_head_type VALUE 'C',
-        pull_request TYPE ty_head_type VALUE 'P',
-      END OF c_head_types.
     CONSTANTS:
       BEGIN OF c_id,
         general      TYPE string VALUE 'general',
@@ -396,7 +379,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       lv_button    TYPE string,
       lv_icon      TYPE string,
       lv_offline   TYPE abap_bool,
-      lv_head_type TYPE ty_head_type.
+      lv_head_type TYPE zif_abapgit_git_definitions=>ty_head_type.
 
     IF io_existing_form_data IS BOUND AND io_existing_form_data->is_empty( ) = abap_false.
       lv_offline = io_existing_form_data->get( c_id-offline ).
@@ -448,19 +431,19 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         iv_action = c_event-change_head_type
       )->option(
         iv_label = 'Branch'
-        iv_value = c_head_types-branch
+        iv_value = zif_abapgit_git_definitions=>c_head_types-branch
       )->option(
         iv_label = 'Tag'
-        iv_value = c_head_types-tag
+        iv_value = zif_abapgit_git_definitions=>c_head_types-tag
       )->option(
         iv_label = 'Commit'
-        iv_value = c_head_types-commit
+        iv_value = zif_abapgit_git_definitions=>c_head_types-commit
       )->option(
         iv_label = 'Pull Request'
-        iv_value = c_head_types-pull_request ).
+        iv_value = zif_abapgit_git_definitions=>c_head_types-pull_request ).
 
-      IF lv_head_type = c_head_types-branch OR
-         lv_head_type = c_head_types-commit.
+      IF lv_head_type = zif_abapgit_git_definitions=>c_head_types-branch OR
+         lv_head_type = zif_abapgit_git_definitions=>c_head_types-commit.
         ro_form->text(
           iv_name        = c_id-branch
           iv_label       = 'Branch'
@@ -468,7 +451,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
           iv_side_action = c_event-choose_branch ).
       ENDIF.
 
-      IF lv_head_type = c_head_types-tag.
+      IF lv_head_type = zif_abapgit_git_definitions=>c_head_types-tag.
         ro_form->text(
           iv_name        = c_id-tag
           iv_label       = 'Tag'
@@ -476,7 +459,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
           iv_side_action = c_event-choose_tag ).
       ENDIF.
 
-      IF lv_head_type = c_head_types-commit.
+      IF lv_head_type = zif_abapgit_git_definitions=>c_head_types-commit.
         ro_form->text(
           iv_name        = c_id-commit
           iv_label       = 'Commit'
@@ -486,7 +469,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
           iv_side_action = c_event-choose_commit ).
       ENDIF.
 
-      IF lv_head_type = c_head_types-pull_request.
+      IF lv_head_type = zif_abapgit_git_definitions=>c_head_types-pull_request.
         ro_form->text(
           iv_name        = c_id-pull_request
           iv_label       = 'Pull Request'
@@ -519,17 +502,17 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       rs_settings-head_type = io_form_data->get( c_id-head_type ).
 
       CASE rs_settings-head_type.
-        WHEN c_head_types-branch.
+        WHEN zif_abapgit_git_definitions=>c_head_types-branch.
           rs_settings-branch = zif_abapgit_git_definitions=>c_git_branch-heads_prefix &&
             io_form_data->get( c_id-branch ).
-        WHEN c_head_types-tag.
+        WHEN zif_abapgit_git_definitions=>c_head_types-tag.
           rs_settings-tag = zif_abapgit_git_definitions=>c_git_branch-tags_prefix &&
             io_form_data->get( c_id-tag ).
-        WHEN c_head_types-commit.
+        WHEN zif_abapgit_git_definitions=>c_head_types-commit.
           rs_settings-branch = zif_abapgit_git_definitions=>c_git_branch-heads_prefix &&
             io_form_data->get( c_id-branch ).
           rs_settings-commit = io_form_data->get( c_id-commit ).
-        WHEN c_head_types-pull_request.
+        WHEN zif_abapgit_git_definitions=>c_head_types-pull_request.
           rs_settings-pull_request = io_form_data->get( c_id-pull_request ).
       ENDCASE.
     ENDIF.
@@ -539,48 +522,11 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
   METHOD get_remote_settings_from_repo.
 
-    DATA: li_repo_online TYPE REF TO zif_abapgit_repo_online,
-          lv_branch      TYPE ty_remote_settings-branch.
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
 
     IF ii_repo->is_offline( ) = abap_false.
       li_repo_online ?= ii_repo.
-
-      rs_settings-url = li_repo_online->get_url( ).
-      rs_settings-offline = abap_false.
-      rs_settings-switched_origin = li_repo_online->get_switched_origin( ).
-
-      IF li_repo_online->get_selected_commit( ) IS NOT INITIAL.
-        rs_settings-commit = li_repo_online->get_selected_commit( ).
-        rs_settings-branch = li_repo_online->get_selected_branch( ).
-        rs_settings-head_type = c_head_types-commit.
-      ELSEIF li_repo_online->get_switched_origin( ) IS NOT INITIAL.
-        " get_switched_origin( ) returns the original repo url + HEAD concatenated with @
-        " get_branch( ) returns the branch of the PR in the source repo
-        " get_url( ) returns the source repo of the PR branch
-
-        rs_settings-switched_origin = li_repo_online->get_switched_origin( ).
-        SPLIT rs_settings-switched_origin AT '@' INTO rs_settings-url rs_settings-branch.
-        IF rs_settings-branch CP zif_abapgit_git_definitions=>c_git_branch-tags.
-          rs_settings-tag = rs_settings-branch.
-          CLEAR rs_settings-branch.
-        ENDIF.
-
-        lv_branch = li_repo_online->get_selected_branch( ).
-        REPLACE FIRST OCCURRENCE OF zif_abapgit_git_definitions=>c_git_branch-heads_prefix IN lv_branch WITH space.
-        CONDENSE lv_branch.
-        rs_settings-pull_request = |{ li_repo_online->get_url( ) }@{ lv_branch }|.
-        rs_settings-head_type = c_head_types-pull_request.
-      ELSE.
-        rs_settings-branch = li_repo_online->get_selected_branch( ).
-        rs_settings-head_type = c_head_types-branch.
-
-        IF rs_settings-branch CP zif_abapgit_git_definitions=>c_git_branch-tags.
-          rs_settings-head_type = c_head_types-tag.
-          rs_settings-tag = rs_settings-branch.
-          CLEAR rs_settings-branch.
-        ENDIF.
-      ENDIF.
-
+      rs_settings = li_repo_online->get_remote_settings( ).
     ELSE.
       rs_settings-offline = abap_true.
     ENDIF.
@@ -669,7 +615,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     ro_form_data = zcl_abapgit_string_map=>create( )->merge( io_form_data ).
 
     CASE ro_form_data->get( c_id-head_type ).
-      WHEN c_head_types-branch.
+      WHEN zif_abapgit_git_definitions=>c_head_types-branch.
         ro_form_data->set(
           iv_key = c_id-pull_request
           iv_val = '' ).
@@ -679,7 +625,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         ro_form_data->set(
           iv_key = c_id-tag
           iv_val = '' ).
-      WHEN c_head_types-tag.
+      WHEN zif_abapgit_git_definitions=>c_head_types-tag.
         ro_form_data->set(
           iv_key = c_id-pull_request
           iv_val = '' ).
@@ -689,11 +635,11 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         ro_form_data->set(
           iv_key = c_id-branch
           iv_val = '' ).
-      WHEN c_head_types-commit.
+      WHEN zif_abapgit_git_definitions=>c_head_types-commit.
         ro_form_data->set(
           iv_key = c_id-pull_request
           iv_val = '' ).
-      WHEN c_head_types-pull_request.
+      WHEN zif_abapgit_git_definitions=>c_head_types-pull_request.
         ro_form_data->set(
           iv_key = c_id-commit
           iv_val = '' ).
@@ -740,23 +686,24 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     ENDIF.
 
     CASE ls_settings_new-head_type.
-      WHEN c_head_types-branch.
+      WHEN zif_abapgit_git_definitions=>c_head_types-branch.
         switch_to_pull_req( iv_revert = abap_true ).
         switch_to_commit( iv_revert = abap_true ).
         switch_to_branch_tag( ls_settings_new-branch ).
-      WHEN c_head_types-tag.
+      WHEN zif_abapgit_git_definitions=>c_head_types-tag.
         switch_to_pull_req( iv_revert = abap_true ).
         switch_to_commit( iv_revert = abap_true ).
         switch_to_branch_tag( ls_settings_new-tag ).
-      WHEN c_head_types-commit.
+      WHEN zif_abapgit_git_definitions=>c_head_types-commit.
         switch_to_pull_req( iv_revert = abap_true ).
         switch_to_commit( iv_commit = ls_settings_new-commit ).
-      WHEN c_head_types-pull_request.
+      WHEN zif_abapgit_git_definitions=>c_head_types-pull_request.
         switch_to_commit( iv_revert = abap_true ).
         switch_to_pull_req( iv_pull = ls_settings_new-pull_request ).
     ENDCASE.
 
-    IF mi_repo->is_offline( ) = abap_false AND ls_settings_new-head_type <> c_head_types-pull_request.
+    IF mi_repo->is_offline( ) = abap_false AND
+      ls_settings_new-head_type <> zif_abapgit_git_definitions=>c_head_types-pull_request.
       " Switching from PR to something else will reset the URL in repo->switch_origin( space )
       " -> set URL again
       li_repo_online->set_url( ls_settings_new-url ).
@@ -807,7 +754,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         TRY.
             mo_form_data->set(
               iv_key = c_id-head_type
-              iv_val = c_head_types-branch ).
+              iv_val = zif_abapgit_git_definitions=>c_head_types-branch ).
 
             IF lv_url CP 'http*'.
               lv_branch = zcl_abapgit_git_factory=>get_git_transport( )->branches( lv_url )->get_head_symref( ).
@@ -882,7 +829,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       lo_branch_list           TYPE REF TO zif_abapgit_git_branch_list,
       lo_url                   TYPE REF TO zcl_abapgit_git_url,
       lv_offline               TYPE abap_bool,
-      lv_head_type             TYPE ty_head_type,
+      lv_head_type             TYPE zif_abapgit_git_definitions=>ty_head_type,
       lv_branch                TYPE ty_remote_settings-branch,
       lv_url                   TYPE ty_remote_settings-url,
       lv_branch_check_error_id TYPE string,
@@ -921,22 +868,22 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       lv_head_type = io_form_data->get( c_id-head_type ).
 
       CASE lv_head_type.
-        WHEN c_head_types-branch.
+        WHEN zif_abapgit_git_definitions=>c_head_types-branch.
           lv_branch = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && io_form_data->get( c_id-branch ).
           CONDENSE lv_branch.
           lv_branch_check_error_id = c_id-branch.
-        WHEN c_head_types-tag.
+        WHEN zif_abapgit_git_definitions=>c_head_types-tag.
           lv_branch = zif_abapgit_git_definitions=>c_git_branch-tags_prefix && io_form_data->get( c_id-tag ).
           CONDENSE lv_branch.
           lv_branch_check_error_id = c_id-tag.
-        WHEN c_head_types-pull_request.
+        WHEN zif_abapgit_git_definitions=>c_head_types-pull_request.
           lv_pull_request = io_form_data->get( c_id-pull_request ).
           SPLIT lv_pull_request AT '@' INTO lv_url lv_branch.
           IF lv_branch IS NOT INITIAL.
             lv_branch = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && lv_branch.
           ENDIF.
           lv_branch_check_error_id = c_id-pull_request.
-        WHEN c_head_types-commit.
+        WHEN zif_abapgit_git_definitions=>c_head_types-commit.
           lv_commit = io_form_data->get( c_id-commit ).
 
           " Cannot check for commit existence currently (needs API that doesn't rely on finding the first commit
@@ -1066,7 +1013,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
 
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions,
-          lv_head_type     TYPE ty_head_type,
+          lv_head_type     TYPE zif_abapgit_git_definitions=>ty_head_type,
           lv_offline       TYPE abap_bool.
 
     IF mo_form_data IS BOUND AND mo_form_data->is_empty( ) = abap_false.
@@ -1088,29 +1035,29 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     ls_hotkey_action-hotkey      = 'u'.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    IF lv_head_type = c_head_types-branch OR
-       lv_head_type = c_head_types-commit.
+    IF lv_head_type = zif_abapgit_git_definitions=>c_head_types-branch OR
+       lv_head_type = zif_abapgit_git_definitions=>c_head_types-commit.
       ls_hotkey_action-description = 'Choose Branch'.
       ls_hotkey_action-action      = c_event-choose_branch.
       ls_hotkey_action-hotkey      = 'b'.
       INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
     ENDIF.
 
-    IF lv_head_type = c_head_types-tag.
+    IF lv_head_type = zif_abapgit_git_definitions=>c_head_types-tag.
       ls_hotkey_action-description = 'Choose Tag'.
       ls_hotkey_action-action      = c_event-choose_tag.
       ls_hotkey_action-hotkey      = 't'.
       INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
     ENDIF.
 
-    IF lv_head_type = c_head_types-commit.
+    IF lv_head_type = zif_abapgit_git_definitions=>c_head_types-commit.
       ls_hotkey_action-description = 'Choose Commit'.
       ls_hotkey_action-action      = c_event-choose_commit.
       ls_hotkey_action-hotkey      = 'c'.
       INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
     ENDIF.
 
-    IF lv_head_type = c_head_types-pull_request.
+    IF lv_head_type = zif_abapgit_git_definitions=>c_head_types-pull_request.
       ls_hotkey_action-description = 'Choose Pull Request'.
       ls_hotkey_action-action      = c_event-choose_pull_request.
       ls_hotkey_action-hotkey      = 'p'.
