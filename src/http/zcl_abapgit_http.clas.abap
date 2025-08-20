@@ -9,8 +9,6 @@ CLASS zcl_abapgit_http DEFINITION
         digest TYPE string VALUE 'Digest',
       END OF c_scheme .
 
-    CONSTANTS c_not_authorized TYPE string VALUE 'Unauthorized access: Check your credentials'.
-
     CLASS-METHODS get_agent
       RETURNING
         VALUE(rv_agent) TYPE string .
@@ -104,7 +102,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
         cv_pass         = lv_pass ).
 
     IF lv_user IS INITIAL.
-      zcx_abapgit_exception=>raise( c_not_authorized ).
+      zcx_abapgit_exception=>raise( 'Unauthorized access. Check your credentials' ).
     ENDIF.
 
     IF lv_user <> lv_default_user.

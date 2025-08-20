@@ -2,8 +2,6 @@ CLASS zcl_abapgit_http_client DEFINITION PUBLIC CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    CONSTANTS c_not_authorized TYPE string VALUE 'Unauthorized access to resource (HTTP 401). Check your credentials'.
-
     METHODS:
       constructor
         IMPORTING ii_client TYPE REF TO if_http_client,
@@ -60,7 +58,7 @@ CLASS zcl_abapgit_http_client IMPLEMENTATION.
       WHEN 302.
         zcx_abapgit_exception=>raise( 'Resource access temporarily redirected (HTTP 302). Check the URL' ).
       WHEN 401.
-        zcx_abapgit_exception=>raise( c_not_authorized ).
+        zcx_abapgit_exception=>raise( 'Unauthorized access to resource (HTTP 401). Check your credentials' ).
       WHEN 403.
         zcx_abapgit_exception=>raise( 'Access to resource forbidden (HTTP 403)' ).
       WHEN 404.
