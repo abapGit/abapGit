@@ -505,6 +505,9 @@ CLASS lcl_repo IMPLEMENTATION.
   METHOD zif_abapgit_repo_online~check_for_valid_branch.
     RETURN.
   ENDMETHOD.
+  METHOD zif_abapgit_repo_online~get_remote_settings.
+    RETURN.
+  ENDMETHOD.
 ENDCLASS.
 
 CLASS lcl_repo_srv DEFINITION FINAL.

@@ -81,14 +81,14 @@ INTERFACE zif_abapgit_persistence PUBLIC.
 
   TYPES:
     BEGIN OF ty_remote_settings,
-      offline         TYPE zif_abapgit_persistence=>ty_repo-offline,
-      url             TYPE zif_abapgit_persistence=>ty_repo-url,
+      offline         TYPE ty_repo-offline,
+      url             TYPE ty_repo-url,
       branch          TYPE zif_abapgit_git_definitions=>ty_git_branch-name,
       tag             TYPE zif_abapgit_git_definitions=>ty_git_tag-name,
       commit          TYPE zif_abapgit_git_definitions=>ty_commit-sha1,
       pull_request    TYPE string,
       head_type       TYPE zif_abapgit_git_definitions=>ty_head_type,
-      switched_origin TYPE zif_abapgit_persistence=>ty_repo-switched_origin,
+      switched_origin TYPE ty_repo-switched_origin,
     END OF ty_remote_settings.
 
 ENDINTERFACE.
