@@ -145,6 +145,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
+
   METHOD add_menu_begin.
 
     io_menu->add(
@@ -434,14 +435,6 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_diff_extra~insert_nav.
-
-    " add beacon at beginning of file
-    rv_insert_nav = abap_true.
-
-  ENDMETHOD.
-
-
   METHOD is_patch_line_possible.
 
     IF is_diff_line-result = zif_abapgit_definitions=>c_diff-update
@@ -462,49 +455,6 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
     super->refresh( iv_action ).
 
     restore_patch_flags( lt_diff_files_old ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_diff_extra~render_beacon_begin_of_row.
-
-    mv_section_count = mv_section_count + 1.
-
-    ii_html->add( |<th class="patch">| ).
-    ii_html->add_checkbox( |patch_section_{ get_normalized_fname_with_path( is_diff ) }_{ mv_section_count }| ).
-    ii_html->add( '</th>' ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_diff_extra~render_diff_head_after_state.
-
-    DATA: lv_act_id TYPE string.
-
-    lv_act_id = |{ c_actions-refresh_local_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
-
-    IF is_diff-obj_type IS NOT INITIAL AND is_diff-obj_name IS NOT INITIAL.
-      " Dummy link is handled in JS (based on ID)
-      ii_html->add( '<span class="repo_name">' ).
-      ii_html->add_a( iv_txt   = ii_html->icon( iv_name  = 'redo-alt-solid'
-                                                iv_class = 'pad-sides'
-                                                iv_hint  = 'Local refresh of this object' )
-                      iv_id    = lv_act_id
-                      iv_act   = lv_act_id
-                      iv_typ   = zif_abapgit_html=>c_action_type-dummy
-                      iv_class = |url| ).
-      ii_html->add( '</span>' ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_diff_extra~render_line_split_row.
-
-    render_patch( ii_html      = ii_html
-                  iv_filename  = iv_filename
-                  is_diff_line = is_diff_line
-                  iv_index     = iv_index ).
 
   ENDMETHOD.
 
@@ -568,14 +518,6 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_diff_extra~render_table_head_non_unified.
-
-    render_patch_head( ii_html = ii_html
-                       is_diff = is_diff ).
-
-  ENDMETHOD.
-
-
   METHOD restore_patch_flags.
 
     DATA:
@@ -620,6 +562,65 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
     apply_patch_from_form_fields( ii_event ).
     add_to_stage( ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_diff_extra~insert_nav.
+
+    " add beacon at beginning of file
+    rv_insert_nav = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_diff_extra~render_beacon_begin_of_row.
+
+    mv_section_count = mv_section_count + 1.
+
+    ii_html->add( |<th class="patch">| ).
+    ii_html->add_checkbox( |patch_section_{ get_normalized_fname_with_path( is_diff ) }_{ mv_section_count }| ).
+    ii_html->add( '</th>' ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_diff_extra~render_diff_head_after_state.
+
+    DATA: lv_act_id TYPE string.
+
+    lv_act_id = |{ c_actions-refresh_local_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
+
+    IF is_diff-obj_type IS NOT INITIAL AND is_diff-obj_name IS NOT INITIAL.
+      " Dummy link is handled in JS (based on ID)
+      ii_html->add( '<span class="repo_name">' ).
+      ii_html->add_a( iv_txt   = ii_html->icon( iv_name  = 'redo-alt-solid'
+                                                iv_class = 'pad-sides'
+                                                iv_hint  = 'Local refresh of this object' )
+                      iv_id    = lv_act_id
+                      iv_act   = lv_act_id
+                      iv_typ   = zif_abapgit_html=>c_action_type-dummy
+                      iv_class = |url| ).
+      ii_html->add( '</span>' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_diff_extra~render_line_split_row.
+
+    render_patch( ii_html      = ii_html
+                  iv_filename  = iv_filename
+                  is_diff_line = is_diff_line
+                  iv_index     = iv_index ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_diff_extra~render_table_head_non_unified.
+
+    render_patch_head( ii_html = ii_html
+                       is_diff = is_diff ).
 
   ENDMETHOD.
 
@@ -682,6 +683,8 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
+    register_handlers( ).
+
     CLEAR mv_section_count.
 
     IF mv_pushed = abap_true.
@@ -689,8 +692,6 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
       calculate_diff( ).
       CLEAR mv_pushed.
     ENDIF.
-
-    register_handlers( ).
 
     ri_html = super->zif_abapgit_gui_renderable~render( ).
 

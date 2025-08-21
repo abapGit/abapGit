@@ -367,6 +367,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     DATA lv_url TYPE string.
     DATA lv_autofocus TYPE abap_bool.
 
+    register_handlers( ).
+
     IF mv_form_id IS NOT INITIAL.
       ls_form_id = | id="{ mv_form_id }"|.
     ENDIF.
@@ -452,8 +454,6 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ri_html->add( |</ul>| ).
     ri_html->add( |</form>| ).
     ri_html->add( |</div>| ).
-
-    register_handlers( ).
 
   ENDMETHOD.
 
