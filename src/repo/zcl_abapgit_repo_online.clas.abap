@@ -20,6 +20,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
     ALIASES push                    FOR zif_abapgit_repo_online~push.
     ALIASES create_branch           FOR zif_abapgit_repo_online~create_branch.
     ALIASES check_for_valid_branch  FOR zif_abapgit_repo_online~check_for_valid_branch.
+    ALIASES get_remote_settings     FOR zif_abapgit_repo_online~get_remote_settings.
 
     METHODS zif_abapgit_repo~get_files_remote
         REDEFINITION .
@@ -66,11 +67,13 @@ ENDCLASS.
 
 CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
+
   METHOD constructor.
 
     super->constructor( is_data ).
 
   ENDMETHOD.
+
 
   METHOD fetch_remote.
 
@@ -226,6 +229,49 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   METHOD zif_abapgit_repo_online~get_current_remote.
     fetch_remote( ).
     rv_sha1 = mv_current_commit.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~get_remote_settings.
+
+    DATA lv_branch TYPE string.
+
+    rs_settings-url             = get_url( ).
+    rs_settings-offline         = abap_false.
+    rs_settings-switched_origin = get_switched_origin( ).
+
+    IF get_selected_commit( ) IS NOT INITIAL.
+      rs_settings-commit    = get_selected_commit( ).
+      rs_settings-branch    = get_selected_branch( ).
+      rs_settings-head_type = zif_abapgit_git_definitions=>c_head_types-commit.
+    ELSEIF get_switched_origin( ) IS NOT INITIAL.
+      " get_switched_origin( ) returns the original repo url + HEAD concatenated with @
+      " get_branch( ) returns the branch of the PR in the source repo
+      " get_url( ) returns the source repo of the PR branch
+
+      rs_settings-switched_origin = get_switched_origin( ).
+      SPLIT rs_settings-switched_origin AT '@' INTO rs_settings-url rs_settings-branch.
+      IF rs_settings-branch CP zif_abapgit_git_definitions=>c_git_branch-tags.
+        rs_settings-tag = rs_settings-branch.
+        CLEAR rs_settings-branch.
+      ENDIF.
+
+      lv_branch = get_selected_branch( ).
+      REPLACE FIRST OCCURRENCE OF zif_abapgit_git_definitions=>c_git_branch-heads_prefix IN lv_branch WITH space.
+      CONDENSE lv_branch.
+      rs_settings-pull_request = |{ get_url( ) }@{ lv_branch }|.
+      rs_settings-head_type    = zif_abapgit_git_definitions=>c_head_types-pull_request.
+    ELSE.
+      rs_settings-branch    = get_selected_branch( ).
+      rs_settings-head_type = zif_abapgit_git_definitions=>c_head_types-branch.
+
+      IF rs_settings-branch CP zif_abapgit_git_definitions=>c_git_branch-tags.
+        rs_settings-head_type = zif_abapgit_git_definitions=>c_head_types-tag.
+        rs_settings-tag       = rs_settings-branch.
+        CLEAR rs_settings-branch.
+      ENDIF.
+    ENDIF.
+
   ENDMETHOD.
 
 

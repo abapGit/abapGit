@@ -148,4 +148,14 @@ INTERFACE zif_abapgit_git_definitions
       peel         TYPE string VALUE '^{}',
     END OF c_git_branch.
 
+  TYPES ty_head_type TYPE c LENGTH 1.
+  CONSTANTS:
+    BEGIN OF c_head_types,
+      all          TYPE ty_head_type VALUE 'A',
+      branch       TYPE ty_head_type VALUE 'B',
+      tag          TYPE ty_head_type VALUE 'T',
+      commit       TYPE ty_head_type VALUE 'C',
+      pull_request TYPE ty_head_type VALUE 'P',
+    END OF c_head_types.
+
 ENDINTERFACE.
