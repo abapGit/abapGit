@@ -256,7 +256,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF_BASE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -1439,6 +1439,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF_BASE IMPLEMENTATION.
     DATA: ls_diff_file LIKE LINE OF mt_diff_files,
           li_progress  TYPE REF TO  zif_abapgit_progress.
 
+    register_handlers( ).
+
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     li_progress = zcl_abapgit_progress=>get_instance( lines( mt_diff_files ) ).
@@ -1467,8 +1469,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF_BASE IMPLEMENTATION.
     register_deferred_script( render_scripts( ) ).
 
     li_progress->off( ).
-
-    register_handlers( ).
 
   ENDMETHOD.
 ENDCLASS.
