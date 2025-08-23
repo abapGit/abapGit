@@ -86,7 +86,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -1026,6 +1026,10 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     DELETE ls_internal-dd35v WHERE shlpinher = abap_true.
     LOOP AT ls_internal-dd36m ASSIGNING <ls_dd36m>.
       CLEAR <ls_dd36m>-tabname.
+      CLEAR <ls_dd36m>-rollname.
+      CLEAR <ls_dd36m>-domname.
+      CLEAR <ls_dd36m>-datatype.
+      CLEAR <ls_dd36m>-leng.
       lv_index = sy-tabix.
       READ TABLE ls_internal-dd35v WITH KEY fieldname = <ls_dd36m>-fieldname TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
