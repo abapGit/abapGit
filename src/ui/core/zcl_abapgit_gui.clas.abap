@@ -17,6 +17,7 @@ CLASS zcl_abapgit_gui DEFINITION
         go_back_to_bookmark TYPE i VALUE 6,
         new_page_replacing  TYPE i VALUE 7,
       END OF c_event_state .
+
     METHODS go_home
       IMPORTING
         iv_action TYPE string
@@ -105,12 +106,19 @@ CLASS zcl_abapgit_gui DEFINITION
         !it_postdata TYPE zif_abapgit_html_viewer=>ty_post_data OPTIONAL .
     METHODS handle_error
       IMPORTING
+        !iv_state     TYPE i
         !ix_exception TYPE REF TO zcx_abapgit_exception .
     METHODS is_page_modal
       IMPORTING
         !ii_page      TYPE REF TO zif_abapgit_gui_renderable
       RETURNING
         VALUE(rv_yes) TYPE abap_bool .
+    METHODS is_new_page
+      IMPORTING
+        !iv_state          TYPE i
+      RETURNING
+        VALUE(rv_new_page) TYPE abap_bool.
+
 ENDCLASS.
 
 
@@ -326,7 +334,9 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
       CATCH zcx_abapgit_cancel ##NO_HANDLER.
         " Do nothing = c_event_state-no_more_act
       CATCH zcx_abapgit_exception INTO lx_exception.
-        handle_error( lx_exception ).
+        handle_error(
+          iv_state     = ls_handled-state
+          ix_exception = lx_exception ).
     ENDTRY.
 
   ENDMETHOD.
@@ -345,8 +355,15 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
         li_gui_error_handler ?= mi_cur_page.
 
         IF li_gui_error_handler IS BOUND AND li_gui_error_handler->handle_error( ix_exception ) = abap_true.
-          " We rerender the current page to display the error box
-          render( ).
+          " If error happens when opening a new page, for example, the login to repo fails,
+          " then go back to previous page.
+          " Otherwise, re-render the current page to display the error box
+          IF is_new_page( iv_state ) = abap_true.
+            MESSAGE ix_exception TYPE 'S' DISPLAY LIKE 'E'.
+            back( ).
+          ELSE.
+            render( ).
+          ENDIF.
         ELSEIF ix_exception->mi_log IS BOUND.
           mi_common_log = ix_exception->mi_log.
           IF mi_common_log->get_log_level( ) >= zif_abapgit_log=>c_log_level-warning.
@@ -360,6 +377,15 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
         " In case of fire we just fallback to plain old message
         MESSAGE lx_exception TYPE 'S' DISPLAY LIKE 'E'.
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD is_new_page.
+
+    rv_new_page = boolc(
+      iv_state = c_event_state-new_page OR
+      iv_state = c_event_state-new_page_w_bookmark ).
 
   ENDMETHOD.
 

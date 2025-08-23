@@ -143,7 +143,10 @@
     "contains_tab": true,
     "cyclic_oo": false,
     "cyclomatic_complexity": {
-      "exclude": ["/diff3/"],
+      "exclude": [
+        "/json/",
+        "/diff3/"
+      ],
       "max": 25
     },
     "dangerous_statement": false,
