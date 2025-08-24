@@ -58,4 +58,11 @@ INTERFACE zif_abapgit_repo_online PUBLIC.
   METHODS check_for_valid_branch
     RAISING
       zcx_abapgit_exception .
+
+  METHODS get_remote_settings
+    RETURNING
+      VALUE(rs_settings) TYPE zif_abapgit_persistence=>ty_remote_settings
+    RAISING
+      zcx_abapgit_exception.
+
 ENDINTERFACE.
