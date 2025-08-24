@@ -217,9 +217,9 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-*    " Reset commit and pull request
-*    li_repo_online->select_commit( '' ).
-*    li_repo_online->switch_origin( '' ).
+    " Reset commit and pull request
+    li_repo_online->select_commit( '' ).
+    li_repo_online->switch_origin( '' ).
 
     li_repo_online->select_branch( ls_branch-name ).
     COMMIT WORK AND WAIT.
