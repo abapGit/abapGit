@@ -1037,6 +1037,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+    SORT ls_internal-dd36m BY flposition.
+
     IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts( CHANGING cs_internal = ls_internal ).
     ENDIF.
