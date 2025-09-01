@@ -2634,6 +2634,7 @@ CLASS ltcl_writer_test DEFINITION FINAL
     METHODS set_date FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_timestamp FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_timestampl FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_utclong FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS read_only FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_array_obj FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_with_type FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -3628,6 +3629,41 @@ CLASS ltcl_writer_test IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD set_utclong.
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_ajson.
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+    DATA li_writer TYPE REF TO zif_abapgit_ajson.
+    DATA lr_utclong TYPE REF TO data.
+
+    FIELD-SYMBOLS <utclong> TYPE any.
+
+    " type utclong is not availble in lower releases
+    TRY.
+        CREATE DATA lr_utclong TYPE ('utclong').
+        ASSIGN lr_utclong->* TO <utclong>.
+      CATCH cx_root.
+      " skip test
+        RETURN.
+    ENDTRY.
+
+    lo_cut = zcl_abapgit_ajson=>create_empty( ).
+    li_writer = lo_cut.
+    CREATE OBJECT lo_nodes_exp.
+    lo_nodes_exp->add( '        |      |object |                            ||1' ).
+    lo_nodes_exp->add( '/       |a     |str    |2021-05-05T12:00:00.1234567Z||0' ).
+
+    <utclong> = '2021-05-05 12:00:00.1234567'.
+    li_writer->set(
+      iv_path = '/a'
+      iv_val  = <utclong> ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->mt_json_tree
+      exp = lo_nodes_exp->sorted( ) ).
+
+  ENDMETHOD.
+
   METHOD read_only.
 
     DATA lo_cut TYPE REF TO zcl_abapgit_ajson.
@@ -4453,6 +4489,8 @@ CLASS ltcl_abap_to_json DEFINITION
     METHODS set_value_xsdboolean FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_value_timestamp FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_value_timestamp_initial FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_value_timestampl FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_value_timestampl_initial FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_null FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_obj FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_array FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -4623,6 +4661,45 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
 
     lv_timestamp = 0.
     lt_nodes = lcl_abap_to_json=>convert( lcl_abap_to_json=>format_timestamp( lv_timestamp ) ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_nodes
+      exp = lo_nodes_exp->mt_nodes ).
+
+  ENDMETHOD.
+
+  METHOD set_value_timestampl.
+
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+    DATA lt_nodes TYPE zif_abapgit_ajson_types=>ty_nodes_tt.
+    DATA lv_timezone TYPE timezone VALUE ''.
+
+    DATA lv_timestampl TYPE timestampl.
+    CREATE OBJECT lo_nodes_exp.
+    lo_nodes_exp->add( '        |      |str |2022-08-31T12:34:56.1234567Z||' ).
+
+    CONVERT DATE '20220831' TIME '123456'
+      INTO TIME STAMP lv_timestampl TIME ZONE lv_timezone.
+    lv_timestampl = lv_timestampl + '0.1234567'.
+    lt_nodes = lcl_abap_to_json=>convert( lcl_abap_to_json=>format_timestampl( lv_timestampl ) ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_nodes
+      exp = lo_nodes_exp->mt_nodes ).
+
+  ENDMETHOD.
+
+  METHOD set_value_timestampl_initial.
+
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+    DATA lt_nodes TYPE zif_abapgit_ajson_types=>ty_nodes_tt.
+
+    DATA lv_timestampl TYPE timestampl.
+    CREATE OBJECT lo_nodes_exp.
+    lo_nodes_exp->add( '        |      |str |0000-00-00T00:00:00.0Z||' ).
+
+    lv_timestampl = 0.
+    lt_nodes = lcl_abap_to_json=>convert( lcl_abap_to_json=>format_timestampl( lv_timestampl ) ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes

@@ -16,6 +16,7 @@ INTERFACE lif_kind.
     struct_deep TYPE ty_kind VALUE cl_abap_typedescr=>typekind_struct2,
     data_ref    TYPE ty_kind VALUE cl_abap_typedescr=>typekind_dref,
     object_ref  TYPE ty_kind VALUE cl_abap_typedescr=>typekind_oref,
+    utclong     TYPE ty_kind VALUE 'p', " cl_abap_typedescr=>typekind_utclong not in lower releases
     enum        TYPE ty_kind VALUE 'k'. " cl_abap_typedescr=>typekind_enum not in lower releases
 
   CONSTANTS:
@@ -1657,6 +1658,9 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     SPLIT |{ iv_ts }| AT '.' INTO lv_int lv_frac.
     SHIFT lv_frac RIGHT DELETING TRAILING '0'.
     SHIFT lv_frac LEFT DELETING LEADING space.
+    IF lv_frac IS INITIAL.
+      lv_frac = '0'.
+    ENDIF.
 
     rv_str =
       lv_date+0(4) && '-' && lv_date+4(2) && '-' && lv_date+6(2) &&
@@ -1670,6 +1674,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
   METHOD convert_value.
 
     DATA ls_node LIKE LINE OF ct_nodes.
+    DATA lv_timestamp TYPE string.
 
     ls_node-path  = is_prefix-path.
     ls_node-name  = is_prefix-name.
@@ -1699,6 +1704,21 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
         ls_node-type  = zif_abapgit_ajson_types=>node_type-number.
         ls_node-value = |{ iv_data }|.
       ENDIF.
+    ELSEIF io_type->absolute_name = '\TYPE=TIMESTAMPL'.
+      IF mv_format_datetime = abap_true.
+        ls_node-type  = zif_abapgit_ajson_types=>node_type-string.
+        ls_node-value = format_timestampl( iv_data ).
+      ELSE.
+        ls_node-type  = zif_abapgit_ajson_types=>node_type-number.
+        ls_node-value = |{ iv_data }|.
+      ENDIF.
+    ELSEIF io_type->type_kind = lif_kind=>utclong.
+      lv_timestamp  = replace(
+        val  = iv_data
+        sub  = ` `
+        with = `T` ) && 'Z'.
+      ls_node-type  = zif_abapgit_ajson_types=>node_type-string.
+      ls_node-value = lv_timestamp.
     ELSEIF io_type->type_kind CO lif_kind=>texts OR
            io_type->type_kind CO lif_kind=>binary OR
            io_type->type_kind CO lif_kind=>enum.
