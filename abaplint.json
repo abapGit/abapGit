@@ -22,6 +22,18 @@
       "abap_func_exporting",
       "abap_func_tables",
       "cssf_formtype_text",
+      "seoc_category_exception",
+      "seoc_category_webdynpro_class",
+      "seoc_exposure_private",
+      "seoc_exposure_protected",
+      "seoc_exposure_public",
+      "seoc_state_implemented",
+      "seoc_version_active",
+      "seoc_version_deleted",
+      "seoc_version_inactive",
+      "seos_scotype_exception",
+      "seos_scotype_parameter",
+      "seox_false",
       "seok_access_free",
       "seok_access_modify",
       "sews_c_vif_version",
@@ -145,7 +157,7 @@
     "cyclomatic_complexity": {
       "exclude": [
         "/json/"
-      ],      
+      ],
       "max": 25
     },
     "dangerous_statement": false,
