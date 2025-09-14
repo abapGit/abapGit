@@ -5,7 +5,6 @@
     "skipGeneratedGatewayClasses": true,
     "skipGeneratedPersistentClasses": true
   },
-  
   "dependencies": [
     {
       "files": "/**/*.*",
