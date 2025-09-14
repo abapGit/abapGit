@@ -1,4 +1,5 @@
 {
+  
   "global": {
     "files": "/{test/src,src}/**/*.*",
     "skipGeneratedFunctionGroups": true,
