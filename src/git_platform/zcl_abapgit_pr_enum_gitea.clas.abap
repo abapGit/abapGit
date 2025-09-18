@@ -48,7 +48,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PR_ENUM_gitea IMPLEMENTATION.
+CLASS zcl_abapgit_pr_enum_gitea IMPLEMENTATION.
 
 
   METHOD clean_url.
@@ -121,6 +121,11 @@ CLASS ZCL_ABAPGIT_PR_ENUM_gitea IMPLEMENTATION.
 
     rs_info-pulls = convert_list( li_pulls_json ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_pr_enum_provider~create_initial_branch.
+    zcx_abapgit_exception=>raise( 'Not implemented for Gitea' ).
   ENDMETHOD.
 
 
