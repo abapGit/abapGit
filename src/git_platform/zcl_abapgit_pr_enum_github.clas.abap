@@ -286,7 +286,7 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
     ENDIF.
 
     lv_json = |\{\n| &&
-              |  "message": "Iniial commit",\n| &&
+              |  "message": "Initial commit",\n| &&
               |  "content": "{ cl_http_utility=>encode_base64( lv_contents ) }",\n| &&
               |  "branch": "{ iv_branch_name }"\n| &&
               |\}|.
