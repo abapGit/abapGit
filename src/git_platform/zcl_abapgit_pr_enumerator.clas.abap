@@ -17,6 +17,15 @@ CLASS zcl_abapgit_pr_enumerator DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS create_initial_branch
+      IMPORTING
+        iv_readme             TYPE string OPTIONAL
+        iv_branch_name        TYPE string DEFAULT 'main'
+      RETURNING
+        VALUE(rv_branch_name) TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS new
       IMPORTING
         iv_url             TYPE string
@@ -52,6 +61,19 @@ CLASS zcl_abapgit_pr_enumerator IMPLEMENTATION.
         mi_enum_provider = create_provider( mv_repo_url ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD create_initial_branch.
+
+    IF mi_enum_provider IS NOT BOUND.
+      RETURN.
+    ENDIF.
+
+    rv_branch_name = mi_enum_provider->create_initial_branch(
+      iv_readme      = iv_readme
+      iv_branch_name = iv_branch_name ).
 
   ENDMETHOD.
 
