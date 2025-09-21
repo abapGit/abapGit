@@ -23,4 +23,13 @@ INTERFACE zif_abapgit_pr_enum_provider
     RAISING
       zcx_abapgit_exception.
 
+  METHODS create_initial_branch
+    IMPORTING
+      iv_readme             TYPE string OPTIONAL
+      iv_branch_name        TYPE string DEFAULT 'main'
+    RETURNING
+      VALUE(rv_branch_name) TYPE string
+    RAISING
+      zcx_abapgit_exception.
+
 ENDINTERFACE.
