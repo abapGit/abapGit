@@ -1,7 +1,7 @@
 INTERFACE zif_abapgit_ajson
   PUBLIC.
 
-  CONSTANTS version TYPE string VALUE 'v1.1.12'. "#EC NOTEXT
+  CONSTANTS version TYPE string VALUE 'v1.1.13'. "#EC NOTEXT
   CONSTANTS origin TYPE string VALUE 'https://github.com/sbcgua/ajson'. "#EC NOTEXT
   CONSTANTS license TYPE string VALUE 'MIT'. "#EC NOTEXT
 
@@ -118,6 +118,12 @@ INTERFACE zif_abapgit_ajson
       iv_path         TYPE string
     RETURNING
       VALUE(rv_value) TYPE timestamp.
+
+  METHODS get_timestampl
+    IMPORTING
+      iv_path         TYPE string
+    RETURNING
+      VALUE(rv_value) TYPE timestampl.
 
   METHODS get_string
     IMPORTING
