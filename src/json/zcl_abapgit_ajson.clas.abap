@@ -3,7 +3,6 @@ CLASS zcl_abapgit_ajson DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
     INTERFACES zif_abapgit_ajson .
 
     ALIASES:
