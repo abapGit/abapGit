@@ -512,6 +512,28 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_ajson~get_timestampl.
+
+    DATA lo_to_abap TYPE REF TO lcl_json_to_abap.
+    DATA lr_item TYPE REF TO zif_abapgit_ajson_types=>ty_node.
+
+    lr_item = get_item( iv_path ).
+
+    IF lr_item IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    CREATE OBJECT lo_to_abap.
+
+    TRY.
+        rv_value = lo_to_abap->to_timestampl( lr_item->value ).
+      CATCH zcx_abapgit_ajson_error.
+        RETURN.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_ajson~is_empty.
     rv_yes = boolc( lines( mt_json_tree ) = 0 ).
   ENDMETHOD.

@@ -1142,6 +1142,7 @@ CLASS ltcl_reader_test DEFINITION FINAL
     METHODS array_to_string_table FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS get_date FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS get_timestamp FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS get_timestampl FOR TESTING RAISING zcx_abapgit_ajson_error.
 
 ENDCLASS.
 
@@ -1349,6 +1350,25 @@ CLASS ltcl_reader_test IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->zif_abapgit_ajson~get_timestamp( '/timestamp' )
+      exp = lv_exp ).
+
+  ENDMETHOD.
+
+  METHOD get_timestampl.
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_ajson.
+    DATA lo_nodes TYPE REF TO lcl_nodes_helper.
+    DATA lv_exp TYPE timestampl VALUE `20200728123456.78934`.
+
+    CREATE OBJECT lo_cut.
+
+    CREATE OBJECT lo_nodes.
+    lo_nodes->add( '  |         |object |                          | |1' ).
+    lo_nodes->add( '/ |timestamp|str    |2020-07-28T12:34:56.78934Z| |0' ).
+    lo_cut->mt_json_tree = lo_nodes->mt_nodes.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->zif_abapgit_ajson~get_timestampl( '/timestamp' )
       exp = lv_exp ).
 
   ENDMETHOD.
