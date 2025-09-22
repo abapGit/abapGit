@@ -93,6 +93,11 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
       iv_key = 'Accept'
       iv_val = 'application/vnd.github.v3+json' ).
 
+    " https://docs.github.com/en/rest/about-the-rest-api/api-versions
+    mi_http_agent->global_headers( )->set(
+      iv_key = 'X-GitHub-Api-Version'
+      iv_val = '2022-11-28' ).
+
     IF zcl_abapgit_login_manager=>get( mv_repo_url ) IS NOT INITIAL.
       mi_http_agent->global_headers( )->set(
         iv_key = 'Authorization'
@@ -301,6 +306,51 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
     ENDIF.
 
     rv_branch_name = iv_branch_name.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_pr_enum_provider~create_repository.
+* https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#create-an-organization-repository
+
+    DATA lv_owner     TYPE string.
+    DATA lv_repo      TYPE string.
+    DATA lv_url       TYPE string.
+    DATA lv_private   TYPE string.
+    DATA lv_auto_init TYPE string.
+    DATA lv_json      TYPE string.
+    DATA li_response  TYPE REF TO zif_abapgit_http_response.
+
+    SPLIT mv_user_and_repo AT '/' INTO lv_owner lv_repo.
+    lv_url = |https://api.github.com/orgs/{ lv_owner }/repos|.
+
+    IF iv_private = abap_true.
+      lv_private = 'true'.
+    ELSE.
+      lv_private = 'false'.
+    ENDIF.
+    " create an initial commit with empty README
+    IF iv_auto_init = abap_true.
+      lv_auto_init = 'true'.
+    ELSE.
+      lv_auto_init = 'false'.
+    ENDIF.
+
+    lv_json = |\{\n| &&
+              |  "name": "{ lv_repo }",\n| &&
+              |  "description": "{ iv_description }",\n| &&
+              |  "private": { lv_private },\n| &&
+              |  "auto_init": { lv_auto_init }\n| &&
+              |\}|.
+
+    li_response = mi_http_agent->request(
+      iv_url     = lv_url
+      iv_method  = zif_abapgit_http_agent=>c_methods-post
+      iv_payload = lv_json ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error creating repository { mv_user_and_repo }: { li_response->error( ) }| ).
+    ENDIF.
 
   ENDMETHOD.
 
