@@ -346,7 +346,7 @@ CLASS lcl_json_path IMPLEMENTATION.
           lx_ajson                  TYPE REF TO zcx_abapgit_ajson_error.
 
     TRY.
-        lo_merged = zcl_abapgit_ajson=>parse( `` ).
+        lo_merged = zcl_abapgit_ajson=>parse( `{}` ).
       CATCH zcx_abapgit_ajson_error INTO lx_ajson.
         zcx_abapgit_exception=>raise_with_text( lx_ajson ).
     ENDTRY.
