@@ -100,6 +100,11 @@ CLASS lcl_utils DEFINITION FINAL.
         VALUE(rv_str) TYPE string
       RAISING
         zcx_abapgit_ajson_error.
+    CLASS-METHODS sanity_check
+      IMPORTING
+        iv_data TYPE csequence
+      RAISING
+        zcx_abapgit_ajson_error.
 
 ENDCLASS.
 
@@ -246,8 +251,10 @@ CLASS lcl_utils IMPLEMENTATION.
 
     CASE lo_type->type_kind.
       WHEN lif_kind=>binary-xstring.
+        " in case of binary data, skip the sanity check to have best performance
         rv_xstr = iv_data.
       WHEN lif_kind=>texts-string OR lif_kind=>texts-char.
+        sanity_check( iv_data ).
         rv_xstr = string_to_xstring_utf8( iv_data ).
       WHEN lif_kind=>table.
         lo_table_type ?= lo_type.
@@ -258,6 +265,7 @@ CLASS lcl_utils IMPLEMENTATION.
             ASSIGN iv_data TO <data>.
             lv_str = concat_lines_of( table = <data>
                                       sep = cl_abap_char_utilities=>newline ).
+            sanity_check( lv_str ).
             rv_xstr = string_to_xstring_utf8( lv_str ).
           CATCH cx_root.
             zcx_abapgit_ajson_error=>raise( 'Error converting input table (should be string_table)' ).
@@ -298,6 +306,20 @@ CLASS lcl_utils IMPLEMENTATION.
       WHEN OTHERS.
         zcx_abapgit_ajson_error=>raise( 'Unsupported type of input (must be char, string, string_table, or xstring)' ).
     ENDCASE.
+
+  ENDMETHOD.
+
+  METHOD sanity_check.
+
+    " A lightweight check covering the top-level JSON value would look like this
+    " ^\s*(\{.*\}|\[.*\]|"(?:\\.|[^"\\])*"|true|false|null|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*$
+    " Unfortunately, this is quite slow so we use a trivial check of the beginning of the JSON data
+    FIND REGEX '^\s*(true|false|null|-?\d|"|\{|\[)' IN iv_data.
+    IF sy-subrc <> 0.
+      zcx_abapgit_ajson_error=>raise(
+        iv_msg      = |Json parsing error: Not JSON|
+        iv_location = 'Line 1, Offset 1' ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -362,12 +384,10 @@ CLASS lcl_json_parser IMPLEMENTATION.
 
     mv_keep_item_order = iv_keep_item_order.
 
+    " Includes lightweight sanity check (unless input is binary)
     lv_json = lcl_utils=>any_to_xstring( iv_json ).
 
     TRY.
-      " TODO sane JSON check:
-      " JSON can be true,false,null,(-)digits
-      " or start from " or from {
         rt_json_tree = _parse( lv_json ).
       CATCH cx_sxml_parse_error INTO lx_sxml_parse.
         lv_location = _get_location(
@@ -466,11 +486,10 @@ CLASS lcl_json_parser IMPLEMENTATION.
               <item>-index = lr_stack_top->children.
             ELSE.
               lt_attributes = lo_open->get_attributes( ).
-              LOOP AT lt_attributes INTO lo_attr.
-                IF lo_attr->qname-name = 'name' AND lo_attr->value_type = if_sxml_value=>co_vt_text.
-                  <item>-name = lo_attr->get_value( ).
-                ENDIF.
-              ENDLOOP.
+              " JSON nodes always have one "name" attribute
+              READ TABLE lt_attributes INTO lo_attr INDEX 1.
+              ASSERT sy-subrc = 0 AND lo_attr->qname-name = 'name'.
+              <item>-name = lo_attr->get_value( ).
               IF mv_keep_item_order = abap_true.
                 <item>-order = lr_stack_top->children.
               ENDIF.
