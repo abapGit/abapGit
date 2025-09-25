@@ -67,8 +67,7 @@ CLASS ltcl_supporter IMPLEMENTATION.
 
   METHOD repository_tables_supported.
 
-    DATA: lo_supporter   TYPE REF TO zif_abapgit_data_supporter,
-          lv_supported   TYPE abap_bool.
+    DATA: lo_supporter TYPE REF TO zif_abapgit_data_supporter.
 
     " Get data supporter
     lo_supporter = zcl_abapgit_data_factory=>get_supporter( ).

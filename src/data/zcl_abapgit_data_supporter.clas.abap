@@ -16,8 +16,6 @@ CLASS zcl_abapgit_data_supporter DEFINITION
 
 ENDCLASS.
 
-ENDCLASS.
-
 
 
 CLASS zcl_abapgit_data_supporter IMPLEMENTATION.
