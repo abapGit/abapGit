@@ -11,19 +11,18 @@ INTERFACE zif_abapgit_dot_abapgit PUBLIC.
 
   TYPES:
     BEGIN OF ty_dot_abapgit,
-      name                   TYPE string,
-      master_language        TYPE spras,
-      i18n_languages         TYPE zif_abapgit_definitions=>ty_languages,
-      use_lxe                TYPE abap_bool,
-      without_translation    TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-      starting_folder        TYPE string,
-      folder_logic           TYPE string,
-      ignore                 TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-      requirements           TYPE ty_requirement_tt,
-      version_constant       TYPE string,
-      abap_language_version  TYPE string,
-      original_system        TYPE tadir-srcsystem,
-      supported_data_objects TYPE zif_abapgit_data_supporter=>ty_objects,
+      name                  TYPE string,
+      master_language       TYPE spras,
+      i18n_languages        TYPE zif_abapgit_definitions=>ty_languages,
+      use_lxe               TYPE abap_bool,
+      without_translation   TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+      starting_folder       TYPE string,
+      folder_logic          TYPE string,
+      ignore                TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+      requirements          TYPE ty_requirement_tt,
+      version_constant      TYPE string,
+      abap_language_version TYPE string,
+      original_system       TYPE tadir-srcsystem,
     END OF ty_dot_abapgit .
 
   CONSTANTS:

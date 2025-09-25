@@ -238,11 +238,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     DATA:
       lt_updated_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt,
-      lt_result        TYPE zif_abapgit_data_deserializer=>ty_results,
-      lo_empty_repo    TYPE REF TO zif_abapgit_repo.
-
-    " Set repository context for data factory to provide repository-specific supporter
-    zcl_abapgit_data_factory=>set_current_repo( me ).
+      lt_result        TYPE zif_abapgit_data_deserializer=>ty_results.
 
     "Deserialize data
     lt_result = zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
@@ -253,9 +249,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     lt_updated_files = zcl_abapgit_data_factory=>get_deserializer( )->actualize(
       it_result = lt_result
       is_checks = is_checks ).
-
-    " Clear repository context to avoid side effects
-    zcl_abapgit_data_factory=>set_current_repo( lo_empty_repo ).
 
     INSERT LINES OF lt_updated_files INTO TABLE ct_files.
 
