@@ -87,14 +87,27 @@ CLASS ltcl_supporter IMPLEMENTATION.
       act = lo_dot_abapgit->get_supported_data_objects( )
       msg = 'Supported data objects should be stored in dot_abapgit' ).
 
-    " Test that the factory method for repository-specific supporter works
-    " Note: We can't easily mock a full repository interface in ABAPv702,
-    " so this test verifies the basic factory method works without repository
-    lo_supporter = zcl_abapgit_data_factory=>get_supporter_for_repo( lo_empty_repo ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lo_dot_abapgit->get_supported_data_objects( ) )
+      exp = 1
+      msg = 'Should have exactly one supported data object' ).
 
+    " Test that the factory method for repository-specific supporter works
+    lo_supporter = zcl_abapgit_data_factory=>get_supporter_for_repo( lo_empty_repo ).
     cl_abap_unit_assert=>assert_bound(
       act = lo_supporter
       msg = 'Factory should return a supporter instance' ).
+
+    " Test repository context functionality
+    zcl_abapgit_data_factory=>set_current_repo( lo_empty_repo ).
+    lo_supporter = zcl_abapgit_data_factory=>get_supporter( ).
+    cl_abap_unit_assert=>assert_bound(
+      act = lo_supporter
+      msg = 'Factory should return supporter with repository context' ).
+
+    " Clear context
+    CLEAR lo_empty_repo.
+    zcl_abapgit_data_factory=>set_current_repo( lo_empty_repo ).
 
   ENDMETHOD.
 

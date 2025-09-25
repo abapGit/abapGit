@@ -10,9 +10,9 @@ CLASS zcl_abapgit_data_factory DEFINITION
         VALUE(ri_supporter) TYPE REF TO zif_abapgit_data_supporter .
     CLASS-METHODS get_supporter_for_repo
       IMPORTING
-        !io_repo                TYPE REF TO zif_abapgit_repo
+        !io_repo            TYPE REF TO zif_abapgit_repo
       RETURNING
-        VALUE(ri_supporter)     TYPE REF TO zif_abapgit_data_supporter .
+        VALUE(ri_supporter) TYPE REF TO zif_abapgit_data_supporter .
     CLASS-METHODS get_serializer
       RETURNING
         VALUE(ri_serializer) TYPE REF TO zif_abapgit_data_serializer .

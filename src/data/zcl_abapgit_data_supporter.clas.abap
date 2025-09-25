@@ -6,7 +6,7 @@ CLASS zcl_abapgit_data_supporter DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_data_supporter.
-    
+
     METHODS constructor
       IMPORTING
         !io_repo TYPE REF TO zif_abapgit_repo OPTIONAL.
