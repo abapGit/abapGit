@@ -122,6 +122,12 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS set_objs_without_translation
       IMPORTING
         !it_list TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit-without_translation.
+    METHODS get_supported_data_objects
+      RETURNING
+        VALUE(rt_objects) TYPE zif_abapgit_data_supporter=>ty_objects.
+    METHODS set_supported_data_objects
+      IMPORTING
+        !it_objects TYPE zif_abapgit_data_supporter=>ty_objects.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -447,5 +453,15 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
     rv_yes = ms_data-use_lxe.
 
+  ENDMETHOD.
+
+
+  METHOD get_supported_data_objects.
+    rt_objects = ms_data-supported_data_objects.
+  ENDMETHOD.
+
+
+  METHOD set_supported_data_objects.
+    ms_data-supported_data_objects = it_objects.
   ENDMETHOD.
 ENDCLASS.

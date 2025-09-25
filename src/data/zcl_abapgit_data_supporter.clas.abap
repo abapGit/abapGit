@@ -6,11 +6,16 @@ CLASS zcl_abapgit_data_supporter DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_data_supporter.
+    
+    METHODS constructor
+      IMPORTING
+        !io_repo TYPE REF TO zif_abapgit_repo OPTIONAL.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA mt_supported_objects TYPE zif_abapgit_data_supporter=>ty_objects.
+    DATA mo_repo TYPE REF TO zif_abapgit_repo.
 
     METHODS get_supported_objects.
 
@@ -21,13 +26,20 @@ ENDCLASS.
 CLASS zcl_abapgit_data_supporter IMPLEMENTATION.
 
 
+  METHOD constructor.
+    mo_repo = io_repo.
+  ENDMETHOD.
+
+
   METHOD get_supported_objects.
 
     DATA:
-      lt_tables  TYPE STANDARD TABLE OF tabname,
-      lv_tabname TYPE tabname,
-      ls_object  LIKE LINE OF mt_supported_objects,
-      li_exit    TYPE REF TO zif_abapgit_exit.
+      lt_tables          TYPE STANDARD TABLE OF tabname,
+      lv_tabname         TYPE tabname,
+      ls_object          LIKE LINE OF mt_supported_objects,
+      li_exit            TYPE REF TO zif_abapgit_exit,
+      lo_dot_abapgit     TYPE REF TO zcl_abapgit_dot_abapgit,
+      ls_dot_abapgit     TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
     " For safety reasons, by default only customer-defined customizing tables are supported
     SELECT dd02l~tabname
@@ -48,6 +60,22 @@ CLASS zcl_abapgit_data_supporter IMPLEMENTATION.
       ls_object-name = lv_tabname.
       INSERT ls_object INTO TABLE mt_supported_objects.
     ENDLOOP.
+
+    " Add repository-specific supported objects if repository is provided
+    IF mo_repo IS BOUND.
+      TRY.
+          lo_dot_abapgit = mo_repo->get_dot_abapgit( ).
+          ls_dot_abapgit = lo_dot_abapgit->get_data( ).
+
+          " Add repository-defined supported objects
+          LOOP AT ls_dot_abapgit-supported_data_objects INTO ls_object.
+            INSERT ls_object INTO TABLE mt_supported_objects.
+          ENDLOOP.
+
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
+          " If there's an error getting dot_abapgit config, continue without repo-specific objects
+      ENDTRY.
+    ENDIF.
 
     " The list of supported objects can be enhanced using an exit
     " Name patterns are allowed. For example, TABU T009*

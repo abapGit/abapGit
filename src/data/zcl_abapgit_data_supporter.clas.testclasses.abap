@@ -20,7 +20,8 @@ CLASS ltcl_supporter DEFINITION FOR TESTING RISK LEVEL HARMLESS
   PRIVATE SECTION.
     METHODS:
       is_not_supported FOR TESTING,
-      is_supported FOR TESTING.
+      is_supported FOR TESTING,
+      repo_factory_integration FOR TESTING.
 
 ENDCLASS.
 
@@ -61,6 +62,39 @@ CLASS ltcl_supporter IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_act
       exp = abap_true ).
+
+  ENDMETHOD.
+
+  METHOD repo_factory_integration.
+
+    DATA: lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
+          lo_supporter   TYPE REF TO zif_abapgit_data_supporter,
+          ls_dot_data    TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
+          lt_objects     TYPE zif_abapgit_data_supporter=>ty_objects,
+          ls_object      LIKE LINE OF lt_objects,
+          lo_empty_repo  TYPE REF TO zif_abapgit_repo.
+
+    " Create dot_abapgit with supported data objects
+    ls_object-type = zif_abapgit_data_config=>c_data_type-tabu.
+    ls_object-name = 'ZTESTCUSTOM'.
+    INSERT ls_object INTO TABLE lt_objects.
+
+    ls_dot_data-supported_data_objects = lt_objects.
+    CREATE OBJECT lo_dot_abapgit EXPORTING is_data = ls_dot_data.
+
+    " Test that dot_abapgit correctly stores and retrieves supported data objects
+    cl_abap_unit_assert=>assert_not_initial(
+      act = lo_dot_abapgit->get_supported_data_objects( )
+      msg = 'Supported data objects should be stored in dot_abapgit' ).
+
+    " Test that the factory method for repository-specific supporter works
+    " Note: We can't easily mock a full repository interface in ABAPv702,
+    " so this test verifies the basic factory method works without repository
+    lo_supporter = zcl_abapgit_data_factory=>get_supporter_for_repo( lo_empty_repo ).
+
+    cl_abap_unit_assert=>assert_bound(
+      act = lo_supporter
+      msg = 'Factory should return a supporter instance' ).
 
   ENDMETHOD.
 
