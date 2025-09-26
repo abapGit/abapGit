@@ -24,6 +24,7 @@ CLASS zcl_abapgit_login_manager DEFINITION
         !iv_uri        TYPE string
         !iv_username   TYPE string
         !iv_password   TYPE string
+        !iv_is_basic   TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(rv_auth) TYPE string
       RAISING
@@ -57,7 +58,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
+CLASS zcl_abapgit_login_manager IMPLEMENTATION.
 
 
   METHOD append.
@@ -126,12 +127,15 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    CONCATENATE iv_username ':' iv_password INTO lv_concat.
+    IF iv_is_basic = abap_true.
+      CONCATENATE iv_username ':' iv_password INTO lv_concat.
 
-    rv_auth = cl_http_utility=>encode_base64( lv_concat ).
+      rv_auth = cl_http_utility=>encode_base64( lv_concat ).
 
-    CONCATENATE 'Basic' rv_auth INTO rv_auth
-      SEPARATED BY space.
+      CONCATENATE 'Basic' rv_auth INTO rv_auth SEPARATED BY space.
+    ELSE.
+      CONCATENATE 'Bearer' iv_password INTO rv_auth SEPARATED BY space.
+    ENDIF.
 
     append( iv_uri  = iv_uri
             iv_auth = rv_auth ).
