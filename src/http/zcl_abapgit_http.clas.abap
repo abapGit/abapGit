@@ -22,7 +22,7 @@ CLASS zcl_abapgit_http DEFINITION
     CLASS-METHODS create_by_url
       IMPORTING
         !iv_url          TYPE string
-        !iv_service      TYPE string
+        !iv_service      TYPE string OPTIONAL
         it_headers       TYPE ty_headers OPTIONAL
       RETURNING
         VALUE(ro_client) TYPE REF TO zcl_abapgit_http_client
