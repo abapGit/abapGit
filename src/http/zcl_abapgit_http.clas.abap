@@ -179,13 +179,16 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
     li_client->request->set_header_field(
         name  = 'user-agent'
         value = get_agent( ) ).
-    lv_uri = zcl_abapgit_url=>path_name( iv_url ) &&
-             '/info/refs?service=git-' &&
-             iv_service &&
-             '-pack'.
-    li_client->request->set_header_field(
-        name  = '~request_uri'
-        value = lv_uri ).
+
+    IF iv_service IS NOT INITIAL.
+      lv_uri = zcl_abapgit_url=>path_name( iv_url ) &&
+               '/info/refs?service=git-' &&
+               iv_service &&
+               '-pack'.
+      li_client->request->set_header_field(
+          name  = '~request_uri'
+          value = lv_uri ).
+    ENDIF.
 
     LOOP AT it_headers INTO ls_header.
       li_client->request->set_header_field(
