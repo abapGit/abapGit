@@ -18,7 +18,9 @@ CLASS zcl_abapgit_diff_cloud DEFINITION PUBLIC FINAL CREATE PUBLIC.
         iv_old                TYPE xstring
         iv_ignore_indentation TYPE abap_bool
         iv_ignore_comments    TYPE abap_bool
-        iv_ignore_case        TYPE abap_bool.
+        iv_ignore_case        TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 CLASS zcl_abapgit_diff_cloud IMPLEMENTATION.
@@ -51,14 +53,10 @@ CLASS zcl_abapgit_diff_cloud IMPLEMENTATION.
     DATA lv_max        TYPE i.
 
     IF iv_new IS NOT INITIAL.
-      lv_new_string = cl_abap_conv_in_ce=>create(
-        input    = iv_new
-        encoding = 'UTF-8' )->read( ).
+      lv_new_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_new ).
     ENDIF.
     IF iv_old IS NOT INITIAL.
-      lv_old_string = cl_abap_conv_in_ce=>create(
-        input    = iv_old
-        encoding = 'UTF-8' )->read( ).
+      lv_old_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_old ).
     ENDIF.
 
     SPLIT lv_new_string AT cl_abap_char_utilities=>cr_lf INTO TABLE lt_new.
