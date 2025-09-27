@@ -1,5 +1,5 @@
 {
-  "input_folder": "{src,deps,test/src}",
+  "input_folder": ["src", "deps", "test/src"],
   "input_filter": [
     "\\.w3mi.",
     "deps/",
@@ -50,27 +50,7 @@
     "zcl_abapgit_x",
     "zcl_abapgit_z",
     "zcx_abapgit",
-    "zif_abapgit_a",
-    "zif_abapgit_b",
-    "zif_abapgit_c",
-    "zif_abapgit_d",
-    "zif_abapgit_e",
-    "zif_abapgit_f",
-    "zif_abapgit_g",
-    "zif_abapgit_h",
-    "zif_abapgit_l",
-    "zif_abapgit_m",
-    "zif_abapgit_object",
-    "zcl_abapgit_object_tabl_ddl",
-    "zif_abapgit_oo_object_fnc",
-    "zif_abapgit_p",
-    "zif_abapgit_r",
-    "zif_abapgit_s",
-    "zif_abapgit_t",
-    "zif_abapgit_v",
-    "zif_abapgit_w",
-    "zif_abapgit_x",
-    "zif_abapgit_i18n_file"
+    "zif_"
   ],
   "output_folder": "output",
   "libs": [
