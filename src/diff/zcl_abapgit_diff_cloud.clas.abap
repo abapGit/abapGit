@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_cloud DEFINITION PUBLIC FINAL CREATE PUBLIC.
+CLASS zcl_abapgit_diff_cloud DEFINITION PUBLIC FINAL CREATE PUBLIC.
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_diff.
@@ -21,14 +21,14 @@ CLASS zcl_abapgit_cloud DEFINITION PUBLIC FINAL CREATE PUBLIC.
         iv_ignore_case        TYPE abap_bool.
 ENDCLASS.
 
-CLASS zcl_abapgit_cloud IMPLEMENTATION.
+CLASS zcl_abapgit_diff_cloud IMPLEMENTATION.
 
   METHOD create.
-    CREATE OBJECT ri_diff TYPE zcl_abapgit_cloud.
+    CREATE OBJECT ri_diff TYPE zcl_abapgit_diff_cloud.
   ENDMETHOD.
 
   METHOD zif_abapgit_diff~create.
-    DATA lo_obj TYPE REF TO zcl_abapgit_cloud.
+    DATA lo_obj TYPE REF TO zcl_abapgit_diff_cloud.
     CREATE OBJECT lo_obj.
     lo_obj->build_diff( iv_new                = iv_new
                         iv_old                = iv_old
