@@ -75,6 +75,9 @@
     "addCommonJS": true,
     "unknownTypes": "runtimeError",
     "extraSetup": "../test/setup.mjs",
+    "populateTables": {
+      "reposrc": false
+    },
     "skip": [
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_get_t100_longtext", "method": "test01", "note": "uses MSAG from database"},
 
