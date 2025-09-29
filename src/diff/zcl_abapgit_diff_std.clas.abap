@@ -4,9 +4,9 @@ CLASS zcl_abapgit_diff_std DEFINITION PUBLIC.
       IMPORTING
         iv_new                TYPE xstring
         iv_old                TYPE xstring
-        iv_ignore_indentation TYPE abap_bool DEFAULT abap_false
-        iv_ignore_comments    TYPE abap_bool DEFAULT abap_false
-        iv_ignore_case        TYPE abap_bool DEFAULT abap_false
+        iv_ignore_indentation TYPE abap_bool
+        iv_ignore_comments    TYPE abap_bool
+        iv_ignore_case        TYPE abap_bool
       RETURNING
         VALUE(rt_diff)        TYPE zif_abapgit_definitions=>ty_diffs_tt
       RAISING

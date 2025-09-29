@@ -36,7 +36,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
   METHOD calculate_stats.
 
-    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
+    FIELD-SYMBOLS <ls_diff> LIKE LINE OF mt_diff.
 
     LOOP AT mt_diff ASSIGNING <ls_diff>.
       CASE <ls_diff>-result.
@@ -55,10 +55,18 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
     IF zcl_abapgit_factory=>get_function_module( )->function_exists( 'RS_CMP_COMPUTE_DELTA' ) = abap_true.
       mt_diff = zcl_abapgit_diff_std=>compute(
-        iv_new = iv_new
-        iv_old = iv_old ).
+        iv_new                = iv_new
+        iv_old                = iv_old
+        iv_ignore_indentation = iv_ignore_indentation
+        iv_ignore_comments    = iv_ignore_comments
+        iv_ignore_case        = iv_ignore_case ).
     ELSE.
-      ASSERT 1 = 2.
+      mt_diff = zcl_abapgit_diff_diff3=>compute(
+        iv_new                = iv_new
+        iv_old                = iv_old
+        iv_ignore_indentation = iv_ignore_indentation
+        iv_ignore_comments    = iv_ignore_comments
+        iv_ignore_case        = iv_ignore_case ).
     ENDIF.
 
     calculate_stats( ).
