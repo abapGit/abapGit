@@ -95,6 +95,8 @@ CLASS ltcl_parser_test DEFINITION FINAL
     METHODS special_characters_in_path FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS special_characters_in_value FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS unicode_characters FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS parse_empty_object FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS parse_empty_string FOR TESTING RAISING zcx_abapgit_ajson_error.
 
 ENDCLASS.
 
@@ -629,6 +631,35 @@ CLASS ltcl_parser_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lt_act
       exp = mo_nodes->mt_nodes ).
+
+  ENDMETHOD.
+
+  METHOD parse_empty_object.
+
+    DATA lo_cut TYPE REF TO lcl_json_parser.
+    DATA lt_act TYPE zif_abapgit_ajson_types=>ty_nodes_tt.
+
+    mo_nodes->add( '                 |         |object |                        |  |0' ).
+
+    CREATE OBJECT lo_cut.
+    lt_act = lo_cut->parse( `{}` ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = mo_nodes->mt_nodes ).
+
+  ENDMETHOD.
+
+  METHOD parse_empty_string.
+
+    DATA lo_cut TYPE REF TO lcl_json_parser.
+
+    CREATE OBJECT lo_cut.
+
+    TRY.
+        lo_cut->parse( `` ).
+        cl_abap_unit_assert=>fail( `empty string should raise an exception` ).
+      CATCH zcx_abapgit_ajson_error.
+    ENDTRY.
 
   ENDMETHOD.
 
