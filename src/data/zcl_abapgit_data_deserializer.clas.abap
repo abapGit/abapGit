@@ -240,7 +240,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      IF is_table_allowed_to_edit( ls_result ) = abap_false.
+      IF is_table_allowed_to_edit( ls_result ) = abap_false AND ls_result-in_repo = abap_false.
         zcx_abapgit_exception=>raise( |Table { ls_result-name } not supported for updating data| ).
       ENDIF.
 
@@ -287,6 +287,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     DATA lr_db_data TYPE REF TO data.
     DATA ls_file    LIKE LINE OF it_files.
     DATA ls_result  LIKE LINE OF rt_result.
+    DATA lv_tabfile TYPE string.
 
     lt_configs = ii_config->get_configs( ).
 
@@ -323,6 +324,16 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
         ASSERT sy-subrc = 0.
 
         MOVE-CORRESPONDING ls_file TO ls_result-config. " config file
+
+        " Check if table is included in repo
+        lv_tabfile = replace(
+          val   = ls_file-filename
+          sub   = 'conf.json'
+          with  = 'tabl.xml' ).
+
+        READ TABLE it_files TRANSPORTING NO FIELDS
+          WITH KEY file COMPONENTS filename = lv_tabfile.
+        ls_result-in_repo = boolc( sy-subrc = 0 ).
 
         INSERT ls_result INTO TABLE rt_result.
       ENDIF.

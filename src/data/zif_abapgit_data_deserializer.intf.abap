@@ -10,6 +10,7 @@ INTERFACE zif_abapgit_data_deserializer
            inserts TYPE REF TO data,
            file    TYPE zif_abapgit_git_definitions=>ty_file_signature,
            config  TYPE zif_abapgit_git_definitions=>ty_file_signature,
+           in_repo TYPE abap_bool,
          END OF ty_result.
   TYPES: ty_results TYPE STANDARD TABLE OF ty_result WITH KEY type name.
 
