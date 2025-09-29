@@ -5,7 +5,8 @@
   "description": "",
   "main": "",
   "scripts": {
-    "gitea": "docker compose down && docker compose up -d && npx playwright install && playwright test && sleep 20 && sh create.sh"
+    "echo": "echo Gitea running on http://localhost:3050 user:abapgit password:abapgit",
+    "gitea": "docker compose down && docker compose up -d && npx playwright install && playwright test && sleep 20 && sh create.sh && npm run echo"
   },
   "keywords": [],
   "author": "",
