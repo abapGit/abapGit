@@ -105,20 +105,10 @@ ENDCLASS.
 CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
 
-  METHOD zif_abapgit_git_transport~branches.
+  METHOD branches.
 
-    DATA: lo_client TYPE REF TO zcl_abapgit_http_client.
-
-
-    branch_list(
-      EXPORTING
-        iv_url         = iv_url
-        iv_service     = c_service-upload
-      IMPORTING
-        eo_client      = lo_client
-        ei_branch_list = ri_branch_list ).
-
-    lo_client->close( ).
+    " This method is kept for compatibility reasons
+    ri_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( iv_url ).
 
   ENDMETHOD.
 
@@ -131,9 +121,11 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
     DATA lv_data                  TYPE string.
     DATA lv_expected_content_type TYPE string.
 
-    eo_client = zcl_abapgit_http=>create_by_url(
-      iv_url     = iv_url
-      iv_service = iv_service ).
+    eo_client = zcl_abapgit_http=>create_by_url( iv_url ).
+
+    eo_client->set_header(
+      iv_key   = '~request_uri'
+      iv_value = zcl_abapgit_url=>path_name( iv_url ) && |/info/refs?service=git-{ iv_service }-pack| ).
 
     lv_expected_content_type = lc_content_type.
     REPLACE '<service>' IN lv_expected_content_type WITH iv_service.
@@ -432,9 +424,11 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
     APPEND iv_hash TO lt_hashes.
     ev_commit = iv_hash.
 
-    lo_client = zcl_abapgit_http=>create_by_url(
-      iv_url     = iv_url
-      iv_service = c_service-upload ).
+    lo_client = zcl_abapgit_http=>create_by_url( iv_url ).
+
+    lo_client->set_header(
+      iv_key   = '~request_uri'
+      iv_value = zcl_abapgit_url=>path_name( iv_url ) && |/info/refs?service=git-{ c_service-upload }-pack| ).
 
     et_objects = upload_pack( io_client       = lo_client
                               iv_url          = iv_url
@@ -444,11 +438,20 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD branches.
+  METHOD zif_abapgit_git_transport~branches.
 
-    " This method is kept for compatibility reasons
-    ri_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( iv_url ).
+    DATA: lo_client TYPE REF TO zcl_abapgit_http_client.
+
+
+    branch_list(
+      EXPORTING
+        iv_url         = iv_url
+        iv_service     = c_service-upload
+      IMPORTING
+        eo_client      = lo_client
+        ei_branch_list = ri_branch_list ).
+
+    lo_client->close( ).
 
   ENDMETHOD.
-
 ENDCLASS.

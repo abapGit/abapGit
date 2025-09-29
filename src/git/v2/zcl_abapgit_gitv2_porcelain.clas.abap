@@ -41,7 +41,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
+CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
 
 
   METHOD decode_pack.
@@ -95,7 +95,6 @@ CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
 
     lo_client = zcl_abapgit_http=>create_by_url(
       iv_url     = iv_url
-      iv_service = c_service-upload
       it_headers = lt_headers ).
 
     lo_client->check_smart_response(
@@ -164,6 +163,7 @@ CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
     DELETE rt_objects WHERE type <> zif_abapgit_git_definitions=>c_type-commit.
 
   ENDMETHOD.
+
 
   METHOD zif_abapgit_gitv2_porcelain~fetch_blob.
 
