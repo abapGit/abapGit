@@ -1,9 +1,9 @@
 {
-  "name": "gitea",
+  "name": "abapgit-giteatest",
   "version": "1.0.0",
   "private": true,
   "description": "",
-  "main": "index.js",
+  "main": "",
   "scripts": {
     "gitea": "docker compose down && docker compose up -d && npx playwright install && playwright test && sleep 20 && sh create.sh"
   },
@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@playwright/test": "^1.51.1",
-    "@types/node": "^22.14.0"
+    "@playwright/test": "^1.55.1",
+    "@types/node": "^22.18.6"
   }
 }
