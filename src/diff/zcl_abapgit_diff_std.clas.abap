@@ -201,8 +201,7 @@ CLASS zcl_abapgit_diff_std IMPLEMENTATION.
       ls_diff  LIKE LINE OF rt_diff,
       lt_delta TYPE STANDARD TABLE OF rsedcresul WITH DEFAULT KEY.
 
-    FIELD-SYMBOLS:
-      <ls_delta> LIKE LINE OF lt_delta.
+    FIELD-SYMBOLS <ls_delta> LIKE LINE OF lt_delta.
 
     " Note: Ignore case is for keywords, variables, types etc, but not for literals
     CALL FUNCTION 'RS_CMP_COMPUTE_DELTA'
