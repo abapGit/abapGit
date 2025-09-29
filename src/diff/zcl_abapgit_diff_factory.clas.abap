@@ -8,11 +8,7 @@ ENDCLASS.
 CLASS zcl_abapgit_diff_factory IMPLEMENTATION.
 
   METHOD get.
-    IF zcl_abapgit_factory=>get_function_module( )->function_exists( 'RS_CMP_COMPUTE_DELTA' ) = abap_true.
-      CREATE OBJECT ri_diff TYPE zcl_abapgit_diff.
-    ELSE.
-      CREATE OBJECT ri_diff TYPE zcl_abapgit_diff_cloud.
-    ENDIF.
+    CREATE OBJECT ri_diff TYPE zcl_abapgit_diff.
   ENDMETHOD.
 
 ENDCLASS.
