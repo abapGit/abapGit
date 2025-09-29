@@ -15,6 +15,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_diff_diff3 IMPLEMENTATION.
   METHOD compute.
+* Beware: this is AI generated code -Hvam 2025-09-29
     DATA: lv_new      TYPE string,
           lv_old      TYPE string,
           lv_new_last TYPE c LENGTH 1,
