@@ -17,7 +17,7 @@ CLASS zcl_abapgit_diff_std DEFINITION PUBLIC.
     CLASS-DATA gv_compare_mode TYPE c LENGTH 1.
     CLASS-DATA gv_ignore_case TYPE abap_bool.
 
-    METHODS unpack
+    CLASS-METHODS unpack
       IMPORTING
         !iv_new TYPE xstring
         !iv_old TYPE xstring
@@ -27,23 +27,23 @@ CLASS zcl_abapgit_diff_std DEFINITION PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
-    METHODS compute_diff
+    CLASS-METHODS compute_diff
       IMPORTING
         !it_new        TYPE rswsourcet
         !it_old        TYPE rswsourcet
       RETURNING
         VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt.
 
-    METHODS compute_diff_extra
+    CLASS-METHODS compute_diff_extra
       IMPORTING
         !it_new        TYPE rswsourcet
         !it_old        TYPE rswsourcet
       RETURNING
         VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt.
 
-    METHODS adjust_diff.
+    CLASS-METHODS adjust_diff.
 
-    METHODS has_line_diff
+    CLASS-METHODS has_line_diff
       IMPORTING
         iv_old             TYPE string
         iv_new             TYPE string
