@@ -155,8 +155,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
 
   METHOD create_by_url.
 
-    DATA: lv_uri           TYPE string,
-          lv_scheme        TYPE string,
+    DATA: lv_scheme        TYPE string,
           lv_authorization TYPE string,
           li_client        TYPE REF TO if_http_client,
           ls_header        LIKE LINE OF it_headers.
