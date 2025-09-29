@@ -1,10 +1,10 @@
 CLASS zcl_abapgit_ajson DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_ajson .
+    INTERFACES zif_abapgit_ajson.
 
     ALIASES:
       is_empty FOR zif_abapgit_ajson~is_empty,
@@ -57,7 +57,7 @@ CLASS zcl_abapgit_ajson DEFINITION
       RETURNING
         VALUE(ro_instance)  TYPE REF TO zcl_abapgit_ajson
       RAISING
-        zcx_abapgit_ajson_error .
+        zcx_abapgit_ajson_error.
 
     CLASS-METHODS create_empty " Might be deprecated, prefer using new( ) or create object
       IMPORTING
@@ -77,13 +77,14 @@ CLASS zcl_abapgit_ajson DEFINITION
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_ajson
       RAISING
-        zcx_abapgit_ajson_error .
+        zcx_abapgit_ajson_error.
 
     METHODS constructor
       IMPORTING
         iv_keep_item_order            TYPE abap_bool DEFAULT abap_false
         iv_format_datetime            TYPE abap_bool DEFAULT abap_true
         iv_to_abap_corresponding_only TYPE abap_bool DEFAULT abap_false.
+
     CLASS-METHODS new
       IMPORTING
         iv_keep_item_order            TYPE abap_bool DEFAULT abap_false
@@ -91,6 +92,12 @@ CLASS zcl_abapgit_ajson DEFINITION
         iv_to_abap_corresponding_only TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ro_instance)            TYPE REF TO zcl_abapgit_ajson.
+
+    CLASS-METHODS normalize_path
+      IMPORTING
+        iv_path        TYPE string
+      RETURNING
+        VALUE(rv_path) TYPE string.
 
   PROTECTED SECTION.
 
@@ -217,18 +224,14 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
 
   METHOD get_item.
 
-    FIELD-SYMBOLS <item> LIKE LINE OF mt_json_tree.
     DATA ls_path_name TYPE zif_abapgit_ajson_types=>ty_path_name.
     ls_path_name = lcl_utils=>split_path( iv_path ).
 
     READ TABLE mt_json_tree
-      ASSIGNING <item>
+      REFERENCE INTO rv_item
       WITH KEY
         path = ls_path_name-path
         name = ls_path_name-name.
-    IF sy-subrc = 0.
-      GET REFERENCE OF <item> INTO rv_item.
-    ENDIF.
 
   ENDMETHOD.
 
@@ -239,6 +242,11 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
         iv_to_abap_corresponding_only = iv_to_abap_corresponding_only
         iv_format_datetime = iv_format_datetime
         iv_keep_item_order = iv_keep_item_order.
+  ENDMETHOD.
+
+
+  METHOD normalize_path.
+    rv_path = lcl_utils=>normalize_path( iv_path ).
   ENDMETHOD.
 
 
@@ -876,6 +884,11 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
 
 
   METHOD zif_abapgit_ajson~slice.
+
+    " TODO: idea
+    " read only mode (for read only jsons or a param)
+    " which would reuse the original tree, so copy a reference of the tree, presuming that it is not changed
+    " this will be faster, in particular for array iterations
 
     DATA lo_section         TYPE REF TO zcl_abapgit_ajson.
     DATA ls_item            LIKE LINE OF mt_json_tree.
