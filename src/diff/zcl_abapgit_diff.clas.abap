@@ -271,15 +271,18 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
     ENDIF.
     mv_ignore_case = iv_ignore_case.
 
-    unpack( EXPORTING iv_new = iv_new
+    IF zcl_abapgit_factory=>get_function_module( )->function_exists( 'RS_CMP_COMPUTE_DELTA' ) = abap_true.
+
+      unpack( EXPORTING iv_new = iv_new
                       iv_old = iv_old
             IMPORTING et_new = lt_new
                       et_old = lt_old ).
 
-    mt_diff = compute_diff( it_new = lt_new
+      mt_diff = compute_diff( it_new = lt_new
                             it_old = lt_old ).
 
-    adjust_diff( ).
+      adjust_diff( ).
+    ENDIF.
 
     calculate_stats( ).
     map_beacons( ).
