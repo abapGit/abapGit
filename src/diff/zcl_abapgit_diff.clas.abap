@@ -63,10 +63,10 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
     ELSE.
       mt_diff = zcl_abapgit_diff_diff3=>compute(
         iv_new                = iv_new
-        iv_old                = iv_old
-        iv_ignore_indentation = iv_ignore_indentation
-        iv_ignore_comments    = iv_ignore_comments
-        iv_ignore_case        = iv_ignore_case ).
+        iv_old                = iv_old ).
+        " iv_ignore_indentation = iv_ignore_indentation
+        " iv_ignore_comments    = iv_ignore_comments
+        " iv_ignore_case        = iv_ignore_case
     ENDIF.
 
     calculate_stats( ).

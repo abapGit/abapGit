@@ -2,13 +2,14 @@ CLASS zcl_abapgit_diff_diff3 DEFINITION PUBLIC.
   PUBLIC SECTION.
     CLASS-METHODS compute
       IMPORTING
-        iv_new                TYPE xstring
-        iv_old                TYPE xstring
-        iv_ignore_indentation TYPE abap_bool
-        iv_ignore_comments    TYPE abap_bool
-        iv_ignore_case        TYPE abap_bool
+        iv_new         TYPE xstring
+        iv_old         TYPE xstring
+        " todo
+        " iv_ignore_indentation TYPE abap_bool
+        " iv_ignore_comments    TYPE abap_bool
+        " iv_ignore_case        TYPE abap_bool
       RETURNING
-        VALUE(rt_diff)        TYPE zif_abapgit_definitions=>ty_diffs_tt
+        VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt
       RAISING
         zcx_abapgit_exception.
 ENDCLASS.
