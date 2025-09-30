@@ -19,7 +19,7 @@ CLASS zcl_abapgit_login_manager DEFINITION
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS clear .
-    CLASS-METHODS set
+    CLASS-METHODS set_basic
       IMPORTING
         !iv_uri        TYPE string
         !iv_username   TYPE string
@@ -124,7 +124,7 @@ CLASS zcl_abapgit_login_manager IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set.
+  METHOD set_basic.
 
     DATA: lv_concat TYPE string.
 
