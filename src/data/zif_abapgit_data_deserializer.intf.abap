@@ -25,6 +25,7 @@ INTERFACE zif_abapgit_data_deserializer
 
   METHODS deserialize
     IMPORTING
+      !iv_package      TYPE devclass
       !ii_config       TYPE REF TO zif_abapgit_data_config
       !it_files        TYPE zif_abapgit_git_definitions=>ty_files_tt
     RETURNING
