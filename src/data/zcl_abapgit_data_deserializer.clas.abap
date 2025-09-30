@@ -357,7 +357,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
         " Check if table is included in repo
         lv_tabname = to_upper( replace(
           val   = ls_file-filename
-          sub   = 'conf.json'
+          sub   = '.conf.json'
           with  = '' ) ).
 
         ls_result-in_repo = is_table_included_in_repo(
