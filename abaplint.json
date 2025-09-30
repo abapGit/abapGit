@@ -160,7 +160,8 @@
     "cyclic_oo": false,
     "cyclomatic_complexity": {
       "exclude": [
-        "/json/"
+        "/json/",
+        "/diff3/"
       ],
       "max": 25
     },
@@ -282,7 +283,9 @@
     "identical_contents": false,
     "identical_descriptions": false,
     "identical_form_names": true,
-    "if_in_if": true,
+    "if_in_if": {
+      "exclude": ["/diff3/"]
+    },
     "implement_methods": true,
     "in_statement_indentation": false,
     "indentation": {
@@ -326,6 +329,7 @@
     "local_testclass_consistency": true,
     "local_variable_names": {
       "exclude": [
+        "/diff3/",
         "/json/"
       ],
       "expectedConstant": "^LC_.*$",
@@ -340,6 +344,7 @@
     "method_implemented_twice": true,
     "method_length": {
       "exclude": [
+        "/diff3/",
         "zcl_abapgit_convert.clas.locals_imp.abap"
       ],
       "checkForms": true,
