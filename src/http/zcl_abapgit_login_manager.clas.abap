@@ -28,7 +28,7 @@ CLASS zcl_abapgit_login_manager DEFINITION
         VALUE(rv_auth) TYPE string
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS set_token
+    CLASS-METHODS set_bearer
       IMPORTING
         !iv_uri        TYPE string
         !iv_token      TYPE string
@@ -146,7 +146,7 @@ CLASS zcl_abapgit_login_manager IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_token.
+  METHOD set_bearer.
 
     ASSERT NOT iv_uri IS INITIAL.
 
