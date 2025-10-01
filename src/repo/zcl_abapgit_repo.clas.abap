@@ -242,6 +242,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     "Deserialize data
     lt_result = zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
+      iv_package = get_package( )
       ii_config  = get_data_config( )
       it_files   = get_files_remote( ) ).
 
@@ -668,10 +669,9 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     deserialize_data(
       EXPORTING
-        iv_package = get_package( )
-        is_checks  = is_checks
+        is_checks = is_checks
       CHANGING
-        ct_files   = lt_updated_files ).
+        ct_files  = lt_updated_files ).
 
     CLEAR mt_local. " Should be before CS update which uses NEW local
 
