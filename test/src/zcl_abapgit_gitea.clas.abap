@@ -35,7 +35,7 @@ CLASS zcl_abapgit_gitea IMPLEMENTATION.
 
     lv_url = c_base && '/api/v1/user/repos'.
 
-    zcl_abapgit_login_manager=>set(
+    zcl_abapgit_login_manager=>set_basic(
       iv_uri      = lv_url
       iv_username = c_username
       iv_password = c_password ).

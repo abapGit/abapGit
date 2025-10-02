@@ -18,6 +18,15 @@ CLASS zcl_abapgit_gitv2_porcelain DEFINITION
     CONSTANTS c_flush_pkt TYPE c LENGTH 4 VALUE '0000'.
     CONSTANTS c_delim_pkt TYPE c LENGTH 4 VALUE '0001'.
 
+    CLASS-METHODS get_request_uri
+      IMPORTING
+        iv_url        TYPE string
+        iv_service    TYPE string
+      RETURNING
+        VALUE(rv_uri) TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS send_command
       IMPORTING
         iv_url             TYPE string
@@ -41,7 +50,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
+CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
 
 
   METHOD decode_pack.
@@ -78,6 +87,11 @@ CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_request_uri.
+    rv_uri = zcl_abapgit_url=>path_name( iv_url ) && |/info/refs?service=git-{ iv_service }-pack|.
+  ENDMETHOD.
+
+
   METHOD send_command.
 
     CONSTANTS lc_content_regex TYPE string VALUE '^[0-9a-f]{4}#'.
@@ -89,13 +103,16 @@ CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
     DATA lv_argument TYPE string.
 
 
-    ls_header-key = 'Git-Protocol'.
+    ls_header-key   = 'Git-Protocol'.
     ls_header-value = 'version=2'.
+    APPEND ls_header TO lt_headers.
+    ls_header-key   = '~request_uri'.
+    ls_header-value = get_request_uri( iv_url     = iv_url
+                                       iv_service = iv_service ).
     APPEND ls_header TO lt_headers.
 
     lo_client = zcl_abapgit_http=>create_by_url(
       iv_url     = iv_url
-      iv_service = c_service-upload
       it_headers = lt_headers ).
 
     lo_client->check_smart_response(
@@ -164,6 +181,7 @@ CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
     DELETE rt_objects WHERE type <> zif_abapgit_git_definitions=>c_type-commit.
 
   ENDMETHOD.
+
 
   METHOD zif_abapgit_gitv2_porcelain~fetch_blob.
 
