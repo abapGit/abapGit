@@ -242,6 +242,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     "Deserialize data
     lt_result = zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
+      iv_package = get_package( )
       ii_config  = get_data_config( )
       it_files   = get_files_remote( ) ).
 
