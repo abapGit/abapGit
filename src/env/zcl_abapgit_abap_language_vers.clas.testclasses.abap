@@ -416,7 +416,7 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
     " SAP class is available. In older releases, all packages will have
     " ABAP language version "undefined" and are handled like a new package
     TRY.
-        CALL METHOD (c_language_cfg)=>('GET_INSTANCE').
+        CALL METHOD (c_language_cfg)=>get_instance.
         mv_has_language_cfg = abap_true.
       CATCH cx_root.
         mv_has_language_cfg = abap_false.
