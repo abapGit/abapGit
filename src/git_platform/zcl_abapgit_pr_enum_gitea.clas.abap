@@ -129,6 +129,11 @@ CLASS zcl_abapgit_pr_enum_gitea IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_pr_enum_provider~create_repository.
+    zcx_abapgit_exception=>raise( 'Not implemented for Gitea' ).
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_pr_enum_provider~list_pull_requests.
 
     DATA lv_upstream_url TYPE string.
