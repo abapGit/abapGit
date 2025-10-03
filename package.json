@@ -24,11 +24,11 @@
     ]
   },
   "devDependencies": {
-    "@abaplint/cli": "^2.113.216",
+    "@abaplint/cli": "^2.113.221",
     "@abaplint/database-sqlite": "^2.11.78",
-    "@abaplint/runtime": "^2.11.93",
+    "@abaplint/runtime": "^2.11.96",
     "express": "^4.21.2",
-    "@abaplint/transpiler-cli": "^2.11.93",
+    "@abaplint/transpiler-cli": "^2.11.96",
     "globals": "^16.4.0",
     "abapmerge": "^0.16.6",
     "c8": "^10.1.3",
