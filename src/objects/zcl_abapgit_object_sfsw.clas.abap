@@ -34,7 +34,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SFSW IMPLEMENTATION.
 
 
   METHOD activate.
@@ -159,7 +159,8 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
           lv_name_32   TYPE sfw_name32,
           lv_name_80   TYPE sfw_name80,
           lt_parent_bf TYPE sfw_bf_sw_outtab,
-          lt_conflicts TYPE sfw_confl_outtab.
+          lt_conflicts TYPE sfw_confl_outtab,
+          lt_packages  TYPE sfw_devcl_outtab.
 
     IF iv_step = zif_abapgit_object=>gc_step_id-late.
       activate( ).
@@ -177,6 +178,9 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
                   CHANGING cg_data = lt_parent_bf ).
     io_xml->read( EXPORTING iv_name = 'CONFLICTS'
                   CHANGING cg_data = lt_conflicts ).
+    io_xml->read( EXPORTING iv_name = 'PACKAGES'
+                  CHANGING cg_data = lt_packages ).
+
 
     TRY.
         IF zif_abapgit_object~exists( ) = abap_true.
@@ -197,6 +201,7 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
 
     lo_switch->set_parent_bf( lt_parent_bf ).
     lo_switch->set_conflicts( lt_conflicts ).
+    lo_switch->set_assigned_packages( lt_packages ).
 
     set_default_package( iv_package ).
     tadir_insert( iv_package ).
@@ -296,7 +301,8 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
           lv_name_32   TYPE sfw_name32,
           lv_name_80   TYPE sfw_name80,
           lt_parent_bf TYPE sfw_bf_sw_outtab,
-          lt_conflicts TYPE sfw_confl_outtab.
+          lt_conflicts TYPE sfw_confl_outtab,
+          lt_packages  TYPE sfw_devcl_outtab.
 
 
     IF zif_abapgit_object~exists( ) = abap_false.
@@ -320,6 +326,7 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
 
     lt_parent_bf = lo_switch->get_parent_bf( ).
     lt_conflicts = lo_switch->get_conflicts( ).
+    lt_packages  = lo_switch->get_assigned_packages( ).
 
     io_xml->add( ig_data = ls_header
                  iv_name = 'HEADER' ).
@@ -332,6 +339,9 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
                  iv_name = 'PARENT_BF' ).
     io_xml->add( ig_data = lt_conflicts
                  iv_name = 'CONFLICTS' ).
+    io_xml->add( ig_data = lt_packages
+                 iv_name = 'PACKAGES' ).
+
 
     serialize_longtexts( ii_xml         = io_xml
                          iv_longtext_id = c_longtext_id_sfsw ).
