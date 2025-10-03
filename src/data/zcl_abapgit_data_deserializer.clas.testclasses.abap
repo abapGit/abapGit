@@ -31,8 +31,9 @@ CLASS ltcl_test IMPLEMENTATION.
 
     " this does not change the database. it just gives a preview of changes
     li_cut->deserialize(
-      ii_config = li_config
-      it_files  = lt_files ).
+      iv_package = ''
+      ii_config  = li_config
+      it_files   = lt_files ).
 
   ENDMETHOD.
 

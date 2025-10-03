@@ -22,7 +22,6 @@ CLASS zcl_abapgit_http DEFINITION
     CLASS-METHODS create_by_url
       IMPORTING
         !iv_url          TYPE string
-        !iv_service      TYPE string
         it_headers       TYPE ty_headers OPTIONAL
       RETURNING
         VALUE(ro_client) TYPE REF TO zcl_abapgit_http_client
@@ -156,8 +155,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
 
   METHOD create_by_url.
 
-    DATA: lv_uri           TYPE string,
-          lv_scheme        TYPE string,
+    DATA: lv_scheme        TYPE string,
           lv_authorization TYPE string,
           li_client        TYPE REF TO if_http_client,
           ls_header        LIKE LINE OF it_headers.
@@ -179,13 +177,6 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
     li_client->request->set_header_field(
         name  = 'user-agent'
         value = get_agent( ) ).
-    lv_uri = zcl_abapgit_url=>path_name( iv_url ) &&
-             '/info/refs?service=git-' &&
-             iv_service &&
-             '-pack'.
-    li_client->request->set_header_field(
-        name  = '~request_uri'
-        value = lv_uri ).
 
     LOOP AT it_headers INTO ls_header.
       li_client->request->set_header_field(
