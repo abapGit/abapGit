@@ -75,7 +75,10 @@
     "addFilenames": true,
     "addCommonJS": true,
     "unknownTypes": "runtimeError",
-    "extraSetup": "../test/setup.mjs",
+    "setup": {
+      "filename": "../test/setup.mjs",
+      "preFunction": "setup"
+    },
     "populateTables": {
       "reposrc": false
     },
