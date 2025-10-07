@@ -161,7 +161,7 @@ iv_end = iv_end_offset ).
       READ TABLE it_buffer INDEX iv_offset + sy-index INTO temp1.
 
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+        RAISE EXCEPTION TYPE cx_sy_itab_error.
       ENDIF.
       APPEND temp1 TO rs_result-chunk.
     ENDDO.
@@ -381,7 +381,7 @@ iv_end = iv_end_offset ).
       READ TABLE lt_hunks INDEX lv_hunk + 1 INTO temp1.
 
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+        RAISE EXCEPTION TYPE cx_sy_itab_error.
       ENDIF.
       ls_hunk = temp1.
       lv_hunk = lv_hunk + 1.
@@ -411,7 +411,7 @@ iv_end = iv_end_offset ).
         READ TABLE lt_hunks INDEX lv_hunk + 1 INTO temp3.
 
         IF sy-subrc <> 0.
-          RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+          RAISE EXCEPTION TYPE cx_sy_itab_error.
         ENDIF.
         ls_next_hunk = temp3.
 
@@ -479,7 +479,7 @@ iv_end = ls_hunk-ab_start + ls_hunk-ab_length ).
           READ TABLE lt_region_hunks INDEX lv_region_hunk + 1 INTO temp4.
 
           IF sy-subrc <> 0.
-            RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+            RAISE EXCEPTION TYPE cx_sy_itab_error.
           ENDIF.
           ls_hunk = temp4.
           lv_region_hunk = lv_region_hunk + 1.
@@ -601,7 +601,7 @@ iv_end = lv_b_end ).
     READ TABLE lt_lcs WITH KEY key = lines( lt_lcs ) - 1 INTO temp15.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     ls_candidate = temp15.
     DO.
@@ -618,7 +618,7 @@ iv_end = lv_b_end ).
         READ TABLE it_buffer1 INDEX lv_tail1 + 1 INTO temp7.
 
         IF sy-subrc <> 0.
-          RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+          RAISE EXCEPTION TYPE cx_sy_itab_error.
         ENDIF.
         INSERT temp7 INTO TABLE ls_different-buffer1.
       ENDDO.
@@ -634,7 +634,7 @@ iv_end = lv_b_end ).
         READ TABLE it_buffer2 INDEX lv_tail2 + 1 INTO temp9.
 
         IF sy-subrc <> 0.
-          RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+          RAISE EXCEPTION TYPE cx_sy_itab_error.
         ENDIF.
         INSERT temp9 INTO TABLE ls_different-buffer2.
       ENDDO.
@@ -658,7 +658,7 @@ iv_end = lv_b_end ).
         READ TABLE it_buffer1 INDEX lv_tail1 + 1 INTO temp11.
 
         IF sy-subrc <> 0.
-          RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+          RAISE EXCEPTION TYPE cx_sy_itab_error.
         ENDIF.
         INSERT temp11 INTO TABLE lt_common.
       ENDIF.
@@ -673,7 +673,7 @@ iv_end = lv_b_end ).
       READ TABLE lt_lcs WITH KEY key = ls_candidate-chain INTO temp13.
 
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+        RAISE EXCEPTION TYPE cx_sy_itab_error.
       ENDIF.
       ls_candidate = temp13.
     ENDDO.
@@ -718,7 +718,7 @@ iv_end = lv_b_end ).
     READ TABLE lt_lcs WITH KEY key = lines( lt_lcs ) - 1 INTO temp18.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     ls_candidate = temp18.
     DO.
@@ -757,7 +757,7 @@ iv_end = lv_b_end ).
       READ TABLE lt_lcs WITH KEY key = ls_candidate-chain INTO temp16.
 
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+        RAISE EXCEPTION TYPE cx_sy_itab_error.
       ENDIF.
       ls_candidate = temp16.
     ENDDO.
@@ -795,7 +795,7 @@ iv_end = lv_b_end ).
     READ TABLE lt_lcs WITH KEY key = lines( lt_lcs ) - 1 INTO temp20.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     ls_candidate = temp20.
     DO.
@@ -827,7 +827,7 @@ iv_end = lv_b_end ).
       READ TABLE lt_lcs WITH KEY key = ls_candidate-chain INTO temp18.
 
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+        RAISE EXCEPTION TYPE cx_sy_itab_error.
       ENDIF.
       ls_candidate = temp18.
     ENDDO.
@@ -950,7 +950,7 @@ iv_end = lv_b_end ).
         READ TABLE lt_equivalenceclasses WITH KEY key = <lv_buffer1> INTO temp27.
 
         IF sy-subrc <> 0.
-          RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+          RAISE EXCEPTION TYPE cx_sy_itab_error.
         ENDIF.
         lt_buffer2indices = temp27-values.
       ELSE.
@@ -966,7 +966,7 @@ iv_end = lv_b_end ).
       READ TABLE lt_candidates WITH KEY key = 0 INTO temp31.
 
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+        RAISE EXCEPTION TYPE cx_sy_itab_error.
       ENDIF.
       ls_c = temp31.
       LOOP AT lt_buffer2indices INTO lv_j.
@@ -981,7 +981,7 @@ iv_end = lv_b_end ).
             READ TABLE lt_candidates WITH KEY key = lv_s INTO temp23.
 
             IF sy-subrc <> 0.
-              RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+              RAISE EXCEPTION TYPE cx_sy_itab_error.
             ENDIF.
             IF temp23-buffer2index < lv_j.
               IF lv_s = lines( lt_candidates ) - 1.
@@ -993,7 +993,7 @@ iv_end = lv_b_end ).
               READ TABLE lt_candidates WITH KEY key = lv_s + 1 INTO temp25.
 
               IF sy-subrc <> 0.
-                RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+                RAISE EXCEPTION TYPE cx_sy_itab_error.
               ENDIF.
               IF temp25-buffer2index > lv_j.
                 EXIT.
@@ -1020,7 +1020,7 @@ iv_end = lv_b_end ).
             READ TABLE lt_candidates WITH KEY key = lv_r ASSIGNING <temp27>.
 
             IF sy-subrc <> 0.
-              RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+              RAISE EXCEPTION TYPE cx_sy_itab_error.
             ENDIF.
             <temp27>-buffer1index = ls_c-buffer1index.
 
@@ -1029,7 +1029,7 @@ iv_end = lv_b_end ).
             READ TABLE lt_candidates WITH KEY key = lv_r ASSIGNING <temp29>.
 
             IF sy-subrc <> 0.
-              RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+              RAISE EXCEPTION TYPE cx_sy_itab_error.
             ENDIF.
             <temp29>-buffer2index = ls_c-buffer2index.
 
@@ -1038,7 +1038,7 @@ iv_end = lv_b_end ).
             READ TABLE lt_candidates WITH KEY key = lv_r ASSIGNING <temp31>.
 
             IF sy-subrc <> 0.
-              RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+              RAISE EXCEPTION TYPE cx_sy_itab_error.
             ENDIF.
             <temp31>-chain        = ls_c-chain.
           ENDIF.
@@ -1062,7 +1062,7 @@ iv_end = lv_b_end ).
         READ TABLE lt_candidates WITH KEY key = lv_r ASSIGNING <temp34>.
 
         IF sy-subrc <> 0.
-          RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+          RAISE EXCEPTION TYPE cx_sy_itab_error.
         ENDIF.
         <temp34>-buffer1index = ls_c-buffer1index.
 
@@ -1071,7 +1071,7 @@ iv_end = lv_b_end ).
         READ TABLE lt_candidates WITH KEY key = lv_r ASSIGNING <temp36>.
 
         IF sy-subrc <> 0.
-          RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+          RAISE EXCEPTION TYPE cx_sy_itab_error.
         ENDIF.
         <temp36>-buffer2index = ls_c-buffer2index.
 
@@ -1080,7 +1080,7 @@ iv_end = lv_b_end ).
         READ TABLE lt_candidates WITH KEY key = lv_r ASSIGNING <temp38>.
 
         IF sy-subrc <> 0.
-          RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+          RAISE EXCEPTION TYPE cx_sy_itab_error.
         ENDIF.
         <temp38>-chain        = ls_c-chain.
       ELSE.
@@ -1231,7 +1231,7 @@ iv_end = lv_b_end ).
         READ TABLE it_buffer INDEX lv_curroffset + 1 INTO temp40.
 
         IF sy-subrc <> 0.
-          RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+          RAISE EXCEPTION TYPE cx_sy_itab_error.
         ENDIF.
         APPEND temp40 TO rt_result.
         lv_curroffset = lv_curroffset + 1.
@@ -1244,7 +1244,7 @@ iv_end = lv_b_end ).
         READ TABLE <ls_patch>-buffer2-chunk INDEX sy-index INTO temp42.
 
         IF sy-subrc <> 0.
-          RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+          RAISE EXCEPTION TYPE cx_sy_itab_error.
         ENDIF.
         APPEND temp42 TO rt_result.
       ENDDO.
@@ -1259,7 +1259,7 @@ iv_end = lv_b_end ).
       READ TABLE it_buffer INDEX lv_curroffset + 1 INTO temp44.
 
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+        RAISE EXCEPTION TYPE cx_sy_itab_error.
       ENDIF.
       APPEND temp44 TO rt_result.
       lv_curroffset = lv_curroffset + 1.
@@ -1300,7 +1300,7 @@ iv_end = lv_b_end ).
       READ TABLE it_data INDEX lv_line INTO temp46.
 
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+        RAISE EXCEPTION TYPE cx_sy_itab_error.
       ENDIF.
       INSERT temp46 INTO TABLE rt_result.
       lv_line = lv_line - 1.
