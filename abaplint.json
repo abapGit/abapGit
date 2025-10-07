@@ -240,6 +240,7 @@
         "^cl_xco_",
         "^cx_aff_",
         "^cx_wb_object_operation_error$",
+        "^cx_sy_itab_line_not_found$",
         "^cx_xco_",
         "^flag$",
         "^i18_a_langiso2$",
