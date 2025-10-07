@@ -1,7 +1,8 @@
 CLASS zcl_abapgit_aff_registry DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_aff_factory .
 
   PUBLIC SECTION.
     INTERFACES:
