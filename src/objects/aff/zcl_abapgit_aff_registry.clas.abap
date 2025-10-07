@@ -11,7 +11,6 @@ CLASS zcl_abapgit_aff_registry DEFINITION
     CONSTANTS c_aff_feature TYPE string VALUE 'AFF'.
 
     METHODS constructor.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
