@@ -76,9 +76,6 @@ CLASS zcl_abapgit_filename_logic DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CLASS-DATA:
-      go_aff_registry TYPE REF TO zif_abapgit_aff_registry.
-
     CLASS-METHODS name_escape
       IMPORTING
         !iv_name       TYPE csequence
@@ -154,11 +151,7 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
 
     " Assume AFF namespace convention
-    IF go_aff_registry IS INITIAL.
-      CREATE OBJECT go_aff_registry TYPE zcl_abapgit_aff_registry.
-    ENDIF.
-
-    IF go_aff_registry->is_supported_object_type( |{ lv_type }| ) = abap_true.
+    IF zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( |{ lv_type }| ) = abap_true.
       REPLACE ALL OCCURRENCES OF '(' IN lv_name WITH '/'.
       REPLACE ALL OCCURRENCES OF ')' IN lv_name WITH '/'.
     ENDIF.
@@ -391,10 +384,7 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
       CONCATENATE rv_filename '.' iv_ext INTO rv_filename.
     ENDIF.
 
-    " Handle namespaces
-    CREATE OBJECT go_aff_registry TYPE zcl_abapgit_aff_registry.
-
-    IF go_aff_registry->is_supported_object_type( is_item-obj_type ) = abap_true.
+    IF zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( is_item-obj_type ) = abap_true.
       FIND ALL OCCURRENCES OF `/` IN rv_filename MATCH COUNT lv_nb_of_slash.
       IF lv_nb_of_slash = 2.
         REPLACE FIRST OCCURRENCE OF `/` IN rv_filename WITH `(`.
