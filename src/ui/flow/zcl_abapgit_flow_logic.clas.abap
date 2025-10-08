@@ -218,10 +218,11 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
   METHOD consolidate.
 
-    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
-    DATA ls_feature  LIKE LINE OF lt_features.
-    DATA lv_string   TYPE string.
-    DATA li_repo     TYPE REF TO zif_abapgit_repo.
+    DATA lt_features  TYPE zif_abapgit_flow_logic=>ty_features.
+    DATA ls_feature   LIKE LINE OF lt_features.
+    DATA lv_string    TYPE string.
+    DATA li_repo      TYPE REF TO zif_abapgit_repo.
+    DATA ls_transport TYPE zif_abapgit_cts_api=>ty_transport_data.
 
 
 * todo: handling multiple repositories
@@ -235,13 +236,16 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         lv_string = |Branch <tt>{ ls_feature-branch-display_name }</tt> is not up to date|.
         INSERT lv_string INTO TABLE rs_consolidate-errors.
       ELSEIF ls_feature-branch-display_name IS NOT INITIAL
-          AND ls_feature-transport-trkorr IS INITIAL.
+          AND ls_feature-transport-trkorr IS INITIAL
+          AND lines( ls_feature-changed_files ) > 0.
+* its okay if the changes are outside the starting folder
         lv_string = |Branch <tt>{ ls_feature-branch-display_name }</tt> has no transport|.
         INSERT lv_string INTO TABLE rs_consolidate-errors.
       ELSEIF ls_feature-transport-trkorr IS NOT INITIAL
           AND ls_feature-branch-display_name IS INITIAL
           AND ls_feature-full_match = abap_false.
-        lv_string = |Transport <tt>{ ls_feature-transport-trkorr }</tt> has no branch|.
+        ls_transport = zcl_abapgit_factory=>get_cts_api( )->read( ls_feature-transport-trkorr ).
+        lv_string = |Transport <tt>{ ls_feature-transport-trkorr }</tt> has no branch, created { ls_transport-as4date }|.
         INSERT lv_string INTO TABLE rs_consolidate-errors.
       ENDIF.
 * todo: branches without pull requests?
