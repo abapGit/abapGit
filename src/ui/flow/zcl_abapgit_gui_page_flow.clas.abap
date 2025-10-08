@@ -30,6 +30,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         only_my_transports  TYPE string VALUE 'only_my_transports',
         hide_full_matches   TYPE string VALUE 'hide_full_matches',
         hide_matching_files TYPE string VALUE 'hide_matching_files',
+        hide_conflicts      TYPE string VALUE 'hide_conflicts',
       END OF c_action .
     DATA ms_information TYPE zif_abapgit_flow_logic=>ty_information .
     DATA ms_user_settings TYPE zif_abapgit_persist_user=>ty_flow_settings.
@@ -307,6 +308,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide matching files|
       iv_class = 'command'
       iv_act   = |{ c_action-hide_matching_files }| ) ).
+
+    IF ms_user_settings-hide_conflicts = abap_true.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide transports with conflicts|
+      iv_class = 'command'
+      iv_act   = |{ c_action-hide_conflicts }| ) ).
 
     ri_html->add( '</span>' ).
 

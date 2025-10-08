@@ -32,6 +32,7 @@ INTERFACE zif_abapgit_persist_user
             only_my_transports  TYPE abap_bool,
             hide_full_matches   TYPE abap_bool,
             hide_matching_files TYPE abap_bool,
+            hide_conflicts      TYPE abap_bool,
           END OF ty_flow_settings.
 
   METHODS get_changes_only
