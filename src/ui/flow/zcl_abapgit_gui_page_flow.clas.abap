@@ -362,6 +362,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         ms_user_settings-hide_full_matches = boolc( ms_user_settings-hide_full_matches <> abap_true ).
         zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-hide_conflicts.
+        ms_user_settings-hide_conflicts = boolc( ms_user_settings-hide_conflicts <> abap_true ).
+        zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-hide_matching_files.
         ms_user_settings-hide_matching_files = boolc( ms_user_settings-hide_matching_files <> abap_true ).
         zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
