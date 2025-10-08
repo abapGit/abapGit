@@ -245,7 +245,8 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
           AND ls_feature-branch-display_name IS INITIAL
           AND ls_feature-full_match = abap_false.
         ls_transport = zcl_abapgit_factory=>get_cts_api( )->read( ls_feature-transport-trkorr ).
-        lv_string = |Transport <tt>{ ls_feature-transport-trkorr }</tt> has no branch, created { ls_transport-as4date }|.
+        lv_string = |Transport <tt>{ ls_feature-transport-trkorr }</tt> has no branch, created {
+          ls_transport-as4date DATE = ISO }|.
         INSERT lv_string INTO TABLE rs_consolidate-errors.
       ENDIF.
 * todo: branches without pull requests?
