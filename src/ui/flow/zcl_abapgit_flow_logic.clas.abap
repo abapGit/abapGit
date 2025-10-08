@@ -175,7 +175,6 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA ls_changed_file LIKE LINE OF cs_feature-changed_files.
     DATA ls_item         TYPE zif_abapgit_definitions=>ty_item.
     DATA lv_extension    TYPE string.
-    DATA li_aff_registry TYPE REF TO zif_abapgit_aff_registry.
 
 
     FIELD-SYMBOLS <ls_transport> LIKE LINE OF it_transports.
@@ -214,8 +213,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         ls_item-obj_type = <ls_transport>-object.
         ls_item-obj_name = <ls_transport>-obj_name.
 
-        CREATE OBJECT li_aff_registry TYPE zcl_abapgit_aff_registry.
-        IF li_aff_registry->is_supported_object_type( <ls_transport>-object ) = abap_true.
+        IF zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( <ls_transport>-object ) = abap_true.
           lv_extension = 'json'.
         ELSE.
           lv_extension = 'xml'.
