@@ -174,7 +174,9 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA ls_changed      LIKE LINE OF cs_feature-changed_objects.
     DATA ls_changed_file LIKE LINE OF cs_feature-changed_files.
     DATA ls_item         TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_filename     TYPE string.
     DATA lv_extension    TYPE string.
+    DATA lv_main_file    TYPE string.
 
 
     FIELD-SYMBOLS <ls_transport> LIKE LINE OF it_transports.
@@ -219,14 +221,29 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
           lv_extension = 'xml'.
         ENDIF.
 
-        CLEAR ls_changed_file.
-        ls_changed_file-path       = '/'. " todo?
-        ls_changed_file-filename   = zcl_abapgit_filename_logic=>object_to_file(
+        lv_main_file = zcl_abapgit_filename_logic=>object_to_file(
           is_item = ls_item
-          iv_ext = lv_extension ).
-        ls_changed_file-local_sha1 = repeat(
-          val = '0'
-          occ = strlen( ls_changed_file-local_sha1 ) ).
+          iv_ext  = lv_extension ).
+        CONCATENATE '.' lv_extension INTO lv_extension.
+        lv_filename = lv_main_file.
+        REPLACE FIRST OCCURRENCE OF lv_extension IN lv_filename WITH '*'.
+
+        LOOP AT it_main_expanded ASSIGNING <ls_main_expanded>
+            WHERE name CP lv_filename.
+          CLEAR ls_changed_file.
+          ls_changed_file-filename    = <ls_main_expanded>-name.
+          ls_changed_file-path        = <ls_main_expanded>-path.
+          ls_changed_file-remote_sha1 = <ls_main_expanded>-sha1.
+          INSERT ls_changed_file INTO TABLE cs_feature-changed_files.
+        ENDLOOP.
+        IF sy-subrc <> 0.
+          CLEAR ls_changed_file.
+          ls_changed_file-filename    = lv_main_file.
+          ls_changed_file-path        = '/src/'. " todo?
+* after its deleted locally and remote then remote and local sha1 will match(be empty)
+          INSERT ls_changed_file INTO TABLE cs_feature-changed_files.
+        ENDIF.
+
       ENDIF.
 
     ENDLOOP.
