@@ -30,6 +30,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         only_my_transports  TYPE string VALUE 'only_my_transports',
         hide_full_matches   TYPE string VALUE 'hide_full_matches',
         hide_matching_files TYPE string VALUE 'hide_matching_files',
+        hide_conflicts      TYPE string VALUE 'hide_conflicts',
       END OF c_action .
     DATA ms_information TYPE zif_abapgit_flow_logic=>ty_information .
     DATA ms_user_settings TYPE zif_abapgit_persist_user=>ty_flow_settings.
@@ -80,6 +81,14 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
+
+    METHODS skip_show
+      IMPORTING
+        is_feature     TYPE zif_abapgit_flow_logic=>ty_feature
+      RETURNING
+        VALUE(rv_skip) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -308,6 +317,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       iv_class = 'command'
       iv_act   = |{ c_action-hide_matching_files }| ) ).
 
+    IF ms_user_settings-hide_conflicts = abap_true.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide transports with conflicts|
+      iv_class = 'command'
+      iv_act   = |{ c_action-hide_conflicts }| ) ).
+
     ri_html->add( '</span>' ).
 
   ENDMETHOD.
@@ -341,6 +360,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-hide_full_matches.
         ms_user_settings-hide_full_matches = boolc( ms_user_settings-hide_full_matches <> abap_true ).
+        zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-hide_conflicts.
+        ms_user_settings-hide_conflicts = boolc( ms_user_settings-hide_conflicts <> abap_true ).
         zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-hide_matching_files.
@@ -395,6 +418,57 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD skip_show.
+
+    DATA lt_my_transports TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
+    DATA lt_user          TYPE zif_abapgit_cts_api=>ty_user_range.
+    DATA ls_user          LIKE LINE OF lt_user.
+    DATA ls_duplicate     LIKE LINE OF ms_information-transport_duplicates.
+
+    rv_skip = abap_false.
+
+    IF ms_user_settings-only_my_transports = abap_true.
+      ls_user-low = sy-uname.
+      ls_user-sign = 'I'.
+      ls_user-option = 'EW'.
+      lt_my_transports = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( it_user = lt_user ).
+    ENDIF.
+
+    IF ms_user_settings-hide_full_matches = abap_true
+          AND NOT is_feature-transport IS INITIAL
+          AND is_feature-full_match = abap_true.
+      rv_skip = abap_true.
+      RETURN.
+    ENDIF.
+
+    IF ms_user_settings-only_my_transports = abap_true AND is_feature-transport-trkorr IS NOT INITIAL.
+      READ TABLE lt_my_transports WITH KEY table_line = is_feature-transport-trkorr TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        rv_skip = abap_true.
+        RETURN.
+      ENDIF.
+    ENDIF.
+
+    IF ms_user_settings-hide_conflicts = abap_true.
+      LOOP AT ms_information-transport_duplicates INTO ls_duplicate.
+        READ TABLE is_feature-changed_objects WITH KEY
+            obj_type = ls_duplicate-obj_type
+            obj_name = ls_duplicate-obj_name
+            TRANSPORTING NO FIELDS.
+        IF sy-subrc = 0.
+          rv_skip = abap_true.
+          RETURN.
+        ENDIF.
+      ENDLOOP.
+
+    ENDIF.
+
+    IF lines( is_feature-changed_files ) = 0.
+* no changes, eg. only files outside of starting folder changed
+      rv_skip = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD zif_abapgit_gui_renderable~render.
 
@@ -402,10 +476,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     DATA lv_index         TYPE i.
     DATA lv_rendered      TYPE abap_bool.
     DATA lo_timer         TYPE REF TO zcl_abapgit_timer.
-    DATA lt_my_transports TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
     DATA lv_message       LIKE LINE OF ms_information-errors.
-    DATA lt_user          TYPE zif_abapgit_cts_api=>ty_user_range.
-    DATA ls_user          LIKE LINE OF lt_user.
+
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -430,31 +502,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       ri_html->add( '<br>' ).
     ENDIF.
 
-    IF ms_user_settings-only_my_transports = abap_true.
-      ls_user-low = sy-uname.
-      ls_user-sign = 'I'.
-      ls_user-option = 'EW'.
-      lt_my_transports = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( it_user = lt_user ).
-    ENDIF.
-
     LOOP AT ms_information-features INTO ls_feature.
       lv_index = sy-tabix.
 
-      IF ms_user_settings-hide_full_matches = abap_true
-          AND NOT ls_feature-transport IS INITIAL
-          AND ls_feature-full_match = abap_true.
-        CONTINUE.
-      ENDIF.
-
-      IF ms_user_settings-only_my_transports = abap_true AND ls_feature-transport-trkorr IS NOT INITIAL.
-        READ TABLE lt_my_transports WITH KEY table_line = ls_feature-transport-trkorr TRANSPORTING NO FIELDS.
-        IF sy-subrc <> 0.
-          CONTINUE.
-        ENDIF.
-      ENDIF.
-
-      IF lines( ls_feature-changed_files ) = 0.
-* no changes, eg. only files outside of starting folder changed
+      IF skip_show( ls_feature ) = abap_true.
         CONTINUE.
       ENDIF.
       lv_rendered = abap_true.
