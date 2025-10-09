@@ -173,6 +173,11 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
     DATA ls_changed      LIKE LINE OF cs_feature-changed_objects.
     DATA ls_changed_file LIKE LINE OF cs_feature-changed_files.
+    DATA ls_item         TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_filename     TYPE string.
+    DATA lv_extension    TYPE string.
+    DATA lv_main_file    TYPE string.
+
 
     FIELD-SYMBOLS <ls_transport> LIKE LINE OF it_transports.
     FIELD-SYMBOLS <ls_local>     LIKE LINE OF it_local.
@@ -189,6 +194,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
           AND item-obj_type = <ls_transport>-object
           AND item-obj_name = <ls_transport>-obj_name.
 
+        CLEAR ls_changed_file.
         ls_changed_file-path       = <ls_local>-file-path.
         ls_changed_file-filename   = <ls_local>-file-filename.
         ls_changed_file-local_sha1 = <ls_local>-file-sha1.
@@ -203,6 +209,42 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
         INSERT ls_changed_file INTO TABLE cs_feature-changed_files.
       ENDLOOP.
+      IF sy-subrc <> 0.
+* then its a deletion
+        CLEAR ls_item.
+        ls_item-obj_type = <ls_transport>-object.
+        ls_item-obj_name = <ls_transport>-obj_name.
+
+        IF zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( <ls_transport>-object ) = abap_true.
+          lv_extension = 'json'.
+        ELSE.
+          lv_extension = 'xml'.
+        ENDIF.
+
+        lv_main_file = zcl_abapgit_filename_logic=>object_to_file(
+          is_item = ls_item
+          iv_ext  = lv_extension ).
+        CONCATENATE '.' lv_extension INTO lv_extension.
+        lv_filename = lv_main_file.
+        REPLACE FIRST OCCURRENCE OF lv_extension IN lv_filename WITH '*'.
+
+        LOOP AT it_main_expanded ASSIGNING <ls_main_expanded>
+            WHERE name CP lv_filename.
+          CLEAR ls_changed_file.
+          ls_changed_file-filename    = <ls_main_expanded>-name.
+          ls_changed_file-path        = <ls_main_expanded>-path.
+          ls_changed_file-remote_sha1 = <ls_main_expanded>-sha1.
+          INSERT ls_changed_file INTO TABLE cs_feature-changed_files.
+        ENDLOOP.
+        IF sy-subrc <> 0.
+          CLEAR ls_changed_file.
+          ls_changed_file-filename    = lv_main_file.
+          ls_changed_file-path        = '/src/'. " todo?
+* after its deleted locally and remote then remote and local sha1 will match(be empty)
+          INSERT ls_changed_file INTO TABLE cs_feature-changed_files.
+        ENDIF.
+
+      ENDIF.
 
     ENDLOOP.
 
@@ -213,6 +255,55 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     rs_data-name = ii_repo->get_name( ).
     rs_data-key = ii_repo->get_key( ).
     rs_data-package = ii_repo->get_package( ).
+  ENDMETHOD.
+
+
+  METHOD check_files.
+
+    DATA ls_missing      LIKE LINE OF ct_missing_remote.
+    DATA lv_found_main   TYPE abap_bool.
+    DATA ls_feature      LIKE LINE OF it_features.
+    DATA lv_found_branch TYPE abap_bool.
+
+    FIELD-SYMBOLS <ls_local> LIKE LINE OF it_local.
+    FIELD-SYMBOLS <ls_expanded> LIKE LINE OF ct_main_expanded.
+
+    LOOP AT it_local ASSIGNING <ls_local> WHERE file-filename <> zif_abapgit_definitions=>c_dot_abapgit.
+      READ TABLE ct_main_expanded WITH KEY name = <ls_local>-file-filename ASSIGNING <ls_expanded>.
+      lv_found_main = boolc( sy-subrc = 0 ).
+
+      lv_found_branch = abap_false.
+      LOOP AT it_features INTO ls_feature.
+        READ TABLE ls_feature-changed_files TRANSPORTING NO FIELDS
+          WITH KEY filename = <ls_local>-file-filename.
+        IF sy-subrc = 0.
+          lv_found_branch = abap_true.
+          EXIT.
+        ENDIF.
+      ENDLOOP.
+
+      IF lv_found_main = abap_false AND lv_found_branch = abap_false.
+        CLEAR ls_missing.
+        ls_missing-path = <ls_local>-file-path.
+        ls_missing-filename = <ls_local>-file-filename.
+        ls_missing-local_sha1 = <ls_local>-file-sha1.
+        INSERT ls_missing INTO TABLE ct_missing_remote.
+      ELSEIF lv_found_branch = abap_false AND <ls_expanded>-path <> <ls_local>-file-path.
+* todo
+      ELSEIF lv_found_branch = abap_false AND <ls_expanded>-sha1 <> <ls_local>-file-sha1.
+        CLEAR ls_missing.
+        ls_missing-path = <ls_local>-file-path.
+        ls_missing-filename = <ls_local>-file-filename.
+        ls_missing-local_sha1 = <ls_local>-file-sha1.
+        ls_missing-remote_sha1 = <ls_expanded>-sha1.
+        INSERT ls_missing INTO TABLE ct_missing_remote.
+      ENDIF.
+
+      IF lv_found_main = abap_true OR lv_found_branch = abap_true.
+        DELETE ct_main_expanded WHERE name = <ls_local>-file-filename AND path = <ls_local>-file-path.
+      ENDIF.
+    ENDLOOP.
+
   ENDMETHOD.
 
 
@@ -259,6 +350,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         cs_information = rs_consolidate ).
 
   ENDMETHOD.
+
 
   METHOD consolidate_files.
 
@@ -354,53 +446,41 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD check_files.
+  METHOD errors_from_transports.
 
-    DATA ls_missing      LIKE LINE OF ct_missing_remote.
-    DATA lv_found_main   TYPE abap_bool.
-    DATA ls_feature      LIKE LINE OF it_features.
-    DATA lv_found_branch TYPE abap_bool.
+    DATA lv_message    TYPE string.
+    DATA lt_transports LIKE it_transports.
+    DATA lv_index      TYPE i.
+    DATA ls_next       LIKE LINE OF lt_transports.
+    DATA ls_transport  LIKE LINE OF lt_transports.
+    DATA ls_duplicate  LIKE LINE OF cs_information-transport_duplicates.
 
-    FIELD-SYMBOLS <ls_local> LIKE LINE OF it_local.
-    FIELD-SYMBOLS <ls_expanded> LIKE LINE OF ct_main_expanded.
+    lt_transports = it_transports.
+    SORT lt_transports BY object obj_name trkorr.
 
-    LOOP AT it_local ASSIGNING <ls_local> WHERE file-filename <> zif_abapgit_definitions=>c_dot_abapgit.
-      READ TABLE ct_main_expanded WITH KEY name = <ls_local>-file-filename ASSIGNING <ls_expanded>.
-      lv_found_main = boolc( sy-subrc = 0 ).
-
-      lv_found_branch = abap_false.
-      LOOP AT it_features INTO ls_feature.
-        READ TABLE ls_feature-changed_files TRANSPORTING NO FIELDS
-          WITH KEY filename = <ls_local>-file-filename.
-        IF sy-subrc = 0.
-          lv_found_branch = abap_true.
-          EXIT.
-        ENDIF.
-      ENDLOOP.
-
-      IF lv_found_main = abap_false AND lv_found_branch = abap_false.
-        CLEAR ls_missing.
-        ls_missing-path = <ls_local>-file-path.
-        ls_missing-filename = <ls_local>-file-filename.
-        ls_missing-local_sha1 = <ls_local>-file-sha1.
-        INSERT ls_missing INTO TABLE ct_missing_remote.
-      ELSEIF lv_found_branch = abap_false AND <ls_expanded>-path <> <ls_local>-file-path.
-* todo
-      ELSEIF lv_found_branch = abap_false AND <ls_expanded>-sha1 <> <ls_local>-file-sha1.
-        CLEAR ls_missing.
-        ls_missing-path = <ls_local>-file-path.
-        ls_missing-filename = <ls_local>-file-filename.
-        ls_missing-local_sha1 = <ls_local>-file-sha1.
-        ls_missing-remote_sha1 = <ls_expanded>-sha1.
-        INSERT ls_missing INTO TABLE ct_missing_remote.
+    LOOP AT lt_transports INTO ls_transport.
+      lv_index = sy-tabix + 1.
+      READ TABLE lt_transports INTO ls_next INDEX lv_index.
+      IF sy-subrc <> 0.
+        CONTINUE.
       ENDIF.
 
-      IF lv_found_main = abap_true OR lv_found_branch = abap_true.
-        DELETE ct_main_expanded WHERE name = <ls_local>-file-filename AND path = <ls_local>-file-path.
+      IF ls_next-object = ls_transport-object
+          AND ls_next-trkorr <> ls_transport-trkorr
+          AND ls_next-obj_name = ls_transport-obj_name.
+        lv_message = |Object <tt>{ ls_transport-object }</tt> <tt>{ ls_transport-obj_name
+          }</tt> is in multiple transports: <tt>{ ls_transport-trkorr }</tt> and <tt>{ ls_next-trkorr }</tt>|.
+        INSERT lv_message INTO TABLE cs_information-errors.
+
+        CLEAR ls_duplicate.
+        ls_duplicate-obj_type = ls_transport-object.
+        ls_duplicate-obj_name = ls_transport-obj_name.
+        INSERT ls_duplicate INTO TABLE cs_information-transport_duplicates.
       ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
+
 
   METHOD find_open_transports.
 
@@ -840,42 +920,6 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
           cs_feature       = ls_result ).
 
       INSERT ls_result INTO TABLE ct_features.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD errors_from_transports.
-
-    DATA lv_message    TYPE string.
-    DATA lt_transports LIKE it_transports.
-    DATA lv_index      TYPE i.
-    DATA ls_next       LIKE LINE OF lt_transports.
-    DATA ls_transport  LIKE LINE OF lt_transports.
-    DATA ls_duplicate  LIKE LINE OF cs_information-transport_duplicates.
-
-    lt_transports = it_transports.
-    SORT lt_transports BY object obj_name trkorr.
-
-    LOOP AT lt_transports INTO ls_transport.
-      lv_index = sy-tabix + 1.
-      READ TABLE lt_transports INTO ls_next INDEX lv_index.
-      IF sy-subrc <> 0.
-        CONTINUE.
-      ENDIF.
-
-      IF ls_next-object = ls_transport-object
-          AND ls_next-trkorr <> ls_transport-trkorr
-          AND ls_next-obj_name = ls_transport-obj_name.
-        lv_message = |Object <tt>{ ls_transport-object }</tt> <tt>{ ls_transport-obj_name
-          }</tt> is in multiple transports: <tt>{ ls_transport-trkorr }</tt> and <tt>{ ls_next-trkorr }</tt>|.
-        INSERT lv_message INTO TABLE cs_information-errors.
-
-        CLEAR ls_duplicate.
-        ls_duplicate-obj_type = ls_transport-object.
-        ls_duplicate-obj_name = ls_transport-obj_name.
-        INSERT ls_duplicate INTO TABLE cs_information-transport_duplicates.
-      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.

@@ -100,10 +100,10 @@ CLASS ZCL_ABAPGIT_FLOW_PAGE_UTILS IMPLEMENTATION.
   METHOD render_table.
 
     DATA ls_path_name LIKE LINE OF it_files.
-    DATA lv_status TYPE string.
-    DATA lv_param TYPE string.
-    DATA li_repo TYPE REF TO zif_abapgit_repo.
-    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_status    TYPE string.
+    DATA lv_param     TYPE string.
+    DATA li_repo      TYPE REF TO zif_abapgit_repo.
+    DATA ls_item      TYPE zif_abapgit_definitions=>ty_item.
     DATA lv_duplicate TYPE abap_bool.
 
 
