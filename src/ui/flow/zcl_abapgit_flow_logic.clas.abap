@@ -476,6 +476,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         READ TABLE cs_information-features WITH KEY transport-trkorr = ls_next-trkorr TRANSPORTING NO FIELDS.
         lv_found2 = boolc( sy-subrc = 0 ).
         IF lv_found1 = abap_false AND lv_found2 = abap_false.
+          " not in any favorite flow enabled repo
           CONTINUE.
         ENDIF.
 
