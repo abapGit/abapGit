@@ -698,6 +698,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
 * move to output structure
     rs_request-trstatus = ls_request-h-trstatus.
+    rs_request-as4date  = ls_request-h-as4date.
     LOOP AT ls_request-keys INTO ls_key.
       APPEND INITIAL LINE TO rs_request-keys ASSIGNING <ls_key>.
       MOVE-CORRESPONDING ls_key TO <ls_key>.
