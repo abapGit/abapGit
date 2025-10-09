@@ -75,9 +75,9 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
 
     CLASS-METHODS errors_from_transports
       IMPORTING
-        it_transports  TYPE ty_transports_tt
+        it_all_transports TYPE ty_transports_tt
       CHANGING
-        cs_information TYPE zif_abapgit_flow_logic=>ty_information.
+        cs_information    TYPE zif_abapgit_flow_logic=>ty_information.
 
     CLASS-METHODS add_objects_and_files_from_tr
       IMPORTING
@@ -449,13 +449,15 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
   METHOD errors_from_transports.
 
     DATA lv_message    TYPE string.
-    DATA lt_transports LIKE it_transports.
+    DATA lt_transports LIKE it_all_transports.
     DATA lv_index      TYPE i.
     DATA ls_next       LIKE LINE OF lt_transports.
     DATA ls_transport  LIKE LINE OF lt_transports.
     DATA ls_duplicate  LIKE LINE OF cs_information-transport_duplicates.
+    DATA lv_found1     TYPE abap_bool.
+    DATA lv_found2     TYPE abap_bool.
 
-    lt_transports = it_transports.
+    lt_transports = it_all_transports.
     SORT lt_transports BY object obj_name trkorr.
 
     LOOP AT lt_transports INTO ls_transport.
@@ -468,6 +470,15 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
       IF ls_next-object = ls_transport-object
           AND ls_next-trkorr <> ls_transport-trkorr
           AND ls_next-obj_name = ls_transport-obj_name.
+
+        READ TABLE cs_information-features WITH KEY transport-trkorr = ls_transport-trkorr TRANSPORTING NO FIELDS.
+        lv_found1 = boolc( sy-subrc = 0 ).
+        READ TABLE cs_information-features WITH KEY transport-trkorr = ls_next-trkorr TRANSPORTING NO FIELDS.
+        lv_found2 = boolc( sy-subrc = 0 ).
+        IF lv_found1 = abap_false AND lv_found2 = abap_false.
+          CONTINUE.
+        ENDIF.
+
         lv_message = |Object <tt>{ ls_transport-object }</tt> <tt>{ ls_transport-obj_name
           }</tt> is in multiple transports: <tt>{ ls_transport-trkorr }</tt> and <tt>{ ls_next-trkorr }</tt>|.
         INSERT lv_message INTO TABLE cs_information-errors.
@@ -653,12 +664,6 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
     lt_all_transports = find_open_transports( ).
 
-    errors_from_transports(
-      EXPORTING
-        it_transports  = lt_all_transports
-      CHANGING
-        cs_information = rs_information ).
-
 * list branches on favorite + flow enabled + transported repos
     lt_repos = list_repos( ).
     LOOP AT lt_repos INTO li_repo_online.
@@ -735,6 +740,12 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
       INSERT LINES OF lt_features INTO TABLE rs_information-features.
     ENDLOOP.
+
+    errors_from_transports(
+      EXPORTING
+        it_all_transports  = lt_all_transports
+      CHANGING
+        cs_information     = rs_information ).
 
     SORT rs_information-features BY full_match transport-trkorr DESCENDING.
 
