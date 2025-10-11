@@ -430,7 +430,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     IF ms_user_settings-only_my_transports = abap_true.
       ls_user-low = sy-uname.
       ls_user-sign = 'I'.
-      ls_user-option = 'EW'.
+      ls_user-option = 'EQ'.
       INSERT ls_user INTO TABLE lt_user.
       lt_my_transports = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( it_user = lt_user ).
     ENDIF.
