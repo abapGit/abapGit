@@ -406,7 +406,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
 " skip the object is in any open transport
       READ TABLE lt_all_transports WITH KEY object = <ls_tadir>-object obj_name = <ls_tadir>-obj_name TRANSPORTING NO FIELDS.
-      IF sy-subrc = 0.
+      IF sy-subrc = 0 AND <ls_tadir>-object <> 'DEVC'.
 * todo: this is not correct for AFF enabled objects
         lv_filename = |{ to_lower( <ls_tadir>-obj_name ) }.{ to_lower( <ls_tadir>-object ) }*|.
         DELETE lt_main_expanded WHERE name CP lv_filename.
