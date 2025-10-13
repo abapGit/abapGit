@@ -366,6 +366,9 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA ls_branch   LIKE LINE OF lt_branches.
     DATA ls_only_remote TYPE zif_abapgit_flow_logic=>ty_path_name.
     DATA ls_result   LIKE LINE OF lt_features.
+    DATA lt_all_transports TYPE ty_transports_tt.
+    DATA lv_filename TYPE string.
+
 
     FIELD-SYMBOLS <ls_tadir> LIKE LINE OF lt_tadir.
 
@@ -398,7 +401,18 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
       io_dot          = li_repo->get_dot_abapgit( )
       iv_check_exists = abap_true ).
 
+    lt_all_transports = find_open_transports( ).
+
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+" skip the object is in any open transport
+      READ TABLE lt_all_transports WITH KEY object = <ls_tadir>-object obj_name = <ls_tadir>-obj_name TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0 AND <ls_tadir>-object <> 'DEVC'.
+* todo: this is not correct for AFF enabled objects
+        lv_filename = |{ to_lower( <ls_tadir>-obj_name ) }.{ to_lower( <ls_tadir>-object ) }*|.
+        DELETE lt_main_expanded WHERE name CP lv_filename.
+        CONTINUE.
+      ENDIF.
+
       INSERT <ls_tadir> INTO TABLE lt_filter.
 
       IF lines( lt_filter ) >= 500.
