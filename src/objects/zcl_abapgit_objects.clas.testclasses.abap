@@ -186,7 +186,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
   METHOD serialize_intf_aff_translate.
 
     DATA: ls_item           TYPE zif_abapgit_definitions=>ty_item,
-          lo_aff_registry   TYPE REF TO zif_abapgit_aff_registry,
+          li_aff_registry   TYPE REF TO zif_abapgit_aff_registry,
           ls_act            TYPE zif_abapgit_objects=>ty_serialization,
           ls_translation_de TYPE zif_abapgit_git_definitions=>ty_file,
           lt_target_langu   TYPE zif_abapgit_definitions=>ty_languages,
@@ -196,8 +196,8 @@ CLASS ltcl_serialize IMPLEMENTATION.
     ls_item-obj_type = 'INTF'.
     ls_item-obj_name = 'IF_BADI_TADIR_CHANGED'.
 
-    CREATE OBJECT lo_aff_registry TYPE ltd_aff_supported_true.
-    zcl_abapgit_aff_injector=>set_registry( lo_aff_registry ).
+    CREATE OBJECT li_aff_registry TYPE ltd_aff_supported_true.
+    zcl_abapgit_aff_injector=>set_registry( li_aff_registry ).
 
     APPEND `DE` TO lt_target_langu.
     lo_i18n_params = zcl_abapgit_i18n_params=>new( iv_main_language     = zif_abapgit_definitions=>c_english
