@@ -56,35 +56,7 @@ CLASS ltcl_object_types IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lcl_settings_with_features DEFINITION.
-  PUBLIC SECTION.
-    INTERFACES zif_abapgit_persist_settings.
-    METHODS: constructor
-      IMPORTING iv_features TYPE string.
-  PRIVATE SECTION.
-    DATA mv_features TYPE string.
-ENDCLASS.
-
-CLASS lcl_settings_with_features IMPLEMENTATION.
-
-  METHOD zif_abapgit_persist_settings~modify.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_persist_settings~read.
-
-    CREATE OBJECT ro_settings.
-    ro_settings->set_experimental_features( mv_features ).
-
-  ENDMETHOD.
-
-  METHOD constructor.
-    mv_features = iv_features.
-  ENDMETHOD.
-
-ENDCLASS.
-
-CLASS lcl_aff_supported_true DEFINITION FINAL FOR TESTING
+CLASS ltd_aff_supported_true DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
 
@@ -94,7 +66,7 @@ CLASS lcl_aff_supported_true DEFINITION FINAL FOR TESTING
 ENDCLASS.
 
 
-CLASS lcl_aff_supported_true IMPLEMENTATION.
+CLASS ltd_aff_supported_true IMPLEMENTATION.
 
   METHOD zif_abapgit_aff_registry~is_supported_object_type.
     rv_result = abap_true.
@@ -224,7 +196,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
     ls_item-obj_type = 'INTF'.
     ls_item-obj_name = 'IF_BADI_TADIR_CHANGED'.
 
-    CREATE OBJECT lo_aff_registry TYPE lcl_aff_supported_true.
+    CREATE OBJECT lo_aff_registry TYPE ltd_aff_supported_true.
     zcl_abapgit_aff_injector=>set_registry( lo_aff_registry ).
 
     APPEND `DE` TO lt_target_langu.
