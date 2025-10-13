@@ -84,6 +84,23 @@ CLASS lcl_settings_with_features IMPLEMENTATION.
 
 ENDCLASS.
 
+CLASS lcl_aff_supported_true DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PUBLIC SECTION.
+    INTERFACES:
+      zif_abapgit_aff_registry.
+ENDCLASS.
+
+
+CLASS lcl_aff_supported_true IMPLEMENTATION.
+
+  METHOD zif_abapgit_aff_registry~is_supported_object_type.
+    rv_result = abap_true.
+  ENDMETHOD.
+
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_serialize DEFINITION
@@ -197,23 +214,18 @@ CLASS ltcl_serialize IMPLEMENTATION.
   METHOD serialize_intf_aff_translate.
 
     DATA: ls_item           TYPE zif_abapgit_definitions=>ty_item,
-          lo_settings       TYPE REF TO lcl_settings_with_features,
+          lo_aff_registry   TYPE REF TO zif_abapgit_aff_registry,
           ls_act            TYPE zif_abapgit_objects=>ty_serialization,
           ls_translation_de TYPE zif_abapgit_git_definitions=>ty_file,
           lt_target_langu   TYPE zif_abapgit_definitions=>ty_languages,
           lo_i18n_params    TYPE REF TO zcl_abapgit_i18n_params,
-          lv_features       TYPE string,
           lv_filename       TYPE string.
 
     ls_item-obj_type = 'INTF'.
     ls_item-obj_name = 'IF_BADI_TADIR_CHANGED'.
 
-    lv_features = |{ zcl_abapgit_aff_registry=>c_aff_feature }, { zcl_abapgit_properties_file=>c_properties_feature }|.
-    CREATE OBJECT lo_settings
-      EXPORTING
-        iv_features = lv_features.
-
-    zcl_abapgit_persist_injector=>set_settings( lo_settings ).
+    CREATE OBJECT lo_aff_registry TYPE lcl_aff_supported_true.
+    zcl_abapgit_aff_injector=>set_registry( lo_aff_registry ).
 
     APPEND `DE` TO lt_target_langu.
     lo_i18n_params = zcl_abapgit_i18n_params=>new( iv_main_language     = zif_abapgit_definitions=>c_english
