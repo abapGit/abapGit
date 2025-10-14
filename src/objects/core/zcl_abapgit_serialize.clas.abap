@@ -605,7 +605,9 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     ASSERT mv_free > 0.
 
-    lv_abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
+    IF mo_abap_language_version IS NOT INITIAL.
+      lv_abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
+    ENDIF.
 
     lv_main_language_only = ms_i18n_params-main_language_only.
     IF lv_main_language_only = abap_false AND mt_wo_translation_patterns IS NOT INITIAL.
@@ -663,7 +665,9 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     ls_file_item-item-obj_name  = is_tadir-obj_name.
     ls_file_item-item-devclass  = is_tadir-devclass.
     ls_file_item-item-srcsystem = is_tadir-srcsystem.
-    ls_file_item-item-abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
+    IF mo_abap_language_version IS NOT INITIAL.
+      ls_file_item-item-abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
+    ENDIF.
 
     ls_i18n_params = ms_i18n_params.
     IF ls_i18n_params-main_language_only = abap_false AND mt_wo_translation_patterns IS NOT INITIAL.
