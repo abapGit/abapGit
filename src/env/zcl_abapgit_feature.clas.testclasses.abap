@@ -77,9 +77,10 @@ CLASS ltcl_feature DEFINITION FOR TESTING RISK LEVEL HARMLESS
 
     DATA mo_settings TYPE REF TO zcl_abapgit_settings.
     DATA mo_cut TYPE REF TO zcl_abapgit_feature.
-    DATA: mo_env TYPE REF TO ltd_environment.
+    DATA mo_env TYPE REF TO ltd_environment.
 
-    METHODS: setup,
+    METHODS:
+      setup,
       merged_feature_disabled FOR TESTING,
       dev_feature_disabled FOR TESTING,
       dev_feature_enabled FOR TESTING.
