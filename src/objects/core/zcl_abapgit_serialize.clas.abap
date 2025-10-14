@@ -657,9 +657,9 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
   METHOD run_sequential.
 
-    DATA: lx_error     TYPE REF TO zcx_abapgit_exception,
+    DATA: lx_error       TYPE REF TO zcx_abapgit_exception,
           ls_i18n_params LIKE ms_i18n_params,
-          ls_file_item TYPE zif_abapgit_objects=>ty_serialization.
+          ls_file_item   TYPE zif_abapgit_objects=>ty_serialization.
 
     ls_file_item-item-obj_type  = is_tadir-object.
     ls_file_item-item-obj_name  = is_tadir-obj_name.
