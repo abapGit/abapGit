@@ -587,6 +587,7 @@ iv_end = lv_b_end ).
     DATA temp12 LIKE sy-tabix.
     DATA temp13 LIKE LINE OF lt_lcs.
     DATA temp14 LIKE sy-tabix.
+    DATA lv_key TYPE i.
     lt_lcs = zif_abapgit_diff3~lcs( it_buffer1 = it_buffer1
                                          it_buffer2 = it_buffer2 ).
 
@@ -598,7 +599,8 @@ iv_end = lv_b_end ).
 
 
     temp16 = sy-tabix.
-    READ TABLE lt_lcs WITH KEY key = lines( lt_lcs ) - 1 INTO temp15.
+    lv_key = lines( lt_lcs ) - 1.
+    READ TABLE lt_lcs WITH KEY key = lv_key INTO temp15.
 
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_error.
@@ -703,6 +705,7 @@ iv_end = lv_b_end ).
     DATA ls_result LIKE temp15.
     DATA temp16 LIKE LINE OF lt_lcs.
     DATA temp17 LIKE sy-tabix.
+    DATA lv_key TYPE i.
     lt_lcs = zif_abapgit_diff3~lcs(
       it_buffer1 = it_buffer1
       it_buffer2 = it_buffer2 ).
@@ -715,7 +718,8 @@ iv_end = lv_b_end ).
 
 
     temp19 = sy-tabix.
-    READ TABLE lt_lcs WITH KEY key = lines( lt_lcs ) - 1 INTO temp18.
+    lv_key = lines( lt_lcs ) - 1.
+    READ TABLE lt_lcs WITH KEY key = lv_key INTO temp18.
 
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_error.
@@ -781,6 +785,7 @@ iv_end = lv_b_end ).
     DATA lv_mismatchlength2 TYPE i.
     DATA temp18 LIKE LINE OF lt_lcs.
     DATA temp19 LIKE sy-tabix.
+    DATA lv_key TYPE i.
     lt_lcs = zif_abapgit_diff3~lcs( it_buffer1 = it_buffer1
                                          it_buffer2 = it_buffer2 ).
 
@@ -792,7 +797,8 @@ iv_end = lv_b_end ).
 
 
     temp21 = sy-tabix.
-    READ TABLE lt_lcs WITH KEY key = lines( lt_lcs ) - 1 INTO temp20.
+    lv_key = lines( lt_lcs ) - 1.
+    READ TABLE lt_lcs WITH KEY key = lv_key INTO temp20.
 
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_error.
@@ -907,6 +913,7 @@ iv_end = lv_b_end ).
     DATA temp37 LIKE sy-tabix.
     FIELD-SYMBOLS <temp38> LIKE LINE OF lt_candidates.
     DATA temp39 LIKE sy-tabix.
+    DATA lv_key TYPE i.
     lv_j = 0.
 
     LOOP AT it_buffer2 ASSIGNING <lv_buffer2>.
@@ -990,7 +997,8 @@ iv_end = lv_b_end ).
 
 
               temp26 = sy-tabix.
-              READ TABLE lt_candidates WITH KEY key = lv_s + 1 INTO temp25.
+              lv_key = lv_s + 1.
+              READ TABLE lt_candidates WITH KEY key = lv_key INTO temp25.
 
               IF sy-subrc <> 0.
                 RAISE EXCEPTION TYPE cx_sy_itab_error.
