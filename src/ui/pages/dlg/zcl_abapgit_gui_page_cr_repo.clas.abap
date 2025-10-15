@@ -175,7 +175,7 @@ CLASS zcl_abapgit_gui_page_cr_repo IMPLEMENTATION.
 
           " So far, this is only implemented for GitHub
           " The following trigges a login which is required for the API call to work
-          zcl_abapgit_http=>create_by_url( iv_url = 'https://api.github.com/user/repos' ).
+          zcl_abapgit_http=>create_by_url( 'https://api.github.com/user/repos' ).
 
           lv_url = |https://github.com/{ mo_form_data->get( c_id-user_or_org ) }/{ mo_form_data->get( c_id-name ) }|.
 
