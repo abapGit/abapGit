@@ -19,7 +19,7 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
         iv_title TYPE clike
         iv_body  TYPE clike OPTIONAL
         iv_head  TYPE string
-        iv_base  TYPE string DEFAULT 'main'
+        iv_base  TYPE string
       RAISING
         zcx_abapgit_exception.
 
