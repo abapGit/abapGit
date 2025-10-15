@@ -189,21 +189,23 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
       " Standalone version
-      lt_source = zcl_abapgit_factory=>get_sap_report( )->read_report( c_exit_standalone ).
-      IF sy-subrc = 0.
-        resolve_exit_include(
-          CHANGING
-            cv_clsname = ls_class_key-clsname
-            ct_source  = lt_source ).
-        ri_html->add( |<div>User exits are active (include { get_jump_object(
-          iv_obj_type = 'PROG'
-          iv_obj_name = c_exit_standalone ) } found)</div><br>| ).
-        ri_html->add( render_exit_info_methods(
-                        it_source  = lt_source
-                        iv_clsname = to_upper( ls_class_key-clsname ) ) ).
-      ELSE.
-        ri_html->add( |<div>No user exits implemented (include { c_exit_standalone } not found)</div><br>| ).
-      ENDIF.
+      TRY.
+          lt_source = zcl_abapgit_factory=>get_sap_report( )->read_report( c_exit_standalone ).
+
+          resolve_exit_include(
+            CHANGING
+              cv_clsname = ls_class_key-clsname
+              ct_source  = lt_source ).
+          ri_html->add( |<div>User exits are active (include { get_jump_object(
+            iv_obj_type = 'PROG'
+            iv_obj_name = c_exit_standalone ) } found)</div><br>| ).
+          ri_html->add( render_exit_info_methods(
+                          it_source  = lt_source
+                          iv_clsname = to_upper( ls_class_key-clsname ) ) ).
+
+        CATCH zcx_abapgit_exception.
+          ri_html->add( |<div>No user exits implemented (include { c_exit_standalone } not found)</div><br>| ).
+      ENDTRY.
     ELSE.
       " Developer version
       TRY.
@@ -312,6 +314,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
           lv_type     LIKE LINE OF lt_types,
           lt_obj      TYPE STANDARD TABLE OF ko100 WITH DEFAULT KEY,
           lv_class    TYPE seoclsname,
+          lv_text     TYPE c LENGTH 60,
           li_object   TYPE REF TO zif_abapgit_object,
           ls_item     TYPE zif_abapgit_definitions=>ty_item,
           ls_metadata TYPE zif_abapgit_definitions=>ty_metadata,
@@ -353,9 +356,18 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
       IF sy-subrc = 0.
         rv_html = rv_html && |<td>{ <ls_obj>-text }</td>|.
       ELSE.
-        rv_html = rv_html && |<td class="warning">No description</td>|.
+        SELECT SINGLE descript FROM seoclasstx INTO lv_text
+          WHERE clsname = lv_class AND langu = sy-langu.
+        IF sy-subrc = 0.
+          lv_text = replace(
+            val  = lv_text
+            sub  = 'abapGit - '
+            with = '' ).
+          rv_html = rv_html && |<td>abapGit Enhancement: { lv_text }</td>|.
+        ELSE.
+          rv_html = rv_html && |<td>abapGit Enhancement: <span class="warning">No description</span></td>|.
+        ENDIF.
       ENDIF.
-
 
       TRY.
           ls_item-obj_type = lv_type.
