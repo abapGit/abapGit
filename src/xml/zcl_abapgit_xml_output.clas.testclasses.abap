@@ -49,7 +49,7 @@ CLASS ltcl_xml_output IMPLEMENTATION.
   METHOD render_xml_string.
 
     DATA: ls_input           TYPE ty_old,
-          lv_value           TYPE string,
+          lv_expected        TYPE string,
           lv_xml             TYPE string,
           lo_output          TYPE REF TO zcl_abapgit_xml_output,
           lo_conv_in_string  TYPE REF TO cl_abap_conv_in_ce,
@@ -61,13 +61,13 @@ CLASS ltcl_xml_output IMPLEMENTATION.
     ls_input-foo = '2'.
     ls_input-bar = 'A'.
 
-    lv_value =
+    lv_expected =
       '<?xml version="1.0" encoding="utf-16"?>#<abapGit version="v1.0.0">#' &
       ' <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">#' &
       '  <asx:values>#   <DATA>#    <FOO>2</FOO>#    <BAR>A' &
       '</BAR>#   </DATA>#  </asx:values># </asx:abap>#</abapGit>#'.
 
-    REPLACE ALL OCCURRENCES OF '#' IN lv_value WITH cl_abap_char_utilities=>newline.
+    REPLACE ALL OCCURRENCES OF '#' IN lv_expected WITH cl_abap_char_utilities=>newline.
 
     CREATE OBJECT lo_output.
     lo_output->zif_abapgit_xml_output~add( iv_name = 'DATA'
@@ -81,7 +81,7 @@ CLASS ltcl_xml_output IMPLEMENTATION.
       encoding    = lv_encoding
       ignore_cerr = 'X' ).
 
-    lo_conv_out_string->write( data = lv_value ).
+    lo_conv_out_string->write( data = lv_expected ).
 
     lv_xstring = lo_conv_out_string->get_buffer( ).
 
@@ -95,11 +95,11 @@ CLASS ltcl_xml_output IMPLEMENTATION.
       encoding = lv_encoding
       input    = lv_xstring ).
 
-    lo_conv_in_string->read( IMPORTING data = lv_value ).
+    lo_conv_in_string->read( IMPORTING data = lv_expected ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_xml
-      exp = lv_value ).
+      exp = lv_expected ).
 
   ENDMETHOD.
 

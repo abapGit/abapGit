@@ -129,8 +129,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA li_aff_registry TYPE REF TO zif_abapgit_aff_registry.
-
     super->constructor(
       is_item        = is_item
       iv_language    = iv_language
@@ -139,9 +137,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     mi_object_oriented_object_fct = zcl_abapgit_oo_factory=>get_by_type( ms_item-obj_type ).
 
-    CREATE OBJECT li_aff_registry TYPE zcl_abapgit_aff_registry.
-
-    mv_aff_enabled = li_aff_registry->is_supported_object_type( 'INTF' ).
+    mv_aff_enabled = zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( 'INTF' ).
 
   ENDMETHOD.
 

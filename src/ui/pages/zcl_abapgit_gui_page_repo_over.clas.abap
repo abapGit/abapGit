@@ -1078,6 +1078,11 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     zcl_abapgit_exit=>get_instance( )->wall_message_list( ri_html ).
 
+    IF zcl_abapgit_factory=>get_environment( )->is_repo_object_changes_allowed( ) = abap_false.
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error(
+        iv_error = |Repository changes are not allowed in this system/client! Pull not possible!| ) ).
+    ENDIF.
+
     ri_html->add( |<div class="repo-overview">| ).
     render_header_bar( ri_html ).
     render_header_label_list( ri_html ).

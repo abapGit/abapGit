@@ -72,6 +72,7 @@ CLASS ltcl_lcs IMPLEMENTATION.
     DATA temp57 LIKE sy-tabix.
     DATA temp58 LIKE LINE OF lt_lcs.
     DATA temp59 LIKE sy-tabix.
+    DATA lv_key TYPE i.
     lt_lcs = zcl_abapgit_diff3=>create( )->lcs(
       it_buffer1 = lcl_helper=>split( 'AA a b c ZZ new 00 a a M 99' )
       it_buffer2 = lcl_helper=>split( 'AA a d c ZZ 11 M z z 99' ) ).
@@ -79,10 +80,11 @@ CLASS ltcl_lcs IMPLEMENTATION.
 
 
     temp36 = sy-tabix.
-    READ TABLE lt_lcs WITH KEY key = lines( lt_lcs ) - 1 INTO temp35.
+    lv_key = lines( lt_lcs ) - 1.
+    READ TABLE lt_lcs WITH KEY key = lv_key INTO temp35.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     ls_result = temp35.
 
@@ -101,7 +103,7 @@ CLASS ltcl_lcs IMPLEMENTATION.
     READ TABLE lt_lcs WITH KEY key = ls_result-chain INTO temp48.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     ls_result = temp48.
 
@@ -119,7 +121,7 @@ CLASS ltcl_lcs IMPLEMENTATION.
     READ TABLE lt_lcs WITH KEY key = ls_result-chain INTO temp50.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     ls_result = temp50.
 
@@ -137,7 +139,7 @@ CLASS ltcl_lcs IMPLEMENTATION.
     READ TABLE lt_lcs WITH KEY key = ls_result-chain INTO temp52.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     ls_result = temp52.
 
@@ -155,7 +157,7 @@ CLASS ltcl_lcs IMPLEMENTATION.
     READ TABLE lt_lcs WITH KEY key = ls_result-chain INTO temp54.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     ls_result = temp54.
 
@@ -173,7 +175,7 @@ CLASS ltcl_lcs IMPLEMENTATION.
     READ TABLE lt_lcs WITH KEY key = ls_result-chain INTO temp56.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     ls_result = temp56.
 
@@ -191,7 +193,7 @@ CLASS ltcl_lcs IMPLEMENTATION.
     READ TABLE lt_lcs WITH KEY key = ls_result-chain INTO temp58.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     ls_result = temp58.
 
@@ -271,7 +273,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp60.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp60-common )
@@ -282,7 +284,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp62.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp62-diff ).
 
@@ -292,7 +294,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp64.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp64-common ).
 
@@ -301,7 +303,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp66.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp66-diff-buffer1 )
@@ -312,7 +314,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp68.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp68-diff-buffer2 )
@@ -324,7 +326,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp70.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp70-common )
@@ -335,7 +337,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp72.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp72-diff ).
 
@@ -345,7 +347,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp74.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp74-common ).
 
@@ -354,7 +356,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp76.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp76-diff-buffer1 )
@@ -365,7 +367,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp78.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp78-diff-buffer2 )
@@ -377,7 +379,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 5 INTO temp80.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp80-common )
@@ -388,7 +390,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 5 INTO temp82.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp82-diff ).
 
@@ -398,7 +400,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 6 INTO temp84.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp84-common ).
 
@@ -407,7 +409,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 6 INTO temp86.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp86-diff-buffer1 )
@@ -418,7 +420,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 6 INTO temp88.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp88-diff-buffer2 )
@@ -430,7 +432,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 7 INTO temp90.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp90-common )
@@ -441,7 +443,7 @@ CLASS ltcl_diff_comm IMPLEMENTATION.
     READ TABLE lt_result INDEX 7 INTO temp92.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp92-diff ).
 
@@ -515,7 +517,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp94.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp94-buffer1-key
@@ -526,7 +528,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp96.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp96-buffer1-len
@@ -537,7 +539,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp98.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp98-buffer1content )
@@ -548,7 +550,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp100.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp100-buffer2-key
@@ -559,7 +561,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp102.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp102-buffer2-len
@@ -570,7 +572,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp104.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp104-buffer2content )
@@ -582,7 +584,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp106.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp106-buffer1-key
@@ -593,7 +595,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp108.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp108-buffer1-len
@@ -604,7 +606,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp110.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp110-buffer1content )
@@ -615,7 +617,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp112.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp112-buffer2-key
@@ -626,7 +628,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp114.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp114-buffer2-len
@@ -637,7 +639,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp116.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp116-buffer2content )
@@ -649,7 +651,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp118.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp118-buffer1-key
@@ -660,7 +662,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp120.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp120-buffer1-len
@@ -671,7 +673,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp122.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp122-buffer1content )
@@ -682,7 +684,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp124.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp124-buffer2-key
@@ -693,7 +695,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp126.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp126-buffer2-len
@@ -704,7 +706,7 @@ CLASS ltcl_diff_indices IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp128.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp128-buffer2content )
@@ -796,7 +798,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp130.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp130-buffer1-offset
@@ -807,7 +809,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp132.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp132-buffer1-length
@@ -818,7 +820,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp134.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp134-buffer1-chunk )
@@ -829,7 +831,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp136.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp136-buffer2-offset
@@ -840,7 +842,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp138.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp138-buffer2-length
@@ -851,7 +853,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp140.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp140-buffer2-chunk )
@@ -863,7 +865,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp142.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp142-buffer1-offset
@@ -874,7 +876,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp144.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp144-buffer1-length
@@ -885,7 +887,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp146.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp146-buffer1-chunk )
@@ -896,7 +898,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp148.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp148-buffer2-offset
@@ -907,7 +909,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp150.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp150-buffer2-length
@@ -918,7 +920,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp152.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp152-buffer2-chunk )
@@ -930,7 +932,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp154.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp154-buffer1-offset
@@ -941,7 +943,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp156.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp156-buffer1-length
@@ -952,7 +954,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp158.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp158-buffer1-chunk )
@@ -963,7 +965,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp160.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp160-buffer2-offset
@@ -974,7 +976,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp162.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp162-buffer2-length
@@ -985,7 +987,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp164.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp164-buffer2-chunk )
@@ -1068,7 +1070,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 1 INTO temp166.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp166-buffer1-offset
@@ -1079,7 +1081,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 1 INTO temp168.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp168-buffer1-length
@@ -1090,7 +1092,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 1 INTO temp170.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp170-buffer1-chunk ).
 
@@ -1099,7 +1101,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 1 INTO temp172.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp172-buffer2-offset ).
 
@@ -1108,7 +1110,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 1 INTO temp174.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp174-buffer2-length ).
 
@@ -1117,7 +1119,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 1 INTO temp176.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp176-buffer2-chunk )
@@ -1129,7 +1131,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 2 INTO temp178.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp178-buffer1-offset
@@ -1140,7 +1142,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 2 INTO temp180.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp180-buffer1-length
@@ -1151,7 +1153,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 2 INTO temp182.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp182-buffer1-chunk ).
 
@@ -1160,7 +1162,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 2 INTO temp184.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp184-buffer2-offset ).
 
@@ -1169,7 +1171,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 2 INTO temp186.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp186-buffer2-length ).
 
@@ -1178,7 +1180,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 2 INTO temp188.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp188-buffer2-chunk )
@@ -1190,7 +1192,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 3 INTO temp190.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp190-buffer1-offset
@@ -1201,7 +1203,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 3 INTO temp192.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp192-buffer1-length
@@ -1212,7 +1214,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 3 INTO temp194.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp194-buffer1-chunk ).
 
@@ -1221,7 +1223,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 3 INTO temp196.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp196-buffer2-offset ).
 
@@ -1230,7 +1232,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 3 INTO temp198.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp198-buffer2-length ).
 
@@ -1239,7 +1241,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_strip INDEX 3 INTO temp200.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp200-buffer2-chunk )
@@ -1312,7 +1314,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 1 INTO temp202.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp202-buffer2-offset
@@ -1323,7 +1325,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 1 INTO temp204.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp204-buffer2-length
@@ -1334,7 +1336,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 1 INTO temp206.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp206-buffer2-chunk )
@@ -1345,7 +1347,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 1 INTO temp208.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp208-buffer1-offset
@@ -1356,7 +1358,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 1 INTO temp210.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp210-buffer1-length
@@ -1367,7 +1369,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 1 INTO temp212.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp212-buffer1-chunk )
@@ -1379,7 +1381,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 2 INTO temp214.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp214-buffer2-offset
@@ -1390,7 +1392,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 2 INTO temp216.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp216-buffer2-length
@@ -1401,7 +1403,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 2 INTO temp218.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp218-buffer2-chunk )
@@ -1412,7 +1414,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 2 INTO temp220.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp220-buffer1-offset
@@ -1423,7 +1425,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 2 INTO temp222.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp222-buffer1-length
@@ -1434,7 +1436,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 2 INTO temp224.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp224-buffer1-chunk )
@@ -1446,7 +1448,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 3 INTO temp226.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp226-buffer2-offset
@@ -1457,7 +1459,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 3 INTO temp228.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp228-buffer2-length
@@ -1468,7 +1470,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 3 INTO temp230.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp230-buffer2-chunk )
@@ -1479,7 +1481,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 3 INTO temp232.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp232-buffer1-offset
@@ -1490,7 +1492,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 3 INTO temp234.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp234-buffer1-length
@@ -1501,7 +1503,7 @@ CLASS ltcl_diff_patch IMPLEMENTATION.
     READ TABLE lt_invert INDEX 3 INTO temp236.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp236-buffer1-chunk )
@@ -1658,7 +1660,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp238.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp238-stable
@@ -1669,7 +1671,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp240.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp240-stable_region-buffer
@@ -1680,7 +1682,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp242.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp242-stable_region-buffer_start
@@ -1691,7 +1693,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp244.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp244-stable_region-buffer_length
@@ -1702,7 +1704,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp246.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp246-stable_region-buffer_content )
@@ -1714,7 +1716,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp248.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp248-stable
@@ -1725,7 +1727,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp250.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp250-unstable_region-a_start
@@ -1736,7 +1738,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp252.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp252-unstable_region-a_length
@@ -1747,7 +1749,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp254.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp254-unstable_region-a_content )
@@ -1758,7 +1760,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp256.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp256-unstable_region-o_start
@@ -1769,7 +1771,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp258.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp258-unstable_region-o_length
@@ -1780,7 +1782,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp260.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp260-unstable_region-o_content )
@@ -1791,7 +1793,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp262.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp262-unstable_region-b_start
@@ -1802,7 +1804,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp264.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp264-unstable_region-b_length
@@ -1813,7 +1815,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp266.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp266-unstable_region-b_content )
@@ -1825,7 +1827,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp268.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp268-stable
@@ -1836,7 +1838,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp270.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp270-stable_region-buffer
@@ -1847,7 +1849,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp272.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp272-stable_region-buffer_start
@@ -1858,7 +1860,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp274.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp274-stable_region-buffer_length
@@ -1869,7 +1871,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp276.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp276-stable_region-buffer_content )
@@ -1881,7 +1883,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp278.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp278-stable
@@ -1892,7 +1894,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp280.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp280-unstable_region-a_start
@@ -1903,7 +1905,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp282.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp282-unstable_region-a_length
@@ -1914,7 +1916,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp284.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp284-unstable_region-a_content )
@@ -1925,7 +1927,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp286.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp286-unstable_region-o_start
@@ -1936,7 +1938,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp288.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp288-unstable_region-o_length
@@ -1947,7 +1949,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp290.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp290-unstable_region-o_content )
@@ -1958,7 +1960,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp292.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp292-unstable_region-b_start
@@ -1969,7 +1971,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp294.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp294-unstable_region-b_length
@@ -1980,7 +1982,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp296.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp296-unstable_region-b_content )
@@ -1992,7 +1994,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 5 INTO temp298.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp298-stable
@@ -2003,7 +2005,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 5 INTO temp300.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp300-stable_region-buffer
@@ -2014,7 +2016,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 5 INTO temp302.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp302-stable_region-buffer_start
@@ -2025,7 +2027,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 5 INTO temp304.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp304-stable_region-buffer_length
@@ -2036,7 +2038,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 5 INTO temp306.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp306-stable_region-buffer_content )
@@ -2048,7 +2050,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 6 INTO temp308.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp308-stable
@@ -2059,7 +2061,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 6 INTO temp310.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp310-stable_region-buffer
@@ -2070,7 +2072,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 6 INTO temp312.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp312-stable_region-buffer_start
@@ -2081,7 +2083,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 6 INTO temp314.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp314-stable_region-buffer_length
@@ -2092,7 +2094,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 6 INTO temp316.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp316-stable_region-buffer_content )
@@ -2104,7 +2106,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 7 INTO temp318.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp318-stable
@@ -2115,7 +2117,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 7 INTO temp320.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp320-stable_region-buffer
@@ -2126,7 +2128,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 7 INTO temp322.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp322-stable_region-buffer_start
@@ -2137,7 +2139,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 7 INTO temp324.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp324-stable_region-buffer_length
@@ -2148,7 +2150,7 @@ CLASS ltcl_diff3_merge_regions IMPLEMENTATION.
     READ TABLE lt_result INDEX 7 INTO temp326.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp326-stable_region-buffer_content )
@@ -2261,7 +2263,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp328.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp328-ok )
@@ -2272,7 +2274,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp330.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp330-conflict ).
 
@@ -2282,7 +2284,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp332.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp332-ok ).
 
@@ -2291,7 +2293,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp334.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp334-conflict-o ).
 
@@ -2300,7 +2302,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp336.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp336-conflict-a )
@@ -2311,7 +2313,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp338.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp338-conflict-b )
@@ -2323,7 +2325,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp340.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp340-ok )
@@ -2334,7 +2336,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp342.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp342-conflict ).
 
@@ -2344,7 +2346,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp344.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp344-ok ).
 
@@ -2353,7 +2355,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp346.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp346-conflict-o )
@@ -2364,7 +2366,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp348.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp348-conflict-a )
@@ -2375,7 +2377,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp350.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp350-conflict-b )
@@ -2387,7 +2389,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 5 INTO temp352.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp352-ok )
@@ -2398,7 +2400,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 5 INTO temp354.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp354-conflict ).
 
@@ -2428,7 +2430,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp356.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp356-ok )
@@ -2439,7 +2441,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp358.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp358-conflict ).
 
@@ -2482,7 +2484,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp360.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp360-ok )
@@ -2493,7 +2495,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp362.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp362-conflict ).
 
@@ -2503,7 +2505,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp364.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp364-ok ).
 
@@ -2512,7 +2514,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp366.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp366-conflict-o ).
 
@@ -2521,7 +2523,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp368.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp368-conflict-a )
@@ -2532,7 +2534,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp370.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp370-conflict-b )
@@ -2544,7 +2546,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp372.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lcl_helper=>concat( temp372-ok )
@@ -2555,7 +2557,7 @@ CLASS ltcl_diff3_merge IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp374.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp374-conflict ).
 
@@ -2948,7 +2950,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp377.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lines( temp377-common )
@@ -2959,7 +2961,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp379.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp379-diff ).
 
@@ -2969,7 +2971,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp381.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp381-common ).
 
@@ -2978,7 +2980,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp383.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lines( temp383-diff-buffer1 )
@@ -2989,7 +2991,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp385.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lines( temp385-diff-buffer2 )
@@ -3001,7 +3003,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp387.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lines( temp387-common )
@@ -3012,7 +3014,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp389.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp389-diff ).
 
@@ -3022,7 +3024,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp391.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp391-common ).
 
@@ -3031,7 +3033,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp393.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lines( temp393-diff-buffer1 )
@@ -3042,7 +3044,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp395.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lines( temp395-diff-buffer2 )
@@ -3054,7 +3056,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 5 INTO temp397.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lines( temp397-common )
@@ -3065,7 +3067,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 5 INTO temp399.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp399-diff ).
 
@@ -3075,7 +3077,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 6 INTO temp401.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp401-common ).
 
@@ -3084,7 +3086,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 6 INTO temp403.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lines( temp403-diff-buffer1 )
@@ -3095,7 +3097,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 6 INTO temp405.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lines( temp405-diff-buffer2 )
@@ -3107,7 +3109,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 7 INTO temp407.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lines( temp407-common )
@@ -3118,7 +3120,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 7 INTO temp409.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp409-diff ).
 
@@ -3128,7 +3130,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 8 INTO temp411.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_initial( temp411-common ).
 
@@ -3137,7 +3139,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 8 INTO temp413.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lines( temp413-diff-buffer1 )
@@ -3148,7 +3150,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 8 INTO temp415.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = lines( temp415-diff-buffer2 )
@@ -3201,7 +3203,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp417.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp417-buffer1-key
@@ -3212,7 +3214,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp419.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp419-buffer1-len
@@ -3223,7 +3225,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp421.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp421-buffer2-key
@@ -3234,7 +3236,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 1 INTO temp423.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp423-buffer2-len
@@ -3246,7 +3248,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp425.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp425-buffer1-key
@@ -3257,7 +3259,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp427.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp427-buffer1-len
@@ -3268,7 +3270,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp429.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp429-buffer2-key
@@ -3279,7 +3281,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 2 INTO temp431.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp431-buffer2-len
@@ -3291,7 +3293,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp433.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp433-buffer1-key
@@ -3302,7 +3304,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp435.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp435-buffer1-len
@@ -3313,7 +3315,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp437.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp437-buffer2-key
@@ -3324,7 +3326,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 3 INTO temp439.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp439-buffer2-len
@@ -3336,7 +3338,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp441.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp441-buffer1-key
@@ -3347,7 +3349,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp443.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp443-buffer1-len
@@ -3358,7 +3360,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp445.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp445-buffer2-key
@@ -3369,7 +3371,7 @@ CLASS ltcl_abap_code IMPLEMENTATION.
     READ TABLE lt_result INDEX 4 INTO temp447.
 
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
+      RAISE EXCEPTION TYPE cx_sy_itab_error.
     ENDIF.
     cl_abap_unit_assert=>assert_equals(
       act = temp447-buffer2-len
