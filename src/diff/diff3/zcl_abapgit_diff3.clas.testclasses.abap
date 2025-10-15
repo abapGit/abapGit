@@ -72,6 +72,7 @@ CLASS ltcl_lcs IMPLEMENTATION.
     DATA temp57 LIKE sy-tabix.
     DATA temp58 LIKE LINE OF lt_lcs.
     DATA temp59 LIKE sy-tabix.
+    DATA lv_key TYPE i.
     lt_lcs = zcl_abapgit_diff3=>create( )->lcs(
       it_buffer1 = lcl_helper=>split( 'AA a b c ZZ new 00 a a M 99' )
       it_buffer2 = lcl_helper=>split( 'AA a d c ZZ 11 M z z 99' ) ).
@@ -79,7 +80,8 @@ CLASS ltcl_lcs IMPLEMENTATION.
 
 
     temp36 = sy-tabix.
-    READ TABLE lt_lcs WITH KEY key = lines( lt_lcs ) - 1 INTO temp35.
+    lv_key = lines( lt_lcs ) - 1.
+    READ TABLE lt_lcs WITH KEY key = lv_key INTO temp35.
 
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_sy_itab_error.
