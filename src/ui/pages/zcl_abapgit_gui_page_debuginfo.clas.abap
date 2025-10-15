@@ -363,10 +363,10 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
             val  = lv_text
             sub  = 'abapGit - '
             with = '' ).
-          rv_html = rv_html && |<td>abapGit Enhancement: { lv_text }</td>|.
         ELSE.
-          rv_html = rv_html && |<td>abapGit Enhancement: <span class="warning">No description</span></td>|.
+          lv_text = '<span class="warning">No description</span>'.
         ENDIF.
+        rv_html = rv_html && |<td>abapGit Enhancement: { lv_text }</td>|.
       ENDIF.
 
       TRY.
