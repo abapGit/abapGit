@@ -6,9 +6,6 @@ CLASS zcl_abapgit_properties_file DEFINITION
   PUBLIC SECTION.
     INTERFACES zif_abapgit_i18n_file.
 
-    CONSTANTS:
-      c_properties_feature TYPE string VALUE 'TRANSL'.
-
     METHODS constructor
       IMPORTING
         iv_lang TYPE laiso.
