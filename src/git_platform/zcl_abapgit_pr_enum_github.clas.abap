@@ -19,7 +19,13 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
         iv_title TYPE clike
         iv_body  TYPE clike OPTIONAL
         iv_head  TYPE string
-        iv_base  TYPE string DEFAULT 'main'
+        iv_base  TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS merge_pull_request
+      IMPORTING
+        iv_pull_number TYPE i
       RAISING
         zcx_abapgit_exception.
 
@@ -73,14 +79,12 @@ ENDCLASS.
 
 CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
 
-
   METHOD clean_url.
     rv_url = replace(
       val = iv_url
       regex = '\{.*\}$'
       with = '' ).
   ENDMETHOD.
-
 
   METHOD constructor.
 
@@ -166,6 +170,31 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
 
     IF li_response->is_ok( ) = abap_false.
       zcx_abapgit_exception=>raise( |Error creating pull request: { li_response->error( ) }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD merge_pull_request.
+* https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#merge-a-pull-request
+
+    DATA lv_url      TYPE string.
+    DATA lv_json     TYPE string.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+
+    lv_url = mv_repo_url && '/pulls/' && iv_pull_number && '/merge'.
+
+    lv_json = |\{\n| &&
+              |  "commit_title": "Merge pull request #{ iv_pull_number }",\n| &&
+              |  "merge_method": "squash"\n| &&
+              |\}|.
+
+    li_response = mi_http_agent->request(
+      iv_url     = lv_url
+      iv_method  = zif_abapgit_http_agent=>c_methods-put
+      iv_payload = lv_json ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error merging pull request: { li_response->error( ) }| ).
     ENDIF.
 
   ENDMETHOD.
