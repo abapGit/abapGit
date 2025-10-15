@@ -26,6 +26,7 @@ INTERFACE zif_abapgit_pr_enum_provider
   METHODS create_repository
     IMPORTING
       iv_description TYPE string OPTIONAL
+      iv_is_org      TYPE abap_bool DEFAULT abap_true
       iv_private     TYPE abap_bool DEFAULT abap_true
       iv_auto_init   TYPE abap_bool DEFAULT abap_true
     RAISING

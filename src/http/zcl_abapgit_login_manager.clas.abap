@@ -160,14 +160,4 @@ CLASS zcl_abapgit_login_manager IMPLEMENTATION.
             iv_auth = rv_auth ).
 
   ENDMETHOD.
-
-
-  METHOD set_token.
-
-    CONCATENATE 'Bearer' iv_token INTO rv_auth SEPARATED BY space.
-
-    append( iv_uri  = iv_uri
-            iv_auth = rv_auth ).
-
-  ENDMETHOD.
 ENDCLASS.

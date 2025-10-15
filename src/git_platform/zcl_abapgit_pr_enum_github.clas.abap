@@ -19,7 +19,13 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
         iv_title TYPE clike
         iv_body  TYPE clike OPTIONAL
         iv_head  TYPE string
-        iv_base  TYPE string DEFAULT 'main'
+        iv_base  TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS merge_pull_request
+      IMPORTING
+        iv_pull_number TYPE i
       RAISING
         zcx_abapgit_exception.
 
@@ -202,6 +208,32 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD merge_pull_request.
+* https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#merge-a-pull-request
+
+    DATA lv_url      TYPE string.
+    DATA lv_json     TYPE string.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+
+    lv_url = mv_repo_url && '/pulls/' && iv_pull_number && '/merge'.
+
+    lv_json = |\{\n| &&
+              |  "commit_title": "Merge pull request #{ iv_pull_number }",\n| &&
+              |  "merge_method": "squash"\n| &&
+              |\}|.
+
+    li_response = mi_http_agent->request(
+      iv_url     = lv_url
+      iv_method  = zif_abapgit_http_agent=>c_methods-put
+      iv_payload = lv_json ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error merging pull request: { li_response->error( ) }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD ready_for_review.
 * https://docs.github.com/en/graphql/reference/mutations#markpullrequestreadyforreview
 * https://gist.github.com/jeromepl/02e70f3ea4a4e8103da6f96f14eb213c
@@ -322,13 +354,20 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
     DATA li_response  TYPE REF TO zif_abapgit_http_response.
 
     SPLIT mv_user_and_repo AT '/' INTO lv_owner lv_repo.
-    lv_url = |https://api.github.com/orgs/{ lv_owner }/repos|.
+
+    " repo for organization or authenticated user
+    IF iv_is_org = abap_true.
+      lv_url = |https://api.github.com/orgs/{ lv_owner }/repos|.
+    ELSE.
+      lv_url = |https://api.github.com/user/repos|.
+    ENDIF.
 
     IF iv_private = abap_true.
       lv_private = 'true'.
     ELSE.
       lv_private = 'false'.
     ENDIF.
+
     " create an initial commit with empty README
     IF iv_auto_init = abap_true.
       lv_auto_init = 'true'.

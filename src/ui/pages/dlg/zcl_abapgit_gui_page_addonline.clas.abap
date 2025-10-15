@@ -203,7 +203,7 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
       iv_label       = 'Create Package'
       iv_action      = c_event-create_package
     )->command(
-      iv_label       = 'GitHub Repository'
+      iv_label       = 'Create GitHub Repo'
       iv_action      = c_event-create_repo
     )->command(
       iv_label       = 'Back'

@@ -20,6 +20,7 @@ CLASS zcl_abapgit_pr_enumerator DEFINITION
     METHODS create_repository
       IMPORTING
         iv_description TYPE string OPTIONAL
+        iv_is_org      TYPE abap_bool DEFAULT abap_true
         iv_private     TYPE abap_bool DEFAULT abap_true
         iv_auto_init   TYPE abap_bool DEFAULT abap_true
       RAISING
@@ -64,7 +65,7 @@ CLASS zcl_abapgit_pr_enumerator IMPLEMENTATION.
 
   METHOD constructor.
 
-    mv_repo_url = to_lower( iv_url ).
+    mv_repo_url = iv_url.
     TRY.
         mi_enum_provider = create_provider( mv_repo_url ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
@@ -136,6 +137,7 @@ CLASS zcl_abapgit_pr_enumerator IMPLEMENTATION.
 
     mi_enum_provider->create_repository(
       iv_description = iv_description
+      iv_is_org      = iv_is_org
       iv_private     = iv_private
       iv_auto_init   = iv_auto_init ).
 

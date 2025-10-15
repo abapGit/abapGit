@@ -35,11 +35,11 @@ CLASS zcl_abapgit_gui_page_cr_repo DEFINITION
 
     CONSTANTS:
       BEGIN OF c_id,
-        org         TYPE string VALUE 'org',
+        repo_type   TYPE string VALUE 'repo_type',
+        user_or_org TYPE string VALUE 'user_or_org',
         name        TYPE string VALUE 'name',
         description TYPE string VALUE 'description',
         private     TYPE string VALUE 'private',
-        token       TYPE string VALUE 'token',
       END OF c_id.
 
     CONSTANTS:
@@ -96,37 +96,38 @@ CLASS zcl_abapgit_gui_page_cr_repo IMPLEMENTATION.
 
   METHOD get_form_schema.
 
-    ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'create-repository' ).
+    ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'create-github-repository' ).
 
-    ro_form->text(
-      iv_label       = 'Organization'
-      iv_name        = c_id-org
-      iv_required    = abap_true ).
-
-    ro_form->text(
+    ro_form->radio(
+      iv_name          = c_id-repo_type
+      iv_default_value = abap_false
+      iv_label         = 'Type of Repository'
+    )->option(
+      iv_label         = 'User'
+      iv_value         = abap_false
+    )->option(
+      iv_label         = 'Organization'
+      iv_value         = abap_true
+    )->text(
+      iv_label       = 'User or Organization'
+      iv_name        = c_id-user_or_org
+      iv_required    = abap_true
+    )->text(
       iv_label       = 'Repository Name'
       iv_name        = c_id-name
-      iv_required    = abap_true ).
-
-    ro_form->text(
+      iv_required    = abap_true
+    )->text(
       iv_label       = 'Description'
-      iv_name        = c_id-description ).
-
-    ro_form->checkbox(
+      iv_name        = c_id-description
+    )->checkbox(
       iv_label       = 'Private'
       iv_name        = c_id-private
-      iv_hint        = 'Set visibility to private (organization) or public' ).
-
-    ro_form->text(
-      iv_label       = 'GitHub Token'
-      iv_name        = c_id-token ).
-
-    ro_form->command(
-      iv_label       = 'Create'
+      iv_hint        = 'Set visibility to private (organization) or public'
+    )->command(
+      iv_label       = 'Create GitHub Repository'
       iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
-      iv_action      = c_event-create ).
-
-    ro_form->command(
+      iv_action      = c_event-create
+    )->command(
       iv_label       = 'Back'
       iv_action      = zif_abapgit_definitions=>c_action-go_back ).
 
@@ -144,7 +145,7 @@ CLASS zcl_abapgit_gui_page_cr_repo IMPLEMENTATION.
       SUBMATCHES lv_org lv_name.
     IF sy-subrc = 0.
       mo_form_data->set(
-        iv_key = c_id-org
+        iv_key = c_id-user_or_org
         iv_val = lv_org ).
 
       mo_form_data->set(
@@ -162,6 +163,7 @@ CLASS zcl_abapgit_gui_page_cr_repo IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA lv_url TYPE string.
+    DATA lv_msg TYPE string.
 
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
@@ -171,18 +173,20 @@ CLASS zcl_abapgit_gui_page_cr_repo IMPLEMENTATION.
 
         IF mo_validation_log->is_empty( ) = abap_true.
 
-          zcl_abapgit_login_manager=>set_token(
-            iv_uri   = 'https://api.github.com/'
-            iv_token = mo_form_data->get( c_id-token ) ).
-
           " So far, this is only implemented for GitHub
-          lv_url = |https://github.com/{ mo_form_data->get( c_id-org ) }/{ mo_form_data->get( c_id-name ) }|.
+          " The following trigges a login which is required for the API call to work
+          zcl_abapgit_http=>create_by_url( iv_url = 'https://api.github.com/user/repos' ).
+
+          lv_url = |https://github.com/{ mo_form_data->get( c_id-user_or_org ) }/{ mo_form_data->get( c_id-name ) }|.
 
           zcl_abapgit_pr_enumerator=>new( lv_url )->create_repository(
             iv_description = mo_form_data->get( c_id-description )
+            iv_is_org      = |{ mo_form_data->get( c_id-repo_type ) }|
             iv_private     = |{ mo_form_data->get( c_id-private ) }| ).
 
-          MESSAGE 'Repository created' TYPE 'S'.
+          lv_msg = |GitHub repository { lv_url } created successfully|.
+
+          MESSAGE lv_msg TYPE 'S'.
 
           rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
         ELSE.
