@@ -1,4 +1,5 @@
-CLASS zcl_abapgit_aff_factory DEFINITION PUBLIC.
+CLASS zcl_abapgit_aff_factory DEFINITION PUBLIC
+  GLOBAL FRIENDS zcl_abapgit_aff_injector.
   PUBLIC SECTION.
     CLASS-METHODS get_registry
       RETURNING
