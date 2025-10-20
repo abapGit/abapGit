@@ -144,7 +144,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
+CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
 
   METHOD add_ignore.
@@ -327,6 +327,13 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
     " Ignore all files matching pattern in ignore list
     LOOP AT ms_data-ignore INTO lv_ignore.
+      " # needs to be escaped since it's the escape character
+      " and used as namespace separator in filenames, for example
+      lv_ignore = replace(
+        val  = lv_ignore
+        sub  = '#'
+        with = '##'
+        occ  = 0 ).
       IF lv_name CP lv_ignore.
         rv_ignored = abap_true.
         RETURN.
