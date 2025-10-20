@@ -316,7 +316,6 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     DATA lr_db_data TYPE REF TO data.
     DATA ls_file    LIKE LINE OF it_files.
     DATA ls_result  LIKE LINE OF rt_result.
-    DATA lv_tabname TYPE tabname.
 
     lt_configs = ii_config->get_configs( ).
 
@@ -355,14 +354,9 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
         MOVE-CORRESPONDING ls_file TO ls_result-config. " config file
 
         " Check if table is included in repo
-        lv_tabname = to_upper( replace(
-          val   = ls_file-filename
-          sub   = '.conf.json'
-          with  = '' ) ).
-
         ls_result-in_repo = is_table_included_in_repo(
           iv_package = iv_package
-          iv_tabname = lv_tabname ).
+          iv_tabname = ls_config-name ).
 
         INSERT ls_result INTO TABLE rt_result.
       ENDIF.
