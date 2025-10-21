@@ -136,7 +136,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
 
   METHOD add_local_status.
@@ -577,21 +577,23 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
   METHOD get.
 
-    DATA lt_branches            TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA ls_branch              LIKE LINE OF lt_branches.
-    DATA ls_result              LIKE LINE OF rs_information-features.
-    DATA li_repo_online         TYPE REF TO zif_abapgit_repo_online.
-    DATA lt_features            LIKE rs_information-features.
-    DATA lt_all_transports      TYPE ty_transports_tt.
+    DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA ls_branch LIKE LINE OF lt_branches.
+    DATA ls_result LIKE LINE OF rs_information-features.
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
+    DATA lt_features LIKE rs_information-features.
+    DATA lt_all_transports TYPE ty_transports_tt.
     DATA lt_relevant_transports TYPE ty_trkorr_tt.
-    DATA lt_repos               TYPE ty_repos_tt.
-    DATA lt_main_expanded       TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
-    DATA lt_local               TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_repos TYPE ty_repos_tt.
+    DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+    DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_real_transports LIKE lt_all_transports.
 
-    FIELD-SYMBOLS <ls_feature>   LIKE LINE OF lt_features.
+    FIELD-SYMBOLS <ls_feature> LIKE LINE OF lt_features.
     FIELD-SYMBOLS <ls_path_name> LIKE LINE OF <ls_feature>-changed_files.
 
     lt_all_transports = find_open_transports( ).
+    lt_real_transports = lt_all_transports.
 
 * list branches on favorite + flow enabled + transported repos
     lt_repos = list_repos( ).
@@ -665,7 +667,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
     errors_from_transports(
       EXPORTING
-        it_all_transports  = lt_all_transports
+        it_all_transports  = lt_real_transports
       CHANGING
         cs_information     = rs_information ).
 
