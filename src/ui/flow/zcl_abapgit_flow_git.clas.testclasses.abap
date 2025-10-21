@@ -300,7 +300,7 @@ ENDCLASS.
 
 CLASS ltcl_find_changes_in_git DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
   PUBLIC SECTION.
-    METHODS setup_test_calls_method FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS basic_test FOR TESTING RAISING zcx_abapgit_exception.
     METHODS handles_empty_features FOR TESTING RAISING zcx_abapgit_exception.
 
   PRIVATE SECTION.
@@ -328,7 +328,7 @@ CLASS ltcl_find_changes_in_git IMPLEMENTATION.
     zcl_abapgit_git_injector=>set_v2_porcelain( ).
   ENDMETHOD.
 
-  METHOD setup_test_calls_method.
+  METHOD basic_test.
     " Scenario: Basic test that method can be called without errors
     " Expected: Method executes without exception with valid input
 
@@ -338,7 +338,7 @@ CLASS ltcl_find_changes_in_git IMPLEMENTATION.
     DATA ls_feature       LIKE LINE OF lt_features.
     DATA ls_branch        LIKE LINE OF lt_branches.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
-    DATA ls_changed_file LIKE LINE OF ls_feature-changed_files.
+    DATA ls_changed_file  LIKE LINE OF ls_feature-changed_files.
 
     " Add a feature branch
     mo_test_data->add_branch(
