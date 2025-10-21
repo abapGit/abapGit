@@ -314,12 +314,13 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
           lv_type     LIKE LINE OF lt_types,
           lt_obj      TYPE STANDARD TABLE OF ko100 WITH DEFAULT KEY,
           lv_class    TYPE seoclsname,
-          lv_text     TYPE c LENGTH 60,
           li_object   TYPE REF TO zif_abapgit_object,
           ls_item     TYPE zif_abapgit_definitions=>ty_item,
           ls_metadata TYPE zif_abapgit_definitions=>ty_metadata,
           lv_step     TYPE zif_abapgit_objects=>ty_deserialization_step,
-          lt_steps    TYPE zif_abapgit_objects=>ty_deserialization_step_tt.
+          lt_steps    TYPE zif_abapgit_objects=>ty_deserialization_step_tt,
+          lt_descr    TYPE zif_abapgit_oo_object_fnc=>ty_seoclasstx_tt,
+          ls_descr    LIKE LINE OF lt_descr.
 
     FIELD-SYMBOLS: <ls_obj> TYPE ko100.
 
@@ -356,17 +357,18 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
       IF sy-subrc = 0.
         rv_html = rv_html && |<td>{ <ls_obj>-text }</td>|.
       ELSE.
-        SELECT SINGLE descript FROM seoclasstx INTO lv_text
-          WHERE clsname = lv_class AND langu = sy-langu.
+        lt_descr = zcl_abapgit_oo_factory=>get_by_type( 'CLAS' )->read_descriptions_class( lv_class ).
+
+        READ TABLE lt_descr INTO ls_descr WITH KEY langu = sy-langu.
         IF sy-subrc = 0.
-          lv_text = replace(
-            val  = lv_text
+          ls_descr-descript = replace(
+            val  = ls_descr-descript
             sub  = 'abapGit - '
             with = '' ).
         ELSE.
-          lv_text = '<span class="warning">No description</span>'.
+          ls_descr-descript = '<span class="warning">No description</span>'.
         ENDIF.
-        rv_html = rv_html && |<td>abapGit Enhancement: { lv_text }</td>|.
+        rv_html = rv_html && |<td>abapGit Enhancement: { ls_descr-descript }</td>|.
       ENDIF.
 
       TRY.
