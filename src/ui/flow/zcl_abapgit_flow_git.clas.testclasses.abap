@@ -225,18 +225,19 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
     " Scenario: main has moved forward, feature branch is behind
     " Expected: branch should be marked as up-to-date = false
 
-    DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
-    DATA ls_feature LIKE LINE OF lt_features.
-    DATA ls_main TYPE zif_abapgit_git_definitions=>ty_git_branch.
-    DATA ls_branch LIKE LINE OF lt_branches.
+    DATA lt_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA lt_features      TYPE zif_abapgit_flow_logic=>ty_features.
+    DATA ls_feature       LIKE LINE OF lt_features.
+    DATA ls_main          TYPE zif_abapgit_git_definitions=>ty_git_branch.
+    DATA ls_branch        LIKE LINE OF lt_branches.
     DATA lv_old_main_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
     DATA lv_new_main_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
 
     FIELD-SYMBOLS <ls_main> LIKE LINE OF lt_branches.
 
     " Get current main SHA
-    READ TABLE mo_test_data->get_branches( ) INTO ls_main
+    lt_branches = mo_test_data->get_branches( ).
+    READ TABLE lt_branches INTO ls_main
       WITH KEY display_name = zif_abapgit_flow_logic=>c_main.
     lv_old_main_sha1 = ls_main-sha1.
 
