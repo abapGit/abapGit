@@ -14,6 +14,10 @@ CLASS lcl_test_data DEFINITION FINAL.
       RETURNING
         VALUE(rt_commits) TYPE zif_abapgit_definitions=>ty_objects_tt.
 
+    METHODS get_all_objects
+      RETURNING
+        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt.
+
     METHODS get_object
       IMPORTING
         iv_sha1          TYPE zif_abapgit_git_definitions=>ty_sha1
@@ -23,9 +27,9 @@ CLASS lcl_test_data DEFINITION FINAL.
     METHODS add_branch
       IMPORTING
         iv_name     TYPE string
-        iv_parent   TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL
-        iv_filename TYPE string DEFAULT 'feature.abap'
-        iv_content  TYPE string DEFAULT 'feature content'
+        iv_parent   TYPE zif_abapgit_git_definitions=>ty_sha1
+        iv_filename TYPE string
+        iv_content  TYPE string
       RAISING
         zcx_abapgit_exception.
 
@@ -33,12 +37,16 @@ CLASS lcl_test_data DEFINITION FINAL.
       IMPORTING
         iv_parent      TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL
         iv_parent2     TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL
-        iv_filename    TYPE string DEFAULT 'test.abap'
-        iv_content     TYPE string DEFAULT 'test content'
+        iv_filename    TYPE string
+        iv_content     TYPE string
       RETURNING
         VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception.
+
+    METHODS get_main_branch_sha1
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1.
 
   PRIVATE SECTION.
     DATA mv_url      TYPE string.
@@ -64,15 +72,30 @@ ENDCLASS.
 
 CLASS lcl_test_data IMPLEMENTATION.
   METHOD constructor.
-    DATA ls_branch TYPE zif_abapgit_git_definitions=>ty_git_branch.
+    FIELD-SYMBOLS <ls_branch> LIKE LINE OF mt_branches.
 
     mv_url = 'https://github.com/test/repo.git'.
 
-    " Create main branch with one commit
-    ls_branch-display_name = zif_abapgit_flow_logic=>c_main.
-    ls_branch-sha1 = create_commit( ).
-    ls_branch-is_head = abap_true.
-    INSERT ls_branch INTO TABLE mt_branches.
+    add_branch(
+      iv_name     = zif_abapgit_flow_logic=>c_main
+      iv_parent   = '0000000000000000000000000000000000000000'
+      iv_filename = 'main.abap'
+      iv_content  = 'main' ).
+
+    READ TABLE mt_branches ASSIGNING <ls_branch>
+      WITH KEY display_name = zif_abapgit_flow_logic=>c_main.
+    ASSERT sy-subrc = 0.
+    <ls_branch>-is_head = abap_true.
+  ENDMETHOD.
+
+  METHOD get_main_branch_sha1.
+    DATA ls_branch LIKE LINE OF mt_branches.
+
+    READ TABLE mt_branches INTO ls_branch
+      WITH KEY display_name = zif_abapgit_flow_logic=>c_main.
+    ASSERT sy-subrc = 0.
+
+    rv_sha1 = ls_branch-sha1.
   ENDMETHOD.
 
   METHOD get_url.
@@ -88,6 +111,10 @@ CLASS lcl_test_data IMPLEMENTATION.
     LOOP AT mt_objects INTO ls_object WHERE type = zif_abapgit_git_definitions=>c_type-commit.
       APPEND ls_object TO rt_commits.
     ENDLOOP.
+  ENDMETHOD.
+
+  METHOD get_all_objects.
+    rt_objects = mt_objects.
   ENDMETHOD.
 
   METHOD get_object.
@@ -215,8 +242,8 @@ CLASS lcl_mock_gitv2 IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_gitv2_porcelain~list_no_blobs_multi.
-    " Not used in find_up_to_date
-    ASSERT 1 = 2.
+    " Return all objects (trees, commits) for the given SHA1s - no blobs
+    rt_objects = mo_test_data->get_all_objects( ).
   ENDMETHOD.
 
   METHOD zif_abapgit_gitv2_porcelain~commits_last_year.
@@ -227,6 +254,176 @@ CLASS lcl_mock_gitv2 IMPLEMENTATION.
     " Not used in find_up_to_date
     ASSERT 1 = 2.
   ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_mock_repo_online DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_repo_online PARTIALLY IMPLEMENTED.
+
+    METHODS constructor
+      IMPORTING
+        io_test_data TYPE REF TO lcl_test_data.
+
+  PRIVATE SECTION.
+    DATA mo_test_data TYPE REF TO lcl_test_data.
+    DATA mo_dot       TYPE REF TO zcl_abapgit_dot_abapgit.
+ENDCLASS.
+
+CLASS lcl_mock_repo_online IMPLEMENTATION.
+
+  METHOD constructor.
+    DATA ls_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
+
+    mo_test_data = io_test_data.
+
+    " Create a minimal .abapgit.xml configuration
+    ls_data-starting_folder = '/'.
+    CREATE OBJECT mo_dot
+      EXPORTING
+        is_data = ls_data.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_online~get_url.
+    rv_url = mo_test_data->get_url( ).
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_dot_abapgit.
+    ro_dot_abapgit = mo_dot.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_package.
+    rv_package = '$TEST'.
+  ENDMETHOD.
+ENDCLASS.
+
+***************************************************************************
+
+CLASS ltcl_find_changes_in_git DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+  PUBLIC SECTION.
+    METHODS setup_test_calls_method FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS handles_empty_features FOR TESTING RAISING zcx_abapgit_exception.
+
+  PRIVATE SECTION.
+    METHODS setup.
+    METHODS teardown.
+
+    DATA mo_test_data TYPE REF TO lcl_test_data.
+ENDCLASS.
+
+CLASS ltcl_find_changes_in_git IMPLEMENTATION.
+
+  METHOD setup.
+    DATA lo_mock_gitv2 TYPE REF TO lcl_mock_gitv2.
+
+    CREATE OBJECT mo_test_data.
+
+    CREATE OBJECT lo_mock_gitv2
+      EXPORTING
+        io_test_data = mo_test_data.
+
+    zcl_abapgit_git_injector=>set_v2_porcelain( lo_mock_gitv2 ).
+  ENDMETHOD.
+
+  METHOD teardown.
+    zcl_abapgit_git_injector=>set_v2_porcelain( ).
+  ENDMETHOD.
+
+  METHOD setup_test_calls_method.
+    " Scenario: Basic test that method can be called without errors
+    " Expected: Method executes without exception with valid input
+
+    DATA li_repo_online   TYPE REF TO zif_abapgit_repo_online.
+    DATA lt_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA lt_features      TYPE zif_abapgit_flow_logic=>ty_features.
+    DATA ls_feature       LIKE LINE OF lt_features.
+    DATA ls_branch        LIKE LINE OF lt_branches.
+    DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+    DATA ls_changed_file LIKE LINE OF ls_feature-changed_files.
+
+    " Add a feature branch
+    mo_test_data->add_branch(
+      iv_name     = 'feature/test'
+      iv_parent   = mo_test_data->get_main_branch_sha1( )
+      iv_filename = 'feature.abap'
+      iv_content  = 'feature content' ).
+
+    lt_branches = mo_test_data->get_branches( ).
+
+    " Create features structure
+    LOOP AT lt_branches INTO ls_branch WHERE is_head = abap_false.
+      CLEAR ls_feature.
+      ls_feature-branch-display_name = ls_branch-display_name.
+      ls_feature-branch-sha1 = ls_branch-sha1.
+      INSERT ls_feature INTO TABLE lt_features.
+    ENDLOOP.
+
+    " Create mock repo
+    CREATE OBJECT li_repo_online TYPE lcl_mock_repo_online
+      EXPORTING
+        io_test_data = mo_test_data.
+
+    " Call the method under test - should not raise exception
+    zcl_abapgit_flow_git=>find_changes_in_git(
+      EXPORTING
+        ii_repo_online   = li_repo_online
+        it_branches      = lt_branches
+      IMPORTING
+        et_main_expanded = lt_main_expanded
+      CHANGING
+        ct_features      = lt_features ).
+
+    " Assert: Feature branch structure should be populated
+    READ TABLE lt_features INDEX 1 INTO ls_feature.
+    cl_abap_unit_assert=>assert_subrc( msg = 'Feature branch should be in features table' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_feature-branch-display_name
+      exp = 'feature/test'
+      msg = 'Feature branch name should match' ).
+
+    LOOP AT ls_feature-changed_files INTO ls_changed_file.
+      WRITE: / ls_changed_file-path, ls_changed_file-filename.
+    ENDLOOP.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( ls_feature-changed_files )
+      exp = 1 ).
+
+  ENDMETHOD.
+
+  METHOD handles_empty_features.
+    " Scenario: Only main branch exists (no feature branches)
+    " Expected: Method executes without error when ct_features is empty
+
+    DATA li_repo_online   TYPE REF TO zif_abapgit_repo_online.
+    DATA lt_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA lt_features      TYPE zif_abapgit_flow_logic=>ty_features.
+    DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+
+    lt_branches = mo_test_data->get_branches( ).
+
+    " Create mock repo
+    CREATE OBJECT li_repo_online TYPE lcl_mock_repo_online
+      EXPORTING
+        io_test_data = mo_test_data.
+
+    " Call the method under test - should not raise exception
+    zcl_abapgit_flow_git=>find_changes_in_git(
+      EXPORTING
+        ii_repo_online   = li_repo_online
+        it_branches      = lt_branches
+      IMPORTING
+        et_main_expanded = lt_main_expanded
+      CHANGING
+        ct_features      = lt_features ).
+
+    " Assert: features should remain empty (no feature branches)
+    cl_abap_unit_assert=>assert_initial(
+      act = lt_features
+      msg = 'Features should be empty when only main branch exists' ).
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 ***************************************************************************
@@ -275,6 +472,7 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
     " Add a feature branch based on main
     mo_test_data->add_branch(
       iv_name     = 'feature/test'
+      iv_parent   = mo_test_data->get_main_branch_sha1( )
       iv_filename = 'new.txt'
       iv_content  = 'new content' ).
 
@@ -328,10 +526,17 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
     lv_old_main_sha1 = ls_main-sha1.
 
     " Add a feature branch based on current main
-    mo_test_data->add_branch( 'feature/old' ).
+    mo_test_data->add_branch(
+      iv_name     = 'feature/old'
+      iv_parent   = mo_test_data->get_main_branch_sha1( )
+      iv_filename = 'feature.old.abap'
+      iv_content  = 'feature old content' ).
 
     " Advance main with a new commit
-    lv_new_main_sha1 = mo_test_data->create_commit( iv_parent = lv_old_main_sha1 ).
+    lv_new_main_sha1 = mo_test_data->create_commit(
+      iv_parent   = lv_old_main_sha1
+      iv_filename = 'something.abap'
+      iv_content  = 'something' ).
 
     " Update main branch to new commit
     lt_branches = mo_test_data->get_branches( ).
