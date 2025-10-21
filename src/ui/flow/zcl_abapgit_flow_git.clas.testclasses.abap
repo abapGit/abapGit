@@ -127,7 +127,7 @@ CLASS lcl_test_data IMPLEMENTATION.
     lv_blob_sha1 = create_blob( iv_content ).
 
     " Create tree with the blob
-    ls_node-chmod = '100644'.
+    ls_node-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     ls_node-name = iv_filename.
     ls_node-sha1 = lv_blob_sha1.
     APPEND ls_node TO lt_nodes.
