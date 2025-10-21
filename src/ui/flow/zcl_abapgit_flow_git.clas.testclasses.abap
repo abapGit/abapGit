@@ -29,11 +29,6 @@ CLASS lcl_test_data DEFINITION FINAL.
       RAISING
         zcx_abapgit_exception.
 
-  PRIVATE SECTION.
-    DATA mv_url      TYPE string.
-    DATA mt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA mt_commits  TYPE zif_abapgit_definitions=>ty_objects_tt.
-
     METHODS create_commit
       IMPORTING
         iv_parent      TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL
@@ -44,6 +39,11 @@ CLASS lcl_test_data DEFINITION FINAL.
         VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception.
+
+  PRIVATE SECTION.
+    DATA mv_url      TYPE string.
+    DATA mt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA mt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt.
 
     METHODS create_blob
       IMPORTING
@@ -84,11 +84,14 @@ CLASS lcl_test_data IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_commits.
-    rt_commits = mt_commits.
+    DATA ls_object LIKE LINE OF rt_commits.
+    LOOP AT mt_objects INTO ls_object WHERE type = zif_abapgit_git_definitions=>c_type-commit.
+      APPEND ls_object TO rt_commits.
+    ENDLOOP.
   ENDMETHOD.
 
   METHOD get_object.
-    READ TABLE mt_commits INTO rs_object
+    READ TABLE mt_objects INTO rs_object
       WITH KEY sha1 = iv_sha1.
   ENDMETHOD.
 
@@ -147,7 +150,7 @@ CLASS lcl_test_data IMPLEMENTATION.
     ls_object-type = zif_abapgit_git_definitions=>c_type-commit.
     ls_object-data = lv_data.
 
-    INSERT ls_object INTO TABLE mt_commits.
+    INSERT ls_object INTO TABLE mt_objects.
 
     rv_sha1 = ls_object-sha1.
   ENDMETHOD.
@@ -163,7 +166,7 @@ CLASS lcl_test_data IMPLEMENTATION.
     ls_object-type = zif_abapgit_git_definitions=>c_type-blob.
     ls_object-data = lv_data.
 
-    INSERT ls_object INTO TABLE mt_commits.
+    INSERT ls_object INTO TABLE mt_objects.
 
     rv_sha1 = ls_object-sha1.
   ENDMETHOD.
@@ -178,7 +181,7 @@ CLASS lcl_test_data IMPLEMENTATION.
     ls_object-type = zif_abapgit_git_definitions=>c_type-tree.
     ls_object-data = lv_data.
 
-    INSERT ls_object INTO TABLE mt_commits.
+    INSERT ls_object INTO TABLE mt_objects.
 
     rv_sha1 = ls_object-sha1.
   ENDMETHOD.
@@ -261,16 +264,19 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
 
   METHOD single_branch_up_to_date.
     " Scenario: feature branch is based on main and has one commit
-    " Expected: branch should be marked as up-to-date = false
-    " (because it has commits that are not in main)
+    " Expected: branch should be marked as up-to-date = true
+    " (because it is directly based on main without any divergence)
 
     DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
     DATA ls_feature  LIKE LINE OF lt_features.
     DATA ls_branch   LIKE LINE OF lt_branches.
 
-    " Add a feature branch
-    mo_test_data->add_branch( 'feature/test' ).
+    " Add a feature branch based on main
+    mo_test_data->add_branch(
+      iv_name     = 'feature/test'
+      iv_filename = 'new.txt'
+      iv_content  = 'new content' ).
 
     lt_branches = mo_test_data->get_branches( ).
 
@@ -289,15 +295,15 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
       CHANGING
         ct_features = lt_features ).
 
-    " Assert: feature branch should have up_to_date = false
-    " (it has commits not in main)
+    " Assert: feature branch should have up_to_date = true
+    " (it is ahead of main but directly based on it)
     READ TABLE lt_features INDEX 1 INTO ls_feature.
     cl_abap_unit_assert=>assert_subrc( ).
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_feature-branch-up_to_date
-      exp = abap_false
-      msg = 'Branch with new commits should not be up-to-date' ).
+      exp = abap_true
+      msg = 'Branch ahead of main but directly based on it should be up-to-date' ).
   ENDMETHOD.
 
   METHOD branch_not_up_to_date.
