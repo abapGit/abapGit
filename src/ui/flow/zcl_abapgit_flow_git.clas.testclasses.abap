@@ -53,9 +53,9 @@ CLASS lcl_test_data DEFINITION FINAL.
         VALUE(ro_dot) TYPE REF TO zcl_abapgit_dot_abapgit.
 
   PRIVATE SECTION.
-    DATA mv_url      TYPE string.
+    DATA mv_url TYPE string.
     DATA mt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA mt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
 
     METHODS create_blob
       IMPORTING
@@ -123,7 +123,8 @@ CLASS lcl_test_data IMPLEMENTATION.
 
   METHOD get_commits.
     DATA ls_object LIKE LINE OF rt_commits.
-    LOOP AT mt_objects INTO ls_object WHERE type = zif_abapgit_git_definitions=>c_type-commit.
+    LOOP AT mt_objects USING KEY type INTO ls_object
+        WHERE type = zif_abapgit_git_definitions=>c_type-commit.
       APPEND ls_object TO rt_commits.
     ENDLOOP.
   ENDMETHOD.
@@ -133,8 +134,8 @@ CLASS lcl_test_data IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_object.
-    READ TABLE mt_objects INTO rs_object
-      WITH KEY sha1 = iv_sha1.
+    READ TABLE mt_objects INTO rs_object WITH TABLE KEY sha
+      COMPONENTS sha1 = iv_sha1.
   ENDMETHOD.
 
   METHOD add_branch.
@@ -160,23 +161,23 @@ CLASS lcl_test_data IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD create_commit.
-    DATA ls_commit        TYPE zcl_abapgit_git_pack=>ty_commit.
-    DATA ls_node          TYPE zcl_abapgit_git_pack=>ty_node.
-    DATA ls_object        TYPE zif_abapgit_definitions=>ty_object.
+    DATA ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA ls_node TYPE zcl_abapgit_git_pack=>ty_node.
+    DATA ls_object TYPE zif_abapgit_definitions=>ty_object.
     DATA ls_parent_commit TYPE zcl_abapgit_git_pack=>ty_commit.
-    DATA lt_nodes         TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
-    DATA lt_parent_nodes  TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
-    DATA lv_blob_sha1     TYPE zif_abapgit_git_definitions=>ty_sha1.
-    DATA lv_data          TYPE xstring.
-    DATA lv_tree_sha1     TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lt_nodes TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA lt_parent_nodes TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA lv_blob_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lv_data TYPE xstring.
+    DATA lv_tree_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
 
     " If we have a parent commit, inherit its tree nodes
     IF iv_parent IS NOT INITIAL.
-      READ TABLE mt_objects INTO ls_object WITH KEY sha1 = iv_parent.
+      READ TABLE mt_objects INTO ls_object WITH TABLE KEY sha COMPONENTS sha1 = iv_parent.
       IF sy-subrc = 0.
         ls_parent_commit = zcl_abapgit_git_pack=>decode_commit( ls_object-data ).
         " Get parent tree
-        READ TABLE mt_objects INTO ls_object WITH KEY sha1 = ls_parent_commit-tree.
+        READ TABLE mt_objects INTO ls_object WITH TABLE KEY sha COMPONENTS sha1 = ls_parent_commit-tree.
         IF sy-subrc = 0.
           lt_parent_nodes = zcl_abapgit_git_pack=>decode_tree( ls_object-data ).
           lt_nodes = lt_parent_nodes.
@@ -220,7 +221,7 @@ CLASS lcl_test_data IMPLEMENTATION.
 
   METHOD create_blob.
     DATA ls_object TYPE zif_abapgit_definitions=>ty_object.
-    DATA lv_data   TYPE xstring.
+    DATA lv_data TYPE xstring.
 
     " Convert string content to xstring
     lv_data = zcl_abapgit_convert=>string_to_xstring_utf8( iv_content ).
@@ -236,7 +237,7 @@ CLASS lcl_test_data IMPLEMENTATION.
 
   METHOD create_tree.
     DATA ls_object TYPE zif_abapgit_definitions=>ty_object.
-    DATA lv_data   TYPE xstring.
+    DATA lv_data TYPE xstring.
 
     lv_data = zcl_abapgit_git_pack=>encode_tree( it_nodes ).
 
@@ -301,8 +302,8 @@ CLASS ltcl_find_changes_in_git DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATI
     METHODS both_branches_diverged FOR TESTING RAISING zcx_abapgit_exception.
 
   PRIVATE SECTION.
-    METHODS setup.
-    METHODS teardown.
+    METHODS setup RAISING zcx_abapgit_exception.
+    METHODS teardown RAISING zcx_abapgit_exception.
 
     DATA mo_test_data TYPE REF TO lcl_test_data.
 ENDCLASS.
@@ -329,12 +330,12 @@ CLASS ltcl_find_changes_in_git IMPLEMENTATION.
     " Scenario: Basic test that method can be called without errors
     " Expected: Method executes without exception with valid input
 
-    DATA lt_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA lt_features      TYPE zif_abapgit_flow_logic=>ty_features.
-    DATA ls_feature       LIKE LINE OF lt_features.
-    DATA ls_branch        LIKE LINE OF lt_branches.
+    DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
+    DATA ls_feature LIKE LINE OF lt_features.
+    DATA ls_branch LIKE LINE OF lt_branches.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
-    DATA ls_changed_file  LIKE LINE OF ls_feature-changed_files.
+    DATA ls_changed_file LIKE LINE OF ls_feature-changed_files.
 
     " Add a feature branch
     mo_test_data->add_branch(
@@ -391,8 +392,8 @@ CLASS ltcl_find_changes_in_git IMPLEMENTATION.
     " Scenario: Only main branch exists (no feature branches)
     " Expected: Method executes without error when ct_features is empty
 
-    DATA lt_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA lt_features      TYPE zif_abapgit_flow_logic=>ty_features.
+    DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
 
     lt_branches = mo_test_data->get_branches( ).
@@ -420,15 +421,15 @@ CLASS ltcl_find_changes_in_git IMPLEMENTATION.
     " Scenario: Both feature and main branch have additional commits
     " Expected: Method detects changes in both branches
 
-    DATA lt_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA lt_features      TYPE zif_abapgit_flow_logic=>ty_features.
-    DATA ls_feature       LIKE LINE OF lt_features.
-    DATA ls_branch        LIKE LINE OF lt_branches.
-    DATA ls_main          TYPE zif_abapgit_git_definitions=>ty_git_branch.
+    DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
+    DATA ls_feature LIKE LINE OF lt_features.
+    DATA ls_branch LIKE LINE OF lt_branches.
+    DATA ls_main TYPE zif_abapgit_git_definitions=>ty_git_branch.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
     DATA lv_old_main_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
     DATA lv_new_main_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
-    DATA ls_changed_file  LIKE LINE OF ls_feature-changed_files.
+    DATA ls_changed_file LIKE LINE OF ls_feature-changed_files.
 
     FIELD-SYMBOLS <ls_main> LIKE LINE OF lt_branches.
 
@@ -511,8 +512,8 @@ CLASS ltcl_find_up_to_date DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION S
     METHODS only_main_branch FOR TESTING RAISING zcx_abapgit_exception.
 
   PRIVATE SECTION.
-    METHODS setup.
-    METHODS teardown.
+    METHODS setup RAISING zcx_abapgit_exception.
+    METHODS teardown RAISING zcx_abapgit_exception.
 
     DATA mo_test_data TYPE REF TO lcl_test_data.
 ENDCLASS.
@@ -542,8 +543,8 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
 
     DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
-    DATA ls_feature  LIKE LINE OF lt_features.
-    DATA ls_branch   LIKE LINE OF lt_branches.
+    DATA ls_feature LIKE LINE OF lt_features.
+    DATA ls_branch LIKE LINE OF lt_branches.
 
     " Add a feature branch based on main
     mo_test_data->add_branch(
@@ -585,11 +586,11 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
     " Scenario: main has moved forward, feature branch is behind
     " Expected: branch should be marked as up-to-date = false
 
-    DATA lt_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA lt_features      TYPE zif_abapgit_flow_logic=>ty_features.
-    DATA ls_feature       LIKE LINE OF lt_features.
-    DATA ls_main          TYPE zif_abapgit_git_definitions=>ty_git_branch.
-    DATA ls_branch        LIKE LINE OF lt_branches.
+    DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
+    DATA ls_feature LIKE LINE OF lt_features.
+    DATA ls_main TYPE zif_abapgit_git_definitions=>ty_git_branch.
+    DATA ls_branch LIKE LINE OF lt_branches.
     DATA lv_old_main_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
     DATA lv_new_main_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
 
