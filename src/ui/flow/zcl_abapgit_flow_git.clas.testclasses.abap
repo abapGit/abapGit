@@ -14,10 +14,18 @@ CLASS lcl_test_data DEFINITION FINAL.
       RETURNING
         VALUE(rt_commits) TYPE zif_abapgit_definitions=>ty_objects_tt.
 
+    METHODS get_object
+      IMPORTING
+        iv_sha1          TYPE zif_abapgit_git_definitions=>ty_sha1
+      RETURNING
+        VALUE(rs_object) TYPE zif_abapgit_definitions=>ty_object.
+
     METHODS add_branch
       IMPORTING
-        iv_name   TYPE string
-        iv_parent TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL
+        iv_name     TYPE string
+        iv_parent   TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL
+        iv_filename TYPE string DEFAULT 'feature.abap'
+        iv_content  TYPE string DEFAULT 'feature content'
       RAISING
         zcx_abapgit_exception.
 
@@ -30,6 +38,24 @@ CLASS lcl_test_data DEFINITION FINAL.
       IMPORTING
         iv_parent      TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL
         iv_parent2     TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL
+        iv_filename    TYPE string DEFAULT 'test.abap'
+        iv_content     TYPE string DEFAULT 'test content'
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS create_blob
+      IMPORTING
+        iv_content     TYPE string
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS create_tree
+      IMPORTING
+        it_nodes       TYPE zcl_abapgit_git_pack=>ty_nodes_tt
       RETURNING
         VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
@@ -61,6 +87,11 @@ CLASS lcl_test_data IMPLEMENTATION.
     rt_commits = mt_commits.
   ENDMETHOD.
 
+  METHOD get_object.
+    READ TABLE mt_commits INTO rs_object
+      WITH KEY sha1 = iv_sha1.
+  ENDMETHOD.
+
   METHOD add_branch.
     DATA ls_branch TYPE zif_abapgit_git_definitions=>ty_git_branch.
     DATA lv_parent TYPE zif_abapgit_git_definitions=>ty_sha1.
@@ -75,7 +106,10 @@ CLASS lcl_test_data IMPLEMENTATION.
     ENDIF.
 
     ls_branch-display_name = iv_name.
-    ls_branch-sha1 = create_commit( iv_parent = lv_parent ).
+    ls_branch-sha1 = create_commit(
+      iv_parent   = lv_parent
+      iv_filename = iv_filename
+      iv_content  = iv_content ).
     ls_branch-is_head = abap_false.
     INSERT ls_branch INTO TABLE mt_branches.
   ENDMETHOD.
@@ -84,9 +118,23 @@ CLASS lcl_test_data IMPLEMENTATION.
     DATA ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
     DATA ls_object TYPE zif_abapgit_definitions=>ty_object.
     DATA lv_data   TYPE xstring.
+    DATA lt_nodes  TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA ls_node   TYPE zcl_abapgit_git_pack=>ty_node.
+    DATA lv_blob_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lv_tree_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
+
+    " Create blob for file content
+    lv_blob_sha1 = create_blob( iv_content ).
+
+    " Create tree with the blob
+    ls_node-chmod = '100644'.
+    ls_node-name = iv_filename.
+    ls_node-sha1 = lv_blob_sha1.
+    APPEND ls_node TO lt_nodes.
+    lv_tree_sha1 = create_tree( lt_nodes ).
 
     " Create a minimal commit structure
-    ls_commit-tree = '0000000000000000000000000000000000000001'.
+    ls_commit-tree = lv_tree_sha1.
     ls_commit-parent = iv_parent.
     ls_commit-parent2 = iv_parent2.
     ls_commit-author = 'Test User <test@test.com>'.
@@ -97,6 +145,40 @@ CLASS lcl_test_data IMPLEMENTATION.
 
     ls_object-sha1 = zcl_abapgit_hash=>sha1_raw( lv_data ).
     ls_object-type = zif_abapgit_git_definitions=>c_type-commit.
+    ls_object-data = lv_data.
+
+    INSERT ls_object INTO TABLE mt_commits.
+
+    rv_sha1 = ls_object-sha1.
+  ENDMETHOD.
+
+  METHOD create_blob.
+    DATA ls_object TYPE zif_abapgit_definitions=>ty_object.
+    DATA lv_data   TYPE xstring.
+    DATA lo_conv   TYPE REF TO cl_abap_conv_out_ce.
+
+    " Convert string content to xstring
+    lo_conv = cl_abap_conv_out_ce=>create( encoding = 'UTF-8' ).
+    lo_conv->write( data = iv_content ).
+    lv_data = lo_conv->get_buffer( ).
+
+    ls_object-sha1 = zcl_abapgit_hash=>sha1_blob( lv_data ).
+    ls_object-type = zif_abapgit_git_definitions=>c_type-blob.
+    ls_object-data = lv_data.
+
+    INSERT ls_object INTO TABLE mt_commits.
+
+    rv_sha1 = ls_object-sha1.
+  ENDMETHOD.
+
+  METHOD create_tree.
+    DATA ls_object TYPE zif_abapgit_definitions=>ty_object.
+    DATA lv_data   TYPE xstring.
+
+    lv_data = zcl_abapgit_git_pack=>encode_tree( it_nodes ).
+
+    ls_object-sha1 = zcl_abapgit_hash=>sha1_tree( lv_data ).
+    ls_object-type = zif_abapgit_git_definitions=>c_type-tree.
     ls_object-data = lv_data.
 
     INSERT ls_object INTO TABLE mt_commits.
@@ -157,6 +239,9 @@ CLASS ltcl_find_up_to_date DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION S
     METHODS single_branch_up_to_date FOR TESTING RAISING zcx_abapgit_exception.
     METHODS branch_not_up_to_date FOR TESTING RAISING zcx_abapgit_exception.
     METHODS only_main_branch FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS verify_tree_and_blob FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS multiple_files_in_commit FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS different_blob_contents FOR TESTING RAISING zcx_abapgit_exception.
 
   PRIVATE SECTION.
     DATA mo_test_data TYPE REF TO lcl_test_data.
@@ -299,6 +384,204 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
     cl_abap_unit_assert=>assert_initial(
       act = lt_features
       msg = 'Features should be empty when only main branch exists' ).
+  ENDMETHOD.
+
+  METHOD verify_tree_and_blob.
+    " Scenario: Verify that commits contain proper tree and blob objects
+    " Expected: tree and blob objects should be created and retrievable
+
+    DATA lt_commits TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA ls_commit  TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA lv_tree_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lt_nodes   TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+
+    FIELD-SYMBOLS <ls_object> TYPE zif_abapgit_definitions=>ty_object.
+
+    lt_commits = mo_test_data->get_commits( ).
+
+    " Should have at least: 1 commit + 1 tree + 1 blob = 3 objects
+    cl_abap_unit_assert=>assert_true(
+      act = xsdbool( lines( lt_commits ) >= 3 )
+      msg = 'Should have at least commit, tree, and blob objects' ).
+
+    " Verify we have a commit object
+    READ TABLE lt_commits ASSIGNING <ls_object>
+      WITH KEY type = zif_abapgit_git_definitions=>c_type-commit.
+    cl_abap_unit_assert=>assert_subrc(
+      exp = 0
+      msg = 'Should have at least one commit object' ).
+
+    " Decode the commit and get tree SHA
+    ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).
+    lv_tree_sha1 = ls_commit-tree.
+
+    cl_abap_unit_assert=>assert_not_initial(
+      act = lv_tree_sha1
+      msg = 'Commit should have a tree SHA' ).
+
+    " Verify the tree object exists
+    READ TABLE lt_commits ASSIGNING <ls_object>
+      WITH KEY sha1 = lv_tree_sha1
+               type = zif_abapgit_git_definitions=>c_type-tree.
+    cl_abap_unit_assert=>assert_subrc(
+      exp = 0
+      msg = 'Tree object should exist in objects list' ).
+
+    " Decode the tree and verify it has nodes
+    lt_nodes = zcl_abapgit_git_pack=>decode_tree( <ls_object>-data ).
+    cl_abap_unit_assert=>assert_not_initial(
+      act = lt_nodes
+      msg = 'Tree should contain at least one node (file)' ).
+
+    " Verify blob object exists
+    READ TABLE lt_commits ASSIGNING <ls_object>
+      WITH KEY type = zif_abapgit_git_definitions=>c_type-blob.
+    cl_abap_unit_assert=>assert_subrc(
+      exp = 0
+      msg = 'Should have at least one blob object' ).
+  ENDMETHOD.
+
+  METHOD multiple_files_in_commit.
+    " Scenario: Create commit with multiple files (multiple blobs in tree)
+    " Expected: Tree should contain multiple nodes, each referencing a blob
+
+    DATA lt_commits TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA ls_branch TYPE zif_abapgit_git_definitions=>ty_git_branch.
+    DATA ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA lt_nodes TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA lv_blob_count TYPE i.
+
+    FIELD-SYMBOLS <ls_object> TYPE zif_abapgit_definitions=>ty_object.
+    FIELD-SYMBOLS <ls_node> TYPE zcl_abapgit_git_pack=>ty_node.
+
+    " Add a branch with a commit containing multiple files
+    " First, let's add multiple commits to the test data
+    mo_test_data->add_branch( 'feature/multifile' ).
+
+    lt_commits = mo_test_data->get_commits( ).
+
+    " Count blob objects
+    LOOP AT lt_commits ASSIGNING <ls_object>
+      WHERE type = zif_abapgit_git_definitions=>c_type-blob.
+      lv_blob_count = lv_blob_count + 1.
+    ENDLOOP.
+
+    cl_abap_unit_assert=>assert_true(
+      act = xsdbool( lv_blob_count >= 1 )
+      msg = 'Should have at least one blob object' ).
+
+    " Find the most recent commit (the feature branch commit)
+    lt_branches = mo_test_data->get_branches( ).
+    READ TABLE lt_branches INTO ls_branch
+      WITH KEY display_name = 'feature/multifile'.
+    cl_abap_unit_assert=>assert_subrc( ).
+
+    " Get the commit object
+    READ TABLE lt_commits ASSIGNING <ls_object>
+      WITH KEY sha1 = ls_branch-sha1
+               type = zif_abapgit_git_definitions=>c_type-commit.
+    cl_abap_unit_assert=>assert_subrc(
+      exp = 0
+      msg = 'Feature branch commit should exist' ).
+
+    " Decode commit to get tree
+    ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).
+
+    " Verify tree exists
+    READ TABLE lt_commits ASSIGNING <ls_object>
+      WITH KEY sha1 = ls_commit-tree
+               type = zif_abapgit_git_definitions=>c_type-tree.
+    cl_abap_unit_assert=>assert_subrc(
+      exp = 0
+      msg = 'Tree should exist for the commit' ).
+
+    " Decode tree and verify nodes
+    lt_nodes = zcl_abapgit_git_pack=>decode_tree( <ls_object>-data ).
+    cl_abap_unit_assert=>assert_not_initial(
+      act = lt_nodes
+      msg = 'Tree should contain nodes' ).
+
+    " Verify each node references a blob that exists
+    LOOP AT lt_nodes ASSIGNING <ls_node>.
+      READ TABLE lt_commits TRANSPORTING NO FIELDS
+        WITH KEY sha1 = <ls_node>-sha1
+                 type = zif_abapgit_git_definitions=>c_type-blob.
+      cl_abap_unit_assert=>assert_subrc(
+        exp = 0
+        msg = 'Blob referenced by tree node should exist' ).
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD different_blob_contents.
+    " Scenario: Create branches with different file contents
+    " Expected: Each should have different blob SHA1s
+
+    DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA ls_branch1 TYPE zif_abapgit_git_definitions=>ty_git_branch.
+    DATA ls_branch2 TYPE zif_abapgit_git_definitions=>ty_git_branch.
+    DATA ls_commit1 TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA ls_commit2 TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA lt_nodes1 TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA lt_nodes2 TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA ls_object TYPE zif_abapgit_definitions=>ty_object.
+
+    " Create two branches with different content
+    mo_test_data->add_branch(
+      iv_name     = 'feature/content1'
+      iv_filename = 'test.abap'
+      iv_content  = 'Content for branch 1' ).
+
+    mo_test_data->add_branch(
+      iv_name     = 'feature/content2'
+      iv_filename = 'test.abap'
+      iv_content  = 'Content for branch 2' ).
+
+    lt_branches = mo_test_data->get_branches( ).
+
+    " Get commits for both branches
+    READ TABLE lt_branches INTO ls_branch1
+      WITH KEY display_name = 'feature/content1'.
+    cl_abap_unit_assert=>assert_subrc( ).
+
+    READ TABLE lt_branches INTO ls_branch2
+      WITH KEY display_name = 'feature/content2'.
+    cl_abap_unit_assert=>assert_subrc( ).
+
+    " Get commit objects and decode them
+    ls_object = mo_test_data->get_object( ls_branch1-sha1 ).
+    ls_commit1 = zcl_abapgit_git_pack=>decode_commit( ls_object-data ).
+
+    ls_object = mo_test_data->get_object( ls_branch2-sha1 ).
+    ls_commit2 = zcl_abapgit_git_pack=>decode_commit( ls_object-data ).
+
+    " Trees should be different (since they contain different blobs)
+    cl_abap_unit_assert=>assert_differs(
+      act = ls_commit1-tree
+      exp = ls_commit2-tree
+      msg = 'Commits with different content should have different tree SHAs' ).
+
+    " Get trees and decode them
+    ls_object = mo_test_data->get_object( ls_commit1-tree ).
+    lt_nodes1 = zcl_abapgit_git_pack=>decode_tree( ls_object-data ).
+
+    ls_object = mo_test_data->get_object( ls_commit2-tree ).
+    lt_nodes2 = zcl_abapgit_git_pack=>decode_tree( ls_object-data ).
+
+    " Both trees should have nodes
+    cl_abap_unit_assert=>assert_not_initial(
+      act = lt_nodes1
+      msg = 'Tree 1 should have nodes' ).
+
+    cl_abap_unit_assert=>assert_not_initial(
+      act = lt_nodes2
+      msg = 'Tree 2 should have nodes' ).
+
+    " Blob SHAs should be different (different content)
+    cl_abap_unit_assert=>assert_differs(
+      act = lt_nodes1[ 1 ]-sha1
+      exp = lt_nodes2[ 1 ]-sha1
+      msg = 'Different file content should result in different blob SHAs' ).
   ENDMETHOD.
 
 ENDCLASS.
