@@ -82,7 +82,9 @@ CLASS zcl_abapgit_flow_exit IMPLEMENTATION.
 
     IF gi_exit IS NOT INITIAL.
       TRY.
-          gi_exit->info_extras( is_feature ).
+          gi_exit->info_extras(
+            ii_html    = ii_html
+            is_feature = is_feature ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
