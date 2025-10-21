@@ -651,15 +651,6 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
         CHANGING
           ct_features = lt_features ).
 
-*********************
-
-      zcl_abapgit_flow_git=>find_up_to_date(
-        EXPORTING
-          iv_url      = li_repo_online->get_url( )
-          it_branches = lt_branches
-        CHANGING
-          ct_features = lt_features ).
-
       LOOP AT lt_features ASSIGNING <ls_feature>.
         <ls_feature>-full_match = abap_true.
         LOOP AT <ls_feature>-changed_files ASSIGNING <ls_path_name>.

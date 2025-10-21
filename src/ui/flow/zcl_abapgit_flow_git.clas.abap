@@ -85,6 +85,13 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
         it_files   = <ls_branch>-changed_files ).
     ENDLOOP.
 
+    find_up_to_date(
+      EXPORTING
+        iv_url      = iv_url
+        it_branches = it_branches
+      CHANGING
+        ct_features = ct_features ).
+
   ENDMETHOD.
 
   METHOD map_files_to_objects.
