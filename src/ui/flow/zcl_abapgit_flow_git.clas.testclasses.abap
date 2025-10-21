@@ -157,13 +157,11 @@ CLASS lcl_test_data IMPLEMENTATION.
 
     " If we have a parent commit, inherit its tree nodes
     IF iv_parent IS NOT INITIAL.
-      READ TABLE mt_objects INTO ls_object
-        WITH KEY sha1 = iv_parent.
+      READ TABLE mt_objects INTO ls_object WITH KEY sha1 = iv_parent.
       IF sy-subrc = 0.
         ls_parent_commit = zcl_abapgit_git_pack=>decode_commit( ls_object-data ).
         " Get parent tree
-        READ TABLE mt_objects INTO ls_object
-          WITH KEY sha1 = ls_parent_commit-tree.
+        READ TABLE mt_objects INTO ls_object WITH KEY sha1 = ls_parent_commit-tree.
         IF sy-subrc = 0.
           lt_parent_nodes = zcl_abapgit_git_pack=>decode_tree( ls_object-data ).
           lt_nodes = lt_parent_nodes.
