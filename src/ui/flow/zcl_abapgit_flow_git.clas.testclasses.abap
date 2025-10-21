@@ -22,9 +22,9 @@ CLASS lcl_test_data DEFINITION FINAL.
         zcx_abapgit_exception.
 
   PRIVATE SECTION.
-    DATA mv_url TYPE string.
+    DATA mv_url      TYPE string.
     DATA mt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA mt_commits TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA mt_commits  TYPE zif_abapgit_definitions=>ty_objects_tt.
 
     METHODS create_commit
       IMPORTING
@@ -83,7 +83,7 @@ CLASS lcl_test_data IMPLEMENTATION.
   METHOD create_commit.
     DATA ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
     DATA ls_object TYPE zif_abapgit_definitions=>ty_object.
-    DATA lv_data TYPE xstring.
+    DATA lv_data   TYPE xstring.
 
     " Create a minimal commit structure
     ls_commit-tree = '0000000000000000000000000000000000000001'.
@@ -166,6 +166,7 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
 
   METHOD setup.
     DATA lo_mock_gitv2 TYPE REF TO lcl_mock_gitv2.
+
     CREATE OBJECT mo_test_data.
 
     CREATE OBJECT lo_mock_gitv2
@@ -176,7 +177,6 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD teardown.
-    " Restore original git v2 porcelain
     zcl_abapgit_git_injector=>set_v2_porcelain( ).
   ENDMETHOD.
 
@@ -187,8 +187,8 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
 
     DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
-    DATA ls_feature LIKE LINE OF lt_features.
-    DATA ls_branch LIKE LINE OF lt_branches.
+    DATA ls_feature  LIKE LINE OF lt_features.
+    DATA ls_branch   LIKE LINE OF lt_branches.
 
     " Add a feature branch
     mo_test_data->add_branch( 'feature/test' ).
