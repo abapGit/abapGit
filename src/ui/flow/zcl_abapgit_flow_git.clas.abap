@@ -6,6 +6,7 @@ CLASS zcl_abapgit_flow_git DEFINITION PUBLIC.
       IMPORTING
         iv_url           TYPE string
         io_dot           TYPE REF TO zcl_abapgit_dot_abapgit
+        iv_package       TYPE devclass
         it_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       EXPORTING
         et_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
@@ -28,7 +29,8 @@ CLASS zcl_abapgit_flow_git DEFINITION PUBLIC.
     CLASS-METHODS map_files_to_objects
       IMPORTING
         it_files                  TYPE zif_abapgit_flow_logic=>ty_path_name_tt
-        ii_repo                   TYPE REF TO zif_abapgit_repo
+        io_dot                    TYPE REF TO zcl_abapgit_dot_abapgit
+        iv_package                TYPE devclass
       RETURNING
         VALUE(rt_changed_objects) TYPE zif_abapgit_definitions=>ty_items_ts
       RAISING
@@ -79,30 +81,27 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
         iv_starting_folder = lv_starting_folder ).
 
       <ls_branch>-changed_objects = map_files_to_objects(
-        ii_repo  = li_repo
-        it_files = <ls_branch>-changed_files ).
+        io_dot     = io_dot
+        iv_package = iv_package
+        it_files   = <ls_branch>-changed_files ).
     ENDLOOP.
 
   ENDMETHOD.
 
   METHOD map_files_to_objects.
 
-    DATA ls_item    TYPE zif_abapgit_definitions=>ty_item.
-    DATA lv_package TYPE devclass.
-    DATA lo_dot     TYPE REF TO zcl_abapgit_dot_abapgit.
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
 
     FIELD-SYMBOLS <ls_file> LIKE LINE OF it_files.
 
-    lv_package = ii_repo->get_package( ).
-    lo_dot = ii_repo->get_dot_abapgit( ).
 
     LOOP AT it_files ASSIGNING <ls_file>.
       zcl_abapgit_filename_logic=>file_to_object(
         EXPORTING
           iv_filename = <ls_file>-filename
           iv_path     = <ls_file>-path
-          iv_devclass = lv_package
-          io_dot      = lo_dot
+          iv_devclass = iv_package
+          io_dot      = io_dot
         IMPORTING
           es_item     = ls_item ).
       INSERT ls_item INTO TABLE rt_changed_objects.

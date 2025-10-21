@@ -357,6 +357,7 @@ CLASS ltcl_find_changes_in_git IMPLEMENTATION.
       EXPORTING
         iv_url         = mo_test_data->get_url( )
         io_dot         = mo_test_data->get_dotabapgit( )
+        iv_package     = 'ZTEST_PACKAGE'
         it_branches      = lt_branches
       IMPORTING
         et_main_expanded = lt_main_expanded
@@ -400,6 +401,7 @@ CLASS ltcl_find_changes_in_git IMPLEMENTATION.
       EXPORTING
         iv_url         = mo_test_data->get_url( )
         io_dot         = mo_test_data->get_dotabapgit( )
+        iv_package     = 'ZTEST_PACKAGE'
         it_branches      = lt_branches
       IMPORTING
         et_main_expanded = lt_main_expanded

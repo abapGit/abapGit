@@ -382,6 +382,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       EXPORTING
         iv_url           = ii_online->get_url( )
         io_dot           = li_repo->get_dot_abapgit( )
+        iv_package       = li_repo->get_package( )
         it_branches      = lt_branches
       IMPORTING
         et_main_expanded = lt_main_expanded
@@ -612,6 +613,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
         EXPORTING
           iv_url           = li_repo_online->get_url( )
           io_dot           = li_repo_online->zif_abapgit_repo~get_dot_abapgit( )
+          iv_package       = li_repo_online->zif_abapgit_repo~get_package( )
           it_branches      = lt_branches
         IMPORTING
           et_main_expanded = lt_main_expanded
