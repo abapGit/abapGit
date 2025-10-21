@@ -115,12 +115,12 @@ CLASS lcl_test_data IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD create_commit.
-    DATA ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
-    DATA ls_object TYPE zif_abapgit_definitions=>ty_object.
-    DATA lv_data   TYPE xstring.
-    DATA lt_nodes  TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
-    DATA ls_node   TYPE zcl_abapgit_git_pack=>ty_node.
+    DATA ls_commit    TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA ls_node      TYPE zcl_abapgit_git_pack=>ty_node.
+    DATA ls_object    TYPE zif_abapgit_definitions=>ty_object.
+    DATA lt_nodes     TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
     DATA lv_blob_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lv_data      TYPE xstring.
     DATA lv_tree_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
 
     " Create blob for file content
@@ -155,12 +155,9 @@ CLASS lcl_test_data IMPLEMENTATION.
   METHOD create_blob.
     DATA ls_object TYPE zif_abapgit_definitions=>ty_object.
     DATA lv_data   TYPE xstring.
-    DATA lo_conv   TYPE REF TO cl_abap_conv_out_ce.
 
     " Convert string content to xstring
-    lo_conv = cl_abap_conv_out_ce=>create( encoding = 'UTF-8' ).
-    lo_conv->write( data = iv_content ).
-    lv_data = lo_conv->get_buffer( ).
+    lv_data = zcl_abapgit_convert=>string_to_xstring_utf8( iv_content ).
 
     ls_object-sha1 = zcl_abapgit_hash=>sha1_blob( lv_data ).
     ls_object-type = zif_abapgit_git_definitions=>c_type-blob.
