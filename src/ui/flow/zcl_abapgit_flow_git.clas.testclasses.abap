@@ -233,14 +233,14 @@ ENDCLASS.
 
 CLASS ltcl_find_up_to_date DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
   PUBLIC SECTION.
-    METHODS setup.
-    METHODS teardown.
-
     METHODS single_branch_up_to_date FOR TESTING RAISING zcx_abapgit_exception.
     METHODS branch_not_up_to_date FOR TESTING RAISING zcx_abapgit_exception.
     METHODS only_main_branch FOR TESTING RAISING zcx_abapgit_exception.
 
   PRIVATE SECTION.
+    METHODS setup.
+    METHODS teardown.
+
     DATA mo_test_data TYPE REF TO lcl_test_data.
 ENDCLASS.
 
