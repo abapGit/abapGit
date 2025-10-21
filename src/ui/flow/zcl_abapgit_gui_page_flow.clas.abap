@@ -93,13 +93,13 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
 
   METHOD call_consolidate.
 
-    DATA lt_repos        TYPE zcl_abapgit_flow_logic=>ty_repos_tt.
-    DATA li_repo         LIKE LINE OF lt_repos.
+    DATA lt_repos TYPE zcl_abapgit_flow_logic=>ty_repos_tt.
+    DATA li_repo  LIKE LINE OF lt_repos.
 
     lt_repos = zcl_abapgit_flow_logic=>list_repos( abap_false ).
     IF lines( lt_repos ) <> 1.
