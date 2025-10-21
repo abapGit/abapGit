@@ -145,21 +145,44 @@ CLASS lcl_test_data IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD create_commit.
-    DATA ls_commit    TYPE zcl_abapgit_git_pack=>ty_commit.
-    DATA ls_node      TYPE zcl_abapgit_git_pack=>ty_node.
-    DATA ls_object    TYPE zif_abapgit_definitions=>ty_object.
-    DATA lt_nodes     TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
-    DATA lv_blob_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
-    DATA lv_data      TYPE xstring.
-    DATA lv_tree_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA ls_commit        TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA ls_node          TYPE zcl_abapgit_git_pack=>ty_node.
+    DATA ls_object        TYPE zif_abapgit_definitions=>ty_object.
+    DATA ls_parent_commit TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA lt_nodes         TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA lt_parent_nodes  TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA lv_blob_sha1     TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lv_data          TYPE xstring.
+    DATA lv_tree_sha1     TYPE zif_abapgit_git_definitions=>ty_sha1.
+
+    " If we have a parent commit, inherit its tree nodes
+    IF iv_parent IS NOT INITIAL.
+      READ TABLE mt_objects INTO ls_object
+        WITH KEY sha1 = iv_parent.
+      IF sy-subrc = 0.
+        ls_parent_commit = zcl_abapgit_git_pack=>decode_commit( ls_object-data ).
+        " Get parent tree
+        READ TABLE mt_objects INTO ls_object
+          WITH KEY sha1 = ls_parent_commit-tree.
+        IF sy-subrc = 0.
+          lt_parent_nodes = zcl_abapgit_git_pack=>decode_tree( ls_object-data ).
+          lt_nodes = lt_parent_nodes.
+        ENDIF.
+      ENDIF.
+    ENDIF.
 
     " Create blob for file content
     lv_blob_sha1 = create_blob( iv_content ).
 
-    " Create tree with the blob
+    " Add or update the file in the tree
     ls_node-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     ls_node-name = iv_filename.
     ls_node-sha1 = lv_blob_sha1.
+
+    " Remove existing node with same name if it exists
+    DELETE lt_nodes WHERE name = iv_filename.
+
+    " Add the new/updated node
     APPEND ls_node TO lt_nodes.
     lv_tree_sha1 = create_tree( lt_nodes ).
 
