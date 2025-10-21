@@ -19,7 +19,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FLOW_EXIT IMPLEMENTATION.
+CLASS zcl_abapgit_flow_exit IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -49,6 +49,17 @@ CLASS ZCL_ABAPGIT_FLOW_EXIT IMPLEMENTATION.
           rs_result = gi_exit->on_event(
            ii_event    = ii_event
            it_features = it_features ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_flow_exit~get_settings.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          rs_settings = gi_exit->get_settings( iv_repo_key ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
