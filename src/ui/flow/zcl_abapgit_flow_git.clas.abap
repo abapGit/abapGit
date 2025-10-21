@@ -4,7 +4,8 @@ CLASS zcl_abapgit_flow_git DEFINITION PUBLIC.
 
     CLASS-METHODS find_changes_in_git
       IMPORTING
-        ii_repo_online   TYPE REF TO zif_abapgit_repo_online
+        iv_url           TYPE string
+        io_dot           TYPE REF TO zcl_abapgit_dot_abapgit
         it_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       EXPORTING
         et_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
@@ -51,17 +52,15 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
 
     CLEAR et_main_expanded.
 
-    li_repo = ii_repo_online.
-
     LOOP AT it_branches INTO ls_branch WHERE is_head = abap_false.
       APPEND ls_branch-sha1 TO lt_sha1.
     ENDLOOP.
 
     lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_no_blobs_multi(
-      iv_url  = ii_repo_online->get_url( )
+      iv_url  = iv_url
       it_sha1 = lt_sha1 ).
 
-    lv_starting_folder = li_repo->get_dot_abapgit( )->get_starting_folder( ) && '*'.
+    lv_starting_folder = io_dot->get_starting_folder( ) && '*'.
 
     READ TABLE it_branches INTO ls_main WITH KEY display_name = zif_abapgit_flow_logic=>c_main.
     ASSERT sy-subrc = 0.

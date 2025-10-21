@@ -48,6 +48,10 @@ CLASS lcl_test_data DEFINITION FINAL.
       RETURNING
         VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1.
 
+    METHODS get_dotabapgit
+      RETURNING
+        VALUE(ro_dot) TYPE REF TO zcl_abapgit_dot_abapgit.
+
   PRIVATE SECTION.
     DATA mv_url      TYPE string.
     DATA mt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
@@ -86,6 +90,17 @@ CLASS lcl_test_data IMPLEMENTATION.
       WITH KEY display_name = zif_abapgit_flow_logic=>c_main.
     ASSERT sy-subrc = 0.
     <ls_branch>-is_head = abap_true.
+  ENDMETHOD.
+
+  METHOD get_dotabapgit.
+    DATA ls_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
+
+    ls_data-starting_folder = '/'.
+
+    CREATE OBJECT ro_dot
+      EXPORTING
+        is_data = ls_data.
+
   ENDMETHOD.
 
   METHOD get_main_branch_sha1.
@@ -277,46 +292,6 @@ CLASS lcl_mock_gitv2 IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_mock_repo_online DEFINITION FINAL.
-  PUBLIC SECTION.
-    INTERFACES zif_abapgit_repo_online PARTIALLY IMPLEMENTED.
-
-    METHODS constructor
-      IMPORTING
-        io_test_data TYPE REF TO lcl_test_data.
-
-  PRIVATE SECTION.
-    DATA mo_test_data TYPE REF TO lcl_test_data.
-    DATA mo_dot       TYPE REF TO zcl_abapgit_dot_abapgit.
-ENDCLASS.
-
-CLASS lcl_mock_repo_online IMPLEMENTATION.
-
-  METHOD constructor.
-    DATA ls_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
-
-    mo_test_data = io_test_data.
-
-    " Create a minimal .abapgit.xml configuration
-    ls_data-starting_folder = '/'.
-    CREATE OBJECT mo_dot
-      EXPORTING
-        is_data = ls_data.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_repo_online~get_url.
-    rv_url = mo_test_data->get_url( ).
-  ENDMETHOD.
-
-  METHOD zif_abapgit_repo~get_dot_abapgit.
-    ro_dot_abapgit = mo_dot.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_repo~get_package.
-    rv_package = '$TEST'.
-  ENDMETHOD.
-ENDCLASS.
-
 ***************************************************************************
 
 CLASS ltcl_find_changes_in_git DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
@@ -353,7 +328,6 @@ CLASS ltcl_find_changes_in_git IMPLEMENTATION.
     " Scenario: Basic test that method can be called without errors
     " Expected: Method executes without exception with valid input
 
-    DATA li_repo_online   TYPE REF TO zif_abapgit_repo_online.
     DATA lt_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
     DATA lt_features      TYPE zif_abapgit_flow_logic=>ty_features.
     DATA ls_feature       LIKE LINE OF lt_features.
@@ -378,15 +352,11 @@ CLASS ltcl_find_changes_in_git IMPLEMENTATION.
       INSERT ls_feature INTO TABLE lt_features.
     ENDLOOP.
 
-    " Create mock repo
-    CREATE OBJECT li_repo_online TYPE lcl_mock_repo_online
-      EXPORTING
-        io_test_data = mo_test_data.
-
     " Call the method under test - should not raise exception
     zcl_abapgit_flow_git=>find_changes_in_git(
       EXPORTING
-        ii_repo_online   = li_repo_online
+        iv_url         = mo_test_data->get_url( )
+        io_dot         = mo_test_data->get_dotabapgit( )
         it_branches      = lt_branches
       IMPORTING
         et_main_expanded = lt_main_expanded
@@ -419,22 +389,17 @@ CLASS ltcl_find_changes_in_git IMPLEMENTATION.
     " Scenario: Only main branch exists (no feature branches)
     " Expected: Method executes without error when ct_features is empty
 
-    DATA li_repo_online   TYPE REF TO zif_abapgit_repo_online.
     DATA lt_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
     DATA lt_features      TYPE zif_abapgit_flow_logic=>ty_features.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
 
     lt_branches = mo_test_data->get_branches( ).
 
-    " Create mock repo
-    CREATE OBJECT li_repo_online TYPE lcl_mock_repo_online
-      EXPORTING
-        io_test_data = mo_test_data.
-
     " Call the method under test - should not raise exception
     zcl_abapgit_flow_git=>find_changes_in_git(
       EXPORTING
-        ii_repo_online   = li_repo_online
+        iv_url         = mo_test_data->get_url( )
+        io_dot         = mo_test_data->get_dotabapgit( )
         it_branches      = lt_branches
       IMPORTING
         et_main_expanded = lt_main_expanded
