@@ -554,7 +554,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         iv_index   = lv_index
         is_feature = ls_feature ) ).
 
-      IF ls_feature-branch IS NOT INITIAL AND ls_feature-branch-up_to_date = abap_false.
+      IF ls_feature-branch IS NOT INITIAL AND ls_feature-branch-up_to_date = abap_false
+          AND zcl_abapgit_flow_exit=>get_instance( )->get_settings( ls_feature-repo-key )-allow_not_up_to_date = abap_false.
         ri_html->add( '<b>Branch not up to date</b><br><br>' ).
         CONTINUE.
       ENDIF.
@@ -571,7 +572,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
           iv_repo_key             = ls_feature-repo-key ) ).
       ENDIF.
 
-* todo      LOOP AT ls_feature-changed_objects INTO ls_item.
+* todo     LOOP AT ls_feature-changed_objects INTO ls_item.
 * todo       ri_html->add( |<tt><small>{ ls_item-obj_type } { ls_item-obj_name }</small></tt><br>| ).
 * todo     ENDLOOP.
 

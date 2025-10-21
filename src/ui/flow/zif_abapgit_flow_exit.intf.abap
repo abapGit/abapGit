@@ -1,6 +1,15 @@
 INTERFACE zif_abapgit_flow_exit
   PUBLIC .
 
+  TYPES: BEGIN OF ty_settings,
+           allow_not_up_to_date TYPE abap_bool,
+         END OF ty_settings.
+
+  METHODS get_settings
+    IMPORTING
+      !iv_repo_key       TYPE zif_abapgit_persistence=>ty_repo-key
+    RETURNING
+      VALUE(rs_settings) TYPE ty_settings.
 
   METHODS toolbar_extras
     IMPORTING
