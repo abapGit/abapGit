@@ -380,7 +380,8 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
     zcl_abapgit_flow_git=>find_changes_in_git(
       EXPORTING
-        ii_repo_online   = ii_online
+        iv_url           = ii_online->get_url( )
+        io_dot           = li_repo->get_dot_abapgit( )
         it_branches      = lt_branches
       IMPORTING
         et_main_expanded = lt_main_expanded
@@ -609,7 +610,8 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
       zcl_abapgit_flow_git=>find_changes_in_git(
         EXPORTING
-          ii_repo_online   = li_repo_online
+          iv_url           = li_repo_online->get_url( )
+          io_dot           = li_repo_online->zif_abapgit_repo~get_dot_abapgit( )
           it_branches      = lt_branches
         IMPORTING
           et_main_expanded = lt_main_expanded
