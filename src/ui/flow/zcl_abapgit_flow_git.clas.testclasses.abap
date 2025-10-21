@@ -283,7 +283,8 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
     " Create features structure
     LOOP AT lt_branches INTO ls_branch WHERE is_head = abap_false.
       CLEAR ls_feature.
-      ls_feature-branch = ls_branch.
+      ls_feature-branch-display_name = ls_branch-display_name.
+      ls_feature-branch-sha1 = ls_branch-sha1.
       INSERT ls_feature INTO TABLE lt_features.
     ENDLOOP.
 
@@ -341,7 +342,8 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
     " Create features structure
     LOOP AT lt_branches INTO ls_branch WHERE is_head = abap_false.
       CLEAR ls_feature.
-      ls_feature-branch = ls_branch.
+      ls_feature-branch-display_name = ls_branch-display_name.
+      ls_feature-branch-sha1 = ls_branch-sha1.
       INSERT ls_feature INTO TABLE lt_features.
     ENDLOOP.
 
