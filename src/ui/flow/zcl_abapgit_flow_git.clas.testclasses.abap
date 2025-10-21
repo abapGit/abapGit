@@ -402,13 +402,16 @@ CLASS ltcl_find_changes_in_git IMPLEMENTATION.
       exp = 'feature/test'
       msg = 'Feature branch name should match' ).
 
-    LOOP AT ls_feature-changed_files INTO ls_changed_file.
-      WRITE: / ls_changed_file-path, ls_changed_file-filename.
-    ENDLOOP.
-
     cl_abap_unit_assert=>assert_equals(
       act = lines( ls_feature-changed_files )
       exp = 1 ).
+
+    LOOP AT ls_feature-changed_files INTO ls_changed_file.
+      cl_abap_unit_assert=>assert_equals(
+        act = ls_changed_file-filename
+        exp = 'feature.abap'
+        msg = 'Changed file name should match' ).
+    ENDLOOP.
 
   ENDMETHOD.
 
