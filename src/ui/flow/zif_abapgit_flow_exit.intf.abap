@@ -19,6 +19,7 @@ INTERFACE zif_abapgit_flow_exit
 
   METHODS info_extras
     IMPORTING
+      !ii_html    TYPE REF TO zif_abapgit_html
       !is_feature TYPE zif_abapgit_flow_logic=>ty_feature.
 
   TYPES: BEGIN OF ty_event_result,

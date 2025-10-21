@@ -516,7 +516,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ri_html->add( |No corresponding transport found<br>| ).
     ENDIF.
 
-    zcl_abapgit_flow_exit=>get_instance( )->info_extras( is_feature ).
+    zcl_abapgit_flow_exit=>get_instance( )->info_extras(
+      ii_html    = ri_html
+      is_feature = is_feature ).
 
   ENDMETHOD.
 
