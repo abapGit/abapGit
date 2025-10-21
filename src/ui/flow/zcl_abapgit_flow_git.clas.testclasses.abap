@@ -480,12 +480,11 @@ CLASS ltcl_find_changes_in_git IMPLEMENTATION.
 
     " Assert: Feature branch structure should be populated
     READ TABLE lt_features INDEX 1 INTO ls_feature.
-    cl_abap_unit_assert=>assert_subrc( msg = 'Feature branch should be in features table' ).
+    cl_abap_unit_assert=>assert_subrc( ).
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_feature-branch-display_name
-      exp = 'feature/diverged'
-      msg = 'Feature branch name should match' ).
+      exp = 'feature/diverged' ).
 
     " Assert: Feature branch should have at least one changed file
     LOOP AT ls_feature-changed_files INTO ls_changed_file.
