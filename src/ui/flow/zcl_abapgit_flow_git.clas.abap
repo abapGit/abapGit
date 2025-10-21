@@ -46,7 +46,6 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
     DATA lt_objects         TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA lv_starting_folder TYPE string.
     DATA ls_main            LIKE LINE OF it_branches.
-    DATA li_repo            TYPE REF TO zif_abapgit_repo.
     DATA lo_find            TYPE REF TO lcl_find_changes.
 
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
