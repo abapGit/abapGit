@@ -539,6 +539,12 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ELSE.
           ri_html->add( 'Status: Ready for Review' ).
         ENDIF.
+
+        IF ls_feature-branch-up_to_date = abap_true.
+          ri_html->add( 'Branch up to date: True' ).
+        ELSE.
+          ri_html->add( 'Branch up to date: False' ).
+        ENDIF.
       ELSE.
         ri_html->add( |No PR found| ).
       ENDIF.
