@@ -298,6 +298,7 @@ CLASS ltcl_find_changes_in_git DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATI
   PUBLIC SECTION.
     METHODS basic_test FOR TESTING RAISING zcx_abapgit_exception.
     METHODS handles_empty_features FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS both_branches_diverged FOR TESTING RAISING zcx_abapgit_exception.
 
   PRIVATE SECTION.
     METHODS setup.
@@ -412,6 +413,91 @@ CLASS ltcl_find_changes_in_git IMPLEMENTATION.
     cl_abap_unit_assert=>assert_initial(
       act = lt_features
       msg = 'Features should be empty when only main branch exists' ).
+
+  ENDMETHOD.
+
+  METHOD both_branches_diverged.
+    " Scenario: Both feature and main branch have additional commits
+    " Expected: Method detects changes in both branches
+
+    DATA lt_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA lt_features      TYPE zif_abapgit_flow_logic=>ty_features.
+    DATA ls_feature       LIKE LINE OF lt_features.
+    DATA ls_branch        LIKE LINE OF lt_branches.
+    DATA ls_main          TYPE zif_abapgit_git_definitions=>ty_git_branch.
+    DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+    DATA lv_old_main_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lv_new_main_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA ls_changed_file  LIKE LINE OF ls_feature-changed_files.
+
+    FIELD-SYMBOLS <ls_main> LIKE LINE OF lt_branches.
+
+
+    " Get current main SHA
+    lt_branches = mo_test_data->get_branches( ).
+    READ TABLE lt_branches INTO ls_main
+      WITH KEY display_name = zif_abapgit_flow_logic=>c_main.
+    lv_old_main_sha1 = ls_main-sha1.
+
+    " Add a feature branch based on current main
+    mo_test_data->add_branch(
+      iv_name     = 'feature/diverged'
+      iv_parent   = mo_test_data->get_main_branch_sha1( )
+      iv_filename = 'feature-file.abap'
+      iv_content  = 'feature content' ).
+
+    " Advance main with a new commit
+    lv_new_main_sha1 = mo_test_data->create_commit(
+      iv_parent   = lv_old_main_sha1
+      iv_filename = 'main-file.abap'
+      iv_content  = 'main content' ).
+
+    " Update main branch to new commit
+    lt_branches = mo_test_data->get_branches( ).
+    READ TABLE lt_branches ASSIGNING <ls_main>
+      WITH KEY display_name = zif_abapgit_flow_logic=>c_main.
+    <ls_main>-sha1 = lv_new_main_sha1.
+
+    " Create features structure
+    LOOP AT lt_branches INTO ls_branch WHERE is_head = abap_false.
+      CLEAR ls_feature.
+      ls_feature-branch-display_name = ls_branch-display_name.
+      ls_feature-branch-sha1 = ls_branch-sha1.
+      INSERT ls_feature INTO TABLE lt_features.
+    ENDLOOP.
+
+    " Call the method under test
+    zcl_abapgit_flow_git=>find_changes_in_git(
+      EXPORTING
+        iv_url           = mo_test_data->get_url( )
+        io_dot           = mo_test_data->get_dotabapgit( )
+        iv_package       = 'ZTEST_PACKAGE'
+        it_branches      = lt_branches
+      IMPORTING
+        et_main_expanded = lt_main_expanded
+      CHANGING
+        ct_features      = lt_features ).
+
+    " Assert: Feature branch structure should be populated
+    READ TABLE lt_features INDEX 1 INTO ls_feature.
+    cl_abap_unit_assert=>assert_subrc( msg = 'Feature branch should be in features table' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_feature-branch-display_name
+      exp = 'feature/diverged'
+      msg = 'Feature branch name should match' ).
+
+    " Assert: Feature branch should have at least one changed file
+    LOOP AT ls_feature-changed_files INTO ls_changed_file.
+      cl_abap_unit_assert=>assert_equals(
+        act = ls_changed_file-filename
+        exp = 'feature-file.abap' ).
+    ENDLOOP.
+
+    " Assert: Feature branch should be marked as not up-to-date
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_feature-branch-up_to_date
+      exp = abap_false ).
 
   ENDMETHOD.
 
