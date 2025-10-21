@@ -43,12 +43,13 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
         zcx_abapgit_exception.
 
     TYPES: BEGIN OF ty_status,
-             state       TYPE string,
-             description TYPE string,
-             url         TYPE string,
+             name       TYPE string,
+             status     TYPE string,
+             conclusion TYPE string,
+             title      TYPE string,
            END OF ty_status.
     TYPES ty_status_tt TYPE STANDARD TABLE OF ty_status WITH DEFAULT KEY.
-    METHODS get_status
+    METHODS get_check_runs
       IMPORTING
         iv_ref           TYPE string
       RETURNING
@@ -305,7 +306,7 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD get_status.
+  METHOD get_check_runs.
 * https://docs.github.com/en/rest/commits/statuses?apiVersion=2022-11-28#get-the-combined-status-for-a-specific-reference
 
     DATA lv_url      TYPE string.
@@ -317,14 +318,14 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
     DATA lx_ajson    TYPE REF TO zcx_abapgit_ajson_error.
 
 
-    lv_url = mv_repo_url && '/commits/' && iv_ref && '/status'.
+    lv_url = mv_repo_url && '/commits/' && iv_ref && '/check-runs'.
 
     li_response = mi_http_agent->request(
       iv_url     = lv_url
       iv_method  = zif_abapgit_http_agent=>c_methods-get ).
 
     IF li_response->is_ok( ) = abap_false.
-      zcx_abapgit_exception=>raise( |Error getting status for ref { iv_ref }: { li_response->error( ) }| ).
+      zcx_abapgit_exception=>raise( |Error getting check-runs for ref { iv_ref }: { li_response->error( ) }| ).
     ENDIF.
 
     TRY.
@@ -333,11 +334,12 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_ajson ).
     ENDTRY.
 
-    lt_statuses = li_json->members( '/statuses' ).
+    lt_statuses = li_json->members( '/check_runs' ).
     LOOP AT lt_statuses INTO lv_item.
-      ls_status-state = li_json->get( |/statuses/{ lv_item }/state| ).
-      ls_status-description = li_json->get( |/statuses/{ lv_item }/description| ).
-      ls_status-url = li_json->get( |/statuses/{ lv_item }/target_url| ).
+      ls_status-name = li_json->get( |/check_runs/{ lv_item }/name| ).
+      ls_status-status = li_json->get( |/check_runs/{ lv_item }/status| ).
+      ls_status-conclusion = li_json->get( |/check_runs/{ lv_item }/conclusion| ).
+      ls_status-title = li_json->get( |/check_runs/{ lv_item }/output/title| ).
       APPEND ls_status TO rt_status.
     ENDLOOP.
 
