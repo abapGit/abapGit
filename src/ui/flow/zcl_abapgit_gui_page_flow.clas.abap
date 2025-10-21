@@ -54,6 +54,14 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+    METHODS render_info
+      IMPORTING
+        !is_feature    TYPE zif_abapgit_flow_logic=>ty_feature
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+
     METHODS call_stage_commit
       IMPORTING
         !ii_event         TYPE REF TO zif_abapgit_gui_event
@@ -471,14 +479,54 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD render_info.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    IF is_feature-branch-display_name IS INITIAL.
+      ri_html->add( |No branch found, comparing with <tt>main</tt>| ).
+    ELSEIF is_feature-pr IS NOT INITIAL.
+      ri_html->add( 'Pull Request: ' ).
+      ri_html->add_a(
+          iv_txt   = is_feature-pr-title
+          iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ is_feature-pr-url }|
+          iv_class = |url| ).
+
+      ri_html->add( |<br>| ).
+      IF is_feature-pr-draft = abap_true.
+        ri_html->add( 'Status: Draft' ).
+      ELSE.
+        ri_html->add( 'Status: Ready for Review' ).
+      ENDIF.
+
+      ri_html->add( |<br>| ).
+      IF is_feature-branch-up_to_date = abap_true.
+        ri_html->add( 'Branch up to date: True' ).
+      ELSE.
+        ri_html->add( 'Branch up to date: False' ).
+      ENDIF.
+    ELSE.
+      ri_html->add( |No PR found| ).
+    ENDIF.
+    ri_html->add( |<br>| ).
+
+    IF is_feature-transport IS NOT INITIAL.
+      ri_html->add( |Transport: <tt>{ is_feature-transport-trkorr }</tt> - { is_feature-transport-title }<br>| ).
+    ELSE.
+      ri_html->add( |No corresponding transport found<br>| ).
+    ENDIF.
+
+    zcl_abapgit_flow_exit=>get_instance( )->info_extras( is_feature ).
+
+  ENDMETHOD.
+
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA ls_feature       LIKE LINE OF ms_information-features.
-    DATA lv_index         TYPE i.
-    DATA lv_rendered      TYPE abap_bool.
-    DATA lo_timer         TYPE REF TO zcl_abapgit_timer.
-    DATA lv_message       LIKE LINE OF ms_information-errors.
-
+    DATA ls_feature  LIKE LINE OF ms_information-features.
+    DATA lv_index    TYPE i.
+    DATA lv_rendered TYPE abap_bool.
+    DATA lo_timer    TYPE REF TO zcl_abapgit_timer.
+    DATA lv_message  LIKE LINE OF ms_information-errors.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -524,38 +572,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ENDIF.
       ri_html->add( |</font></b><br>| ).
 
-      IF ls_feature-branch-display_name IS INITIAL.
-        ri_html->add( |No branch found, comparing with <tt>main</tt>| ).
-      ELSEIF ls_feature-pr IS NOT INITIAL.
-        ri_html->add( 'Pull Request: ' ).
-        ri_html->add_a(
-          iv_txt   = ls_feature-pr-title
-          iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ ls_feature-pr-url }|
-          iv_class = |url| ).
-
-        ri_html->add( |<br>| ).
-        IF ls_feature-pr-draft = abap_true.
-          ri_html->add( 'Status: Draft' ).
-        ELSE.
-          ri_html->add( 'Status: Ready for Review' ).
-        ENDIF.
-
-        ri_html->add( |<br>| ).
-        IF ls_feature-branch-up_to_date = abap_true.
-          ri_html->add( 'Branch up to date: True' ).
-        ELSE.
-          ri_html->add( 'Branch up to date: False' ).
-        ENDIF.
-      ELSE.
-        ri_html->add( |No PR found| ).
-      ENDIF.
-      ri_html->add( |<br>| ).
-
-      IF ls_feature-transport IS NOT INITIAL.
-        ri_html->add( |Transport: <tt>{ ls_feature-transport-trkorr }</tt> - { ls_feature-transport-title }<br>| ).
-      ELSE.
-        ri_html->add( |No corresponding transport found<br>| ).
-      ENDIF.
+      ri_html->add( render_info( ls_feature ) ).
 
       ri_html->add( render_toolbar(
         iv_index   = lv_index

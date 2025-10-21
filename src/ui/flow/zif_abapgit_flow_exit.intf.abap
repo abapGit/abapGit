@@ -17,6 +17,10 @@ INTERFACE zif_abapgit_flow_exit
       !is_feature TYPE zif_abapgit_flow_logic=>ty_feature
       !iv_index   TYPE i .
 
+  METHODS info_extras
+    IMPORTING
+      !is_feature TYPE zif_abapgit_flow_logic=>ty_feature.
+
   TYPES: BEGIN OF ty_event_result,
            handled TYPE zif_abapgit_gui_event_handler=>ty_handling_result,
            refresh TYPE abap_bool,

@@ -21,7 +21,6 @@ ENDCLASS.
 
 CLASS zcl_abapgit_flow_exit IMPLEMENTATION.
 
-
   METHOD get_instance.
 * this exit only works with global classes
 
@@ -40,7 +39,6 @@ CLASS zcl_abapgit_flow_exit IMPLEMENTATION.
     ri_exit = gi_global_exit.
 
   ENDMETHOD.
-
 
   METHOD zif_abapgit_flow_exit~on_event.
 
@@ -66,7 +64,6 @@ CLASS zcl_abapgit_flow_exit IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD zif_abapgit_flow_exit~toolbar_extras.
 
     IF gi_exit IS NOT INITIAL.
@@ -80,4 +77,15 @@ CLASS zcl_abapgit_flow_exit IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_flow_exit~info_extras.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->info_extras( is_feature ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
