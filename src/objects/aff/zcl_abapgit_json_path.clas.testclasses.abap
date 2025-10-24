@@ -209,7 +209,9 @@ CLASS ltcl_json_path IMPLEMENTATION.
     CREATE OBJECT lo_cut.
     lv_act = lo_cut->deserialize( lt_file ).
 
-    cl_abap_unit_assert=>assert_initial( lv_act ).
+    cl_abap_unit_assert=>assert_equals(
+        act = lv_act
+        exp = `{}` ).
 
   ENDMETHOD.
 

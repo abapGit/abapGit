@@ -17,13 +17,30 @@
     }
   ],
   "syntax": {
+    "version": "v702",
     "errorNamespace": "^(Z|Y|LT?CL_|TY_|LIF_|C_|.*ABAPGIT)",
     "globalConstants": [
       "abap_func_exporting",
       "abap_func_tables",
       "cssf_formtype_text",
+      "seoc_category_exception",
+      "seoc_category_webdynpro_class",
+      "seoc_exposure_private",
+      "seoc_exposure_protected",
+      "seoc_exposure_public",
+      "seoc_state_implemented",
+      "seoc_version_active",
+      "seoc_version_deleted",
+      "seoc_version_inactive",
       "seok_access_free",
       "seok_access_modify",
+      "seoo_cmptype_attribute",
+      "seoo_cmptype_event",
+      "seoo_cmptype_method",
+      "seoo_cmptype_type",
+      "seos_scotype_exception",
+      "seos_scotype_parameter",
+      "seox_false",
       "sews_c_vif_version",
       "skwfc_obtype_folder",
       "skwfc_obtype_loio",
@@ -45,8 +62,7 @@
       "wdyn_limu_component_controller",
       "wdyn_limu_component_definition",
       "wdyn_limu_component_view"
-    ],
-    "version": "v702"
+    ]
   },
   "rules": {
     "7bit_ascii": {
@@ -143,6 +159,10 @@
     "contains_tab": true,
     "cyclic_oo": false,
     "cyclomatic_complexity": {
+      "exclude": [
+        "/json/",
+        "/diff3/"
+      ],
       "max": 25
     },
     "dangerous_statement": false,
@@ -220,6 +240,7 @@
         "^cl_xco_",
         "^cx_aff_",
         "^cx_wb_object_operation_error$",
+        "^cx_sy_itab_line_not_found$",
         "^cx_xco_",
         "^flag$",
         "^i18_a_langiso2$",
@@ -263,7 +284,9 @@
     "identical_contents": false,
     "identical_descriptions": false,
     "identical_form_names": true,
-    "if_in_if": true,
+    "if_in_if": {
+      "exclude": ["/diff3/"]
+    },
     "implement_methods": true,
     "in_statement_indentation": false,
     "indentation": {
@@ -307,6 +330,7 @@
     "local_testclass_consistency": true,
     "local_variable_names": {
       "exclude": [
+        "/diff3/",
         "/json/"
       ],
       "expectedConstant": "^LC_.*$",
@@ -321,6 +345,7 @@
     "method_implemented_twice": true,
     "method_length": {
       "exclude": [
+        "/diff3/",
         "zcl_abapgit_convert.clas.locals_imp.abap"
       ],
       "checkForms": true,

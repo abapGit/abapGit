@@ -172,7 +172,7 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
       iv_readonly    = zcl_abapgit_factory=>get_environment( )->is_merged( )
     )->text(
       iv_name        = c_id-experimental_features
-      iv_label       = 'Experimental Features'
+      iv_label       = 'Experimental Features (might require restarting abapGit)'
       iv_readonly    = zcl_abapgit_factory=>get_environment( )->is_merged( )
       iv_hint        = 'Set to "X" to enable all features or add feature values as a comma-separated list' ).
 

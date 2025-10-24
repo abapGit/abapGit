@@ -94,6 +94,16 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
       act = lv_ignored
       exp = abap_false ).
 
+    " Ignore everything in a namespace
+    lo_dot->add_ignore( iv_path = lc_path
+                        iv_filename = '#namespace#*' ).
+
+    lv_ignored = lo_dot->is_ignored( iv_path = lc_path
+                                     iv_filename = '#namespace#cl_test.clas.abap' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_ignored
+      exp = abap_true ).
+
   ENDMETHOD.
 
 ENDCLASS.

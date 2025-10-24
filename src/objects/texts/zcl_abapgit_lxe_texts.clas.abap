@@ -53,13 +53,13 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
       BEGIN OF ty_lxe_lang_map, " extract from LXE_T002X
         language  TYPE lxeisolang,
         r3_lang   TYPE spras,
-        langshort TYPE lxechar2,
+        langshort TYPE c LENGTH 2,
       END OF ty_lxe_lang_map.
 
     CLASS-DATA gt_lxe_lang_cache TYPE SORTED TABLE OF ty_lxe_lang_map WITH UNIQUE KEY language
       WITH NON-UNIQUE SORTED KEY iso2 COMPONENTS langshort.
-      " Controversial: we need uniq, but maybe it's better to keep it debuggable
-      " TODO, add r3 key if needed in future
+    " Controversial: we need uniq, but maybe it's better to keep it debuggable
+    " TODO, add r3 key if needed in future
 
     TYPES:
       BEGIN OF ty_lxe_translation,
@@ -126,6 +126,11 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         iv_object_name     TYPE sobj_name
       RETURNING
         VALUE(rt_obj_list) TYPE lxe_tt_colob .
+    METHODS remove_irrelevant
+      IMPORTING
+        iv_objtype        TYPE trobjtype
+      CHANGING
+        ct_text_pairs_tmp TYPE ty_lxe_translation-text_pairs.
     METHODS read_lxe_object_text_pair
       IMPORTING
         iv_s_lang                TYPE lxeisolang
@@ -183,7 +188,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
+CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
 
   METHOD check_langs_versus_installed.
@@ -320,7 +325,8 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
             cv_changed    = lv_changed
             ct_text_pairs = lt_text_pairs_tmp ).
 
-        IF lv_changed = abap_true.
+        IF lv_changed = abap_true AND lines( lt_text_pairs_tmp ) > 0.
+          " If lt_text_pairs_tmp is empty it raises error, while this is a practical case
           write_lxe_object_text_pair(
             iv_s_lang  = lv_main_lang
             iv_t_lang  = lv_target_lang
@@ -429,18 +435,29 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
   METHOD get_lang_iso4.
 
     DATA ls_lang LIKE LINE OF gt_lxe_lang_cache.
+    DATA lt_lang TYPE STANDARD TABLE OF lxe_t002.
+
+    FIELD-SYMBOLS <ls_lang> LIKE LINE OF lt_lang.
 
     IF gt_lxe_lang_cache IS INITIAL. " Cache
 
-      SELECT language r3_lang langshort
-        INTO TABLE gt_lxe_lang_cache
-        FROM lxe_t002x
-        WHERE is_r3_lang = 'X'
-        AND r3_lang <> '' " ??? precausion
-        AND langshort <> ''.
+      CALL FUNCTION 'LXE_T002_GET_LANGUAGES'
+        EXPORTING
+          r3_lang_only = abap_true
+        TABLES
+          lt_lang      = lt_lang.
 
-      " Alternatively, call LXE_T002_GET_LANGUAGES and then convert language
-      " 4char to 2char => 2char = to_upper( language(2) )
+      LOOP AT lt_lang ASSIGNING <ls_lang>.
+        CLEAR ls_lang.
+        ls_lang-language  = <ls_lang>-language.
+        ls_lang-r3_lang   = <ls_lang>-r3_lang.
+        IF ls_lang-language = 'zhTW'.
+          ls_lang-langshort = 'ZF'.
+        ELSE.
+          ls_lang-langshort = to_upper( <ls_lang>-language ).
+        ENDIF.
+        INSERT ls_lang INTO TABLE gt_lxe_lang_cache.
+      ENDLOOP.
 
     ENDIF.
 
@@ -567,6 +584,12 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
     ENDTRY.
 
+    remove_irrelevant(
+      EXPORTING
+        iv_objtype        = iv_objtype
+      CHANGING
+        ct_text_pairs_tmp = rt_text_pairs_tmp ).
+
   ENDMETHOD.
 
 
@@ -621,6 +644,16 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD remove_irrelevant.
+
+    IF iv_objtype = 'RPT4'.
+      DELETE ct_text_pairs_tmp WHERE textkey = 'DUMMY KEY FOR DDIC FLAG COPY'. " see #7314
+    ENDIF.
+    " Add more when identified ...
+
+  ENDMETHOD.
+
+
   METHOD serialize_as_po.
 
     DATA lt_lxe_texts TYPE ty_lxe_translations.
@@ -637,7 +670,7 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
       CREATE OBJECT lo_po_file
         EXPORTING
           iv_suppress_comments = mo_i18n_params->ms_params-suppress_po_comments
-          iv_lang = lv_lang.
+          iv_lang              = lv_lang.
       LOOP AT lt_lxe_texts ASSIGNING <ls_translation>.
         IF iso4_to_iso2( <ls_translation>-target_lang ) = lv_lang.
           lo_po_file->push_text_pairs(

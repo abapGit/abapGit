@@ -295,26 +295,25 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
         iv_id          = c_longtext_id-class
         iv_object_name = lv_object
         iv_language    = mv_language ).
-      RETURN.
-    ENDIF.
-
-    mi_object_oriented_object_fct->create_documentation(
-      it_lines       = lt_lines
-      iv_id          = c_longtext_id-class
-      iv_object_name = lv_object
-      iv_language    = mv_language ).
-
-    ii_xml->read( EXPORTING iv_name = 'I18N_LINES'
-                  CHANGING cg_data = lt_i18n_lines ).
-
-    LOOP AT lt_i18n_lines INTO ls_i18n_lines.
+    ELSE.
       mi_object_oriented_object_fct->create_documentation(
-        it_lines         = ls_i18n_lines-lines
-        iv_id            = c_longtext_id-class
-        iv_object_name   = lv_object
-        iv_language      = ls_i18n_lines-language
-        iv_no_masterlang = abap_true ).
-    ENDLOOP.
+        it_lines       = lt_lines
+        iv_id          = c_longtext_id-class
+        iv_object_name = lv_object
+        iv_language    = mv_language ).
+
+      ii_xml->read( EXPORTING iv_name = 'I18N_LINES'
+                    CHANGING cg_data = lt_i18n_lines ).
+
+      LOOP AT lt_i18n_lines INTO ls_i18n_lines.
+        mi_object_oriented_object_fct->create_documentation(
+          it_lines         = ls_i18n_lines-lines
+          iv_id            = c_longtext_id-class
+          iv_object_name   = lv_object
+          iv_language      = ls_i18n_lines-language
+          iv_no_masterlang = abap_true ).
+      ENDLOOP.
+    ENDIF.
 
     deserialize_longtexts(
       ii_xml           = ii_xml

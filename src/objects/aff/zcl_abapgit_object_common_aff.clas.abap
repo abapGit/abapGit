@@ -85,7 +85,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
     DATA:
       lv_is_supported TYPE abap_bool,
-      li_aff_registry TYPE REF TO zif_abapgit_aff_registry,
       lo_handler      TYPE REF TO object.
 
     super->constructor(
@@ -98,9 +97,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     TRY.
         lo_handler = get_object_handler( ).
 
-        CREATE OBJECT li_aff_registry TYPE zcl_abapgit_aff_registry.
-
-        lv_is_supported = li_aff_registry->is_supported_object_type( is_item-obj_type ).
+        lv_is_supported = zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( is_item-obj_type ).
       CATCH cx_root.
         lv_is_supported = abap_false.
     ENDTRY.

@@ -19,7 +19,13 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
         iv_title TYPE clike
         iv_body  TYPE clike OPTIONAL
         iv_head  TYPE string
-        iv_base  TYPE string DEFAULT 'main'
+        iv_base  TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS merge_pull_request
+      IMPORTING
+        iv_pull_number TYPE i
       RAISING
         zcx_abapgit_exception.
 
@@ -71,7 +77,14 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
+CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
+
+  METHOD clean_url.
+    rv_url = replace(
+      val = iv_url
+      regex = '\{.*\}$'
+      with = '' ).
+  ENDMETHOD.
 
   METHOD constructor.
 
@@ -127,52 +140,6 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD fetch_repo_by_url.
-
-    DATA li_pulls_json TYPE REF TO zif_abapgit_ajson.
-    DATA lv_pull_url TYPE string.
-    DATA li_response TYPE REF TO zif_abapgit_http_response.
-    DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
-
-    li_response = mi_http_agent->request( iv_repo_url ).
-
-    TRY.
-        rs_info-repo_json = li_response->json( ).
-        li_response->headers( ). " for debug
-        lv_pull_url = clean_url( rs_info-repo_json->get( '/pulls_url' ) ).
-        IF lv_pull_url IS INITIAL OR rs_info-repo_json->get( '/message' ) = 'Not Found'.
-          RETURN.
-        ENDIF.
-        li_pulls_json = mi_http_agent->request( lv_pull_url )->json( ).
-      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
-        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
-    ENDTRY.
-
-    rs_info-pulls = convert_list( li_pulls_json ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_pr_enum_provider~list_pull_requests.
-
-    DATA lv_upstream_url TYPE string.
-    DATA ls_repo_info TYPE ty_info.
-    FIELD-SYMBOLS <ls_p> LIKE LINE OF ls_repo_info-pulls.
-
-    ls_repo_info = fetch_repo_by_url( mv_repo_url ).
-    APPEND LINES OF ls_repo_info-pulls TO rt_pulls.
-
-    IF ls_repo_info-repo_json->get_boolean( '/fork' ) = abap_true.
-      lv_upstream_url = ls_repo_info-repo_json->get( '/source/url' ). " parent ?
-      ls_repo_info = fetch_repo_by_url( lv_upstream_url ).
-      LOOP AT ls_repo_info-pulls ASSIGNING <ls_p>.
-        <ls_p>-is_for_upstream = abap_true.
-        APPEND <ls_p> TO rt_pulls.
-      ENDLOOP.
-    ENDIF.
-
-  ENDMETHOD.
-
   METHOD create_pull_request.
 * https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#create-a-pull-request
 
@@ -206,6 +173,58 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD merge_pull_request.
+* https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#merge-a-pull-request
+
+    DATA lv_url      TYPE string.
+    DATA lv_json     TYPE string.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+
+    lv_url = mv_repo_url && '/pulls/' && iv_pull_number && '/merge'.
+
+    lv_json = |\{\n| &&
+              |  "commit_title": "Merge pull request #{ iv_pull_number }",\n| &&
+              |  "merge_method": "squash"\n| &&
+              |\}|.
+
+    li_response = mi_http_agent->request(
+      iv_url     = lv_url
+      iv_method  = zif_abapgit_http_agent=>c_methods-put
+      iv_payload = lv_json ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error merging pull request: { li_response->error( ) }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD fetch_repo_by_url.
+
+    DATA li_pulls_json TYPE REF TO zif_abapgit_ajson.
+    DATA lv_pull_url TYPE string.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+    DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
+
+    li_response = mi_http_agent->request( iv_repo_url ).
+
+    TRY.
+        rs_info-repo_json = li_response->json( ).
+        li_response->headers( ). " for debug
+        lv_pull_url = clean_url( rs_info-repo_json->get( '/pulls_url' ) ).
+        IF lv_pull_url IS INITIAL OR rs_info-repo_json->get( '/message' ) = 'Not Found'.
+          RETURN.
+        ENDIF.
+        li_pulls_json = mi_http_agent->request( lv_pull_url )->json( ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+    ENDTRY.
+
+    rs_info-pulls = convert_list( li_pulls_json ).
+
+  ENDMETHOD.
+
 
   METHOD ready_for_review.
 * https://docs.github.com/en/graphql/reference/mutations#markpullrequestreadyforreview
@@ -247,6 +266,7 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD update_pull_request_branch.
 * https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#update-a-pull-request-branch
 
@@ -274,10 +294,63 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD clean_url.
-    rv_url = replace(
-      val = iv_url
-      regex = '\{.*\}$'
-      with = '' ).
+
+  METHOD zif_abapgit_pr_enum_provider~create_initial_branch.
+* https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#create-or-update-file-contents--parameters
+
+    DATA lv_owner    TYPE string.
+    DATA lv_repo     TYPE string.
+    DATA lv_url      TYPE string.
+    DATA lv_contents TYPE string.
+    DATA lv_json     TYPE string.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+
+    lv_url = mv_repo_url && '/contents/README.md'.
+    SPLIT mv_user_and_repo AT '/' INTO lv_owner lv_repo.
+
+    lv_contents = iv_readme.
+
+    IF lv_contents IS INITIAL.
+      lv_contents = |# { to_upper( lv_repo ) }|.
+    ENDIF.
+
+    lv_json = |\{\n| &&
+              |  "message": "Initial commit",\n| &&
+              |  "content": "{ cl_http_utility=>encode_base64( lv_contents ) }",\n| &&
+              |  "branch": "{ iv_branch_name }"\n| &&
+              |\}|.
+
+    li_response = mi_http_agent->request(
+      iv_url     = lv_url
+      iv_method  = zif_abapgit_http_agent=>c_methods-put
+      iv_payload = lv_json ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error creating initial { iv_branch_name } branch: { li_response->error( ) }| ).
+    ENDIF.
+
+    rv_branch_name = iv_branch_name.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_pr_enum_provider~list_pull_requests.
+
+    DATA lv_upstream_url TYPE string.
+    DATA ls_repo_info TYPE ty_info.
+    FIELD-SYMBOLS <ls_p> LIKE LINE OF ls_repo_info-pulls.
+
+    ls_repo_info = fetch_repo_by_url( mv_repo_url ).
+    APPEND LINES OF ls_repo_info-pulls TO rt_pulls.
+
+    IF ls_repo_info-repo_json->get_boolean( '/fork' ) = abap_true.
+      lv_upstream_url = ls_repo_info-repo_json->get( '/source/url' ). " parent ?
+      ls_repo_info = fetch_repo_by_url( lv_upstream_url ).
+      LOOP AT ls_repo_info-pulls ASSIGNING <ls_p>.
+        <ls_p>-is_for_upstream = abap_true.
+        APPEND <ls_p> TO rt_pulls.
+      ENDLOOP.
+    ENDIF.
+
   ENDMETHOD.
 ENDCLASS.

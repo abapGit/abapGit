@@ -1,7 +1,8 @@
 {
-  "input_folder": "{src,deps,test/src}",
+  "input_folder": ["src", "deps", "test/src"],
   "input_filter": [
     "\\.w3mi.",
+    "\\.enqu.",
     "deps/",
     "src/ui/zcl_abapgit_e",
     "src/ui/lib/zcl_abapgit_e",
@@ -9,13 +10,7 @@
     "src/zcl_abapgit_e",
     "zag1",
     "src/env/*",
-    "zcl_abapgit_adt_link",
-    "zcl_abapgit_aff_registry",
-    "zcl_abapgit_apack_helper",
-    "zcl_abapgit_apack_writer",
-    "zcl_abapgit_ajson*",
-    "zcl_abapgit_apack_reader",
-    "zcl_abapgit_auth",
+    "zcl_abapgit_a",
     "zcl_abapgit_b",
     "zcl_abapgit_c",
     "zcl_abapgit_d",
@@ -50,27 +45,7 @@
     "zcl_abapgit_x",
     "zcl_abapgit_z",
     "zcx_abapgit",
-    "zif_abapgit_a",
-    "zif_abapgit_b",
-    "zif_abapgit_c",
-    "zif_abapgit_d",
-    "zif_abapgit_e",
-    "zif_abapgit_f",
-    "zif_abapgit_g",
-    "zif_abapgit_h",
-    "zif_abapgit_l",
-    "zif_abapgit_m",
-    "zif_abapgit_object",
-    "zcl_abapgit_object_tabl_ddl",
-    "zif_abapgit_oo_object_fnc",
-    "zif_abapgit_p",
-    "zif_abapgit_r",
-    "zif_abapgit_s",
-    "zif_abapgit_t",
-    "zif_abapgit_v",
-    "zif_abapgit_w",
-    "zif_abapgit_x",
-    "zif_abapgit_i18n_file"
+    "zif_"
   ],
   "output_folder": "output",
   "libs": [
@@ -79,6 +54,9 @@
     },
     {
       "url": "https://github.com/open-abap/open-abap-gui"
+    },
+    {
+      "url": "https://github.com/open-abap/open-abap-seo"
     },
     {
       "url": "https://github.com/open-abap/express-icf-shim"
@@ -91,7 +69,13 @@
     "addFilenames": true,
     "addCommonJS": true,
     "unknownTypes": "runtimeError",
-    "extraSetup": "../test/setup.mjs",
+    "setup": {
+      "filename": "../test/setup.mjs",
+      "preFunction": "setup"
+    },
+    "populateTables": {
+      "reposrc": false
+    },
     "skip": [
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_get_t100_longtext", "method": "test01", "note": "uses MSAG from database"},
 
@@ -110,14 +94,9 @@
       {"object": "ZCL_ABAPGIT_STATUS_CALC", "class": "ltcl_calculate_status", "method": "deleted_remote", "note": "READ TABLE subrc 4 vs subrc 8"},
       {"object": "ZCL_ABAPGIT_STATUS_CALC", "class": "ltcl_calculate_status", "method": "complete", "note": "READ TABLE subrc 4 vs subrc 8"},
 
-      {"object": "ZCL_ABAPGIT_PERSIST_PACKAGES", "class": "ltcl_packages", "method": "test_package", "note": "call to ENQUEUE_EZABAPGIT fails"},
-
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "space_leading_trailing",          "note": "??"},
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "bad_xml_raises_exc",              "note": "handling of xml parser errors, cl_ixml, test method parse_negative"},
       {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "render_xml_string", "note": "condensing values not working"},
-      {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "up"},
-      {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "empty", "note": "missing implementation of if_ixml_document$create_attribute_ns in open abap"},
-      {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "down"},
 
       {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_wda_0001",           "note": "Void type: SOTR_HEAD"},
       {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_wda_0003_not_exist", "note": "Void type: SOTR_HEAD"},
@@ -133,10 +112,11 @@
 
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity", "note": " https://github.com/open-abap/open-abap/issues/471 "},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "parse_error", "note": "NodeJS 20 does not set position of parsing error"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "unicode_characters", "note": "missing class"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "parse_error",           "note": "NodeJS 20 does not set position of parsing error"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "unicode_characters",    "note": "missing class"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_timestampl",        "note": " https://github.com/abaplint/transpiler/issues/1528 "},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_value_timestampl", "note": " https://github.com/abaplint/transpiler/issues/1528 "},
 
-      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "abapgit_version",     "note": "Error: ReadReport, transpiler todo"},
       {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "interface1",          "note": "SCAN-ABAP-SOURCE, wrong value"},
       {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "interface2",          "note": "SCAN-ABAP-SOURCE, wrong value"},
       {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "class1",              "note": "SCAN-ABAP-SOURCE, wrong value"},
@@ -150,53 +130,36 @@
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_settings",   "note": "skip, this changes database"},
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_login", "note": "skip, this changes database"},
 
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff01", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff02", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff03", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff04", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff05", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff06", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff07", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff08", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff09", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff10", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff11", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff12", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff13", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff14", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff15", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff16", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff17", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff18", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "map_beacons", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff07", "note": "todo zcl_abapgit_diff_diff3"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff08", "note": "todo zcl_abapgit_diff_diff3"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff09", "note": "todo zcl_abapgit_diff_diff3"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff11", "note": "todo zcl_abapgit_diff_diff3"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff14", "note": "todo zcl_abapgit_diff_diff3"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff15", "note": "todo zcl_abapgit_diff_diff3"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff16", "note": "todo zcl_abapgit_diff_diff3"},
 
       {"object": "ZCL_ABAPGIT_USER_RECORD", "class": "ltcl_user_record", "method": "test_invalid_user", "note": "Void type: BAPIADDR3"},
 
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_object_types", "method": "type_supported", "note": "no such table: seometarel, https://github.com/abapGit/abapGit/issues/1449#issuecomment-1653011315 "},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_object_types", "method": "type_supported", "note": "not currently supported in open-abap"},
       {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_object_types", "method": "not_exist", "note": "call to TR_OBJECT_TABLE fails"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_tabl", "note": "no such table: seometarel"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_shlp", "note": "no such table: seometarel"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_view", "note": "no such table: seometarel"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_auth", "note": "no such table: seometarel"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_clas", "note": "no such table: seometarel"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_intf", "note": "no such table: seometarel"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_doma", "note": "no such table: seometarel"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_dtel", "note": "no such table: seometarel"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_fugr", "note": "no such table: seometarel"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_msag", "note": "no such table: seometarel"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_prog", "note": "no such table: seometarel"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_tran", "note": "no such table: seometarel"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_ttyp", "note": "no such table: seometarel"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_intf_aff_translate", "note": "Void type: SEOCLASSDF"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_check_objects_locked", "method": "throw_excp_if_object_is_locked", "note": "no such table: seometarel"},
-      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_check_objects_locked", "method": "no_excp_if_obj_is_not_locked", "note": "no such table: seometarel"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_tabl", "note": "not currently supported in open-abap"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_shlp", "note": "not currently supported in open-abap"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_view", "note": "not currently supported in open-abap"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_auth", "note": "not currently supported in open-abap"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_clas", "note": "not currently supported in open-abap"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_intf", "note": "not currently supported in open-abap"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_doma", "note": "not currently supported in open-abap"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_dtel", "note": "not currently supported in open-abap"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_fugr", "note": "not currently supported in open-abap"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_msag", "note": "not currently supported in open-abap"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_prog", "note": "not currently supported in open-abap"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_tran", "note": "not currently supported in open-abap"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_ttyp", "note": "not currently supported in open-abap"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_serialize", "method": "serialize_intf_aff_translate", "note": "not currently supported in open-abap"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_check_objects_locked", "method": "throw_excp_if_object_is_locked", "note": "not currently supported in open-abap"},
+      {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_check_objects_locked", "method": "no_excp_if_obj_is_not_locked", "note": "not currently supported in open-abap"},
 
-      {"object": "ZCL_ABAPGIT_ABAP_LANGUAGE_VERS", "class": "ltcl_abap_language_version", "method": "is_import_allowed", "note": "CL_ABAP_LANGUAGE_VERSION/_CFG"},
-
-      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "raise_error_if_package_exists", "note": "Void type: SCOMPKDTLN"},
-      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_given_in_popup",        "note": "Void type: SCOMPKDTLN"},
-      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_not_created_when_canc", "note": "Void type: SCOMPKDTLN"},
-      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm",  "note": "Void type: SCOMPKDTLN"}
+      {"object": "ZCL_ABAPGIT_ABAP_LANGUAGE_VERS", "class": "ltcl_abap_language_version", "method": "is_import_allowed", "note": "CL_ABAP_LANGUAGE_VERSION/_CFG"}
     ]
   }
 }

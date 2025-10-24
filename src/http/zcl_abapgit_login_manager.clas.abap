@@ -19,11 +19,19 @@ CLASS zcl_abapgit_login_manager DEFINITION
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS clear .
-    CLASS-METHODS set
+    CLASS-METHODS set_basic
       IMPORTING
         !iv_uri        TYPE string
         !iv_username   TYPE string
         !iv_password   TYPE string
+      RETURNING
+        VALUE(rv_auth) TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS set_bearer
+      IMPORTING
+        !iv_uri        TYPE string
+        !iv_token      TYPE string
       RETURNING
         VALUE(rv_auth) TYPE string
       RAISING
@@ -57,7 +65,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
+CLASS zcl_abapgit_login_manager IMPLEMENTATION.
 
 
   METHOD append.
@@ -116,7 +124,7 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set.
+  METHOD set_basic.
 
     DATA: lv_concat TYPE string.
 
@@ -130,8 +138,23 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
 
     rv_auth = cl_http_utility=>encode_base64( lv_concat ).
 
-    CONCATENATE 'Basic' rv_auth INTO rv_auth
-      SEPARATED BY space.
+    CONCATENATE 'Basic' rv_auth INTO rv_auth SEPARATED BY space.
+
+    append( iv_uri  = iv_uri
+            iv_auth = rv_auth ).
+
+  ENDMETHOD.
+
+
+  METHOD set_bearer.
+
+    ASSERT NOT iv_uri IS INITIAL.
+
+    IF iv_token IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    CONCATENATE 'Bearer' iv_token INTO rv_auth SEPARATED BY space.
 
     append( iv_uri  = iv_uri
             iv_auth = rv_auth ).

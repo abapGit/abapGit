@@ -1067,6 +1067,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     DATA lt_overview TYPE ty_overviews.
     DATA ls_settings TYPE zif_abapgit_persist_user=>ty_s_user_settings.
 
+    register_handlers( ).
+
     ls_settings = zcl_abapgit_persist_factory=>get_settings( )->read( )->get_user_settings( ).
     mo_label_colors = zcl_abapgit_repo_labels=>split_colors_into_map( ls_settings-label_colors ).
 
@@ -1075,6 +1077,11 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     zcl_abapgit_exit=>get_instance( )->wall_message_list( ri_html ).
+
+    IF zcl_abapgit_factory=>get_environment( )->is_repo_object_changes_allowed( ) = abap_false.
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error(
+        iv_error = |Repository changes are not allowed in this system/client! Pull not possible!| ) ).
+    ENDIF.
 
     ri_html->add( |<div class="repo-overview">| ).
     render_header_bar( ri_html ).
@@ -1086,7 +1093,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     register_deferred_script( render_scripts( ) ).
     register_deferred_script( zcl_abapgit_gui_chunk_lib=>render_repo_palette( c_action-select ) ).
-    register_handlers( ).
 
   ENDMETHOD.
 ENDCLASS.

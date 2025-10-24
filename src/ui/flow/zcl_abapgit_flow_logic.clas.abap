@@ -75,9 +75,9 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
 
     CLASS-METHODS errors_from_transports
       IMPORTING
-        it_transports  TYPE ty_transports_tt
+        it_all_transports TYPE ty_transports_tt
       CHANGING
-        cs_information TYPE zif_abapgit_flow_logic=>ty_information.
+        cs_information    TYPE zif_abapgit_flow_logic=>ty_information.
 
     CLASS-METHODS add_objects_and_files_from_tr
       IMPORTING
@@ -173,6 +173,11 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
     DATA ls_changed      LIKE LINE OF cs_feature-changed_objects.
     DATA ls_changed_file LIKE LINE OF cs_feature-changed_files.
+    DATA ls_item         TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_filename     TYPE string.
+    DATA lv_extension    TYPE string.
+    DATA lv_main_file    TYPE string.
+
 
     FIELD-SYMBOLS <ls_transport> LIKE LINE OF it_transports.
     FIELD-SYMBOLS <ls_local>     LIKE LINE OF it_local.
@@ -189,6 +194,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
           AND item-obj_type = <ls_transport>-object
           AND item-obj_name = <ls_transport>-obj_name.
 
+        CLEAR ls_changed_file.
         ls_changed_file-path       = <ls_local>-file-path.
         ls_changed_file-filename   = <ls_local>-file-filename.
         ls_changed_file-local_sha1 = <ls_local>-file-sha1.
@@ -203,6 +209,42 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
         INSERT ls_changed_file INTO TABLE cs_feature-changed_files.
       ENDLOOP.
+      IF sy-subrc <> 0.
+* then its a deletion
+        CLEAR ls_item.
+        ls_item-obj_type = <ls_transport>-object.
+        ls_item-obj_name = <ls_transport>-obj_name.
+
+        IF zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( <ls_transport>-object ) = abap_true.
+          lv_extension = 'json'.
+        ELSE.
+          lv_extension = 'xml'.
+        ENDIF.
+
+        lv_main_file = zcl_abapgit_filename_logic=>object_to_file(
+          is_item = ls_item
+          iv_ext  = lv_extension ).
+        CONCATENATE '.' lv_extension INTO lv_extension.
+        lv_filename = lv_main_file.
+        REPLACE FIRST OCCURRENCE OF lv_extension IN lv_filename WITH '*'.
+
+        LOOP AT it_main_expanded ASSIGNING <ls_main_expanded>
+            WHERE name CP lv_filename.
+          CLEAR ls_changed_file.
+          ls_changed_file-filename    = <ls_main_expanded>-name.
+          ls_changed_file-path        = <ls_main_expanded>-path.
+          ls_changed_file-remote_sha1 = <ls_main_expanded>-sha1.
+          INSERT ls_changed_file INTO TABLE cs_feature-changed_files.
+        ENDLOOP.
+        IF sy-subrc <> 0.
+          CLEAR ls_changed_file.
+          ls_changed_file-filename    = lv_main_file.
+          ls_changed_file-path        = '/src/'. " todo?
+* after its deleted locally and remote then remote and local sha1 will match(be empty)
+          INSERT ls_changed_file INTO TABLE cs_feature-changed_files.
+        ENDIF.
+
+      ENDIF.
 
     ENDLOOP.
 
@@ -213,139 +255,6 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     rs_data-name = ii_repo->get_name( ).
     rs_data-key = ii_repo->get_key( ).
     rs_data-package = ii_repo->get_package( ).
-  ENDMETHOD.
-
-
-  METHOD consolidate.
-
-    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
-    DATA ls_feature  LIKE LINE OF lt_features.
-    DATA lv_string   TYPE string.
-    DATA li_repo     TYPE REF TO zif_abapgit_repo.
-
-
-* todo: handling multiple repositories
-
-    li_repo ?= ii_online.
-    lt_features = get( )-features.
-
-    LOOP AT lt_features INTO ls_feature WHERE repo-key = li_repo->get_key( ).
-      IF ls_feature-branch-display_name IS NOT INITIAL
-          AND ls_feature-branch-up_to_date = abap_false.
-        lv_string = |Branch <tt>{ ls_feature-branch-display_name }</tt> is not up to date|.
-        INSERT lv_string INTO TABLE rs_consolidate-errors.
-      ELSEIF ls_feature-branch-display_name IS NOT INITIAL
-          AND ls_feature-transport-trkorr IS INITIAL.
-        lv_string = |Branch <tt>{ ls_feature-branch-display_name }</tt> has no transport|.
-        INSERT lv_string INTO TABLE rs_consolidate-errors.
-      ELSEIF ls_feature-transport-trkorr IS NOT INITIAL
-          AND ls_feature-branch-display_name IS INITIAL
-          AND ls_feature-full_match = abap_false.
-        lv_string = |Transport <tt>{ ls_feature-transport-trkorr }</tt> has no branch|.
-        INSERT lv_string INTO TABLE rs_consolidate-errors.
-      ENDIF.
-* todo: branches without pull requests?
-    ENDLOOP.
-
-    consolidate_files(
-      EXPORTING
-        ii_online      = ii_online
-      CHANGING
-        cs_information = rs_consolidate ).
-
-  ENDMETHOD.
-
-  METHOD consolidate_files.
-
-    DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lt_filter   TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lo_filter   TYPE REF TO zcl_abapgit_object_filter_obj.
-    DATA lt_local    TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
-    DATA li_repo     TYPE REF TO zif_abapgit_repo.
-    DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
-    DATA ls_expanded LIKE LINE OF lt_main_expanded.
-    DATA ls_branch   LIKE LINE OF lt_branches.
-    DATA ls_only_remote TYPE zif_abapgit_flow_logic=>ty_path_name.
-    DATA ls_result   LIKE LINE OF lt_features.
-
-    FIELD-SYMBOLS <ls_tadir> LIKE LINE OF lt_tadir.
-
-    li_repo ?= ii_online.
-
-* find all that exists local, serialize these, skip if no changes or if in any branch
-    lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
-      iv_url    = ii_online->get_url( )
-      iv_prefix = zif_abapgit_git_definitions=>c_git_branch-heads_prefix )->get_all( ).
-
-    CLEAR lt_features.
-    LOOP AT lt_branches INTO ls_branch WHERE display_name <> zif_abapgit_flow_logic=>c_main.
-      ls_result-repo = build_repo_data( ii_online ).
-      ls_result-branch-display_name = ls_branch-display_name.
-      ls_result-branch-sha1 = ls_branch-sha1.
-      INSERT ls_result INTO TABLE lt_features.
-    ENDLOOP.
-
-    zcl_abapgit_flow_git=>find_changes_in_git(
-      EXPORTING
-        ii_repo_online   = ii_online
-        it_branches      = lt_branches
-      IMPORTING
-        et_main_expanded = lt_main_expanded
-      CHANGING
-        ct_features      = lt_features ).
-
-    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
-      iv_package      = li_repo->get_package( )
-      io_dot          = li_repo->get_dot_abapgit( )
-      iv_check_exists = abap_true ).
-
-    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      INSERT <ls_tadir> INTO TABLE lt_filter.
-
-      IF lines( lt_filter ) >= 500.
-        CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
-        lt_local = li_repo->get_files_local_filtered( lo_filter ).
-        CLEAR lt_filter.
-        check_files(
-          EXPORTING
-            it_local          = lt_local
-            it_features       = lt_features
-          CHANGING
-            ct_main_expanded  = lt_main_expanded
-            ct_missing_remote = cs_information-missing_remote ).
-        IF lines( cs_information-missing_remote ) > 1000.
-          INSERT `Only first 1000 missing files shown` INTO TABLE cs_information-warnings.
-        ENDIF.
-      ENDIF.
-    ENDLOOP.
-
-    IF lines( lt_filter ) > 0.
-      CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
-      lt_local = li_repo->get_files_local_filtered( lo_filter ).
-      CLEAR lt_filter.
-      check_files(
-        EXPORTING
-          it_local          = lt_local
-          it_features       = lt_features
-        CHANGING
-          ct_main_expanded  = lt_main_expanded
-          ct_missing_remote = cs_information-missing_remote ).
-    ENDIF.
-
-* todo: double check, there might have been changes while consolidation is running
-* or do smaller batches?
-
-* those left in lt_main_expanded are only in remote, not local
-    LOOP AT lt_main_expanded INTO ls_expanded.
-      CLEAR ls_only_remote.
-      ls_only_remote-path = ls_expanded-path.
-      ls_only_remote-filename = ls_expanded-name.
-      ls_only_remote-remote_sha1 = ls_expanded-sha1.
-      INSERT ls_only_remote INTO TABLE cs_information-only_remote.
-    ENDLOOP.
-
   ENDMETHOD.
 
 
@@ -396,6 +305,208 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
+
+  METHOD consolidate.
+
+    DATA lt_features  TYPE zif_abapgit_flow_logic=>ty_features.
+    DATA ls_feature   LIKE LINE OF lt_features.
+    DATA lv_string    TYPE string.
+    DATA li_repo      TYPE REF TO zif_abapgit_repo.
+    DATA ls_transport TYPE zif_abapgit_cts_api=>ty_transport_data.
+
+
+* todo: handling multiple repositories
+
+    li_repo ?= ii_online.
+    lt_features = get( )-features.
+
+    LOOP AT lt_features INTO ls_feature WHERE repo-key = li_repo->get_key( ).
+      IF ls_feature-branch-display_name IS NOT INITIAL
+          AND ls_feature-branch-up_to_date = abap_false.
+        lv_string = |Branch <tt>{ ls_feature-branch-display_name }</tt> is not up to date|.
+        INSERT lv_string INTO TABLE rs_consolidate-errors.
+      ELSEIF ls_feature-branch-display_name IS NOT INITIAL
+          AND ls_feature-transport-trkorr IS INITIAL
+          AND lines( ls_feature-changed_files ) > 0.
+* its okay if the changes are outside the starting folder
+        lv_string = |Branch <tt>{ ls_feature-branch-display_name }</tt> has no transport|.
+        INSERT lv_string INTO TABLE rs_consolidate-errors.
+      ELSEIF ls_feature-transport-trkorr IS NOT INITIAL
+          AND ls_feature-branch-display_name IS INITIAL
+          AND ls_feature-full_match = abap_false.
+        ls_transport = zcl_abapgit_factory=>get_cts_api( )->read( ls_feature-transport-trkorr ).
+        lv_string = |Transport <tt>{ ls_feature-transport-trkorr }</tt> has no branch, created {
+          ls_transport-as4date DATE = ISO }|.
+        INSERT lv_string INTO TABLE rs_consolidate-errors.
+      ENDIF.
+* todo: branches without pull requests?
+    ENDLOOP.
+
+    consolidate_files(
+      EXPORTING
+        ii_online      = ii_online
+      CHANGING
+        cs_information = rs_consolidate ).
+
+  ENDMETHOD.
+
+
+  METHOD consolidate_files.
+
+    DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lt_filter   TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lo_filter   TYPE REF TO zcl_abapgit_object_filter_obj.
+    DATA lt_local    TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
+    DATA li_repo     TYPE REF TO zif_abapgit_repo.
+    DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+    DATA ls_expanded LIKE LINE OF lt_main_expanded.
+    DATA ls_branch   LIKE LINE OF lt_branches.
+    DATA ls_only_remote TYPE zif_abapgit_flow_logic=>ty_path_name.
+    DATA ls_result   LIKE LINE OF lt_features.
+    DATA lt_all_transports TYPE ty_transports_tt.
+    DATA lv_filename TYPE string.
+
+
+    FIELD-SYMBOLS <ls_tadir> LIKE LINE OF lt_tadir.
+
+    li_repo ?= ii_online.
+
+* find all that exists local, serialize these, skip if no changes or if in any branch
+    lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
+      iv_url    = ii_online->get_url( )
+      iv_prefix = zif_abapgit_git_definitions=>c_git_branch-heads_prefix )->get_all( ).
+
+    CLEAR lt_features.
+    LOOP AT lt_branches INTO ls_branch WHERE display_name <> zif_abapgit_flow_logic=>c_main.
+      ls_result-repo = build_repo_data( ii_online ).
+      ls_result-branch-display_name = ls_branch-display_name.
+      ls_result-branch-sha1 = ls_branch-sha1.
+      INSERT ls_result INTO TABLE lt_features.
+    ENDLOOP.
+
+    zcl_abapgit_flow_git=>find_changes_in_git(
+      EXPORTING
+        ii_repo_online   = ii_online
+        it_branches      = lt_branches
+      IMPORTING
+        et_main_expanded = lt_main_expanded
+      CHANGING
+        ct_features      = lt_features ).
+
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
+      iv_package      = li_repo->get_package( )
+      io_dot          = li_repo->get_dot_abapgit( )
+      iv_check_exists = abap_true ).
+
+    lt_all_transports = find_open_transports( ).
+
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+" skip the object is in any open transport
+      READ TABLE lt_all_transports WITH KEY object = <ls_tadir>-object obj_name = <ls_tadir>-obj_name TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0 AND <ls_tadir>-object <> 'DEVC'.
+* todo: this is not correct for AFF enabled objects
+        lv_filename = |{ to_lower( <ls_tadir>-obj_name ) }.{ to_lower( <ls_tadir>-object ) }*|.
+        DELETE lt_main_expanded WHERE name CP lv_filename.
+        CONTINUE.
+      ENDIF.
+
+      INSERT <ls_tadir> INTO TABLE lt_filter.
+
+      IF lines( lt_filter ) >= 500.
+        CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+        lt_local = li_repo->get_files_local_filtered( lo_filter ).
+        CLEAR lt_filter.
+        check_files(
+          EXPORTING
+            it_local          = lt_local
+            it_features       = lt_features
+          CHANGING
+            ct_main_expanded  = lt_main_expanded
+            ct_missing_remote = cs_information-missing_remote ).
+        IF lines( cs_information-missing_remote ) > 1000.
+          INSERT `Only first 1000 missing files shown` INTO TABLE cs_information-warnings.
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
+
+    IF lines( lt_filter ) > 0.
+      CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+      lt_local = li_repo->get_files_local_filtered( lo_filter ).
+      CLEAR lt_filter.
+      check_files(
+        EXPORTING
+          it_local          = lt_local
+          it_features       = lt_features
+        CHANGING
+          ct_main_expanded  = lt_main_expanded
+          ct_missing_remote = cs_information-missing_remote ).
+    ENDIF.
+
+* todo: double check, there might have been changes while consolidation is running
+* or do smaller batches?
+
+* those left in lt_main_expanded are only in remote, not local
+    LOOP AT lt_main_expanded INTO ls_expanded.
+      CLEAR ls_only_remote.
+      ls_only_remote-path = ls_expanded-path.
+      ls_only_remote-filename = ls_expanded-name.
+      ls_only_remote-remote_sha1 = ls_expanded-sha1.
+      INSERT ls_only_remote INTO TABLE cs_information-only_remote.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD errors_from_transports.
+
+    DATA lv_message    TYPE string.
+    DATA lt_transports LIKE it_all_transports.
+    DATA lv_index      TYPE i.
+    DATA ls_next       LIKE LINE OF lt_transports.
+    DATA ls_transport  LIKE LINE OF lt_transports.
+    DATA ls_duplicate  LIKE LINE OF cs_information-transport_duplicates.
+    DATA lv_found1     TYPE abap_bool.
+    DATA lv_found2     TYPE abap_bool.
+
+    lt_transports = it_all_transports.
+    SORT lt_transports BY object obj_name trkorr.
+
+    LOOP AT lt_transports INTO ls_transport.
+      lv_index = sy-tabix + 1.
+      READ TABLE lt_transports INTO ls_next INDEX lv_index.
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
+
+      IF ls_next-object = ls_transport-object
+          AND ls_next-trkorr <> ls_transport-trkorr
+          AND ls_next-obj_name = ls_transport-obj_name.
+
+        READ TABLE cs_information-features WITH KEY transport-trkorr = ls_transport-trkorr TRANSPORTING NO FIELDS.
+        lv_found1 = boolc( sy-subrc = 0 ).
+        READ TABLE cs_information-features WITH KEY transport-trkorr = ls_next-trkorr TRANSPORTING NO FIELDS.
+        lv_found2 = boolc( sy-subrc = 0 ).
+        IF lv_found1 = abap_false AND lv_found2 = abap_false.
+          " not in any favorite flow enabled repo
+          CONTINUE.
+        ENDIF.
+
+        lv_message = |Object <tt>{ ls_transport-object }</tt> <tt>{ ls_transport-obj_name
+          }</tt> is in multiple transports: <tt>{ ls_transport-trkorr }</tt> and <tt>{ ls_next-trkorr }</tt>|.
+        INSERT lv_message INTO TABLE cs_information-errors.
+
+        CLEAR ls_duplicate.
+        ls_duplicate-obj_type = ls_transport-object.
+        ls_duplicate-obj_name = ls_transport-obj_name.
+        INSERT ls_duplicate INTO TABLE cs_information-transport_duplicates.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
 
   METHOD find_open_transports.
 
@@ -568,12 +679,6 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
     lt_all_transports = find_open_transports( ).
 
-    errors_from_transports(
-      EXPORTING
-        it_transports  = lt_all_transports
-      CHANGING
-        cs_information = rs_information ).
-
 * list branches on favorite + flow enabled + transported repos
     lt_repos = list_repos( ).
     LOOP AT lt_repos INTO li_repo_online.
@@ -650,6 +755,12 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
       INSERT LINES OF lt_features INTO TABLE rs_information-features.
     ENDLOOP.
+
+    errors_from_transports(
+      EXPORTING
+        it_all_transports  = lt_all_transports
+      CHANGING
+        cs_information     = rs_information ).
 
     SORT rs_information-features BY full_match transport-trkorr DESCENDING.
 
@@ -835,42 +946,6 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
           cs_feature       = ls_result ).
 
       INSERT ls_result INTO TABLE ct_features.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD errors_from_transports.
-
-    DATA lv_message    TYPE string.
-    DATA lt_transports LIKE it_transports.
-    DATA lv_index      TYPE i.
-    DATA ls_next       LIKE LINE OF lt_transports.
-    DATA ls_transport  LIKE LINE OF lt_transports.
-    DATA ls_duplicate  LIKE LINE OF cs_information-transport_duplicates.
-
-    lt_transports = it_transports.
-    SORT lt_transports BY object obj_name trkorr.
-
-    LOOP AT lt_transports INTO ls_transport.
-      lv_index = sy-tabix + 1.
-      READ TABLE lt_transports INTO ls_next INDEX lv_index.
-      IF sy-subrc <> 0.
-        CONTINUE.
-      ENDIF.
-
-      IF ls_next-object = ls_transport-object
-          AND ls_next-trkorr <> ls_transport-trkorr
-          AND ls_next-obj_name = ls_transport-obj_name.
-        lv_message = |Object <tt>{ ls_transport-object }</tt> <tt>{ ls_transport-obj_name
-          }</tt> is in multiple transports: <tt>{ ls_transport-trkorr }</tt> and <tt>{ ls_next-trkorr }</tt>|.
-        INSERT lv_message INTO TABLE cs_information-errors.
-
-        CLEAR ls_duplicate.
-        ls_duplicate-obj_type = ls_transport-object.
-        ls_duplicate-obj_name = ls_transport-obj_name.
-        INSERT ls_duplicate INTO TABLE cs_information-transport_duplicates.
-      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.

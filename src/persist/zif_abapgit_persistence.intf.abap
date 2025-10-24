@@ -79,4 +79,16 @@ INTERFACE zif_abapgit_persistence PUBLIC.
   TYPES: ty_repos TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
   TYPES: ty_repo_keys TYPE STANDARD TABLE OF ty_repo-key WITH DEFAULT KEY.
 
+  TYPES:
+    BEGIN OF ty_remote_settings,
+      offline         TYPE ty_repo-offline,
+      url             TYPE ty_repo-url,
+      branch          TYPE zif_abapgit_git_definitions=>ty_git_branch-name,
+      tag             TYPE zif_abapgit_git_definitions=>ty_git_tag-name,
+      commit          TYPE zif_abapgit_git_definitions=>ty_commit-sha1,
+      pull_request    TYPE string,
+      head_type       TYPE zif_abapgit_git_definitions=>ty_head_type,
+      switched_origin TYPE ty_repo-switched_origin,
+    END OF ty_remote_settings.
+
 ENDINTERFACE.
