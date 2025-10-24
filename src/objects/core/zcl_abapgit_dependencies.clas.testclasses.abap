@@ -42,6 +42,10 @@ CLASS ltcl_sap_package IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~check_object_type.
+    RETURN.
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~list_subpackages.
 
     IF mv_package = 'Z_MAIN'.
