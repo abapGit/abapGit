@@ -327,6 +327,9 @@ CLASS lcl_sap_package IMPLEMENTATION.
   METHOD zif_abapgit_sap_package~get.
     RETURN.
   ENDMETHOD.
+  METHOD zif_abapgit_sap_package~check_object_type.
+    RETURN.
+  ENDMETHOD.
   METHOD zif_abapgit_sap_package~validate_name.
     RETURN.
   ENDMETHOD.
