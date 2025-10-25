@@ -42,6 +42,7 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
         choose_branch   TYPE string VALUE 'choose-branch',
         choose_labels   TYPE string VALUE 'choose-labels',
         add_online_repo TYPE string VALUE 'add-repo-online',
+        create_repo     TYPE string VALUE 'create-repository',
       END OF c_event.
 
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
@@ -202,6 +203,9 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
       iv_label       = 'Create Package'
       iv_action      = c_event-create_package
     )->command(
+      iv_label       = 'Create GitHub Repo'
+      iv_action      = c_event-create_repo
+    )->command(
       iv_label       = 'Back'
       iv_action      = zif_abapgit_definitions=>c_action-go_back ).
 
@@ -280,6 +284,11 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
           zcx_abapgit_exception=>raise( |Package { lv_package } already exists| ).
         ENDIF.
         rs_handled-page  = zcl_abapgit_gui_page_cpackage=>create( lv_package ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+
+      WHEN c_event-create_repo.
+
+        rs_handled-page  = zcl_abapgit_gui_page_cr_repo=>create( mo_form_data->get( c_id-url ) ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_event-choose_package.
