@@ -1324,7 +1324,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     DATA: lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
           lv_package  LIKE LINE OF lt_packages,
-          lv_tree     TYPE dirtree-tname.
+          lv_tree     TYPE string.
 
 
     lt_packages = zcl_abapgit_factory=>get_sap_package( iv_package )->list_subpackages( ).
