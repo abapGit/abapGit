@@ -37,6 +37,9 @@ CLASS zcl_abapgit_injector DEFINITION
     CLASS-METHODS set_exit
       IMPORTING
         ii_exit TYPE REF TO zif_abapgit_exit.
+    CLASS-METHODS set_default_transport
+      IMPORTING
+        ii_default_transport TYPE REF TO zif_abapgit_default_transport.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -45,6 +48,9 @@ ENDCLASS.
 
 CLASS zcl_abapgit_injector IMPLEMENTATION.
 
+  METHOD set_default_transport.
+    zcl_abapgit_factory=>gi_default_transport = ii_default_transport.
+  ENDMETHOD.
 
   METHOD set_cts_api.
     zcl_abapgit_factory=>gi_cts_api = ii_cts_api.
