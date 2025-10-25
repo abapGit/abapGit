@@ -41,14 +41,18 @@
   margin-left: 0px;
   padding: 2px 5px;
 }
-.db-entry dt::after {  content: ":" }
+.db-entry dt::after { content: ":" }
 
 /* COLORS */
 
 .db-entry {
   background-color: var(--theme-container-background-color);
 }
-.db-entry pre, .db-entry textarea {
+.db-entry pre {
+  background-color: #f4f4f4;
+  border-color: var(--theme-container-border-color);
+}
+.db-entry textarea {
   background-color: var(--theme-table-background-color);
   border-color: var(--theme-container-border-color);
 }

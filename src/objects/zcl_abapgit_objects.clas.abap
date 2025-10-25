@@ -194,12 +194,6 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS get_deserialize_steps
       RETURNING
         VALUE(rt_steps) TYPE zif_abapgit_objects=>ty_step_data_tt .
-    CLASS-METHODS check_main_package
-      IMPORTING
-        !iv_package  TYPE devclass
-        !iv_obj_type TYPE tadir-object
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS change_package_assignments
       IMPORTING
         !is_item TYPE zif_abapgit_definitions=>ty_item
@@ -291,33 +285,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       CONCATENATE LINES OF lt_duplicates INTO lv_all_duplicates SEPARATED BY `, `.
       zcx_abapgit_exception=>raise( |Duplicates: { lv_all_duplicates }| ).
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD check_main_package.
-
-    " check package restrictions, closed package, descriptive or
-    " functional package
-    cl_pak_object_types=>check_object_type(
-      EXPORTING
-        i_working_mode         = 'I'
-        i_package_name         = iv_package
-        i_pgmid                = 'R3TR'
-        i_object_type          = iv_obj_type
-      EXCEPTIONS
-        wrong_object_type      = 1
-        package_not_extensible = 2
-        package_not_loaded     = 3
-        OTHERS                 = 4 ).
-    CASE sy-subrc.
-      WHEN 0.
-        RETURN.
-      WHEN 2.
-        zcx_abapgit_exception=>raise( |Object type { iv_obj_type } not allowed for package { iv_package }| ).
-      WHEN OTHERS.
-        zcx_abapgit_exception=>raise_t100( ).
-    ENDCASE.
 
   ENDMETHOD.
 
@@ -681,9 +648,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
               io_dot  = lo_dot
               iv_path = <ls_result>-path ).
 
-            check_main_package(
-              iv_package  = lv_package
-              iv_obj_type = ls_item-obj_type ).
+            zcl_abapgit_factory=>get_sap_package( lv_package )->check_object_type( ls_item-obj_type ).
           ENDIF.
 
           IF ls_item-obj_type = 'DEVC'.
@@ -1359,7 +1324,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     DATA: lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
           lv_package  LIKE LINE OF lt_packages,
-          lv_tree     TYPE dirtree-tname.
+          lv_tree     TYPE string.
 
 
     lt_packages = zcl_abapgit_factory=>get_sap_package( iv_package )->list_subpackages( ).
