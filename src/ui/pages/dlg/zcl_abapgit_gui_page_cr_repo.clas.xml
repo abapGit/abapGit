@@ -3,14 +3,13 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_FLOW_GIT</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_CR_REPO</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Flow git utils</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Create Package</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
-    <WITH_UNIT_TESTS>X</WITH_UNIT_TESTS>
    </VSEOCLASS>
   </asx:values>
  </asx:abap>
