@@ -46,6 +46,12 @@ CLASS zcl_abapgit_object_wdyn DEFINITION
       recover_view
         IMPORTING is_view TYPE wdy_md_view_meta_data
         RAISING   zcx_abapgit_exception,
+      unlock_definition
+        IMPORTING is_component_key TYPE wdy_md_component_key,
+      unlock_controller
+        IMPORTING is_controller_key TYPE wdy_md_controller_key,
+      unlock_view
+        IMPORTING is_view_key TYPE wdy_md_view_key,
       delta_controller
         IMPORTING is_controller   TYPE wdy_md_controller_meta_data
         RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
@@ -790,6 +796,8 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Error recovering version of controller: { lx_error->get_text( ) }| ).
     ENDTRY.
 
+    unlock_controller( ls_key ).
+
   ENDMETHOD.
 
 
@@ -818,6 +826,8 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Error recovering version of component: { lx_error->get_text( ) }| ).
     ENDTRY.
 
+    unlock_definition( ls_key ).
+
   ENDMETHOD.
 
 
@@ -842,6 +852,58 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
             corrnr   = lv_corrnr ).
       CATCH cx_wdy_md_exception INTO lx_error.
         zcx_abapgit_exception=>raise( |Error recovering version of abstract view: { lx_error->get_text( ) }| ).
+    ENDTRY.
+
+    unlock_view( ls_key ).
+
+  ENDMETHOD.
+
+
+  METHOD unlock_controller.
+
+    DATA lo_controller TYPE REF TO cl_wdy_md_controller.
+
+    TRY.
+        lo_controller ?= cl_wdy_md_controller=>get_object_by_key(
+          component_name  = is_controller_key-component_name
+          controller_name = is_controller_key-controller_name ).
+        lo_controller->if_wdy_md_lockable_object~unlock( ).
+      CATCH cx_wdy_md_permission_failure cx_wdy_md_not_existing ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD unlock_definition.
+
+    DATA: lo_component     TYPE REF TO cl_wdy_md_component,
+          lo_comp_intf_def TYPE REF TO cl_wdy_md_component_intf_def.
+
+    TRY.
+        lo_component ?= cl_wdy_md_component=>get_object_by_key( name = is_component_key-component_name ).
+        lo_component->if_wdy_md_component~unlock( ).
+      CATCH cx_wdy_md_not_existing.
+        TRY.
+            lo_comp_intf_def ?= cl_wdy_md_component_intf_def=>get_object_by_key( name = is_component_key-component_name ).
+            lo_comp_intf_def->if_wdy_md_component_intf_def~unlock( ).
+          CATCH cx_wdy_md_permission_failure cx_wdy_md_not_existing ##NO_HANDLER.
+        ENDTRY.
+      CATCH cx_wdy_md_permission_failure ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD unlock_view.
+
+    DATA lo_view TYPE REF TO cl_wdy_md_abstract_view.
+
+    TRY.
+        lo_view ?= cl_wdy_md_abstract_view=>get_object_by_key(
+          component_name = is_view_key-component_name
+          view_name      = is_view_key-view_name ).
+        lo_view->if_wdy_md_lockable_object~unlock( ).
+      CATCH cx_wdy_md_permission_failure cx_wdy_md_not_existing ##NO_HANDLER.
     ENDTRY.
 
   ENDMETHOD.
