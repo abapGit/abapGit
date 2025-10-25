@@ -1,23 +1,26 @@
-CLASS zcl_abapgit_flow_page_utils DEFINITION PUBLIC.
+CLASS zcl_abapgit_flow_page_utils DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
+
   PUBLIC SECTION.
+
     CLASS-METHODS render_table
       IMPORTING
-        it_files                TYPE zif_abapgit_flow_logic=>ty_path_name_tt
-        it_transport_duplicates TYPE zif_abapgit_flow_logic=>ty_transport_duplicates_tt OPTIONAL
-        is_user_settings        TYPE zif_abapgit_persist_user=>ty_flow_settings OPTIONAL
-        iv_repo_key             TYPE zif_abapgit_persistence=>ty_repo-key
+        !it_files                TYPE zif_abapgit_flow_logic=>ty_path_name_tt
+        !it_transport_duplicates TYPE zif_abapgit_flow_logic=>ty_transport_duplicates_tt OPTIONAL
+        !is_user_settings        TYPE zif_abapgit_persist_user=>ty_flow_settings OPTIONAL
+        !iv_repo_key             TYPE zif_abapgit_persistence=>ty_repo-key
       RETURNING
-        VALUE(ri_html)          TYPE REF TO zif_abapgit_html
+        VALUE(ri_html)           TYPE REF TO zif_abapgit_html
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     CLASS-METHODS call_diff
       IMPORTING
         !ii_event         TYPE REF TO zif_abapgit_gui_event
       RETURNING
         VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -100,10 +103,10 @@ CLASS ZCL_ABAPGIT_FLOW_PAGE_UTILS IMPLEMENTATION.
   METHOD render_table.
 
     DATA ls_path_name LIKE LINE OF it_files.
-    DATA lv_status    TYPE string.
-    DATA lv_param     TYPE string.
-    DATA li_repo      TYPE REF TO zif_abapgit_repo.
-    DATA ls_item      TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_status TYPE string.
+    DATA lv_param TYPE string.
+    DATA li_repo TYPE REF TO zif_abapgit_repo.
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
     DATA lv_duplicate TYPE abap_bool.
 
 
