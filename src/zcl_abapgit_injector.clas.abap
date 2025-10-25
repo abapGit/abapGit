@@ -12,6 +12,7 @@ CLASS zcl_abapgit_injector DEFINITION
       IMPORTING
         !iv_package     TYPE devclass
         !ii_sap_package TYPE REF TO zif_abapgit_sap_package .
+    CLASS-METHODS clear_sap_package.
     CLASS-METHODS set_cts_api
       IMPORTING
         !ii_cts_api TYPE REF TO zif_abapgit_cts_api .
@@ -36,6 +37,9 @@ CLASS zcl_abapgit_injector DEFINITION
     CLASS-METHODS set_exit
       IMPORTING
         ii_exit TYPE REF TO zif_abapgit_exit.
+    CLASS-METHODS set_default_transport
+      IMPORTING
+        ii_default_transport TYPE REF TO zif_abapgit_default_transport.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -44,6 +48,9 @@ ENDCLASS.
 
 CLASS zcl_abapgit_injector IMPLEMENTATION.
 
+  METHOD set_default_transport.
+    zcl_abapgit_factory=>gi_default_transport = ii_default_transport.
+  ENDMETHOD.
 
   METHOD set_cts_api.
     zcl_abapgit_factory=>gi_cts_api = ii_cts_api.
@@ -100,6 +107,10 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
 
     <ls_sap_package>-instance = ii_sap_package.
 
+  ENDMETHOD.
+
+  METHOD clear_sap_package.
+    CLEAR zcl_abapgit_factory=>gt_sap_package.
   ENDMETHOD.
 
 

@@ -138,8 +138,10 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
 
   METHOD get_sap_package.
 
-    DATA: ls_sap_package TYPE ty_sap_package.
-    FIELD-SYMBOLS: <ls_sap_package> TYPE ty_sap_package.
+    DATA ls_sap_package TYPE ty_sap_package.
+    FIELD-SYMBOLS <ls_sap_package> TYPE ty_sap_package.
+
+    ASSERT iv_package IS NOT INITIAL.
 
     READ TABLE gt_sap_package ASSIGNING <ls_sap_package>
                               WITH TABLE KEY package = iv_package.
