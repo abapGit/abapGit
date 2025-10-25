@@ -12,6 +12,7 @@ CLASS zcl_abapgit_injector DEFINITION
       IMPORTING
         !iv_package     TYPE devclass
         !ii_sap_package TYPE REF TO zif_abapgit_sap_package .
+    CLASS-METHODS clear_sap_package.
     CLASS-METHODS set_cts_api
       IMPORTING
         !ii_cts_api TYPE REF TO zif_abapgit_cts_api .
@@ -100,6 +101,10 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
 
     <ls_sap_package>-instance = ii_sap_package.
 
+  ENDMETHOD.
+
+  METHOD clear_sap_package.
+    CLEAR zcl_abapgit_factory=>gt_sap_package.
   ENDMETHOD.
 
 
