@@ -41,6 +41,21 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
         iv_pull_number TYPE i
       RAISING
         zcx_abapgit_exception.
+
+    TYPES: BEGIN OF ty_status,
+             name       TYPE string,
+             status     TYPE string,
+             conclusion TYPE string,
+             title      TYPE string,
+           END OF ty_status.
+    TYPES ty_status_tt TYPE STANDARD TABLE OF ty_status WITH DEFAULT KEY.
+    METHODS get_check_runs
+      IMPORTING
+        iv_ref           TYPE string
+      RETURNING
+        VALUE(rt_status) TYPE ty_status_tt
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -270,14 +285,11 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
   METHOD update_pull_request_branch.
 * https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#update-a-pull-request-branch
 
-    DATA lv_owner    TYPE string.
-    DATA lv_repo     TYPE string.
     DATA lv_url      TYPE string.
     DATA lv_json     TYPE string.
     DATA li_response TYPE REF TO zif_abapgit_http_response.
 
     lv_url = mv_repo_url && '/pulls/' && iv_pull_number && '/update-branch'.
-    SPLIT mv_user_and_repo AT '/' INTO lv_owner lv_repo.
 
     lv_json = |\{\n| &&
               |  "expected_head_sha": "{ to_lower( iv_expected_head_sha ) }"\n| &&
@@ -294,6 +306,44 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD get_check_runs.
+* https://docs.github.com/en/rest/commits/statuses?apiVersion=2022-11-28#get-the-combined-status-for-a-specific-reference
+
+    DATA lv_url      TYPE string.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+    DATA li_json     TYPE REF TO zif_abapgit_ajson.
+    DATA lt_statuses TYPE string_table.
+    DATA ls_status   TYPE ty_status.
+    DATA lv_item     LIKE LINE OF lt_statuses.
+    DATA lx_ajson    TYPE REF TO zcx_abapgit_ajson_error.
+
+
+    lv_url = mv_repo_url && '/commits/' && iv_ref && '/check-runs'.
+
+    li_response = mi_http_agent->request(
+      iv_url     = lv_url
+      iv_method  = zif_abapgit_http_agent=>c_methods-get ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error getting check-runs for ref { iv_ref }: { li_response->error( ) }| ).
+    ENDIF.
+
+    TRY.
+        li_json = li_response->json( ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+    ENDTRY.
+
+    lt_statuses = li_json->members( '/check_runs' ).
+    LOOP AT lt_statuses INTO lv_item.
+      ls_status-name = li_json->get( |/check_runs/{ lv_item }/name| ).
+      ls_status-status = li_json->get( |/check_runs/{ lv_item }/status| ).
+      ls_status-conclusion = li_json->get( |/check_runs/{ lv_item }/conclusion| ).
+      ls_status-title = li_json->get( |/check_runs/{ lv_item }/output/title| ).
+      APPEND ls_status TO rt_status.
+    ENDLOOP.
+
+  ENDMETHOD.
 
   METHOD zif_abapgit_pr_enum_provider~create_initial_branch.
 * https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#create-or-update-file-contents--parameters
