@@ -73,4 +73,9 @@ INTERFACE zif_abapgit_sap_package
       VALUE(rv_transport_layer) TYPE devlayer
     RAISING
        zcx_abapgit_exception.
+  METHODS check_object_type
+    IMPORTING
+      iv_obj_type TYPE tadir-object
+    RAISING
+      zcx_abapgit_exception.
 ENDINTERFACE.
