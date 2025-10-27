@@ -21,6 +21,7 @@ CLASS zcl_abapgit_flow_git DEFINITION PUBLIC.
         it_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       CHANGING
         ct_features TYPE zif_abapgit_flow_logic=>ty_features
+        ct_objects  TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -77,7 +78,8 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
         iv_url      = iv_url
         it_branches = it_branches
       CHANGING
-        ct_features = ct_features ).
+        ct_features = ct_features
+        ct_objects  = lt_objects ).
 
     LOOP AT ct_features ASSIGNING <ls_feature> WHERE branch-display_name <> zif_abapgit_flow_logic=>c_main.
       IF lv_previous IS INITIAL OR lv_previous <> <ls_feature>-repo-key.
@@ -159,6 +161,10 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
     lt_commits = zcl_abapgit_git_factory=>get_v2_porcelain( )->commits_last_year(
       iv_url  = iv_url
       it_sha1 = lt_sha1 ).
+    LOOP AT lt_commits ASSIGNING <ls_commit>.
+      INSERT <ls_commit> INTO TABLE ct_objects.
+* ignore subrc, it might already be there
+    ENDLOOP.
 
     CREATE OBJECT lo_visit.
     lo_visit->clear( )->push( ls_main-sha1 ).
