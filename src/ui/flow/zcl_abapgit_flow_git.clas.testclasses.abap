@@ -494,9 +494,9 @@ CLASS ltcl_find_changes_in_git IMPLEMENTATION.
     " todo: ENDLOOP.
 
     " Assert: Feature branch should be marked as not up-to-date
-    " todo: cl_abap_unit_assert=>assert_equals(
-    " todo:   act = ls_feature-branch-up_to_date
-    " todo:   exp = abap_false ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_feature-branch-up_to_date
+      exp = abap_false ).
 
   ENDMETHOD.
 
