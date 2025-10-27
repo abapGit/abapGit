@@ -47,6 +47,7 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
     DATA lv_starting_folder TYPE string.
     DATA ls_main            LIKE LINE OF it_branches.
     DATA li_find            TYPE REF TO lif_find_changes.
+    DATA lv_previous        TYPE zif_abapgit_persistence=>ty_repo-key.
 
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
 
@@ -78,17 +79,20 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       CHANGING
         ct_features = ct_features ).
 
-    IF zcl_abapgit_flow_exit=>get_instance( )->get_settings( <ls_branch>-repo-key )-allow_not_up_to_date = abap_true.
-      CREATE OBJECT li_find TYPE lcl_find_changes_new
-        EXPORTING
-          it_objects = lt_objects.
-    ELSE.
-      CREATE OBJECT li_find TYPE lcl_find_changes
-        EXPORTING
-          it_objects = lt_objects.
-    ENDIF.
-
     LOOP AT ct_features ASSIGNING <ls_branch> WHERE branch-display_name <> zif_abapgit_flow_logic=>c_main.
+      IF lv_previous IS INITIAL OR lv_previous <> <ls_branch>-repo-key.
+        IF zcl_abapgit_flow_exit=>get_instance( )->get_settings( <ls_branch>-repo-key )-allow_not_up_to_date = abap_true.
+          CREATE OBJECT li_find TYPE lcl_find_changes_new
+            EXPORTING
+              it_objects = lt_objects.
+        ELSE.
+          CREATE OBJECT li_find TYPE lcl_find_changes
+            EXPORTING
+              it_objects = lt_objects.
+        ENDIF.
+        lv_previous = <ls_branch>-repo-key.
+      ENDIF.
+
       <ls_branch>-changed_files = li_find->find_changes(
         iv_main            = ls_main-sha1
         iv_branch          = <ls_branch>-branch-sha1
