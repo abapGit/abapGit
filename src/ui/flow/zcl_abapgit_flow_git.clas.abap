@@ -136,7 +136,7 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
     DATA lv_current TYPE zif_abapgit_git_definitions=>ty_sha1.
     DATA lt_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
     DATA lo_visit   TYPE REF TO lcl_sha1_stack.
-    DATA ls_commit     TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA ls_commit  TYPE zcl_abapgit_git_pack=>ty_commit.
 
     DATA lt_main_reachable TYPE HASHED TABLE OF zif_abapgit_git_definitions=>ty_sha1 WITH UNIQUE KEY table_line.
 
