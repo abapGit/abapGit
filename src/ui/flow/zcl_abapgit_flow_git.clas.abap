@@ -166,6 +166,7 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       <ls_branch>-branch-up_to_date = abap_undefined.
       lo_visit->clear( )->push( <ls_branch>-branch-sha1 ).
 
+      " find up_to_date
       WHILE lo_visit->size( ) > 0.
         lv_current = lo_visit->pop( ).
         IF lv_current = ls_main-sha1.
@@ -185,8 +186,24 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
           lo_visit->push( ls_raw-parent ).
           IF ls_raw-parent2 IS NOT INITIAL.
             lo_visit->push( ls_raw-parent2 ).
-          ELSE.
-            <ls_branch>-branch-first_commit = lv_current.
+          ENDIF.
+        ENDIF.
+      ENDWHILE.
+
+      " find first commit
+      lo_visit->clear( )->push( <ls_branch>-branch-sha1 ).
+      WHILE lo_visit->size( ) > 0.
+        READ TABLE lt_commits ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
+        IF sy-subrc = 0.
+          ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+          IF ls_raw-parent2 IS INITIAL.
+            lo_visit->push( ls_raw-parent ).
+
+            READ TABLE lt_main_reachable WITH KEY table_line = ls_raw-parent TRANSPORTING NO FIELDS.
+            IF sy-subrc = 0.
+              <ls_branch>-branch-first_commit = lv_current.
+              EXIT.
+            ENDIF.
           ENDIF.
         ENDIF.
       ENDWHILE.

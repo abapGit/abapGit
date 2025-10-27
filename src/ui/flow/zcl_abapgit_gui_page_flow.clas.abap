@@ -500,7 +500,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ENDIF.
 
       ri_html->add( |<br>| ).
-      ri_html->add( |First commit: { is_feature-branch-first_commit }| ).
+      ri_html->add( |First commit: { to_lower( is_feature-branch-first_commit(7) ) }| ).
 
       ri_html->add( |<br>| ).
       IF is_feature-branch-up_to_date = abap_true.
