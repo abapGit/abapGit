@@ -17,7 +17,6 @@ CLASS zcl_abapgit_flow_git DEFINITION PUBLIC.
 
     CLASS-METHODS find_up_to_date
       IMPORTING
-        iv_url      TYPE string
         it_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
         it_objects  TYPE zif_abapgit_definitions=>ty_objects_tt
       CHANGING
@@ -89,7 +88,6 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
 
     find_up_to_date(
       EXPORTING
-        iv_url      = iv_url
         it_branches = it_branches
         it_objects  = lt_objects
       CHANGING
@@ -146,10 +144,8 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
 
   METHOD find_up_to_date.
 
-    DATA ls_branch  LIKE LINE OF it_branches.
     DATA ls_main    LIKE LINE OF it_branches.
     DATA lv_current TYPE zif_abapgit_git_definitions=>ty_sha1.
-    DATA lt_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
     DATA lo_visit   TYPE REF TO lcl_sha1_stack.
     DATA ls_commit  TYPE zcl_abapgit_git_pack=>ty_commit.
 
@@ -163,6 +159,9 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       " only main branch
       RETURN.
     ENDIF.
+
+    READ TABLE it_branches INTO ls_main WITH KEY display_name = zif_abapgit_flow_logic=>c_main.
+    ASSERT sy-subrc = 0.
 
     CREATE OBJECT lo_visit.
     lo_visit->clear( )->push( ls_main-sha1 ).

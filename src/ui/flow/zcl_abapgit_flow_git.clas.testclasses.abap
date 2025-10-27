@@ -565,7 +565,6 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
     " Call the method under test
     zcl_abapgit_flow_git=>find_up_to_date(
       EXPORTING
-        iv_url      = mo_test_data->get_url( )
         it_branches = lt_branches
         it_objects  = mo_test_data->get_all_objects( )
       CHANGING
@@ -632,7 +631,6 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
     " Call the method under test
     zcl_abapgit_flow_git=>find_up_to_date(
       EXPORTING
-        iv_url      = mo_test_data->get_url( )
         it_branches = lt_branches
         it_objects  = mo_test_data->get_all_objects( )
       CHANGING
@@ -660,7 +658,6 @@ CLASS ltcl_find_up_to_date IMPLEMENTATION.
     " Call the method under test - should return immediately
     zcl_abapgit_flow_git=>find_up_to_date(
       EXPORTING
-        iv_url      = mo_test_data->get_url( )
         it_branches = lt_branches
         it_objects  = mo_test_data->get_all_objects( )
       CHANGING
