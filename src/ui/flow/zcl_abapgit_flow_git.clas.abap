@@ -198,9 +198,9 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
         READ TABLE lt_commits ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
         IF sy-subrc = 0.
           ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
-          IF ls_raw-parent2 IS INITIAL.
-            lo_visit->push( ls_raw-parent ).
+          lo_visit->push( ls_raw-parent ).
 
+          IF ls_raw-parent2 IS INITIAL.
             READ TABLE lt_main_reachable WITH KEY table_line = ls_raw-parent TRANSPORTING NO FIELDS.
             IF sy-subrc = 0.
               <ls_branch>-branch-first_commit = lv_current.
