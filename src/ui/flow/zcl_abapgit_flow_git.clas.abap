@@ -71,14 +71,14 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       iv_parent  = ls_main-sha1 ).
     DELETE et_main_expanded WHERE path NP lv_starting_folder.
 
-    CREATE OBJECT lo_find EXPORTING it_objects = lt_objects.
-
     find_up_to_date(
       EXPORTING
         iv_url      = iv_url
         it_branches = it_branches
       CHANGING
         ct_features = ct_features ).
+
+    CREATE OBJECT lo_find EXPORTING it_objects = lt_objects.
 
     LOOP AT ct_features ASSIGNING <ls_branch> WHERE branch-display_name <> zif_abapgit_flow_logic=>c_main.
       IF zcl_abapgit_flow_exit=>get_instance( )->get_settings( <ls_branch>-repo-key )-allow_not_up_to_date = abap_true.
