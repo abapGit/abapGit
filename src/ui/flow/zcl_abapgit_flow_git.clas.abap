@@ -193,6 +193,8 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       " find first commit
       lo_visit->clear( )->push( <ls_branch>-branch-sha1 ).
       WHILE lo_visit->size( ) > 0.
+        lv_current = lo_visit->pop( ).
+
         READ TABLE lt_commits ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
         IF sy-subrc = 0.
           ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
