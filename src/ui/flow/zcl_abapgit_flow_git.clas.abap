@@ -185,6 +185,8 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
           lo_visit->push( ls_raw-parent ).
           IF ls_raw-parent2 IS NOT INITIAL.
             lo_visit->push( ls_raw-parent2 ).
+          ELSE.
+            <ls_branch>-branch-first_commit = lv_current.
           ENDIF.
         ENDIF.
       ENDWHILE.
