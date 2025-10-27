@@ -73,24 +73,28 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
 
     CREATE OBJECT lo_find EXPORTING it_objects = lt_objects.
 
-    LOOP AT ct_features ASSIGNING <ls_branch> WHERE branch-display_name <> zif_abapgit_flow_logic=>c_main.
-      <ls_branch>-changed_files = lo_find->find_changes(
-        iv_main            = ls_main-sha1
-        iv_branch          = <ls_branch>-branch-sha1
-        iv_starting_folder = lv_starting_folder ).
-
-      <ls_branch>-changed_objects = map_files_to_objects(
-        io_dot     = io_dot
-        iv_package = iv_package
-        it_files   = <ls_branch>-changed_files ).
-    ENDLOOP.
-
     find_up_to_date(
       EXPORTING
         iv_url      = iv_url
         it_branches = it_branches
       CHANGING
         ct_features = ct_features ).
+
+    LOOP AT ct_features ASSIGNING <ls_branch> WHERE branch-display_name <> zif_abapgit_flow_logic=>c_main.
+      IF zcl_abapgit_flow_exit=>get_instance( )->get_settings( <ls_branch>-repo-key )-allow_not_up_to_date = abap_true.
+        BREAK-POINT.
+      ELSE.
+        <ls_branch>-changed_files = lo_find->find_changes(
+          iv_main            = ls_main-sha1
+          iv_branch          = <ls_branch>-branch-sha1
+          iv_starting_folder = lv_starting_folder ).
+      ENDIF.
+
+      <ls_branch>-changed_objects = map_files_to_objects(
+        io_dot     = io_dot
+        iv_package = iv_package
+        it_files   = <ls_branch>-changed_files ).
+    ENDLOOP.
 
   ENDMETHOD.
 
