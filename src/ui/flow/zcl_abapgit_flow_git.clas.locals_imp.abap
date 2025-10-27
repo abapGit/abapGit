@@ -1,18 +1,49 @@
+INTERFACE lif_find_changes.
+
+  METHODS find_changes
+    IMPORTING
+      iv_main            TYPE zif_abapgit_git_definitions=>ty_sha1
+      iv_branch          TYPE zif_abapgit_git_definitions=>ty_sha1
+      iv_starting_folder TYPE string
+    RETURNING
+      VALUE(rt_files)    TYPE zif_abapgit_flow_logic=>ty_path_name_tt
+    RAISING
+      zcx_abapgit_exception.
+
+ENDINTERFACE.
+
+****************************************************************************
+
+CLASS lcl_find_changes_new DEFINITION.
+  PUBLIC SECTION.
+    METHODS constructor
+      IMPORTING
+        it_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
+
+    INTERFACES lif_find_changes.
+  PRIVATE SECTION.
+    DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
+ENDCLASS.
+
+CLASS lcl_find_changes_new IMPLEMENTATION.
+  METHOD constructor.
+    mt_objects = it_objects.
+  ENDMETHOD.
+
+  METHOD lif_find_changes~find_changes.
+    BREAK-POINT.
+  ENDMETHOD.
+ENDCLASS.
+
+****************************************************************************
+
 CLASS lcl_find_changes DEFINITION.
   PUBLIC SECTION.
     METHODS constructor
       IMPORTING
         it_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
 
-    METHODS find_changes
-      IMPORTING
-        iv_main            TYPE zif_abapgit_git_definitions=>ty_sha1
-        iv_branch          TYPE zif_abapgit_git_definitions=>ty_sha1
-        iv_starting_folder TYPE string
-      RETURNING
-        VALUE(rt_files)    TYPE zif_abapgit_flow_logic=>ty_path_name_tt
-      RAISING
-        zcx_abapgit_exception.
+    INTERFACES lif_find_changes.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_tree_cache,
@@ -47,7 +78,7 @@ CLASS lcl_find_changes IMPLEMENTATION.
     mt_objects = it_objects.
   ENDMETHOD.
 
-  METHOD find_changes.
+  METHOD lif_find_changes~find_changes.
 * don't care if its added or removed or changed, just remove identical
 * also list identical moved files
     DATA ls_object LIKE LINE OF mt_objects.
