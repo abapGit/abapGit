@@ -19,9 +19,9 @@ CLASS zcl_abapgit_flow_git DEFINITION PUBLIC.
       IMPORTING
         iv_url      TYPE string
         it_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
+        it_objects  TYPE zif_abapgit_definitions=>ty_objects_tt
       CHANGING
         ct_features TYPE zif_abapgit_flow_logic=>ty_features
-        ct_objects  TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -49,11 +49,15 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
     DATA ls_main            LIKE LINE OF it_branches.
     DATA li_find            TYPE REF TO lif_find_changes.
     DATA lv_previous        TYPE zif_abapgit_persistence=>ty_repo-key.
+    DATA lt_commits         TYPE zif_abapgit_definitions=>ty_objects_tt.
 
     FIELD-SYMBOLS <ls_feature> LIKE LINE OF ct_features.
+    FIELD-SYMBOLS <ls_commit> LIKE LINE OF lt_commits.
 
 
     CLEAR et_main_expanded.
+
+*******************************
 
     LOOP AT it_branches INTO ls_branch WHERE is_head = abap_false.
       APPEND ls_branch-sha1 TO lt_sha1.
@@ -62,6 +66,16 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
     lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_no_blobs_multi(
       iv_url  = iv_url
       it_sha1 = lt_sha1 ).
+
+    lt_commits = zcl_abapgit_git_factory=>get_v2_porcelain( )->commits_last_year(
+      iv_url  = iv_url
+      it_sha1 = lt_sha1 ).
+    LOOP AT lt_commits ASSIGNING <ls_commit>.
+      INSERT <ls_commit> INTO TABLE lt_objects.
+* ignore subrc, it might already be there
+    ENDLOOP.
+
+********************************
 
     lv_starting_folder = io_dot->get_starting_folder( ) && '*'.
 
@@ -77,9 +91,9 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       EXPORTING
         iv_url      = iv_url
         it_branches = it_branches
+        it_objects  = lt_objects
       CHANGING
-        ct_features = ct_features
-        ct_objects  = lt_objects ).
+        ct_features = ct_features ).
 
     LOOP AT ct_features ASSIGNING <ls_feature> WHERE branch-display_name <> zif_abapgit_flow_logic=>c_main.
       IF lv_previous IS INITIAL OR lv_previous <> <ls_feature>-repo-key.
@@ -133,7 +147,6 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
   METHOD find_up_to_date.
 
     DATA ls_branch  LIKE LINE OF it_branches.
-    DATA lt_commits TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA ls_main    LIKE LINE OF it_branches.
     DATA lv_current TYPE zif_abapgit_git_definitions=>ty_sha1.
     DATA lt_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
@@ -143,7 +156,7 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
     DATA lt_main_reachable TYPE HASHED TABLE OF zif_abapgit_git_definitions=>ty_sha1 WITH UNIQUE KEY table_line.
 
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
-    FIELD-SYMBOLS <ls_commit> LIKE LINE OF lt_commits.
+    FIELD-SYMBOLS <ls_commit> LIKE LINE OF it_objects.
 
 
     IF lines( it_branches ) = 1.
@@ -151,27 +164,12 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    READ TABLE it_branches INTO ls_main WITH KEY display_name = zif_abapgit_flow_logic=>c_main.
-    ASSERT sy-subrc = 0.
-
-    LOOP AT it_branches INTO ls_branch WHERE is_head = abap_false.
-      APPEND ls_branch-sha1 TO lt_sha1.
-    ENDLOOP.
-
-    lt_commits = zcl_abapgit_git_factory=>get_v2_porcelain( )->commits_last_year(
-      iv_url  = iv_url
-      it_sha1 = lt_sha1 ).
-    LOOP AT lt_commits ASSIGNING <ls_commit>.
-      INSERT <ls_commit> INTO TABLE ct_objects.
-* ignore subrc, it might already be there
-    ENDLOOP.
-
     CREATE OBJECT lo_visit.
     lo_visit->clear( )->push( ls_main-sha1 ).
     WHILE lo_visit->size( ) > 0.
       lv_current = lo_visit->pop( ).
       INSERT lv_current INTO TABLE lt_main_reachable.
-      READ TABLE lt_commits ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
+      READ TABLE it_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
       IF sy-subrc = 0.
         ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
         lo_visit->push( ls_commit-parent ).
@@ -199,7 +197,7 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
           EXIT.
         ENDIF.
 
-        READ TABLE lt_commits ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
+        READ TABLE it_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
         IF sy-subrc = 0.
           ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
           lo_visit->push( ls_commit-parent ).
@@ -214,7 +212,7 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       WHILE lo_visit->size( ) > 0.
         lv_current = lo_visit->pop( ).
 
-        READ TABLE lt_commits ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
+        READ TABLE it_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
         IF sy-subrc = 0.
           ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
           lo_visit->push( ls_commit-parent ).
