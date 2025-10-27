@@ -49,7 +49,7 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
     DATA li_find            TYPE REF TO lif_find_changes.
     DATA lv_previous        TYPE zif_abapgit_persistence=>ty_repo-key.
 
-    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
+    FIELD-SYMBOLS <ls_feature> LIKE LINE OF ct_features.
 
 
     CLEAR et_main_expanded.
@@ -79,9 +79,9 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       CHANGING
         ct_features = ct_features ).
 
-    LOOP AT ct_features ASSIGNING <ls_branch> WHERE branch-display_name <> zif_abapgit_flow_logic=>c_main.
-      IF lv_previous IS INITIAL OR lv_previous <> <ls_branch>-repo-key.
-        IF zcl_abapgit_flow_exit=>get_instance( )->get_settings( <ls_branch>-repo-key )-allow_not_up_to_date = abap_true.
+    LOOP AT ct_features ASSIGNING <ls_feature> WHERE branch-display_name <> zif_abapgit_flow_logic=>c_main.
+      IF lv_previous IS INITIAL OR lv_previous <> <ls_feature>-repo-key.
+        IF zcl_abapgit_flow_exit=>get_instance( )->get_settings( <ls_feature>-repo-key )-allow_not_up_to_date = abap_true.
           CREATE OBJECT li_find TYPE lcl_find_changes_new
             EXPORTING
               it_objects = lt_objects.
@@ -90,18 +90,19 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
             EXPORTING
               it_objects = lt_objects.
         ENDIF.
-        lv_previous = <ls_branch>-repo-key.
+        lv_previous = <ls_feature>-repo-key.
       ENDIF.
 
-      <ls_branch>-changed_files = li_find->find_changes(
+      <ls_feature>-changed_files = li_find->find_changes(
         iv_main            = ls_main-sha1
-        iv_branch          = <ls_branch>-branch-sha1
+        iv_branch          = <ls_feature>-branch-sha1
+        iv_first_commit    = <ls_feature>-branch-first_commit
         iv_starting_folder = lv_starting_folder ).
 
-      <ls_branch>-changed_objects = map_files_to_objects(
+      <ls_feature>-changed_objects = map_files_to_objects(
         io_dot     = io_dot
         iv_package = iv_package
-        it_files   = <ls_branch>-changed_files ).
+        it_files   = <ls_feature>-changed_files ).
     ENDLOOP.
 
   ENDMETHOD.
@@ -135,7 +136,7 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
     DATA lv_current TYPE zif_abapgit_git_definitions=>ty_sha1.
     DATA lt_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
     DATA lo_visit   TYPE REF TO lcl_sha1_stack.
-    DATA ls_raw     TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA ls_commit     TYPE zcl_abapgit_git_pack=>ty_commit.
 
     DATA lt_main_reachable TYPE HASHED TABLE OF zif_abapgit_git_definitions=>ty_sha1 WITH UNIQUE KEY table_line.
 
@@ -166,10 +167,10 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       INSERT lv_current INTO TABLE lt_main_reachable.
       READ TABLE lt_commits ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
       IF sy-subrc = 0.
-        ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
-        lo_visit->push( ls_raw-parent ).
-        IF ls_raw-parent2 IS NOT INITIAL.
-          lo_visit->push( ls_raw-parent2 ).
+        ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+        lo_visit->push( ls_commit-parent ).
+        IF ls_commit-parent2 IS NOT INITIAL.
+          lo_visit->push( ls_commit-parent2 ).
         ENDIF.
       ENDIF.
     ENDWHILE.
@@ -194,10 +195,10 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
 
         READ TABLE lt_commits ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
         IF sy-subrc = 0.
-          ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
-          lo_visit->push( ls_raw-parent ).
-          IF ls_raw-parent2 IS NOT INITIAL.
-            lo_visit->push( ls_raw-parent2 ).
+          ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+          lo_visit->push( ls_commit-parent ).
+          IF ls_commit-parent2 IS NOT INITIAL.
+            lo_visit->push( ls_commit-parent2 ).
           ENDIF.
         ENDIF.
       ENDWHILE.
@@ -209,11 +210,11 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
 
         READ TABLE lt_commits ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
         IF sy-subrc = 0.
-          ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
-          lo_visit->push( ls_raw-parent ).
+          ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+          lo_visit->push( ls_commit-parent ).
 
-          IF ls_raw-parent2 IS INITIAL.
-            READ TABLE lt_main_reachable WITH KEY table_line = ls_raw-parent TRANSPORTING NO FIELDS.
+          IF ls_commit-parent2 IS INITIAL.
+            READ TABLE lt_main_reachable WITH KEY table_line = ls_commit-parent TRANSPORTING NO FIELDS.
             IF sy-subrc = 0.
               <ls_branch>-branch-first_commit = lv_current.
               EXIT.

@@ -4,6 +4,7 @@ INTERFACE lif_find_changes.
     IMPORTING
       iv_main            TYPE zif_abapgit_git_definitions=>ty_sha1
       iv_branch          TYPE zif_abapgit_git_definitions=>ty_sha1
+      iv_first_commit    TYPE zif_abapgit_git_definitions=>ty_sha1
       iv_starting_folder TYPE string
     RETURNING
       VALUE(rt_files)    TYPE zif_abapgit_flow_logic=>ty_path_name_tt
@@ -23,6 +24,12 @@ CLASS lcl_find_changes_new DEFINITION.
     INTERFACES lif_find_changes.
   PRIVATE SECTION.
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
+
+    METHODS find_changed_in_commit
+      IMPORTING
+        is_commit TYPE zcl_abapgit_git_pack=>ty_commit
+      CHANGING
+        ct_files  TYPE zif_abapgit_flow_logic=>ty_path_name_tt.
 ENDCLASS.
 
 CLASS lcl_find_changes_new IMPLEMENTATION.
@@ -30,8 +37,45 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
     mt_objects = it_objects.
   ENDMETHOD.
 
+  METHOD find_changed_in_commit.
+    ASSERT is_commit IS NOT INITIAL.
+
+* todo
+
+  ENDMETHOD.
+
   METHOD lif_find_changes~find_changes.
-    BREAK-POINT.
+    DATA lv_current TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA ls_commit  TYPE zcl_abapgit_git_pack=>ty_commit.
+
+    FIELD-SYMBOLS <ls_commit> LIKE LINE OF mt_objects.
+
+
+    ASSERT iv_first_commit IS NOT INITIAL.
+    ASSERT iv_main IS NOT INITIAL.
+    ASSERT iv_branch IS NOT INITIAL.
+
+    lv_current = iv_branch.
+
+    DO.
+      READ TABLE mt_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
+      ASSERT sy-subrc = 0.
+
+      ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+      IF ls_commit-parent2 IS INITIAL.
+* analyze changed files in commit
+        find_changed_in_commit(
+          EXPORTING is_commit = ls_commit
+          CHANGING  ct_files  = rt_files ).
+      ENDIF.
+
+      IF lv_current = iv_first_commit.
+        EXIT.
+      ENDIF.
+
+      lv_current = ls_commit-parent.
+    ENDDO.
+
   ENDMETHOD.
 ENDCLASS.
 
