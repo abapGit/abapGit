@@ -269,12 +269,16 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       lo_toolbar->add( iv_txt = 'Pull'
                        iv_act = |{ c_action-pull }{ lv_extra }|
                        iv_opt = lv_opt ).
-      IF is_feature-transport-trkorr IS NOT INITIAL
-          AND ( is_feature-branch-up_to_date = abap_undefined OR is_feature-branch-up_to_date = abap_true ).
+
+      IF is_feature-transport-trkorr IS NOT INITIAL.
+        IF zcl_abapgit_flow_exit=>get_instance( )->get_settings( is_feature-repo-key )-allow_not_up_to_date = abap_true
+            OR is_feature-branch-up_to_date = abap_undefined
+            OR is_feature-branch-up_to_date = abap_true.
 * its only remote, so there is no changes to stage
-        lo_toolbar->add( iv_txt = 'Stage and Commit'
+          lo_toolbar->add( iv_txt = 'Stage and Commit'
                          iv_act = |{ c_action-stage_and_commit }{ lv_extra }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+        ENDIF.
       ENDIF.
     ENDIF.
 
@@ -498,6 +502,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ELSE.
         ri_html->add( 'Status: Ready for Review' ).
       ENDIF.
+
+      ri_html->add( |<br>| ).
+      ri_html->add( |First commit: { is_feature-branch-first_commit(7) }| ).
 
       ri_html->add( |<br>| ).
       IF is_feature-branch-up_to_date = abap_true.
