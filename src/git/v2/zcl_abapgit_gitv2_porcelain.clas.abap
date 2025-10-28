@@ -178,7 +178,6 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
       it_arguments = lt_arguments ).
 
     rt_objects = decode_pack( lv_xstring ).
-* sdfd    DELETE rt_objects WHERE type <> zif_abapgit_git_definitions=>c_type-commit.
 
   ENDMETHOD.
 
