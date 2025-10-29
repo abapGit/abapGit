@@ -151,7 +151,7 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gitv2_porcelain~commits_last_year.
-
+* including trees
     DATA lv_xstring   TYPE xstring.
     DATA lt_arguments TYPE string_table.
     DATA lv_argument  TYPE string.
@@ -178,7 +178,6 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
       it_arguments = lt_arguments ).
 
     rt_objects = decode_pack( lv_xstring ).
-    DELETE rt_objects WHERE type <> zif_abapgit_git_definitions=>c_type-commit.
 
   ENDMETHOD.
 

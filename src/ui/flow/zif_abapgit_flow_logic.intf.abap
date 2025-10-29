@@ -15,6 +15,7 @@ INTERFACE zif_abapgit_flow_logic
            display_name TYPE string,
            sha1         TYPE zif_abapgit_git_definitions=>ty_sha1,
            up_to_date   TYPE abap_bool,
+           first_commit TYPE zif_abapgit_git_definitions=>ty_sha1,
          END OF ty_branch.
 
   TYPES: BEGIN OF ty_feature,
