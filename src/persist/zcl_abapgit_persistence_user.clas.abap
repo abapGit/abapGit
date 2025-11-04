@@ -176,14 +176,14 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_user~get_default_git_user_email.
 
-    rv_email = ms_user-default_git_user-email.
+    rv_email = ms_user-settings-default_git_email.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_persist_user~get_default_git_user_name.
 
-    rv_username = ms_user-default_git_user-name.
+    rv_username = ms_user-settings-default_git_uname.
 
   ENDMETHOD.
 
@@ -320,7 +320,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_user~set_default_git_user_email.
 
-    ms_user-default_git_user-email = iv_email.
+    ms_user-settings-default_git_email = iv_email.
     update( ).
 
   ENDMETHOD.
@@ -328,7 +328,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_user~set_default_git_user_name.
 
-    ms_user-default_git_user-name = iv_username.
+    ms_user-settings-default_git_uname = iv_username.
     update( ).
 
   ENDMETHOD.
@@ -483,3 +483,4 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
     rv_folders = ms_user-show_folders.
   ENDMETHOD.
 ENDCLASS.
+

@@ -13,10 +13,12 @@ CLASS ltcl_user DEFINITION
       mi_user TYPE REF TO zif_abapgit_persist_user.
 
     METHODS:
-      set_get_git_user   FOR TESTING RAISING zcx_abapgit_exception,
-      set_get_repo_show  FOR TESTING RAISING zcx_abapgit_exception,
-      set_get_settings   FOR TESTING RAISING zcx_abapgit_exception,
-      set_get_repo_login FOR TESTING RAISING zcx_abapgit_exception,
+      set_get_git_user               FOR TESTING RAISING zcx_abapgit_exception,
+      set_get_repo_show              FOR TESTING RAISING zcx_abapgit_exception,
+      set_get_settings               FOR TESTING RAISING zcx_abapgit_exception,
+      set_get_repo_login             FOR TESTING RAISING zcx_abapgit_exception,
+      default_git_user_email         FOR TESTING RAISING zcx_abapgit_exception,
+      default_git_stored_in_settings FOR TESTING RAISING zcx_abapgit_exception,
       teardown RAISING zcx_abapgit_exception.
 
 ENDCLASS.
@@ -71,7 +73,7 @@ CLASS ltcl_user IMPLEMENTATION.
     DATA: lv_login TYPE string.
 
     mi_user = zcl_abapgit_persist_factory=>get_user( c_abap_user ).
-    mi_user->set_repo_login( iv_url = c_repo_url
+    mi_user->set_repo_login( iv_url   = c_repo_url
                              iv_login = c_git_user ).
 
     FREE mi_user.
@@ -104,6 +106,64 @@ CLASS ltcl_user IMPLEMENTATION.
       exp = abap_true ).
 
   ENDMETHOD.
+
+
+  METHOD default_git_user_email.
+
+    DATA lv_email TYPE string.
+
+    CONSTANTS lc_test_email TYPE string VALUE 'test@example.com'.
+
+    mi_user = zcl_abapgit_persist_factory=>get_user( c_abap_user ).
+    mi_user->set_default_git_user_email( lc_test_email ).
+
+    CLEAR mi_user.
+
+    mi_user = zcl_abapgit_persist_factory=>get_user( c_abap_user ).
+    lv_email = mi_user->get_default_git_user_email( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_email
+      exp = lc_test_email ).
+
+  ENDMETHOD.
+
+
+  METHOD default_git_stored_in_settings.
+
+    DATA ls_settings TYPE zif_abapgit_persist_user=>ty_s_user_settings.
+
+    CONSTANTS:
+      lc_test_name  TYPE string VALUE 'Test User',
+      lc_test_email TYPE string VALUE 'testuser@example.com'.
+
+    mi_user = zcl_abapgit_persist_factory=>get_user( c_abap_user ).
+    mi_user->set_default_git_user_name( lc_test_name ).
+    mi_user->set_default_git_user_email( lc_test_email ).
+
+    CLEAR mi_user.
+
+    mi_user = zcl_abapgit_persist_factory=>get_user( c_abap_user ).
+    ls_settings = mi_user->get_settings( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_settings-default_git_uname
+      exp = lc_test_name ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_settings-default_git_email
+      exp = lc_test_email ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mi_user->get_default_git_user_name( )
+      exp = lc_test_name ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mi_user->get_default_git_user_email( )
+      exp = lc_test_email ).
+
+  ENDMETHOD.
+
 
   METHOD teardown.
     " Delete test user settings
