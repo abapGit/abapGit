@@ -73,7 +73,7 @@ CLASS lcl_json_path IMPLEMENTATION.
           lt_path_elements TYPE string_table,
           lv_json          TYPE string.
 
-    FIND REGEX `(.*)=(.*$)` IN iv_json_path SUBMATCHES lv_path lv_value.
+    FIND REGEX `(.*)=(.*$)` IN iv_json_path SUBMATCHES lv_path lv_value ##REGEX_POSIX.
 
     IF path_contains_array( lv_path ) = abap_true.
 
@@ -99,7 +99,7 @@ CLASS lcl_json_path IMPLEMENTATION.
   METHOD path_contains_array.
     DATA lv_array_pattern TYPE string VALUE `.*\[.*\].*`.
     rv_result = boolc( matches( val   = iv_path
-                                regex = lv_array_pattern ) ).
+                                regex = lv_array_pattern ) ) ##REGEX_POSIX.
   ENDMETHOD.
 
   METHOD build_json.
@@ -139,8 +139,8 @@ CLASS lcl_json_path IMPLEMENTATION.
 
     ELSE. " is array
 
-      FIND REGEX `\[(.*)\]` IN lv_first_elem SUBMATCHES lv_sub_match.
-      FIND REGEX `(\w+)(?==='([^']*)')` IN lv_sub_match SUBMATCHES lv_key_name lv_key_value.
+      FIND REGEX `\[(.*)\]` IN lv_first_elem SUBMATCHES lv_sub_match ##REGEX_POSIX.
+      FIND REGEX `(\w+)(?==='([^']*)')` IN lv_sub_match SUBMATCHES lv_key_name lv_key_value ##REGEX_POSIX.
       READ TABLE lt_new_path_element INTO lv_name INDEX 2.
 
 
@@ -169,7 +169,7 @@ CLASS lcl_json_path IMPLEMENTATION.
 
   METHOD is_primitiv.
 
-    FIND REGEX `^.\w+` IN iv_string. " string start with .
+    FIND REGEX `^.\w+` IN iv_string ##REGEX_POSIX. " string start with .
     rv_result = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -186,7 +186,7 @@ CLASS lcl_json_path IMPLEMENTATION.
     lv_pcre_pattern = `(^\$)|(\.\w+)|(\[[^\]]*\])`.
 
     TRY.
-        FIND ALL OCCURRENCES OF REGEX lv_pcre_pattern IN iv_path RESULTS lt_match_result.
+        FIND ALL OCCURRENCES OF REGEX lv_pcre_pattern IN iv_path RESULTS lt_match_result ##REGEX_POSIX.
       CATCH cx_sy_find_infinite_loop cx_sy_range_out_of_bounds cx_sy_invalid_regex cx_sy_regex_too_complex INTO lx_find.
         zcx_abapgit_exception=>raise_with_text( lx_find ).
     ENDTRY.
@@ -387,13 +387,13 @@ CLASS lcl_json_path IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    FIND REGEX `^!` IN iv_line.
+    FIND REGEX `^!` IN iv_line ##REGEX_POSIX.
     IF sy-subrc = 0.
       rv_result = abap_true.
       RETURN.
     ENDIF.
 
-    FIND REGEX `^#` IN iv_line.
+    FIND REGEX `^#` IN iv_line ##REGEX_POSIX.
     IF sy-subrc = 0.
       rv_result = abap_true.
       RETURN.

@@ -731,7 +731,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
   METHOD is_refresh.
 
-    FIND FIRST OCCURRENCE OF REGEX |^{ c_actions-refresh_prefix }| IN iv_action.
+    FIND FIRST OCCURRENCE OF REGEX |^{ c_actions-refresh_prefix }| IN iv_action ##REGEX_POSIX.
     rv_is_refrseh = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -822,7 +822,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
     FIND FIRST OCCURRENCE OF REGEX lv_regex
       IN iv_action
-      SUBMATCHES lv_obj_type lv_obj_name.
+      SUBMATCHES lv_obj_type lv_obj_name ##REGEX_POSIX.
 
     IF sy-subrc = 0.
       mi_repo->refresh_local_object(

@@ -83,7 +83,7 @@ CLASS zcl_abapgit_utils IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline IN lv_string_data WITH space.
     REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf IN lv_string_data WITH space.
 
-    FIND ALL OCCURRENCES OF REGEX '[^[:print:]]' IN lv_string_data MATCH COUNT lv_printable_chars_count.
+    FIND ALL OCCURRENCES OF REGEX '[^[:print:]]' IN lv_string_data MATCH COUNT lv_printable_chars_count ##REGEX_POSIX.
     lv_percentage = lv_printable_chars_count * 100 / strlen( lv_string_data ).
     rv_is_binary = boolc( lv_percentage > lc_binary_threshold ).
 
@@ -100,7 +100,7 @@ CLASS zcl_abapgit_utils IMPLEMENTATION.
     IF iv_email IS INITIAL.
       rv_valid = abap_true.
     ELSE.
-      FIND REGEX lc_email_regex IN iv_email.
+      FIND REGEX lc_email_regex IN iv_email ##REGEX_POSIX.
       rv_valid = boolc( sy-subrc = 0 ).
     ENDIF.
 

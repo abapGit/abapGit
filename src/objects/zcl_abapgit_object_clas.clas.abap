@@ -447,7 +447,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     FIELD-SYMBOLS <lv_source> LIKE LINE OF ct_source.
 
-    FIND REGEX '^\s*INTERFACES(:| )\s*' && iv_from_interface && '\s*.' IN TABLE ct_source MATCH LINE lv_tabix.
+    FIND REGEX '^\s*INTERFACES(:| )\s*' && iv_from_interface && '\s*.' IN TABLE ct_source MATCH LINE lv_tabix ##REGEX_POSIX.
     IF sy-subrc = 0.
       READ TABLE ct_source ASSIGNING <lv_source> INDEX lv_tabix.
       ASSERT sy-subrc = 0.

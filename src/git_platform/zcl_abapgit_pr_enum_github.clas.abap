@@ -99,7 +99,7 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
     rv_url = replace(
       val = iv_url
       regex = '\{.*\}$'
-      with = '' ).
+      with = '' ) ##REGEX_POSIX.
   ENDMETHOD.
 
 

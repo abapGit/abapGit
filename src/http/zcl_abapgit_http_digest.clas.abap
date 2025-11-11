@@ -115,9 +115,9 @@ CLASS ZCL_ABAPGIT_HTTP_DIGEST IMPLEMENTATION.
 
     lv_value = ii_client->response->get_header_field( 'www-authenticate' ).
 
-    FIND REGEX 'realm="([\w ]+)"' IN lv_value SUBMATCHES mv_realm.
-    FIND REGEX 'qop="(\w+)"' IN lv_value SUBMATCHES mv_qop.
-    FIND REGEX 'nonce="([\w=/+\$]+)"' IN lv_value SUBMATCHES mv_nonce.
+    FIND REGEX 'realm="([\w ]+)"' IN lv_value SUBMATCHES mv_realm ##REGEX_POSIX.
+    FIND REGEX 'qop="(\w+)"' IN lv_value SUBMATCHES mv_qop ##REGEX_POSIX.
+    FIND REGEX 'nonce="([\w=/+\$]+)"' IN lv_value SUBMATCHES mv_nonce ##REGEX_POSIX.
 
   ENDMETHOD.
 

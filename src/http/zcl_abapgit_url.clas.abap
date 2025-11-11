@@ -90,7 +90,7 @@ CLASS zcl_abapgit_url IMPLEMENTATION.
                          ev_path = lv_path ).
 
         IF rv_name IS INITIAL.
-          FIND REGEX '([\w-]+)/$' IN lv_path SUBMATCHES rv_name.
+          FIND REGEX '([\w-]+)/$' IN lv_path SUBMATCHES rv_name ##REGEX_POSIX.
           IF sy-subrc <> 0.
             zcx_abapgit_exception=>raise( 'Malformed URL' ).
           ENDIF.
@@ -112,7 +112,7 @@ CLASS zcl_abapgit_url IMPLEMENTATION.
     DATA: lv_host TYPE string ##NEEDED.
 
     FIND REGEX '(.*://[^/]*)(.*)' IN iv_url
-      SUBMATCHES lv_host rv_path_name.
+      SUBMATCHES lv_host rv_path_name ##REGEX_POSIX.
 
   ENDMETHOD.
 
@@ -120,10 +120,10 @@ CLASS zcl_abapgit_url IMPLEMENTATION.
   METHOD regex.
 
     FIND REGEX '^(https?://[^/]*)(.*/)(.*)\.git$' IN iv_url
-      SUBMATCHES ev_host ev_path ev_name.
+      SUBMATCHES ev_host ev_path ev_name ##REGEX_POSIX.
     IF sy-subrc <> 0.
       FIND REGEX '^(https?://[^/]*)(.*/)(.*)$' IN iv_url
-        SUBMATCHES ev_host ev_path ev_name.
+        SUBMATCHES ev_host ev_path ev_name ##REGEX_POSIX.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Malformed URL' ).
       ENDIF.

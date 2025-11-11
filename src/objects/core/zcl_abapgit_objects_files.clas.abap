@@ -232,7 +232,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
     REPLACE FIRST OCCURRENCE
       OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
       IN lv_xml
-      WITH '<?xml version="1.0" encoding="utf-8"?>'.
+      WITH '<?xml version="1.0" encoding="utf-8"?>' ##REGEX_POSIX.
     ASSERT sy-subrc = 0.
 
     ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8_bom( lv_xml ).

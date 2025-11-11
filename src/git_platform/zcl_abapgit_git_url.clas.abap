@@ -74,18 +74,18 @@ CLASS zcl_abapgit_git_url IMPLEMENTATION.
 
     FIND REGEX '^http(?:s)?:\/\/(?:www\.)?(github\.com|bitbucket\.org|gitlab\.com)\/'
       IN rv_commit_url
-      RESULTS ls_result.
+      RESULTS ls_result ##REGEX_POSIX.
     IF sy-subrc = 0.
       READ TABLE ls_result-submatches INDEX 1 ASSIGNING <ls_provider_match>.
       CASE rv_commit_url+<ls_provider_match>-offset(<ls_provider_match>-length).
         WHEN 'github.com'.
-          REPLACE REGEX '\.git$' IN rv_commit_url WITH space.
+          REPLACE REGEX '\.git$' IN rv_commit_url WITH space ##REGEX_POSIX.
           rv_commit_url = rv_commit_url && |/commit/| && iv_hash.
         WHEN 'bitbucket.org'.
-          REPLACE REGEX '\.git$' IN rv_commit_url WITH space.
+          REPLACE REGEX '\.git$' IN rv_commit_url WITH space ##REGEX_POSIX.
           rv_commit_url = rv_commit_url && |/commits/| && iv_hash.
         WHEN 'gitlab.com'.
-          REPLACE REGEX '\.git$' IN rv_commit_url WITH space.
+          REPLACE REGEX '\.git$' IN rv_commit_url WITH space ##REGEX_POSIX.
           rv_commit_url = rv_commit_url && |/-/commit/| && iv_hash.
       ENDCASE.
     ENDIF.
@@ -101,12 +101,12 @@ CLASS zcl_abapgit_git_url IMPLEMENTATION.
 
     " Provider-specific check for URLs that don't work
     IF lv_provider CS 'gitlab.com'.
-      FIND REGEX '\.git$' IN iv_url IGNORING CASE.
+      FIND REGEX '\.git$' IN iv_url IGNORING CASE ##REGEX_POSIX.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Repo URL for GitLab must end in ".git"' ).
       ENDIF.
     ELSEIF lv_provider CS 'dev.azure.com'.
-      FIND REGEX '\.git$' IN iv_url IGNORING CASE.
+      FIND REGEX '\.git$' IN iv_url IGNORING CASE ##REGEX_POSIX.
       IF sy-subrc = 0.
         zcx_abapgit_exception=>raise( 'Repo URL for Azure DevOps must not end in ".git"' ).
       ENDIF.

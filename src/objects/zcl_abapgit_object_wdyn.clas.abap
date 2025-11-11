@@ -422,7 +422,7 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
       lt_abap = mo_files->read_abap( iv_extra = lv_extra ).
       LOOP AT lt_abap INTO ls_abap.
         " Start of method
-        FIND REGEX '\s*method\s+(.*)\s*\.' IN ls_abap-line IGNORING CASE SUBMATCHES lv_cmpname.
+        FIND REGEX '\s*method\s+(.*)\s*\.' IN ls_abap-line IGNORING CASE SUBMATCHES lv_cmpname ##REGEX_POSIX.
         IF sy-subrc = 0.
           lv_line = 1.
         ENDIF.
@@ -439,7 +439,7 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
         ENDIF.
 
         " End of method
-        FIND REGEX '\s*endmethod\s*\.' IN ls_abap-line IGNORING CASE.
+        FIND REGEX '\s*endmethod\s*\.' IN ls_abap-line IGNORING CASE ##REGEX_POSIX.
         IF sy-subrc = 0.
           lv_line = 0.
         ENDIF.

@@ -421,7 +421,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
     rs_expl-value = |{ zcl_abapgit_repo_srv=>get_instance( )->get( is_data-value )->get_name( ) }|.
 
     FIND FIRST OCCURRENCE OF REGEX '<METHOD>(.*)</METHOD>'
-      IN is_data-data_str IGNORING CASE RESULTS ls_result.
+      IN is_data-data_str IGNORING CASE RESULTS ls_result ##REGEX_POSIX.
     READ TABLE ls_result-submatches INTO ls_match INDEX 1.
     IF sy-subrc = 0.
       lv_class = is_data-data_str+ls_match-offset(ls_match-length).
@@ -449,7 +449,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
       lv_cnt    TYPE i.
 
     FIND FIRST OCCURRENCE OF REGEX '<OFFLINE/>'
-      IN is_data-data_str IGNORING CASE MATCH COUNT lv_cnt.
+      IN is_data-data_str IGNORING CASE MATCH COUNT lv_cnt ##REGEX_POSIX.
     IF lv_cnt > 0.
       rs_expl-extra = 'Online'.
     ELSE.
@@ -457,13 +457,13 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
     ENDIF.
 
     FIND FIRST OCCURRENCE OF REGEX '<DISPLAY_NAME>(.*)</DISPLAY_NAME>'
-      IN is_data-data_str IGNORING CASE RESULTS ls_result.
+      IN is_data-data_str IGNORING CASE RESULTS ls_result ##REGEX_POSIX.
     READ TABLE ls_result-submatches INTO ls_match INDEX 1.
     IF sy-subrc = 0.
       rs_expl-value = is_data-data_str+ls_match-offset(ls_match-length).
     ELSE.
       FIND FIRST OCCURRENCE OF REGEX '<NAME>(.*)</NAME>'
-        IN is_data-data_str IGNORING CASE RESULTS ls_result.
+        IN is_data-data_str IGNORING CASE RESULTS ls_result ##REGEX_POSIX.
       READ TABLE ls_result-submatches INTO ls_match INDEX 1.
       IF sy-subrc = 0.
         rs_expl-value = is_data-data_str+ls_match-offset(ls_match-length).
@@ -472,7 +472,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
     IF rs_expl-value IS INITIAL.
       FIND FIRST OCCURRENCE OF REGEX '<URL>(.*)</URL>'
-        IN is_data-data_str IGNORING CASE RESULTS ls_result.
+        IN is_data-data_str IGNORING CASE RESULTS ls_result ##REGEX_POSIX.
       READ TABLE ls_result-submatches INTO ls_match INDEX 1.
       IF sy-subrc = 0.
         rs_expl-value = is_data-data_str+ls_match-offset(ls_match-length).
@@ -534,7 +534,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
     LOOP AT it_db_entries ASSIGNING <ls_db_entry>.
       IF <ls_db_entry>-type = zcl_abapgit_persistence_db=>c_type_repo.
         FIND FIRST OCCURRENCE OF REGEX '<OFFLINE/>'
-          IN <ls_db_entry>-data_str IGNORING CASE MATCH COUNT lv_cnt.
+          IN <ls_db_entry>-data_str IGNORING CASE MATCH COUNT lv_cnt ##REGEX_POSIX.
         IF lv_cnt > 0.
           lv_online = lv_online + 1.
         ELSE.

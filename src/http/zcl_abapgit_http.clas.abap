@@ -111,7 +111,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
     ENDIF.
 
     rv_scheme = ii_client->response->get_header_field( 'www-authenticate' ).
-    FIND REGEX '^(\w+)' IN rv_scheme SUBMATCHES rv_scheme.
+    FIND REGEX '^(\w+)' IN rv_scheme SUBMATCHES rv_scheme ##REGEX_POSIX.
 
     CASE rv_scheme.
       WHEN c_scheme-digest.
@@ -360,7 +360,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->change_local_host( CHANGING ct_hosts = lt_list ).
 
-    FIND REGEX 'https?://([^/^:]*)' IN iv_url SUBMATCHES lv_host.
+    FIND REGEX 'https?://([^/^:]*)' IN iv_url SUBMATCHES lv_host ##REGEX_POSIX.
 
     READ TABLE lt_list WITH KEY table_line = lv_host TRANSPORTING NO FIELDS.
     rv_bool = boolc( sy-subrc = 0 ).

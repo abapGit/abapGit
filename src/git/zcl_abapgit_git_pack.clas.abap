@@ -322,7 +322,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       FIND REGEX |-----END PGP SIGNATURE-----[[:space:]]+|
         IN lv_string
         MATCH OFFSET lv_offset
-        MATCH LENGTH lv_length.
+        MATCH LENGTH lv_length ##REGEX_POSIX.
       lv_length = lv_length - 1.
       lv_length_gpgsig = lv_offset + lv_length - 7.
       lv_length = lv_offset + lv_length.
@@ -371,7 +371,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
           FIND FIRST OCCURRENCE OF REGEX `(.*)<(.*)>`
                      IN lv_trash
                      SUBMATCHES rs_tag-tagger_name
-                                rs_tag-tagger_email.
+                                rs_tag-tagger_email ##REGEX_POSIX.
 
           rs_tag-tagger_name = condense( rs_tag-tagger_name ).
 
