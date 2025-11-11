@@ -471,19 +471,19 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
       REPLACE FIRST OCCURRENCE OF REGEX
         |({ zcx_abapgit_exception=>c_section_text-cause }{ cl_abap_char_utilities=>newline })|
-        IN lv_longtext WITH |<h3>$1</h3>|.
+        IN lv_longtext WITH |<h3>$1</h3>| ##REGEX_POSIX.
 
       REPLACE FIRST OCCURRENCE OF REGEX
         |({ zcx_abapgit_exception=>c_section_text-system_response }{ cl_abap_char_utilities=>newline })|
-        IN lv_longtext WITH |<h3>$1</h3>|.
+        IN lv_longtext WITH |<h3>$1</h3>| ##REGEX_POSIX.
 
       REPLACE FIRST OCCURRENCE OF REGEX
         |({ zcx_abapgit_exception=>c_section_text-what_to_do }{ cl_abap_char_utilities=>newline })|
-        IN lv_longtext WITH |<h3>$1</h3>|.
+        IN lv_longtext WITH |<h3>$1</h3>| ##REGEX_POSIX.
 
       REPLACE FIRST OCCURRENCE OF REGEX
         |({ zcx_abapgit_exception=>c_section_text-sys_admin }{ cl_abap_char_utilities=>newline })|
-        IN lv_longtext WITH |<h3>$1</h3>|.
+        IN lv_longtext WITH |<h3>$1</h3>| ##REGEX_POSIX.
 
       REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf
         IN lv_longtext

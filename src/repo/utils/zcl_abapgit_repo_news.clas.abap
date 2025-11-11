@@ -272,7 +272,7 @@ CLASS zcl_abapgit_repo_news IMPLEMENTATION.
     ENDIF.
 
     " Check if line is a header line
-    FIND FIRST OCCURRENCE OF REGEX lc_header_pattern IN iv_line SUBMATCHES lv_version.
+    FIND FIRST OCCURRENCE OF REGEX lc_header_pattern IN iv_line SUBMATCHES lv_version ##REGEX_POSIX.
     IF sy-subrc IS INITIAL.
       lv_version        = zcl_abapgit_version=>normalize( lv_version ).
       rs_log-version    = lv_version.
@@ -280,7 +280,7 @@ CLASS zcl_abapgit_repo_news IMPLEMENTATION.
       rs_log-pos_to_cur = zcl_abapgit_version=>compare( iv_a = lv_version
                                                         iv_b = iv_current_version ).
     ELSE.
-      FIND FIRST OCCURRENCE OF REGEX '^\s*!' IN iv_line.
+      FIND FIRST OCCURRENCE OF REGEX '^\s*!' IN iv_line ##REGEX_POSIX.
       rs_log-is_important = boolc( sy-subrc IS INITIAL ). " Change is important
     ENDIF.
 

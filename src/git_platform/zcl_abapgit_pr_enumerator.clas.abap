@@ -97,7 +97,7 @@ CLASS zcl_abapgit_pr_enumerator IMPLEMENTATION.
 
     FIND ALL OCCURRENCES OF REGEX 'github\.com\/([^\/]+)\/([^\/]+)'
       IN iv_repo_url
-      SUBMATCHES lv_user lv_repo.
+      SUBMATCHES lv_user lv_repo ##REGEX_POSIX.
     IF sy-subrc = 0.
       lv_repo = replace(
         val = lv_repo
@@ -112,7 +112,7 @@ CLASS zcl_abapgit_pr_enumerator IMPLEMENTATION.
 * used in integration testing, see /test/ folder
     FIND ALL OCCURRENCES OF REGEX 'localhost:3050\/([^\/]+)\/([^\/]+)'
       IN iv_repo_url
-      SUBMATCHES lv_user lv_repo.
+      SUBMATCHES lv_user lv_repo ##REGEX_POSIX.
     IF sy-subrc = 0.
       CREATE OBJECT ri_provider TYPE zcl_abapgit_pr_enum_gitea
         EXPORTING

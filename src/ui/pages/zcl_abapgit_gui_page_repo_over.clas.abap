@@ -861,7 +861,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     IF sy-subrc = 0.
       FIND FIRST OCCURRENCE OF REGEX `filter=(.*)`
         IN <lv_postdata>
-        SUBMATCHES ms_list_settings-filter.
+        SUBMATCHES ms_list_settings-filter ##REGEX_POSIX.
     ENDIF.
 
     ms_list_settings-filter = condense( ms_list_settings-filter ).

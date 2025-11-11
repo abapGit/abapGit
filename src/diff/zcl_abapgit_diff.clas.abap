@@ -148,7 +148,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
       <ls_diff>-beacon = lv_beacon_idx.
 
       LOOP AT lt_regex INTO lo_regex.
-        FIND FIRST OCCURRENCE OF REGEX lo_regex IN <ls_diff>-new SUBMATCHES lv_submatch.
+        FIND FIRST OCCURRENCE OF REGEX lo_regex IN <ls_diff>-new SUBMATCHES lv_submatch ##REGEX_POSIX.
         IF sy-subrc = 0. " Match
           lv_beacon_str = <ls_diff>-new.
           lv_submatch = to_upper( lv_submatch ).
