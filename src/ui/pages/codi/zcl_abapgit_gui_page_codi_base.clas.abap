@@ -369,7 +369,7 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
     lv_temp = replace(
       val   = ii_event->mv_action
       regex = |^{ c_ci_sig }|
-      with  = `` ).
+      with  = `` ) ##REGEX_POSIX.
 
     IF lv_temp <> ii_event->mv_action. " CI navigation request detected
       handle_navigation( lv_temp ).

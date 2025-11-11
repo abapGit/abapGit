@@ -99,7 +99,7 @@ CLASS lcl_json_path IMPLEMENTATION.
   METHOD path_contains_array.
     DATA lv_array_pattern TYPE string VALUE `.*\[.*\].*`.
     rv_result = boolc( matches( val   = iv_path
-                                regex = lv_array_pattern ) ).
+                                regex = lv_array_pattern ) ) ##REGEX_POSIX.
   ENDMETHOD.
 
   METHOD build_json.

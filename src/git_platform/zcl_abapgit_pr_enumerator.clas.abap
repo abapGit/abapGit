@@ -102,7 +102,7 @@ CLASS zcl_abapgit_pr_enumerator IMPLEMENTATION.
       lv_repo = replace(
         val = lv_repo
         regex = '\.git$'
-        with = '' ).
+        with = '' ) ##REGEX_POSIX.
       CREATE OBJECT ri_provider TYPE zcl_abapgit_pr_enum_github
         EXPORTING
           iv_user_and_repo = |{ lv_user }/{ lv_repo }|

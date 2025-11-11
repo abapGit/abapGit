@@ -170,11 +170,11 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
 
     rv_head_end = find( val = iv_html
                         regex = |{ cl_abap_char_utilities=>newline }?\\s*</head>|
-                        case = abap_false ).
+                        case = abap_false ) ##REGEX_POSIX.
     IF rv_head_end <= 0.
       rv_head_end = find( val = iv_html
                           regex = |</head>|
-                          case = abap_false ).
+                          case = abap_false ) ##REGEX_POSIX.
       IF rv_head_end <= 0.
         zcx_abapgit_exception=>raise( 'HTML preprocessor: </head> not found' ).
       ENDIF.
