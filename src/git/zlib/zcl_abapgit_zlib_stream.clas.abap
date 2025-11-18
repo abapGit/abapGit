@@ -77,7 +77,6 @@ CLASS zcl_abapgit_zlib_stream IMPLEMENTATION.
         lv_x = mv_compressed+mv_offset(1).
 
         " inlining hex_to_bits for better performance
-        CLEAR mv_bits.
         DO 8 TIMES.
           GET BIT sy-index OF lv_x INTO lv_c.
           CONCATENATE mv_bits lv_c INTO mv_bits.
