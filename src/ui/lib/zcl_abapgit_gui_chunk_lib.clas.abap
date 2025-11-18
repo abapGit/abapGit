@@ -349,7 +349,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     rv_normalized_program_name = substring_before(
       val   = iv_program_name
-      regex = `(=+CP)?$` ).
+      regex = `(=+CP)?$` ) ##REGEX_POSIX.
 
   ENDMETHOD.
 

@@ -244,7 +244,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
             re_lang_sap1 = lcl_bcp47_language_table=>bcp47_to_sap1( im_lang_bcp47 ).
           CATCH zcx_abapgit_exception.
 
-            CREATE OBJECT lv_regex EXPORTING pattern = `[A-Z0-9]{2}`.
+            CREATE OBJECT lv_regex EXPORTING pattern = `[A-Z0-9]{2}` ##REGEX_POSIX.
             lv_abap_matcher = lv_regex->create_matcher( text = im_lang_bcp47 ).
 
             IF abap_true = lv_abap_matcher->match( ).

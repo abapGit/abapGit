@@ -133,7 +133,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
+CLASS zcl_abapgit_html_table IMPLEMENTATION.
 
 
   METHOD apply_sorting.
@@ -227,7 +227,7 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
 
     IF find(
         val = iv_event
-        regex = c_sort_by_event_regex ) = 0.
+        regex = c_sort_by_event_regex ) = 0 ##REGEX_POSIX.
 
       lv_req = replace(
         val  = iv_event

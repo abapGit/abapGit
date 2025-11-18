@@ -96,7 +96,7 @@ CLASS zcl_abapgit_syntax_highlighter IMPLEMENTATION.
       CREATE OBJECT ls_rule-regex
         EXPORTING
           pattern     = iv_regex
-          ignore_case = abap_true.
+          ignore_case = abap_true ##REGEX_POSIX.
     ENDIF.
 
     ls_rule-token         = iv_token.
