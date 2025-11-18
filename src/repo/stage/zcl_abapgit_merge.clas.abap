@@ -308,7 +308,7 @@ CLASS zcl_abapgit_merge IMPLEMENTATION.
       <ls_ancestor>-time = ls_commit-author.
 
       "Strip Author entry of all but the time component
-      REPLACE ALL OCCURRENCES OF REGEX '[a-zA-Z<>@.-]*' IN <ls_ancestor>-time WITH ''.
+      REPLACE ALL OCCURRENCES OF REGEX '[a-zA-Z<>@.-]*' IN <ls_ancestor>-time WITH '' ##REGEX_POSIX.
       CONDENSE <ls_ancestor>-time.
     ENDLOOP.
 

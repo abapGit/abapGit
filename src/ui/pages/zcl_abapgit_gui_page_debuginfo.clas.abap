@@ -443,11 +443,11 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
     cv_clsname = c_exit_class.
 
     DO.
-      FIND REGEX 'CLASS\s+(.*)\s+DEFINITION' IN TABLE ct_source SUBMATCHES cv_clsname IGNORING CASE.
+      FIND REGEX 'CLASS\s+(.*)\s+DEFINITION' IN TABLE ct_source SUBMATCHES cv_clsname IGNORING CASE ##REGEX_POSIX.
       IF sy-subrc = 0.
         RETURN.
       ENDIF.
-      FIND REGEX 'INCLUDE\s+(.*)\s*\.' IN TABLE ct_source SUBMATCHES lv_include IGNORING CASE.
+      FIND REGEX 'INCLUDE\s+(.*)\s*\.' IN TABLE ct_source SUBMATCHES lv_include IGNORING CASE ##REGEX_POSIX.
       IF sy-subrc = 0.
         TRY.
             ct_source = zcl_abapgit_factory=>get_sap_report( )->read_report( lv_include ).

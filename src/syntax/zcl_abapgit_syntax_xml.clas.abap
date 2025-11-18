@@ -171,7 +171,7 @@ CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
         AND <ls_prev>-length  = 1
         AND <ls_prev>-text_tag = '<'.
 
-      FIND REGEX '<\s*[^\s]*' IN iv_line+<ls_prev>-offset MATCH LENGTH <ls_prev>-length.
+      FIND REGEX '<\s*[^\s]*' IN iv_line+<ls_prev>-offset MATCH LENGTH <ls_prev>-length ##REGEX_POSIX.
       IF sy-subrc <> 0.
         <ls_prev>-length = 1.
       ENDIF.

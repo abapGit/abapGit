@@ -64,7 +64,7 @@ CLASS zcl_abapgit_apack_writer IMPLEMENTATION.
     REPLACE FIRST OCCURRENCE
       OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
       IN rv_xml
-      WITH '<?xml version="1.0" encoding="utf-8"?>'.
+      WITH '<?xml version="1.0" encoding="utf-8"?>' ##REGEX_POSIX.
 
   ENDMETHOD.
 ENDCLASS.

@@ -294,7 +294,7 @@ CLASS zcl_abapgit_object_wdca IMPLEMENTATION.
         REPLACE FIRST OCCURRENCE
           OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
           IN lv_xml_string
-          WITH '<?xml version="1.0"?>'.
+          WITH '<?xml version="1.0"?>' ##REGEX_POSIX.
         ASSERT sy-subrc = 0.
 
         lv_xml_xstring = zcl_abapgit_convert=>string_to_xstring( lv_xml_string ).
@@ -424,7 +424,7 @@ CLASS zcl_abapgit_object_wdca IMPLEMENTATION.
       REPLACE FIRST OCCURRENCE
         OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
         IN lv_xml_string
-        WITH '<?xml version="1.0" encoding="utf-8"?>'.
+        WITH '<?xml version="1.0" encoding="utf-8"?>' ##REGEX_POSIX.
       ASSERT sy-subrc = 0.
     ENDIF.
 

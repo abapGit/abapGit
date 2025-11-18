@@ -243,12 +243,12 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
     SPLIT iv_version AT '-' INTO lv_version lv_prerelease.
 
     FIND FIRST OCCURRENCE OF REGEX lc_version_pattern
-      IN lv_version SUBMATCHES lv_version_n.
+      IN lv_version SUBMATCHES lv_version_n ##REGEX_POSIX.
 
     IF lv_prerelease IS NOT INITIAL.
 
       FIND FIRST OCCURRENCE OF REGEX lc_prerelease_pattern
-        IN lv_prerelease SUBMATCHES lv_prerelease_n.
+        IN lv_prerelease SUBMATCHES lv_prerelease_n ##REGEX_POSIX.
 
     ENDIF.
 

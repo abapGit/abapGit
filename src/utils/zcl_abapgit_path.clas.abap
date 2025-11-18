@@ -117,7 +117,7 @@ CLASS ZCL_ABAPGIT_PATH IMPLEMENTATION.
 
     FIND FIRST OCCURRENCE OF REGEX '^/(.*/)?' IN iv_fullpath
       MATCH COUNT lv_cnt
-      MATCH LENGTH lv_len.
+      MATCH LENGTH lv_len ##REGEX_POSIX.
 
     IF lv_cnt > 0.
       ev_path     = iv_fullpath+0(lv_len).

@@ -142,7 +142,7 @@ CLASS zcl_abapgit_gui_page_cr_repo IMPLEMENTATION.
 
     FIND ALL OCCURRENCES OF REGEX 'github\.com\/([^\/]+)\/([^\/]+)'
       IN mv_url
-      SUBMATCHES lv_org lv_name.
+      SUBMATCHES lv_org lv_name ##REGEX_POSIX.
     IF sy-subrc = 0.
       mo_form_data->set(
         iv_key = c_id-user_or_org

@@ -233,7 +233,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     IF iv_str CA '/'.
       FIND REGEX '(.*/)(.*)' IN iv_str
-        SUBMATCHES ev_path ev_filename.
+        SUBMATCHES ev_path ev_filename ##REGEX_POSIX.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Malformed path' ).
       ENDIF.

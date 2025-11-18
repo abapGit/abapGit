@@ -49,7 +49,7 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
         <lv_source> = replace(
           val   = <lv_source>
           regex = '^(\*".*) \.$'
-          with  = '$1.' ).
+          with  = '$1.' ) ##REGEX_POSIX.
       ENDIF.
     ENDLOOP.
 

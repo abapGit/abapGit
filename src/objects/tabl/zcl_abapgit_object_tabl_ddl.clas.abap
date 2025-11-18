@@ -225,7 +225,7 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
     DATA lv_value      TYPE string.
 
 
-    REPLACE FIRST OCCURRENCE OF REGEX '^[\n ]*' IN cv_ddl WITH ||.
+    REPLACE FIRST OCCURRENCE OF REGEX '^[\n ]*' IN cv_ddl WITH || ##REGEX_POSIX.
 
     WHILE cv_ddl CP '@*'.
       SPLIT cv_ddl AT |\n| INTO lv_annotation cv_ddl.
@@ -893,8 +893,8 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
 
   METHOD unescape_string.
     rv_string = iv_string.
-    REPLACE FIRST OCCURRENCE OF REGEX |^'| IN rv_string WITH ||.
-    REPLACE FIRST OCCURRENCE OF REGEX |'$| IN rv_string WITH ||.
+    REPLACE FIRST OCCURRENCE OF REGEX |^'| IN rv_string WITH || ##REGEX_POSIX.
+    REPLACE FIRST OCCURRENCE OF REGEX |'$| IN rv_string WITH || ##REGEX_POSIX.
     REPLACE ALL OCCURRENCES OF |''| IN rv_string WITH |'|.
   ENDMETHOD.
 ENDCLASS.

@@ -427,7 +427,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
     FIND FIRST OCCURRENCE OF REGEX `patch_line` && `_(.*)_(\d)+_(\d+)`
          IN iv_patch
-         SUBMATCHES ev_filename lv_section ev_line_index.
+         SUBMATCHES ev_filename lv_section ev_line_index ##REGEX_POSIX.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Invalid patch| ).
     ENDIF.

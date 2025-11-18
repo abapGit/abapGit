@@ -179,12 +179,12 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
 
     " Collect all namespaces based on name of xml- and json-files
     LOOP AT it_results ASSIGNING <ls_result>.
-      FIND REGEX '^#([a-zA-Z0-9]+)#.*\..*\.xml$' IN <ls_result>-filename SUBMATCHES lv_namespace.
+      FIND REGEX '^#([a-zA-Z0-9]+)#.*\..*\.xml$' IN <ls_result>-filename SUBMATCHES lv_namespace ##REGEX_POSIX.
       IF sy-subrc = 0.
         lv_namespace = '/' && to_upper( lv_namespace ) && '/'.
         COLLECT lv_namespace INTO lt_namespace.
       ENDIF.
-      FIND REGEX '^\(([a-zA-Z0-9]+)\).*\..*\.json$' IN <ls_result>-filename SUBMATCHES lv_namespace.
+      FIND REGEX '^\(([a-zA-Z0-9]+)\).*\..*\.json$' IN <ls_result>-filename SUBMATCHES lv_namespace ##REGEX_POSIX.
       IF sy-subrc = 0.
         lv_namespace = '/' && to_upper( lv_namespace ) && '/'.
         COLLECT lv_namespace INTO lt_namespace.
