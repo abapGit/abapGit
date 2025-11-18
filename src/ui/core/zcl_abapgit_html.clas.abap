@@ -122,7 +122,7 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
     CREATE OBJECT go_single_tags_re
       EXPORTING
         pattern     = '<(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|!)'
-        ignore_case = abap_false.
+        ignore_case = abap_false ##REGEX_POSIX.
 
     gv_spaces = repeat(
       val = ` `
