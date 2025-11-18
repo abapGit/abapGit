@@ -24,7 +24,6 @@ CLASS zcl_abapgit_persistence_user DEFINITION
       ty_repo_configs TYPE STANDARD TABLE OF ty_repo_config WITH DEFAULT KEY .
     TYPES:
       BEGIN OF ty_user,
-        default_git_user TYPE zif_abapgit_git_definitions=>ty_git_user,
         repo_show        TYPE zif_abapgit_persistence=>ty_repo-key,
         hide_files       TYPE abap_bool,
         changes_only     TYPE abap_bool,
@@ -176,14 +175,14 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_user~get_default_git_user_email.
 
-    rv_email = ms_user-default_git_user-email.
+    rv_email = ms_user-settings-default_git_email.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_persist_user~get_default_git_user_name.
 
-    rv_username = ms_user-default_git_user-name.
+    rv_username = ms_user-settings-default_git_uname.
 
   ENDMETHOD.
 
@@ -320,7 +319,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_user~set_default_git_user_email.
 
-    ms_user-default_git_user-email = iv_email.
+    ms_user-settings-default_git_email = iv_email.
     update( ).
 
   ENDMETHOD.
@@ -328,7 +327,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_user~set_default_git_user_name.
 
-    ms_user-default_git_user-name = iv_username.
+    ms_user-settings-default_git_uname = iv_username.
     update( ).
 
   ENDMETHOD.
@@ -483,3 +482,4 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
     rv_folders = ms_user-show_folders.
   ENDMETHOD.
 ENDCLASS.
+
