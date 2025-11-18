@@ -36,11 +36,12 @@ CLASS zcl_abapgit_zlib_stream DEFINITION
 
     DATA mv_bits TYPE string .
     DATA mv_compressed TYPE xstring .
+    DATA mv_offset TYPE i.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZLIB_STREAM IMPLEMENTATION.
+CLASS zcl_abapgit_zlib_stream IMPLEMENTATION.
 
 
   METHOD clear_bits.
@@ -51,13 +52,14 @@ CLASS ZCL_ABAPGIT_ZLIB_STREAM IMPLEMENTATION.
   METHOD constructor.
 
     mv_compressed = iv_data.
+    mv_offset     = 0.
 
   ENDMETHOD.
 
 
   METHOD remaining.
 
-    rv_length = xstrlen( mv_compressed ) + 1.
+    rv_length = xstrlen( mv_compressed ) + 1 - mv_offset.
 
   ENDMETHOD.
 
@@ -71,9 +73,9 @@ CLASS ZCL_ABAPGIT_ZLIB_STREAM IMPLEMENTATION.
 
     WHILE strlen( rv_bits ) < iv_length.
       IF mv_bits IS INITIAL.
-        lv_x = mv_compressed(1).
+        lv_x = mv_compressed+mv_offset(1).
         mv_bits = zcl_abapgit_zlib_convert=>hex_to_bits( lv_x ).
-        mv_compressed = mv_compressed+1.
+        mv_offset = mv_offset + 1.
       ENDIF.
       lv_left = iv_length - strlen( rv_bits ).
       IF lv_left >= strlen( mv_bits ).
@@ -92,8 +94,8 @@ CLASS ZCL_ABAPGIT_ZLIB_STREAM IMPLEMENTATION.
 
   METHOD take_bytes.
 
-    rv_bytes = mv_compressed(iv_length).
-    mv_compressed = mv_compressed+iv_length.
+    rv_bytes = mv_compressed+mv_offset(iv_length).
+    mv_offset = mv_offset + iv_length.
 
   ENDMETHOD.
 
