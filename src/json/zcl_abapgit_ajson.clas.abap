@@ -736,7 +736,7 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
     ENDIF.
 
     IF go_float_regex IS NOT BOUND.
-      CREATE OBJECT go_float_regex EXPORTING pattern = '^([1-9][0-9]*|0)\.[0-9]+$'.
+      CREATE OBJECT go_float_regex EXPORTING pattern = '^([1-9][0-9]*|0)\.[0-9]+$' ##REGEX_POSIX.
       " expects fractional, because ints are detected separately
     ENDIF.
 
