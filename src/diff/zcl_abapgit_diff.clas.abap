@@ -97,7 +97,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
       CREATE OBJECT lo_regex
         EXPORTING
           pattern     = lv_regex
-          ignore_case = abap_true.
+          ignore_case = abap_true ##REGEX_POSIX.
       APPEND lo_regex TO rt_regex_set.
     ENDLOOP.
 

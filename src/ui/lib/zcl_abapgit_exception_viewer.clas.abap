@@ -128,7 +128,7 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
   METHOD extract_classname.
 
     rv_classname = substring_before( val   = iv_mainprogram
-                                     regex = '=*CP$' ).
+                                     regex = '=*CP$' ) ##REGEX_POSIX.
 
   ENDMETHOD.
 
