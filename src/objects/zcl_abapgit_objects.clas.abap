@@ -213,7 +213,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -649,6 +649,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
               iv_path = <ls_result>-path ).
 
             zcl_abapgit_factory=>get_sap_package( lv_package )->check_object_type( ls_item-obj_type ).
+          ELSE.
+            lv_package = ii_repo->get_package( ).
           ENDIF.
 
           IF ls_item-obj_type = 'DEVC'.
