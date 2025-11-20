@@ -7,6 +7,7 @@ CLASS zcl_abapgit_zlib_huffman DEFINITION
     TYPES:
       ty_lengths TYPE STANDARD TABLE OF i WITH DEFAULT KEY .
 
+    " If this ever changes, adjust the bit instance data as well
     CONSTANTS c_maxbits TYPE i VALUE 15 ##NO_TEXT.
 
     METHODS constructor
@@ -27,6 +28,23 @@ CLASS zcl_abapgit_zlib_huffman DEFINITION
 
     DATA: mt_count  TYPE STANDARD TABLE OF i WITH DEFAULT KEY,
           mt_symbol TYPE STANDARD TABLE OF i WITH DEFAULT KEY.
+
+    DATA:
+      mv_bit01 TYPE i,
+      mv_bit02 TYPE i,
+      mv_bit03 TYPE i,
+      mv_bit04 TYPE i,
+      mv_bit05 TYPE i,
+      mv_bit06 TYPE i,
+      mv_bit07 TYPE i,
+      mv_bit08 TYPE i,
+      mv_bit09 TYPE i,
+      mv_bit10 TYPE i,
+      mv_bit11 TYPE i,
+      mv_bit12 TYPE i,
+      mv_bit13 TYPE i,
+      mv_bit14 TYPE i,
+      mv_bit15 TYPE i.
 
 ENDCLASS.
 
@@ -88,11 +106,61 @@ CLASS ZCL_ABAPGIT_ZLIB_HUFFMAN IMPLEMENTATION.
       <lv_offset> = <lv_offset> + 1.
     ENDDO.
 
+    READ TABLE mt_count INDEX 1 INTO mv_bit01.            "#EC CI_SUBRC
+    READ TABLE mt_count INDEX 2 INTO mv_bit02.            "#EC CI_SUBRC
+    READ TABLE mt_count INDEX 3 INTO mv_bit03.            "#EC CI_SUBRC
+    READ TABLE mt_count INDEX 4 INTO mv_bit04.            "#EC CI_SUBRC
+    READ TABLE mt_count INDEX 5 INTO mv_bit05.            "#EC CI_SUBRC
+    READ TABLE mt_count INDEX 6 INTO mv_bit06.            "#EC CI_SUBRC
+    READ TABLE mt_count INDEX 7 INTO mv_bit07.            "#EC CI_SUBRC
+    READ TABLE mt_count INDEX 8 INTO mv_bit08.            "#EC CI_SUBRC
+    READ TABLE mt_count INDEX 9 INTO mv_bit09.            "#EC CI_SUBRC
+    READ TABLE mt_count INDEX 10 INTO mv_bit10.           "#EC CI_SUBRC
+    READ TABLE mt_count INDEX 11 INTO mv_bit11.           "#EC CI_SUBRC
+    READ TABLE mt_count INDEX 12 INTO mv_bit12.           "#EC CI_SUBRC
+    READ TABLE mt_count INDEX 13 INTO mv_bit13.           "#EC CI_SUBRC
+    READ TABLE mt_count INDEX 14 INTO mv_bit14.           "#EC CI_SUBRC
+    READ TABLE mt_count INDEX 15 INTO mv_bit15.           "#EC CI_SUBRC
+
   ENDMETHOD.
 
 
   METHOD get_count.
-    READ TABLE mt_count INDEX iv_index INTO rv_value.     "#EC CI_SUBRC
+    " This method is on hot path so we use instance variables to avoid reading mt_count
+    CASE iv_index.
+      WHEN 1.
+        rv_value = mv_bit01.
+      WHEN 2.
+        rv_value = mv_bit02.
+      WHEN 3.
+        rv_value = mv_bit03.
+      WHEN 4.
+        rv_value = mv_bit04.
+      WHEN 5.
+        rv_value = mv_bit05.
+      WHEN 6.
+        rv_value = mv_bit06.
+      WHEN 7.
+        rv_value = mv_bit07.
+      WHEN 8.
+        rv_value = mv_bit08.
+      WHEN 9.
+        rv_value = mv_bit09.
+      WHEN 10.
+        rv_value = mv_bit10.
+      WHEN 11.
+        rv_value = mv_bit11.
+      WHEN 12.
+        rv_value = mv_bit12.
+      WHEN 13.
+        rv_value = mv_bit13.
+      WHEN 14.
+        rv_value = mv_bit14.
+      WHEN 15.
+        rv_value = mv_bit15.
+      WHEN OTHERS.
+        rv_value = 0.
+    ENDCASE.
   ENDMETHOD.
 
 
