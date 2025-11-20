@@ -505,7 +505,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 * TODO: refactor, maybe use zcl_abapgit_string_map ?
 
-    DATA: ls_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask.
+    DATA: ls_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask,
+          lv_name TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit-name.
 
 
     ASSERT iv_url IS SUPPLIED
@@ -546,7 +547,15 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     ENDIF.
 
     IF is_dot_abapgit IS SUPPLIED.
+      " Special treatment for name: if not supplied, keep old name.
+      " Otherwise it will be cleared if the remote .abapGit has no name as the
+      " name property is not mandatory.
+      lv_name = is_dot_abapgit-name.
+      IF lv_name IS INITIAL.
+        lv_name = ms_data-dot_abapgit-name.
+      ENDIF.
       ms_data-dot_abapgit = is_dot_abapgit.
+      ms_data-dot_abapgit-name = lv_name.
       ls_mask-dot_abapgit = abap_true.
     ENDIF.
 
