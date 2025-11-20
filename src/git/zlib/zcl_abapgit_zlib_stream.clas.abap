@@ -36,11 +36,12 @@ CLASS zcl_abapgit_zlib_stream DEFINITION
 
     DATA mv_bits TYPE string .
     DATA mv_compressed TYPE xstring .
+    DATA mv_offset TYPE i.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZLIB_STREAM IMPLEMENTATION.
+CLASS zcl_abapgit_zlib_stream IMPLEMENTATION.
 
 
   METHOD clear_bits.
@@ -51,29 +52,37 @@ CLASS ZCL_ABAPGIT_ZLIB_STREAM IMPLEMENTATION.
   METHOD constructor.
 
     mv_compressed = iv_data.
+    mv_offset     = 0.
 
   ENDMETHOD.
 
 
   METHOD remaining.
 
-    rv_length = xstrlen( mv_compressed ) + 1.
+    rv_length = xstrlen( mv_compressed ) + 1 - mv_offset.
 
   ENDMETHOD.
 
 
   METHOD take_bits.
 
-    DATA: lv_left  TYPE i,
-          lv_index TYPE i,
-          lv_x     TYPE x LENGTH 1.
-
+    DATA:
+      lv_left  TYPE i,
+      lv_index TYPE i,
+      lv_c     TYPE c,
+      lv_x     TYPE x LENGTH 1.
 
     WHILE strlen( rv_bits ) < iv_length.
       IF mv_bits IS INITIAL.
-        lv_x = mv_compressed(1).
-        mv_bits = zcl_abapgit_zlib_convert=>hex_to_bits( lv_x ).
-        mv_compressed = mv_compressed+1.
+        lv_x = mv_compressed+mv_offset(1).
+
+        " inlining hex_to_bits for better performance
+        DO 8 TIMES.
+          GET BIT sy-index OF lv_x INTO lv_c.
+          CONCATENATE mv_bits lv_c INTO mv_bits.
+        ENDDO.
+
+        mv_offset = mv_offset + 1.
       ENDIF.
       lv_left = iv_length - strlen( rv_bits ).
       IF lv_left >= strlen( mv_bits ).
@@ -92,15 +101,27 @@ CLASS ZCL_ABAPGIT_ZLIB_STREAM IMPLEMENTATION.
 
   METHOD take_bytes.
 
-    rv_bytes = mv_compressed(iv_length).
-    mv_compressed = mv_compressed+iv_length.
+    rv_bytes = mv_compressed+mv_offset(iv_length).
+    mv_offset = mv_offset + iv_length.
 
   ENDMETHOD.
 
 
   METHOD take_int.
 
-    rv_int = zcl_abapgit_zlib_convert=>bits_to_int( take_bits( iv_length ) ).
+    DATA:
+      lv_bits   TYPE string,
+      lv_i      TYPE i,
+      lv_offset TYPE i.
+
+    lv_bits = take_bits( iv_length ).
+
+    " inlining bits_to_int for better performance
+    DO strlen( lv_bits ) TIMES.
+      lv_i = lv_bits+lv_offset(1).
+      rv_int = rv_int * 2 + lv_i.
+      lv_offset = lv_offset + 1.
+    ENDDO.
 
   ENDMETHOD.
 ENDCLASS.
