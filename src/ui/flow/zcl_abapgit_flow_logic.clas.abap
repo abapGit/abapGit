@@ -173,6 +173,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     FIELD-SYMBOLS <ls_local>         LIKE LINE OF it_local.
     FIELD-SYMBOLS <ls_main_expanded> LIKE LINE OF it_main_expanded.
 
+
     LOOP AT it_transports ASSIGNING <ls_transport> WHERE trkorr = iv_trkorr.
       ls_changed-obj_type = <ls_transport>-object.
       ls_changed-obj_name = <ls_transport>-obj_name.
