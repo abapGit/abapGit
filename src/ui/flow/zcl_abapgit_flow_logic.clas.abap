@@ -174,7 +174,6 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     FIELD-SYMBOLS <ls_local>     LIKE LINE OF it_local.
     FIELD-SYMBOLS <ls_main_expanded> LIKE LINE OF it_main_expanded.
 
-
     LOOP AT it_transports ASSIGNING <ls_transport> WHERE trkorr = iv_trkorr.
       ls_changed-obj_type = <ls_transport>-object.
       ls_changed-obj_name = <ls_transport>-obj_name.
@@ -526,7 +525,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
       ls_result-title  = zcl_abapgit_factory=>get_cts_api( )->read_description( lv_trkorr ).
 
       lt_objects = zcl_abapgit_factory=>get_cts_api( )->list_r3tr_by_request( lv_trkorr ).
-      LOOP AT lt_objects ASSIGNING <ls_object>.
+      LOOP AT lt_objects ASSIGNING <ls_object> WHERE object <> 'CINS' AND object <> 'NOTE'.
         ls_result-object   = <ls_object>-object.
         ls_result-obj_name = <ls_object>-obj_name.
 
