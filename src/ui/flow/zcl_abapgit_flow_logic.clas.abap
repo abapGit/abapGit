@@ -162,16 +162,16 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
   METHOD add_objects_and_files_from_tr.
 
-    DATA ls_changed      LIKE LINE OF cs_feature-changed_objects.
+    DATA ls_changed LIKE LINE OF cs_feature-changed_objects.
     DATA ls_changed_file LIKE LINE OF cs_feature-changed_files.
-    DATA ls_item         TYPE zif_abapgit_definitions=>ty_item.
-    DATA lv_filename     TYPE string.
-    DATA lv_extension    TYPE string.
-    DATA lv_main_file    TYPE string.
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_filename TYPE string.
+    DATA lv_extension TYPE string.
+    DATA lv_main_file TYPE string.
 
 
     FIELD-SYMBOLS <ls_transport> LIKE LINE OF it_transports.
-    FIELD-SYMBOLS <ls_local>     LIKE LINE OF it_local.
+    FIELD-SYMBOLS <ls_local> LIKE LINE OF it_local.
     FIELD-SYMBOLS <ls_main_expanded> LIKE LINE OF it_main_expanded.
 
     LOOP AT it_transports ASSIGNING <ls_transport> WHERE trkorr = iv_trkorr.
@@ -217,6 +217,11 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         CONCATENATE '.' lv_extension INTO lv_extension.
         lv_filename = lv_main_file.
         REPLACE FIRST OCCURRENCE OF lv_extension IN lv_filename WITH '*'.
+
+        IF lv_filename = 'package.devc*'.
+* this might leave deleted packages in git, but its okay for now
+          CONTINUE.
+        ENDIF.
 
         LOOP AT it_main_expanded ASSIGNING <ls_main_expanded>
             WHERE name CP lv_filename.
