@@ -136,7 +136,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
 
   METHOD add_local_status.
