@@ -284,9 +284,6 @@ CLASS ltcl_resolve IMPLEMENTATION.
                         WITH KEY object   = iv_object_b
                                  obj_name = iv_obj_name_b.
 
-    WRITE / ls_tadir_a-korrnum.
-    WRITE / ls_tadir_b-korrnum.
-
     cl_abap_unit_assert=>assert_true(
       act = boolc( ls_tadir_a-korrnum < ls_tadir_b-korrnum )
       msg = |{ iv_object_a } { iv_obj_name_a } should be deleted before { iv_object_b } { iv_obj_name_b }| ).
