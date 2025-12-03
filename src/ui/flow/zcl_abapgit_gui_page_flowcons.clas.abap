@@ -51,12 +51,11 @@ CLASS zcl_abapgit_gui_page_flowcons DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_flowcons IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
@@ -180,7 +179,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOWCONS IMPLEMENTATION.
 
     ls_comment-committer-name  = 'consolidate'.
     ls_comment-committer-email = 'consolidate@localhost'.
-    ls_comment-comment         = |Consolidate { sy-datum DATE = ISO } { sy-uzeit TIME = ISO }|.
+    ls_comment-comment         = |Consolidate { sy-datum DATE = ISO } { sy-uzeit TIME = ISO }\n| &&
+      |User: { sy-uname }|.
 
     INSERT iv_sha1 INTO TABLE lt_sha1.
     lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_no_blobs_multi(
