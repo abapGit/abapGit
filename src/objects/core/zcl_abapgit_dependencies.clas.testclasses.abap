@@ -253,10 +253,11 @@ CLASS ltcl_resolve IMPLEMENTATION.
       EXPORTING iv_skip_ddic = abap_true
       CHANGING ct_tadir = mt_tadir ).
 
-    then_should_be_deleted_before( iv_object_a   = 'G4BA'
-                                   iv_obj_name_a = 'ZTEST_G4BA'
-                                   iv_object_b   = 'SRVB'
-                                   iv_obj_name_b = 'ZTEST_SRVB' ).
+    " G4BA should be deleted AFTER SRVB (SRVB deleted first, then G4BA)
+    then_should_be_deleted_before( iv_object_a   = 'SRVB'
+                                   iv_obj_name_a = 'ZTEST_SRVB'
+                                   iv_object_b   = 'G4BA'
+                                   iv_obj_name_b = 'ZTEST_G4BA' ).
 
   ENDMETHOD.
 
@@ -282,6 +283,9 @@ CLASS ltcl_resolve IMPLEMENTATION.
     READ TABLE mt_tadir INTO ls_tadir_b
                         WITH KEY object   = iv_object_b
                                  obj_name = iv_obj_name_b.
+
+    WRITE / ls_tadir_a-korrnum.
+    WRITE / ls_tadir_b-korrnum.
 
     cl_abap_unit_assert=>assert_true(
       act = boolc( ls_tadir_a-korrnum < ls_tadir_b-korrnum )
