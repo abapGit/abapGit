@@ -223,20 +223,19 @@ CLASS ltcl_resolve DEFINITION FOR TESTING
   PRIVATE SECTION.
     DATA mt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
-    METHODS:
-      g4ba_after_srvb FOR TESTING RAISING cx_static_check,
+    METHODS g4ba_after_srvb FOR TESTING RAISING cx_static_check.
 
-      given_tadir
-        IMPORTING
-          iv_object   TYPE tadir-object
-          iv_obj_name TYPE tadir-obj_name,
+    METHODS given_tadir
+      IMPORTING
+        iv_object   TYPE tadir-object
+        iv_obj_name TYPE tadir-obj_name.
 
-      then_should_be_deleted_before
-        IMPORTING
-          iv_object_a   TYPE tadir-object
-          iv_obj_name_a TYPE tadir-obj_name
-          iv_object_b   TYPE tadir-object
-          iv_obj_name_b TYPE tadir-obj_name.
+    METHODS then_should_be_deleted_before
+      IMPORTING
+        iv_object_a   TYPE tadir-object
+        iv_obj_name_a TYPE tadir-obj_name
+        iv_object_b   TYPE tadir-object
+        iv_obj_name_b TYPE tadir-obj_name.
 
 ENDCLASS.
 
@@ -250,7 +249,9 @@ CLASS ltcl_resolve IMPLEMENTATION.
     given_tadir( iv_object   = 'SRVB'
                  iv_obj_name = 'ZTEST_SRVB' ).
 
-    zcl_abapgit_dependencies=>resolve( CHANGING ct_tadir = mt_tadir ).
+    zcl_abapgit_dependencies=>resolve(
+      EXPORTING iv_skip_ddic = abap_true
+      CHANGING ct_tadir = mt_tadir ).
 
     then_should_be_deleted_before( iv_object_a   = 'G4BA'
                                    iv_obj_name_a = 'ZTEST_G4BA'
