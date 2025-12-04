@@ -21,7 +21,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_g4ba IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_G4BA IMPLEMENTATION.
 
 
   METHOD get_field_rules.
@@ -99,7 +99,8 @@ CLASS zcl_abapgit_object_g4ba IMPLEMENTATION.
 
     get_generic( )->delete( iv_package ).
 
-    tadir_delete( abap_true ).
+*    tadir_delete( abap_true ).
+    UPDATE tadir SET delflag = abap_true WHERE pgmid = 'R3TR' AND object = 'G4BA' AND obj_name = ms_item-obj_name.
 
   ENDMETHOD.
 
