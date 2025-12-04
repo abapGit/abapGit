@@ -99,6 +99,8 @@ CLASS zcl_abapgit_object_g4ba IMPLEMENTATION.
 
     get_generic( )->delete( iv_package ).
 
+    tadir_delete( abap_true ).
+
   ENDMETHOD.
 
 
