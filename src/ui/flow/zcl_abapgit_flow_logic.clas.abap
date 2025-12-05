@@ -169,9 +169,8 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     DATA lv_extension    TYPE string.
     DATA lv_main_file    TYPE string.
 
-
-    FIELD-SYMBOLS <ls_transport> LIKE LINE OF it_transports.
-    FIELD-SYMBOLS <ls_local>     LIKE LINE OF it_local.
+    FIELD-SYMBOLS <ls_transport>     LIKE LINE OF it_transports.
+    FIELD-SYMBOLS <ls_local>         LIKE LINE OF it_local.
     FIELD-SYMBOLS <ls_main_expanded> LIKE LINE OF it_main_expanded.
 
 
@@ -218,6 +217,11 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
         CONCATENATE '.' lv_extension INTO lv_extension.
         lv_filename = lv_main_file.
         REPLACE FIRST OCCURRENCE OF lv_extension IN lv_filename WITH '*'.
+
+        IF lv_filename = 'package.devc*'.
+* this might leave deleted packages in git, but its okay for now
+          CONTINUE.
+        ENDIF.
 
         LOOP AT it_main_expanded ASSIGNING <ls_main_expanded>
             WHERE name CP lv_filename.
@@ -526,7 +530,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
       ls_result-title  = zcl_abapgit_factory=>get_cts_api( )->read_description( lv_trkorr ).
 
       lt_objects = zcl_abapgit_factory=>get_cts_api( )->list_r3tr_by_request( lv_trkorr ).
-      LOOP AT lt_objects ASSIGNING <ls_object>.
+      LOOP AT lt_objects ASSIGNING <ls_object> WHERE object <> 'CINS' AND object <> 'NOTE'.
         ls_result-object   = <ls_object>-object.
         ls_result-obj_name = <ls_object>-obj_name.
 
