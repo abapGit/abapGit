@@ -106,7 +106,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
+CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
 
   METHOD add_data.
@@ -683,6 +683,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
 *               lc_hex_men TYPE x VALUE '01',
                lc_hex_par TYPE x VALUE '02',
                lc_hex_rep TYPE x VALUE '80',
+               lc_hex_var TYPE x VALUE '90',
                lc_hex_rpv TYPE x VALUE '10',
                lc_hex_obj TYPE x VALUE '08'.
 
@@ -786,9 +787,13 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
           zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
 
-        " Function above does not update report transactions with variant correctly
+        " RPY_TRANSACTION_INSERT does not set the variant flag (x'10') in cinfo for report transactions with variants,
+        " so we update it manually to include both report (x'80') and variant (x'10') flags (i.e., '90' in hexadecimal).
         IF ls_tstc-cinfo O lc_hex_rpv.
-          UPDATE tstc SET cinfo = '90' WHERE tcode = ls_tstc-tcode.
+          UPDATE tstc SET cinfo = lc_hex_var WHERE tcode = ls_tstc-tcode.
+          IF sy-subrc <> 0.
+            zcx_abapgit_exception=>raise( 'Update of TSTC cinfo failed' ).
+          ENDIF.
         ENDIF.
 
     ENDCASE.
