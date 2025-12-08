@@ -6,7 +6,6 @@ CLASS zcl_abapgit_ajson DEFINITION
 
     INTERFACES zif_abapgit_ajson.
 
-
     ALIASES:
       is_empty FOR zif_abapgit_ajson~is_empty,
       exists FOR zif_abapgit_ajson~exists,
