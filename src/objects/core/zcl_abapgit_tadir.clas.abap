@@ -330,7 +330,6 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         wi_tadir_object                = ls_tadir-object
         wi_tadir_obj_name              = ls_tadir-obj_name
         wi_test_modus                  = abap_false
-        iv_delflag                     = iv_delflag
       EXCEPTIONS
         tadir_entry_not_existing       = 1
         tadir_entry_ill_type           = 2
