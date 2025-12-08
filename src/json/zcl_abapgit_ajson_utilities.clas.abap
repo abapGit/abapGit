@@ -119,7 +119,7 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
 
       IF iv_keep_empty_arrays = abap_false.
         LOOP AT io_json->mt_json_tree INTO ls_json_tree
-          WHERE type = zif_abapgit_ajson_types=>node_type-array AND children = 0.
+          WHERE type = zif_abapgit_ajson_types=>node_type-array AND children = 0. "#EC CI_SORTSEQ
 
           io_json->delete( ls_json_tree-path && ls_json_tree-name ).
 
@@ -130,7 +130,7 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
       ENDIF.
 
       LOOP AT io_json->mt_json_tree INTO ls_json_tree
-        WHERE type = zif_abapgit_ajson_types=>node_type-object AND children = 0.
+        WHERE type = zif_abapgit_ajson_types=>node_type-object AND children = 0. "#EC CI_SORTSEQ
 
         io_json->delete( ls_json_tree-path && ls_json_tree-name ).
 
