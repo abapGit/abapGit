@@ -40,8 +40,6 @@ CLASS zcl_abapgit_objects_super DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS tadir_delete
-      IMPORTING
-        iv_delflag TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
     METHODS exists_a_lock_entry_for
