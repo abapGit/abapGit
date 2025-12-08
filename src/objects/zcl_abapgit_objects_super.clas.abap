@@ -408,8 +408,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
     zcl_abapgit_factory=>get_tadir( )->delete_single(
       iv_object   = ms_item-obj_type
-      iv_obj_name = ms_item-obj_name
-      iv_delflag  = iv_delflag ).
+      iv_obj_name = ms_item-obj_name ).
 
   ENDMETHOD.
 
