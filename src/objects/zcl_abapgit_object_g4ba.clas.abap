@@ -99,6 +99,9 @@ CLASS zcl_abapgit_object_g4ba IMPLEMENTATION.
 
     get_generic( )->delete( iv_package ).
 
+* SUSH object type checks if the G4BA exists, and blocks deletion if the TADIR exists without deletion flag
+    UPDATE tadir SET delflag = abap_true WHERE pgmid = 'R3TR' AND object = 'G4BA' AND obj_name = ms_item-obj_name.
+
   ENDMETHOD.
 
 

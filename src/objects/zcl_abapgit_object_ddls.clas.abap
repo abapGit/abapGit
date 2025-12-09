@@ -430,6 +430,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
     DATA: lv_typename   TYPE typename.
     DATA: lv_ddtypekind TYPE ddtypekind.
+    DATA lv_adt_jump_enabled TYPE abap_bool.
 
     lv_typename = ms_item-obj_name.
 
@@ -439,7 +440,9 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
       IMPORTING
         typekind = lv_ddtypekind.
 
-    IF lv_ddtypekind = 'STOB'.
+    lv_adt_jump_enabled = zcl_abapgit_persist_factory=>get_settings( )->read( )->get_adt_jump_enabled( ).
+
+    IF lv_ddtypekind = 'STOB' AND lv_adt_jump_enabled = abap_true.
       open_adt_stob( ms_item-obj_name ).
       rv_exit = abap_true.
     ENDIF.

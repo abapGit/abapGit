@@ -121,7 +121,7 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           " AUTH after DCLS
           <ls_tadir>-korrnum = '715000'.
         WHEN 'SUSH'.
-          " SUSH after SUSC and SRVB
+          " SUSH after SUSC, SRVB, and G4BA
           <ls_tadir>-korrnum = '712000'.
         WHEN 'SUSC'.
           " SUSC after SUSO
