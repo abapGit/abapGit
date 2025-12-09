@@ -224,6 +224,7 @@ CLASS ltcl_resolve DEFINITION FOR TESTING
     DATA mt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     METHODS g4ba_after_srvb FOR TESTING RAISING cx_static_check.
+    METHODS sush_after_g4ba FOR TESTING RAISING cx_static_check.
 
     METHODS given_tadir
       IMPORTING
@@ -258,6 +259,26 @@ CLASS ltcl_resolve IMPLEMENTATION.
                                    iv_obj_name_a = 'ZTEST_SRVB'
                                    iv_object_b   = 'G4BA'
                                    iv_obj_name_b = 'ZTEST_G4BA' ).
+
+  ENDMETHOD.
+
+  METHOD sush_after_g4ba.
+
+    given_tadir( iv_object   = 'SUSH'
+                 iv_obj_name = 'ZTEST_SUSH' ).
+
+    given_tadir( iv_object   = 'G4BA'
+                 iv_obj_name = 'ZTEST_G4BA' ).
+
+    zcl_abapgit_dependencies=>resolve(
+      EXPORTING iv_skip_ddic = abap_true
+      CHANGING ct_tadir = mt_tadir ).
+
+    " SUSH should be deleted AFTER G4BA (G4BA deleted first, then SUSH)
+    then_should_be_deleted_before( iv_object_a   = 'G4BA'
+                                   iv_obj_name_a = 'ZTEST_G4BA'
+                                   iv_object_b   = 'SUSH'
+                                   iv_obj_name_b = 'ZTEST_SUSH' ).
 
   ENDMETHOD.
 
