@@ -84,7 +84,8 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_HOOK IMPLEMENTATION.
 * some ENHO might be inconsistent, resulting in identical filenames added to mo_files, so do a check
       IF mo_files->contains_file( iv_extra = ls_file-file
                                   iv_ext = 'abap' ) = abap_true.
-        zcx_abapgit_exception=>raise( |ENHO { ms_item-obj_name } contains enhancements with duplicate filenames (hash collision)| ).
+        zcx_abapgit_exception=>raise( |ENHO { ms_item-obj_name
+          } contains enhancements with duplicate filenames (hash collision)| ).
       ENDIF.
 
       mo_files->add_abap( iv_extra = ls_file-file
