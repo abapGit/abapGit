@@ -714,6 +714,10 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
           IMPORTING
             ev_string         = lv_xml_fdt0_application ).
 
+        IF lv_xml_fdt0_application IS INITIAL.
+          zcx_abapgit_exception=>raise( 'FDT0, empty application' ).
+        ENDIF.
+
         lo_xml_document = cl_ixml_80_20=>parse_to_document( stream_string = lv_xml_fdt0_application ).
         lo_xml_element = lo_xml_document->get_root_element( ).
 
@@ -721,7 +725,7 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
 
         io_xml->set_raw( lo_xml_element ).
 
-      CATCH cx_fdt_input cx_ixml_exception INTO lx_root.
+      CATCH cx_fdt_input INTO lx_root.
         zcx_abapgit_exception=>raise_with_text( lx_root ).
     ENDTRY.
 
