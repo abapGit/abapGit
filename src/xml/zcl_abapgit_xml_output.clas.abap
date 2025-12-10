@@ -67,6 +67,7 @@ CLASS ZCL_ABAPGIT_XML_OUTPUT IMPLEMENTATION.
 
     CALL TRANSFORMATION id
       OPTIONS initial_components = 'suppress'
+      value_handling = 'move'
       SOURCE (lt_stab)
       RESULT XML li_doc.
 
