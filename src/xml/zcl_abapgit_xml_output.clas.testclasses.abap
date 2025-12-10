@@ -4,11 +4,9 @@ CLASS zcl_abapgit_xml_output DEFINITION LOCAL FRIENDS ltcl_xml_output.
 CLASS ltcl_xml_output DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
   PUBLIC SECTION.
-    METHODS:
-      render_xml_string FOR TESTING
-        RAISING zcx_abapgit_exception,
-      add_simple_object FOR TESTING
-        RAISING zcx_abapgit_exception.
+    METHODS render_xml_string FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS add_simple_object FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS long_numc FOR TESTING RAISING zcx_abapgit_exception.
 
     TYPES: BEGIN OF ty_old,
              foo TYPE i,
@@ -100,6 +98,31 @@ CLASS ltcl_xml_output IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_xml
       exp = lv_expected ).
+
+  ENDMETHOD.
+
+  METHOD long_numc.
+
+    DATA: BEGIN OF ls_foo,
+            bar TYPE n LENGTH 255,
+          END OF ls_foo.
+
+    DATA lo_output TYPE REF TO zcl_abapgit_xml_output.
+    DATA lv_xml TYPE string.
+
+* write a bad value into the NUMC field,
+    ls_foo = '0009'.
+
+    CREATE OBJECT lo_output.
+    lo_output->zif_abapgit_xml_output~add(
+      iv_name = 'DATA'
+      ig_data = ls_foo ).
+
+    lv_xml = lo_output->zif_abapgit_xml_output~render( ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = lv_xml
+      exp = '*>0009<*' ).
 
   ENDMETHOD.
 
