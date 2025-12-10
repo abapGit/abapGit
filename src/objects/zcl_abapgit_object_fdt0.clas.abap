@@ -624,6 +624,10 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
     FIELD-SYMBOLS <ls_version> LIKE LINE OF lt_version.
 
     lv_application_id = get_application_id( ).
+    IF lv_application_id IS INITIAL.
+      rv_active = abap_false.
+      RETURN.
+    ENDIF.
 
     TRY.
         cl_fdt_factory=>get_instance_generic(
