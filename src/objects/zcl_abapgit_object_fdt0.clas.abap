@@ -624,6 +624,10 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
     FIELD-SYMBOLS <ls_version> LIKE LINE OF lt_version.
 
     lv_application_id = get_application_id( ).
+    IF lv_application_id IS INITIAL.
+      rv_active = abap_false.
+      RETURN.
+    ENDIF.
 
     TRY.
         cl_fdt_factory=>get_instance_generic(
@@ -696,7 +700,7 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
 
     DATA lo_dexc TYPE REF TO if_fdt_data_exchange.
     DATA lv_application_id TYPE fdt_admn_0000s-application_id.
-    DATA lx_fdt_input TYPE REF TO cx_fdt_input.
+    DATA lx_root TYPE REF TO cx_root.
     DATA lv_xml_fdt0_application TYPE string.
     DATA lo_xml_document TYPE REF TO if_ixml_document.
     DATA lo_xml_element TYPE REF TO if_ixml_element.
@@ -714,6 +718,10 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
           IMPORTING
             ev_string         = lv_xml_fdt0_application ).
 
+        IF lv_xml_fdt0_application IS INITIAL.
+          zcx_abapgit_exception=>raise( 'FDT0, empty application' ).
+        ENDIF.
+
         lo_xml_document = cl_ixml_80_20=>parse_to_document( stream_string = lv_xml_fdt0_application ).
         lo_xml_element = lo_xml_document->get_root_element( ).
 
@@ -721,8 +729,8 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
 
         io_xml->set_raw( lo_xml_element ).
 
-      CATCH cx_fdt_input INTO lx_fdt_input.
-        zcx_abapgit_exception=>raise_with_text( lx_fdt_input ).
+      CATCH cx_fdt_input INTO lx_root.
+        zcx_abapgit_exception=>raise_with_text( lx_root ).
     ENDTRY.
 
   ENDMETHOD.
