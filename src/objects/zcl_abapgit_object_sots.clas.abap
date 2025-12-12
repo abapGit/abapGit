@@ -149,7 +149,9 @@ CLASS zcl_abapgit_object_sots IMPLEMENTATION.
       ENDIF.
 
       READ TABLE lt_objects INDEX 1 INTO lv_object.
-      ASSERT sy-subrc = 0.
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
 
       " Handled by object serializer
       CHECK lv_object <> 'SICF' AND lv_object <> 'CPUB'.
