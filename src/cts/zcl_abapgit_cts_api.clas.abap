@@ -295,6 +295,25 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_cts_api~read_tasks.
+
+    DATA lt_request_headers TYPE trwbo_request_headers.
+
+    CALL FUNCTION 'TR_READ_REQUEST_WITH_TASKS'
+      EXPORTING
+        iv_trkorr          = iv_request
+      IMPORTING
+        et_request_headers = lt_request_headers
+      EXCEPTIONS
+        invalid_input      = 1
+        OTHERS             = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    BREAK-POINT.
+
+  ENDIF.
 
   METHOD zif_abapgit_cts_api~confirm_transport_messages.
 

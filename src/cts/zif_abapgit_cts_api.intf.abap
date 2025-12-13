@@ -180,4 +180,13 @@ INTERFACE zif_abapgit_cts_api
       !iv_transport_type_to   TYPE trfunction
     RAISING
       zcx_abapgit_exception.
+
+  METHODS read_tasks
+    IMPORTING
+      iv_request      TYPE trkorr
+    RETURNING
+      VALUE(rt_tasks) TYPE ty_trkorr_tt
+    RAISING
+      zcx_abapgit_exception.
+
 ENDINTERFACE.
