@@ -877,14 +877,13 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
   METHOD read_transport_users.
 
-    DATA lv_user TYPE sy-uname.
     DATA lt_tasks TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
+    DATA ls_task  LIKE LINE OF lt_tasks.
 
-    lt_tasks = zcl_abapgit_factory=>get_cts_api( )->read_tasks( iv_trkorr ).
-
-    lv_user = zcl_abapgit_factory=>get_cts_api( )->read( iv_trkorr )-as4user.
-
-    INSERT lv_user INTO TABLE rt_users.
+    lt_tasks = zcl_abapgit_factory=>get_cts_api( )->read_request_and_tasks( iv_trkorr ).
+    LOOP AT lt_tasks INTO ls_task.
+      INSERT ls_task-as4user INTO TABLE rt_users.
+    ENDLOOP.
 
   ENDMETHOD.
 

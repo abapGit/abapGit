@@ -212,6 +212,9 @@ CLASS lcl_cts IMPLEMENTATION.
   METHOD constructor.
     mo_data = io_data.
   ENDMETHOD.
+  METHOD zif_abapgit_cts_api~read_request_and_tasks.
+    RETURN. " todo, implement method
+  ENDMETHOD.
   METHOD zif_abapgit_cts_api~confirm_transport_messages.
     RETURN. " todo, implement method
   ENDMETHOD.

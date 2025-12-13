@@ -295,9 +295,10 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_cts_api~read_tasks.
+  METHOD zif_abapgit_cts_api~read_request_and_tasks.
 
     DATA lt_request_headers TYPE trwbo_request_headers.
+    DATA ls_task            LIKE LINE OF rt_tasks.
 
     CALL FUNCTION 'TR_READ_REQUEST_WITH_TASKS'
       EXPORTING
@@ -311,7 +312,12 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    BREAK-POINT.
+    LOOP AT lt_request_headers INTO ls_task.
+      ls_task-trkorr  = ls_task-trkorr.
+      ls_task-as4user = ls_task-as4user.
+
+      INSERT ls_task INTO TABLE rt_tasks.
+    ENDLOOP.
 
   ENDMETHOD.
 
