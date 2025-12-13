@@ -23,6 +23,7 @@ INTERFACE zif_abapgit_cts_api
       trstatus TYPE e070-trstatus,
       as4date  TYPE d,
       keys     TYPE STANDARD TABLE OF ty_transport_key WITH DEFAULT KEY,
+      as4user  TYPE sy-uname,
     END OF ty_transport_data .
   TYPES:
     BEGIN OF ty_transport_obj,

@@ -132,11 +132,19 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS read_transport_users
+      IMPORTING
+        iv_trkorr       TYPE trkorr
+      RETURNING
+        VALUE(rt_users) TYPE zif_abapgit_flow_logic=>ty_transport_users_tt
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
+CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
 
   METHOD add_local_status.
@@ -401,7 +409,7 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     lt_all_transports = find_open_transports( ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-" skip the object is in any open transport
+" skip the object if it is in any open transport
       READ TABLE lt_all_transports WITH KEY object = <ls_tadir>-object obj_name = <ls_tadir>-obj_name TRANSPORTING NO FIELDS.
       IF sy-subrc = 0 AND <ls_tadir>-object <> 'DEVC'.
 * todo: this is not correct for AFF enabled objects
@@ -664,6 +672,10 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
             <ls_feature>-full_match = abap_false.
           ENDIF.
         ENDLOOP.
+
+        IF <ls_feature>-transport-trkorr IS NOT INITIAL.
+          <ls_feature>-transport-users = read_transport_users( <ls_feature>-transport-trkorr ).
+        ENDIF.
       ENDLOOP.
 
       INSERT LINES OF lt_features INTO TABLE rs_information-features.
@@ -862,4 +874,15 @@ CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
+  METHOD read_transport_users.
+
+    DATA lv_user TYPE sy-uname.
+
+    lv_user = zcl_abapgit_factory=>get_cts_api( )->read( iv_trkorr )-as4user.
+
+    INSERT lv_user INTO TABLE rt_users.
+
+  ENDMETHOD.
+
 ENDCLASS.
