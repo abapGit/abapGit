@@ -23,6 +23,7 @@ INTERFACE zif_abapgit_cts_api
       trstatus TYPE e070-trstatus,
       as4date  TYPE d,
       keys     TYPE STANDARD TABLE OF ty_transport_key WITH DEFAULT KEY,
+      as4user  TYPE sy-uname,
     END OF ty_transport_data .
   TYPES:
     BEGIN OF ty_transport_obj,
@@ -179,4 +180,19 @@ INTERFACE zif_abapgit_cts_api
       !iv_transport_type_to   TYPE trfunction
     RAISING
       zcx_abapgit_exception.
+
+  TYPES: BEGIN OF ty_request_and_tasks,
+           trkorr  TYPE trkorr,
+           as4user TYPE sy-uname,
+         END OF ty_request_and_tasks.
+  TYPES: ty_request_and_tasks_tt TYPE STANDARD TABLE OF ty_request_and_tasks WITH DEFAULT KEY.
+
+  METHODS read_request_and_tasks
+    IMPORTING
+      iv_request      TYPE trkorr
+    RETURNING
+      VALUE(rt_tasks) TYPE ty_request_and_tasks_tt
+    RAISING
+      zcx_abapgit_exception.
+
 ENDINTERFACE.

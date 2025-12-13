@@ -31,6 +31,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         hide_full_matches   TYPE string VALUE 'hide_full_matches',
         hide_matching_files TYPE string VALUE 'hide_matching_files',
         hide_conflicts      TYPE string VALUE 'hide_conflicts',
+        show_details        TYPE string VALUE 'show_details',
       END OF c_action .
     DATA ms_information TYPE zif_abapgit_flow_logic=>ty_information .
     DATA ms_user_settings TYPE zif_abapgit_persist_user=>ty_flow_settings.
@@ -339,6 +340,16 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       iv_class = 'command'
       iv_act   = |{ c_action-hide_conflicts }| ) ).
 
+    IF ms_user_settings-show_details = abap_true.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Show details|
+      iv_class = 'command'
+      iv_act   = |{ c_action-show_details }| ) ).
+
     ri_html->add( '</span>' ).
 
   ENDMETHOD.
@@ -376,6 +387,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-hide_conflicts.
         ms_user_settings-hide_conflicts = boolc( ms_user_settings-hide_conflicts <> abap_true ).
+        zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-show_details.
+        ms_user_settings-show_details = boolc( ms_user_settings-show_details <> abap_true ).
         zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-hide_matching_files.
@@ -503,14 +518,23 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ri_html->add( 'Status: Ready for Review' ).
       ENDIF.
 
-      ri_html->add( |<br>| ).
-      ri_html->add( |First commit: { is_feature-branch-first_commit(7) }| ).
+      IF ms_user_settings-show_details = abap_true.
+        ri_html->add( |<br>| ).
+        ri_html->add( |First commit: { is_feature-branch-first_commit(7) }| ).
 
-      ri_html->add( |<br>| ).
-      IF is_feature-branch-up_to_date = abap_true.
-        ri_html->add( 'Branch up to date: True' ).
-      ELSE.
-        ri_html->add( 'Branch up to date: False' ).
+        ri_html->add( |<br>| ).
+        IF is_feature-branch-up_to_date = abap_true.
+          ri_html->add( 'Branch up to date: True' ).
+        ELSE.
+          ri_html->add( 'Branch up to date: False' ).
+        ENDIF.
+
+        IF is_feature-transport-users IS NOT INITIAL.
+          ri_html->add( |<br>| ).
+          ri_html->add( |Transport users: { concat_lines_of(
+            table = is_feature-transport-users
+            sep   = |, | ) }| ).
+        ENDIF.
       ENDIF.
     ELSE.
       ri_html->add( |No PR found| ).
@@ -604,10 +628,6 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
           is_user_settings        = ms_user_settings
           iv_repo_key             = ls_feature-repo-key ) ).
       ENDIF.
-
-* todo     LOOP AT ls_feature-changed_objects INTO ls_item.
-* todo       ri_html->add( |<tt><small>{ ls_item-obj_type } { ls_item-obj_name }</small></tt><br>| ).
-* todo     ENDLOOP.
 
       ri_html->add( '<br>' ).
     ENDLOOP.
