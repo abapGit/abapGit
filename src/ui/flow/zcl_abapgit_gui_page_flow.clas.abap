@@ -528,6 +528,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ELSE.
           ri_html->add( 'Branch up to date: False' ).
         ENDIF.
+
+        IF is_feature-transport-users IS NOT INITIAL.
+          ri_html->add( |<br>| ).
+          ri_html->add( |Transport users: ABC, ABC, ABC| ).
+        ENDIF.
       ENDIF.
     ELSE.
       ri_html->add( |No PR found| ).

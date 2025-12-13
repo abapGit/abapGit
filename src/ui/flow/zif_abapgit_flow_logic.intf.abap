@@ -34,6 +34,7 @@ INTERFACE zif_abapgit_flow_logic
            BEGIN OF transport,
              trkorr TYPE trkorr,
              title  TYPE string,
+             users  TYPE STANDARD TABLE OF syuname WITH DEFAULT KEY,
            END OF transport,
            full_match      TYPE abap_bool,
            changed_files   TYPE ty_path_name_tt,
