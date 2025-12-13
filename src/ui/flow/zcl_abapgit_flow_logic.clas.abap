@@ -403,9 +403,10 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
         ct_features      = lt_features ).
 
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
-      iv_package      = li_repo->get_package( )
-      io_dot          = li_repo->get_dot_abapgit( )
-      iv_check_exists = abap_true ).
+      iv_package        = li_repo->get_package( )
+      io_dot            = li_repo->get_dot_abapgit( )
+      iv_ignore_delflag = abap_true
+      iv_check_exists   = abap_false ).
 
     lt_all_transports = find_open_transports( ).
 
