@@ -518,8 +518,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ri_html->add( 'Status: Ready for Review' ).
       ENDIF.
 
-      ri_html->add( |<br>| ).
       IF ms_user_settings-show_details = abap_true.
+        ri_html->add( |<br>| ).
         ri_html->add( |First commit: { is_feature-branch-first_commit(7) }| ).
 
         ri_html->add( |<br>| ).
