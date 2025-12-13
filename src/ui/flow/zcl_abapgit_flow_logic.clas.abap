@@ -877,7 +877,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
   METHOD read_transport_users.
 
-    DATA lt_tasks TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
+    DATA lt_tasks TYPE zif_abapgit_cts_api=>ty_request_and_tasks_tt.
     DATA ls_task  LIKE LINE OF lt_tasks.
 
     lt_tasks = zcl_abapgit_factory=>get_cts_api( )->read_request_and_tasks( iv_trkorr ).
