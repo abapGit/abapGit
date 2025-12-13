@@ -531,7 +531,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
         IF is_feature-transport-users IS NOT INITIAL.
           ri_html->add( |<br>| ).
-          ri_html->add( |Transport users: ABC, ABC, ABC| ).
+          ri_html->add( |Transport users: { concat_lines_of(
+            table = is_feature-transport-users
+            sep   = |, | ) }| ).
         ENDIF.
       ENDIF.
     ELSE.
