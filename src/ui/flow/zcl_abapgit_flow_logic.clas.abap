@@ -325,11 +325,12 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     lt_features = get( )-features.
 
     LOOP AT lt_features INTO ls_feature WHERE repo-key = li_repo->get_key( ).
+      " IF ls_feature-branch-display_name IS NOT INITIAL
+      "     AND ls_feature-branch-up_to_date = abap_false.
+      "   lv_string = |Branch <tt>{ ls_feature-branch-display_name }</tt> is not up to date|.
+      "   INSERT lv_string INTO TABLE rs_consolidate-errors.
+      " ELSE
       IF ls_feature-branch-display_name IS NOT INITIAL
-          AND ls_feature-branch-up_to_date = abap_false.
-        lv_string = |Branch <tt>{ ls_feature-branch-display_name }</tt> is not up to date|.
-        INSERT lv_string INTO TABLE rs_consolidate-errors.
-      ELSEIF ls_feature-branch-display_name IS NOT INITIAL
           AND ls_feature-transport-trkorr IS INITIAL
           AND lines( ls_feature-changed_files ) > 0.
 * its okay if the changes are outside the starting folder
