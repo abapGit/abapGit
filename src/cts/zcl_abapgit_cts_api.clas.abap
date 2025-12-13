@@ -313,7 +313,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
     BREAK-POINT.
 
-  ENDIF.
+  ENDMETHOD.
 
   METHOD zif_abapgit_cts_api~confirm_transport_messages.
 
