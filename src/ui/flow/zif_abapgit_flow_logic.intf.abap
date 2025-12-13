@@ -18,7 +18,7 @@ INTERFACE zif_abapgit_flow_logic
            first_commit TYPE zif_abapgit_git_definitions=>ty_sha1,
          END OF ty_branch.
 
-  TYPES ty_transport_users_tt TYPE STANDARD TABLE OF syuname WITH DEFAULT KEY.
+  TYPES ty_transport_users_tt TYPE SORTED TABLE OF syuname WITH UNIQUE KEY table_line.
 
   TYPES: BEGIN OF ty_feature,
            BEGIN OF repo,
