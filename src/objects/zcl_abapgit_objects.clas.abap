@@ -179,6 +179,7 @@ CLASS zcl_abapgit_objects DEFINITION
       RETURNING
         VALUE(ri_obj)   TYPE REF TO zif_abapgit_object
       RAISING
+        zcx_abapgit_exception
         zcx_abapgit_type_not_supported .
 
     CLASS-METHODS map_tadir_to_items
@@ -213,7 +214,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -386,6 +387,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     ENDIF.
 
     TRY.
+        " note: the constructors might raise exception type zcx_abapgit_exception
         IF io_files IS BOUND AND io_i18n_params IS BOUND.
           CREATE OBJECT ri_obj TYPE (lv_class_name)
             EXPORTING
@@ -1013,7 +1015,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           is_item        = is_item
           iv_native_only = iv_native_only ).
         rv_bool = abap_true.
-      CATCH zcx_abapgit_type_not_supported.
+      CATCH zcx_abapgit_exception.
         rv_bool = abap_false.
     ENDTRY.
 
