@@ -23,6 +23,7 @@ CLASS zcl_abapgit_tadir DEFINITION
         !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
         !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
         !iv_only_local_objects TYPE abap_bool DEFAULT abap_false
+        iv_ignore_delflag      TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
@@ -32,6 +33,7 @@ CLASS zcl_abapgit_tadir DEFINITION
         !iv_package            TYPE tadir-devclass
         !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
         !iv_only_local_objects TYPE abap_bool
+        iv_ignore_delflag      TYPE abap_bool DEFAULT abap_false
       EXPORTING
         !et_packages           TYPE zif_abapgit_sap_package=>ty_devclass_tt
         !et_tadir              TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -171,6 +173,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         iv_package            = iv_package
         iv_ignore_subpackages = iv_ignore_subpackages
         iv_only_local_objects = iv_only_local_objects
+        iv_ignore_delflag     = iv_ignore_delflag
       IMPORTING
         et_tadir              = rt_tadir
         et_packages           = lt_packages ).
@@ -268,6 +271,8 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       lt_excludes  TYPE RANGE OF trobjtype,
       ls_exclude   LIKE LINE OF lt_excludes,
       lt_srcsystem TYPE RANGE OF tadir-srcsystem,
+      lt_delflag   TYPE RANGE OF tadir-delflag,
+      ls_delflag   LIKE LINE OF lt_delflag,
       ls_srcsystem LIKE LINE OF lt_srcsystem.
 
     " Determine packages to read
@@ -298,13 +303,20 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       APPEND ls_srcsystem TO lt_srcsystem.
     ENDIF.
 
+    IF iv_ignore_delflag = abap_false.
+      ls_delflag-sign   = 'I'.
+      ls_delflag-option = 'EQ'.
+      ls_delflag-low    = abap_false.
+      APPEND ls_delflag TO lt_delflag.
+    ENDIF.
+
     IF et_packages IS NOT INITIAL.
       SELECT * FROM tadir INTO CORRESPONDING FIELDS OF TABLE et_tadir
         FOR ALL ENTRIES IN et_packages
         WHERE devclass = et_packages-table_line
         AND pgmid      = 'R3TR'
         AND object     NOT IN lt_excludes
-        AND delflag    = abap_false
+        AND delflag    IN lt_delflag
         AND srcsystem  IN lt_srcsystem
         ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS. "#EC CI_GENBUFF "#EC CI_SUBRC
     ENDIF.
@@ -461,7 +473,8 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       iv_package            = iv_package
       io_dot                = io_dot
       iv_ignore_subpackages = iv_ignore_subpackages
-      iv_only_local_objects = iv_only_local_objects ).
+      iv_only_local_objects = iv_only_local_objects
+      iv_ignore_delflag     = iv_ignore_delflag ).
 
     IF io_dot IS NOT INITIAL.
       ls_dot_data = io_dot->get_data( ).

@@ -5,6 +5,9 @@ CLASS zcl_abapgit_web_cts_api DEFINITION PUBLIC.
 ENDCLASS.
 
 CLASS zcl_abapgit_web_cts_api IMPLEMENTATION.
+  METHOD zif_abapgit_cts_api~read_request_and_tasks.
+    RETURN. " todo, implement method
+  ENDMETHOD.
   METHOD zif_abapgit_cts_api~confirm_transport_messages.
     RETURN. " todo, implement method
   ENDMETHOD.

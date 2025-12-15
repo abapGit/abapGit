@@ -18,6 +18,8 @@ INTERFACE zif_abapgit_flow_logic
            first_commit TYPE zif_abapgit_git_definitions=>ty_sha1,
          END OF ty_branch.
 
+  TYPES ty_transport_users_tt TYPE SORTED TABLE OF syuname WITH UNIQUE KEY table_line.
+
   TYPES: BEGIN OF ty_feature,
            BEGIN OF repo,
              name    TYPE string,
@@ -34,6 +36,7 @@ INTERFACE zif_abapgit_flow_logic
            BEGIN OF transport,
              trkorr TYPE trkorr,
              title  TYPE string,
+             users  TYPE ty_transport_users_tt,
            END OF transport,
            full_match      TYPE abap_bool,
            changed_files   TYPE ty_path_name_tt,
