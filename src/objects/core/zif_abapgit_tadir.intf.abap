@@ -21,6 +21,7 @@ INTERFACE zif_abapgit_tadir
       !ii_log                TYPE REF TO zif_abapgit_log OPTIONAL
       !it_filter             TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
       !iv_check_exists       TYPE abap_bool DEFAULT abap_true
+      iv_ignore_delflag      TYPE abap_bool DEFAULT abap_false
     RETURNING
       VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
     RAISING
