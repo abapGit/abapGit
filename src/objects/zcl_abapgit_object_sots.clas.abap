@@ -16,7 +16,8 @@ CLASS zcl_abapgit_object_sots DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS:
       read_sots
         RETURNING
-          VALUE(rt_sots) TYPE ty_sots_tt,
+          VALUE(rt_sots) TYPE ty_sots_tt
+        RAISING zcx_abapgit_exception,
 
       create_sots
         IMPORTING
@@ -150,7 +151,7 @@ CLASS zcl_abapgit_object_sots IMPLEMENTATION.
 
       READ TABLE lt_objects INDEX 1 INTO lv_object.
       IF sy-subrc <> 0.
-        CONTINUE.
+        zcx_abapgit_exception=>raise( 'SOTS: No objects found from SOTR_OBJECT_GET_OBJECTS' ).
       ENDIF.
 
       " Handled by object serializer
