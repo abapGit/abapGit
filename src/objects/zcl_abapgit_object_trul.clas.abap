@@ -13,7 +13,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_trul IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TRUL IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -103,6 +103,7 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+
   METHOD parse_xml.
 
     DATA li_factory TYPE REF TO if_ixml_stream_factory.
@@ -113,10 +114,12 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
     li_ixml = cl_ixml=>create( ).
     li_factory = li_ixml->create_stream_factory( ).
+    ri_doc = li_ixml->create_document( ).
     li_istream = li_factory->create_istream_string( iv_xml ).
-    li_parser = li_ixml->create_parser( stream_factory = li_factory
-                                        istream        = li_istream
-                                        document       = ri_doc ).
+    li_parser = li_ixml->create_parser(
+      stream_factory = li_factory
+      istream        = li_istream
+      document       = ri_doc ).
     li_parser->add_strip_space_element( ).
     lv_subrc = li_parser->parse( ).
     ASSERT lv_subrc = 0.
@@ -124,15 +127,22 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object~serialize.
 
-    DATA lv_xml TYPE string.
+    DATA lv_xml     TYPE string.
+    DATA li_element TYPE REF TO if_ixml_element.
 
     lv_xml = /ltb/cl_tr_standard_rule=>load_to_xml( |{ ms_item-obj_name }| ).
 
+    li_element = parse_xml( lv_xml )->get_root_element( ).
+
+    io_xml->add( iv_name = 'DUMMY'
+                 ig_data = 2 ).
+
     io_xml->add_xml(
       iv_name = 'XML_DATA'
-      ii_xml  = parse_xml( lv_xml )->get_root_element( ) ).
+      ii_xml  = li_element ).
 
   ENDMETHOD.
 ENDCLASS.
