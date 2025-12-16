@@ -4,12 +4,16 @@ CLASS zcl_abapgit_object_trul DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
   PROTECTED SECTION.
   PRIVATE SECTION.
-
+    METHODS parse_xml
+      IMPORTING
+        iv_xml        TYPE string
+      RETURNING
+        VALUE(ri_doc) TYPE REF TO if_ixml_document.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TRUL IMPLEMENTATION.
+CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -99,12 +103,36 @@ CLASS ZCL_ABAPGIT_OBJECT_TRUL IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD parse_xml.
+
+    DATA li_factory TYPE REF TO if_ixml_stream_factory.
+    DATA li_istream TYPE REF TO if_ixml_istream.
+    DATA li_parser  TYPE REF TO if_ixml_parser.
+    DATA li_ixml    TYPE REF TO if_ixml.
+    DATA lv_subrc   TYPE i.
+
+    li_ixml = cl_ixml=>create( ).
+    li_factory = li_ixml->create_stream_factory( ).
+    li_istream = li_factory->create_istream_string( iv_xml ).
+    li_parser = li_ixml->create_parser( stream_factory = li_factory
+                                        istream        = li_istream
+                                        document       = ri_doc ).
+    li_parser->add_strip_space_element( ).
+    lv_subrc = li_parser->parse( ).
+    ASSERT lv_subrc = 0.
+    li_istream->close( ).
+
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
     DATA lv_xml TYPE string.
 
     lv_xml = /ltb/cl_tr_standard_rule=>load_to_xml( |{ ms_item-obj_name }| ).
+
+    io_xml->add_xml(
+      iv_name = 'XML_DATA'
+      ii_xml  = parse_xml( lv_xml )->get_root_element( ) ).
 
   ENDMETHOD.
 ENDCLASS.
