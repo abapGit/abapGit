@@ -297,30 +297,29 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   METHOD render_user_settings.
 
-    DATA lv_icon_class TYPE string.
+    DATA lv_prefix     TYPE string.
     DATA lv_user       TYPE syuname.
+    DATA lv_icon_class TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( '<span class="toolbar-light pad-sides">' ).
 
+    CLEAR lv_prefix.
     IF ms_user_settings-username_filter IS INITIAL.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
+      lv_prefix = `<i id="icon-filter-favorite" class="icon icon-check blue"></i> `.
     ENDIF.
     ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> All users|
+      iv_txt   = |{ lv_prefix }All users|
       iv_class = 'command'
       iv_act   = |{ c_action-username_filter }| ) ).
 
     LOOP AT it_users INTO lv_user.
+      CLEAR lv_prefix.
       IF ms_user_settings-username_filter = lv_user.
-        lv_icon_class = `blue`.
-      ELSE.
-        lv_icon_class = `grey`.
+        lv_prefix = `<i id="icon-filter-favorite" class="icon icon-check blue"></i> `.
       ENDIF.
       ri_html->add( ri_html->a(
-        iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> { lv_user }|
+        iv_txt   = |{ lv_prefix }{ lv_user }|
         iv_class = 'command'
         iv_act   = |{ c_action-username_filter }?user={ lv_user }| ) ).
     ENDLOOP.
