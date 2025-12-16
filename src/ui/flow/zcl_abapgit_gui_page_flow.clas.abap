@@ -463,20 +463,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   METHOD skip_show.
 
-    DATA lt_my_transports TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
-    DATA lt_user          TYPE zif_abapgit_cts_api=>ty_user_range.
-    DATA ls_user          LIKE LINE OF lt_user.
-    DATA ls_duplicate     LIKE LINE OF ms_information-transport_duplicates.
+    DATA ls_duplicate LIKE LINE OF ms_information-transport_duplicates.
 
     rv_skip = abap_false.
-
-    IF ms_user_settings-username_filter IS NOT INITIAL.
-      ls_user-low = ms_user_settings-username_filter.
-      ls_user-sign = 'I'.
-      ls_user-option = 'EQ'.
-      INSERT ls_user INTO TABLE lt_user.
-      lt_my_transports = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( it_user = lt_user ).
-    ENDIF.
 
     IF ms_user_settings-hide_full_matches = abap_true
           AND NOT is_feature-transport IS INITIAL
@@ -486,7 +475,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ENDIF.
 
     IF ms_user_settings-username_filter IS NOT INITIAL AND is_feature-transport-trkorr IS NOT INITIAL.
-      READ TABLE lt_my_transports WITH KEY table_line = is_feature-transport-trkorr TRANSPORTING NO FIELDS.
+      READ TABLE is_feature-transport-users WITH KEY table_line = ms_user_settings-username_filter TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
         rv_skip = abap_true.
         RETURN.
