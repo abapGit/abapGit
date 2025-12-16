@@ -87,7 +87,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
     DATA: lv_err       TYPE string,
           li_package   TYPE REF TO if_package,
           ls_package   TYPE scompkdtln,
-          lv_Component TYPE dlvunit.
+          lv_component TYPE dlvunit.
 
 
     ASSERT NOT is_package-devclass IS INITIAL.
