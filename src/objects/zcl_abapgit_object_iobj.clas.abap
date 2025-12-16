@@ -482,6 +482,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
       CATCH cx_sy_dyn_call_param_not_found.
         CALL FUNCTION 'BAPI_IOBJ_GETDETAIL'
           EXPORTING
+            version                  = lv_version
             infoobject               = lv_iobjnam
           IMPORTING
             details                  = <lg_details>
