@@ -7,7 +7,7 @@ INTERFACE zif_abapgit_sap_package
 
   TYPES: BEGIN OF ty_create,
            devclass  TYPE devclass,
-           korrflag  TYPE korrflag,
+           korrflag  TYPE abap_bool,
            dlvunit   TYPE tdevc-dlvunit,
            component TYPE c LENGTH 20,
            ctext     TYPE c LENGTH 60,
