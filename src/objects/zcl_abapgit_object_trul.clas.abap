@@ -13,7 +13,10 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-* TODO
+    SELECT SINGLE chuser FROM /ltb/tr_hdr INTO rv_user WHERE id = ms_item-obj_name.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -34,7 +37,10 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-* TODO
+    DATA lv_id TYPE /ltb/tr_hdr-id.
+
+    SELECT SINGLE id FROM /ltb/tr_hdr INTO lv_id WHERE id = ms_item-obj_name.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -63,12 +69,17 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
 * TODO
 
+    DATA(instance) = /ltb/cl_tr_standard_rule=>create( ms_item-obj_name ).
+    instance->is_inactive( ).
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~is_locked.
 
-* TODO
+    rv_is_locked = exists_a_lock_entry_for(
+      iv_lock_object = '/LTB/E_TR_HDR'
+      iv_argument    = ms_item-obj_name ).
 
   ENDMETHOD.
 
