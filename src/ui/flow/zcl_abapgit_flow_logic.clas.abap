@@ -539,7 +539,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     ls_date-low = sy-datum - 730.
     INSERT ls_date INTO TABLE lt_date.
 
-    lt_trkorr = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( it_date = lt_date ).
+    lt_trkorr = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( lt_date ).
 
     LOOP AT lt_trkorr INTO lv_trkorr.
       ls_result-trkorr = lv_trkorr.
