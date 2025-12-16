@@ -84,9 +84,10 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_package~create.
 
-    DATA: lv_err     TYPE string,
-          li_package TYPE REF TO if_package,
-          ls_package TYPE scompkdtln.
+    DATA: lv_err       TYPE string,
+          li_package   TYPE REF TO if_package,
+          ls_package   TYPE scompkdtln,
+          lv_Component TYPE dlvunit.
 
 
     ASSERT NOT is_package-devclass IS INITIAL.
@@ -121,7 +122,8 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     " Derive change recording based on software component (top level package)
     IF ls_package-parentcl IS INITIAL AND ls_package-dlvunit IS NOT INITIAL.
-      SELECT SINGLE COUNT(*) FROM cvers WHERE component = ls_package-dlvunit AND comp_type IN ('L', 'Z', 'J').
+      "L: Local customer developments (standard); Z: Local generations; J: Local customer developments (ABAP for cloud development)
+      SELECT SINGLE component FROM cvers INTO lv_component WHERE component = ls_package-dlvunit AND comp_type IN ('L', 'Z', 'J').
       IF sy-subrc <> 0.
         ls_package-korrflag = abap_true.
       ENDIF.
