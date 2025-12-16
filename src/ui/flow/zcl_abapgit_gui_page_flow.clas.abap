@@ -27,7 +27,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         consolidate         TYPE string VALUE 'consolidate',
         pull                TYPE string VALUE 'pull',
         stage_and_commit    TYPE string VALUE 'stage_and_commit',
-        only_my_transports  TYPE string VALUE 'only_my_transports',
+        username_filter     TYPE string VALUE 'username_filter',
         hide_full_matches   TYPE string VALUE 'hide_full_matches',
         hide_matching_files TYPE string VALUE 'hide_matching_files',
         hide_conflicts      TYPE string VALUE 'hide_conflicts',
@@ -310,16 +310,6 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ENDLOOP.
     ri_html->add( '</select>' ).
 
-    IF ms_user_settings-only_my_transports = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only my transports|
-      iv_class = 'command'
-      iv_act   = |{ c_action-only_my_transports }| ) ).
-
     IF ms_user_settings-hide_full_matches = abap_true.
       lv_icon_class = `blue`.
     ELSE.
@@ -387,8 +377,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
 
     CASE ii_event->mv_action.
-      WHEN c_action-only_my_transports.
-        ms_user_settings-only_my_transports = boolc( ms_user_settings-only_my_transports <> abap_true ).
+      WHEN c_action-username_filter.
+        BREAK-POINT.
         zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-hide_full_matches.
@@ -464,8 +454,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     rv_skip = abap_false.
 
-    IF ms_user_settings-only_my_transports = abap_true.
-      ls_user-low = sy-uname.
+    IF ms_user_settings-username_filter IS NOT INITIAL.
+      ls_user-low = ms_user_settings-username_filter.
       ls_user-sign = 'I'.
       ls_user-option = 'EQ'.
       INSERT ls_user INTO TABLE lt_user.
@@ -479,7 +469,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF ms_user_settings-only_my_transports = abap_true AND is_feature-transport-trkorr IS NOT INITIAL.
+    IF ms_user_settings-username_filter IS NOT INITIAL AND is_feature-transport-trkorr IS NOT INITIAL.
       READ TABLE lt_my_transports WITH KEY table_line = is_feature-transport-trkorr TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
         rv_skip = abap_true.
