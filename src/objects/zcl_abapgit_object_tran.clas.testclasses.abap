@@ -76,7 +76,7 @@ CLASS ltcl_split_parameters IMPLEMENTATION.
     then_param_shd_be(
       iv_line  = 1
       iv_field = 'VIEWNAME'
-      iv_value ='ZMM_BF_SPEZ_ROLE' ).
+      iv_value = 'ZMM_BF_SPEZ_ROLE' ).
 
     then_param_shd_be(
       iv_line  = 2
