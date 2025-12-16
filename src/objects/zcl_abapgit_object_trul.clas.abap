@@ -4,7 +4,7 @@ CLASS zcl_abapgit_object_trul DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS gc_xml_tag_name TYPE string VALUE 'XML_DATA'.
+    CONSTANTS c_xml_tag_name TYPE string VALUE 'XML_DATA'.
 
     METHODS parse_xml
       IMPORTING
@@ -21,7 +21,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TRUL IMPLEMENTATION.
+CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -52,7 +52,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRUL IMPLEMENTATION.
 
     li_document = io_xml->get_raw( ).
 
-    li_container_element = li_document->find_from_name_ns( gc_xml_tag_name ).
+    li_container_element = li_document->find_from_name_ns( c_xml_tag_name ).
     lv_xml = render_xml( li_container_element ).
 
     /ltb/cl_tr_standard_rule=>persist_from_xml(
@@ -164,7 +164,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRUL IMPLEMENTATION.
       ig_data = ms_item-obj_name ).
 
     io_xml->add_xml(
-      iv_name = gc_xml_tag_name
+      iv_name = c_xml_tag_name
       ii_xml  = li_element ).
 
   ENDMETHOD.
