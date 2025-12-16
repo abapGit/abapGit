@@ -2,12 +2,11 @@ INTERFACE lif_find_changes.
 
   METHODS find_changes
     IMPORTING
-      iv_main            TYPE zif_abapgit_git_definitions=>ty_sha1
-      iv_branch          TYPE zif_abapgit_git_definitions=>ty_sha1
-      iv_first_commit    TYPE zif_abapgit_git_definitions=>ty_sha1
-      iv_starting_folder TYPE string
+      iv_main         TYPE zif_abapgit_git_definitions=>ty_sha1
+      iv_branch       TYPE zif_abapgit_git_definitions=>ty_sha1
+      iv_first_commit TYPE zif_abapgit_git_definitions=>ty_sha1
     RETURNING
-      VALUE(rt_files)    TYPE zif_abapgit_flow_logic=>ty_path_name_tt
+      VALUE(rt_files) TYPE zif_abapgit_flow_logic=>ty_path_name_tt
     RAISING
       zcx_abapgit_exception.
 
@@ -283,7 +282,6 @@ CLASS lcl_find_changes IMPLEMENTATION.
       iv_tree_main   = lv_tree_main
       iv_tree_branch = lv_tree_branch ).
 
-    DELETE rt_files WHERE path NP iv_starting_folder.
   ENDMETHOD.
 ENDCLASS.
 
