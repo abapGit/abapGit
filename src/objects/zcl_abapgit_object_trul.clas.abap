@@ -137,8 +137,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TRUL IMPLEMENTATION.
 
     li_element = parse_xml( lv_xml )->get_root_element( ).
 
-    io_xml->add( iv_name = 'DUMMY'
-                 ig_data = 2 ).
+    io_xml->add(
+      iv_name = 'NAME'
+      ig_data = ms_item-obj_name ).
 
     io_xml->add_xml(
       iv_name = 'XML_DATA'
