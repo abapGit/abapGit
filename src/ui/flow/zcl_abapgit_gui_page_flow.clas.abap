@@ -324,6 +324,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         iv_act   = |{ c_action-username_filter }?user={ lv_user }| ) ).
     ENDLOOP.
 
+    ri_html->add( '<br>' ).
+
     IF ms_user_settings-hide_full_matches = abap_true.
       lv_icon_class = `blue`.
     ELSE.
