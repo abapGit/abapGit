@@ -455,7 +455,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
     lv_iobjnam = ms_item-obj_name.
 
-    IF is_active( ) = abap_true.
+    IF zif_abapgit_object~is_active( ) = abap_true.
       lv_version = 'A'.
     ELSE.
       " if its not active then look for content version
