@@ -9,7 +9,8 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_trul IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TRUL IMPLEMENTATION.
+
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -67,10 +68,10 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_active.
 
-* TODO
+    DATA lo_instance TYPE REF TO /ltb/cl_tr_standard_rule.
 
-    DATA(instance) = /ltb/cl_tr_standard_rule=>create( ms_item-obj_name ).
-    instance->is_inactive( ).
+    lo_instance ?= /ltb/cl_tr_standard_rule=>create( |{ ms_item-obj_name }| ).
+    rv_active = boolc( lo_instance->is_inactive( ) = abap_false ).
 
   ENDMETHOD.
 
@@ -101,7 +102,9 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-* TODO
+    DATA lv_xml TYPE string.
+
+    lv_xml = /ltb/cl_tr_standard_rule=>load_to_xml( |{ ms_item-obj_name }| ).
 
   ENDMETHOD.
 ENDCLASS.
