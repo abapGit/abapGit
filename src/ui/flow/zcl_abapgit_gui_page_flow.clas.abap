@@ -576,6 +576,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA lv_rendered TYPE abap_bool.
     DATA lo_timer    TYPE REF TO zcl_abapgit_timer.
     DATA lv_message  LIKE LINE OF ms_information-errors.
+    DATA lt_users     TYPE zif_abapgit_flow_logic=>ty_users_tt.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -588,7 +589,12 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ms_information = zcl_abapgit_flow_logic=>get( ).
     ENDIF.
 
-    ri_html->add( render_user_settings( zcl_abapgit_flow_logic=>get_involved_users( ms_information ) ) ).
+    lt_users = zcl_abapgit_flow_logic=>get_involved_users( ms_information ).
+    INSERT sy-uname INTO TABLE lt_users.
+    IF ms_user_settings-username_filter IS NOT INITIAL.
+      INSERT ms_user_settings-username_filter INTO TABLE lt_users.
+    ENDIF.
+    ri_html->add( render_user_settings( lt_users ) ).
 
     ri_html->add( '<br>' ).
     ri_html->add( '<br>' ).
