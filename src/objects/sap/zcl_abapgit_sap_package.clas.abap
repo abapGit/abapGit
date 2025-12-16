@@ -122,8 +122,11 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     " Derive change recording based on software component (top level package)
     IF ls_package-parentcl IS INITIAL AND ls_package-dlvunit IS NOT INITIAL.
-      "L: Local customer developments (standard); Z: Local generations; J: Local customer developments (ABAP for cloud development)
-      SELECT SINGLE component FROM cvers INTO lv_component WHERE component = ls_package-dlvunit AND comp_type IN ('L', 'Z', 'J').
+      "L: Local customer developments (standard)
+      "Z: Local generations
+      "J: Local customer developments (ABAP for cloud development)
+      SELECT SINGLE component FROM cvers INTO lv_component
+        WHERE component = ls_package-dlvunit AND comp_type IN ('L', 'Z', 'J').
       IF sy-subrc <> 0.
         ls_package-korrflag = abap_true.
       ENDIF.
