@@ -17,7 +17,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_sap_package IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -119,6 +119,14 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
       ls_package-pdevclass = zif_abapgit_sap_package~get_default_transport_layer( ).
     ENDIF.
 
+    " Derive change recording based on software component (top level package)
+    IF ls_package-parentcl IS INITIAL AND ls_package-dlvunit IS NOT INITIAL.
+      SELECT SINGLE COUNT(*) FROM cvers WHERE component = ls_package-dlvunit AND comp_type IN ('L', 'Z', 'J').
+      IF sy-subrc <> 0.
+        ls_package-korrflag = abap_true.
+      ENDIF.
+    ENDIF.
+
     cl_package_factory=>create_new_package(
       EXPORTING
         i_reuse_deleted_object     = abap_true
@@ -212,6 +220,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     ENDIF.
 
     ls_child-devclass  = iv_child.
+    ls_child-korrflag  = li_parent->wbo_korr_flag.
     ls_child-dlvunit   = li_parent->software_component.
     ls_child-component = li_parent->application_component.
     ls_child-ctext     = iv_child.
@@ -453,6 +462,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
 
   METHOD zif_abapgit_sap_package~check_object_type.
 
