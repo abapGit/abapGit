@@ -26,7 +26,7 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    SELECT SINGLE chuser FROM /ltb/tr_hdr INTO rv_user WHERE id = ms_item-obj_name.
+    SELECT SINGLE chuser FROM ('/LTB/TR_HDR') INTO rv_user WHERE id = ms_item-obj_name.
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
     ENDIF.
@@ -64,9 +64,9 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA lv_id TYPE /ltb/tr_hdr-id.
+    DATA lv_flag TYPE c LENGTH 1.
 
-    SELECT SINGLE id FROM /ltb/tr_hdr INTO lv_id WHERE id = ms_item-obj_name.
+    SELECT SINGLE inactive FROM ('/LTB/TR_HDR') INTO lv_flag WHERE id = ms_item-obj_name.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
