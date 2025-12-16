@@ -36,7 +36,7 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA lo_instance TYPE REF TO /ltb/cl_tr_standard_rule.
+    DATA lo_instance TYPE REF TO /ltb/cl_tr.
 
     CALL METHOD /ltb/cl_tr_standard_rule=>('CREATE')
       EXPORTING
@@ -100,7 +100,7 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_active.
 
-    DATA lo_instance TYPE REF TO /ltb/cl_tr_standard_rule.
+    DATA lo_instance TYPE REF TO /ltb/cl_tr.
 
     CALL METHOD /ltb/cl_tr_standard_rule=>('CREATE')
       EXPORTING
