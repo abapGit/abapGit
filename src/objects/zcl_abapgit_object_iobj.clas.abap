@@ -452,6 +452,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
     TRY.
         CALL FUNCTION 'BAPI_IOBJ_GETDETAIL'
           EXPORTING
+            version                  = '%'
             infoobject               = lv_iobjnam
           IMPORTING
             details                  = <lg_details>
