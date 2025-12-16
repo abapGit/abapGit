@@ -303,12 +303,27 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( '<span class="toolbar-light pad-sides">' ).
 
-    ri_html->add( '<select id="flow-user-select">' ).
-    ri_html->add( '<option value="">All users</option>' ).
+    IF ms_user_settings-username_filter IS INITIAL.
+      lv_icon_class = `blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
+    ri_html->add( ri_html->a(
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> All users|
+      iv_class = 'command'
+      iv_act   = |{ c_action-username_filter }| ) ).
+
     LOOP AT it_users INTO lv_user.
-      ri_html->add( |<option value="{ lv_user }">{ lv_user }</option>| ).
+      IF ms_user_settings-username_filter = lv_user.
+        lv_icon_class = `blue`.
+      ELSE.
+        lv_icon_class = `grey`.
+      ENDIF.
+      ri_html->add( ri_html->a(
+        iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> { lv_user }|
+        iv_class = 'command'
+        iv_act   = |{ c_action-username_filter }?user={ lv_user }| ) ).
     ENDLOOP.
-    ri_html->add( '</select>' ).
 
     IF ms_user_settings-hide_full_matches = abap_true.
       lv_icon_class = `blue`.
@@ -378,7 +393,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN c_action-username_filter.
-        BREAK-POINT.
+        ms_user_settings-username_filter = ii_event->query( )->get( 'USER' ).
         zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-hide_full_matches.
