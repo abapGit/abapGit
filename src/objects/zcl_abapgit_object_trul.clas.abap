@@ -4,11 +4,19 @@ CLASS zcl_abapgit_object_trul DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CONSTANTS gc_xml_tag_name TYPE string VALUE 'XML_DATA'.
+
     METHODS parse_xml
       IMPORTING
         iv_xml        TYPE string
       RETURNING
         VALUE(ri_doc) TYPE REF TO if_ixml_document.
+
+    METHODS render_xml
+      IMPORTING
+        ii_element    TYPE REF TO if_ixml_element
+      RETURNING
+        VALUE(rv_xml) TYPE string.
 ENDCLASS.
 
 
@@ -28,14 +36,28 @@ CLASS ZCL_ABAPGIT_OBJECT_TRUL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-* TODO
+    DATA lo_instance TYPE REF TO /ltb/cl_tr_standard_rule.
+
+    lo_instance ?= /ltb/cl_tr_standard_rule=>create( |{ ms_item-obj_name }| ).
+    lo_instance->delete( ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
-* TODO
+    DATA li_document TYPE REF TO if_ixml_document.
+    DATA li_container_element TYPE REF TO if_ixml_element.
+    DATA lv_xml TYPE string.
+
+    li_document = io_xml->get_raw( ).
+
+    li_container_element = li_document->find_from_name_ns( gc_xml_tag_name ).
+    lv_xml = render_xml( li_container_element ).
+
+    /ltb/cl_tr_standard_rule=>persist_from_xml(
+      iv_xml = lv_xml
+      iv_id = |{ ms_item-obj_name }| ).
 
   ENDMETHOD.
 
@@ -142,8 +164,26 @@ CLASS ZCL_ABAPGIT_OBJECT_TRUL IMPLEMENTATION.
       ig_data = ms_item-obj_name ).
 
     io_xml->add_xml(
-      iv_name = 'XML_DATA'
+      iv_name = gc_xml_tag_name
       ii_xml  = li_element ).
+
+  ENDMETHOD.
+
+
+  METHOD render_xml.
+
+    DATA li_stream   TYPE REF TO if_ixml_ostream.
+    DATA li_document TYPE REF TO if_ixml_document.
+
+
+    li_document = cl_ixml=>create( )->create_document( ).
+    li_stream = cl_ixml=>create( )->create_stream_factory( )->create_ostream_cstring( rv_xml ).
+    li_document->append_child( ii_element ).
+
+    cl_ixml=>create( )->create_renderer(
+        document = li_document
+        ostream  = li_stream
+    )->render( ).
 
   ENDMETHOD.
 ENDCLASS.
