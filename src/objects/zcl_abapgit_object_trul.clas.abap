@@ -21,7 +21,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_trul IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TRUL IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -36,7 +36,7 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA lo_instance TYPE REF TO /ltb/cl_tr.
+    DATA lo_instance TYPE REF TO object.
 
     CALL METHOD /ltb/cl_tr_standard_rule=>('CREATE')
       EXPORTING
@@ -44,7 +44,7 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
       RECEIVING
         ro_instance = lo_instance.
 
-    lo_instance->delete( ).
+    CALL METHOD lo_instance->('DELETE').
 
   ENDMETHOD.
 
@@ -100,7 +100,8 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_active.
 
-    DATA lo_instance TYPE REF TO /ltb/cl_tr.
+    DATA lo_instance TYPE REF TO object.
+    DATA lv_inactive TYPE abap_bool.
 
     CALL METHOD /ltb/cl_tr_standard_rule=>('CREATE')
       EXPORTING
@@ -108,7 +109,11 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
       RECEIVING
         ro_instance = lo_instance.
 
-    rv_active = boolc( lo_instance->is_inactive( ) = abap_false ).
+    CALL METHOD lo_instance->('IS_INACTIVE')
+      RECEIVING
+        rv_inactive = lv_inactive.
+
+    rv_active = boolc( lv_inactive = abap_false ).
 
   ENDMETHOD.
 
@@ -168,7 +173,7 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
     CALL METHOD /ltb/cl_tr_standard_rule=>('LOAD_TO_XML')
       EXPORTING
-        iv_id = |{ ms_item-obj_name }|
+        iv_id  = |{ ms_item-obj_name }|
       RECEIVING
         rv_xml = lv_xml.
 
