@@ -86,6 +86,8 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         zcx_abapgit_exception.
 
     METHODS render_user_settings
+      IMPORTING
+        it_users       TYPE zif_abapgit_flow_logic=>ty_users_tt
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -296,9 +298,17 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
   METHOD render_user_settings.
 
     DATA lv_icon_class TYPE string.
+    DATA lv_user       TYPE syuname.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( '<span class="toolbar-light pad-sides">' ).
+
+    ri_html->add( '<select id="flow-user-select">' ).
+    ri_html->add( '<option value="">All users</option>' ).
+    LOOP AT it_users INTO lv_user.
+      ri_html->add( |<option value="{ lv_user }">{ lv_user }</option>| ).
+    ENDLOOP.
+    ri_html->add( '</select>' ).
 
     IF ms_user_settings-only_my_transports = abap_true.
       lv_icon_class = `blue`.
@@ -572,7 +582,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ms_information = zcl_abapgit_flow_logic=>get( ).
     ENDIF.
 
-    ri_html->add( render_user_settings( ) ).
+    ri_html->add( render_user_settings( zcl_abapgit_flow_logic=>get_involved_users( ms_information ) ) ).
 
     ri_html->add( '<br>' ).
     ri_html->add( '<br>' ).

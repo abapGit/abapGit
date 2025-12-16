@@ -6,6 +6,12 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS get_involved_users
+      IMPORTING
+        is_information  TYPE zif_abapgit_flow_logic=>ty_information
+      RETURNING
+        VALUE(rt_users) TYPE zif_abapgit_flow_logic=>ty_users_tt.
+
     CLASS-METHODS consolidate
       IMPORTING
         ii_online             TYPE REF TO zif_abapgit_repo_online
@@ -136,7 +142,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       IMPORTING
         iv_trkorr       TYPE trkorr
       RETURNING
-        VALUE(rt_users) TYPE zif_abapgit_flow_logic=>ty_transport_users_tt
+        VALUE(rt_users) TYPE zif_abapgit_flow_logic=>ty_users_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -145,6 +151,20 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
+
+
+  METHOD get_involved_users.
+
+    FIELD-SYMBOLS <ls_feature> LIKE LINE OF is_information-features.
+
+
+    LOOP AT is_information-features ASSIGNING <ls_feature>.
+      INSERT LINES OF <ls_feature>-transport-users INTO TABLE rt_users.
+    ENDLOOP.
+
+    DELETE rt_users WHERE table_line IS INITIAL.
+
+  ENDMETHOD.
 
 
   METHOD add_local_status.
