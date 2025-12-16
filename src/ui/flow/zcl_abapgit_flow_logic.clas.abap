@@ -150,21 +150,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
-
-
-  METHOD get_involved_users.
-
-    FIELD-SYMBOLS <ls_feature> LIKE LINE OF is_information-features.
-
-
-    LOOP AT is_information-features ASSIGNING <ls_feature>.
-      INSERT LINES OF <ls_feature>-transport-users INTO TABLE rt_users.
-    ENDLOOP.
-
-    DELETE rt_users WHERE table_line IS INITIAL.
-
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_FLOW_LOGIC IMPLEMENTATION.
 
 
   METHOD add_local_status.
@@ -714,6 +700,23 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_involved_users.
+
+    FIELD-SYMBOLS <ls_feature> LIKE LINE OF is_information-features.
+
+    DATA lv_user TYPE syuname.
+
+    LOOP AT is_information-features ASSIGNING <ls_feature>.
+      LOOP AT <ls_feature>-transport-users INTO lv_user.
+        INSERT lv_user INTO TABLE rt_users.
+      ENDLOOP.
+    ENDLOOP.
+
+    DELETE rt_users WHERE table_line IS INITIAL.
+
+  ENDMETHOD.
+
+
   METHOD list_repos.
 
     DATA lt_repos  TYPE zif_abapgit_repo_srv=>ty_repo_list.
@@ -737,6 +740,19 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       li_online ?= li_repo.
       INSERT li_online INTO TABLE rt_repos.
     ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD read_transport_users.
+
+    DATA lt_tasks TYPE zif_abapgit_cts_api=>ty_request_and_tasks_tt.
+    DATA ls_task  LIKE LINE OF lt_tasks.
+
+    lt_tasks = zcl_abapgit_factory=>get_cts_api( )->read_request_and_tasks( iv_trkorr ).
+    LOOP AT lt_tasks INTO ls_task.
+      INSERT ls_task-as4user INTO TABLE rt_users.
+    ENDLOOP.
+
   ENDMETHOD.
 
 
@@ -896,17 +912,4 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
-  METHOD read_transport_users.
-
-    DATA lt_tasks TYPE zif_abapgit_cts_api=>ty_request_and_tasks_tt.
-    DATA ls_task  LIKE LINE OF lt_tasks.
-
-    lt_tasks = zcl_abapgit_factory=>get_cts_api( )->read_request_and_tasks( iv_trkorr ).
-    LOOP AT lt_tasks INTO ls_task.
-      INSERT ls_task-as4user INTO TABLE rt_users.
-    ENDLOOP.
-
-  ENDMETHOD.
-
 ENDCLASS.
