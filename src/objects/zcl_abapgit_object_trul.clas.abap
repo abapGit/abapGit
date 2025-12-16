@@ -38,7 +38,12 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
     DATA lo_instance TYPE REF TO /ltb/cl_tr_standard_rule.
 
-    lo_instance ?= /ltb/cl_tr_standard_rule=>create( |{ ms_item-obj_name }| ).
+    CALL METHOD /ltb/cl_tr_standard_rule=>('CREATE')
+      EXPORTING
+        iv_tr_id    = |{ ms_item-obj_name }|
+      RECEIVING
+        ro_instance = lo_instance.
+
     lo_instance->delete( ).
 
   ENDMETHOD.
@@ -46,18 +51,19 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA li_document TYPE REF TO if_ixml_document.
+    DATA li_document          TYPE REF TO if_ixml_document.
     DATA li_container_element TYPE REF TO if_ixml_element.
-    DATA lv_xml TYPE string.
+    DATA lv_xml               TYPE string.
 
     li_document = io_xml->get_raw( ).
 
     li_container_element = li_document->find_from_name_ns( c_xml_tag_name ).
     lv_xml = render_xml( li_container_element ).
 
-    /ltb/cl_tr_standard_rule=>persist_from_xml(
-      iv_xml = lv_xml
-      iv_id = |{ ms_item-obj_name }| ).
+    CALL METHOD /ltb/cl_tr_standard_rule=>('PERSIST_FROM_XML')
+      EXPORTING
+        iv_xml = lv_xml
+        iv_id  = |{ ms_item-obj_name }|.
 
   ENDMETHOD.
 
@@ -96,7 +102,12 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
 
     DATA lo_instance TYPE REF TO /ltb/cl_tr_standard_rule.
 
-    lo_instance ?= /ltb/cl_tr_standard_rule=>create( |{ ms_item-obj_name }| ).
+    CALL METHOD /ltb/cl_tr_standard_rule=>('CREATE')
+      EXPORTING
+        iv_tr_id    = |{ ms_item-obj_name }|
+      RECEIVING
+        ro_instance = lo_instance.
+
     rv_active = boolc( lo_instance->is_inactive( ) = abap_false ).
 
   ENDMETHOD.
@@ -155,7 +166,11 @@ CLASS zcl_abapgit_object_trul IMPLEMENTATION.
     DATA lv_xml     TYPE string.
     DATA li_element TYPE REF TO if_ixml_element.
 
-    lv_xml = /ltb/cl_tr_standard_rule=>load_to_xml( |{ ms_item-obj_name }| ).
+    CALL METHOD /ltb/cl_tr_standard_rule=>('LOAD_TO_XML')
+      EXPORTING
+        iv_id = |{ ms_item-obj_name }|
+      RECEIVING
+        rv_xml = lv_xml.
 
     li_element = parse_xml( lv_xml )->get_root_element( ).
 
