@@ -361,12 +361,17 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
         i_iobjnm  = lv_objna
         i_objvers = 'A'
       IMPORTING
-        e_s_viobj = <lg_viobj>.
+        e_s_viobj = <lg_viobj>
+      EXCEPTIONS
+        iobj_not_found = 1.
+    IF sy-subrc <> 0.
+      rv_active = abap_false.
+    ELSE.
+      ASSIGN COMPONENT 'OBJSTAT' OF STRUCTURE <lg_viobj> TO <lg_objstat>.
 
-    ASSIGN COMPONENT 'OBJSTAT' OF STRUCTURE <lg_viobj> TO <lg_objstat>.
-
-    IF <lg_objstat> = 'ACT' AND sy-subrc = 0.
-      rv_active = abap_true.
+      IF <lg_objstat> = 'ACT' AND sy-subrc = 0.
+        rv_active = abap_true.
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
