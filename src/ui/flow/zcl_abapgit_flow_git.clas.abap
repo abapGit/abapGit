@@ -108,10 +108,11 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       ENDIF.
 
       <ls_feature>-changed_files = li_find->find_changes(
-        iv_main            = ls_main-sha1
-        iv_branch          = <ls_feature>-branch-sha1
-        iv_first_commit    = <ls_feature>-branch-first_commit
-        iv_starting_folder = lv_starting_folder ).
+        iv_main         = ls_main-sha1
+        iv_branch       = <ls_feature>-branch-sha1
+        iv_first_commit = <ls_feature>-branch-first_commit ).
+
+      DELETE <ls_feature>-changed_files WHERE path NP lv_starting_folder.
 
       <ls_feature>-changed_objects = map_files_to_objects(
         io_dot     = io_dot
