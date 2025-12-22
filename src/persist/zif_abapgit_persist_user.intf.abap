@@ -29,11 +29,11 @@ INTERFACE zif_abapgit_persist_user
     END OF ty_list_settings.
 
   TYPES: BEGIN OF ty_flow_settings,
-            only_my_transports  TYPE abap_bool,
             hide_full_matches   TYPE abap_bool,
             hide_matching_files TYPE abap_bool,
             hide_conflicts      TYPE abap_bool,
             show_details        TYPE abap_bool,
+            username_filter     TYPE syuname,
           END OF ty_flow_settings.
 
   METHODS get_changes_only

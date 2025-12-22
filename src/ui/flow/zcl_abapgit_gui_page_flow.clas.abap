@@ -27,7 +27,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         consolidate         TYPE string VALUE 'consolidate',
         pull                TYPE string VALUE 'pull',
         stage_and_commit    TYPE string VALUE 'stage_and_commit',
-        only_my_transports  TYPE string VALUE 'only_my_transports',
+        username_filter     TYPE string VALUE 'username_filter',
         hide_full_matches   TYPE string VALUE 'hide_full_matches',
         hide_matching_files TYPE string VALUE 'hide_matching_files',
         hide_conflicts      TYPE string VALUE 'hide_conflicts',
@@ -86,6 +86,8 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         zcx_abapgit_exception.
 
     METHODS render_user_settings
+      IMPORTING
+        it_users       TYPE zif_abapgit_flow_logic=>ty_users_tt
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -295,20 +297,34 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   METHOD render_user_settings.
 
+    DATA lv_prefix     TYPE string.
+    DATA lv_user       TYPE syuname.
     DATA lv_icon_class TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( '<span class="toolbar-light pad-sides">' ).
 
-    IF ms_user_settings-only_my_transports = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
+    CLEAR lv_prefix.
+    IF ms_user_settings-username_filter IS INITIAL.
+      lv_prefix = `<i id="icon-filter-favorite" class="icon icon-check blue"></i> `.
     ENDIF.
     ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only my transports|
+      iv_txt   = |{ lv_prefix }All users|
       iv_class = 'command'
-      iv_act   = |{ c_action-only_my_transports }| ) ).
+      iv_act   = |{ c_action-username_filter }| ) ).
+
+    LOOP AT it_users INTO lv_user.
+      CLEAR lv_prefix.
+      IF ms_user_settings-username_filter = lv_user.
+        lv_prefix = `<i id="icon-filter-favorite" class="icon icon-check blue"></i> `.
+      ENDIF.
+      ri_html->add( ri_html->a(
+        iv_txt   = |{ lv_prefix }{ lv_user }|
+        iv_class = 'command'
+        iv_act   = |{ c_action-username_filter }?user={ lv_user }| ) ).
+    ENDLOOP.
+
+    ri_html->add( '<br>' ).
 
     IF ms_user_settings-hide_full_matches = abap_true.
       lv_icon_class = `blue`.
@@ -377,8 +393,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
 
     CASE ii_event->mv_action.
-      WHEN c_action-only_my_transports.
-        ms_user_settings-only_my_transports = boolc( ms_user_settings-only_my_transports <> abap_true ).
+      WHEN c_action-username_filter.
+        ms_user_settings-username_filter = ii_event->query( )->get( 'USER' ).
         zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-hide_full_matches.
@@ -447,20 +463,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   METHOD skip_show.
 
-    DATA lt_my_transports TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
-    DATA lt_user          TYPE zif_abapgit_cts_api=>ty_user_range.
-    DATA ls_user          LIKE LINE OF lt_user.
-    DATA ls_duplicate     LIKE LINE OF ms_information-transport_duplicates.
+    DATA ls_duplicate LIKE LINE OF ms_information-transport_duplicates.
 
     rv_skip = abap_false.
-
-    IF ms_user_settings-only_my_transports = abap_true.
-      ls_user-low = sy-uname.
-      ls_user-sign = 'I'.
-      ls_user-option = 'EQ'.
-      INSERT ls_user INTO TABLE lt_user.
-      lt_my_transports = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( it_user = lt_user ).
-    ENDIF.
 
     IF ms_user_settings-hide_full_matches = abap_true
           AND NOT is_feature-transport IS INITIAL
@@ -469,8 +474,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF ms_user_settings-only_my_transports = abap_true AND is_feature-transport-trkorr IS NOT INITIAL.
-      READ TABLE lt_my_transports WITH KEY table_line = is_feature-transport-trkorr TRANSPORTING NO FIELDS.
+    IF ms_user_settings-username_filter IS NOT INITIAL AND is_feature-transport-trkorr IS NOT INITIAL.
+      READ TABLE is_feature-transport-users WITH KEY table_line = ms_user_settings-username_filter TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
         rv_skip = abap_true.
         RETURN.
@@ -528,13 +533,13 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ELSE.
           ri_html->add( 'Branch up to date: False' ).
         ENDIF.
+      ENDIF.
 
-        IF is_feature-transport-users IS NOT INITIAL.
-          ri_html->add( |<br>| ).
-          ri_html->add( |Transport users: { concat_lines_of(
+      IF ms_user_settings-show_details = abap_true AND is_feature-transport-users IS NOT INITIAL.
+        ri_html->add( |<br>| ).
+        ri_html->add( |Transport users: { concat_lines_of(
             table = is_feature-transport-users
             sep   = |, | ) }| ).
-        ENDIF.
       ENDIF.
     ELSE.
       ri_html->add( |No PR found| ).
@@ -560,6 +565,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA lv_rendered TYPE abap_bool.
     DATA lo_timer    TYPE REF TO zcl_abapgit_timer.
     DATA lv_message  LIKE LINE OF ms_information-errors.
+    DATA lt_users     TYPE zif_abapgit_flow_logic=>ty_users_tt.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -572,7 +578,12 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ms_information = zcl_abapgit_flow_logic=>get( ).
     ENDIF.
 
-    ri_html->add( render_user_settings( ) ).
+    lt_users = zcl_abapgit_flow_logic=>get_involved_users( ms_information ).
+    INSERT sy-uname INTO TABLE lt_users.
+    IF ms_user_settings-username_filter IS NOT INITIAL.
+      INSERT ms_user_settings-username_filter INTO TABLE lt_users.
+    ENDIF.
+    ri_html->add( render_user_settings( lt_users ) ).
 
     ri_html->add( '<br>' ).
     ri_html->add( '<br>' ).
