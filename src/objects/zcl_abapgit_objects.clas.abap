@@ -417,7 +417,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                 EXPORTING
                   is_item = is_item.
             ENDIF.
-          CATCH cx_sy_create_object_error.
+          CATCH cx_sy_create_object_error zcx_abapgit_exception.
             RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
         ENDTRY.
     ENDTRY.
