@@ -4,6 +4,7 @@
 CLASS lcl_nodes_helper DEFINITION FINAL.
   PUBLIC SECTION.
 
+
     DATA mt_nodes TYPE zif_abapgit_ajson_types=>ty_nodes_tt.
     METHODS add
       IMPORTING
