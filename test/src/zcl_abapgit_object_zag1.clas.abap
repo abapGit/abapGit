@@ -88,7 +88,7 @@ CLASS zcl_abapgit_object_zag1 IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~get_metadata.
-    RETURN.
+    rs_metadata = get_metadata( ).
   ENDMETHOD.
 
   METHOD zif_abapgit_object~get_comparator.
