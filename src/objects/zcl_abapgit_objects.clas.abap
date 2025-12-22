@@ -213,7 +213,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -399,7 +399,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
               is_item     = is_item
               iv_language = zif_abapgit_definitions=>c_english.
         ENDIF.
-      CATCH cx_sy_create_object_error.
+      CATCH cx_sy_create_object_error zcx_abapgit_exception.
         IF iv_native_only = abap_true.
           " No native support? -> fail
           RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
