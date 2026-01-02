@@ -27,24 +27,24 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FLOW_PAGE_UTILS IMPLEMENTATION.
+CLASS zcl_abapgit_flow_page_utils IMPLEMENTATION.
 
 
   METHOD call_diff.
 
-    DATA lv_key TYPE zif_abapgit_persistence=>ty_value.
+    DATA lv_key         TYPE zif_abapgit_persistence=>ty_value.
     DATA lv_remote_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
-    DATA ls_file TYPE zif_abapgit_git_definitions=>ty_file.
+    DATA ls_file        TYPE zif_abapgit_git_definitions=>ty_file.
     DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
-    DATA li_repo TYPE REF TO zif_abapgit_repo.
-    DATA lv_blob TYPE xstring.
-    DATA ls_local TYPE zif_abapgit_git_definitions=>ty_file.
-    DATA ls_remote TYPE zif_abapgit_git_definitions=>ty_file.
-    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lo_filter TYPE REF TO zcl_abapgit_object_filter_obj.
-    DATA lt_files_item TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    DATA ls_file_item LIKE LINE OF lt_files_item.
-    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA li_repo        TYPE REF TO zif_abapgit_repo.
+    DATA lv_blob        TYPE xstring.
+    DATA ls_local       TYPE zif_abapgit_git_definitions=>ty_file.
+    DATA ls_remote      TYPE zif_abapgit_git_definitions=>ty_file.
+    DATA lt_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lo_filter      TYPE REF TO zcl_abapgit_object_filter_obj.
+    DATA lt_files_item  TYPE zif_abapgit_flow_logic=>ty_local_files.
+    DATA ls_file_item   LIKE LINE OF lt_files_item.
+    DATA ls_item        TYPE zif_abapgit_definitions=>ty_item.
 
     FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
 

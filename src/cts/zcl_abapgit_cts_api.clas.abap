@@ -636,6 +636,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
     SELECT trkorr FROM e070 INTO TABLE lt_tasks
       WHERE strkorr = iv_request
+      AND trfunction = zif_abapgit_cts_api=>c_transport_type-wb_task
       ORDER BY PRIMARY KEY.
     IF sy-subrc <> 0.
       RETURN.
