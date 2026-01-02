@@ -20,7 +20,8 @@ INTERFACE zif_abapgit_flow_logic
 
   TYPES ty_users_tt TYPE SORTED TABLE OF syuname WITH UNIQUE KEY table_line.
 
-  TYPES ty_local_files TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_file_item WITH DEFAULT KEY.
+  TYPES ty_local_files TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
+    WITH NON-UNIQUE KEY item-obj_type item-obj_name.
 
   TYPES: BEGIN OF ty_feature,
            BEGIN OF repo,
