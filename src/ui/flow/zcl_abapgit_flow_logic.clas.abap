@@ -54,7 +54,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
 
     CLASS-METHODS check_files
       IMPORTING
-        it_local          TYPE zif_abapgit_definitions=>ty_files_item_tt
+        it_local          TYPE zif_abapgit_flow_logic=>ty_local_files
         it_features       TYPE zif_abapgit_flow_logic=>ty_features
       CHANGING
         ct_main_expanded  TYPE zif_abapgit_git_definitions=>ty_expanded_tt
@@ -72,7 +72,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       IMPORTING
         ii_repo          TYPE REF TO zif_abapgit_repo
         it_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
-        it_local         TYPE zif_abapgit_definitions=>ty_files_item_tt
+        it_local         TYPE zif_abapgit_flow_logic=>ty_local_files
       CHANGING
         ct_features      TYPE zif_abapgit_flow_logic=>ty_features
         ct_transports    TYPE ty_transports_tt
@@ -89,7 +89,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       IMPORTING
         iv_trkorr        TYPE trkorr
         it_transports    TYPE ty_transports_tt
-        it_local         TYPE zif_abapgit_definitions=>ty_files_item_tt
+        it_local         TYPE zif_abapgit_flow_logic=>ty_local_files
         it_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       CHANGING
         cs_feature       TYPE zif_abapgit_flow_logic=>ty_feature
@@ -106,7 +106,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
 
     CLASS-METHODS add_local_status
       IMPORTING
-        it_local    TYPE zif_abapgit_definitions=>ty_files_item_tt
+        it_local    TYPE zif_abapgit_flow_logic=>ty_local_files
       CHANGING
         ct_features TYPE zif_abapgit_flow_logic=>ty_features
       RAISING
@@ -134,7 +134,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
         it_all_transports      TYPE ty_transports_tt
         it_features            TYPE zif_abapgit_flow_logic=>ty_features
       RETURNING
-        VALUE(rt_local)        TYPE zif_abapgit_definitions=>ty_files_item_tt
+        VALUE(rt_local)        TYPE zif_abapgit_flow_logic=>ty_local_files
       RAISING
         zcx_abapgit_exception.
 
@@ -368,7 +368,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     DATA lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA lt_filter   TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA lo_filter   TYPE REF TO zcl_abapgit_object_filter_obj.
-    DATA lt_local    TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_local    TYPE zif_abapgit_flow_logic=>ty_local_files.
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
     DATA li_repo     TYPE REF TO zif_abapgit_repo.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
@@ -606,7 +606,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     DATA lt_relevant_transports TYPE ty_trkorr_tt.
     DATA lt_repos TYPE ty_repos_tt.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
-    DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_local TYPE zif_abapgit_flow_logic=>ty_local_files.
     DATA lt_real_transports LIKE lt_all_transports.
 
     FIELD-SYMBOLS <ls_feature> LIKE LINE OF lt_features.
