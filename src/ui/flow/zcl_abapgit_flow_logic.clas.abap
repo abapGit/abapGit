@@ -35,8 +35,8 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
     TYPES: BEGIN OF ty_transport,
              trkorr   TYPE trkorr,
              title    TYPE string,
-             object   TYPE e071-object,
-             obj_name TYPE e071-obj_name,
+             object   TYPE tadir-object,
+             obj_name TYPE tadir-obj_name,
              devclass TYPE tadir-devclass,
            END OF ty_transport.
 
