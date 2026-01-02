@@ -40,7 +40,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
              devclass TYPE tadir-devclass,
            END OF ty_transport.
 
-    TYPES ty_transports_tt TYPE STANDARD TABLE OF ty_transport WITH DEFAULT KEY.
+    TYPES ty_transports_tt TYPE STANDARD TABLE OF ty_transport WITH NON-UNIQUE KEY trkorr.
 
     TYPES ty_trkorr_tt TYPE STANDARD TABLE OF trkorr WITH DEFAULT KEY.
 
