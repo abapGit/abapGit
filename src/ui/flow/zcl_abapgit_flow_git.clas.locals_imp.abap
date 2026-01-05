@@ -176,8 +176,8 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
   METHOD find_changed_in_commit.
 
     DATA ls_parent_commit TYPE zcl_abapgit_git_pack=>ty_commit.
-    DATA lt_files LIKE ct_files.
-    DATA ls_file LIKE LINE OF lt_files.
+    DATA lt_files         LIKE ct_files.
+    DATA ls_file          LIKE LINE OF lt_files.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF mt_objects.
 
@@ -191,8 +191,8 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
     ls_parent_commit = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).
 
     lt_files = mo_walker->walk(
-      iv_path       = '/'
-      iv_tree_main  = ls_parent_commit-tree
+      iv_path        = '/'
+      iv_tree_main   = ls_parent_commit-tree
       iv_tree_branch = is_commit-tree ).
 
     LOOP AT lt_files INTO ls_file.
