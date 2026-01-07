@@ -188,12 +188,13 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
         IF zif_abapgit_object~exists( ) = abap_false.
           " Older repos will not have USOBHASH so we try to reconstruct it
           IF ls_usobhash IS INITIAL.
-            MOVE-CORRESPONDING ms_key TO ls_usobhash.
             ASSIGN COMPONENT 'DISPLAY_NAME' OF STRUCTURE <ls_data_head> TO <lv_display_name>.
             IF <lv_display_name> CP 'R3TR*'.
               SPLIT <lv_display_name> AT space INTO ls_usobhash-pgmid ls_usobhash-object ls_usobhash-obj_name.
             ENDIF.
           ENDIF.
+
+          MOVE-CORRESPONDING ms_key TO ls_usobhash.
 
           TRY.
               CALL METHOD lo_su22->('IF_SU22_ADT_OBJECT~CREATE')
@@ -256,10 +257,11 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    IF cl_su2x_api=>su2x_exist_check( is_usobkey            = ms_key
-                                      iv_no_usobhash_update = abap_true ) IS NOT INITIAL.
-      rv_bool = abap_true.
-    ENDIF.
+    DATA ls_usobhash TYPE usobhash.
+
+    SELECT SINGLE * FROM usobhash INTO ls_usobhash WHERE name = ms_key-name AND type = ms_key-type.
+
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -275,7 +277,7 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 
@@ -380,6 +382,8 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
         IF ms_key-type = 'HS' OR ms_key-type = 'HT'.
           SELECT SINGLE * FROM usobhash INTO ls_usobhash WHERE name = ms_key-name AND type = ms_key-type.
           IF sy-subrc = 0.
+            CLEAR: ls_usobhash-name, ls_usobhash-type.
+
             io_xml->add( iv_name = 'USOBHASH'
                          ig_data = ls_usobhash ).
           ENDIF.
