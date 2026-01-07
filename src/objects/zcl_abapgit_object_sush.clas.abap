@@ -111,6 +111,7 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~delete.
+
     DATA:
       lo_su22 TYPE REF TO object,
       lx_err  TYPE REF TO cx_static_check.
@@ -255,8 +256,8 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    IF cl_su2x_api=>su2x_exist_check( EXPORTING is_usobkey            = ms_key
-                                                iv_no_usobhash_update = abap_true ) IS NOT INITIAL.
+    IF cl_su2x_api=>su2x_exist_check( is_usobkey            = ms_key
+                                      iv_no_usobhash_update = abap_true ) IS NOT INITIAL.
       rv_bool = abap_true.
     ENDIF.
 
@@ -363,27 +364,25 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
         io_xml->add( iv_name = 'HEAD'
                      ig_data = <ls_head> ).
 
-        "USOBX
         io_xml->add( iv_name = 'USOBX'
                      ig_data = lt_usobx ).
 
-        "USOBT
         io_xml->add( iv_name = 'USOBT'
                      ig_data = lt_usobt ).
 
-        "USOBX_EXT
         io_xml->add( iv_name = 'USOBX_EXT'
                      ig_data = <lt_usobx_ext> ).
 
-        "USOBT_EXT
         io_xml->add( iv_name = 'USOBT_EXT'
                      ig_data = <lt_usobt_ext> ).
 
         " Serialize hash data because it contains the leading application name needed for recreating the object
-        SELECT SINGLE * FROM usobhash INTO ls_usobhash WHERE name = ms_key-name AND type = ms_key-type.
-        IF sy-subrc = 0.
-          io_xml->add( iv_name = 'USOBHASH'
-                       ig_data = ls_usobhash ).
+        IF ms_key-type = 'HS' OR ms_key-type = 'HT'.
+          SELECT SINGLE * FROM usobhash INTO ls_usobhash WHERE name = ms_key-name AND type = ms_key-type.
+          IF sy-subrc = 0.
+            io_xml->add( iv_name = 'USOBHASH'
+                         ig_data = ls_usobhash ).
+          ENDIF.
         ENDIF.
 
       CATCH cx_static_check INTO lx_err.
