@@ -20,6 +20,9 @@ CLASS zcl_abapgit_object_sush DEFINITION
   PROTECTED SECTION.
 
   PRIVATE SECTION.
+
+    DATA ms_key TYPE usobkey.
+
     METHODS clear_metadata
       CHANGING
         cs_data_head TYPE any
@@ -91,38 +94,33 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
         RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDTRY.
 
+    ms_key = ms_item-obj_name.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
-    DATA ls_key TYPE usobkey.
-
-    ls_key = ms_item-obj_name.
 
     SELECT SINGLE modifier FROM usob_sm INTO rv_user
-      WHERE name = ls_key-name AND type = ls_key-type.
+      WHERE name = ms_key-name AND type = ms_key-type.
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
     ENDIF.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~delete.
     DATA:
       lo_su22 TYPE REF TO object,
-      ls_key  TYPE        usobkey,
       lx_err  TYPE REF TO cx_static_check.
-
-    ASSERT NOT ms_item-obj_name IS INITIAL.
-
-    ls_key = ms_item-obj_name.
 
     TRY.
         CREATE OBJECT lo_su22 TYPE ('CL_SU22_ADT_OBJECT').
 
         CALL METHOD lo_su22->('IF_SU22_ADT_OBJECT~DELETE')
           EXPORTING
-            iv_key     = ls_key
+            iv_key     = ms_key
             iv_cleanup = abap_true.
       CATCH cx_static_check INTO lx_err.
         zcx_abapgit_exception=>raise_with_text( lx_err ).
@@ -141,6 +139,7 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
       lo_appl           TYPE REF TO object,
       lt_usobx          TYPE usobx_t,
       lt_usobt          TYPE usobt_t,
+      ls_usobhash       TYPE usobhash,
       lr_appl_head      TYPE REF TO data,
       lr_data_head      TYPE REF TO data,
       lr_data_usobx_ext TYPE REF TO data,
@@ -152,9 +151,8 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
                    <ls_appl_head>      TYPE any,
                    <lt_data_usobx_ext> TYPE ANY TABLE,
                    <lt_data_usobt_ext> TYPE ANY TABLE,
+                   <lv_display_name>   TYPE any,
                    <ls_devclass>       TYPE any.
-
-    ASSERT NOT ms_item-obj_name IS INITIAL.
 
     TRY.
         CREATE DATA lr_data_head TYPE ('IF_SU22_ADT_OBJECT=>TS_SU2X_HEAD').
@@ -166,58 +164,74 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
         CREATE DATA lr_data_usobt_ext TYPE ('IF_SU22_ADT_OBJECT=>TT_SU2X_T').
         ASSIGN lr_data_usobt_ext->* TO <lt_data_usobt_ext>.
 
-        "HEAD
         io_xml->read( EXPORTING iv_name = 'HEAD'
                       CHANGING  cg_data = <ls_data_head> ).
 
-        "USOBX
         io_xml->read( EXPORTING iv_name = 'USOBX'
                       CHANGING  cg_data = lt_usobx ).
 
-        "USOBT
         io_xml->read( EXPORTING iv_name = 'USOBT'
                       CHANGING  cg_data = lt_usobt ).
 
-        "USOBX_EXT
         io_xml->read( EXPORTING iv_name = 'USOBX_EXT'
                       CHANGING  cg_data = <lt_data_usobx_ext> ).
 
-        "USOBT_EXT
         io_xml->read( EXPORTING iv_name = 'USOBT_EXT'
                       CHANGING  cg_data = <lt_data_usobt_ext> ).
 
-        CREATE OBJECT lo_su22
-          TYPE ('CL_SU22_ADT_OBJECT').
+        io_xml->read( EXPORTING iv_name = 'USOBHASH'
+                      CHANGING  cg_data = ls_usobhash ).
 
-        " check if lead application exists
-        TRY.
-            CALL METHOD lo_su22->('IF_SU22_ADT_OBJECT~CHECK')
-              EXPORTING
-                id_mode = '02'
-              CHANGING
-                cs_head = <ls_data_head>.
-          CATCH cx_static_check INTO lx_err.
-            lv_text = |Lead application of object { ms_item-obj_name } does not exist|.
+        CREATE OBJECT lo_su22 TYPE ('CL_SU22_ADT_OBJECT').
+
+        IF zif_abapgit_object~exists( ) = abap_false.
+          " Older repos will not have USOBHASH so we try to reconstruct it
+          IF ls_usobhash IS INITIAL.
+            MOVE-CORRESPONDING ms_key TO ls_usobhash.
+            ASSIGN COMPONENT 'DISPLAY_NAME' OF STRUCTURE <ls_data_head> TO <lv_display_name>.
+            IF <lv_display_name> CP 'R3TR*'.
+              SPLIT <lv_display_name> AT space INTO ls_usobhash-pgmid ls_usobhash-object ls_usobhash-obj_name.
+            ENDIF.
+          ENDIF.
+
+          TRY.
+              CALL METHOD lo_su22->('IF_SU22_ADT_OBJECT~CREATE')
+                EXPORTING
+                  iv_new_key = ls_usobhash
+                RECEIVING
+                  rs_key     = ls_key.
+            CATCH cx_static_check INTO lx_err.
+              zcx_abapgit_exception=>raise_with_text( lx_err ).
+          ENDTRY.
+        ELSE.
+          " check if lead application exists
+          TRY.
+              CALL METHOD lo_su22->('IF_SU22_ADT_OBJECT~CHECK')
+                EXPORTING
+                  id_mode = '02'
+                CHANGING
+                  cs_head = <ls_data_head>.
+            CATCH cx_static_check INTO lx_err.
+              zcx_abapgit_exception=>raise_with_text( lx_err ).
+          ENDTRY.
+
+          CREATE DATA lr_appl_head TYPE ('CL_SU2X=>TS_HEAD').
+          ASSIGN lr_appl_head->* TO <ls_appl_head>.
+
+          CREATE OBJECT lo_appl TYPE ('CL_SU22_APPL').
+
+          CALL METHOD lo_appl->('GET_DATA')
+            EXPORTING
+              is_key  = ms_key
+            IMPORTING
+              es_head = <ls_appl_head>.
+
+          ASSIGN COMPONENT 'DEVCLASS' OF STRUCTURE <ls_appl_head> TO <ls_devclass>.
+          IF <ls_devclass> <> iv_package.
+            lv_text =
+            |Lead application of object { ms_item-obj_name } does not exist in package { <ls_devclass> }|.
             zcx_abapgit_exception=>raise( lv_text ).
-        ENDTRY.
-
-        MOVE-CORRESPONDING <ls_data_head> TO ls_key.
-        CREATE DATA lr_appl_head TYPE ('CL_SU2X=>TS_HEAD').
-        ASSIGN lr_appl_head->* TO <ls_appl_head>.
-
-        CREATE OBJECT lo_appl TYPE ('CL_SU22_APPL').
-
-        CALL METHOD lo_appl->('GET_DATA')
-          EXPORTING
-            is_key  = ls_key
-          IMPORTING
-            es_head = <ls_appl_head>.
-
-        ASSIGN COMPONENT 'DEVCLASS' OF STRUCTURE <ls_appl_head> TO <ls_devclass>.
-        IF <ls_devclass> <> iv_package.
-          lv_text =
-          |Lead application of object { ms_item-obj_name } does not exist in package { <ls_devclass> }|.
-          zcx_abapgit_exception=>raise( lv_text ).
+          ENDIF.
         ENDIF.
 
         TRY.
@@ -240,17 +254,17 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~exists.
-    DATA: ls_usobhash TYPE usobhash.
 
-    SELECT SINGLE * FROM usobhash INTO ls_usobhash "#EC CI_ALL_FIELDS_NEEDED
-        WHERE name = ms_item-obj_name.                "#EC CI_SGLSELECT
-
-    rv_bool = boolc( sy-subrc = 0 ).
+    IF cl_su2x_api=>su2x_exist_check( EXPORTING is_usobkey            = ms_key
+                                                iv_no_usobhash_update = abap_true ) IS NOT INITIAL.
+      rv_bool = abap_true.
+    ENDIF.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_comparator.
+    RETURN.
   ENDMETHOD.
 
 
@@ -281,6 +295,7 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
+    RETURN.
   ENDMETHOD.
 
 
@@ -297,8 +312,8 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA:
-      ls_key       TYPE usobkey,
       lo_su22      TYPE REF TO object,
+      ls_usobhash  TYPE usobhash,
       lt_usobx     TYPE usobx_t,
       lt_usobt     TYPE usobt_t,
       lr_head      TYPE REF TO data,
@@ -311,8 +326,6 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
                    <lt_usobx_ext> TYPE ANY TABLE,
                    <lt_usobt_ext> TYPE ANY TABLE.
 
-    ls_key = ms_item-obj_name.
-
     TRY.
         CREATE DATA lr_head TYPE ('IF_SU22_ADT_OBJECT=>TS_SU2X_HEAD').
         ASSIGN lr_head->* TO <ls_head>.
@@ -323,13 +336,12 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
         CREATE DATA lr_usobt_ext TYPE ('IF_SU22_ADT_OBJECT=>TT_SU2X_T').
         ASSIGN lr_usobt_ext->* TO <lt_usobt_ext>.
 
-        CREATE OBJECT lo_su22
-          TYPE ('CL_SU22_ADT_OBJECT').
+        CREATE OBJECT lo_su22 TYPE ('CL_SU22_ADT_OBJECT').
 
         TRY.
             CALL METHOD lo_su22->('IF_SU22_ADT_OBJECT~SELECT')
               EXPORTING
-                iv_key       = ls_key
+                iv_key       = ms_key
               IMPORTING
                 es_head      = <ls_head>
                 et_usobx     = lt_usobx
@@ -348,7 +360,6 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
             ct_usobx_ext = <lt_usobx_ext>
             ct_usobt_ext = <lt_usobt_ext> ).
 
-        "HEAD
         io_xml->add( iv_name = 'HEAD'
                      ig_data = <ls_head> ).
 
@@ -367,6 +378,13 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
         "USOBT_EXT
         io_xml->add( iv_name = 'USOBT_EXT'
                      ig_data = <lt_usobt_ext> ).
+
+        " Serialize hash data because it contains the leading application name needed for recreating the object
+        SELECT SINGLE * FROM usobhash INTO ls_usobhash WHERE name = ms_key-name AND type = ms_key-type.
+        IF sy-subrc = 0.
+          io_xml->add( iv_name = 'USOBHASH'
+                       ig_data = ls_usobhash ).
+        ENDIF.
 
       CATCH cx_static_check INTO lx_err.
         zcx_abapgit_exception=>raise_with_text( lx_err ).
