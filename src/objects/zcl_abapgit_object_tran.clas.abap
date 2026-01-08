@@ -699,7 +699,6 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     DATA: ls_item TYPE zif_abapgit_definitions=>ty_item,
           lr_head TYPE REF TO data,
           lx_err  TYPE REF TO cx_root,
-          ls_sush TYPE usob_sm,
           lo_sush TYPE REF TO zcl_abapgit_object_sush.
 
     FIELD-SYMBOLS <ls_head> TYPE any.
