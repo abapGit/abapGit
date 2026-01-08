@@ -696,7 +696,13 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
           lt_tstca        TYPE ty_tstca,
           lt_param_values TYPE ty_param_values,
           ls_rsstcd       TYPE rsstcd.
+    DATA: ls_item TYPE zif_abapgit_definitions=>ty_item,
+          lr_head TYPE REF TO data,
+          lx_err  TYPE REF TO cx_root,
+          ls_sush TYPE usob_sm,
+          lo_sush TYPE REF TO zcl_abapgit_object_sush.
 
+    FIELD-SYMBOLS <ls_head> TYPE any.
 
     IF zif_abapgit_object~exists( ) = abap_true.
       zif_abapgit_object~delete( iv_package   = iv_package
@@ -807,13 +813,46 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       deserialize_texts( io_xml ).
     ENDIF.
 
+    " Import SU22 data by reusing SUSH deserializer
+    TRY.
+        CREATE DATA lr_head TYPE ('IF_SU22_ADT_OBJECT=>TS_SU2X_HEAD').
+        ASSIGN lr_head->* TO <ls_head>.
+      CATCH cx_root.
+        RETURN. ">>> no SU22 in this release
+    ENDTRY.
+
+    TRY.
+        io_xml->read( EXPORTING iv_name = 'HEAD'
+                      CHANGING  cg_data = <ls_head> ).
+
+        IF <ls_head> IS NOT INITIAL.
+          ls_item-obj_type    = 'SUSH'.
+          ls_item-obj_name    = ms_item-obj_name.
+          ls_item-obj_name+30 = 'TR'.
+
+          CREATE OBJECT lo_sush TYPE zcl_abapgit_object_sush
+            EXPORTING
+              is_item     = ls_item
+              iv_language = mv_language.
+
+          lo_sush->zif_abapgit_object~deserialize(
+            iv_package   = iv_package
+            io_xml       = io_xml
+            iv_step      = iv_step
+            ii_log       = ii_log
+            iv_transport = iv_transport ).
+        ENDIF.
+
+      CATCH cx_root INTO lx_err.
+        zcx_abapgit_exception=>raise_with_text( lx_err ).
+    ENDTRY.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
 
     DATA: lv_tcode TYPE tstc-tcode.
-
 
     SELECT SINGLE tcode FROM tstc INTO lv_tcode
       WHERE tcode = ms_item-obj_name.                   "#EC CI_GENBUFF
@@ -861,7 +900,6 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
 
-
     APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
     <ls_bdcdata>-program  = 'SAPLSEUK'.
     <ls_bdcdata>-dynpro   = '0390'.
@@ -902,7 +940,9 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
           ls_tstcp       TYPE tstcp,
           lt_tstca       TYPE ty_tstca,
           ls_gui_attr    TYPE tstcc.
-
+    DATA: ls_item TYPE zif_abapgit_definitions=>ty_item,
+          ls_sush TYPE usob_sm,
+          lo_sush TYPE REF TO zcl_abapgit_object_sush.
 
     lv_transaction = ms_item-obj_name.
 
@@ -942,6 +982,21 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts( io_xml ).
+    ENDIF.
+
+    " Add SU22 data by reusing SUSH serializer
+    SELECT SINGLE * FROM usob_sm INTO ls_sush WHERE name = ms_item-obj_name AND type = 'TR'.
+    IF sy-subrc = 0.
+      ls_item-obj_type    = 'SUSH'.
+      ls_item-obj_name    = ms_item-obj_name.
+      ls_item-obj_name+30 = 'TR'.
+
+      CREATE OBJECT lo_sush TYPE zcl_abapgit_object_sush
+        EXPORTING
+          is_item     = ls_item
+          iv_language = mv_language.
+
+      lo_sush->zif_abapgit_object~serialize( io_xml ).
     ENDIF.
 
   ENDMETHOD.
