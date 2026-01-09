@@ -209,7 +209,9 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
 
     mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    mi_config = mi_repo->get_data_config( ).
+
+    CREATE OBJECT mi_config TYPE zcl_abapgit_data_config.
+    mi_config->load_config( iv_key ).
 
   ENDMETHOD.
 
@@ -243,6 +245,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     ls_config-where        = build_where( lo_map ).
 
     mi_config->add_config( ls_config ).
+    mi_config->save_config( mi_repo->get_key( ) ).
 
   ENDMETHOD.
 
@@ -258,6 +261,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     ls_config-name = to_upper( lo_map->get( c_id-table ) ).
 
     mi_config->remove_config( ls_config ).
+    mi_config->save_config( mi_repo->get_key( ) ).
 
   ENDMETHOD.
 
@@ -275,6 +279,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     ls_config-where        = build_where( lo_map ).
 
     mi_config->update_config( ls_config ).
+    mi_config->save_config( mi_repo->get_key( ) ).
 
   ENDMETHOD.
 
@@ -420,26 +425,4 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     ri_html->add( '</div>' ).
 
   ENDMETHOD.
-
-
-  METHOD validate_table_name.
-    DATA: ls_item TYPE zif_abapgit_definitions=>ty_item,
-          lv_exists TYPE abap_bool,
-          lv_table_name TYPE sobj_name.
-
-    lv_table_name = to_upper( condense( iv_table_name ) ).
-
-    CLEAR ls_item.
-    ls_item-obj_name = lv_table_name.
-    ls_item-obj_type = 'TABL'.
-    lv_exists = zcl_abapgit_objects=>exists( ls_item ).
-
-    IF lv_exists = abap_false.
-      co_validation_log->set(
-          iv_key = c_id-table
-          iv_val = |Table { lv_table_name } does not exists | ).
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
