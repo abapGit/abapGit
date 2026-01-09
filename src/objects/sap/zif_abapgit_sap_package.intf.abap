@@ -7,6 +7,7 @@ INTERFACE zif_abapgit_sap_package
 
   TYPES: BEGIN OF ty_create,
            devclass  TYPE devclass,
+           korrflag  TYPE abap_bool,
            dlvunit   TYPE tdevc-dlvunit,
            component TYPE c LENGTH 20,
            ctext     TYPE c LENGTH 60,
@@ -72,7 +73,7 @@ INTERFACE zif_abapgit_sap_package
     RETURNING
       VALUE(rv_transport_layer) TYPE devlayer
     RAISING
-       zcx_abapgit_exception.
+      zcx_abapgit_exception.
   METHODS check_object_type
     IMPORTING
       iv_obj_type TYPE tadir-object
