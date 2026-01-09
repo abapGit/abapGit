@@ -209,6 +209,13 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_obj_type   TYPE zif_abapgit_definitions=>ty_item-obj_type
       RETURNING
         VALUE(rv_bool) TYPE abap_bool.
+
+    CLASS-METHODS is_prog_enho_include
+      IMPORTING
+        !iv_obj_name   TYPE tadir-obj_name
+      RETURNING
+        VALUE(rv_bool) TYPE abap_bool.
+
 ENDCLASS.
 
 
@@ -1164,6 +1171,12 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         is_item-obj_name }| ).
     ENDIF.
 
+    " Skip enhancement implementation includes - handled by ENHO serializer
+    " See SAP note 1025291 for background on TADIR entries
+    IF is_item-obj_type = 'PROG' AND is_prog_enho_include( is_item-obj_name ) = abap_true.
+      zcx_abapgit_exception=>raise( |Object skipped, ENHO include should not be in TADIR: PROG { is_item-obj_name }| ).
+    ENDIF.
+
     lo_files = zcl_abapgit_objects_files=>new( is_item ).
 
     li_obj = create_object(
@@ -1343,4 +1356,36 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
+
+  METHOD is_prog_enho_include.
+
+    DATA lv_enho_name TYPE enhname.
+
+    " ENHO includes ending in 'E' or 'EIMP' at position 31 shouldn't be in TADIR
+    " but appear due to bug (SAP note 1025291). Skip them, sources are in ENHO.
+
+    " Format: <enho_name><padding_with_=><E/EIMP>
+    " Example: ZMM_SOME_ENHANCEMENT==========E
+
+    IF NOT ( iv_obj_name+30(4) = 'EIMP' OR
+             iv_obj_name+30(4) = 'E   ' ).
+      RETURN.
+    ENDIF.
+
+    " Extract enhancement name: first 30 chars, strip trailing '='
+    lv_enho_name = iv_obj_name(30).
+    SHIFT lv_enho_name RIGHT DELETING TRAILING '='.
+    SHIFT lv_enho_name LEFT DELETING LEADING space.
+
+    " Check if corresponding ENHO exists
+    SELECT SINGLE obj_name FROM tadir INTO lv_enho_name
+      WHERE pgmid = 'R3TR'
+      AND object = 'ENHO'
+      AND obj_name = lv_enho_name.
+
+    rv_bool = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
 ENDCLASS.

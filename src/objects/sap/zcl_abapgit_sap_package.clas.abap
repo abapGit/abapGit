@@ -25,33 +25,6 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_sap_package~get_default_transport_layer.
-
-    " Get default transport layer
-    TRY.
-        CALL FUNCTION 'TR_GET_TRANSPORT_TARGET'
-          EXPORTING
-            iv_use_default             = abap_true
-            iv_get_layer_only          = abap_true
-          IMPORTING
-            ev_layer                   = rv_transport_layer
-          EXCEPTIONS
-            wrong_call                 = 1
-            invalid_input              = 2
-            cts_initialization_failure = 3
-            OTHERS                     = 4.
-        IF sy-subrc <> 0.
-      " Return empty layer (i.e. "local workbench request" for the package)
-          CLEAR rv_transport_layer.
-        ENDIF.
-      CATCH cx_sy_dyn_call_illegal_func.
-* the function module doesnt exist in open-abap
-        CLEAR rv_transport_layer.
-    ENDTRY.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req.
 
     DATA: li_package TYPE REF TO if_package.
@@ -82,11 +55,39 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_sap_package~check_object_type.
+
+    " check package restrictions, closed package, descriptive or
+    " functional package
+    cl_pak_object_types=>check_object_type(
+      EXPORTING
+        i_working_mode         = 'I'
+        i_package_name         = mv_package
+        i_pgmid                = 'R3TR'
+        i_object_type          = iv_obj_type
+      EXCEPTIONS
+        wrong_object_type      = 1
+        package_not_extensible = 2
+        package_not_loaded     = 3
+        OTHERS                 = 4 ).
+    CASE sy-subrc.
+      WHEN 0.
+        RETURN.
+      WHEN 2.
+        zcx_abapgit_exception=>raise( |Object type { iv_obj_type } not allowed for package { mv_package }| ).
+      WHEN OTHERS.
+        zcx_abapgit_exception=>raise_t100( ).
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_sap_package~create.
 
-    DATA: lv_err     TYPE string,
-          li_package TYPE REF TO if_package,
-          ls_package TYPE scompkdtln.
+    DATA: lv_err       TYPE string,
+          li_package   TYPE REF TO if_package,
+          ls_package   TYPE scompkdtln,
+          lv_component TYPE dlvunit.
 
 
     ASSERT NOT is_package-devclass IS INITIAL.
@@ -117,6 +118,18 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     " For transportable packages, get default transport and layer
     IF ls_package-devclass(1) <> '$' AND ls_package-pdevclass IS INITIAL.
       ls_package-pdevclass = zif_abapgit_sap_package~get_default_transport_layer( ).
+    ENDIF.
+
+    " Derive change recording based on software component (top level package)
+    IF ls_package-parentcl IS INITIAL AND ls_package-dlvunit IS NOT INITIAL.
+      "L: Local customer developments (standard)
+      "Z: Local generations
+      "J: Local customer developments (ABAP for cloud development)
+      SELECT SINGLE component FROM cvers INTO lv_component
+        WHERE component = ls_package-dlvunit AND comp_type IN ('L', 'Z', 'J').
+      IF sy-subrc <> 0.
+        ls_package-korrflag = abap_true.
+      ENDIF.
     ENDIF.
 
     cl_package_factory=>create_new_package(
@@ -212,6 +225,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     ENDIF.
 
     ls_child-devclass  = iv_child.
+    ls_child-korrflag  = li_parent->wbo_korr_flag.
     ls_child-dlvunit   = li_parent->software_component.
     ls_child-component = li_parent->application_component.
     ls_child-ctext     = iv_child.
@@ -284,6 +298,34 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     rs_package-parentcl  = li_package->super_package_name.
     rs_package-pdevclass = li_package->transport_layer.
     rs_package-as4user   = li_package->changed_by.
+    rs_package-korrflag  = li_package->wbo_korr_flag.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_sap_package~get_default_transport_layer.
+
+    " Get default transport layer
+    TRY.
+        CALL FUNCTION 'TR_GET_TRANSPORT_TARGET'
+          EXPORTING
+            iv_use_default             = abap_true
+            iv_get_layer_only          = abap_true
+          IMPORTING
+            ev_layer                   = rv_transport_layer
+          EXCEPTIONS
+            wrong_call                 = 1
+            invalid_input              = 2
+            cts_initialization_failure = 3
+            OTHERS                     = 4.
+        IF sy-subrc <> 0.
+      " Return empty layer (i.e. "local workbench request" for the package)
+          CLEAR rv_transport_layer.
+        ENDIF.
+      CATCH cx_sy_dyn_call_illegal_func.
+* the function module doesnt exist in open-abap
+        CLEAR rv_transport_layer.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -451,32 +493,6 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Package name { mv_package } is not valid| ).
     ENDIF.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_sap_package~check_object_type.
-
-    " check package restrictions, closed package, descriptive or
-    " functional package
-    cl_pak_object_types=>check_object_type(
-      EXPORTING
-        i_working_mode         = 'I'
-        i_package_name         = mv_package
-        i_pgmid                = 'R3TR'
-        i_object_type          = iv_obj_type
-      EXCEPTIONS
-        wrong_object_type      = 1
-        package_not_extensible = 2
-        package_not_loaded     = 3
-        OTHERS                 = 4 ).
-    CASE sy-subrc.
-      WHEN 0.
-        RETURN.
-      WHEN 2.
-        zcx_abapgit_exception=>raise( |Object type { iv_obj_type } not allowed for package { mv_package }| ).
-      WHEN OTHERS.
-        zcx_abapgit_exception=>raise_t100( ).
-    ENDCASE.
 
   ENDMETHOD.
 ENDCLASS.
