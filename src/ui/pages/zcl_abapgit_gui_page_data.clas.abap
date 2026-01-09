@@ -362,6 +362,27 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD validate_table_name.
+    DATA: ls_item       TYPE zif_abapgit_definitions=>ty_item,
+          lv_exists     TYPE abap_bool,
+          lv_table_name TYPE sobj_name.
+
+    lv_table_name = to_upper( condense( iv_table_name ) ).
+
+    CLEAR ls_item.
+    ls_item-obj_name = lv_table_name.
+    ls_item-obj_type = 'TABL'.
+    lv_exists = zcl_abapgit_objects=>exists( ls_item ).
+
+    IF lv_exists = abap_false.
+      co_validation_log->set(
+        iv_key = c_id-table
+        iv_val = |Table { lv_table_name } does not exists | ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_event_handler~on_event.
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
