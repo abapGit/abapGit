@@ -238,10 +238,10 @@ CLASS zcl_abapgit_gui_page_db_entry IMPLEMENTATION.
 
     " Create syntax highlighter
     CASE iv_db_type.
-      WHEN 'REPO_DATA'.
-        lo_highlighter = zcl_abapgit_syntax_factory=>create( '*.json' ).
-      WHEN 'REPO_CS'.
+      WHEN zcl_abapgit_persistence_db=>c_type_repo_csum.
         lo_highlighter = zcl_abapgit_syntax_factory=>create( '*.txt' ).
+      WHEN zcl_abapgit_persistence_db=>c_type_repo_data.
+        lo_highlighter = zcl_abapgit_syntax_factory=>create( '*.json' ).
       WHEN OTHERS.
         lo_highlighter = zcl_abapgit_syntax_factory=>create( '*.xml' ).
         lv_data        = zcl_abapgit_xml_pretty=>print( lv_data ).
