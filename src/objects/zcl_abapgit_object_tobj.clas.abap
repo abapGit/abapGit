@@ -135,15 +135,15 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
 
 
     io_xml->read( EXPORTING iv_name = 'OBJH'
-                  CHANGING cg_data = ls_objh ).
+                  CHANGING  cg_data = ls_objh ).
     io_xml->read( EXPORTING iv_name = 'OBJT'
-                  CHANGING cg_data = ls_objt ).
+                  CHANGING  cg_data = ls_objt ).
     io_xml->read( EXPORTING iv_name = 'OBJS'
-                  CHANGING cg_data = lt_objs ).
+                  CHANGING  cg_data = lt_objs ).
     io_xml->read( EXPORTING iv_name = 'OBJSL'
-                  CHANGING cg_data = lt_objsl ).
+                  CHANGING  cg_data = lt_objsl ).
     io_xml->read( EXPORTING iv_name = 'OBJM'
-                  CHANGING cg_data = lt_objm ).
+                  CHANGING  cg_data = lt_objm ).
 
     CALL FUNCTION 'OBJ_GENERATE'
       EXPORTING
@@ -193,8 +193,14 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
       WHERE objectname = ls_objh-objectname
       AND objecttype = ls_objh-objecttype.
 
+* fm OBJ_GENERATE ignores several fields like primary table flag
+* for Individual Transaction Objects
+    IF ls_objh-objecttype = 'T'.
+      MODIFY objs FROM TABLE lt_objs.
+    ENDIF.
+
     io_xml->read( EXPORTING iv_name = 'TOBJ'
-                  CHANGING cg_data = ls_tobj ).
+                  CHANGING  cg_data = ls_tobj ).
     ls_tobj-tvdir-gendate = sy-datum.
     ls_tobj-tvdir-gentime = sy-uzeit.
     ls_tobj-tvdir-devclass = iv_package.
