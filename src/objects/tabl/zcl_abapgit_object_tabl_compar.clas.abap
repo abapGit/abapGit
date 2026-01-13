@@ -209,7 +209,7 @@ CLASS zcl_abapgit_object_tabl_compar IMPLEMENTATION.
           ELSEIF ls_old_table_field-rollname IS NOT INITIAL.
             ii_log->add_info(
               iv_msg  = |Field { ls_old_table_field-fieldname }: | &
-                        |Data type changed from date element { ls_old_table_field-rollname } | &
+                        |Data type changed from data element { ls_old_table_field-rollname } | &
                         |to internal type | &
                         |{ ls_new_table_field-inttype }(length { ls_new_table_field-intlen })|
               is_item = ms_item ).
