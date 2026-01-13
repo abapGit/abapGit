@@ -135,10 +135,12 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
       lx_err       TYPE REF TO cx_static_check,
       lv_text      TYPE string.
 
-    FIELD-SYMBOLS: <ls_data_head>    TYPE any,
-                   <ls_appl_head>    TYPE any,
-                   <lv_display_name> TYPE any,
-                   <ls_devclass>     TYPE any.
+    FIELD-SYMBOLS:
+      <ls_data_head>             TYPE any,
+      <ls_appl_head>             TYPE any,
+      <lv_abap_language_version> TYPE uccheck,
+      <lv_display_name>          TYPE any,
+      <ls_devclass>              TYPE any.
 
     TRY.
         CREATE DATA lr_data_head TYPE ('IF_SU22_ADT_OBJECT=>TS_SU2X_HEAD').
@@ -157,6 +159,11 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
                       CHANGING  cg_data = ls_usobhash ).
 
         CREATE OBJECT lo_su22 TYPE ('CL_SU22_ADT_OBJECT').
+
+        ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_data_head> TO <lv_abap_language_version>.
+        IF sy-subrc = 0.
+          set_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+        ENDIF.
 
         IF zif_abapgit_object~exists( ) = abap_false.
           " Older repos will not have USOBHASH so we try to reconstruct it
@@ -221,16 +228,16 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
           ENDIF.
         ENDIF.
 
+        " Not for transactions
+        IF ms_key-type <> 'TR'.
+          corr_insert( iv_package ).
+        ENDIF.
+
         CALL METHOD lo_su22->('IF_SU22_ADT_OBJECT~UPDATE')
           EXPORTING
             is_head  = <ls_data_head>
             it_usobx = lt_usobx
             it_usobt = lt_usobt.
-
-        " Not for transactions
-        IF ms_key-type <> 'TR'.
-          corr_insert( iv_package ).
-        ENDIF.
 
       CATCH cx_static_check INTO lx_err.
         zcx_abapgit_exception=>raise_with_text( lx_err ).
@@ -308,10 +315,11 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
       lr_usobt_ext TYPE REF TO data,
       lx_err       TYPE REF TO cx_static_check.
 
-
-    FIELD-SYMBOLS: <ls_head>      TYPE any,
-                   <lt_usobx_ext> TYPE ANY TABLE,
-                   <lt_usobt_ext> TYPE ANY TABLE.
+    FIELD-SYMBOLS:
+      <ls_head>                  TYPE any,
+      <lv_abap_language_version> TYPE uccheck,
+      <lt_usobx_ext>             TYPE ANY TABLE,
+      <lt_usobt_ext>             TYPE ANY TABLE.
 
     TRY.
         CREATE DATA lr_head TYPE ('IF_SU22_ADT_OBJECT=>TS_SU2X_HEAD').
@@ -340,6 +348,11 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
             cs_data_head = <ls_head>
             ct_usobx     = lt_usobx
             ct_usobt     = lt_usobt ).
+
+        ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_head> TO <lv_abap_language_version>.
+        IF sy-subrc = 0.
+          <lv_abap_language_version> = get_abap_language_version( ).
+        ENDIF.
 
         io_xml->add( iv_name = 'HEAD'
                      ig_data = <ls_head> ).
