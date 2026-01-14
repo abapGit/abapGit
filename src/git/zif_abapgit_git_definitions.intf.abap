@@ -6,8 +6,6 @@ INTERFACE zif_abapgit_git_definitions
   TYPES:
     ty_type    TYPE c LENGTH 6 .
   TYPES:
-    ty_bitbyte TYPE c LENGTH 8 .
-  TYPES:
     ty_sha1    TYPE c LENGTH 40 .
   TYPES: ty_sha1_tt TYPE STANDARD TABLE OF ty_sha1 WITH DEFAULT KEY .
   TYPES:
