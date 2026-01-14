@@ -4,16 +4,6 @@ CLASS zcl_abapgit_convert DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-METHODS bitbyte_to_int
-      IMPORTING
-        !iv_bits      TYPE clike
-      RETURNING
-        VALUE(rv_int) TYPE i .
-    CLASS-METHODS x_to_bitbyte
-      IMPORTING
-        !iv_x             TYPE x
-      RETURNING
-        VALUE(rv_bitbyte) TYPE zif_abapgit_git_definitions=>ty_bitbyte .
     CLASS-METHODS string_to_xstring_utf8
       IMPORTING
         !iv_string        TYPE string
@@ -154,36 +144,6 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
   METHOD base64_to_xstring.
 
     rv_xstr = cl_http_utility=>decode_x_base64( iv_base64 ).
-
-  ENDMETHOD.
-
-
-  METHOD bitbyte_to_int.
-
-    DATA: lv_bitbyte TYPE string,
-          lv_len     TYPE i,
-          lv_offset  TYPE i.
-
-    lv_bitbyte = iv_bits.
-    SHIFT lv_bitbyte LEFT DELETING LEADING '0 '.
-    lv_len     = strlen( lv_bitbyte ).
-    lv_offset  = lv_len - 1.
-
-    rv_int = 0.
-    DO lv_len TIMES.
-
-      IF sy-index = 1.
-        "Initialize
-        IF lv_bitbyte+lv_offset(1) = '1'.
-          rv_int = 1.
-        ENDIF.
-      ELSEIF lv_bitbyte+lv_offset(1) = '1'.
-        rv_int = rv_int + ( 2 ** ( sy-index - 1 ) ).
-      ENDIF.
-
-      lv_offset = lv_offset - 1. "Move Cursor
-
-    ENDDO.
 
   ENDMETHOD.
 
@@ -535,18 +495,4 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD x_to_bitbyte.
-
-    CLEAR rv_bitbyte.
-
-    GET BIT 1 OF iv_x INTO rv_bitbyte+0(1).
-    GET BIT 2 OF iv_x INTO rv_bitbyte+1(1).
-    GET BIT 3 OF iv_x INTO rv_bitbyte+2(1).
-    GET BIT 4 OF iv_x INTO rv_bitbyte+3(1).
-    GET BIT 5 OF iv_x INTO rv_bitbyte+4(1).
-    GET BIT 6 OF iv_x INTO rv_bitbyte+5(1).
-    GET BIT 7 OF iv_x INTO rv_bitbyte+6(1).
-    GET BIT 8 OF iv_x INTO rv_bitbyte+7(1).
-
-  ENDMETHOD.
 ENDCLASS.
