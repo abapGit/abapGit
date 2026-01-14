@@ -625,15 +625,17 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
                lc_low7 TYPE x LENGTH 1 VALUE '7F',  " 01111111 - lower 7 bits mask
                lc_zero TYPE x LENGTH 1 VALUE '00'.
 
-    DATA: lv_byte   TYPE x LENGTH 1,
-          lv_bits   TYPE i,
-          lv_factor TYPE i.
+    DATA: lv_byte     TYPE x LENGTH 1,
+          lv_bits     TYPE x LENGTH 1,
+          lv_bits_int TYPE i,
+          lv_factor   TYPE i.
 
     lv_byte = cv_data(1).
     cv_data = cv_data+1.
 
 * First byte: lower 4 bits contain the initial length value
-    ev_length = lv_byte BIT-AND lc_low4.
+    lv_bits = lv_byte BIT-AND lc_low4.
+    ev_length = lv_bits.
     lv_factor = 16. " 2^4, next 7 bits are shifted by 4
 
 * While MSB is set, continue reading bytes
@@ -645,7 +647,8 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       cv_data = cv_data+1.
 * Add the lower 7 bits multiplied by the current factor
       lv_bits = lv_byte BIT-AND lc_low7.
-      ev_length = ev_length + lv_bits * lv_factor.
+      lv_bits_int = lv_bits.
+      ev_length = ev_length + lv_bits_int * lv_factor.
       lv_factor = lv_factor * 128. " 2^7, each subsequent byte shifts by 7 more bits
     ENDWHILE.
 
