@@ -11,6 +11,9 @@ CLASS zcl_abapgit_persist_factory DEFINITION
     CLASS-METHODS get_repo_cs
       RETURNING
         VALUE(ri_repo_cs) TYPE REF TO zif_abapgit_persist_repo_cs .
+    CLASS-METHODS get_repo_data
+      RETURNING
+        VALUE(ri_repo_data) TYPE REF TO zif_abapgit_persist_repo_data.
     CLASS-METHODS get_settings
       RETURNING
         VALUE(ri_settings) TYPE REF TO zif_abapgit_persist_settings .
@@ -30,6 +33,7 @@ CLASS zcl_abapgit_persist_factory DEFINITION
 
     CLASS-DATA gi_repo TYPE REF TO zif_abapgit_persist_repo .
     CLASS-DATA gi_repo_cs TYPE REF TO zif_abapgit_persist_repo_cs .
+    CLASS-DATA gi_repo_data TYPE REF TO zif_abapgit_persist_repo_data.
     CLASS-DATA gi_settings TYPE REF TO zif_abapgit_persist_settings .
     CLASS-DATA gi_background TYPE REF TO zif_abapgit_persist_background.
     CLASS-DATA gi_packages TYPE REF TO zif_abapgit_persist_packages.
@@ -81,6 +85,17 @@ CLASS zcl_abapgit_persist_factory IMPLEMENTATION.
     ENDIF.
 
     ri_repo_cs = gi_repo_cs.
+
+  ENDMETHOD.
+
+
+  METHOD get_repo_data.
+
+    IF gi_repo_data IS INITIAL.
+      CREATE OBJECT gi_repo_data TYPE zcl_abapgit_persistence_repo.
+    ENDIF.
+
+    ri_repo_data = gi_repo_data.
 
   ENDMETHOD.
 

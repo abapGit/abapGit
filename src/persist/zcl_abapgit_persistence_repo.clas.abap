@@ -7,6 +7,7 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
 
     INTERFACES zif_abapgit_persist_repo .
     INTERFACES zif_abapgit_persist_repo_cs .
+    INTERFACES zif_abapgit_persist_repo_data.
 
     METHODS constructor .
     METHODS rewrite_repo_meta
@@ -205,6 +206,34 @@ CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
 
     mo_db->modify(
       iv_type  = zcl_abapgit_persistence_db=>c_type_repo_csum
+      iv_value = iv_key
+      iv_data  = iv_cs_blob ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_repo_data~delete.
+
+    mo_db->delete(
+      iv_type  = zcl_abapgit_persistence_db=>c_type_repo_data
+      iv_value = iv_key ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_repo_data~read.
+
+    rv_cs_blob = mo_db->read(
+      iv_type  = zcl_abapgit_persistence_db=>c_type_repo_data
+      iv_value = iv_key ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_repo_data~update.
+
+    mo_db->modify(
+      iv_type  = zcl_abapgit_persistence_db=>c_type_repo_data
       iv_value = iv_key
       iv_data  = iv_cs_blob ).
 

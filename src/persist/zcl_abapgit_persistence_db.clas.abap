@@ -10,6 +10,7 @@ CLASS zcl_abapgit_persistence_db DEFINITION
       c_type_settings   TYPE zif_abapgit_persistence=>ty_type VALUE 'SETTINGS' ##NO_TEXT,
       c_type_repo       TYPE zif_abapgit_persistence=>ty_type VALUE 'REPO' ##NO_TEXT,
       c_type_repo_csum  TYPE zif_abapgit_persistence=>ty_type VALUE 'REPO_CS' ##NO_TEXT,
+      c_type_repo_data  TYPE zif_abapgit_persistence=>ty_type VALUE 'REPO_DATA' ##NO_TEXT,
       c_type_background TYPE zif_abapgit_persistence=>ty_type VALUE 'BACKGROUND' ##NO_TEXT,
       c_type_packages   TYPE zif_abapgit_persistence=>ty_type VALUE 'PACKAGES' ##NO_TEXT,
       c_type_user       TYPE zif_abapgit_persistence=>ty_type VALUE 'USER' ##NO_TEXT.
@@ -97,7 +98,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
+CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
 
 
   METHOD add.
@@ -269,6 +270,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
     IF NOT (
       iv_type = c_type_repo OR
       iv_type = c_type_repo_csum OR
+      iv_type = c_type_repo_data OR
       iv_type = c_type_user OR
       iv_type = c_type_settings OR
       iv_type = c_type_background OR
