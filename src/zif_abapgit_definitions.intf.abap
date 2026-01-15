@@ -76,13 +76,14 @@ INTERFACE zif_abapgit_definitions
     END OF ty_transport .
   TYPES:
     BEGIN OF ty_deserialize_checks,
-      overwrite       TYPE ty_overwrite_tt,
-      warning_package TYPE ty_overwrite_tt,
-      data_loss       TYPE ty_overwrite_tt,
-      requirements    TYPE ty_requirements,
-      dependencies    TYPE ty_dependencies,
-      transport       TYPE ty_transport,
-      customizing     TYPE ty_transport,
+      overwrite             TYPE ty_overwrite_tt,
+      warning_package       TYPE ty_overwrite_tt,
+      data_loss             TYPE ty_overwrite_tt,
+      delete_tabl_with_data TYPE ty_overwrite_tt,
+      requirements          TYPE ty_requirements,
+      dependencies          TYPE ty_dependencies,
+      transport             TYPE ty_transport,
+      customizing           TYPE ty_transport,
     END OF ty_deserialize_checks .
   TYPES:
     BEGIN OF ty_delete_checks,

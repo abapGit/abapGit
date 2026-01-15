@@ -88,6 +88,20 @@ CLASS zcl_abapgit_objects_check DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS warning_tabl_data_adjust
+      IMPORTING
+        !it_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      CHANGING
+        !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS warning_tabl_data_find
+      IMPORTING
+        !it_results         TYPE zif_abapgit_definitions=>ty_results_tt
+      RETURNING
+        VALUE(rt_overwrite) TYPE zif_abapgit_definitions=>ty_overwrite_tt.
+
     CLASS-METHODS determine_transport_request
       IMPORTING
         ii_repo                     TYPE REF TO zif_abapgit_repo
@@ -158,6 +172,12 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
       CHANGING
         ct_results   = ct_results ).
 
+    warning_tabl_data_adjust(
+      EXPORTING
+        it_overwrite = is_checks-delete_tabl_with_data
+      CHANGING
+        ct_results   = ct_results ).
+
   ENDMETHOD.
 
 
@@ -219,6 +239,8 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     rs_checks-data_loss = warning_data_loss_find(
       ii_repo    = ii_repo
       it_results = lt_results ).
+
+    rs_checks-delete_tabl_with_data = warning_tabl_data_find( lt_results ).
 
     IF lines( lt_results ) > 0.
       li_package = zcl_abapgit_factory=>get_sap_package( ii_repo->get_package( ) ).
@@ -490,6 +512,100 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     ENDLOOP.
 
     rt_overwrite = lt_overwrite_unique.
+
+  ENDMETHOD.
+
+
+  METHOD warning_tabl_data_adjust.
+
+    DATA lt_overwrite LIKE it_overwrite.
+
+    lt_overwrite = warning_tabl_data_find( ct_results ).
+
+    adjust_result(
+      EXPORTING
+        iv_txt           = 'Deletion of table with data'
+        it_overwrite_old = it_overwrite
+        it_overwrite_new = lt_overwrite
+      CHANGING
+        ct_results       = ct_results ).
+
+  ENDMETHOD.
+
+
+  METHOD warning_tabl_data_find.
+
+    DATA:
+      ls_overwrite LIKE LINE OF rt_overwrite,
+      lv_subrc     TYPE sy-subrc,
+      lv_status    TYPE c LENGTH 2,
+      BEGIN OF ls_dd02l,
+        tabname  TYPE dd02l-tabname,
+        tabclass TYPE dd02l-tabclass,
+        sqltab   TYPE dd02l-sqltab,
+      END OF ls_dd02l.
+
+    FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
+
+    " Check for tables being deleted that contain data
+    LOOP AT it_results ASSIGNING <ls_result>
+      WHERE obj_type = 'TABL'
+        AND match IS INITIAL
+        AND packmove IS INITIAL ##PRIMKEY[SEC_KEY].
+
+      CONCATENATE <ls_result>-lstate <ls_result>-rstate INTO lv_status RESPECTING BLANKS.
+
+      " Check if this is a delete action (added locally or deleted remotely)
+      CHECK lv_status = 'A ' OR lv_status = ' D' OR lv_status = 'MD'.
+
+      " Get table metadata
+      SELECT SINGLE tabname tabclass sqltab FROM dd02l
+        INTO CORRESPONDING FIELDS OF ls_dd02l
+        WHERE tabname = <ls_result>-obj_name
+        AND as4local = 'A'
+        AND as4vers = '0000'.
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
+
+      " Only check database tables (transparent, cluster, pool)
+      CHECK ls_dd02l-tabclass = 'TRANSP'
+         OR ls_dd02l-tabclass = 'CLUSTER'
+         OR ls_dd02l-tabclass = 'POOL'.
+
+      " Check if table contains data
+      CALL FUNCTION 'DD_EXISTS_DATA'
+        EXPORTING
+          reftab          = ls_dd02l-sqltab
+          tabclass        = ls_dd02l-tabclass
+          tabname         = ls_dd02l-tabname
+        IMPORTING
+          subrc           = lv_subrc
+        EXCEPTIONS
+          missing_reftab  = 1
+          sql_error       = 2
+          buffer_overflow = 3
+          unknown_error   = 4
+          OTHERS          = 5.
+      IF sy-subrc <> 0 OR lv_subrc <> 0.
+        CONTINUE.
+      ENDIF.
+
+      " Table contains data
+      READ TABLE rt_overwrite TRANSPORTING NO FIELDS WITH KEY object_type_and_name COMPONENTS
+        obj_type = <ls_result>-obj_type
+        obj_name = <ls_result>-obj_name.
+      IF sy-subrc <> 0.
+        CLEAR ls_overwrite.
+        MOVE-CORRESPONDING <ls_result> TO ls_overwrite.
+        ls_overwrite-devclass = <ls_result>-package.
+        ls_overwrite-action   = zif_abapgit_objects=>c_deserialize_action-delete_tabl_with_data.
+        ls_overwrite-icon     = icon_delete.
+        ls_overwrite-text     = 'Delete table that contains data'.
+        INSERT ls_overwrite INTO TABLE rt_overwrite.
+      ENDIF.
+
+    ENDLOOP.
 
   ENDMETHOD.
 ENDCLASS.
