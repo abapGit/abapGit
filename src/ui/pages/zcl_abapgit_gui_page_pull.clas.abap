@@ -191,6 +191,15 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+    LOOP AT ms_checks-delete_tabl_with_data ASSIGNING <ls_warning>.
+      lv_value = mo_form_data->get( |{ <ls_warning>-obj_type }-{ <ls_warning>-obj_name }| ).
+      IF lv_value = 'on'.
+        <ls_warning>-decision = zif_abapgit_definitions=>c_yes.
+      ELSE.
+        <ls_warning>-decision = zif_abapgit_definitions=>c_no.
+      ENDIF.
+    ENDLOOP.
+
 * todo, show log?
     zcl_abapgit_services_repo=>real_deserialize(
       is_checks = ms_checks

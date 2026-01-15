@@ -77,16 +77,11 @@ CLASS zcl_abapgit_object_tabl DEFINITION
         !cs_internal TYPE zif_abapgit_object_tabl=>ty_internal
       RAISING
         zcx_abapgit_exception .
-    METHODS is_db_table_category
-      IMPORTING
-        !iv_tabclass               TYPE dd02l-tabclass
-      RETURNING
-        VALUE(rv_is_db_table_type) TYPE dd02l-tabclass .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
+CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -438,16 +433,6 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_db_table_category.
-
-    " values from domain TABCLASS
-    rv_is_db_table_type = boolc( iv_tabclass = 'TRANSP'
-                              OR iv_tabclass = 'CLUSTER'
-                              OR iv_tabclass = 'POOL' ).
-
-  ENDMETHOD.
-
-
   METHOD is_idoc_segment.
 
     DATA lv_segment_type TYPE edilsegtyp.
@@ -657,14 +642,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_objname TYPE rsedd0-ddobjname,
-          lv_no_ask  TYPE abap_bool,
-          lv_subrc   TYPE sy-subrc,
-          BEGIN OF ls_dd02l,
-            tabname  TYPE dd02l-tabname,
-            tabclass TYPE dd02l-tabclass,
-            sqltab   TYPE dd02l-sqltab,
-          END OF ls_dd02l.
+    DATA: lv_objname TYPE rsedd0-ddobjname.
 
     IF zif_abapgit_object~exists( ) = abap_false.
       " Proxies e.g. delete on its own, nothing todo here then.
@@ -675,36 +653,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
     IF delete_idoc_segment( ) = abap_false.
 
-      lv_no_ask = abap_true.
-      SELECT SINGLE tabname tabclass sqltab FROM dd02l
-        INTO CORRESPONDING FIELDS OF ls_dd02l
-        WHERE tabname = ms_item-obj_name
-        AND as4local = 'A'
-        AND as4vers = '0000'.
-      IF sy-subrc = 0 AND is_db_table_category( ls_dd02l-tabclass ) = abap_true.
-
-        CALL FUNCTION 'DD_EXISTS_DATA'
-          EXPORTING
-            reftab          = ls_dd02l-sqltab
-            tabclass        = ls_dd02l-tabclass
-            tabname         = ls_dd02l-tabname
-          IMPORTING
-            subrc           = lv_subrc
-          EXCEPTIONS
-            missing_reftab  = 1
-            sql_error       = 2
-            buffer_overflow = 3
-            unknown_error   = 4
-            OTHERS          = 5.
-
-        IF sy-subrc = 0 AND lv_subrc = 0.
-          lv_no_ask = abap_false.
-        ENDIF.
-
-      ENDIF.
-
+      " User has already confirmed deletion of tables with data in deserialize_checks
       delete_ddic( iv_objtype = 'T'
-                   iv_no_ask  = lv_no_ask ).
+                   iv_no_ask  = abap_true ).
 
       delete_longtexts( c_longtext_id_tabl ).
 
