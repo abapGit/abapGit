@@ -777,6 +777,7 @@ CLASS ltcl_get_length DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS 
       length_22783 FOR TESTING RAISING zcx_abapgit_exception,
       length_90000 FOR TESTING RAISING zcx_abapgit_exception,
       length_1000000 FOR TESTING RAISING zcx_abapgit_exception,
+      length_200000000 FOR TESTING RAISING zcx_abapgit_exception,
       data_advances_1_byte FOR TESTING RAISING zcx_abapgit_exception,
       data_advances_2_bytes FOR TESTING RAISING zcx_abapgit_exception,
       data_advances_3_bytes FOR TESTING RAISING zcx_abapgit_exception.
@@ -998,6 +999,16 @@ CLASS ltcl_get_length IMPLEMENTATION.
       iv_data              = '8F8F0BDEADBEEF'
       iv_expected_length   = 22783
       iv_expected_data_len = 4 ).
+
+  ENDMETHOD.
+
+  METHOD length_200000000.
+* Large value requiring 5 bytes - tests arithmetic with large factor values
+* 200000000 = 0 + 32*16 + 120*2048 + 122*262144 + 5*33554432
+* Encoding: 80 A0 F8 FA 05
+    test(
+      iv_data     = '80A0F8FA05'
+      iv_expected = 200000000 ).
 
   ENDMETHOD.
 
