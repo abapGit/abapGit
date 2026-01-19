@@ -636,13 +636,11 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 * First byte: lower 4 bits contain the initial length value
     lv_bits = lv_byte BIT-AND lc_low4.
     ev_length = lv_bits.
-    lv_factor = 1.
+    lv_factor = 16. " 2^4, first continuation byte shifts by 4
 
 * While MSB is set, continue reading bytes
     WHILE lv_byte BIT-AND lc_msb <> lc_zero.
-      IF lv_factor = 1.
-        lv_factor = 16. " 2^4, first continuation byte shifts by 4
-      ELSE.
+      IF sy-index > 1.
         lv_factor = lv_factor * 128. " 2^7, each subsequent byte shifts by 7 more bits
       ENDIF.
       IF xstrlen( cv_data ) = 0.
