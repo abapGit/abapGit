@@ -227,8 +227,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         iv_package    = is_repo_params-package
         iv_ign_subpkg = is_repo_params-ignore_subpackages
       IMPORTING
-        ei_repo    = li_repo
-        ev_reason  = lv_reason ).
+        ei_repo       = li_repo
+        ev_reason     = lv_reason ).
 
     IF li_repo IS BOUND.
       zcx_abapgit_exception=>raise( lv_reason ).
@@ -327,6 +327,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD new_offline.
 
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
     check_package( is_repo_params ).
 
     " create new repo and add to favorites
@@ -339,8 +341,15 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       iv_main_lang_only = is_repo_params-main_lang_only
       iv_abap_lang_vers = is_repo_params-abap_lang_vers ).
 
-    " Make sure there're no leftovers from previous repos
-    ri_repo->checksums( )->rebuild( ).
+    TRY.
+        " Make sure there're no leftovers from previous repos (also checks folder logic)
+        ri_repo->checksums( )->rebuild( ).
+
+      CATCH zcx_abapgit_exception INTO lx_error.
+        zcl_abapgit_repo_srv=>get_instance( )->delete( ri_repo ).
+        COMMIT WORK.
+        RAISE EXCEPTION lx_error.
+    ENDTRY.
 
     toggle_favorite( ri_repo->get_key( ) ).
 
@@ -375,14 +384,15 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         check_package_exists(
           iv_package = is_repo_params-package
           it_remote  = li_repo->get_files_remote( ) ).
+
+        " Make sure there're no leftovers from previous repos (also checks folder logic)
+        li_repo->checksums( )->rebuild( ).
+
       CATCH zcx_abapgit_exception INTO lx_error.
         zcl_abapgit_repo_srv=>get_instance( )->delete( li_repo ).
         COMMIT WORK.
         RAISE EXCEPTION lx_error.
     ENDTRY.
-
-    " Make sure there're no leftovers from previous repos
-    li_repo->checksums( )->rebuild( ).
 
     toggle_favorite( li_repo->get_key( ) ).
 
@@ -436,8 +446,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     li_popups->popup_to_select_from_list(
       EXPORTING
         it_list               = ct_data_loss
-        iv_header_text        = |Changes to the following objects could lead to DATA LOSS!|
-                             && | Select the objects which should be changed to the remote version, anyway.|
+        iv_header_text        = |Changes to the following objects could lead to DATA LOSS!| &&
+                                | Select the objects which should be changed to the remote version, anyway.|
         iv_select_column_text = 'Overwrite?'
         it_columns_to_display = lt_columns
         it_preselected_rows   = lt_preselected_rows
@@ -565,8 +575,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     li_popups->popup_to_select_from_list(
       EXPORTING
         it_list               = ct_overwrite
-        iv_header_text        = |The following objects are different between local and remote repository.|
-                             && | Select the objects which should be brought in line with the remote version.|
+        iv_header_text        = |The following objects are different between local and remote repository.| &&
+                                | Select the objects which should be brought in line with the remote version.|
         iv_select_column_text = 'Change?'
         it_columns_to_display = lt_columns
         it_preselected_rows   = lt_preselected_rows
@@ -624,8 +634,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     li_popups->popup_to_select_from_list(
       EXPORTING
         it_list               = ct_overwrite
-        iv_header_text        = |The following objects have been created in other packages.|
-                             && | Select the objects which should be overwritten.|
+        iv_header_text        = |The following objects have been created in other packages.| &&
+                                | Select the objects which should be overwritten.|
         iv_select_column_text = |Overwrite?|
         it_columns_to_display = lt_columns
       IMPORTING
