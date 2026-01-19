@@ -620,25 +620,39 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 *    is the least significant part, and sizeN is the
 *    most significant part.
 
-    DATA: lv_x           TYPE x,
-          lv_length_bits TYPE string,
-          lv_bitbyte     TYPE zif_abapgit_git_definitions=>ty_bitbyte.
+    CONSTANTS: lc_msb  TYPE x LENGTH 1 VALUE '80',  " 10000000 - MSB continuation flag
+               lc_low4 TYPE x LENGTH 1 VALUE '0F',  " 00001111 - lower 4 bits mask
+               lc_low7 TYPE x LENGTH 1 VALUE '7F',  " 01111111 - lower 7 bits mask
+               lc_zero TYPE x LENGTH 1 VALUE '00'.
 
+    DATA: lv_byte     TYPE x LENGTH 1,
+          lv_bits     TYPE x LENGTH 1,
+          lv_bits_int TYPE i,
+          lv_factor   TYPE i.
 
-    lv_x = cv_data(1).
-    lv_bitbyte = zcl_abapgit_convert=>x_to_bitbyte( lv_x ).
-
+    lv_byte = cv_data(1).
     cv_data = cv_data+1.
-    lv_length_bits = lv_bitbyte+4.
 
-    WHILE lv_bitbyte(1) <> '0'.
-      lv_x = cv_data(1).
-      lv_bitbyte = zcl_abapgit_convert=>x_to_bitbyte( lv_x ).
+* First byte: lower 4 bits contain the initial length value
+    lv_bits = lv_byte BIT-AND lc_low4.
+    ev_length = lv_bits.
+    lv_factor = 16. " 2^4, first continuation byte shifts by 4
+
+* While MSB is set, continue reading bytes
+    WHILE lv_byte BIT-AND lc_msb <> lc_zero.
+      IF sy-index > 1.
+        lv_factor = lv_factor * 128. " 2^7, each subsequent byte shifts by 7 more bits
+      ENDIF.
+      IF xstrlen( cv_data ) = 0.
+        EXIT.
+      ENDIF.
+      lv_byte = cv_data(1).
       cv_data = cv_data+1.
-      CONCATENATE lv_bitbyte+1 lv_length_bits INTO lv_length_bits.
+* Add the lower 7 bits multiplied by the current factor
+      lv_bits = lv_byte BIT-AND lc_low7.
+      lv_bits_int = lv_bits.
+      ev_length = ev_length + lv_bits_int * lv_factor.
     ENDWHILE.
-
-    ev_length = zcl_abapgit_convert=>bitbyte_to_int( lv_length_bits ).
 
   ENDMETHOD.
 

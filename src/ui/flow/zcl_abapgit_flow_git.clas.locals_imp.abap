@@ -122,19 +122,19 @@ CLASS lcl_walker IMPLEMENTATION.
 
   METHOD decode_tree.
     DATA ls_cache LIKE LINE OF mt_tree_cache.
-    DATA ls_object LIKE LINE OF mt_objects.
 
     FIELD-SYMBOLS <ls_cache> LIKE LINE OF mt_tree_cache.
+    FIELD-SYMBOLS <ls_object> LIKE LINE OF mt_objects.
 
     READ TABLE mt_tree_cache ASSIGNING <ls_cache> WITH KEY sha1 = iv_tree.
     IF sy-subrc = 0.
       rt_nodes = <ls_cache>-nodes.
     ELSE.
-      READ TABLE mt_objects INTO ls_object WITH TABLE KEY type
+      READ TABLE mt_objects ASSIGNING <ls_object> WITH TABLE KEY type
         COMPONENTS sha1 = iv_tree type = zif_abapgit_git_definitions=>c_type-tree.
       ASSERT sy-subrc = 0.
 
-      rt_nodes = zcl_abapgit_git_pack=>decode_tree( ls_object-data ).
+      rt_nodes = zcl_abapgit_git_pack=>decode_tree( <ls_object>-data ).
 
       ls_cache-sha1 = iv_tree.
       ls_cache-nodes = rt_nodes.
@@ -176,8 +176,8 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
   METHOD find_changed_in_commit.
 
     DATA ls_parent_commit TYPE zcl_abapgit_git_pack=>ty_commit.
-    DATA lt_files LIKE ct_files.
-    DATA ls_file LIKE LINE OF lt_files.
+    DATA lt_files         LIKE ct_files.
+    DATA ls_file          LIKE LINE OF lt_files.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF mt_objects.
 
@@ -191,8 +191,8 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
     ls_parent_commit = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).
 
     lt_files = mo_walker->walk(
-      iv_path       = '/'
-      iv_tree_main  = ls_parent_commit-tree
+      iv_path        = '/'
+      iv_tree_main   = ls_parent_commit-tree
       iv_tree_branch = is_commit-tree ).
 
     LOOP AT lt_files INTO ls_file.
