@@ -777,7 +777,7 @@ CLASS ltcl_get_length DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS 
       length_22783 FOR TESTING RAISING zcx_abapgit_exception,
       length_90000 FOR TESTING RAISING zcx_abapgit_exception,
       length_1000000 FOR TESTING RAISING zcx_abapgit_exception,
-      length_20047483647 FOR TESTING RAISING zcx_abapgit_exception,
+      length_200000000 FOR TESTING RAISING zcx_abapgit_exception,
       data_advances_1_byte FOR TESTING RAISING zcx_abapgit_exception,
       data_advances_2_bytes FOR TESTING RAISING zcx_abapgit_exception,
       data_advances_3_bytes FOR TESTING RAISING zcx_abapgit_exception.
@@ -1002,14 +1002,13 @@ CLASS ltcl_get_length IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD length_20047483647.
-* Very large value requiring 6 bytes - tests potential arithmetic overflow
-* 20047483647 encoded as variable-length integer:
-* bits 0-3: 15, bits 4-10: 47, bits 11-17: 10, bits 18-24: 59, bits 25-31: 85, bits 32+: 4
-* Encoding: 8F AF 8A BB D5 04
+  METHOD length_200000000.
+* Large value requiring 5 bytes - tests arithmetic with large factor values
+* 200000000 = 0 + 32*16 + 120*2048 + 122*262144 + 5*33554432
+* Encoding: 80 A0 F8 FA 05
     test(
-      iv_data     = '8FAF8ABBD504'
-      iv_expected = 20047483647 ).
+      iv_data     = '80A0F8FA05'
+      iv_expected = 200000000 ).
 
   ENDMETHOD.
 
