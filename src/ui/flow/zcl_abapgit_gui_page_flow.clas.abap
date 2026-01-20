@@ -109,12 +109,32 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception.
+
+    METHODS build_view_dropdown
+      RETURNING
+        VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
+
+    METHODS build_main_toolbar
+      RETURNING
+        VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
+  METHOD build_main_toolbar.
+
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'actionbar-flow' ).
+
+    ro_toolbar->add( iv_txt = 'View'
+                     io_sub = build_view_dropdown( ) ).
+
+  ENDMETHOD.
 
   METHOD call_consolidate.
 
@@ -306,9 +326,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   METHOD render_user_settings.
 
-    DATA lv_prefix     TYPE string.
-    DATA lv_user       TYPE syuname.
-    DATA lv_icon_class TYPE string.
+    DATA lv_prefix TYPE string.
+    DATA lv_user   TYPE syuname.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( '<span class="toolbar-light pad-sides">' ).
@@ -334,46 +353,6 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ENDLOOP.
 
     ri_html->add( '<br>' ).
-
-    IF ms_user_settings-hide_full_matches = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide full matches|
-      iv_class = 'command'
-      iv_act   = |{ c_action-hide_full_matches }| ) ).
-
-    IF ms_user_settings-hide_matching_files = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide matching files|
-      iv_class = 'command'
-      iv_act   = |{ c_action-hide_matching_files }| ) ).
-
-    IF ms_user_settings-hide_conflicts = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide transports with conflicts|
-      iv_class = 'command'
-      iv_act   = |{ c_action-hide_conflicts }| ) ).
-
-    IF ms_user_settings-show_details = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Show details|
-      iv_class = 'command'
-      iv_act   = |{ c_action-show_details }| ) ).
 
     ri_html->add( '</span>' ).
 
@@ -447,6 +426,31 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD build_view_dropdown.
+
+    CREATE OBJECT ro_toolbar.
+
+    ro_toolbar->add(
+      iv_txt = 'Hide full matches'
+      iv_chk = ms_user_settings-hide_full_matches
+      iv_act = c_action-hide_full_matches ).
+
+    ro_toolbar->add(
+      iv_txt = 'Hide matching files'
+      iv_chk = ms_user_settings-hide_matching_files
+      iv_act = c_action-hide_matching_files ).
+
+    ro_toolbar->add(
+      iv_txt = 'Hide transports with conflicts'
+      iv_chk = ms_user_settings-hide_conflicts
+      iv_act = c_action-hide_conflicts ).
+
+    ro_toolbar->add(
+      iv_txt = 'Show details'
+      iv_chk = ms_user_settings-show_details
+      iv_act = c_action-show_details ).
+
+  ENDMETHOD.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
@@ -459,10 +463,6 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ro_toolbar->add(
       iv_txt = 'Consolidate'
       iv_act = c_action-consolidate ).
-
-    ro_toolbar->add(
-      iv_txt = zcl_abapgit_gui_buttons=>repo_list( )
-      iv_act = zif_abapgit_definitions=>c_action-abapgit_home ).
 
     ro_toolbar->add(
       iv_txt = 'Back'
@@ -640,6 +640,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     IF ms_user_settings-username_filter IS NOT INITIAL.
       INSERT ms_user_settings-username_filter INTO TABLE lt_users.
     ENDIF.
+    ri_html->add( build_main_toolbar( )->render( iv_right = abap_true ) ).
     ri_html->add( render_user_settings( lt_users ) ).
 
     ri_html->add( '<br>' ).
