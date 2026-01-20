@@ -675,8 +675,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ri_html->add( 'Nothing in progress<br><br>' ).
     ELSEIF lv_rendered = abap_false.
       ri_html->add( 'List filtered<br><br>' ).
-      ri_html->add( |<small>{ lines( ms_information-features ) } features in { lo_timer->end( ) }</small>| ).
     ENDIF.
+
+    ri_html->add( |<small>{ lines( ms_information-features ) } features in { lo_timer->end( ) }</small>| ).
 
     ri_html->add( '</div>' ).
 
