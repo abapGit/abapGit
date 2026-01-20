@@ -2,11 +2,12 @@ INTERFACE lif_find_changes.
 
   METHODS find_changes
     IMPORTING
-      iv_main         TYPE zif_abapgit_git_definitions=>ty_sha1
-      iv_branch       TYPE zif_abapgit_git_definitions=>ty_sha1
-      iv_first_commit TYPE zif_abapgit_git_definitions=>ty_sha1
+      iv_main                TYPE zif_abapgit_git_definitions=>ty_sha1
+      iv_branch              TYPE zif_abapgit_git_definitions=>ty_sha1
+      iv_first_commit        TYPE zif_abapgit_git_definitions=>ty_sha1
+      iv_latest_merge_commit TYPE zif_abapgit_git_definitions=>ty_sha1
     RETURNING
-      VALUE(rt_files) TYPE zif_abapgit_flow_logic=>ty_path_name_tt
+      VALUE(rt_files)        TYPE zif_abapgit_flow_logic=>ty_path_name_tt
     RAISING
       zcx_abapgit_exception.
 
@@ -218,6 +219,7 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
     ASSERT iv_main IS NOT INITIAL.
     ASSERT iv_branch IS NOT INITIAL.
 
+    lv_current = iv_latest_merge_commit. " dummy, remove me
     lv_current = iv_branch.
 
     DO.

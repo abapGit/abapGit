@@ -108,9 +108,10 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       ENDIF.
 
       <ls_feature>-changed_files = li_find->find_changes(
-        iv_main         = ls_main-sha1
-        iv_branch       = <ls_feature>-branch-sha1
-        iv_first_commit = <ls_feature>-branch-first_commit ).
+        iv_main                = ls_main-sha1
+        iv_branch              = <ls_feature>-branch-sha1
+        iv_first_commit        = <ls_feature>-branch-first_commit
+        iv_latest_merge_commit = <ls_feature>-branch-latest_merge_commit ).
 
       DELETE <ls_feature>-changed_files WHERE path NP lv_starting_folder.
 
@@ -207,7 +208,7 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
         ENDIF.
       ENDWHILE.
 
-      " find first commit
+      " find first commit and latest merge commit
       lo_visit->clear( )->push( <ls_branch>-branch-sha1 ).
       WHILE lo_visit->size( ) > 0.
         lv_current = lo_visit->pop( ).
@@ -217,7 +218,11 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
           ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
           lo_visit->push( ls_commit-parent ).
 
-          IF ls_commit-parent2 IS INITIAL.
+          IF ls_commit-parent2 IS NOT INITIAL.
+            IF <ls_branch>-branch-latest_merge_commit IS INITIAL.
+              <ls_branch>-branch-latest_merge_commit = lv_current.
+            ENDIF.
+          ELSE.
             READ TABLE lt_main_reachable WITH KEY table_line = ls_commit-parent TRANSPORTING NO FIELDS.
             IF sy-subrc = 0.
               <ls_branch>-branch-first_commit = lv_current.
