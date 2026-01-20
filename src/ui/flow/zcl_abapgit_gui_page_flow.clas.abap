@@ -663,17 +663,18 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         is_feature = ls_feature ) ).
     ENDLOOP.
 
-    IF lines( ms_information-features ) = 0 OR lv_rendered = abap_false.
-      ri_html->add( 'Empty, repositories must be favorite + flow enabled<br><br>' ).
-
-      ri_html->add( 'Or nothing in progress<br><br>' ).
+    IF ms_information-enabled_repositories = 0.
+      ri_html->add( 'Flow is not enabled on any favorite repository.<br><br>' ).
 
       ri_html->add_a(
         iv_txt   = 'abapGit flow documentation'
         iv_act   = |{ zif_abapgit_definitions=>c_action-url
           }?url=https://docs.abapgit.org/user-guide/reference/flow.html|
         iv_class = |url| ).
-    ELSE.
+    ELSEIF lines( ms_information-features ) = 0.
+      ri_html->add( 'Nothing in progress<br><br>' ).
+    ELSEIF lv_rendered = abap_false.
+      ri_html->add( 'List filtered<br><br>' ).
       ri_html->add( |<small>{ lines( ms_information-features ) } features in { lo_timer->end( ) }</small>| ).
     ENDIF.
 
