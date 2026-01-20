@@ -138,7 +138,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ro_toolbar->add( iv_txt = 'Advanced'
                      io_sub = build_advanced_dropdown( ) ).
 
-    ro_toolbar->add( iv_txt = 'User'
+    ro_toolbar->add( iv_txt = 'User Filter'
                      io_sub = build_user_filter_dropdown( ) ).
 
     ro_toolbar->add( iv_txt = 'View'
@@ -630,6 +630,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA lv_rendered TYPE abap_bool.
     DATA lo_timer    TYPE REF TO zcl_abapgit_timer.
     DATA lv_message  LIKE LINE OF ms_information-errors.
+    DATA lv_filter   TYPE string.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -681,7 +682,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ri_html->add( 'List filtered<br><br>' ).
     ENDIF.
 
-    ri_html->add( |<small>{ lines( ms_information-features ) } features in { lo_timer->end( ) }</small>| ).
+    IF ms_user_settings-username_filter IS NOT INITIAL.
+      lv_filter = |, user filter: { ms_user_settings-username_filter }|.
+    ENDIF.
+    ri_html->add( |<small>{ lines( ms_information-features ) } features in { lo_timer->end( ) }{ lv_filter }</small>| ).
 
     ri_html->add( '</div>' ).
 
