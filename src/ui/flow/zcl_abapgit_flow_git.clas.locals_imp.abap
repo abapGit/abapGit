@@ -63,10 +63,6 @@ CLASS lcl_walker IMPLEMENTATION.
     DATA ls_file        LIKE LINE OF rt_files.
     DATA lt_files       LIKE rt_files.
 
-    IF iv_tree_main = iv_tree_branch.
-      RETURN.
-    ENDIF.
-
     IF iv_tree_main IS NOT INITIAL.
       lt_main = decode_tree( iv_tree_main ).
     ENDIF.
@@ -81,6 +77,7 @@ CLASS lcl_walker IMPLEMENTATION.
       IF sy-subrc = 0.
         DELETE lt_branch INDEX sy-tabix.
         IF ls_node_branch-sha1 = ls_node_main-sha1.
+* the file or folder matches, skip
           CONTINUE.
         ENDIF.
       ENDIF.
