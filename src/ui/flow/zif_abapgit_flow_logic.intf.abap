@@ -53,6 +53,7 @@ INTERFACE zif_abapgit_flow_logic
             features             TYPE ty_features,
             errors               TYPE string_table,
             transport_duplicates TYPE ty_transport_duplicates_tt,
+            enabled_repositories TYPE i,
          END OF ty_information.
 
   CONSTANTS c_main TYPE string VALUE 'main'.
