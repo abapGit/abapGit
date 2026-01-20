@@ -134,6 +134,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ro_toolbar->add( iv_txt = 'View'
                      io_sub = build_view_dropdown( ) ).
 
+    ro_toolbar->add( iv_txt = 'Refresh'
+                     iv_act = |{ c_action-refresh }|
+                     iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+
   ENDMETHOD.
 
   METHOD call_consolidate.
@@ -455,10 +459,6 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
     ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-flow' ).
-
-    ro_toolbar->add(
-      iv_txt = 'Refresh'
-      iv_act = c_action-refresh ).
 
     ro_toolbar->add(
       iv_txt = 'Consolidate'
