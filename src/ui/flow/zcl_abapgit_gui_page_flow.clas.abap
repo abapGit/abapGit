@@ -32,6 +32,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         hide_matching_files TYPE string VALUE 'hide_matching_files',
         hide_conflicts      TYPE string VALUE 'hide_conflicts',
         show_details        TYPE string VALUE 'show_details',
+        rollback_pr         TYPE string VALUE 'rollback_pr',
       END OF c_action .
     DATA ms_information TYPE zif_abapgit_flow_logic=>ty_information .
     DATA ms_user_settings TYPE zif_abapgit_persist_user=>ty_flow_settings.
@@ -157,6 +158,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ro_advanced_dropdown->add(
       iv_txt = 'Consolidate'
       iv_act = c_action-consolidate ).
+
+    ro_advanced_dropdown->add(
+      iv_txt = 'Rollback PR'
+      iv_act = c_action-rollback_pr ).
 
   ENDMETHOD.
 
@@ -416,6 +421,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       WHEN c_action-hide_matching_files.
         ms_user_settings-hide_matching_files = boolc( ms_user_settings-hide_matching_files <> abap_true ).
         zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-rollback_pr.
+        MESSAGE 'Rollback PR functionality is not yet implemented.' TYPE 'I'.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-refresh.
         refresh( ).
