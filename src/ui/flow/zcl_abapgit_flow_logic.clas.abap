@@ -617,6 +617,8 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
 * list branches on favorite + flow enabled + transported repos
     lt_repos = list_repos( ).
+    rs_information-enabled_repositories = lines( lt_repos ).
+
     LOOP AT lt_repos INTO li_repo_online.
 
       lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
