@@ -121,6 +121,12 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
         zcx_abapgit_exception .
+
+    METHODS build_advanced_dropdown
+      RETURNING
+        VALUE(ro_advanced_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -131,12 +137,25 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     ro_toolbar = zcl_abapgit_html_toolbar=>create( 'actionbar-flow' ).
 
+    ro_toolbar->add( iv_txt = 'Advanced'
+                     io_sub = build_advanced_dropdown( ) ).
+
     ro_toolbar->add( iv_txt = 'View'
                      io_sub = build_view_dropdown( ) ).
 
     ro_toolbar->add( iv_txt = 'Refresh'
                      iv_act = |{ c_action-refresh }|
                      iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+
+  ENDMETHOD.
+
+  METHOD build_advanced_dropdown.
+
+    CREATE OBJECT ro_advanced_dropdown.
+
+    ro_advanced_dropdown->add(
+      iv_txt = 'Consolidate'
+      iv_act = c_action-consolidate ).
 
   ENDMETHOD.
 
@@ -459,10 +478,6 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
     ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-flow' ).
-
-    ro_toolbar->add(
-      iv_txt = 'Consolidate'
-      iv_act = c_action-consolidate ).
 
     ro_toolbar->add(
       iv_txt = 'Back'
