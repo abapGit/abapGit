@@ -135,11 +135,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     ro_toolbar = zcl_abapgit_html_toolbar=>create( 'actionbar-flow' ).
 
-    ro_toolbar->add( iv_txt = 'Advanced'
-                     io_sub = build_advanced_dropdown( ) ).
-
     ro_toolbar->add( iv_txt = 'User Filter'
                      io_sub = build_user_filter_dropdown( ) ).
+
+    ro_toolbar->add( iv_txt = 'Advanced'
+                     io_sub = build_advanced_dropdown( ) ).
 
     ro_toolbar->add( iv_txt = 'View'
                      io_sub = build_view_dropdown( ) ).
