@@ -535,6 +535,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       IF ms_user_settings-show_details = abap_true.
         ri_html->add( |<br>| ).
         ri_html->add( |First commit: { is_feature-branch-first_commit(7) }| ).
+        ri_html->add( |<br>| ).
         ri_html->add( |Latest merge: { is_feature-branch-latest_merge_commit(7) }| ).
 
         ri_html->add( |<br>| ).
