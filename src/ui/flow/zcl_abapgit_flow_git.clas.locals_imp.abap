@@ -56,12 +56,12 @@ CLASS lcl_walker IMPLEMENTATION.
 
   METHOD walk.
 
-    DATA lt_main TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
-    DATA lt_branch TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
-    DATA ls_node_main LIKE LINE OF lt_main.
+    DATA lt_main        TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA lt_branch      TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA ls_node_main   LIKE LINE OF lt_main.
     DATA ls_node_branch LIKE LINE OF lt_branch.
-    DATA ls_file LIKE LINE OF rt_files.
-    DATA lt_files LIKE rt_files.
+    DATA ls_file        LIKE LINE OF rt_files.
+    DATA lt_files       LIKE rt_files.
 
     IF iv_tree_main IS NOT INITIAL.
       lt_main = decode_tree( iv_tree_main ).
