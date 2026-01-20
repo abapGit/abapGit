@@ -100,6 +100,15 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         VALUE(rv_skip) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
+
+    METHODS render_feature
+      IMPORTING
+        !iv_index      TYPE i
+        !is_feature    TYPE zif_abapgit_flow_logic=>ty_feature
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -558,6 +567,52 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD render_feature.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<b><font size="+2">' && is_feature-repo-name ).
+    IF is_feature-branch-display_name IS NOT INITIAL.
+      ri_html->add( | - | ).
+      ri_html->add_icon( 'code-branch' ).
+      ri_html->add( is_feature-branch-display_name ).
+    ENDIF.
+    IF is_feature-transport-trkorr IS NOT INITIAL.
+      ri_html->add( | - | ).
+      ri_html->add_icon( 'truck-solid' ).
+      ri_html->add( |<tt>{ is_feature-transport-trkorr }</tt>| ).
+    ENDIF.
+    ri_html->add( |</font></b><br>| ).
+
+    ri_html->add( render_info( is_feature ) ).
+
+    ri_html->add( render_toolbar(
+      iv_index   = iv_index
+      is_feature = is_feature ) ).
+
+    IF is_feature-branch IS NOT INITIAL AND is_feature-branch-up_to_date = abap_false
+        AND zcl_abapgit_flow_exit=>get_instance( )->get_settings( is_feature-repo-key )-allow_not_up_to_date = abap_false.
+      ri_html->add( '<b>Branch not up to date</b><br><br>' ).
+      RETURN.
+    ENDIF.
+
+    IF is_feature-full_match = abap_true.
+      ri_html->add( |Full Match, {
+        lines( is_feature-changed_files ) } files, {
+        lines( is_feature-changed_objects ) } objects<br>| ).
+    ELSE.
+      ri_html->add( zcl_abapgit_flow_page_utils=>render_table(
+        it_files                = is_feature-changed_files
+        it_transport_duplicates = ms_information-transport_duplicates
+        is_user_settings        = ms_user_settings
+        iv_repo_key             = is_feature-repo-key ) ).
+    ENDIF.
+
+    ri_html->add( '<br>' ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_renderable~render.
 
     DATA ls_feature  LIKE LINE OF ms_information-features.
@@ -603,44 +658,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ENDIF.
       lv_rendered = abap_true.
 
-      ri_html->add( '<b><font size="+2">' && ls_feature-repo-name ).
-      IF ls_feature-branch-display_name IS NOT INITIAL.
-        ri_html->add( | - | ).
-        ri_html->add_icon( 'code-branch' ).
-        ri_html->add( ls_feature-branch-display_name ).
-      ENDIF.
-      IF ls_feature-transport-trkorr IS NOT INITIAL.
-        ri_html->add( | - | ).
-        ri_html->add_icon( 'truck-solid' ).
-        ri_html->add( |<tt>{ ls_feature-transport-trkorr }</tt>| ).
-      ENDIF.
-      ri_html->add( |</font></b><br>| ).
-
-      ri_html->add( render_info( ls_feature ) ).
-
-      ri_html->add( render_toolbar(
+      ri_html->add( render_feature(
         iv_index   = lv_index
         is_feature = ls_feature ) ).
-
-      IF ls_feature-branch IS NOT INITIAL AND ls_feature-branch-up_to_date = abap_false
-          AND zcl_abapgit_flow_exit=>get_instance( )->get_settings( ls_feature-repo-key )-allow_not_up_to_date = abap_false.
-        ri_html->add( '<b>Branch not up to date</b><br><br>' ).
-        CONTINUE.
-      ENDIF.
-
-      IF ls_feature-full_match = abap_true.
-        ri_html->add( |Full Match, {
-          lines( ls_feature-changed_files ) } files, {
-          lines( ls_feature-changed_objects ) } objects<br>| ).
-      ELSE.
-        ri_html->add( zcl_abapgit_flow_page_utils=>render_table(
-          it_files                = ls_feature-changed_files
-          it_transport_duplicates = ms_information-transport_duplicates
-          is_user_settings        = ms_user_settings
-          iv_repo_key             = ls_feature-repo-key ) ).
-      ENDIF.
-
-      ri_html->add( '<br>' ).
     ENDLOOP.
 
     IF lines( ms_information-features ) = 0 OR lv_rendered = abap_false.
