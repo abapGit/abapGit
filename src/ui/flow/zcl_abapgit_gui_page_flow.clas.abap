@@ -85,14 +85,6 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS render_user_settings
-      IMPORTING
-        it_users       TYPE zif_abapgit_flow_logic=>ty_users_tt
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html
-      RAISING
-        zcx_abapgit_exception .
-
     METHODS skip_show
       IMPORTING
         is_feature     TYPE zif_abapgit_flow_logic=>ty_feature
@@ -127,6 +119,12 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         VALUE(ro_advanced_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
         zcx_abapgit_exception .
+
+    METHODS build_user_filter_dropdown
+      RETURNING
+        VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -139,6 +137,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     ro_toolbar->add( iv_txt = 'Advanced'
                      io_sub = build_advanced_dropdown( ) ).
+
+    ro_toolbar->add( iv_txt = 'User'
+                     io_sub = build_user_filter_dropdown( ) ).
 
     ro_toolbar->add( iv_txt = 'View'
                      io_sub = build_view_dropdown( ) ).
@@ -346,38 +347,30 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD build_user_filter_dropdown.
 
-  METHOD render_user_settings.
+    DATA lv_user  TYPE syuname.
+    DATA lt_users TYPE zif_abapgit_flow_logic=>ty_users_tt.
 
-    DATA lv_prefix TYPE string.
-    DATA lv_user   TYPE syuname.
+    CREATE OBJECT ro_toolbar.
 
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    ri_html->add( '<span class="toolbar-light pad-sides">' ).
-
-    CLEAR lv_prefix.
-    IF ms_user_settings-username_filter IS INITIAL.
-      lv_prefix = `<i id="icon-filter-favorite" class="icon icon-check blue"></i> `.
+    lt_users = zcl_abapgit_flow_logic=>get_involved_users( ms_information ).
+    INSERT sy-uname INTO TABLE lt_users.
+    IF ms_user_settings-username_filter IS NOT INITIAL.
+      INSERT ms_user_settings-username_filter INTO TABLE lt_users.
     ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |{ lv_prefix }All users|
-      iv_class = 'command'
-      iv_act   = |{ c_action-username_filter }| ) ).
 
-    LOOP AT it_users INTO lv_user.
-      CLEAR lv_prefix.
-      IF ms_user_settings-username_filter = lv_user.
-        lv_prefix = `<i id="icon-filter-favorite" class="icon icon-check blue"></i> `.
-      ENDIF.
-      ri_html->add( ri_html->a(
-        iv_txt   = |{ lv_prefix }{ lv_user }|
-        iv_class = 'command'
-        iv_act   = |{ c_action-username_filter }?user={ lv_user }| ) ).
+    ro_toolbar->add(
+      iv_txt = 'All users'
+      iv_chk = boolc( ms_user_settings-username_filter IS INITIAL )
+      iv_act = c_action-username_filter ).
+
+    LOOP AT lt_users INTO lv_user.
+      ro_toolbar->add(
+        iv_txt = |{ lv_user }|
+        iv_chk = boolc( ms_user_settings-username_filter = lv_user )
+        iv_act = |{ c_action-username_filter }?user={ lv_user }| ).
     ENDLOOP.
-
-    ri_html->add( '<br>' ).
-
-    ri_html->add( '</span>' ).
 
   ENDMETHOD.
 
@@ -637,7 +630,6 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA lv_rendered TYPE abap_bool.
     DATA lo_timer    TYPE REF TO zcl_abapgit_timer.
     DATA lv_message  LIKE LINE OF ms_information-errors.
-    DATA lt_users     TYPE zif_abapgit_flow_logic=>ty_users_tt.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -650,13 +642,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ms_information = zcl_abapgit_flow_logic=>get( ).
     ENDIF.
 
-    lt_users = zcl_abapgit_flow_logic=>get_involved_users( ms_information ).
-    INSERT sy-uname INTO TABLE lt_users.
-    IF ms_user_settings-username_filter IS NOT INITIAL.
-      INSERT ms_user_settings-username_filter INTO TABLE lt_users.
-    ENDIF.
     ri_html->add( build_main_toolbar( )->render( iv_right = abap_true ) ).
-    ri_html->add( render_user_settings( lt_users ) ).
 
     ri_html->add( '<br>' ).
     ri_html->add( '<br>' ).
