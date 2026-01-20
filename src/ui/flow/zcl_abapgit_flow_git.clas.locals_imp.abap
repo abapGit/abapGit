@@ -151,7 +151,7 @@ ENDCLASS.
 * this one allows branches not being up to date with main
 *  branch:         A---B---C---D
 *                 /       /
-*  main:      X---Y---Z---M
+*  main:      X---Y---Z---Q---W
 CLASS lcl_find_changes_new DEFINITION.
   PUBLIC SECTION.
     METHODS constructor
