@@ -118,6 +118,10 @@ CLASS lcl_walker IMPLEMENTATION.
       ENDCASE.
     ENDLOOP.
 
+    IF iv_tree_main = iv_tree_branch.
+      ASSERT lines( rt_files ) = 0.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD decode_tree.
