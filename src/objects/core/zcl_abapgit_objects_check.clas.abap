@@ -90,6 +90,7 @@ CLASS zcl_abapgit_objects_check DEFINITION
 
     CLASS-METHODS warning_tabl_data_adjust
       IMPORTING
+        !ii_repo      TYPE REF TO zif_abapgit_repo
         !it_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
       CHANGING
         !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
@@ -98,9 +99,12 @@ CLASS zcl_abapgit_objects_check DEFINITION
 
     CLASS-METHODS warning_tabl_data_find
       IMPORTING
+        ii_repo             TYPE REF TO zif_abapgit_repo
         !it_results         TYPE zif_abapgit_definitions=>ty_results_tt
       RETURNING
-        VALUE(rt_overwrite) TYPE zif_abapgit_definitions=>ty_overwrite_tt.
+        VALUE(rt_overwrite) TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      RAISING
+        zcx_abapgit_exception.
 
     CLASS-METHODS determine_transport_request
       IMPORTING
@@ -174,6 +178,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
     warning_tabl_data_adjust(
       EXPORTING
+        ii_repo      = ii_repo
         it_overwrite = is_checks-delete_tabl_with_data
       CHANGING
         ct_results   = ct_results ).
@@ -240,7 +245,9 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
       ii_repo    = ii_repo
       it_results = lt_results ).
 
-    rs_checks-delete_tabl_with_data = warning_tabl_data_find( lt_results ).
+    rs_checks-delete_tabl_with_data = warning_tabl_data_find(
+      ii_repo    = ii_repo
+      it_results = lt_results ).
 
     IF lines( lt_results ) > 0.
       li_package = zcl_abapgit_factory=>get_sap_package( ii_repo->get_package( ) ).
@@ -520,7 +527,9 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
     DATA lt_overwrite LIKE it_overwrite.
 
-    lt_overwrite = warning_tabl_data_find( ct_results ).
+    lt_overwrite = warning_tabl_data_find(
+      it_results = ct_results
+      ii_repo    = ii_repo ).
 
     adjust_result(
       EXPORTING
@@ -538,14 +547,17 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     DATA:
       ls_overwrite LIKE LINE OF rt_overwrite,
       lv_subrc     TYPE sy-subrc,
-      lv_status    TYPE c LENGTH 2,
       BEGIN OF ls_dd02l,
         tabname  TYPE dd02l-tabname,
         tabclass TYPE dd02l-tabclass,
         sqltab   TYPE dd02l-sqltab,
       END OF ls_dd02l.
+    DATA lt_remote_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
+
+
+    lt_remote_files = ii_repo->get_files_remote( iv_ignore_files = abap_true ).
 
     " Check for tables being deleted that contain data
     LOOP AT it_results ASSIGNING <ls_result>
@@ -553,10 +565,11 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         AND match IS INITIAL
         AND packmove IS INITIAL ##PRIMKEY[SEC_KEY].
 
-      CONCATENATE <ls_result>-lstate <ls_result>-rstate INTO lv_status RESPECTING BLANKS.
-
-      " Check if this is a delete action (added locally or deleted remotely)
-      CHECK lv_status = 'A ' OR lv_status = ' D' OR lv_status = 'MD'.
+      READ TABLE lt_remote_files TRANSPORTING NO FIELDS WITH KEY filename = <ls_result>-filename.
+      IF sy-subrc = 0.
+        " Table exists remotely, so not being deleted
+        CONTINUE.
+      ENDIF.
 
       " Get table metadata
       SELECT SINGLE tabname tabclass sqltab FROM dd02l
