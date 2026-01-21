@@ -259,6 +259,9 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
       READ TABLE mt_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = iv_first_commit.
       ASSERT sy-subrc = 0.
       ls_commit2 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+      READ TABLE mt_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = ls_commit2-parent.
+      ASSERT sy-subrc = 0.
+      ls_commit2 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
     ENDIF.
 
     DATA(lt_test_files) = mo_walker->walk(
