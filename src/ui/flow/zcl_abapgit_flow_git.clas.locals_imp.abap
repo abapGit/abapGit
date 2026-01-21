@@ -222,24 +222,24 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
 
     lv_current = iv_branch.
 
-"     DO.
-"       READ TABLE mt_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
-"       ASSERT sy-subrc = 0.
+    DO.
+      READ TABLE mt_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
+      ASSERT sy-subrc = 0.
 
-"       ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
-"       IF ls_commit-parent2 IS INITIAL.
-" * analyze changed files in commit
-"         find_changed_in_commit(
-"           EXPORTING is_commit = ls_commit
-"           CHANGING  ct_files  = rt_files ).
-"       ENDIF.
+      ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+      IF ls_commit-parent2 IS INITIAL.
+* analyze changed files in commit
+        find_changed_in_commit(
+          EXPORTING is_commit = ls_commit
+          CHANGING  ct_files  = rt_files ).
+      ENDIF.
 
-"       IF lv_current = iv_first_commit.
-"         EXIT.
-"       ENDIF.
+      IF lv_current = iv_first_commit.
+        EXIT.
+      ENDIF.
 
-"       lv_current = ls_commit-parent.
-"     ENDDO.
+      lv_current = ls_commit-parent.
+    ENDDO.
 
 *********************************************
 
@@ -264,10 +264,11 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
       ls_commit2 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
     ENDIF.
 
-    rt_files = mo_walker->walk(
+    DATA(lt_test_files) = mo_walker->walk(
       iv_path        = '/'
       iv_tree_main   = ls_commit1-tree
       iv_tree_branch = ls_commit2-tree ).
+    BREAK-POINT.
 
   ENDMETHOD.
 ENDCLASS.
