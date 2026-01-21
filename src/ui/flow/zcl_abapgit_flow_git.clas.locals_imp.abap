@@ -268,7 +268,9 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
       iv_path        = '/'
       iv_tree_main   = ls_commit1-tree
       iv_tree_branch = ls_commit2-tree ).
-    BREAK-POINT.
+    IF lines( lt_test_files ) <> lines( rt_files ).
+      BREAK-POINT.
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
