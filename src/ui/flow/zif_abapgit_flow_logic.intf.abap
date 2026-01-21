@@ -12,10 +12,11 @@ INTERFACE zif_abapgit_flow_logic
     ty_path_name_tt TYPE HASHED TABLE OF ty_path_name WITH UNIQUE KEY path filename.
 
   TYPES: BEGIN OF ty_branch,
-           display_name TYPE string,
-           sha1         TYPE zif_abapgit_git_definitions=>ty_sha1,
-           up_to_date   TYPE abap_bool,
-           first_commit TYPE zif_abapgit_git_definitions=>ty_sha1,
+           display_name        TYPE string,
+           sha1                TYPE zif_abapgit_git_definitions=>ty_sha1,
+           up_to_date          TYPE abap_bool,
+           first_commit        TYPE zif_abapgit_git_definitions=>ty_sha1,
+           latest_merge_commit TYPE zif_abapgit_git_definitions=>ty_sha1,
          END OF ty_branch.
 
   TYPES ty_users_tt TYPE SORTED TABLE OF syuname WITH UNIQUE KEY table_line.
