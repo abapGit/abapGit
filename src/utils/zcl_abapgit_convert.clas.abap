@@ -19,6 +19,14 @@ CLASS zcl_abapgit_convert DEFINITION
         VALUE(rv_string) TYPE string
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS xstring_to_string_utf8_raw
+      IMPORTING
+        !iv_data         TYPE xsequence
+        !iv_length       TYPE i OPTIONAL
+      RETURNING
+        VALUE(rv_string) TYPE string
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS string_to_xstring_utf8_bom
       IMPORTING
         !iv_string        TYPE string
@@ -471,6 +479,21 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
     rv_string = lcl_in=>convert(
       iv_data   = lv_data
+      iv_length = lv_length ).
+
+  ENDMETHOD.
+
+  METHOD xstring_to_string_utf8_raw.
+
+    DATA lv_length TYPE i.
+
+    lv_length = iv_length.
+    IF lv_length <= 0.
+      lv_length = xstrlen( iv_data ).
+    ENDIF.
+
+    rv_string = lcl_in=>convert(
+      iv_data   = iv_data
       iv_length = lv_length ).
 
   ENDMETHOD.
