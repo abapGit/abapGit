@@ -94,22 +94,14 @@ CLASS lcl_walker IMPLEMENTATION.
 
   METHOD walk_tree.
 
-    DATA: ls_object   LIKE LINE OF gt_objects,
-          lt_expanded LIKE rt_expanded,
+    DATA: lt_expanded LIKE rt_expanded,
           lt_nodes    TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
 
     FIELD-SYMBOLS: <ls_exp>  LIKE LINE OF rt_expanded,
                    <ls_node> LIKE LINE OF lt_nodes.
 
 
-    READ TABLE gt_objects INTO ls_object
-      WITH KEY type COMPONENTS
-        type = zif_abapgit_git_definitions=>c_type-tree
-        sha1 = iv_tree.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'tree not found' ).
-    ENDIF.
-    lt_nodes = decode_tree( ls_object-data ).
+    lt_nodes = decode_tree( iv_tree ).
 
     LOOP AT lt_nodes ASSIGNING <ls_node>.
       CASE <ls_node>-chmod.
