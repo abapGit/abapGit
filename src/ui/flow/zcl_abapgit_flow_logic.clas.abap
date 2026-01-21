@@ -760,14 +760,12 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
   METHOD relevant_transports_via_devc.
 
-    DATA ls_trkorr   LIKE LINE OF it_transports.
     DATA lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
     DATA lv_found    TYPE abap_bool.
-    DATA lv_package  LIKE LINE OF lt_packages.
     DATA lt_trkorr   TYPE ty_transports_tt.
 
-    FIELD-SYMBOLS <ls_transport> LIKE LINE OF it_transports.
-
+    FIELD-SYMBOLS <ls_trkorr>  LIKE LINE OF it_transports.
+    FIELD-SYMBOLS <lv_package> LIKE LINE OF lt_packages.
 
     lt_trkorr = it_transports.
     SORT lt_trkorr BY trkorr.
@@ -776,11 +774,11 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     lt_packages = zcl_abapgit_factory=>get_sap_package( ii_repo->get_package( ) )->list_subpackages( ).
     INSERT ii_repo->get_package( ) INTO TABLE lt_packages.
 
-    LOOP AT lt_trkorr INTO ls_trkorr.
+    LOOP AT lt_trkorr ASSIGNING <ls_trkorr>.
       lv_found = abap_false.
 
-      LOOP AT lt_packages INTO lv_package.
-        READ TABLE it_transports ASSIGNING <ls_transport> WITH KEY trkorr = ls_trkorr-trkorr devclass = lv_package.
+      LOOP AT lt_packages ASSIGNING <lv_package>.
+        READ TABLE it_transports TRANSPORTING NO FIELDS WITH KEY trkorr = <ls_trkorr>-trkorr devclass = <lv_package>.
         IF sy-subrc = 0.
           lv_found = abap_true.
           EXIT.
@@ -791,7 +789,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       ENDIF.
 
       IF lv_found = abap_true.
-        INSERT ls_trkorr-trkorr INTO TABLE rt_transports.
+        INSERT <ls_trkorr>-trkorr INTO TABLE rt_transports.
       ENDIF.
     ENDLOOP.
 
