@@ -211,15 +211,15 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
   METHOD lif_find_changes~find_changes.
     DATA lv_current TYPE zif_abapgit_git_definitions=>ty_sha1.
     DATA ls_commit  TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA ls_commit1 TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA ls_commit2 TYPE zcl_abapgit_git_pack=>ty_commit.
 
     FIELD-SYMBOLS <ls_commit> LIKE LINE OF mt_objects.
 
 
     ASSERT iv_first_commit IS NOT INITIAL.
-    ASSERT iv_main IS NOT INITIAL.
     ASSERT iv_branch IS NOT INITIAL.
 
-    lv_current = iv_latest_merge_commit. " dummy, remove me
     lv_current = iv_branch.
 
     DO.
@@ -240,6 +240,26 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
 
       lv_current = ls_commit-parent.
     ENDDO.
+
+    IF iv_latest_merge_commit IS NOT INITIAL.
+      READ TABLE mt_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = iv_branch.
+      ASSERT sy-subrc = 0.
+      ls_commit1 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+
+      READ TABLE mt_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = iv_latest_merge_commit.
+      ASSERT sy-subrc = 0.
+      ls_commit2 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+      ASSERT ls_commit2-parent2 IS NOT INITIAL.
+      READ TABLE mt_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = ls_commit2-parent2.
+      ASSERT sy-subrc = 0.
+      ls_commit2 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+
+      DATA(lt_test_files) = mo_walker->walk(
+        iv_path        = '/'
+        iv_tree_main   = ls_commit1-tree
+        iv_tree_branch = ls_commit2-tree ).
+      BREAK-POINT.
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
