@@ -199,7 +199,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
     DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
 
     IF zcl_abapgit_factory=>get_cts_api( )->is_chrec_possible_for_package( mi_repo->get_package( ) ) = abap_true.
-      zcx_abapgit_exception=>raise( 'Feature is only supported local packages (no transport)' ).
+      zcx_abapgit_exception=>raise( 'Feature only supports local packages (no transport)' ).
     ENDIF.
 
     " This is limited to prefix logic, repositories that have only one package, or repositories that have no
@@ -466,7 +466,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
     IF zcl_abapgit_factory=>get_cts_api( )->is_chrec_possible_for_package( lv_new_package ) = abap_true.
       ro_validation_log->set(
         iv_key = c_id-new_package
-        iv_val = 'Feature is only supported local packages (no transport)' ).
+        iv_val = 'Feature only supports local packages (no transport)' ).
     ENDIF.
 
   ENDMETHOD.
