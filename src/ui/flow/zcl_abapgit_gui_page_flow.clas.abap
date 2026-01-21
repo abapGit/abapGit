@@ -560,7 +560,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ri_html->add( |<br>| ).
         ri_html->add( |First commit: { is_feature-branch-first_commit(7) }| ).
         ri_html->add( |<br>| ).
-        ri_html->add( |Latest merge: { is_feature-branch-latest_merge_commit(7) }| ).
+        IF is_feature-branch-latest_merge_commit IS INITIAL.
+          ri_html->add( |Latest merge: No merges| ).
+        ELSE.
+          ri_html->add( |Latest merge: { is_feature-branch-latest_merge_commit(7) }| ).
+        ENDIF.
 
         ri_html->add( |<br>| ).
         IF is_feature-branch-up_to_date = abap_true.
