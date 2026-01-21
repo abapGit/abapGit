@@ -81,9 +81,11 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
     READ TABLE it_branches INTO ls_main WITH KEY display_name = zif_abapgit_flow_logic=>c_main.
     ASSERT sy-subrc = 0.
 
-    et_main_expanded = zcl_abapgit_git_porcelain=>full_tree(
-      it_objects = lt_objects
-      iv_parent  = ls_main-sha1 ).
+    lcl_walker=>initialize( lt_objects ).
+    " sdf et_main_expanded = zcl_abapgit_git_porcelain=>full_tree(
+    "   it_objects = lt_objects
+    "   iv_parent  = ls_main-sha1 ).
+    et_main_expanded = lcl_walker=>expand( ls_main-sha1 ).
     DELETE et_main_expanded WHERE path NP lv_starting_folder.
 
     find_up_to_date(
