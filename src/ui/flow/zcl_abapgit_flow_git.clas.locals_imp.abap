@@ -266,8 +266,8 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
 
     DATA(lt_test_files) = mo_walker->walk(
       iv_path        = '/'
-      iv_tree_main   = ls_commit1-tree
-      iv_tree_branch = ls_commit2-tree ).
+      iv_tree_main   = ls_commit2-tree
+      iv_tree_branch = ls_commit1-tree ).
     BREAK-POINT.
 
   ENDMETHOD.
