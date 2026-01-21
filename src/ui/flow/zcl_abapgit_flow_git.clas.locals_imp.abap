@@ -241,11 +241,13 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
       lv_current = ls_commit-parent.
     ENDDO.
 
-    IF iv_latest_merge_commit IS NOT INITIAL.
-      READ TABLE mt_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = iv_branch.
-      ASSERT sy-subrc = 0.
-      ls_commit1 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+*********************************************
 
+    READ TABLE mt_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = iv_branch.
+    ASSERT sy-subrc = 0.
+    ls_commit1 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+
+    IF iv_latest_merge_commit IS NOT INITIAL.
       READ TABLE mt_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = iv_latest_merge_commit.
       ASSERT sy-subrc = 0.
       ls_commit2 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
@@ -253,13 +255,17 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
       READ TABLE mt_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = ls_commit2-parent2.
       ASSERT sy-subrc = 0.
       ls_commit2 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
-
-      DATA(lt_test_files) = mo_walker->walk(
-        iv_path        = '/'
-        iv_tree_main   = ls_commit1-tree
-        iv_tree_branch = ls_commit2-tree ).
-      BREAK-POINT.
+    ELSE.
+      READ TABLE mt_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = iv_first_commit.
+      ASSERT sy-subrc = 0.
+      ls_commit2 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
     ENDIF.
+
+    DATA(lt_test_files) = mo_walker->walk(
+      iv_path        = '/'
+      iv_tree_main   = ls_commit1-tree
+      iv_tree_branch = ls_commit2-tree ).
+    BREAK-POINT.
 
   ENDMETHOD.
 ENDCLASS.
