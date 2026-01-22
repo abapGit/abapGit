@@ -211,7 +211,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     CREATE OBJECT mi_config TYPE zcl_abapgit_data_config.
-    mi_config->load_config( iv_key ).
+    mi_config->zif_abapgit_data_persistence~load_config( iv_key ).
 
   ENDMETHOD.
 
@@ -245,7 +245,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     ls_config-where        = build_where( lo_map ).
 
     mi_config->add_config( ls_config ).
-    mi_config->save_config( mi_repo->get_key( ) ).
+    mi_config->zif_abapgit_data_persistence~save_config( mi_repo->get_key( ) ).
 
   ENDMETHOD.
 
@@ -261,7 +261,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     ls_config-name = to_upper( lo_map->get( c_id-table ) ).
 
     mi_config->remove_config( ls_config ).
-    mi_config->save_config( mi_repo->get_key( ) ).
+    mi_config->zif_abapgit_data_persistence~save_config( mi_repo->get_key( ) ).
 
   ENDMETHOD.
 
@@ -279,7 +279,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     ls_config-where        = build_where( lo_map ).
 
     mi_config->update_config( ls_config ).
-    mi_config->save_config( mi_repo->get_key( ) ).
+    mi_config->zif_abapgit_data_persistence~save_config( mi_repo->get_key( ) ).
 
   ENDMETHOD.
 
