@@ -324,9 +324,9 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         ASSIGN COMPONENT 'LANGUAGE' OF STRUCTURE <ls_create_info> TO <lv_field>.
         <lv_field> = mv_language.
         ASSIGN COMPONENT 'DESCRIPTION' OF STRUCTURE <ls_create_info> TO <lv_field>.
-        <lv_field> = mr_service_binding->('METADATA-DESCRIPTION').
+        <lv_field> = |{ ms_item-obj_name }|.
         ASSIGN COMPONENT 'GROUP_ID' OF STRUCTURE <ls_create_info> TO <lv_field>.
-        <lv_field> = mr_service_binding->('METADATA-NAME').
+        <lv_field> = |{ ms_item-obj_name }|.
 
         CALL METHOD ('/IWFND/CL_V4_PUBLISHING_CONFIG')=>('GET_INSTANCE')
           RECEIVING
@@ -342,7 +342,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         " Do we use OAuth 2.0 scope?
         " CALL METHOD ('/IWFND/CL_V4_COF_FACADE')=>('CREATE_OAUTH2_SCOPE')
         "   EXPORTING
-        "     iv_service_group_id = <lv_field>.
+        "     iv_service_group_id = <lv_field>
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
@@ -374,7 +374,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         " Do we use OAuth 2.0 scope?
         " CALL METHOD ('/IWFND/CL_V4_COF_FACADE')=>('DELETE_OAUTH2_SCOPE')
         "   EXPORTING
-        "     iv_service_group_id = |{ ms_item-obj_name }|.
+        "     iv_service_group_id = |{ ms_item-obj_name }|
 
       CATCH cx_root ##NO_HANDLER.
         " not published i.e. good to go
