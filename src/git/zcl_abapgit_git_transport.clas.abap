@@ -339,7 +339,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
     lv_xstring = lo_client->send_receive_close( lv_xstring ).
 
-    lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ).
+    lv_string = zcl_abapgit_convert=>xstring_to_string_utf8_raw( lv_xstring ).
 
     check_report_status( lv_string ).
 

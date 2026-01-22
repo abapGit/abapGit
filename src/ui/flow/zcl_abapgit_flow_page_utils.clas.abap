@@ -152,9 +152,9 @@ CLASS zcl_abapgit_flow_page_utils IMPLEMENTATION.
             lv_param }&remote_sha1={ ls_path_name-remote_sha1 }| ).
       ENDIF.
 
-      ri_html->add( |<tr><td><tt>{ ls_path_name-path }{ ls_path_name-filename }</tt></td><td>{
-        ls_path_name-remote_sha1(7) }</td><td>{
-        ls_path_name-local_sha1(7) }</td><td>{ lv_status }</td><td>| ).
+      ri_html->add( |<tr><td>{ ls_path_name-path }{ ls_path_name-filename }</td><td><tt>{
+        ls_path_name-remote_sha1(7) }</tt></td><td><tt>{
+        ls_path_name-local_sha1(7) }</tt></td><td>{ lv_status }</td><td>| ).
       IF lv_duplicate = abap_true.
         ri_html->add_icon( iv_name = 'exclamation-triangle/red'
                            iv_hint = 'In duplicate transports' ).
