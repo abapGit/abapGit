@@ -32,6 +32,9 @@ CLASS zcl_abapgit_object_chdo DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
+
+    CONSTANTS c_class_gen_marker TYPE string VALUE '*CLASS_GEN*'.
+
     TYPES: BEGIN OF ty_change_document,
              reports_generated TYPE SORTED TABLE OF tcdrps WITH UNIQUE KEY object reportname,
              objects           TYPE SORTED TABLE OF tcdobs WITH UNIQUE KEY object tabname,
@@ -92,31 +95,31 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
   METHOD delete_tadir_cdnames.
 
-    IF is_cdnames-repnamec IS NOT INITIAL AND is_cdnames-repnamec NP '*CLASS_GEN*'.
+    IF is_cdnames-repnamec IS NOT INITIAL AND is_cdnames-repnamec NS c_class_gen_marker.
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'PROG'
         iv_obj_name  = is_cdnames-repnamec ).
     ENDIF.
 
-    IF is_cdnames-repnamet IS NOT INITIAL AND is_cdnames-repnamet NP '*CLASS_GEN*'.
+    IF is_cdnames-repnamet IS NOT INITIAL AND is_cdnames-repnamet NS c_class_gen_marker.
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'PROG'
         iv_obj_name  = is_cdnames-repnamet ).
     ENDIF.
 
-    IF is_cdnames-repnamefix IS NOT INITIAL AND is_cdnames-repnamefix NP '*CLASS_GEN*'.
+    IF is_cdnames-repnamefix IS NOT INITIAL AND is_cdnames-repnamefix NS c_class_gen_marker.
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'PROG'
         iv_obj_name  = is_cdnames-repnamefix ).
     ENDIF.
 
-    IF is_cdnames-repnamevar IS NOT INITIAL AND is_cdnames-repnamevar NP '*CLASS_GEN*'.
+    IF is_cdnames-repnamevar IS NOT INITIAL AND is_cdnames-repnamevar NS c_class_gen_marker.
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'PROG'
         iv_obj_name  = is_cdnames-repnamevar ).
     ENDIF.
 
-    IF is_cdnames-fgrp IS NOT INITIAL AND is_cdnames-fgrp NP '*CLASS_GEN*'.
+    IF is_cdnames-fgrp IS NOT INITIAL AND is_cdnames-fgrp NS c_class_gen_marker.
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'FUGR'
         iv_obj_name  = is_cdnames-fgrp ).
@@ -127,7 +130,7 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
   METHOD delete_tadir_tabl.
 
-    IF is_tcdrs-tabname IS NOT INITIAL AND is_tcdrs-tabname NP '*CLASS_GEN*'.
+    IF is_tcdrs-tabname IS NOT INITIAL AND is_tcdrs-tabname NS c_class_gen_marker.
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'TABL'
         iv_obj_name  = is_tcdrs-tabname ).
