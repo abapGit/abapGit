@@ -35,12 +35,12 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
     TYPES: BEGIN OF ty_transport,
              trkorr   TYPE trkorr,
              title    TYPE string,
-             object   TYPE e071-object,
-             obj_name TYPE e071-obj_name,
+             object   TYPE tadir-object,
+             obj_name TYPE tadir-obj_name,
              devclass TYPE tadir-devclass,
            END OF ty_transport.
 
-    TYPES ty_transports_tt TYPE STANDARD TABLE OF ty_transport WITH DEFAULT KEY.
+    TYPES ty_transports_tt TYPE STANDARD TABLE OF ty_transport WITH NON-UNIQUE KEY trkorr.
 
     TYPES ty_trkorr_tt TYPE STANDARD TABLE OF trkorr WITH DEFAULT KEY.
 
@@ -54,7 +54,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
 
     CLASS-METHODS check_files
       IMPORTING
-        it_local          TYPE zif_abapgit_definitions=>ty_files_item_tt
+        it_local          TYPE zif_abapgit_flow_logic=>ty_local_files
         it_features       TYPE zif_abapgit_flow_logic=>ty_features
       CHANGING
         ct_main_expanded  TYPE zif_abapgit_git_definitions=>ty_expanded_tt
@@ -72,7 +72,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       IMPORTING
         ii_repo          TYPE REF TO zif_abapgit_repo
         it_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
-        it_local         TYPE zif_abapgit_definitions=>ty_files_item_tt
+        it_local         TYPE zif_abapgit_flow_logic=>ty_local_files
       CHANGING
         ct_features      TYPE zif_abapgit_flow_logic=>ty_features
         ct_transports    TYPE ty_transports_tt
@@ -89,7 +89,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       IMPORTING
         iv_trkorr        TYPE trkorr
         it_transports    TYPE ty_transports_tt
-        it_local         TYPE zif_abapgit_definitions=>ty_files_item_tt
+        it_local         TYPE zif_abapgit_flow_logic=>ty_local_files
         it_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       CHANGING
         cs_feature       TYPE zif_abapgit_flow_logic=>ty_feature
@@ -106,7 +106,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
 
     CLASS-METHODS add_local_status
       IMPORTING
-        it_local    TYPE zif_abapgit_definitions=>ty_files_item_tt
+        it_local    TYPE zif_abapgit_flow_logic=>ty_local_files
       CHANGING
         ct_features TYPE zif_abapgit_flow_logic=>ty_features
       RAISING
@@ -134,7 +134,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
         it_all_transports      TYPE ty_transports_tt
         it_features            TYPE zif_abapgit_flow_logic=>ty_features
       RETURNING
-        VALUE(rt_local)        TYPE zif_abapgit_definitions=>ty_files_item_tt
+        VALUE(rt_local)        TYPE zif_abapgit_flow_logic=>ty_local_files
       RAISING
         zcx_abapgit_exception.
 
@@ -368,7 +368,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     DATA lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA lt_filter   TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA lo_filter   TYPE REF TO zcl_abapgit_object_filter_obj.
-    DATA lt_local    TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_local    TYPE zif_abapgit_flow_logic=>ty_local_files.
     DATA lt_features TYPE zif_abapgit_flow_logic=>ty_features.
     DATA li_repo     TYPE REF TO zif_abapgit_repo.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
@@ -606,7 +606,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     DATA lt_relevant_transports TYPE ty_trkorr_tt.
     DATA lt_repos TYPE ty_repos_tt.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
-    DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_local TYPE zif_abapgit_flow_logic=>ty_local_files.
     DATA lt_real_transports LIKE lt_all_transports.
 
     FIELD-SYMBOLS <ls_feature> LIKE LINE OF lt_features.
@@ -617,6 +617,8 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
 * list branches on favorite + flow enabled + transported repos
     lt_repos = list_repos( ).
+    rs_information-enabled_repositories = lines( lt_repos ).
+
     LOOP AT lt_repos INTO li_repo_online.
 
       lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
@@ -758,14 +760,12 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
   METHOD relevant_transports_via_devc.
 
-    DATA ls_trkorr   LIKE LINE OF it_transports.
     DATA lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
     DATA lv_found    TYPE abap_bool.
-    DATA lv_package  LIKE LINE OF lt_packages.
     DATA lt_trkorr   TYPE ty_transports_tt.
 
-    FIELD-SYMBOLS <ls_transport> LIKE LINE OF it_transports.
-
+    FIELD-SYMBOLS <ls_trkorr>  LIKE LINE OF it_transports.
+    FIELD-SYMBOLS <lv_package> LIKE LINE OF lt_packages.
 
     lt_trkorr = it_transports.
     SORT lt_trkorr BY trkorr.
@@ -774,11 +774,11 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     lt_packages = zcl_abapgit_factory=>get_sap_package( ii_repo->get_package( ) )->list_subpackages( ).
     INSERT ii_repo->get_package( ) INTO TABLE lt_packages.
 
-    LOOP AT lt_trkorr INTO ls_trkorr.
+    LOOP AT lt_trkorr ASSIGNING <ls_trkorr>.
       lv_found = abap_false.
 
-      LOOP AT lt_packages INTO lv_package.
-        READ TABLE it_transports ASSIGNING <ls_transport> WITH KEY trkorr = ls_trkorr-trkorr devclass = lv_package.
+      LOOP AT lt_packages ASSIGNING <lv_package>.
+        READ TABLE it_transports TRANSPORTING NO FIELDS WITH KEY trkorr = <ls_trkorr>-trkorr devclass = <lv_package>.
         IF sy-subrc = 0.
           lv_found = abap_true.
           EXIT.
@@ -789,7 +789,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       ENDIF.
 
       IF lv_found = abap_true.
-        INSERT ls_trkorr-trkorr INTO TABLE rt_transports.
+        INSERT <ls_trkorr>-trkorr INTO TABLE rt_transports.
       ENDIF.
     ENDLOOP.
 

@@ -57,7 +57,7 @@ CLASS zcl_abapgit_git_utils IMPLEMENTATION.
 
     lv_xstring = iv_data(4).
 
-    lv_char4 = zcl_abapgit_convert=>xstring_to_string_utf8(
+    lv_char4 = zcl_abapgit_convert=>xstring_to_string_utf8_raw(
       iv_data   = lv_xstring
       iv_length = 4 ).
 
