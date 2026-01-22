@@ -2,8 +2,8 @@ INTERFACE zif_abapgit_persist_repo_data PUBLIC.
 
   METHODS update
     IMPORTING
-      !iv_key     TYPE zif_abapgit_persistence=>ty_repo-key
-      !iv_cs_blob TYPE zif_abapgit_persistence=>ty_content-data_str
+      !iv_key  TYPE zif_abapgit_persistence=>ty_repo-key
+      !iv_json TYPE zif_abapgit_persistence=>ty_content-data_str
     RAISING
       zcx_abapgit_exception.
 
@@ -15,9 +15,9 @@ INTERFACE zif_abapgit_persist_repo_data PUBLIC.
 
   METHODS read
     IMPORTING
-      !iv_key           TYPE zif_abapgit_persistence=>ty_repo-key
+      !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
     RETURNING
-      VALUE(rv_cs_blob) TYPE zif_abapgit_persistence=>ty_content-data_str
+      VALUE(rv_json) TYPE zif_abapgit_persistence=>ty_content-data_str
     RAISING
       zcx_abapgit_exception
       zcx_abapgit_not_found.
