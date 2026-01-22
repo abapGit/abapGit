@@ -314,7 +314,13 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
     DATA lo_publishing_config TYPE REF TO object.
 
     FIELD-SYMBOLS <ls_create_info> TYPE any.
+    FIELD-SYMBOLS <lv_description> TYPE any.
     FIELD-SYMBOLS <lv_field> TYPE any.
+
+    ASSIGN COMPONENT 'PUBLISHED' OF STRUCTURE mr_service_binding->* TO <lv_field>.
+    IF sy-subrc <> 0 OR <lv_field> <> abap_true.
+      RETURN.
+    ENDIF.
 
     TRY.
         CREATE DATA lr_create_info TYPE ('/IWFND/IF_V4_PUBLISHING_TYPES=>TY_S_CREATE_GROUP_INFO').
@@ -324,7 +330,8 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         ASSIGN COMPONENT 'LANGUAGE' OF STRUCTURE <ls_create_info> TO <lv_field>.
         <lv_field> = mv_language.
         ASSIGN COMPONENT 'DESCRIPTION' OF STRUCTURE <ls_create_info> TO <lv_field>.
-        <lv_field> = |{ ms_item-obj_name }|.
+        ASSIGN COMPONENT 'METADATA-DESCRIPTION' OF STRUCTURE mr_service_binding->* TO <lv_description>.
+        <lv_field> = <lv_description>.
         ASSIGN COMPONENT 'GROUP_ID' OF STRUCTURE <ls_create_info> TO <lv_field>.
         <lv_field> = |{ ms_item-obj_name }|.
 
@@ -482,9 +489,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
     ENDTRY.
 
     " Publish service binding
-    IF mr_service_binding->('PUBLISHED') = abap_true.
-      publish( ).
-    ENDIF.
+    publish( ).
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
