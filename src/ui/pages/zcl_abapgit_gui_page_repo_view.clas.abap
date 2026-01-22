@@ -1228,7 +1228,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_hotkey_action-hotkey = |l|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description   = |Toggle File View|.
+    ls_hotkey_action-description   = |Toggle File Paths|.
     ls_hotkey_action-action = c_actions-toggle_hide_files.
     ls_hotkey_action-hotkey = |v|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
