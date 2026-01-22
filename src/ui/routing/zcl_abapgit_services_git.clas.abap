@@ -95,7 +95,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
     COMMIT WORK.
 
     zcl_abapgit_exit=>get_instance( )->validate_after_push(
-      ii_repo_online = ii_repo_online ).
+      ii_repo_online ).
 
   ENDMETHOD.
 
