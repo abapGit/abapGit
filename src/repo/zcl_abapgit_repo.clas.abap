@@ -54,7 +54,6 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mi_log TYPE REF TO zif_abapgit_log .
     DATA mi_listener TYPE REF TO zif_abapgit_repo_listener .
     DATA mo_apack_reader TYPE REF TO zcl_abapgit_apack_reader .
-    DATA mi_data_config TYPE REF TO zif_abapgit_data_config .
 
     METHODS find_remote_dot_apack
       RETURNING
@@ -130,6 +129,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
 
 ENDCLASS.
+
 
 
 CLASS zcl_abapgit_repo IMPLEMENTATION.
@@ -208,13 +208,18 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD deserialize_data.
 
     DATA:
+      li_config        TYPE REF TO zif_abapgit_data_config,
       lt_updated_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt,
       lt_result        TYPE zif_abapgit_data_deserializer=>ty_results.
+
+    " Get remote data config
+    CREATE OBJECT li_config TYPE zcl_abapgit_data_config.
+    li_config->from_json( mt_remote ).
 
     "Deserialize data
     lt_result = zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
       iv_package = get_package( )
-      ii_config  = get_data_config( )
+      ii_config  = li_config
       it_files   = get_files_remote( ) ).
 
     "Save deserialized data to DB and add entries to transport requests
@@ -222,7 +227,12 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       it_result = lt_result
       is_checks = is_checks ).
 
-    INSERT LINES OF lt_updated_files INTO TABLE ct_files.
+    " Save local data config
+    IF lt_updated_files IS NOT INITIAL.
+      li_config->zif_abapgit_data_persistence~save_config( ms_data-key ).
+
+      INSERT LINES OF lt_updated_files INTO TABLE ct_files.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -574,26 +584,14 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~get_data_config.
 
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
-
-    IF mi_data_config IS BOUND.
-      ri_config = mi_data_config.
-      RETURN.
-    ENDIF.
-
+    " Get local data config
     CREATE OBJECT ri_config TYPE zcl_abapgit_data_config.
+    ri_config->zif_abapgit_data_persistence~load_config( ms_data-key ).
 
-    READ TABLE mt_remote ASSIGNING <ls_remote>
-      WITH KEY file_path
-      COMPONENTS path = zif_abapgit_data_config=>c_default_path.
-    IF sy-subrc = 0.
+    " If nothing is defined, get remote data config and save it locally
+    IF ri_config->get_configs( ) IS INITIAL.
       ri_config->from_json( mt_remote ).
-    ENDIF.
-
-* offline repos does not have the remote files before the zip is choosen
-* so make sure the json is read after zip file is loaded
-    IF lines( mt_remote ) > 0.
-      mi_data_config = ri_config.
+      ri_config->zif_abapgit_data_persistence~save_config( ms_data-key ).
     ENDIF.
 
   ENDMETHOD.
