@@ -288,7 +288,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
     FIELD-SYMBOLS: <lv_string> LIKE LINE OF lt_string.
 
 
-    lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data ).
+    lv_string = zcl_abapgit_convert=>xstring_to_string_utf8_raw( iv_data ).
 
     SPLIT lv_string AT cl_abap_char_utilities=>newline INTO TABLE lt_string.
 
@@ -351,7 +351,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
     FIELD-SYMBOLS: <lv_string> LIKE LINE OF lt_string.
 
 
-    lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data ).
+    lv_string = zcl_abapgit_convert=>xstring_to_string_utf8_raw( iv_data ).
 
     SPLIT lv_string AT cl_abap_char_utilities=>newline INTO TABLE lt_string.
 
@@ -428,7 +428,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       lv_len = lv_match - lv_cursor.
       lv_xstring = iv_data+lv_cursor(lv_len).
 
-      lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ).
+      lv_string = zcl_abapgit_convert=>xstring_to_string_utf8_raw( lv_xstring ).
       SPLIT lv_string AT space INTO lv_chmod lv_name.
 
       ls_node-chmod = lv_chmod.

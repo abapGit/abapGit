@@ -20,8 +20,6 @@ CLASS lcl_in IMPLEMENTATION.
     DATA lx_error TYPE REF TO cx_root.
     DATA lv_ignore_cerr TYPE abap_bool.
 
-* ignore conversion errors on non-unicode systems
-    lv_ignore_cerr = boolc( cl_abap_char_utilities=>charsize = 1 ).
 
     IF go_conv_new IS INITIAL AND go_conv_old IS INITIAL.
       TRY.
@@ -29,6 +27,9 @@ CLASS lcl_in IMPLEMENTATION.
             RECEIVING
               instance = go_conv_new.
         CATCH cx_sy_dyn_call_illegal_class.
+* ignore conversion errors on non-unicode systems
+          lv_ignore_cerr = boolc( cl_abap_char_utilities=>charsize = 1 ).
+
           lv_class = 'CL_ABAP_CONV_IN_CE'.
           CALL METHOD (lv_class)=>create
             EXPORTING
