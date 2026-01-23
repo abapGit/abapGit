@@ -181,9 +181,9 @@ INTERFACE zif_abapgit_exit PUBLIC.
       zcx_abapgit_exception.
 
   METHODS validate_after_push
-    IMPORTING 
+    IMPORTING
       ii_repo_online TYPE REF TO zif_abapgit_repo_online
-    RAISING   
+    RAISING
       zcx_abapgit_exception.
 
   METHODS wall_message_list
