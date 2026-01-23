@@ -49,7 +49,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_git IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
 
   METHOD commit.
@@ -93,6 +93,8 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
                           io_stage   = io_stage ).
 
     COMMIT WORK.
+
+    zcl_abapgit_exit=>get_instance( )->validate_after_push( ii_repo_online ).
 
   ENDMETHOD.
 

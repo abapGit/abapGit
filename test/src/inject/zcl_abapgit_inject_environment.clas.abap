@@ -1,9 +1,9 @@
-CLASS zcl_abapgit_web_environment DEFINITION PUBLIC.
+CLASS zcl_abapgit_inject_environment DEFINITION PUBLIC.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_environment.
 ENDCLASS.
 
-CLASS zcl_abapgit_web_environment IMPLEMENTATION.
+CLASS zcl_abapgit_inject_environment IMPLEMENTATION.
 
   METHOD zif_abapgit_environment~compare_with_inactive.
     ASSERT 1 = 'decoupled'.
