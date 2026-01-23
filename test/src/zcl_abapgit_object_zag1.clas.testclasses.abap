@@ -44,7 +44,7 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lt_deps    TYPE if_function_test_environment=>tt_function_dependencies.
     DATA lo_initial TYPE REF TO zif_abapgit_repo_srv.
     DATA lo_tr_object_table TYPE REF TO lcl_tr_object_table.
-    DATA lo_environment TYPE REF TO zcl_abapgit_web_environment.
+    DATA lo_environment TYPE REF TO zcl_abapgit_inject_environment.
 
     zcl_abapgit_repo_srv=>inject_instance( lo_initial ).
 

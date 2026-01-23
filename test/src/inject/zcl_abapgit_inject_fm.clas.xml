@@ -3,7 +3,7 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_WEB_INJECT_FM</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_INJECT_FM</CLSNAME>
     <LANGU>E</LANGU>
     <DESCRIPT>ZCL_ABAPGIT_WEB_INJECT_FM</DESCRIPT>
     <STATE>1</STATE>

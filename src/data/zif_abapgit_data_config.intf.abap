@@ -1,6 +1,7 @@
 INTERFACE zif_abapgit_data_config
   PUBLIC .
 
+  INTERFACES zif_abapgit_data_persistence.
 
   TYPES:
     ty_data_type TYPE c LENGTH 4 .
@@ -53,4 +54,5 @@ INTERFACE zif_abapgit_data_config
       !is_config TYPE ty_config
     RAISING
       zcx_abapgit_exception .
+
 ENDINTERFACE.
