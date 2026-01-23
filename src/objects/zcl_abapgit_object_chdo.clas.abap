@@ -206,6 +206,7 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
     DATA: ls_change_object TYPE ty_change_document.
     FIELD-SYMBOLS: <ls_report_generated> LIKE LINE OF ls_change_object-reports_generated.
+    FIELD-SYMBOLS <lv_abap_language_version> TYPE uccheck.
 
     io_xml->read( EXPORTING iv_name = 'CHDO'
                   CHANGING  cg_data = ls_change_object ).
@@ -216,6 +217,11 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
     LOOP AT ls_change_object-reports_generated ASSIGNING <ls_report_generated>.
       <ls_report_generated>-devclass = iv_package.
+
+      ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_report_generated> TO <lv_abap_language_version>.
+      IF sy-subrc = 0.
+        set_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+      ENDIF.
     ENDLOOP.
 
     INSERT tcdobs  FROM TABLE ls_change_object-objects.
@@ -327,6 +333,7 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_reports_generated> LIKE LINE OF ls_change_object-reports_generated,
                    <ls_objects>           LIKE LINE OF ls_change_object-objects,
                    <ls_objects_text>      LIKE LINE OF ls_change_object-objects_text.
+    FIELD-SYMBOLS <lv_abap_language_version> TYPE uccheck.
 
     CALL FUNCTION 'CDNAMES_GET'
       EXPORTING
@@ -352,6 +359,11 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
       CLEAR: <ls_reports_generated>-datum, <ls_reports_generated>-uzeit,
              <ls_reports_generated>-author, <ls_reports_generated>-updname,
              <ls_reports_generated>-devclass.
+
+      ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_reports_generated> TO <lv_abap_language_version>.
+      IF sy-subrc = 0.
+        clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+      ENDIF.
     ENDLOOP.
 
     LOOP AT ls_change_object-objects ASSIGNING <ls_objects>.
