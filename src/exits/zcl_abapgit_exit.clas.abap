@@ -20,11 +20,12 @@ CLASS zcl_abapgit_exit DEFINITION
     CLASS-METHODS is_running_in_test_context
       RETURNING
         VALUE(rv_running_in_test_context) TYPE abap_bool.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
+CLASS zcl_abapgit_exit IMPLEMENTATION.
 
 
   METHOD get_instance.
