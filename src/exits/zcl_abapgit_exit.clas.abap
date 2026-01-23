@@ -508,7 +508,7 @@ CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
 
     IF gi_exit IS NOT INITIAL.
       TRY.
-          gi_exit->validate_after_push( ii_repo_online = ii_repo_online ).
+          gi_exit->validate_after_push( ii_repo_online ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
