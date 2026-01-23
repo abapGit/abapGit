@@ -75,111 +75,111 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'VERSION'
+        iv_fieldname = 'VERSION'
       CHANGING
-        cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'CREATED_AT'
+        iv_fieldname = 'CREATED_AT'
       CHANGING
-        cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'CREATED_BY'
+        iv_fieldname = 'CREATED_BY'
       CHANGING
-        cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'CHANGED_AT'
+        iv_fieldname = 'CHANGED_AT'
       CHANGING
-        cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'CHANGED_BY'
+        iv_fieldname = 'CHANGED_BY'
       CHANGING
-        cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'RESPONSIBLE'
+        iv_fieldname = 'RESPONSIBLE'
       CHANGING
-        cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'PACKAGE_REF'
+        iv_fieldname = 'PACKAGE_REF'
       CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'CONTAINER_REF'
+        iv_fieldname = 'CONTAINER_REF'
       CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'MASTER_SYSTEM'
+        iv_fieldname = 'MASTER_SYSTEM'
       CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'MAIN_OBJECT-CHANGED_AT'
+        iv_fieldname = 'MAIN_OBJECT-CHANGED_AT'
       CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'MAIN_OBJECT-CHANGED_BY'
+        iv_fieldname = 'MAIN_OBJECT-CHANGED_BY'
       CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'MAIN_OBJECT-CREATED_AT'
+        iv_fieldname = 'MAIN_OBJECT-CREATED_AT'
       CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'MAIN_OBJECT-CREATED_BY'
+        iv_fieldname = 'MAIN_OBJECT-CREATED_BY'
       CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'MAIN_OBJECT-RESPONSIBLE'
+        iv_fieldname = 'MAIN_OBJECT-RESPONSIBLE'
       CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'MAIN_OBJECT-PACKAGE_REF'
+        iv_fieldname = 'MAIN_OBJECT-PACKAGE_REF'
       CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'MAIN_OBJECT-CONTAINER_REF'
+        iv_fieldname = 'MAIN_OBJECT-CONTAINER_REF'
       CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'MAIN_OBJECT-MASTER_SYSTEM'
+        iv_fieldname = 'MAIN_OBJECT-MASTER_SYSTEM'
       CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'SYNTAX_CONFIGURATION'
+        iv_fieldname = 'SYNTAX_CONFIGURATION'
       CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     ASSIGN COMPONENT 'LINKS' OF STRUCTURE cs_metadata TO <lv_links>.
     ASSERT sy-subrc = 0.
@@ -221,10 +221,11 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
       lr_data     TYPE REF TO data.
 
     FIELD-SYMBOLS:
-      <lv_metadata_node> TYPE any,
-      <ls_metadata>      TYPE any,
-      <lv_source>        TYPE any,
-      <lg_data>          TYPE any.
+      <lv_abap_language_version> TYPE uccheck,
+      <lv_metadata_node>         TYPE any,
+      <ls_metadata>              TYPE any,
+      <lv_source>                TYPE any,
+      <lg_data>                  TYPE any.
 
     CREATE DATA lr_data TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
     ASSIGN lr_data->* TO <lg_data>.
@@ -242,6 +243,11 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
         iv_name = 'BDEF'
       CHANGING
         cg_data = <ls_metadata> ).
+
+    ASSIGN COMPONENT 'ABAP_LANGU_VERSION' OF STRUCTURE <ls_metadata> TO <lv_abap_language_version>.
+    IF sy-subrc = 0.
+      set_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+    ENDIF.
 
     <lv_metadata_node> = <ls_metadata>.
 
@@ -502,9 +508,9 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
 
     TRY.
         mi_persistence->get(
-            p_object_key              = mv_behaviour_definition_key
-            p_version                 = 'A'
-            p_existence_check_only    = abap_true ).
+          p_object_key           = mv_behaviour_definition_key
+          p_version              = 'A'
+          p_existence_check_only = abap_true ).
         rv_bool = abap_true.
 
       CATCH cx_swb_exception.
@@ -571,9 +577,10 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
       lv_source             TYPE string.
 
     FIELD-SYMBOLS:
-      <ls_behaviour_definition> TYPE any,
-      <lv_metadata>             TYPE any,
-      <lv_source>               TYPE string.
+      <lv_abap_language_version> TYPE uccheck,
+      <ls_behaviour_definition>  TYPE any,
+      <lv_metadata>              TYPE any,
+      <lv_source>                TYPE string.
 
     ASSIGN mr_behaviour_definition->* TO <ls_behaviour_definition>.
     ASSERT sy-subrc = 0.
@@ -592,6 +599,11 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
         ASSERT sy-subrc = 0.
         clear_fields( CHANGING cs_metadata = <lv_metadata> ).
 
+        ASSIGN COMPONENT 'ABAP_LANGU_VERSION' OF STRUCTURE <lv_metadata> TO <lv_abap_language_version>.
+        IF sy-subrc = 0.
+          clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+        ENDIF.
+
         ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_behaviour_definition> TO <lv_source>.
         ASSERT sy-subrc = 0.
         lv_source = <lv_source>.
@@ -601,12 +613,12 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
     ENDTRY.
 
     io_xml->add(
-        iv_name = 'BDEF'
-        ig_data = <lv_metadata> ).
+      iv_name = 'BDEF'
+      ig_data = <lv_metadata> ).
 
     mo_files->add_string(
-        iv_ext    = 'asbdef'
-        iv_string = lv_source ).
+      iv_ext    = 'asbdef'
+      iv_string = lv_source ).
 
   ENDMETHOD.
 ENDCLASS.
