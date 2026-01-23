@@ -1,9 +1,9 @@
-CLASS zcl_abapgit_web_user_record DEFINITION PUBLIC.
+CLASS zcl_abapgit_inject_user_record DEFINITION PUBLIC.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_user_record.
 ENDCLASS.
 
-CLASS zcl_abapgit_web_user_record IMPLEMENTATION.
+CLASS zcl_abapgit_inject_user_record IMPLEMENTATION.
 
   METHOD zif_abapgit_user_record~get_name.
     RETURN. " todo, implement method
