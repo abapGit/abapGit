@@ -17,7 +17,7 @@ CLASS zcl_abapgit_exit DEFINITION
     class-data GI_GLOBAL_EXIT type ref to ZIF_ABAPGIT_EXIT .
     class-data GI_EXIT type ref to ZIF_ABAPGIT_EXIT .
 
-  class-methods IS_RUNNING_IN_TEST_CONTEXT
+    class-methods IS_RUNNING_IN_TEST_CONTEXT
     returning
       value(RV_RUNNING_IN_TEST_CONTEXT) type ABAP_BOOL .
 ENDCLASS.
