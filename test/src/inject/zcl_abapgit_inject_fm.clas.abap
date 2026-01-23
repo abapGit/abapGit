@@ -1,10 +1,10 @@
-CLASS zcl_abapgit_web_inject_fm DEFINITION PUBLIC.
+CLASS zcl_abapgit_inject_fm DEFINITION PUBLIC.
   PUBLIC SECTION.
     INTERFACES if_ftd_invocation_answer.
     CLASS-METHODS inject.
 ENDCLASS.
 
-CLASS zcl_abapgit_web_inject_fm IMPLEMENTATION.
+CLASS zcl_abapgit_inject_fm IMPLEMENTATION.
   METHOD if_ftd_invocation_answer~answer.
     RETURN.
   ENDMETHOD.
@@ -14,7 +14,7 @@ CLASS zcl_abapgit_web_inject_fm IMPLEMENTATION.
     DATA lt_deps    TYPE if_function_test_environment=>tt_function_dependencies.
     DATA lv_dep     LIKE LINE OF lt_deps.
     DATA li_env     TYPE REF TO if_function_test_environment.
-    DATA lo_handler TYPE REF TO zcl_abapgit_web_inject_fm.
+    DATA lo_handler TYPE REF TO zcl_abapgit_inject_fm.
 
 
     INSERT 'ENQUEUE_EZABAPGIT' INTO TABLE lt_deps.
