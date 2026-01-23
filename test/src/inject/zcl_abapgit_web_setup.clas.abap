@@ -1,8 +1,8 @@
 CLASS zcl_abapgit_web_setup DEFINITION PUBLIC.
   PUBLIC SECTION.
     CLASS-METHODS setup
-    RAISING
-      zcx_abapgit_exception.
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 CLASS zcl_abapgit_web_setup IMPLEMENTATION.
