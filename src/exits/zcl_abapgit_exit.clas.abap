@@ -12,7 +12,7 @@ CLASS zcl_abapgit_exit DEFINITION
         VALUE(ri_exit) TYPE REF TO zif_abapgit_exit.
 
   PROTECTED SECTION.
-private section.
+  private section.
 
   class-data GI_GLOBAL_EXIT type ref to ZIF_ABAPGIT_EXIT .
   class-data GI_EXIT type ref to ZIF_ABAPGIT_EXIT .
