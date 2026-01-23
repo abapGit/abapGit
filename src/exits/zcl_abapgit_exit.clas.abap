@@ -14,7 +14,7 @@ CLASS zcl_abapgit_exit DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    class-data GI_GLOBAL_EXIT type ref to ZIF_ABAPGIT_EXIT .
+    CLASS-DATA gi_global_exit TYPE REF TO zif_abapgit_exit .
     class-data GI_EXIT type ref to ZIF_ABAPGIT_EXIT .
 
     class-methods IS_RUNNING_IN_TEST_CONTEXT
