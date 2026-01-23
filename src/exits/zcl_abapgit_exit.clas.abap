@@ -14,12 +14,12 @@ CLASS zcl_abapgit_exit DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CLASS-DATA gi_global_exit TYPE REF TO zif_abapgit_exit .
-    CLASS-DATA gi_exit TYPE REF TO zif_abapgit_exit .
+    CLASS-DATA gi_global_exit TYPE REF TO zif_abapgit_exit.
+    CLASS-DATA gi_exit TYPE REF TO zif_abapgit_exit.
 
     CLASS-METHODS is_running_in_test_context
-    RETURNING
-      VALUE(rv_running_in_test_context) TYPE abap_bool .
+      RETURNING
+        VALUE(rv_running_in_test_context) TYPE abap_bool.
 ENDCLASS.
 
 
