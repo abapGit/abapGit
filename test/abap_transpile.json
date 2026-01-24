@@ -60,6 +60,9 @@
     },
     {
       "url": "https://github.com/open-abap/express-icf-shim"
+    },
+    {
+      "url": "https://github.com/abapGit/abapGit-web-classic"
     }
   ],
   "write_unit_tests": true,
