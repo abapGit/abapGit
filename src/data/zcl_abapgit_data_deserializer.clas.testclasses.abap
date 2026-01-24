@@ -275,14 +275,14 @@ CLASS ltcl_test IMPLEMENTATION.
           li_cts_api_spy      TYPE REF TO lcl_cts_api_spy,
           li_tadir_mock       TYPE REF TO lcl_tadir_mock,
           li_sap_package_mock TYPE REF TO zif_abapgit_sap_package,
+          li_cts_api          TYPE REF TO zif_abapgit_cts_api,
+          li_tadir            TYPE REF TO zif_abapgit_tadir,
+          li_sap_package      TYPE REF TO zif_abapgit_sap_package,
           ls_checks           TYPE zif_abapgit_definitions=>ty_deserialize_checks,
           lt_result           TYPE zif_abapgit_data_deserializer=>ty_results,
           ls_result           TYPE zif_abapgit_data_deserializer=>ty_result,
           ls_overwrite        TYPE zif_abapgit_definitions=>ty_overwrite,
-          lr_data             TYPE REF TO data,
-          li_cts_api_clear    TYPE REF TO zif_abapgit_cts_api,
-          li_tadir_clear      TYPE REF TO zif_abapgit_tadir,
-          li_sap_package_clear TYPE REF TO zif_abapgit_sap_package.
+          lr_data             TYPE REF TO data.
 
     " Setup mocks
     CREATE OBJECT li_cts_api_spy.
@@ -333,11 +333,11 @@ CLASS ltcl_test IMPLEMENTATION.
       msg = 'create_transport_entries should not be called for local packages' ).
 
     " Cleanup
-    zcl_abapgit_injector=>set_cts_api( li_cts_api_clear ).
-    zcl_abapgit_injector=>set_tadir( li_tadir_clear ).
+    zcl_abapgit_injector=>set_cts_api( li_cts_api ).
+    zcl_abapgit_injector=>set_tadir( li_tadir ).
     zcl_abapgit_injector=>set_sap_package(
       iv_package     = lc_package
-      ii_sap_package = li_sap_package_clear ).
+      ii_sap_package = li_sap_package ).
 
   ENDMETHOD.
 
@@ -352,14 +352,14 @@ CLASS ltcl_test IMPLEMENTATION.
           li_cts_api_spy      TYPE REF TO lcl_cts_api_spy,
           li_tadir_mock       TYPE REF TO lcl_tadir_mock,
           li_sap_package_mock TYPE REF TO zif_abapgit_sap_package,
+          li_cts_api          TYPE REF TO zif_abapgit_cts_api,
+          li_tadir            TYPE REF TO zif_abapgit_tadir,
+          li_sap_package      TYPE REF TO zif_abapgit_sap_package,
           ls_checks           TYPE zif_abapgit_definitions=>ty_deserialize_checks,
           lt_result           TYPE zif_abapgit_data_deserializer=>ty_results,
           ls_result           TYPE zif_abapgit_data_deserializer=>ty_result,
           ls_overwrite        TYPE zif_abapgit_definitions=>ty_overwrite,
-          lr_data             TYPE REF TO data,
-          li_cts_api_clear    TYPE REF TO zif_abapgit_cts_api,
-          li_tadir_clear      TYPE REF TO zif_abapgit_tadir,
-          li_sap_package_clear TYPE REF TO zif_abapgit_sap_package.
+          lr_data             TYPE REF TO data.
 
     " Setup mocks
     CREATE OBJECT li_cts_api_spy.
@@ -410,11 +410,11 @@ CLASS ltcl_test IMPLEMENTATION.
       msg = 'create_transport_entries should be called for transportable packages' ).
 
     " Cleanup
-    zcl_abapgit_injector=>set_cts_api( li_cts_api_clear ).
-    zcl_abapgit_injector=>set_tadir( li_tadir_clear ).
+    zcl_abapgit_injector=>set_cts_api( li_cts_api ).
+    zcl_abapgit_injector=>set_tadir( li_tadir ).
     zcl_abapgit_injector=>set_sap_package(
       iv_package     = lc_package
-      ii_sap_package = li_sap_package_clear ).
+      ii_sap_package = li_sap_package ).
 
   ENDMETHOD.
 
