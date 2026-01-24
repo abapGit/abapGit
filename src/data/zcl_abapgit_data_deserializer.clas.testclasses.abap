@@ -268,7 +268,7 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD actualize_local_package.
     " Test that actualize does NOT create transport entries for tables in local packages
 
-    CONSTANTS: lc_tabname TYPE tabname VALUE 'ZTESTLOCAL',
+    CONSTANTS: lc_tabname TYPE tadir-obj_name VALUE 'ZTESTLOCAL',
                lc_package TYPE devclass VALUE '$TMP'.
 
     DATA: li_cut              TYPE REF TO zcl_abapgit_data_deserializer,
@@ -345,7 +345,7 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD actualize_transported_package.
     " Test that actualize DOES create transport entries for tables in transportable packages
 
-    CONSTANTS: lc_tabname TYPE tabname VALUE 'ZTESTTRANS',
+    CONSTANTS: lc_tabname TYPE tadir-obj_name VALUE 'ZTESTTRANS',
                lc_package TYPE devclass VALUE 'ZTEST'.
 
     DATA: li_cut              TYPE REF TO zcl_abapgit_data_deserializer,
