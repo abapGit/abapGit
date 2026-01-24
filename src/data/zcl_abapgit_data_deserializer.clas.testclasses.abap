@@ -307,6 +307,7 @@ CLASS ltcl_test IMPLEMENTATION.
     ls_result-inserts = lr_data.
     ls_result-updates = lr_data.
     ls_result-deletes = lr_data.
+    ls_result-in_repo = abap_true.  " Mark as included in repo to bypass edit check
     INSERT ls_result INTO TABLE lt_result.
 
     " Mark object for update
@@ -384,6 +385,7 @@ CLASS ltcl_test IMPLEMENTATION.
     ls_result-inserts = lr_data.
     ls_result-updates = lr_data.
     ls_result-deletes = lr_data.
+    ls_result-in_repo = abap_true.  " Mark as included in repo to bypass edit check
     INSERT ls_result INTO TABLE lt_result.
 
     " Mark object for update
