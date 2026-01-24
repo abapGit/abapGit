@@ -5,7 +5,8 @@ CLASS zcl_abapgit_data_config DEFINITION
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_data_config .
+    INTERFACES zif_abapgit_data_config.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -135,6 +136,56 @@ CLASS zcl_abapgit_data_config IMPLEMENTATION.
 
     zif_abapgit_data_config~remove_config( is_config ).
     zif_abapgit_data_config~add_config( is_config ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_data_persistence~load_config.
+
+    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
+    DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
+    DATA lv_json TYPE string.
+
+    TRY.
+        lv_json = zcl_abapgit_persist_factory=>get_repo_data( )->read( iv_repo_key ).
+      CATCH zcx_abapgit_exception zcx_abapgit_not_found.
+        " Ignore currently, it's not critical for execution, just return empty
+        RETURN.
+    ENDTRY.
+
+    IF lv_json IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    TRY.
+        lo_ajson = zcl_abapgit_ajson=>parse( lv_json ).
+        lo_ajson->to_abap( IMPORTING ev_container = mt_config ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise( lx_ajson->get_text( ) ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_data_persistence~save_config.
+
+    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
+    DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
+    DATA lv_json  TYPE string.
+
+    TRY.
+        lo_ajson = zcl_abapgit_ajson=>create_empty( ).
+        lo_ajson->zif_abapgit_ajson~set(
+          iv_path = '/'
+          iv_val  = mt_config ).
+        lv_json = lo_ajson->stringify( 2 ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise( lx_ajson->get_text( ) ).
+    ENDTRY.
+
+    zcl_abapgit_persist_factory=>get_repo_data( )->update(
+      iv_key  = iv_repo_key
+      iv_json = lv_json ).
 
   ENDMETHOD.
 ENDCLASS.

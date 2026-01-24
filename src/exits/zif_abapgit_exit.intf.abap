@@ -37,6 +37,13 @@ INTERFACE zif_abapgit_exit PUBLIC.
     RETURNING
       VALUE(rv_allowed) TYPE abap_bool.
 
+  METHODS change_committer_info
+    IMPORTING
+      iv_repo_url TYPE csequence
+    CHANGING
+      cv_name     TYPE csequence
+      cv_email    TYPE csequence.
+
   METHODS change_local_host
     CHANGING
       !ct_hosts TYPE zif_abapgit_definitions=>ty_string_tt.
@@ -173,6 +180,12 @@ INTERFACE zif_abapgit_exit PUBLIC.
     RAISING
       zcx_abapgit_exception.
 
+  METHODS validate_after_push
+    IMPORTING
+      ii_repo_online TYPE REF TO zif_abapgit_repo_online
+    RAISING
+      zcx_abapgit_exception.
+
   METHODS wall_message_list
     IMPORTING
       !ii_html TYPE REF TO zif_abapgit_html.
@@ -182,10 +195,4 @@ INTERFACE zif_abapgit_exit PUBLIC.
       !is_repo_meta TYPE zif_abapgit_persistence=>ty_repo
       !ii_html      TYPE REF TO zif_abapgit_html.
 
-  METHODS change_committer_info
-    IMPORTING
-      iv_repo_url TYPE csequence
-    CHANGING
-      cv_name     TYPE csequence
-      cv_email    TYPE csequence.
 ENDINTERFACE.
