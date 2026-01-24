@@ -1,6 +1,5 @@
 CLASS zcl_abapgit_ui_core_injector DEFINITION
   PUBLIC
-  FOR TESTING
   CREATE PRIVATE .
 
   PUBLIC SECTION.
@@ -14,12 +13,12 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ui_core_injector IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_UI_CORE_INJECTOR IMPLEMENTATION.
+
 
   METHOD set_html_viewer.
 
     zcl_abapgit_ui_core_factory=>gi_html_viewer = ii_html_viewer.
 
   ENDMETHOD.
-
 ENDCLASS.

@@ -461,12 +461,12 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
-    LOOP AT it_results ASSIGNING <ls_result> WHERE match IS INITIAL AND packmove IS INITIAL.
+    LOOP AT it_results ASSIGNING <ls_result> WHERE match IS INITIAL AND packmove IS INITIAL AND obj_type <> 'TABU'.
 
       lv_package = lo_folder_logic->path_to_package(
-        iv_top  = ii_repo->get_package( )
-        io_dot  = ii_repo->get_dot_abapgit( )
-        iv_path = <ls_result>-path
+        iv_top                  = ii_repo->get_package( )
+        io_dot                  = ii_repo->get_dot_abapgit( )
+        iv_path                 = <ls_result>-path
         iv_create_if_not_exists = abap_false ).
 
       ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
