@@ -284,8 +284,6 @@ CLASS ltcl_test IMPLEMENTATION.
           li_tadir_clear      TYPE REF TO zif_abapgit_tadir,
           li_sap_package_clear TYPE REF TO zif_abapgit_sap_package.
 
-    FIELD-SYMBOLS: <lt_data> TYPE ANY TABLE.
-
     " Setup mocks
     CREATE OBJECT li_cts_api_spy.
     CREATE OBJECT li_tadir_mock EXPORTING iv_package = lc_package.
@@ -303,7 +301,6 @@ CLASS ltcl_test IMPLEMENTATION.
 
     " Create dummy data for the result
     lr_data = zcl_abapgit_data_utils=>build_table_itab( lc_tabname ).
-    ASSIGN lr_data->* TO <lt_data>.
 
     ls_result-type    = zif_abapgit_data_config=>c_data_type-tabu.
     ls_result-name    = lc_tabname.
@@ -364,8 +361,6 @@ CLASS ltcl_test IMPLEMENTATION.
           li_tadir_clear      TYPE REF TO zif_abapgit_tadir,
           li_sap_package_clear TYPE REF TO zif_abapgit_sap_package.
 
-    FIELD-SYMBOLS: <lt_data> TYPE ANY TABLE.
-
     " Setup mocks
     CREATE OBJECT li_cts_api_spy.
     CREATE OBJECT li_tadir_mock EXPORTING iv_package = lc_package.
@@ -383,7 +378,6 @@ CLASS ltcl_test IMPLEMENTATION.
 
     " Create dummy data for the result
     lr_data = zcl_abapgit_data_utils=>build_table_itab( lc_tabname ).
-    ASSIGN lr_data->* TO <lt_data>.
 
     ls_result-type    = zif_abapgit_data_config=>c_data_type-tabu.
     ls_result-name    = lc_tabname.
