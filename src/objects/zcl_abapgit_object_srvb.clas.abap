@@ -362,7 +362,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
     DATA lo_publishing_config TYPE REF TO object.
 
-    " If it's publish, we unpublish it
+    " If it's published, we unpublish it
     TRY.
         CALL METHOD ('/IWFND/CL_V4_PUBLISHING_DBA')=>('CHECK_IS_GROUP_PUBLISHED')
           EXPORTING
