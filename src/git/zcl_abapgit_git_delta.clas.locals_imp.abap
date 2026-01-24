@@ -21,7 +21,7 @@ CLASS lcl_stream IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD eat_offset_and_length.
-
+* note: the logic in this method is unrolled/duplicated for performance reasons
     CONSTANTS: lc_1  TYPE x VALUE '01',
                lc_2  TYPE x VALUE '02',
                lc_4  TYPE x VALUE '04',
