@@ -1,10 +1,10 @@
-CLASS zcl_abapgit_web_cts_api DEFINITION PUBLIC.
+CLASS zcl_abapgit_inject_cts_api DEFINITION PUBLIC.
   PUBLIC SECTION.
     INTERFACES:
       zif_abapgit_cts_api.
 ENDCLASS.
 
-CLASS zcl_abapgit_web_cts_api IMPLEMENTATION.
+CLASS zcl_abapgit_inject_cts_api IMPLEMENTATION.
   METHOD zif_abapgit_cts_api~read_request_and_tasks.
     RETURN. " todo, implement method
   ENDMETHOD.
