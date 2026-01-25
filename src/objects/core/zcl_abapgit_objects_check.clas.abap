@@ -565,7 +565,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         AND match IS INITIAL
         AND packmove IS INITIAL ##PRIMKEY[SEC_KEY].
 
-      READ TABLE lt_remote_files TRANSPORTING NO FIELDS WITH KEY filename = <ls_result>-filename.
+      READ TABLE lt_remote_files TRANSPORTING NO FIELDS WITH KEY file COMPONENTS filename = <ls_result>-filename.
       IF sy-subrc = 0.
         " Table exists remotely, so not being deleted
         CONTINUE.
