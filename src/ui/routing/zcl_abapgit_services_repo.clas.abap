@@ -783,7 +783,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     ENDIF.
 
-    ls_checks = li_repo->delete_checks( ).
+    ls_checks = zcl_abapgit_repo_delete_checks=>run( li_repo ).
     IF ls_checks-transport-required = abap_true.
       ls_checks-transport-transport = zcl_abapgit_ui_factory=>get_popups(
                                         )->popup_transport_request( ls_checks-transport-type ).

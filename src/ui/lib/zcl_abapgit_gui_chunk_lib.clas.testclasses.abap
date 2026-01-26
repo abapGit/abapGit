@@ -248,10 +248,6 @@ CLASS ltd_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_repo~delete_checks.
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_repo~get_dot_apack.
 
   ENDMETHOD.

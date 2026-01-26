@@ -445,9 +445,6 @@ CLASS lcl_repo IMPLEMENTATION.
   METHOD zif_abapgit_repo~get_dot_apack.
     RETURN.
   ENDMETHOD.
-  METHOD zif_abapgit_repo~delete_checks.
-    RETURN.
-  ENDMETHOD.
   METHOD zif_abapgit_repo~set_files_remote.
     RETURN.
   ENDMETHOD.

@@ -30,7 +30,6 @@ CLASS zcl_abapgit_repo DEFINITION
     ALIASES get_log                       FOR zif_abapgit_repo~get_log.
     ALIASES create_new_log                FOR zif_abapgit_repo~create_new_log.
     ALIASES get_dot_apack                 FOR zif_abapgit_repo~get_dot_apack.
-    ALIASES delete_checks                 FOR zif_abapgit_repo~delete_checks.
     ALIASES set_files_remote              FOR zif_abapgit_repo~set_files_remote.
     ALIASES get_unsupported_objects_local FOR zif_abapgit_repo~get_unsupported_objects_local.
     ALIASES set_local_settings            FOR zif_abapgit_repo~set_local_settings.
@@ -461,19 +460,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     mi_log->set_title( iv_title ).
 
     ri_log = mi_log.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_repo~delete_checks.
-
-    DATA: li_package TYPE REF TO zif_abapgit_sap_package.
-
-    check_write_protect( ).
-    check_language( ).
-
-    li_package = zcl_abapgit_factory=>get_sap_package( get_package( ) ).
-    rs_checks-transport-required = li_package->are_changes_recorded_in_tr_req( ).
 
   ENDMETHOD.
 

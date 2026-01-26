@@ -131,9 +131,6 @@ CLASS ltd_repo_online IMPLEMENTATION.
   METHOD zif_abapgit_repo~create_new_log.
   ENDMETHOD.
 
-  METHOD zif_abapgit_repo~delete_checks.
-  ENDMETHOD.
-
   METHOD zif_abapgit_repo~deserialize.
   ENDMETHOD.
 

@@ -105,11 +105,6 @@ INTERFACE zif_abapgit_repo
       VALUE(ro_dot_apack) TYPE REF TO zcl_abapgit_apack_reader
     RAISING
       zcx_abapgit_exception.
-  METHODS delete_checks
-    RETURNING
-      VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_delete_checks
-    RAISING
-      zcx_abapgit_exception .
   METHODS set_files_remote
     IMPORTING
       it_files TYPE zif_abapgit_git_definitions=>ty_files_tt .
