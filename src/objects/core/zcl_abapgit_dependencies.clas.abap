@@ -135,10 +135,10 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
         WHEN 'G4BA' OR 'G4BS' OR 'IWMO' OR 'IWSV' OR 'IWVB'.
           " after SRVB
           <ls_tadir>-korrnum = '610000'.
-        WHEN 'SRVB'.
-          " after SRVD
-          <ls_tadir>-korrnum = '600500'.
         WHEN 'SRVD'.
+          " after SRVB
+          <ls_tadir>-korrnum = '600500'.
+        WHEN 'SRVB'.
           <ls_tadir>-korrnum = '600000'.
         WHEN 'IASP'.
           <ls_tadir>-korrnum = '552000'.
