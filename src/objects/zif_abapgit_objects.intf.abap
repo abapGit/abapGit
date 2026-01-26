@@ -36,15 +36,16 @@ INTERFACE zif_abapgit_objects PUBLIC.
   CONSTANTS:
     BEGIN OF c_deserialize_action,
       " also used to determine priority if object has multiple changes, so don't change order
-      no_support TYPE i VALUE -1,
-      none       TYPE i VALUE 0,
-      add        TYPE i VALUE 1,
-      update     TYPE i VALUE 2,
-      overwrite  TYPE i VALUE 3,
-      delete     TYPE i VALUE 4,
-      delete_add TYPE i VALUE 5,
-      packmove   TYPE i VALUE 6,
-      data_loss  TYPE i VALUE 7,
+      no_support            TYPE i VALUE -1,
+      none                  TYPE i VALUE 0,
+      add                   TYPE i VALUE 1,
+      update                TYPE i VALUE 2,
+      overwrite             TYPE i VALUE 3,
+      delete                TYPE i VALUE 4,
+      delete_add            TYPE i VALUE 5,
+      packmove              TYPE i VALUE 6,
+      data_loss             TYPE i VALUE 7,
+      delete_tabl_with_data TYPE i VALUE 8,
     END OF c_deserialize_action.
 
 ENDINTERFACE.

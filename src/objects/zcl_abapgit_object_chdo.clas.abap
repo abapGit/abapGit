@@ -32,6 +32,9 @@ CLASS zcl_abapgit_object_chdo DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
+
+    CONSTANTS c_class_gen_marker TYPE string VALUE '*CLASS_GEN*'.
+
     TYPES: BEGIN OF ty_change_document,
              reports_generated TYPE SORTED TABLE OF tcdrps WITH UNIQUE KEY object reportname,
              objects           TYPE SORTED TABLE OF tcdobs WITH UNIQUE KEY object tabname,
@@ -92,31 +95,31 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
   METHOD delete_tadir_cdnames.
 
-    IF is_cdnames-repnamec IS NOT INITIAL.
+    IF is_cdnames-repnamec IS NOT INITIAL AND is_cdnames-repnamec NS c_class_gen_marker.
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'PROG'
         iv_obj_name  = is_cdnames-repnamec ).
     ENDIF.
 
-    IF is_cdnames-repnamet IS NOT INITIAL.
+    IF is_cdnames-repnamet IS NOT INITIAL AND is_cdnames-repnamet NS c_class_gen_marker.
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'PROG'
         iv_obj_name  = is_cdnames-repnamet ).
     ENDIF.
 
-    IF is_cdnames-repnamefix IS NOT INITIAL.
+    IF is_cdnames-repnamefix IS NOT INITIAL AND is_cdnames-repnamefix NS c_class_gen_marker.
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'PROG'
         iv_obj_name  = is_cdnames-repnamefix ).
     ENDIF.
 
-    IF is_cdnames-repnamevar IS NOT INITIAL.
+    IF is_cdnames-repnamevar IS NOT INITIAL AND is_cdnames-repnamevar NS c_class_gen_marker.
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'PROG'
         iv_obj_name  = is_cdnames-repnamevar ).
     ENDIF.
 
-    IF is_cdnames-fgrp IS NOT INITIAL.
+    IF is_cdnames-fgrp IS NOT INITIAL AND is_cdnames-fgrp NS c_class_gen_marker.
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'FUGR'
         iv_obj_name  = is_cdnames-fgrp ).
@@ -127,7 +130,7 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
   METHOD delete_tadir_tabl.
 
-    IF is_tcdrs-tabname IS NOT INITIAL.
+    IF is_tcdrs-tabname IS NOT INITIAL AND is_tcdrs-tabname NS c_class_gen_marker.
       zcl_abapgit_factory=>get_tadir( )->delete_single(
         iv_object    = 'TABL'
         iv_obj_name  = is_tcdrs-tabname ).
@@ -203,6 +206,7 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
     DATA: ls_change_object TYPE ty_change_document.
     FIELD-SYMBOLS: <ls_report_generated> LIKE LINE OF ls_change_object-reports_generated.
+    FIELD-SYMBOLS <lv_abap_language_version> TYPE uccheck.
 
     io_xml->read( EXPORTING iv_name = 'CHDO'
                   CHANGING  cg_data = ls_change_object ).
@@ -213,6 +217,11 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
     LOOP AT ls_change_object-reports_generated ASSIGNING <ls_report_generated>.
       <ls_report_generated>-devclass = iv_package.
+
+      ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_report_generated> TO <lv_abap_language_version>.
+      IF sy-subrc = 0.
+        set_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+      ENDIF.
     ENDLOOP.
 
     INSERT tcdobs  FROM TABLE ls_change_object-objects.
@@ -324,6 +333,7 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_reports_generated> LIKE LINE OF ls_change_object-reports_generated,
                    <ls_objects>           LIKE LINE OF ls_change_object-objects,
                    <ls_objects_text>      LIKE LINE OF ls_change_object-objects_text.
+    FIELD-SYMBOLS <lv_abap_language_version> TYPE uccheck.
 
     CALL FUNCTION 'CDNAMES_GET'
       EXPORTING
@@ -349,6 +359,11 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
       CLEAR: <ls_reports_generated>-datum, <ls_reports_generated>-uzeit,
              <ls_reports_generated>-author, <ls_reports_generated>-updname,
              <ls_reports_generated>-devclass.
+
+      ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_reports_generated> TO <lv_abap_language_version>.
+      IF sy-subrc = 0.
+        clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+      ENDIF.
     ENDLOOP.
 
     LOOP AT ls_change_object-objects ASSIGNING <ls_objects>.
