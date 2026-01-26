@@ -215,9 +215,6 @@ CLASS ltd_repo_online IMPLEMENTATION.
   METHOD zif_abapgit_repo~refresh_local_objects.
   ENDMETHOD.
 
-  METHOD zif_abapgit_repo~remove_ignored_files.
-  ENDMETHOD.
-
   METHOD zif_abapgit_repo_online~select_branch.
   ENDMETHOD.
 

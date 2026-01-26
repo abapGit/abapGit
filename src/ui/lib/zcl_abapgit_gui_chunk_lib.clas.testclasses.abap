@@ -292,10 +292,6 @@ CLASS ltd_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_repo~remove_ignored_files.
-
-  ENDMETHOD.
-
 ENDCLASS.
 
 

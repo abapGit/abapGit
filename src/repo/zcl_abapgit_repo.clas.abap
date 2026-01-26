@@ -39,7 +39,6 @@ CLASS zcl_abapgit_repo DEFINITION
     ALIASES refresh_local_objects         FOR zif_abapgit_repo~refresh_local_objects.
     ALIASES get_data_config               FOR zif_abapgit_repo~get_data_config.
     ALIASES bind_listener                 FOR zif_abapgit_repo~bind_listener.
-    ALIASES remove_ignored_files          FOR zif_abapgit_repo~remove_ignored_files.
 
     METHODS constructor
       IMPORTING
@@ -120,6 +119,11 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS check_abap_language_version
+      RAISING
+        zcx_abapgit_exception .
+    METHODS remove_ignored_files
+      CHANGING
+        ct_files TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
     METHODS remove_locally_excluded_files
@@ -837,7 +841,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_repo~remove_ignored_files.
+  METHOD remove_ignored_files.
 
     DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
     DATA lv_index TYPE sy-index.
