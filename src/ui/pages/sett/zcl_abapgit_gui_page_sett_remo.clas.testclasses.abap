@@ -191,9 +191,6 @@ CLASS ltd_repo_online IMPLEMENTATION.
   METHOD zif_abapgit_repo~get_tadir_objects.
   ENDMETHOD.
 
-  METHOD zif_abapgit_repo~get_unsupported_objects_local.
-  ENDMETHOD.
-
   METHOD zif_abapgit_repo_online~get_url.
   ENDMETHOD.
 
