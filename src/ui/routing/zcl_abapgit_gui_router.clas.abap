@@ -409,10 +409,11 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     IF ri_page IS INITIAL.
       ri_page = zcl_abapgit_gui_page_stage=>create(
-        ii_repo_online = li_repo_online
-        iv_seed        = lv_seed
-        iv_sci_result  = lv_sci_result
-        ii_obj_filter  = ii_obj_filter ).
+        ii_repo_online   = li_repo_online
+        iv_seed          = lv_seed
+        iv_sci_result    = lv_sci_result
+        ii_obj_filter    = ii_obj_filter
+        ii_force_refresh = abap_true ).
     ENDIF.
 
   ENDMETHOD.
