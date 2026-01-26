@@ -145,10 +145,5 @@ INTERFACE zif_abapgit_repo
   METHODS bind_listener
     IMPORTING
       ii_listener TYPE REF TO zif_abapgit_repo_listener .
-  METHODS remove_ignored_files
-    CHANGING
-      ct_files TYPE zif_abapgit_git_definitions=>ty_files_tt
-    RAISING
-      zcx_abapgit_exception .
 
 ENDINTERFACE.

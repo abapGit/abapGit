@@ -472,9 +472,6 @@ CLASS lcl_repo IMPLEMENTATION.
   METHOD zif_abapgit_repo~bind_listener.
     RETURN.
   ENDMETHOD.
-  METHOD zif_abapgit_repo~remove_ignored_files.
-    RETURN.
-  ENDMETHOD.
   METHOD zif_abapgit_repo_online~get_url.
     RETURN.
   ENDMETHOD.
