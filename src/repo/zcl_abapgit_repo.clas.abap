@@ -32,7 +32,6 @@ CLASS zcl_abapgit_repo DEFINITION
     ALIASES get_dot_apack                 FOR zif_abapgit_repo~get_dot_apack.
     ALIASES delete_checks                 FOR zif_abapgit_repo~delete_checks.
     ALIASES set_files_remote              FOR zif_abapgit_repo~set_files_remote.
-    ALIASES get_unsupported_objects_local FOR zif_abapgit_repo~get_unsupported_objects_local.
     ALIASES set_local_settings            FOR zif_abapgit_repo~set_local_settings.
     ALIASES switch_repo_type              FOR zif_abapgit_repo~switch_repo_type.
     ALIASES refresh_local_object          FOR zif_abapgit_repo~refresh_local_object.
@@ -740,29 +739,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       iv_ignore_subpackages = get_local_settings( )-ignore_subpackages
       iv_only_local_objects = get_local_settings( )-only_local_objects
       io_dot                = get_dot_abapgit( ) ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_repo~get_unsupported_objects_local.
-
-    DATA: lt_tadir           TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lt_supported_types TYPE zif_abapgit_objects=>ty_types_tt.
-
-    FIELD-SYMBOLS: <ls_tadir>  LIKE LINE OF lt_tadir,
-                   <ls_object> LIKE LINE OF rt_objects.
-
-    lt_tadir = get_tadir_objects( ).
-
-    lt_supported_types = zcl_abapgit_objects=>supported_list( ).
-    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      READ TABLE lt_supported_types WITH KEY table_line = <ls_tadir>-object TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
-        APPEND INITIAL LINE TO rt_objects ASSIGNING <ls_object>.
-        MOVE-CORRESPONDING <ls_tadir> TO <ls_object>.
-        <ls_object>-obj_type = <ls_tadir>-object.
-      ENDIF.
-    ENDLOOP.
 
   ENDMETHOD.
 

@@ -451,9 +451,6 @@ CLASS lcl_repo IMPLEMENTATION.
   METHOD zif_abapgit_repo~set_files_remote.
     RETURN.
   ENDMETHOD.
-  METHOD zif_abapgit_repo~get_unsupported_objects_local.
-    RETURN.
-  ENDMETHOD.
   METHOD zif_abapgit_repo~set_local_settings.
     RETURN.
   ENDMETHOD.
