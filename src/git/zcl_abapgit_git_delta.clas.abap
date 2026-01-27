@@ -9,6 +9,7 @@ CLASS zcl_abapgit_git_delta DEFINITION PUBLIC.
       RAISING
         zcx_abapgit_exception .
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS delta
       IMPORTING
@@ -24,7 +25,10 @@ CLASS zcl_abapgit_git_delta DEFINITION PUBLIC.
 
 ENDCLASS.
 
+
+
 CLASS zcl_abapgit_git_delta IMPLEMENTATION.
+
 
   METHOD decode_deltas.
 
@@ -56,22 +60,16 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
                            iv_text    = 'Decode deltas' ).
       ENDIF.
 
-      delta( EXPORTING is_object = ls_object
-             CHANGING ct_objects = ct_objects ).
+      delta( EXPORTING is_object  = ls_object
+             CHANGING  ct_objects = ct_objects ).
     ENDLOOP.
 
   ENDMETHOD.
 
+
   METHOD delta.
 
-    CONSTANTS: lc_1   TYPE x VALUE '01',
-               lc_2   TYPE x VALUE '02',
-               lc_4   TYPE x VALUE '04',
-               lc_8   TYPE x VALUE '08',
-               lc_16  TYPE x VALUE '10',
-               lc_32  TYPE x VALUE '20',
-               lc_64  TYPE x VALUE '40',
-               lc_128 TYPE x VALUE '80'.
+    CONSTANTS lc_128 TYPE x VALUE '80'.
 
     DATA: lv_base   TYPE xstring,
           lv_result TYPE xstring,
@@ -110,36 +108,14 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
 
       lv_org = lo_stream->eat_byte( ).
 
-      IF lv_org BIT-AND lc_128 = lc_128. " MSB = 1
-
-        lv_offset = 0.
-        IF lv_org BIT-AND lc_1 = lc_1.
-          lv_offset = lo_stream->eat_byte( ).
-        ENDIF.
-        IF lv_org BIT-AND lc_2 = lc_2.
-          lv_offset = lv_offset + lo_stream->eat_byte( ) * 256.
-        ENDIF.
-        IF lv_org BIT-AND lc_4 = lc_4.
-          lv_offset = lv_offset + lo_stream->eat_byte( ) * 65536.
-        ENDIF.
-        IF lv_org BIT-AND lc_8 = lc_8.
-          lv_offset = lv_offset + lo_stream->eat_byte( ) * 16777216. " hmm, overflow?
-        ENDIF.
-
-        lv_len = 0.
-        IF lv_org BIT-AND lc_16 = lc_16.
-          lv_len = lo_stream->eat_byte( ).
-        ENDIF.
-        IF lv_org BIT-AND lc_32 = lc_32.
-          lv_len = lv_len + lo_stream->eat_byte( ) * 256.
-        ENDIF.
-        IF lv_org BIT-AND lc_64 = lc_64.
-          lv_len = lv_len + lo_stream->eat_byte( ) * 65536.
-        ENDIF.
-
-        IF lv_len = 0.
-          lv_len = 65536.
-        ENDIF.
+      IF lv_org O lc_128. " MSB = 1
+* copy from base
+        lo_stream->eat_offset_and_length(
+          EXPORTING
+            iv_instruction = lv_org
+          IMPORTING
+            ev_offset      = lv_offset
+            ev_length      = lv_len ).
 
         CONCATENATE lv_result lv_base+lv_offset(lv_len) INTO lv_result IN BYTE MODE.
       ELSE. " lv_bitbyte(1) = '0'
@@ -166,18 +142,17 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
 
   METHOD delta_header.
 
-    DATA lv_x   TYPE x.
-    DATA lv_bit TYPE c LENGTH 1.
+    CONSTANTS lc_128 TYPE x VALUE '80'.
+
+    DATA lv_x TYPE x.
 
 * header is skipped for performance reasons
     DO.
       lv_x = io_stream->eat_byte( ).
-      GET BIT 1 OF lv_x INTO lv_bit.
-      IF lv_bit = '0'.
-        EXIT. " current loop
+      IF lv_x Z lc_128. " MSB = 0
+        EXIT.
       ENDIF.
     ENDDO.
 
   ENDMETHOD.
-
 ENDCLASS.

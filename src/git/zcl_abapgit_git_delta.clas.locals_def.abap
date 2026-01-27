@@ -18,6 +18,13 @@ CLASS lcl_stream DEFINITION FINAL.
       RETURNING
         VALUE(rv_data) TYPE abap_bool.
 
+    METHODS eat_offset_and_length
+      IMPORTING
+        iv_instruction   TYPE ty_hex
+      EXPORTING
+        VALUE(ev_offset) TYPE i
+        VALUE(ev_length) TYPE i.
+
   PRIVATE SECTION.
     DATA mv_data TYPE xstring.
     DATA mv_position TYPE i.
