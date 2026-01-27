@@ -72,8 +72,7 @@ CLASS zcl_abapgit_object_desd IMPLEMENTATION.
     lr_logger_type_descr = cl_abap_typedescr=>describe_by_name( 'CL_DD_LOG_ABS_LOGGER' ).
 
     lr_logger_ref_descr = cl_abap_refdescr=>get(
-      p_referenced_type = lr_logger_type_descr
-    ).
+      p_referenced_type = lr_logger_type_descr ).
     CREATE DATA lr_data_of_logger_object TYPE HANDLE lr_logger_ref_descr.
     lr_data_of_logger_object->* ?= lo_dd_logger.
 
