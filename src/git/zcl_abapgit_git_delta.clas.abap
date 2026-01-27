@@ -9,6 +9,7 @@ CLASS zcl_abapgit_git_delta DEFINITION PUBLIC.
       RAISING
         zcx_abapgit_exception .
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS delta
       IMPORTING
@@ -24,7 +25,10 @@ CLASS zcl_abapgit_git_delta DEFINITION PUBLIC.
 
 ENDCLASS.
 
+
+
 CLASS zcl_abapgit_git_delta IMPLEMENTATION.
+
 
   METHOD decode_deltas.
 
@@ -56,11 +60,12 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
                            iv_text    = 'Decode deltas' ).
       ENDIF.
 
-      delta( EXPORTING is_object = ls_object
-             CHANGING ct_objects = ct_objects ).
+      delta( EXPORTING is_object  = ls_object
+             CHANGING  ct_objects = ct_objects ).
     ENDLOOP.
 
   ENDMETHOD.
+
 
   METHOD delta.
 
@@ -103,7 +108,7 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
 
       lv_org = lo_stream->eat_byte( ).
 
-      IF lv_org BIT-AND lc_128 = lc_128. " MSB = 1
+      IF lv_org O lc_128. " MSB = 1
 * copy from base
         lo_stream->eat_offset_and_length(
           EXPORTING
@@ -137,18 +142,17 @@ CLASS zcl_abapgit_git_delta IMPLEMENTATION.
 
   METHOD delta_header.
 
-    DATA lv_x   TYPE x.
-    DATA lv_bit TYPE c LENGTH 1.
+    CONSTANTS lc_128 TYPE x VALUE '80'.
+
+    DATA lv_x TYPE x.
 
 * header is skipped for performance reasons
     DO.
       lv_x = io_stream->eat_byte( ).
-      GET BIT 1 OF lv_x INTO lv_bit.
-      IF lv_bit = '0'.
-        EXIT. " current loop
+      IF lv_x Z lc_128. " MSB = 0
+        EXIT.
       ENDIF.
     ENDDO.
 
   ENDMETHOD.
-
 ENDCLASS.
