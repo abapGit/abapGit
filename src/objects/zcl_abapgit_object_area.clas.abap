@@ -38,7 +38,10 @@ CLASS zcl_abapgit_object_area IMPLEMENTATION.
     CALL METHOD lr_area->('IF_RSAWBN_FOLDER_TREE~DELETE_NODE')
       EXPORTING
         i_nodename    = ms_item-obj_name
-        i_with_dialog = ''.
+        i_with_dialog = ''
+      EXCEPTIONS
+        cancelled     = 1
+        OTHERS        = 2.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error while deleting AREA: { ms_item-obj_name }| ).
@@ -59,7 +62,7 @@ CLASS zcl_abapgit_object_area IMPLEMENTATION.
       lr_area       TYPE REF TO object.
 
     io_xml->read( EXPORTING iv_name = 'NODENAME'
-                  CHANGING cg_data = lv_nodename ).
+                  CHANGING  cg_data = lv_nodename ).
 
     io_xml->read( EXPORTING iv_name = 'PARENTNAME'
                   CHANGING  cg_data = lv_parentname ).
@@ -72,12 +75,26 @@ CLASS zcl_abapgit_object_area IMPLEMENTATION.
 
     CREATE OBJECT lr_area TYPE ('CL_NEW_AWB_AREA').
 
-    CALL METHOD lr_area->('IF_RSAWBN_FOLDER_TREE~CREATE_NODE')
-      EXPORTING
-        i_parentname = lv_parentname
-        i_nodename   = lv_nodename
-        i_txtsh      = lv_txtsh
-        i_txtlg      = lv_txtlg.
+    IF zif_abapgit_object~exists( ) = abap_false.
+      CALL METHOD lr_area->('IF_RSAWBN_FOLDER_TREE~CREATE_NODE')
+        EXPORTING
+          i_parentname = lv_parentname
+          i_nodename   = lv_nodename
+          i_txtsh      = lv_txtsh
+          i_txtlg      = lv_txtlg
+        EXCEPTIONS
+          cancelled    = 1
+          OTHERS       = 2.
+    ELSE.
+      CALL METHOD lr_area->('IF_RSAWBN_FOLDER_TREE~CHANGE_NODE_EXT')
+        EXPORTING
+          i_nodename = lv_nodename
+          i_txtlg    = lv_txtlg
+          i_with_cto = abap_false
+        EXCEPTIONS
+          cancelled  = 1
+          OTHERS     = 2.
+    ENDIF.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error while creating AREA: { ms_item-obj_name }| ).
@@ -114,7 +131,11 @@ CLASS zcl_abapgit_object_area IMPLEMENTATION.
         i_objvers = ''
         i_langu   = ''
       IMPORTING
-        e_t_tree  = <lt_tree>.
+        e_t_tree  = <lt_tree>
+      EXCEPTIONS
+        locked    = 1
+        failed    = 2
+        OTHERS    = 3.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error while read AREA tree| ).
@@ -173,7 +194,11 @@ CLASS zcl_abapgit_object_area IMPLEMENTATION.
         i_objvers = 'A'
         i_langu   = mv_language
       IMPORTING
-        e_t_tree  = <lt_tree>.
+        e_t_tree  = <lt_tree>
+      EXCEPTIONS
+        locked    = 1
+        failed    = 2
+        OTHERS    = 3.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error while read AREA tree| ).
@@ -240,7 +265,11 @@ CLASS zcl_abapgit_object_area IMPLEMENTATION.
         i_objvers = 'A'
         i_langu   = mv_language
       IMPORTING
-        e_t_tree  = <lt_tree>.
+        e_t_tree  = <lt_tree>
+      EXCEPTIONS
+        locked    = 1
+        failed    = 2
+        OTHERS    = 3.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error while read AREA tree| ).
@@ -250,9 +279,7 @@ CLASS zcl_abapgit_object_area IMPLEMENTATION.
 
     lv_select = |INFOAREA = '{ ms_item-obj_name }'|.
 
-    SELECT SINGLE * FROM ('RSDAREAT')
-    INTO <ls_rsdareat>
-    WHERE infoarea = ms_item-obj_name.
+    SELECT SINGLE * FROM ('RSDAREAT') INTO <ls_rsdareat> WHERE infoarea = ms_item-obj_name.
 
     ASSIGN COMPONENT 'TXTSH' OF STRUCTURE <ls_rsdareat> TO <lv_txtsh>.
     ASSIGN COMPONENT 'TXTLG' OF STRUCTURE <ls_rsdareat> TO <lv_txtlg>.
