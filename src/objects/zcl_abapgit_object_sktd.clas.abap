@@ -407,7 +407,7 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
         clear_fields( CHANGING cs_data = <ls_data> ).
 
 
-        ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_data> TO <lv_abap_language_version>.
+        ASSIGN COMPONENT 'METADATA-ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_data> TO <lv_abap_language_version>.
         IF sy-subrc = 0.
           clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
         ENDIF.

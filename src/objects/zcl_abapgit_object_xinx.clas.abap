@@ -408,7 +408,7 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
     ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE ls_extension_index-dd12v TO <lv_abap_language_version>.
     IF sy-subrc = 0.
-      <lv_abap_language_version> = get_abap_language_version( ).
+      clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
     ENDIF.
 
     io_xml->add( iv_name = 'XINX'
