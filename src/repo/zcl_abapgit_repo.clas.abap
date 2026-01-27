@@ -230,10 +230,13 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       it_result = lt_result
       is_checks = is_checks ).
 
-    " Save local data config
-    IF lt_updated_files IS NOT INITIAL.
+    " Save local data config if any configuration was loaded
+    IF li_config->get_configs( ) IS NOT INITIAL.
       li_config->zif_abapgit_data_persistence~save_config( ms_data-key ).
+    ENDIF.
 
+    " Add updated files to result list
+    IF lt_updated_files IS NOT INITIAL.
       INSERT LINES OF lt_updated_files INTO TABLE ct_files.
     ENDIF.
 
@@ -307,6 +310,27 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
         is_meta        = ls_meta_slug
         is_change_mask = is_change_mask ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD remove_ignored_files.
+
+    DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
+    DATA lv_index TYPE sy-index.
+
+    FIELD-SYMBOLS <ls_files> LIKE LINE OF ct_files.
+
+    lo_dot = get_dot_abapgit( ).
+
+    " Skip ignored files
+    LOOP AT ct_files ASSIGNING <ls_files>.
+      lv_index = sy-tabix.
+      IF lo_dot->is_ignored( iv_path     = <ls_files>-path
+                             iv_filename = <ls_files>-filename ) = abap_true.
+        DELETE ct_files INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -591,10 +615,13 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     CREATE OBJECT ri_config TYPE zcl_abapgit_data_config.
     ri_config->zif_abapgit_data_persistence~load_config( ms_data-key ).
 
-    " If nothing is defined, get remote data config and save it locally
+    " If nothing is defined, get remote data config and save it locally (if not empty)
     IF ri_config->get_configs( ) IS INITIAL.
       ri_config->from_json( mt_remote ).
-      ri_config->zif_abapgit_data_persistence~save_config( ms_data-key ).
+
+      IF ri_config->get_configs( ) IS NOT INITIAL.
+        ri_config->zif_abapgit_data_persistence~save_config( ms_data-key ).
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -811,27 +838,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     mv_request_local_refresh = abap_true.
     get_files_local( ).
-
-  ENDMETHOD.
-
-
-  METHOD remove_ignored_files.
-
-    DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
-    DATA lv_index TYPE sy-index.
-
-    FIELD-SYMBOLS <ls_files> LIKE LINE OF ct_files.
-
-    lo_dot = get_dot_abapgit( ).
-
-    " Skip ignored files
-    LOOP AT ct_files ASSIGNING <ls_files>.
-      lv_index = sy-tabix.
-      IF lo_dot->is_ignored( iv_path     = <ls_files>-path
-                             iv_filename = <ls_files>-filename ) = abap_true.
-        DELETE ct_files INDEX lv_index.
-      ENDIF.
-    ENDLOOP.
 
   ENDMETHOD.
 
