@@ -73,7 +73,7 @@ CLASS zcl_abapgit_gui_page_flowcons IMPLEMENTATION.
     DATA ls_file        LIKE LINE OF ms_consolidate-missing_remote.
     DATA lv_package     TYPE devclass.
     DATA ls_item        TYPE zif_abapgit_definitions=>ty_item.
-    DATA lt_local       TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_local       TYPE zif_abapgit_flow_logic=>ty_local_files.
     DATA ls_local       LIKE LINE OF lt_local.
     DATA lo_filter      TYPE REF TO zcl_abapgit_object_filter_obj.
     DATA lo_dot         TYPE REF TO zcl_abapgit_dot_abapgit.

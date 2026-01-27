@@ -111,6 +111,13 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS popup_delete_tabl_data
+      IMPORTING
+        !it_overwrite   TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      CHANGING
+        !ct_delete_tabl TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS check_package
       IMPORTING
         !is_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params
@@ -227,8 +234,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         iv_package    = is_repo_params-package
         iv_ign_subpkg = is_repo_params-ignore_subpackages
       IMPORTING
-        ei_repo    = li_repo
-        ev_reason  = lv_reason ).
+        ei_repo       = li_repo
+        ev_reason     = lv_reason ).
 
     IF li_repo IS BOUND.
       zcx_abapgit_exception=>raise( lv_reason ).
@@ -327,6 +334,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD new_offline.
 
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
     check_package( is_repo_params ).
 
     " create new repo and add to favorites
@@ -339,8 +348,15 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       iv_main_lang_only = is_repo_params-main_lang_only
       iv_abap_lang_vers = is_repo_params-abap_lang_vers ).
 
-    " Make sure there're no leftovers from previous repos
-    ri_repo->checksums( )->rebuild( ).
+    TRY.
+        " Make sure there're no leftovers from previous repos (also checks folder logic)
+        ri_repo->checksums( )->rebuild( ).
+
+      CATCH zcx_abapgit_exception INTO lx_error.
+        zcl_abapgit_repo_srv=>get_instance( )->delete( ri_repo ).
+        COMMIT WORK.
+        RAISE EXCEPTION lx_error.
+    ENDTRY.
 
     toggle_favorite( ri_repo->get_key( ) ).
 
@@ -375,14 +391,15 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         check_package_exists(
           iv_package = is_repo_params-package
           it_remote  = li_repo->get_files_remote( ) ).
+
+        " Make sure there're no leftovers from previous repos (also checks folder logic)
+        li_repo->checksums( )->rebuild( ).
+
       CATCH zcx_abapgit_exception INTO lx_error.
         zcl_abapgit_repo_srv=>get_instance( )->delete( li_repo ).
         COMMIT WORK.
         RAISE EXCEPTION lx_error.
     ENDTRY.
-
-    " Make sure there're no leftovers from previous repos
-    li_repo->checksums( )->rebuild( ).
 
     toggle_favorite( li_repo->get_key( ) ).
 
@@ -436,8 +453,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     li_popups->popup_to_select_from_list(
       EXPORTING
         it_list               = ct_data_loss
-        iv_header_text        = |Changes to the following objects could lead to DATA LOSS!|
-                             && | Select the objects which should be changed to the remote version, anyway.|
+        iv_header_text        = |Changes to the following objects could lead to DATA LOSS!| &&
+                                | Select the objects which should be changed to the remote version, anyway.|
         iv_select_column_text = 'Overwrite?'
         it_columns_to_display = lt_columns
         it_preselected_rows   = lt_preselected_rows
@@ -453,6 +470,69 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         <ls_data_loss>-decision = zif_abapgit_definitions=>c_yes.
       ELSE.
         <ls_data_loss>-decision = zif_abapgit_definitions=>c_no.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD popup_delete_tabl_data.
+
+    DATA: lt_columns  TYPE zif_abapgit_popups=>ty_alv_column_tt,
+          lt_selected LIKE ct_delete_tabl,
+          li_popups   TYPE REF TO zif_abapgit_popups.
+    DATA lt_preselected_rows TYPE zif_abapgit_popups=>ty_rows.
+
+    FIELD-SYMBOLS: <ls_overwrite>    LIKE LINE OF it_overwrite,
+                   <ls_delete_tabl>  LIKE LINE OF ct_delete_tabl,
+                   <ls_column>       TYPE zif_abapgit_popups=>ty_alv_column.
+
+    LOOP AT it_overwrite ASSIGNING <ls_overwrite> WHERE decision <> zif_abapgit_definitions=>c_yes.
+      DELETE ct_delete_tabl WHERE obj_type = <ls_overwrite>-obj_type AND obj_name = <ls_overwrite>-obj_name.
+    ENDLOOP.
+
+    IF lines( ct_delete_tabl ) = 0.
+      RETURN.
+    ENDIF.
+
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'OBJ_TYPE'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'OBJ_NAME'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'ICON'.
+    <ls_column>-text = 'Action'.
+    <ls_column>-show_icon = abap_true.
+    <ls_column>-length = 5.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'TEXT'.
+    <ls_column>-text = 'Description'.
+
+    LOOP AT ct_delete_tabl ASSIGNING <ls_delete_tabl> WHERE decision = zif_abapgit_definitions=>c_yes.
+      INSERT sy-tabix INTO TABLE lt_preselected_rows.
+    ENDLOOP.
+
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->popup_to_select_from_list(
+      EXPORTING
+        it_list               = ct_delete_tabl
+        iv_header_text        = |The following tables contain DATA which will be LOST when they are deleted!| &&
+                                | Select the tables which should be deleted, anyway.|
+        iv_select_column_text = 'Delete?'
+        it_columns_to_display = lt_columns
+        it_preselected_rows   = lt_preselected_rows
+      IMPORTING
+        et_list               = lt_selected ).
+
+    LOOP AT ct_delete_tabl ASSIGNING <ls_delete_tabl>.
+      READ TABLE lt_selected WITH TABLE KEY object_type_and_name
+                             COMPONENTS obj_type = <ls_delete_tabl>-obj_type
+                                        obj_name = <ls_delete_tabl>-obj_name
+                             TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        <ls_delete_tabl>-decision = zif_abapgit_definitions=>c_yes.
+      ELSE.
+        <ls_delete_tabl>-decision = zif_abapgit_definitions=>c_no.
       ENDIF.
     ENDLOOP.
 
@@ -505,6 +585,12 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         ct_data_loss = cs_checks-data_loss ).
 
     popup_package_overwrite( CHANGING ct_overwrite = cs_checks-warning_package ).
+
+    popup_delete_tabl_data(
+      EXPORTING
+        it_overwrite   = lt_decision
+      CHANGING
+        ct_delete_tabl = cs_checks-delete_tabl_with_data ).
 
     IF cs_checks-transport-required = abap_true AND cs_checks-transport-transport IS INITIAL.
       cs_checks-transport-transport =
@@ -565,8 +651,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     li_popups->popup_to_select_from_list(
       EXPORTING
         it_list               = ct_overwrite
-        iv_header_text        = |The following objects are different between local and remote repository.|
-                             && | Select the objects which should be brought in line with the remote version.|
+        iv_header_text        = |The following objects are different between local and remote repository.| &&
+                                | Select the objects which should be brought in line with the remote version.|
         iv_select_column_text = 'Change?'
         it_columns_to_display = lt_columns
         it_preselected_rows   = lt_preselected_rows
@@ -624,8 +710,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     li_popups->popup_to_select_from_list(
       EXPORTING
         it_list               = ct_overwrite
-        iv_header_text        = |The following objects have been created in other packages.|
-                             && | Select the objects which should be overwritten.|
+        iv_header_text        = |The following objects have been created in other packages.| &&
+                                | Select the objects which should be overwritten.|
         iv_select_column_text = |Overwrite?|
         it_columns_to_display = lt_columns
       IMPORTING

@@ -27,11 +27,13 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         consolidate         TYPE string VALUE 'consolidate',
         pull                TYPE string VALUE 'pull',
         stage_and_commit    TYPE string VALUE 'stage_and_commit',
-        only_my_transports  TYPE string VALUE 'only_my_transports',
+        username_filter     TYPE string VALUE 'username_filter',
         hide_full_matches   TYPE string VALUE 'hide_full_matches',
         hide_matching_files TYPE string VALUE 'hide_matching_files',
         hide_conflicts      TYPE string VALUE 'hide_conflicts',
         show_details        TYPE string VALUE 'show_details',
+        rollback_pr         TYPE string VALUE 'rollback_pr',
+        update_all_branches TYPE string VALUE 'update_all_branches',
       END OF c_action .
     DATA ms_information TYPE zif_abapgit_flow_logic=>ty_information .
     DATA ms_user_settings TYPE zif_abapgit_persist_user=>ty_flow_settings.
@@ -85,12 +87,6 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS render_user_settings
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html
-      RAISING
-        zcx_abapgit_exception .
-
     METHODS skip_show
       IMPORTING
         is_feature     TYPE zif_abapgit_flow_logic=>ty_feature
@@ -98,12 +94,77 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         VALUE(rv_skip) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
+
+    METHODS render_feature
+      IMPORTING
+        !iv_index      TYPE i
+        !is_feature    TYPE zif_abapgit_flow_logic=>ty_feature
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS build_view_dropdown
+      RETURNING
+        VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
+
+    METHODS build_main_toolbar
+      RETURNING
+        VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
+
+    METHODS build_advanced_dropdown
+      RETURNING
+        VALUE(ro_advanced_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
+
+    METHODS build_user_filter_dropdown
+      RETURNING
+        VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
+  METHOD build_main_toolbar.
+
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'actionbar-flow' ).
+
+    ro_toolbar->add( iv_txt = 'User Filter'
+                     io_sub = build_user_filter_dropdown( ) ).
+
+    ro_toolbar->add( iv_txt = 'Advanced'
+                     io_sub = build_advanced_dropdown( ) ).
+
+    ro_toolbar->add( iv_txt = 'View'
+                     io_sub = build_view_dropdown( ) ).
+
+  ENDMETHOD.
+
+  METHOD build_advanced_dropdown.
+
+    CREATE OBJECT ro_advanced_dropdown.
+
+    ro_advanced_dropdown->add(
+      iv_txt = 'Consolidate'
+      iv_act = c_action-consolidate ).
+
+    ro_advanced_dropdown->add(
+      iv_txt = 'Rollback PR'
+      iv_act = c_action-rollback_pr ).
+
+    ro_advanced_dropdown->add(
+      iv_txt = 'Update all branches'
+      iv_act = c_action-update_all_branches ).
+
+  ENDMETHOD.
 
   METHOD call_consolidate.
 
@@ -292,65 +353,30 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD build_user_filter_dropdown.
 
-  METHOD render_user_settings.
+    DATA lv_user  TYPE syuname.
+    DATA lt_users TYPE zif_abapgit_flow_logic=>ty_users_tt.
 
-    DATA lv_icon_class TYPE string.
+    CREATE OBJECT ro_toolbar.
 
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    ri_html->add( '<span class="toolbar-light pad-sides">' ).
-
-    IF ms_user_settings-only_my_transports = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
+    lt_users = zcl_abapgit_flow_logic=>get_involved_users( ms_information ).
+    INSERT sy-uname INTO TABLE lt_users.
+    IF ms_user_settings-username_filter IS NOT INITIAL.
+      INSERT ms_user_settings-username_filter INTO TABLE lt_users.
     ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only my transports|
-      iv_class = 'command'
-      iv_act   = |{ c_action-only_my_transports }| ) ).
 
-    IF ms_user_settings-hide_full_matches = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide full matches|
-      iv_class = 'command'
-      iv_act   = |{ c_action-hide_full_matches }| ) ).
+    ro_toolbar->add(
+      iv_txt = 'All users'
+      iv_chk = boolc( ms_user_settings-username_filter IS INITIAL )
+      iv_act = c_action-username_filter ).
 
-    IF ms_user_settings-hide_matching_files = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide matching files|
-      iv_class = 'command'
-      iv_act   = |{ c_action-hide_matching_files }| ) ).
-
-    IF ms_user_settings-hide_conflicts = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Hide transports with conflicts|
-      iv_class = 'command'
-      iv_act   = |{ c_action-hide_conflicts }| ) ).
-
-    IF ms_user_settings-show_details = abap_true.
-      lv_icon_class = `blue`.
-    ELSE.
-      lv_icon_class = `grey`.
-    ENDIF.
-    ri_html->add( ri_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Show details|
-      iv_class = 'command'
-      iv_act   = |{ c_action-show_details }| ) ).
-
-    ri_html->add( '</span>' ).
+    LOOP AT lt_users INTO lv_user.
+      ro_toolbar->add(
+        iv_txt = |{ lv_user }|
+        iv_chk = boolc( ms_user_settings-username_filter = lv_user )
+        iv_act = |{ c_action-username_filter }?user={ lv_user }| ).
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -377,8 +403,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
 
     CASE ii_event->mv_action.
-      WHEN c_action-only_my_transports.
-        ms_user_settings-only_my_transports = boolc( ms_user_settings-only_my_transports <> abap_true ).
+      WHEN c_action-username_filter.
+        ms_user_settings-username_filter = ii_event->query( )->get( 'USER' ).
         zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-hide_full_matches.
@@ -396,6 +422,12 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       WHEN c_action-hide_matching_files.
         ms_user_settings-hide_matching_files = boolc( ms_user_settings-hide_matching_files <> abap_true ).
         zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-rollback_pr.
+        MESSAGE 'Rollback PR functionality is not yet implemented.' TYPE 'I'.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-update_all_branches.
+        MESSAGE 'Update all branches functionality is not yet implemented.' TYPE 'I'.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-refresh.
         refresh( ).
@@ -422,6 +454,31 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD build_view_dropdown.
+
+    CREATE OBJECT ro_toolbar.
+
+    ro_toolbar->add(
+      iv_txt = 'Hide full matches'
+      iv_chk = ms_user_settings-hide_full_matches
+      iv_act = c_action-hide_full_matches ).
+
+    ro_toolbar->add(
+      iv_txt = 'Hide matching files'
+      iv_chk = ms_user_settings-hide_matching_files
+      iv_act = c_action-hide_matching_files ).
+
+    ro_toolbar->add(
+      iv_txt = 'Hide transports with conflicts'
+      iv_chk = ms_user_settings-hide_conflicts
+      iv_act = c_action-hide_conflicts ).
+
+    ro_toolbar->add(
+      iv_txt = 'Show details'
+      iv_chk = ms_user_settings-show_details
+      iv_act = c_action-show_details ).
+
+  ENDMETHOD.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
@@ -429,15 +486,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     ro_toolbar->add(
       iv_txt = 'Refresh'
-      iv_act = c_action-refresh ).
-
-    ro_toolbar->add(
-      iv_txt = 'Consolidate'
-      iv_act = c_action-consolidate ).
-
-    ro_toolbar->add(
-      iv_txt = zcl_abapgit_gui_buttons=>repo_list( )
-      iv_act = zif_abapgit_definitions=>c_action-abapgit_home ).
+      iv_act = c_action-refresh
+      iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
     ro_toolbar->add(
       iv_txt = 'Back'
@@ -447,20 +497,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   METHOD skip_show.
 
-    DATA lt_my_transports TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
-    DATA lt_user          TYPE zif_abapgit_cts_api=>ty_user_range.
-    DATA ls_user          LIKE LINE OF lt_user.
-    DATA ls_duplicate     LIKE LINE OF ms_information-transport_duplicates.
+    DATA ls_duplicate LIKE LINE OF ms_information-transport_duplicates.
 
     rv_skip = abap_false.
-
-    IF ms_user_settings-only_my_transports = abap_true.
-      ls_user-low = sy-uname.
-      ls_user-sign = 'I'.
-      ls_user-option = 'EQ'.
-      INSERT ls_user INTO TABLE lt_user.
-      lt_my_transports = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( it_user = lt_user ).
-    ENDIF.
 
     IF ms_user_settings-hide_full_matches = abap_true
           AND NOT is_feature-transport IS INITIAL
@@ -469,8 +508,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF ms_user_settings-only_my_transports = abap_true AND is_feature-transport-trkorr IS NOT INITIAL.
-      READ TABLE lt_my_transports WITH KEY table_line = is_feature-transport-trkorr TRANSPORTING NO FIELDS.
+    IF ms_user_settings-username_filter IS NOT INITIAL AND is_feature-transport-trkorr IS NOT INITIAL.
+      READ TABLE is_feature-transport-users WITH KEY table_line = ms_user_settings-username_filter TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
         rv_skip = abap_true.
         RETURN.
@@ -521,6 +560,12 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       IF ms_user_settings-show_details = abap_true.
         ri_html->add( |<br>| ).
         ri_html->add( |First commit: { is_feature-branch-first_commit(7) }| ).
+        ri_html->add( |<br>| ).
+        IF is_feature-branch-latest_merge_commit IS INITIAL.
+          ri_html->add( |Latest merge: No merges| ).
+        ELSE.
+          ri_html->add( |Latest merge: { is_feature-branch-latest_merge_commit(7) }| ).
+        ENDIF.
 
         ri_html->add( |<br>| ).
         IF is_feature-branch-up_to_date = abap_true.
@@ -528,13 +573,13 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ELSE.
           ri_html->add( 'Branch up to date: False' ).
         ENDIF.
+      ENDIF.
 
-        IF is_feature-transport-users IS NOT INITIAL.
-          ri_html->add( |<br>| ).
-          ri_html->add( |Transport users: { concat_lines_of(
+      IF ms_user_settings-show_details = abap_true AND is_feature-transport-users IS NOT INITIAL.
+        ri_html->add( |<br>| ).
+        ri_html->add( |Transport users: { concat_lines_of(
             table = is_feature-transport-users
             sep   = |, | ) }| ).
-        ENDIF.
       ENDIF.
     ELSE.
       ri_html->add( |No PR found| ).
@@ -553,6 +598,52 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD render_feature.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<b><font size="+2">' && is_feature-repo-name ).
+    IF is_feature-branch-display_name IS NOT INITIAL.
+      ri_html->add( | - | ).
+      ri_html->add_icon( 'code-branch' ).
+      ri_html->add( is_feature-branch-display_name ).
+    ENDIF.
+    IF is_feature-transport-trkorr IS NOT INITIAL.
+      ri_html->add( | - | ).
+      ri_html->add_icon( 'truck-solid' ).
+      ri_html->add( |<tt>{ is_feature-transport-trkorr }</tt>| ).
+    ENDIF.
+    ri_html->add( |</font></b><br>| ).
+
+    ri_html->add( render_info( is_feature ) ).
+
+    ri_html->add( render_toolbar(
+      iv_index   = iv_index
+      is_feature = is_feature ) ).
+
+    IF is_feature-branch IS NOT INITIAL AND is_feature-branch-up_to_date = abap_false
+        AND zcl_abapgit_flow_exit=>get_instance( )->get_settings( is_feature-repo-key )-allow_not_up_to_date = abap_false.
+      ri_html->add( '<b>Branch not up to date</b><br><br>' ).
+      RETURN.
+    ENDIF.
+
+    IF is_feature-full_match = abap_true.
+      ri_html->add( |Full Match, {
+        lines( is_feature-changed_files ) } files, {
+        lines( is_feature-changed_objects ) } objects<br>| ).
+    ELSE.
+      ri_html->add( zcl_abapgit_flow_page_utils=>render_table(
+        it_files                = is_feature-changed_files
+        it_transport_duplicates = ms_information-transport_duplicates
+        is_user_settings        = ms_user_settings
+        iv_repo_key             = is_feature-repo-key ) ).
+    ENDIF.
+
+    ri_html->add( '<br>' ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_renderable~render.
 
     DATA ls_feature  LIKE LINE OF ms_information-features.
@@ -560,6 +651,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA lv_rendered TYPE abap_bool.
     DATA lo_timer    TYPE REF TO zcl_abapgit_timer.
     DATA lv_message  LIKE LINE OF ms_information-errors.
+    DATA lv_filter   TYPE string.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -572,7 +664,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ms_information = zcl_abapgit_flow_logic=>get( ).
     ENDIF.
 
-    ri_html->add( render_user_settings( ) ).
+    ri_html->add( build_main_toolbar( )->render( iv_right = abap_true ) ).
 
     ri_html->add( '<br>' ).
     ri_html->add( '<br>' ).
@@ -592,59 +684,29 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ENDIF.
       lv_rendered = abap_true.
 
-      ri_html->add( '<b><font size="+2">' && ls_feature-repo-name ).
-      IF ls_feature-branch-display_name IS NOT INITIAL.
-        ri_html->add( | - | ).
-        ri_html->add_icon( 'code-branch' ).
-        ri_html->add( ls_feature-branch-display_name ).
-      ENDIF.
-      IF ls_feature-transport-trkorr IS NOT INITIAL.
-        ri_html->add( | - | ).
-        ri_html->add_icon( 'truck-solid' ).
-        ri_html->add( |<tt>{ ls_feature-transport-trkorr }</tt>| ).
-      ENDIF.
-      ri_html->add( |</font></b><br>| ).
-
-      ri_html->add( render_info( ls_feature ) ).
-
-      ri_html->add( render_toolbar(
+      ri_html->add( render_feature(
         iv_index   = lv_index
         is_feature = ls_feature ) ).
-
-      IF ls_feature-branch IS NOT INITIAL AND ls_feature-branch-up_to_date = abap_false
-          AND zcl_abapgit_flow_exit=>get_instance( )->get_settings( ls_feature-repo-key )-allow_not_up_to_date = abap_false.
-        ri_html->add( '<b>Branch not up to date</b><br><br>' ).
-        CONTINUE.
-      ENDIF.
-
-      IF ls_feature-full_match = abap_true.
-        ri_html->add( |Full Match, {
-          lines( ls_feature-changed_files ) } files, {
-          lines( ls_feature-changed_objects ) } objects<br>| ).
-      ELSE.
-        ri_html->add( zcl_abapgit_flow_page_utils=>render_table(
-          it_files                = ls_feature-changed_files
-          it_transport_duplicates = ms_information-transport_duplicates
-          is_user_settings        = ms_user_settings
-          iv_repo_key             = ls_feature-repo-key ) ).
-      ENDIF.
-
-      ri_html->add( '<br>' ).
     ENDLOOP.
 
-    IF lines( ms_information-features ) = 0 OR lv_rendered = abap_false.
-      ri_html->add( 'Empty, repositories must be favorite + flow enabled<br><br>' ).
-
-      ri_html->add( 'Or nothing in progress<br><br>' ).
+    IF ms_information-enabled_repositories = 0.
+      ri_html->add( 'Flow is not enabled on any favorite repository.<br><br>' ).
 
       ri_html->add_a(
         iv_txt   = 'abapGit flow documentation'
         iv_act   = |{ zif_abapgit_definitions=>c_action-url
           }?url=https://docs.abapgit.org/user-guide/reference/flow.html|
         iv_class = |url| ).
-    ELSE.
-      ri_html->add( |<small>{ lines( ms_information-features ) } features in { lo_timer->end( ) }</small>| ).
+    ELSEIF lines( ms_information-features ) = 0.
+      ri_html->add( 'Nothing in progress<br><br>' ).
+    ELSEIF lv_rendered = abap_false.
+      ri_html->add( 'List filtered<br><br>' ).
     ENDIF.
+
+    IF ms_user_settings-username_filter IS NOT INITIAL.
+      lv_filter = |, user filter: { ms_user_settings-username_filter }|.
+    ENDIF.
+    ri_html->add( |<small>{ lines( ms_information-features ) } features in { lo_timer->end( ) }{ lv_filter }</small>| ).
 
     ri_html->add( '</div>' ).
 

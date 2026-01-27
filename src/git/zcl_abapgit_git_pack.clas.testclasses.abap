@@ -756,11 +756,31 @@ CLASS ltcl_get_length DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS 
         IMPORTING
           iv_data     TYPE xstring
           iv_expected TYPE i,
+      test_data_advances
+        IMPORTING
+          iv_data              TYPE xstring
+          iv_expected_length   TYPE i
+          iv_expected_data_len TYPE i,
       length_0 FOR TESTING RAISING zcx_abapgit_exception,
       length_1 FOR TESTING RAISING zcx_abapgit_exception,
+      length_10 FOR TESTING RAISING zcx_abapgit_exception,
       length_15 FOR TESTING RAISING zcx_abapgit_exception,
+      length_16 FOR TESTING RAISING zcx_abapgit_exception,
+      length_17 FOR TESTING RAISING zcx_abapgit_exception,
       length_31 FOR TESTING RAISING zcx_abapgit_exception,
-      length_22783 FOR TESTING RAISING zcx_abapgit_exception.
+      length_100 FOR TESTING RAISING zcx_abapgit_exception,
+      length_127 FOR TESTING RAISING zcx_abapgit_exception,
+      length_128 FOR TESTING RAISING zcx_abapgit_exception,
+      length_255 FOR TESTING RAISING zcx_abapgit_exception,
+      length_2047 FOR TESTING RAISING zcx_abapgit_exception,
+      length_2048 FOR TESTING RAISING zcx_abapgit_exception,
+      length_22783 FOR TESTING RAISING zcx_abapgit_exception,
+      length_90000 FOR TESTING RAISING zcx_abapgit_exception,
+      length_1000000 FOR TESTING RAISING zcx_abapgit_exception,
+      length_200000000 FOR TESTING RAISING zcx_abapgit_exception,
+      data_advances_1_byte FOR TESTING RAISING zcx_abapgit_exception,
+      data_advances_2_bytes FOR TESTING RAISING zcx_abapgit_exception,
+      data_advances_3_bytes FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -785,6 +805,31 @@ CLASS ltcl_get_length IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD test_data_advances.
+
+    DATA lv_length TYPE i.
+    DATA lv_data TYPE xstring.
+
+    lv_data = iv_data.
+
+    zcl_abapgit_git_pack=>get_length(
+      IMPORTING
+        ev_length = lv_length
+      CHANGING
+        cv_data   = lv_data ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_length
+      exp = iv_expected_length
+      msg = |Length mismatch| ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = xstrlen( lv_data )
+      exp = iv_expected_data_len
+      msg = |Data pointer did not advance correctly| ).
+
+  ENDMETHOD.
+
   METHOD length_0.
 
     test(
@@ -801,11 +846,35 @@ CLASS ltcl_get_length IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD length_10.
+
+    test(
+      iv_data     = '0A'
+      iv_expected = 10 ).
+
+  ENDMETHOD.
+
   METHOD length_15.
 * four least significant bits set
     test(
       iv_data     = '0F'
       iv_expected = 15 ).
+
+  ENDMETHOD.
+
+  METHOD length_16.
+* first value requiring two bytes (MSB set + continuation)
+    test(
+      iv_data     = '8001'
+      iv_expected = 16 ).
+
+  ENDMETHOD.
+
+  METHOD length_17.
+
+    test(
+      iv_data     = '8101'
+      iv_expected = 17 ).
 
   ENDMETHOD.
 
@@ -817,11 +886,129 @@ CLASS ltcl_get_length IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD length_100.
+* 100 = 4 (from first byte bits 0-3) + 6*16 (from second byte bits 0-6)
+* first byte: 1000 0100 = 84, second byte: 0000 0110 = 06
+    test(
+      iv_data     = '8406'
+      iv_expected = 100 ).
+
+  ENDMETHOD.
+
+  METHOD length_127.
+* 127 = 15 + 7*16 = 15 + 112
+* first byte: 1000 1111 = 8F, second byte: 0000 0111 = 07
+    test(
+      iv_data     = '8F07'
+      iv_expected = 127 ).
+
+  ENDMETHOD.
+
+  METHOD length_128.
+* 128 = 0 + 8*16
+* first byte: 1000 0000 = 80, second byte: 0000 1000 = 08
+    test(
+      iv_data     = '8008'
+      iv_expected = 128 ).
+
+  ENDMETHOD.
+
+  METHOD length_255.
+* 255 = 15 + 15*16
+* first byte: 1000 1111 = 8F, second byte: 0000 1111 = 0F
+    test(
+      iv_data     = '8F0F'
+      iv_expected = 255 ).
+
+  ENDMETHOD.
+
+  METHOD length_2047.
+* 2047 = 15 + 127*16
+* first byte: 1000 1111 = 8F, second byte: 0111 1111 = 7F
+    test(
+      iv_data     = '8F7F'
+      iv_expected = 2047 ).
+
+  ENDMETHOD.
+
+  METHOD length_2048.
+* 2048 requires three bytes
+* first byte: 1000 0000 = 80, second byte: 1000 0000 = 80, third byte: 0000 0001 = 01
+    test(
+      iv_data     = '808001'
+      iv_expected = 2048 ).
+
+  ENDMETHOD.
+
   METHOD length_22783.
 
     test(
       iv_data     = '8F8F0B'
       iv_expected = 22783 ).
+
+  ENDMETHOD.
+
+  METHOD length_90000.
+* Large value test - 90000 requires three bytes
+* Encoded as: B0F92B (from type_and_length tests, but stripping the type bits)
+* For get_length, the type bits are in the same byte, so we need the raw encoding
+* 90000 = 0 (bits 0-3) + ... complex calculation
+* Using reverse of type_and_length: 90000 in binary
+* 90000 = 0x15F90 = 0001 0101 1111 1001 0000
+* Encoding: first 4 bits = 0, then 7 bits each
+* first byte: MSB=1, bits 0-3 of length = 0 -> 80
+* second byte: MSB=1, bits 4-10 -> F9 (with MSB) -> F9
+* third byte: MSB=0, bits 11-17 -> 2B
+    test(
+      iv_data     = '80F92B'
+      iv_expected = 90000 ).
+
+  ENDMETHOD.
+
+  METHOD length_1000000.
+* Very large value test - 1000000 requires four bytes
+* 1000000 = 0xF4240
+* Encoding similar to above
+    test(
+      iv_data     = '80A4E803'
+      iv_expected = 1000000 ).
+
+  ENDMETHOD.
+
+  METHOD data_advances_1_byte.
+* Test that cv_data advances by 1 byte for single-byte length
+    test_data_advances(
+      iv_data              = '0FDEADBEEF'
+      iv_expected_length   = 15
+      iv_expected_data_len = 4 ).
+
+  ENDMETHOD.
+
+  METHOD data_advances_2_bytes.
+* Test that cv_data advances by 2 bytes for two-byte length
+    test_data_advances(
+      iv_data              = '8F01DEADBEEF'
+      iv_expected_length   = 31
+      iv_expected_data_len = 4 ).
+
+  ENDMETHOD.
+
+  METHOD data_advances_3_bytes.
+* Test that cv_data advances by 3 bytes for three-byte length
+    test_data_advances(
+      iv_data              = '8F8F0BDEADBEEF'
+      iv_expected_length   = 22783
+      iv_expected_data_len = 4 ).
+
+  ENDMETHOD.
+
+  METHOD length_200000000.
+* Large value requiring 5 bytes - tests arithmetic with large factor values
+* 200000000 = 0 + 32*16 + 120*2048 + 122*262144 + 5*33554432
+* Encoding: 80 A0 F8 FA 05
+    test(
+      iv_data     = '80A0F8FA05'
+      iv_expected = 200000000 ).
 
   ENDMETHOD.
 
