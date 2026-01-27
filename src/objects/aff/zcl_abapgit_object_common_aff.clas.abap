@@ -110,12 +110,20 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
 
   METHOD create_aff_setting_deserialize.
+    DATA:
+      lv_version TYPE r3state.
+
+    IF zcl_abapgit_objects_activation=>is_ddic_type( ms_item-obj_type ) = abap_true.
+      lv_version = 'I'.
+    ELSE.
+      lv_version = 'A'.
+    ENDIF.
     IF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version AND
        ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
       TRY.
           CREATE OBJECT ro_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
             EXPORTING
-              version               = 'A'
+              version               = lv_version
               language              = mv_language
               user                  = sy-uname
               abap_language_version = ms_item-abap_language_version.
@@ -125,7 +133,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     ELSE.
       CREATE OBJECT ro_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
         EXPORTING
-          version               = 'A'
+          version               = lv_version
           language              = mv_language
           user                  = sy-uname.
     ENDIF.
@@ -685,3 +693,4 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.
 ENDCLASS.
+
