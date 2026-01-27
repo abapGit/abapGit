@@ -202,10 +202,8 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        io_xml->read( EXPORTING
-                    iv_name = '/AIF/T_FINF'
-                  CHANGING
-                    cg_data = <lt_table> ).
+        io_xml->read( EXPORTING iv_name = '/AIF/T_FINF'
+                      CHANGING  cg_data = <lt_table> ).
 
         READ TABLE <lt_table> ASSIGNING <ls_table> INDEX 1.
         IF sy-subrc = 0.
@@ -316,6 +314,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
     DATA: lx_root TYPE REF TO cx_root.
     DATA: lt_content TYPE ty_content_t.
+    DATA lv_abap_language_version TYPE uccheck.
 
     DATA lr_tabledescr TYPE REF TO cl_abap_tabledescr.
     DATA lr_structdescr TYPE REF TO cl_abap_structdescr.
@@ -331,24 +330,18 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
     DATA lv_tablename TYPE string.
     FIELD-SYMBOLS: <lv_value> TYPE any.
 
-    IF iv_step <> zif_abapgit_object=>gc_step_id-abap.
-      RETURN.
-    ENDIF.
-
     TRY.
         IF execute_checks( io_xml ) = abap_false.
           zcx_abapgit_exception=>raise( 'AIF interface checks failed' ).
         ENDIF.
 
-        io_xml->read( EXPORTING
-                        iv_name = `Content_table`
-                      CHANGING
-                        cg_data = lt_content ).
+        io_xml->read( EXPORTING iv_name = `Content_table`
+                      CHANGING  cg_data = lt_content ).
 
 
         LOOP AT lt_content REFERENCE INTO lr_content.
           TRY.
-              lv_tablename = cl_abap_dyn_prg=>check_table_name_str( val = lr_content->tabname
+              lv_tablename = cl_abap_dyn_prg=>check_table_name_str( val      = lr_content->tabname
                                                                     packages = '' ).
             CATCH cx_abap_not_a_table INTO lx_abap_not_a_table.
               zcx_abapgit_exception=>raise_with_text( lx_abap_not_a_table ).
@@ -366,13 +359,11 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
             zcx_abapgit_exception=>raise( 'Field Symbol not assigned' ).
           ENDIF.
 
-          io_xml->read( EXPORTING
-                          iv_name = lr_content->tabname
-                        CHANGING
-                          cg_data = <lt_table> ).
+          io_xml->read( EXPORTING iv_name = lr_content->tabname
+                        CHANGING  cg_data = <lt_table> ).
 
           handle_table_data( iv_tabname = lr_content->tabname
-                             it_data = <lt_table> ).
+                             it_data    = <lt_table> ).
 
           IF lr_content->tabname = '/AIF/T_FINF'.
             READ TABLE <lt_table> ASSIGNING <ls_table> INDEX 1.
@@ -402,8 +393,8 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
           RETURN.
         ENDIF.
 
-        get_content_compress( io_log = ii_log
-                              is_ifkeys = ls_ifkey
+        get_content_compress( io_log     = ii_log
+                              is_ifkeys  = ls_ifkey
                               iv_package = iv_package ).
 
 
@@ -419,8 +410,24 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
           RETURN.
         ENDIF.
 
+        " No API for updating ABAP Language Version?
+        TRY.
+            io_xml->read( EXPORTING iv_name = 'ABAP_LANGUAGE_VERSION'
+                          CHANGING  cg_data = lv_abap_language_version ).
+
+            set_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+
+            UPDATE ('/AIF/ICD_DATA') SET abap_language_version = lv_abap_language_version
+              WHERE depl_scenario = ms_icd_data_key-depl_scenario
+                AND ns            = ms_icd_data_key-ns
+                AND ifname        = ms_icd_data_key-ifname
+                AND ifver2        = ms_icd_data_key-ifver2 ##SUBRC_OK.
+
+          CATCH cx_root ##NO_HANDLER.
+        ENDTRY.
+
       CATCH cx_root INTO lx_root.
-        ii_log->add_exception( ix_exc = lx_root
+        ii_log->add_exception( ix_exc  = lx_root
                                is_item = ms_item ).
     ENDTRY.
   ENDMETHOD.
@@ -514,6 +521,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
     DATA lx_root TYPE REF TO cx_root.
     DATA ls_icd_data_key TYPE ty_icd_data_key.
     DATA lt_ifdata TYPE ty_table_data_t.
+    DATA lv_abap_language_version TYPE uccheck.
 
     DATA lr_data TYPE REF TO data.
     FIELD-SYMBOLS <ls_data> TYPE any.
@@ -562,8 +570,24 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
         io_xml->add( iv_name = `Content_table`
                      ig_data = lt_content ).
 
+        TRY.
+            SELECT SINGLE ('ABAP_LANGUAGE_VERSION') FROM ('/AIF/ICD_DATA') INTO lv_abap_language_version
+              WHERE depl_scenario = ms_icd_data_key-depl_scenario
+                AND ns            = ms_icd_data_key-ns
+                AND ifname        = ms_icd_data_key-ifname
+                AND ifver2        = ms_icd_data_key-ifver2 ##SUBRC_OK.
+
+            IF sy-subrc = 0.
+              clear_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+
+              io_xml->add( iv_name = 'ABAP_LANGUAGE_VERSION'
+                           ig_data = lv_abap_language_version ).
+            ENDIF.
+          CATCH cx_root ##NO_HANDLER.
+        ENDTRY.
+
       CATCH cx_root INTO lx_root.
-        zcx_abapgit_exception=>raise( iv_text = 'Serialize not possible'
+        zcx_abapgit_exception=>raise( iv_text     = 'Serialize not possible'
                                       ix_previous = lx_root ).
     ENDTRY.
   ENDMETHOD.
