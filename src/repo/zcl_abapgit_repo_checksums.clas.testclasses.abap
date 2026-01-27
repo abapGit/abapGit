@@ -293,8 +293,6 @@ CLASS lcl_repo_mock IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_repo~get_data_config.
   ENDMETHOD.
-  METHOD zif_abapgit_repo~get_unsupported_objects_local.
-  ENDMETHOD.
   METHOD zif_abapgit_repo~refresh_local_object.
   ENDMETHOD.
   METHOD zif_abapgit_repo~refresh_local_objects.
@@ -306,8 +304,6 @@ CLASS lcl_repo_mock IMPLEMENTATION.
   METHOD zif_abapgit_repo~switch_repo_type.
   ENDMETHOD.
   METHOD zif_abapgit_repo~bind_listener.
-  ENDMETHOD.
-  METHOD zif_abapgit_repo~remove_ignored_files.
   ENDMETHOD.
 
 ENDCLASS.

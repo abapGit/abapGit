@@ -316,8 +316,12 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
     FIELD-SYMBOLS <ls_create_info> TYPE any.
     FIELD-SYMBOLS <lv_description> TYPE any.
     FIELD-SYMBOLS <lv_field> TYPE any.
+    FIELD-SYMBOLS <ls_service_binding> TYPE any.
 
-    ASSIGN COMPONENT 'PUBLISHED' OF STRUCTURE mr_service_binding->* TO <lv_field>.
+    ASSIGN mr_service_binding->* TO <ls_service_binding>.
+    ASSERT sy-subrc = 0.
+
+    ASSIGN COMPONENT 'PUBLISHED' OF STRUCTURE <ls_service_binding> TO <lv_field>.
     IF sy-subrc <> 0 OR <lv_field> <> abap_true.
       RETURN.
     ENDIF.
@@ -330,7 +334,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         ASSIGN COMPONENT 'LANGUAGE' OF STRUCTURE <ls_create_info> TO <lv_field>.
         <lv_field> = mv_language.
         ASSIGN COMPONENT 'DESCRIPTION' OF STRUCTURE <ls_create_info> TO <lv_field>.
-        ASSIGN COMPONENT 'METADATA-DESCRIPTION' OF STRUCTURE mr_service_binding->* TO <lv_description>.
+        ASSIGN COMPONENT 'METADATA-DESCRIPTION' OF STRUCTURE <ls_service_binding> TO <lv_description>.
         <lv_field> = <lv_description>.
         ASSIGN COMPONENT 'GROUP_ID' OF STRUCTURE <ls_create_info> TO <lv_field>.
         <lv_field> = |{ ms_item-obj_name }|.
