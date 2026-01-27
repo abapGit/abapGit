@@ -2,8 +2,9 @@ CLASS zcl_abapgit_object_enho_hook DEFINITION PUBLIC.
   PUBLIC SECTION.
     METHODS: constructor
       IMPORTING
-        is_item  TYPE zif_abapgit_definitions=>ty_item
-        io_files TYPE REF TO zcl_abapgit_objects_files.
+        is_item                  TYPE zif_abapgit_definitions=>ty_item
+        io_files                 TYPE REF TO zcl_abapgit_objects_files
+        iv_abap_language_version TYPE uccheck.
 
     INTERFACES: zif_abapgit_object_enho.
 
@@ -28,6 +29,7 @@ CLASS zcl_abapgit_object_enho_hook DEFINITION PUBLIC.
 
     DATA: ms_item TYPE zif_abapgit_definitions=>ty_item.
     DATA: mo_files TYPE REF TO zcl_abapgit_objects_files.
+    DATA mv_abap_language_version TYPE uccheck.
 
     METHODS add_sources
       CHANGING
@@ -52,7 +54,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENHO_HOOK IMPLEMENTATION.
+CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
 
 
   METHOD add_sources.
@@ -100,6 +102,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_HOOK IMPLEMENTATION.
   METHOD constructor.
     ms_item = is_item.
     mo_files = io_files.
+    mv_abap_language_version = iv_abap_language_version.
   ENDMETHOD.
 
 
@@ -175,19 +178,19 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_HOOK IMPLEMENTATION.
 
 
     ii_xml->read( EXPORTING iv_name = 'SHORTTEXT'
-                  CHANGING cg_data  = lv_shorttext ).
+                  CHANGING  cg_data = lv_shorttext ).
     ii_xml->read( EXPORTING iv_name = 'ORIGINAL_OBJECT'
-                  CHANGING cg_data  = ls_original_object ).
+                  CHANGING  cg_data = ls_original_object ).
     ii_xml->read( EXPORTING iv_name = 'ENHANCEMENTS'
-                  CHANGING cg_data  = lt_enhancements ).
+                  CHANGING  cg_data = lt_enhancements ).
     ii_xml->read( EXPORTING iv_name = 'FILES'
-                  CHANGING cg_data  = lt_files ).
+                  CHANGING  cg_data = lt_files ).
     ii_xml->read( EXPORTING iv_name = 'SPACES'
-                  CHANGING cg_data  = lt_spaces ).
+                  CHANGING  cg_data = lt_spaces ).
 
     " todo: kept for compatibility, remove after grace period #3680
     hook_impl_deserialize( EXPORTING it_spaces = lt_spaces
-                           CHANGING ct_impl    = lt_enhancements ).
+                           CHANGING  ct_impl   = lt_enhancements ).
 
     read_sources( CHANGING ct_enhancements = lt_enhancements
                            ct_files        = lt_files ).
@@ -195,36 +198,50 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_HOOK IMPLEMENTATION.
     lv_enhname = ms_item-obj_name.
     lv_package = iv_package.
     TRY.
-        cl_enh_factory=>create_enhancement(
-          EXPORTING
-            enhname     = lv_enhname
-            enhtype     = cl_abstract_enh_tool_redef=>credefinition
-            enhtooltype = cl_enh_tool_hook_impl=>tooltype
-          IMPORTING
-            enhancement = li_tool
-          CHANGING
-            devclass    = lv_package ).
+        TRY.
+            cl_enh_factory=>create_enhancement(
+              EXPORTING
+                enhname               = lv_enhname
+                enhtype               = cl_abstract_enh_tool_redef=>credefinition
+                enhtooltype           = cl_enh_tool_hook_impl=>tooltype
+                abap_language_version = mv_abap_language_version " not on lower releases
+              IMPORTING
+                enhancement           = li_tool
+              CHANGING
+                devclass              = lv_package ).
+          CATCH cx_root.
+            cl_enh_factory=>create_enhancement(
+              EXPORTING
+                enhname     = lv_enhname
+                enhtype     = cl_abstract_enh_tool_redef=>credefinition
+                enhtooltype = cl_enh_tool_hook_impl=>tooltype
+              IMPORTING
+                enhancement = li_tool
+              CHANGING
+                devclass    = lv_package ).
+        ENDTRY.
+
         lo_hook_impl ?= li_tool.
 
         lo_hook_impl->if_enh_object_docu~set_shorttext( lv_shorttext ).
         lo_hook_impl->set_original_object(
-            pgmid       = ls_original_object-pgmid
-            obj_name    = ls_original_object-org_obj_name
-            obj_type    = ls_original_object-org_obj_type
-            program     = ls_original_object-programname
-            main_type   = ls_original_object-org_main_type
-            main_name   = ls_original_object-org_main_name ).
+          pgmid     = ls_original_object-pgmid
+          obj_name  = ls_original_object-org_obj_name
+          obj_type  = ls_original_object-org_obj_type
+          program   = ls_original_object-programname
+          main_type = ls_original_object-org_main_type
+          main_name = ls_original_object-org_main_name ).
         lo_hook_impl->set_include_bound( ls_original_object-include_bound ).
 
         LOOP AT lt_enhancements ASSIGNING <ls_enhancement>.
           lo_hook_impl->add_hook_impl(
-              overwrite        = <ls_enhancement>-overwrite
-              method           = <ls_enhancement>-method
-              enhmode          = <ls_enhancement>-enhmode
-              full_name        = <ls_enhancement>-full_name
-              source           = <ls_enhancement>-source
-              spot             = <ls_enhancement>-spotname
-              parent_full_name = <ls_enhancement>-parent_full_name ).
+            overwrite        = <ls_enhancement>-overwrite
+            method           = <ls_enhancement>-method
+            enhmode          = <ls_enhancement>-enhmode
+            full_name        = <ls_enhancement>-full_name
+            source           = <ls_enhancement>-source
+            spot             = <ls_enhancement>-spotname
+            parent_full_name = <ls_enhancement>-parent_full_name ).
         ENDLOOP.
         lo_hook_impl->if_enh_object~save( run_dark = abap_true ).
         lo_hook_impl->if_enh_object~unlock( ).

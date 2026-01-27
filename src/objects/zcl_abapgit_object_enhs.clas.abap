@@ -97,6 +97,7 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
           lx_enh_root  TYPE REF TO cx_enh_root,
           li_spot_ref  TYPE REF TO if_enh_spot_tool,
           li_enhs      TYPE REF TO zif_abapgit_object_enhs.
+    DATA lv_abap_language_version TYPE uccheck.
 
     IF zif_abapgit_object~exists( ) = abap_true.
       zif_abapgit_object~delete( iv_package   = iv_package
@@ -106,21 +107,39 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'TOOL'
                   CHANGING  cg_data = lv_tool ).
 
+    io_xml->read( EXPORTING iv_name = 'ABAP_LANGUAGE_VERSION'
+                  CHANGING  cg_data = lv_abap_language_version ).
+
+    set_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+
     lv_spot_name = ms_item-obj_name.
     lv_package   = iv_package.
 
     TRY.
-        cl_enh_factory=>create_enhancement_spot(
-          EXPORTING
-            spot_name      = lv_spot_name
-            tooltype       = lv_tool
-            dark           = abap_false
-            compositename  = lv_parent
-          IMPORTING
-            spot           = li_spot_ref
-          CHANGING
-            devclass       = lv_package ).
-
+        TRY.
+            cl_enh_factory=>create_enhancement_spot(
+              EXPORTING
+                spot_name             = lv_spot_name
+                tooltype              = lv_tool
+                dark                  = abap_false
+                compositename         = lv_parent
+                abap_language_version = lv_abap_language_version " not on lower releases
+              IMPORTING
+                spot                  = li_spot_ref
+              CHANGING
+                devclass              = lv_package ).
+          CATCH cx_root.
+            cl_enh_factory=>create_enhancement_spot(
+              EXPORTING
+                spot_name     = lv_spot_name
+                tooltype      = lv_tool
+                dark          = abap_false
+                compositename = lv_parent
+              IMPORTING
+                spot          = li_spot_ref
+              CHANGING
+                devclass      = lv_package ).
+        ENDTRY.
       CATCH cx_enh_root INTO lx_enh_root.
         zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
     ENDTRY.
@@ -215,6 +234,7 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
           li_spot_ref  TYPE REF TO if_enh_spot_tool,
           li_enhs      TYPE REF TO zif_abapgit_object_enhs,
           lx_enh_root  TYPE REF TO cx_enh_root.
+    DATA lv_abap_language_version TYPE uccheck.
 
     lv_spot_name = ms_item-obj_name.
 
@@ -224,6 +244,18 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
 
       CATCH cx_enh_root INTO lx_enh_root.
         zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
+    ENDTRY.
+
+    TRY.
+        SELECT SINGLE ('ABAP_LANGUAGE_VERSION') FROM enhspotheader INTO lv_abap_language_version
+          WHERE enhspot = ms_item-obj_name AND version = 'A'.
+        IF sy-subrc = 0.
+          clear_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+
+          io_xml->add( iv_name = 'ABAP_LANGUAGE_VERSION'
+                       ig_data = lv_abap_language_version ).
+        ENDIF.
+      CATCH cx_root ##NO_HANDLER.
     ENDTRY.
 
     li_enhs = factory( li_spot_ref->get_tool( ) ).

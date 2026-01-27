@@ -3,14 +3,17 @@ CLASS zcl_abapgit_object_enho_fugr DEFINITION PUBLIC.
   PUBLIC SECTION.
     METHODS: constructor
       IMPORTING
-        is_item  TYPE zif_abapgit_definitions=>ty_item
-        io_files TYPE REF TO zcl_abapgit_objects_files.
+        is_item                  TYPE zif_abapgit_definitions=>ty_item
+        io_files                 TYPE REF TO zcl_abapgit_objects_files
+        iv_abap_language_version TYPE uccheck.
+
     INTERFACES: zif_abapgit_object_enho.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
           mo_files TYPE REF TO zcl_abapgit_objects_files.
+    DATA mv_abap_language_version TYPE uccheck.
 
 ENDCLASS.
 
@@ -22,6 +25,7 @@ CLASS zcl_abapgit_object_enho_fugr IMPLEMENTATION.
   METHOD constructor.
     ms_item = is_item.
     mo_files = io_files.
+    mv_abap_language_version = iv_abap_language_version.
   ENDMETHOD.
 
 
@@ -51,15 +55,28 @@ CLASS zcl_abapgit_object_enho_fugr IMPLEMENTATION.
     lv_package = iv_package.
 
     TRY.
-        cl_enh_factory=>create_enhancement(
-          EXPORTING
-            enhname     = |{ ms_item-obj_name }|
-            enhtype     = ''
-            enhtooltype = lv_tool
-          IMPORTING
-            enhancement = li_tool
-          CHANGING
-            devclass    = lv_package ).
+        TRY.
+            cl_enh_factory=>create_enhancement(
+              EXPORTING
+                enhname               = |{ ms_item-obj_name }|
+                enhtype               = ''
+                enhtooltype           = lv_tool
+                abap_language_version = mv_abap_language_version " not on lower releases
+              IMPORTING
+                enhancement           = li_tool
+              CHANGING
+                devclass              = lv_package ).
+          CATCH cx_root.
+            cl_enh_factory=>create_enhancement(
+              EXPORTING
+                enhname     = |{ ms_item-obj_name }|
+                enhtype     = ''
+                enhtooltype = lv_tool
+              IMPORTING
+                enhancement = li_tool
+              CHANGING
+                devclass    = lv_package ).
+        ENDTRY.
 
         lo_fugrdata ?= li_tool.
 

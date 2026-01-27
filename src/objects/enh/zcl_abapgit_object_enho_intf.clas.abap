@@ -4,14 +4,17 @@ CLASS zcl_abapgit_object_enho_intf DEFINITION PUBLIC.
     METHODS:
       constructor
         IMPORTING
-          is_item  TYPE zif_abapgit_definitions=>ty_item
-          io_files TYPE REF TO zcl_abapgit_objects_files.
+          is_item                  TYPE zif_abapgit_definitions=>ty_item
+          io_files                 TYPE REF TO zcl_abapgit_objects_files
+          iv_abap_language_version TYPE uccheck.
+
     INTERFACES: zif_abapgit_object_enho.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
           mo_files TYPE REF TO zcl_abapgit_objects_files.
+    DATA mv_abap_language_version TYPE uccheck.
 
 ENDCLASS.
 
@@ -23,6 +26,7 @@ CLASS zcl_abapgit_object_enho_intf IMPLEMENTATION.
   METHOD constructor.
     ms_item  = is_item.
     mo_files = io_files.
+    mv_abap_language_version = iv_abap_language_version.
   ENDMETHOD.
 
 
@@ -37,22 +41,36 @@ CLASS zcl_abapgit_object_enho_intf IMPLEMENTATION.
           lx_enh_root  TYPE REF TO cx_enh_root.
 
     ii_xml->read( EXPORTING iv_name = 'SHORTTEXT'
-                  CHANGING cg_data  = lv_shorttext ).
+                  CHANGING  cg_data = lv_shorttext ).
     ii_xml->read( EXPORTING iv_name = 'CLASS'
-                  CHANGING cg_data  = lv_class ).
+                  CHANGING  cg_data = lv_class ).
 
     lv_enhname = ms_item-obj_name.
     lv_package = iv_package.
     TRY.
-        cl_enh_factory=>create_enhancement(
-          EXPORTING
-            enhname     = lv_enhname
-            enhtype     = ''
-            enhtooltype = cl_enh_tool_intf=>tooltype
-          IMPORTING
-            enhancement = li_tool
-          CHANGING
-            devclass    = lv_package ).
+        TRY.
+            cl_enh_factory=>create_enhancement(
+              EXPORTING
+                enhname               = lv_enhname
+                enhtype               = ''
+                enhtooltype           = cl_enh_tool_intf=>tooltype
+                abap_language_version = mv_abap_language_version " not on lower releases
+              IMPORTING
+                enhancement           = li_tool
+              CHANGING
+                devclass              = lv_package ).
+          CATCH cx_root.
+            cl_enh_factory=>create_enhancement(
+              EXPORTING
+                enhname     = lv_enhname
+                enhtype     = ''
+                enhtooltype = cl_enh_tool_intf=>tooltype
+              IMPORTING
+                enhancement = li_tool
+              CHANGING
+                devclass    = lv_package ).
+        ENDTRY.
+
         lo_enh_intf ?= li_tool.
 
         lo_enh_intf->if_enh_object_docu~set_shorttext( lv_shorttext ).

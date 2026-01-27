@@ -8,9 +8,10 @@ CLASS zcl_abapgit_object_enho DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS:
       factory
         IMPORTING
-          iv_tool        TYPE enhtooltype
+          iv_tool                  TYPE enhtooltype
+          iv_abap_language_version TYPE uccheck
         RETURNING
-          VALUE(ri_enho) TYPE REF TO zif_abapgit_object_enho
+          VALUE(ri_enho)           TYPE REF TO zif_abapgit_object_enho
         RAISING
           zcx_abapgit_exception.
 
@@ -27,35 +28,42 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
       WHEN cl_enh_tool_badi_impl=>tooltype.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_badi
           EXPORTING
-            is_item = ms_item.
+            is_item                  = ms_item
+            iv_abap_language_version = iv_abap_language_version.
       WHEN cl_enh_tool_hook_impl=>tooltype.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_hook
           EXPORTING
-            is_item  = ms_item
-            io_files = mo_files.
+            is_item                  = ms_item
+            io_files                 = mo_files
+            iv_abap_language_version = iv_abap_language_version.
       WHEN cl_enh_tool_class=>tooltype.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_class
           EXPORTING
-            is_item  = ms_item
-            io_files = mo_files.
+            is_item                  = ms_item
+            io_files                 = mo_files
+            iv_abap_language_version = iv_abap_language_version.
       WHEN cl_enh_tool_intf=>tooltype.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_intf
           EXPORTING
-            is_item  = ms_item
-            io_files = mo_files.
+            is_item                  = ms_item
+            io_files                 = mo_files
+            iv_abap_language_version = iv_abap_language_version.
       WHEN cl_wdr_cfg_enhancement=>tooltype.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_wdyc
           EXPORTING
-            is_item = ms_item.
+            is_item                  = ms_item
+            iv_abap_language_version = iv_abap_language_version.
       WHEN 'FUGRENH'.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_fugr
           EXPORTING
-            is_item  = ms_item
-            io_files = mo_files.
+            is_item                  = ms_item
+            io_files                 = mo_files
+            iv_abap_language_version = iv_abap_language_version.
       WHEN 'WDYENH'.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_wdyn
           EXPORTING
-            is_item = ms_item.
+            is_item                  = ms_item
+            iv_abap_language_version = iv_abap_language_version.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( |Unsupported ENHO type { iv_tool }| ).
     ENDCASE.
@@ -150,6 +158,7 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
 
     DATA: lv_tool TYPE enhtooltype,
           li_enho TYPE REF TO zif_abapgit_object_enho.
+    DATA lv_abap_language_version TYPE uccheck.
 
     IF zif_abapgit_object~exists( ) = abap_true.
       zif_abapgit_object~delete( iv_package   = iv_package
@@ -157,9 +166,16 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
     ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'TOOL'
-                  CHANGING cg_data = lv_tool ).
+                  CHANGING  cg_data = lv_tool ).
 
-    li_enho = factory( lv_tool ).
+    io_xml->read( EXPORTING iv_name = 'ABAP_LANGUAGE_VERSION'
+                  CHANGING  cg_data = lv_abap_language_version ).
+
+    set_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+
+    li_enho = factory(
+      iv_tool                  = lv_tool
+      iv_abap_language_version = lv_abap_language_version ).
 
     li_enho->deserialize( ii_xml     = io_xml
                           iv_package = iv_package ).
@@ -256,6 +272,7 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
           li_enho     TYPE REF TO zif_abapgit_object_enho,
           li_enh_tool TYPE REF TO if_enh_tool,
           lx_enh_root TYPE REF TO cx_enh_root.
+    DATA lv_abap_language_version TYPE uccheck.
 
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
@@ -271,7 +288,21 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
     ENDTRY.
 
-    li_enho = factory( li_enh_tool->get_tool( ) ).
+    TRY.
+        SELECT SINGLE ('ABAP_LANGUAGE_VERSION') FROM enhheader INTO lv_abap_language_version
+          WHERE enhname = ms_item-obj_name AND version = 'A'.
+        IF sy-subrc = 0.
+          clear_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+
+          io_xml->add( iv_name = 'ABAP_LANGUAGE_VERSION'
+                       ig_data = lv_abap_language_version ).
+        ENDIF.
+      CATCH cx_root ##NO_HANDLER.
+    ENDTRY.
+
+    li_enho = factory(
+      iv_tool                  = li_enh_tool->get_tool( )
+      iv_abap_language_version = lv_abap_language_version ).
 
     li_enho->serialize( ii_xml      = io_xml
                         ii_enh_tool = li_enh_tool ).
