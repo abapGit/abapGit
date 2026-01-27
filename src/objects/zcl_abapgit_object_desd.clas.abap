@@ -12,9 +12,7 @@ CLASS zcl_abapgit_object_desd DEFINITION
       IMPORTING
         iv_desd_name      TYPE sobj_name
       RETURNING
-        VALUE(ro_handler) TYPE REF TO object
-      RAISING
-        cx_sy_ref_creation.
+        VALUE(ro_handler) TYPE REF TO object.
 
 ENDCLASS.
 
