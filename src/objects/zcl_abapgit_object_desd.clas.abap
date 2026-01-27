@@ -32,7 +32,7 @@ CLASS zcl_abapgit_object_desd IMPLEMENTATION.
         CREATE DATA lr_desd_name TYPE ('DD_LES_NAME').
         lr_desd_name->* = ms_item-obj_name.
 
-        lo_handler = _create_les_handler( ir_desd_name = lr_desd_name ).
+        lo_handler = _create_les_handler( lr_desd_name ).
 
         CREATE DATA lr_getstate_enum TYPE ('IF_DD_LES_PERSIST=>EN_GET_STATE').
         IF ms_item-inactive = abap_true.
