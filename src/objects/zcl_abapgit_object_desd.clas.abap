@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_desd DEFINITION
   PRIVATE SECTION.
     METHODS _create_les_handler
       IMPORTING
-        ir_desd_name TYPE REF TO data
+        ir_desd_name      TYPE REF TO data
       RETURNING
         VALUE(ro_handler)   TYPE REF TO object
       RAISING
