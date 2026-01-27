@@ -18,11 +18,11 @@ ENDINTERFACE.
 CLASS lcl_walker DEFINITION.
   PUBLIC SECTION.
 
-    METHODS constructor
+    CLASS-METHODS initialize
       IMPORTING
         it_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
 
-    METHODS walk
+    CLASS-METHODS walk
       IMPORTING
         iv_path         TYPE string
         iv_tree_main    TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL
@@ -32,15 +32,33 @@ CLASS lcl_walker DEFINITION.
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS expand
+      IMPORTING
+        iv_parent          TYPE zif_abapgit_git_definitions=>ty_sha1
+      RETURNING
+        VALUE(rt_expanded) TYPE zif_abapgit_git_definitions=>ty_expanded_tt
+      RAISING
+        zcx_abapgit_exception.
+
   PRIVATE SECTION.
+* the amount of data here should be manageable in memory
     TYPES: BEGIN OF ty_tree_cache,
              sha1  TYPE string,
              nodes TYPE zcl_abapgit_git_pack=>ty_nodes_tt,
            END OF ty_tree_cache.
-    DATA mt_tree_cache TYPE HASHED TABLE OF ty_tree_cache WITH UNIQUE KEY sha1.
-    DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
+    CLASS-DATA gt_tree_cache TYPE HASHED TABLE OF ty_tree_cache WITH UNIQUE KEY sha1.
+    CLASS-DATA gt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
 
-    METHODS decode_tree
+    CLASS-METHODS walk_tree
+      IMPORTING
+        iv_tree            TYPE zif_abapgit_git_definitions=>ty_sha1
+        iv_base            TYPE string
+      RETURNING
+        VALUE(rt_expanded) TYPE zif_abapgit_git_definitions=>ty_expanded_tt
+      RAISING
+        zcx_abapgit_exception .
+
+    CLASS-METHODS decode_tree
       IMPORTING
         iv_tree         TYPE zif_abapgit_git_definitions=>ty_sha1
       RETURNING
@@ -51,8 +69,61 @@ ENDCLASS.
 
 CLASS lcl_walker IMPLEMENTATION.
 
-  METHOD constructor.
-    mt_objects = it_objects.
+  METHOD initialize.
+    gt_objects = it_objects.
+  ENDMETHOD.
+
+  METHOD expand.
+
+    DATA: ls_object LIKE LINE OF gt_objects,
+          ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
+
+    READ TABLE gt_objects INTO ls_object
+      WITH KEY type COMPONENTS
+        type = zif_abapgit_git_definitions=>c_type-commit
+        sha1 = iv_parent.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'commit not found' ).
+    ENDIF.
+    ls_commit = zcl_abapgit_git_pack=>decode_commit( ls_object-data ).
+
+    rt_expanded = walk_tree( iv_tree    = ls_commit-tree
+                             iv_base    = '/' ).
+
+  ENDMETHOD.
+
+  METHOD walk_tree.
+
+    DATA: lt_expanded LIKE rt_expanded,
+          lt_nodes    TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+
+    FIELD-SYMBOLS: <ls_exp>  LIKE LINE OF rt_expanded,
+                   <ls_node> LIKE LINE OF lt_nodes.
+
+
+    lt_nodes = decode_tree( iv_tree ).
+
+    LOOP AT lt_nodes ASSIGNING <ls_node>.
+      CASE <ls_node>-chmod.
+        WHEN zif_abapgit_git_definitions=>c_chmod-file
+            OR zif_abapgit_git_definitions=>c_chmod-executable
+            OR zif_abapgit_git_definitions=>c_chmod-symbolic_link
+            OR zif_abapgit_git_definitions=>c_chmod-submodule.
+          APPEND INITIAL LINE TO rt_expanded ASSIGNING <ls_exp>.
+          <ls_exp>-path  = iv_base.
+          <ls_exp>-name  = <ls_node>-name.
+          <ls_exp>-sha1  = <ls_node>-sha1.
+          <ls_exp>-chmod = <ls_node>-chmod.
+        WHEN zif_abapgit_git_definitions=>c_chmod-dir.
+          lt_expanded = walk_tree(
+            iv_tree    = <ls_node>-sha1
+            iv_base    = iv_base && <ls_node>-name && '/' ).
+          APPEND LINES OF lt_expanded TO rt_expanded.
+        WHEN OTHERS.
+          zcx_abapgit_exception=>raise( |walk_tree: unknown chmod { <ls_node>-chmod }| ).
+      ENDCASE.
+    ENDLOOP.
+
   ENDMETHOD.
 
   METHOD walk.
@@ -123,16 +194,16 @@ CLASS lcl_walker IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD decode_tree.
-    DATA ls_cache LIKE LINE OF mt_tree_cache.
+    DATA ls_cache LIKE LINE OF gt_tree_cache.
 
-    FIELD-SYMBOLS <ls_cache> LIKE LINE OF mt_tree_cache.
-    FIELD-SYMBOLS <ls_object> LIKE LINE OF mt_objects.
+    FIELD-SYMBOLS <ls_cache> LIKE LINE OF gt_tree_cache.
+    FIELD-SYMBOLS <ls_object> LIKE LINE OF gt_objects.
 
-    READ TABLE mt_tree_cache ASSIGNING <ls_cache> WITH KEY sha1 = iv_tree.
+    READ TABLE gt_tree_cache ASSIGNING <ls_cache> WITH KEY sha1 = iv_tree.
     IF sy-subrc = 0.
       rt_nodes = <ls_cache>-nodes.
     ELSE.
-      READ TABLE mt_objects ASSIGNING <ls_object> WITH TABLE KEY type
+      READ TABLE gt_objects ASSIGNING <ls_object> WITH TABLE KEY type
         COMPONENTS sha1 = iv_tree type = zif_abapgit_git_definitions=>c_type-tree.
       ASSERT sy-subrc = 0.
 
@@ -140,7 +211,7 @@ CLASS lcl_walker IMPLEMENTATION.
 
       ls_cache-sha1 = iv_tree.
       ls_cache-nodes = rt_nodes.
-      INSERT ls_cache INTO TABLE mt_tree_cache.
+      INSERT ls_cache INTO TABLE gt_tree_cache.
     ENDIF.
 
   ENDMETHOD.
@@ -162,84 +233,56 @@ CLASS lcl_find_changes_new DEFINITION.
     INTERFACES lif_find_changes.
   PRIVATE SECTION.
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
-    DATA mo_walker TYPE REF TO lcl_walker.
 
-    METHODS find_changed_in_commit
-      IMPORTING
-        is_commit TYPE zcl_abapgit_git_pack=>ty_commit
-      CHANGING
-        ct_files  TYPE zif_abapgit_flow_logic=>ty_path_name_tt
-      RAISING
-        zcx_abapgit_exception.
 ENDCLASS.
 
 CLASS lcl_find_changes_new IMPLEMENTATION.
   METHOD constructor.
     mt_objects = it_objects.
-    CREATE OBJECT mo_walker EXPORTING it_objects = it_objects.
-  ENDMETHOD.
-
-  METHOD find_changed_in_commit.
-
-    DATA ls_parent_commit TYPE zcl_abapgit_git_pack=>ty_commit.
-    DATA lt_files         LIKE ct_files.
-    DATA ls_file          LIKE LINE OF lt_files.
-
-    FIELD-SYMBOLS <ls_object> LIKE LINE OF mt_objects.
-
-
-    ASSERT is_commit-parent IS NOT INITIAL.
-* as per calling logic, never called if there is a parent2
-    ASSERT is_commit-parent2 IS INITIAL.
-
-    READ TABLE mt_objects ASSIGNING <ls_object> WITH TABLE KEY sha COMPONENTS sha1 = is_commit-parent.
-    ASSERT sy-subrc = 0.
-    ls_parent_commit = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).
-
-    lt_files = mo_walker->walk(
-      iv_path        = '/'
-      iv_tree_main   = ls_parent_commit-tree
-      iv_tree_branch = is_commit-tree ).
-
-    LOOP AT lt_files INTO ls_file.
-* if its already there, then skip, we want the latest(top) change in the list
-      INSERT ls_file INTO TABLE ct_files.
-    ENDLOOP.
-
   ENDMETHOD.
 
   METHOD lif_find_changes~find_changes.
-    DATA lv_current TYPE zif_abapgit_git_definitions=>ty_sha1.
-    DATA ls_commit  TYPE zcl_abapgit_git_pack=>ty_commit.
+
+    DATA ls_commit1 TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA ls_commit2 TYPE zcl_abapgit_git_pack=>ty_commit.
 
     FIELD-SYMBOLS <ls_commit> LIKE LINE OF mt_objects.
 
 
     ASSERT iv_first_commit IS NOT INITIAL.
-    ASSERT iv_main IS NOT INITIAL.
     ASSERT iv_branch IS NOT INITIAL.
 
-    lv_current = iv_latest_merge_commit. " dummy, remove me
-    lv_current = iv_branch.
 
-    DO.
-      READ TABLE mt_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
+    READ TABLE mt_objects ASSIGNING <ls_commit> WITH KEY type COMPONENTS
+        type = zif_abapgit_git_definitions=>c_type-commit sha1 = iv_branch.
+    ASSERT sy-subrc = 0.
+    ls_commit1 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+
+    IF iv_latest_merge_commit IS NOT INITIAL.
+      READ TABLE mt_objects ASSIGNING <ls_commit> WITH KEY type COMPONENTS
+        type = zif_abapgit_git_definitions=>c_type-commit sha1 = iv_latest_merge_commit.
       ASSERT sy-subrc = 0.
+      ls_commit2 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+      ASSERT ls_commit2-parent2 IS NOT INITIAL.
+      READ TABLE mt_objects ASSIGNING <ls_commit> WITH KEY type COMPONENTS
+        type = zif_abapgit_git_definitions=>c_type-commit sha1 = ls_commit2-parent2.
+      ASSERT sy-subrc = 0.
+      ls_commit2 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+    ELSE.
+      READ TABLE mt_objects ASSIGNING <ls_commit> WITH KEY type COMPONENTS
+        type = zif_abapgit_git_definitions=>c_type-commit sha1 = iv_first_commit.
+      ASSERT sy-subrc = 0.
+      ls_commit2 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+      READ TABLE mt_objects ASSIGNING <ls_commit> WITH KEY type COMPONENTS
+        type = zif_abapgit_git_definitions=>c_type-commit sha1 = ls_commit2-parent.
+      ASSERT sy-subrc = 0.
+      ls_commit2 = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+    ENDIF.
 
-      ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
-      IF ls_commit-parent2 IS INITIAL.
-* analyze changed files in commit
-        find_changed_in_commit(
-          EXPORTING is_commit = ls_commit
-          CHANGING  ct_files  = rt_files ).
-      ENDIF.
-
-      IF lv_current = iv_first_commit.
-        EXIT.
-      ENDIF.
-
-      lv_current = ls_commit-parent.
-    ENDDO.
+    rt_files = lcl_walker=>walk(
+      iv_path        = '/'
+      iv_tree_main   = ls_commit2-tree
+      iv_tree_branch = ls_commit1-tree ).
 
   ENDMETHOD.
 ENDCLASS.
@@ -257,7 +300,6 @@ CLASS lcl_find_changes DEFINITION.
 
   PRIVATE SECTION.
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
-    DATA mo_walker TYPE REF TO lcl_walker.
 
 ENDCLASS.
 
@@ -265,7 +307,6 @@ CLASS lcl_find_changes IMPLEMENTATION.
 
   METHOD constructor.
     mt_objects = it_objects.
-    CREATE OBJECT mo_walker EXPORTING it_objects = it_objects.
   ENDMETHOD.
 
   METHOD lif_find_changes~find_changes.
@@ -285,7 +326,7 @@ CLASS lcl_find_changes IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     lv_tree_branch = zcl_abapgit_git_pack=>decode_commit( ls_object-data )-tree.
 
-    rt_files = mo_walker->walk(
+    rt_files = lcl_walker=>walk(
       iv_path        = '/'
       iv_tree_main   = lv_tree_main
       iv_tree_branch = lv_tree_branch ).

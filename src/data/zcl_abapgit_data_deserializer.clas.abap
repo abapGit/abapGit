@@ -64,6 +64,14 @@ CLASS zcl_abapgit_data_deserializer DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS is_table_transported
+      IMPORTING
+        !iv_tabname              TYPE tadir-obj_name
+      RETURNING
+        VALUE(rv_is_transported) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -136,6 +144,19 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
     READ TABLE lt_packages TRANSPORTING NO FIELDS WITH TABLE KEY table_line = lv_package.
     rv_is_included = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+
+  METHOD is_table_transported.
+
+    DATA lv_package TYPE devclass.
+
+    lv_package = zcl_abapgit_factory=>get_tadir( )->get_object_package(
+      iv_object   = 'TABL'
+      iv_obj_name = iv_tabname ).
+
+    rv_is_transported = zcl_abapgit_factory=>get_sap_package( lv_package )->are_changes_recorded_in_tr_req( ).
 
   ENDMETHOD.
 
@@ -283,20 +304,22 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       ASSIGN ls_result-deletes->* TO <lt_del>.
       ASSIGN ls_result-updates->* TO <lt_upd>.
 
-      IF zcl_abapgit_data_utils=>is_customizing_table( ls_result-name ) = abap_true.
-        li_cts_api->create_transport_entries(
-          iv_transport = is_checks-customizing-transport
-          it_table_ins = <lt_ins>
-          it_table_upd = <lt_upd>
-          it_table_del = <lt_del>
-          iv_tabname   = |{ ls_result-name }| ).
-      ELSEIF zcl_abapgit_data_utils=>is_application_table( ls_result-name ) = abap_true.
-        li_cts_api->create_transport_entries(
-          iv_transport = is_checks-transport-transport
-          it_table_ins = <lt_ins>
-          it_table_upd = <lt_upd>
-          it_table_del = <lt_del>
-          iv_tabname   = |{ ls_result-name }| ).
+      IF is_table_transported( ls_result-name ) = abap_true.
+        IF zcl_abapgit_data_utils=>is_customizing_table( ls_result-name ) = abap_true.
+          li_cts_api->create_transport_entries(
+            iv_transport = is_checks-customizing-transport
+            it_table_ins = <lt_ins>
+            it_table_upd = <lt_upd>
+            it_table_del = <lt_del>
+            iv_tabname   = |{ ls_result-name }| ).
+        ELSEIF zcl_abapgit_data_utils=>is_application_table( ls_result-name ) = abap_true.
+          li_cts_api->create_transport_entries(
+            iv_transport = is_checks-transport-transport
+            it_table_ins = <lt_ins>
+            it_table_upd = <lt_upd>
+            it_table_del = <lt_del>
+            iv_tabname   = |{ ls_result-name }| ).
+        ENDIF.
       ENDIF.
 
       INSERT ls_result-file INTO TABLE rt_accessed_files. " data file
@@ -379,9 +402,9 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       rs_checks-required     = abap_true.
       rs_checks-type-request = zif_abapgit_cts_api=>c_transport_type-cust_request.
       rs_checks-type-task    = zif_abapgit_cts_api=>c_transport_type-cust_task.
-      rs_checks-transport    = determine_transport_request(
-                                 ii_repo           = ii_repo
-                                 iv_transport_type = rs_checks-type ).
+      rs_checks-transport = determine_transport_request(
+        ii_repo           = ii_repo
+        iv_transport_type = rs_checks-type ).
     ENDIF.
 
   ENDMETHOD.
