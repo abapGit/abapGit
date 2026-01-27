@@ -8,11 +8,14 @@ Legend
 + : added
 - : removed
 
-2025-12-30 v1.133.0
+2026-01-27 v1.133.0
 -------------------
 
 ! Clear `ACTFLAG` and `RESERVEDTE` for DDIC objects (#7319)
 ! TABL: clearing some `DD36M` fields (#7374)
+! SUSH: Fix "lead application does not exist" (#7495)
+! TRAN: Include SU22 data (#7497, #7537)
+! SRVB: Auto-publish service bindings (#7523)
 + PO syntax highlighting (#7338)
 + Repo list: add clear filter (#7344)
 + CLAS: Deserialize sub-component docs (#7360)
@@ -20,6 +23,11 @@ Legend
 + Support initial branch creation (#7390)
 + TABU: Support data pull if table is included in repository (#7404)
 + Feature: Create GitHub repository from abapGit (#7394)
++ Allow changing package for more repos (#7499)
++ Improve git protocol performance (#7505, #7508, #7515)
++ TABU: Support local storage of data config (#7498, #7502, #7520)
++ Repo View: Add hotkey for "filename toggle" (#7519)
++ Feature/validate after push exit (#7521)
 * Stage+commit page: dont show commit id (#7308)
 * Git: optimize delta calculation (#7306)
 * Fix diff resetting .abapgit.xml (#7310)
@@ -61,6 +69,17 @@ Legend
 * FDT0: catch IXML exception (#7469)
 * Fix crash in XML output (#7468)
 * SOTS: fix crash (#7471)
+* Fix error handling in create_object() (#7484)
+* PROG: Ignore invalid TADIR entries for ENHO includes (#7494)
+* Fix package constraint check since SAP_BASIS 816 (#7480)
+* TOBJ: Fix import of primary table flag (#7496)
+* Fix "identical keys" error when creating offline repo (#7500)
+* TABU: Fix "Too many records selected from table" crash (#7501)
+* Fix table comparison (#7503)
+* Update exception message for local package support (#7509)
+* TABU: fix dump when pulling (#7516)
+* CHDO: Fix deletion of generated objects (#7522)
+* TABU: avoid transport popup for local tables (#7517)
 
 2025-06-25 v1.132.0
 -------------------
