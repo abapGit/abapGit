@@ -58,7 +58,7 @@ CLASS zcl_abapgit_object_desd IMPLEMENTATION.
     DATA lr_logger_ref_descr      TYPE REF TO cl_abap_refdescr.
     DATA lr_desd_name             TYPE REF TO data.
     FIELD-SYMBOLS <lv_logger_object> TYPE any.
-    FIELD-SYMBOLS <lv_desd_name> TYPE ANY.
+    FIELD-SYMBOLS <lv_desd_name> TYPE any.
 
     CALL METHOD ('CL_DD_LOG_FACTORY')=>('CREATE_RESTRICTED_LOGGER')
       EXPORTING
