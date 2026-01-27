@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_desd DEFINITION
   PRIVATE SECTION.
     METHODS _create_les_handler
       IMPORTING
-        ir_desd_name      TYPE REF TO data
+        iv_desd_name      TYPE sobj_name
       RETURNING
         VALUE(ro_handler) TYPE REF TO object
       RAISING
@@ -19,31 +19,26 @@ CLASS zcl_abapgit_object_desd DEFINITION
 ENDCLASS.
 
 
-
 CLASS zcl_abapgit_object_desd IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
     DATA lo_handler       TYPE REF TO object.
     DATA lr_getstate_enum TYPE REF TO data.
     DATA lx_error         TYPE REF TO cx_root.
-    DATA lr_desd_name     TYPE REF TO data.
+    FIELD-SYMBOLS <lv_getstate_enum_value> TYPE ANY.
 
     TRY.
-        CREATE DATA lr_desd_name TYPE ('DD_LES_NAME').
-        lr_desd_name->* = ms_item-obj_name.
-
-        lo_handler = _create_les_handler( lr_desd_name ).
-
+        lo_handler = _create_les_handler( ms_item-obj_name ).
         CREATE DATA lr_getstate_enum TYPE ('IF_DD_LES_PERSIST=>EN_GET_STATE').
+        ASSIGN lr_getstate_enum->* TO <lv_getstate_enum_value>.
         IF ms_item-inactive = abap_true.
-          lr_getstate_enum->* = CONV #( 2 ).
+          <lv_getstate_enum_value> = conv #( 2 ).
         ELSE.
-          lr_getstate_enum->* = CONV #( 0 ).
+          <lv_getstate_enum_value> = conv #( 0 ).
         ENDIF.
-
         CALL METHOD lo_handler->('IF_DD_LES_HANDLER~GET_CHANGED_BY')
           EXPORTING
-            iv_state      = lr_getstate_enum->*
+            iv_state      = <lv_getstate_enum_value>
           RECEIVING
             rv_changed_by = rv_user.
       CATCH cx_root INTO lx_error ##CATCH_ALL.
@@ -61,25 +56,32 @@ CLASS zcl_abapgit_object_desd IMPLEMENTATION.
     DATA lr_data_of_logger_object TYPE REF TO data.
     DATA lr_logger_type_descr     TYPE REF TO cl_abap_typedescr.
     DATA lr_logger_ref_descr      TYPE REF TO cl_abap_refdescr.
+    DATA lr_desd_name             TYPE REF TO data.
+    FIELD-SYMBOLS <lv_logger_object> TYPE ANY.
+    FIELD-SYMBOLS <lv_desd_name> TYPE ANY.
 
     CALL METHOD ('CL_DD_LOG_FACTORY')=>('CREATE_RESTRICTED_LOGGER')
       EXPORTING
         iv_log_id = -1
       RECEIVING
         ro_logger = lo_dd_logger.
-    CREATE OBJECT lo_handler_fctry TYPE ('CL_DD_LES_HANDLER_FACTORY').
 
     lr_logger_type_descr = cl_abap_typedescr=>describe_by_name( 'CL_DD_LOG_ABS_LOGGER' ).
-
-    lr_logger_ref_descr = cl_abap_refdescr=>get(
-      p_referenced_type = lr_logger_type_descr ).
+    lr_logger_ref_descr = cl_abap_refdescr=>get( lr_logger_type_descr ).
     CREATE DATA lr_data_of_logger_object TYPE HANDLE lr_logger_ref_descr.
-    lr_data_of_logger_object->* ?= lo_dd_logger.
+    ASSIGN lr_data_of_logger_object->* TO <lv_logger_object>.
+    <lv_logger_object> ?= lo_dd_logger.
 
-    CALL METHOD lo_handler_fctry->('CREATE')
+
+    CREATE DATA lr_desd_name TYPE ('DD_LES_NAME').
+    ASSIGN lr_desd_name->* TO <lv_desd_name>.
+    <lv_desd_name> = iv_desd_name.
+
+    CREATE OBJECT lo_handler_fctry TYPE ('CL_DD_LES_HANDLER_FACTORY').
+    CALL METHOD lo_handler_fctry->('CREATE')   " ABAPLINT
       EXPORTING
-        io_logger = lr_data_of_logger_object->*
-        iv_name   = ir_desd_name->*
+        io_logger = <lv_logger_object>
+        iv_name   = <lv_desd_name>
       RECEIVING
         r_result  = ro_handler.
   ENDMETHOD.
