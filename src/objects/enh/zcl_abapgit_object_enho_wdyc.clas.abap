@@ -22,6 +22,7 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
+    mv_abap_language_version = iv_abap_language_version.
   ENDMETHOD.
 
 
