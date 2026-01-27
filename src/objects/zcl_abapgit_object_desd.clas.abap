@@ -12,7 +12,7 @@ CLASS zcl_abapgit_object_desd DEFINITION
       IMPORTING
         ir_desd_name      TYPE REF TO data
       RETURNING
-        VALUE(ro_handler)   TYPE REF TO object
+        VALUE(ro_handler) TYPE REF TO object
       RAISING
         cx_sy_ref_creation.
 
