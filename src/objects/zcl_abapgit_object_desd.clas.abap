@@ -25,7 +25,7 @@ CLASS zcl_abapgit_object_desd IMPLEMENTATION.
     DATA lo_handler       TYPE REF TO object.
     DATA lr_getstate_enum TYPE REF TO data.
     DATA lx_error         TYPE REF TO cx_root.
-    FIELD-SYMBOLS <lv_getstate_enum_value> TYPE ANY.
+    FIELD-SYMBOLS <lv_getstate_enum_value> TYPE any.
 
     TRY.
         lo_handler = _create_les_handler( ms_item-obj_name ).
