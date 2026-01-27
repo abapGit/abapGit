@@ -106,7 +106,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tran IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
 
 
   METHOD add_data.
@@ -990,12 +990,15 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       ls_item-obj_name    = ms_item-obj_name.
       ls_item-obj_name+30 = 'TR'.
 
-      CREATE OBJECT lo_sush TYPE zcl_abapgit_object_sush
-        EXPORTING
-          is_item     = ls_item
-          iv_language = mv_language.
+      TRY.
+          CREATE OBJECT lo_sush TYPE zcl_abapgit_object_sush
+            EXPORTING
+              is_item     = ls_item
+              iv_language = mv_language.
 
-      lo_sush->zif_abapgit_object~serialize( io_xml ).
+          lo_sush->zif_abapgit_object~serialize( io_xml ).
+        CATCH zcx_abapgit_type_not_supported.
+      ENDTRY.
     ENDIF.
 
   ENDMETHOD.
