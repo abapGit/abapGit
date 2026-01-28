@@ -233,17 +233,21 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
           lt_tactz      TYPE TABLE OF tactz,
           lt_tobjvordat TYPE TABLE OF tobjvordat,
           lt_tobjvor    TYPE TABLE OF tobjvor.
-
+    DATA lv_abap_language_version TYPE uccheck.
+    DATA lr_structdescr TYPE REF TO cl_abap_structdescr.
+    DATA lr_tobj_attr TYPE REF TO data.
+    FIELD-SYMBOLS <ls_tobj_attr> TYPE any.
+    FIELD-SYMBOLS <lv_field> TYPE any.
 
     ASSERT NOT ms_item-obj_name IS INITIAL.
 
     io_xml->read( EXPORTING iv_name = 'TOBJ'
-                  CHANGING cg_data = ls_tobj ).
+                  CHANGING  cg_data = ls_tobj ).
     ls_tobj-bname = sy-uname.
     io_xml->read( EXPORTING iv_name = 'TOBJT'
-                  CHANGING cg_data = ls_tobjt ).
+                  CHANGING  cg_data = ls_tobjt ).
     io_xml->read( EXPORTING iv_name = 'TOBJVORFLG'
-                  CHANGING cg_data = ls_tobjvorflg ).
+                  CHANGING  cg_data = ls_tobjvorflg ).
     io_xml->read( EXPORTING iv_name = 'TACTZ'
                   CHANGING  cg_data = lt_tactz ).
     io_xml->read( EXPORTING iv_name = 'TOBJVORDAT'
@@ -269,6 +273,41 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
     INSERT tobjvordat FROM TABLE lt_tobjvordat.           "#EC CI_SUBRC
     DELETE FROM tobjvor WHERE objct = ms_item-obj_name.   "#EC CI_SUBRC
     INSERT tobjvor FROM TABLE lt_tobjvor.                 "#EC CI_SUBRC
+
+    TRY.
+        io_xml->read( EXPORTING iv_name = 'ABAP_LANGUAGE_VERSION'
+                      CHANGING  cg_data = lv_abap_language_version ).
+
+        set_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+
+        lr_structdescr ?= cl_abap_typedescr=>describe_by_name( p_name = 'TOBJ_ATTR' ).
+        CREATE DATA lr_tobj_attr TYPE HANDLE lr_structdescr.
+        ASSIGN lr_tobj_attr->* TO <ls_tobj_attr>.
+
+        ASSIGN COMPONENT 'OBJCT' OF STRUCTURE <ls_tobj_attr> TO <lv_field>.
+        IF sy-subrc = 0.
+          <lv_field> = ms_item-obj_name.
+        ENDIF.
+        ASSIGN COMPONENT 'MODIFIER' OF STRUCTURE <ls_tobj_attr> TO <lv_field>.
+        IF sy-subrc = 0.
+          <lv_field> = sy-uname.
+        ENDIF.
+        ASSIGN COMPONENT 'MODDATE' OF STRUCTURE <ls_tobj_attr> TO <lv_field>.
+        IF sy-subrc = 0.
+          <lv_field> = sy-datum.
+        ENDIF.
+        ASSIGN COMPONENT 'MODTIME' OF STRUCTURE <ls_tobj_attr> TO <lv_field>.
+        IF sy-subrc = 0.
+          <lv_field> = sy-uzeit.
+        ENDIF.
+        ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_tobj_attr> TO <lv_field>.
+        IF sy-subrc = 0.
+          <lv_field> = lv_abap_language_version.
+        ENDIF.
+
+        MODIFY tobj_attr FROM <ls_tobj_attr>.
+      CATCH cx_root ##NO_HANDLER.
+    ENDTRY.
 
     deserialize_longtexts( ii_xml         = io_xml
                            iv_longtext_id = c_longtext_id_suso ).
@@ -352,7 +391,7 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
           lt_tactz      TYPE TABLE OF tactz,
           lt_tobjvordat TYPE TABLE OF tobjvordat,
           lt_tobjvor    TYPE TABLE OF tobjvor.
-
+    DATA lv_abap_language_version TYPE uccheck.
 
     SELECT SINGLE * FROM tobj INTO ls_tobj
       WHERE objct = ms_item-obj_name.
@@ -396,6 +435,19 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
                  iv_name = 'TOBJVORDAT' ).
     io_xml->add( ig_data = lt_tobjvor
                  iv_name = 'TOBJVOR' ).
+
+    TRY.
+        SELECT SINGLE ('ABAP_LANGUAGE_VERSION') FROM ('TOBJ_ATTR') INTO lv_abap_language_version
+          WHERE objct =  ms_item-obj_name.
+
+        IF sy-subrc = 0.
+          clear_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+
+          io_xml->add( iv_name = 'ABAP_LANGUAGE_VERSION'
+                       ig_data = lv_abap_language_version ).
+        ENDIF.
+      CATCH cx_root ##NO_HANDLER.
+    ENDTRY.
 
     serialize_longtexts( ii_xml         = io_xml
                          iv_longtext_id = c_longtext_id_suso ).
