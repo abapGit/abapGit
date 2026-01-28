@@ -53,6 +53,7 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
     register( 'CHKO' ).
     register( 'CHKV' ).
     register( 'COTA' ).
+    register( 'DESD' ).
     register( 'DRTY' ).
     register( 'DTEB' ).
     register( 'DSFI' ).
