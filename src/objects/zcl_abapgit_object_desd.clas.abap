@@ -21,18 +21,15 @@ CLASS zcl_abapgit_object_desd IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
     DATA lo_handler       TYPE REF TO object.
-    DATA lr_getstate_enum TYPE REF TO data.
     DATA lx_error         TYPE REF TO cx_root.
     FIELD-SYMBOLS <lv_getstate_enum_value> TYPE any.
 
     TRY.
         lo_handler = _create_les_handler( ms_item-obj_name ).
-        CREATE DATA lr_getstate_enum TYPE ('IF_DD_LES_PERSIST=>EN_GET_STATE').
-        ASSIGN lr_getstate_enum->* TO <lv_getstate_enum_value>.
         IF ms_item-inactive = abap_true.
-          <lv_getstate_enum_value> = conv #( 2 ).
+          ASSIGN ('IF_DD_LES_PERSIST=>S_GET_STATE-NEWEST') TO <lv_getstate_enum_value>.
         ELSE.
-          <lv_getstate_enum_value> = conv #( 0 ).
+          ASSIGN ('IF_DD_LES_PERSIST=>S_GET_STATE-ACTIVE') TO <lv_getstate_enum_value>.
         ENDIF.
         CALL METHOD lo_handler->('IF_DD_LES_HANDLER~GET_CHANGED_BY')
           EXPORTING
@@ -76,7 +73,7 @@ CLASS zcl_abapgit_object_desd IMPLEMENTATION.
     <lv_desd_name> = iv_desd_name.
 
     CREATE OBJECT lo_handler_fctry TYPE ('CL_DD_LES_HANDLER_FACTORY').
-    CALL METHOD lo_handler_fctry->('CREATE')   " ABAPLINT
+    CALL METHOD lo_handler_fctry->('CREATE')
       EXPORTING
         io_logger = <lv_logger_object>
         iv_name   = <lv_desd_name>
