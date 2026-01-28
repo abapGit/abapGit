@@ -351,7 +351,7 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
 
         ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_head> TO <lv_abap_language_version>.
         IF sy-subrc = 0.
-          <lv_abap_language_version> = get_abap_language_version( ).
+          clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
         ENDIF.
 
         io_xml->add( iv_name = 'HEAD'
