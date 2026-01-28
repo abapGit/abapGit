@@ -438,7 +438,7 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
 
     TRY.
         SELECT SINGLE ('ABAP_LANGUAGE_VERSION') FROM ('TOBJ_ATTR') INTO lv_abap_language_version
-          WHERE objct =  ms_item-obj_name.
+          WHERE objct = ms_item-obj_name.
 
         IF sy-subrc = 0.
           clear_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
