@@ -8,13 +8,19 @@ CLASS zcl_abapgit_object_smim DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING iv_url             TYPE string
       RETURNING VALUE(rv_filename) TYPE string.
 
+    METHODS get_extension
+      IMPORTING iv_mimetype         TYPE string
+      RETURNING VALUE(rv_extension) TYPE string.
+
     METHODS find_content
       IMPORTING iv_url            TYPE string
+                iv_mimetype       TYPE string
       RETURNING VALUE(rv_content) TYPE xstring
       RAISING   zcx_abapgit_exception.
 
     METHODS build_filename
       IMPORTING iv_filename        TYPE string
+                iv_mimetype        TYPE string
       RETURNING VALUE(rv_filename) TYPE string.
 
     METHODS get_url_for_io
@@ -32,8 +38,16 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
   METHOD build_filename.
 
-    CONCATENATE ms_item-obj_name ms_item-obj_type iv_filename
-      INTO rv_filename SEPARATED BY '.'.
+    DATA lv_extension TYPE string.
+
+    " If filename is missing extension, add it based on mimetype
+    IF iv_filename CA '.'.
+      CONCATENATE ms_item-obj_name ms_item-obj_type iv_filename INTO rv_filename SEPARATED BY '.'.
+    ELSE.
+      lv_extension = get_extension( iv_mimetype ).
+      CONCATENATE ms_item-obj_name ms_item-obj_type iv_filename lv_extension INTO rv_filename SEPARATED BY '.'.
+    ENDIF.
+
     TRANSLATE rv_filename TO LOWER CASE.
 
   ENDMETHOD.
@@ -49,7 +63,9 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
     lv_filename = get_filename( iv_url ).
 
-    lv_filename = build_filename( lv_filename ).
+    lv_filename = build_filename(
+      iv_filename = lv_filename
+      iv_mimetype = iv_mimetype ).
 
     lt_files = mo_files->get_files( ).
 
@@ -57,10 +73,35 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
         WITH KEY file
         COMPONENTS filename = lv_filename.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'SMIM, file not found' ).
+      " Fallback to no extension
+      lv_filename = build_filename(
+        iv_filename = lv_filename
+        iv_mimetype = '' ).
+
+      READ TABLE lt_files ASSIGNING <ls_file>
+          WITH KEY file
+          COMPONENTS filename = lv_filename.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'SMIM, file not found' ).
+      ENDIF.
     ENDIF.
 
     rv_content = <ls_file>-data.
+
+  ENDMETHOD.
+
+
+  METHOD get_extension.
+
+    DATA lv_rest TYPE string ##NEEDED.
+
+    SELECT SINGLE extension FROM mimetypes INTO rv_extension WHERE type = iv_mimetype.
+    IF sy-subrc = 0.
+      IF rv_extension CA ','.
+        SPLIT rv_extension AT ',' INTO rv_extension lv_rest.
+      ENDIF.
+      REPLACE FIRST OCCURRENCE OF '*.' IN rv_extension WITH ''.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -146,7 +187,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
 
     TRY.
-        get_url_for_io( IMPORTING ev_url  = lv_url ).
+        get_url_for_io( IMPORTING ev_url = lv_url ).
       CATCH zcx_abapgit_not_found.
         " Deleted already (maybe by "folder with children") but record deletion in transport
         corr_insert( iv_package ).
@@ -176,23 +217,30 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
     DATA: lv_url      TYPE string,
           lv_folder   TYPE abap_bool,
+          lv_mimetype TYPE string,
           lv_content  TYPE xstring,
           lv_filename TYPE skwf_filnm,
           lv_io       TYPE sdok_docid,
           lv_class    TYPE smimloio-lo_class,
           ls_skwf_io  TYPE skwf_io,
           li_api      TYPE REF TO if_mr_api.
-
+    DATA lv_abap_language_version TYPE uccheck.
 
     li_api = cl_mime_repository_api=>if_mr_api~get_api( ).
     lv_io = ms_item-obj_name.
 
     io_xml->read( EXPORTING iv_name = 'URL'
-                  CHANGING cg_data = lv_url ).
+                  CHANGING  cg_data = lv_url ).
     io_xml->read( EXPORTING iv_name = 'FOLDER'
-                  CHANGING cg_data = lv_folder ).
+                  CHANGING  cg_data = lv_folder ).
     io_xml->read( EXPORTING iv_name = 'CLASS'
-                  CHANGING cg_data = lv_class ).
+                  CHANGING  cg_data = lv_class ).
+    io_xml->read( EXPORTING iv_name = 'MIMETYPE'
+                  CHANGING  cg_data = lv_mimetype ).
+    io_xml->read( EXPORTING iv_name = 'ABAP_LANGUAGE_VERSION'
+                  CHANGING  cg_data = lv_abap_language_version ).
+
+    set_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
 
     ls_skwf_io-objid = lv_io.
 
@@ -225,23 +273,44 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
         CONCATENATE ls_skwf_io-class '_L' INTO ls_skwf_io-class.
       ENDIF.
 
-      lv_content = find_content( lv_url ).
+      lv_content = find_content(
+        iv_url      = lv_url
+        iv_mimetype = lv_mimetype ).
 
-      li_api->put(
-        EXPORTING
-          i_url                   = lv_url
-          i_content               = lv_content
-          i_dev_package           = iv_package
-          i_new_loio              = ls_skwf_io
-        EXCEPTIONS
-          parameter_missing       = 1
-          error_occured           = 2
-          cancelled               = 3
-          permission_failure      = 4
-          data_inconsistency      = 5
-          new_loio_already_exists = 6
-          is_folder               = 7
-          OTHERS                  = 8 ).
+      TRY.
+          li_api->put(
+            EXPORTING
+              i_url                   = lv_url
+              i_content               = lv_content
+              i_dev_package           = iv_package
+              i_new_loio              = ls_skwf_io
+              i_language_version      = lv_abap_language_version " not on lower releases
+            EXCEPTIONS
+              parameter_missing       = 1
+              error_occured           = 2
+              cancelled               = 3
+              permission_failure      = 4
+              data_inconsistency      = 5
+              new_loio_already_exists = 6
+              is_folder               = 7
+              OTHERS                  = 8 ).
+        CATCH cx_root.
+          li_api->put(
+            EXPORTING
+              i_url                   = lv_url
+              i_content               = lv_content
+              i_dev_package           = iv_package
+              i_new_loio              = ls_skwf_io
+            EXCEPTIONS
+              parameter_missing       = 1
+              error_occured           = 2
+              cancelled               = 3
+              permission_failure      = 4
+              data_inconsistency      = 5
+              new_loio_already_exists = 6
+              is_folder               = 7
+              OTHERS                  = 8 ).
+      ENDTRY.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
@@ -317,9 +386,10 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
           lv_class    TYPE smimloio-lo_class,
           ls_file     TYPE zif_abapgit_git_definitions=>ty_file,
           lv_content  TYPE xstring,
+          lv_mimetype TYPE string,
           li_api      TYPE REF TO if_mr_api,
           lv_loio     TYPE sdok_docid.
-
+    DATA lv_abap_language_version TYPE uccheck.
 
     lv_loio = ms_item-obj_name.
 
@@ -339,6 +409,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
           i_url              = lv_url
         IMPORTING
           e_content          = lv_content
+          e_mime_type        = lv_mimetype
         EXCEPTIONS
           parameter_missing  = 1
           error_occured      = 2
@@ -351,7 +422,9 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
       lv_filename = get_filename( lv_url ).
       CLEAR ls_file.
-      ls_file-filename = build_filename( lv_filename ).
+      ls_file-filename = build_filename(
+        iv_filename = lv_filename
+        iv_mimetype = lv_mimetype ).
       ls_file-path     = '/'.
       ls_file-data     = lv_content.
       mo_files->add( ls_file ).
@@ -366,6 +439,17 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
                  ig_data = lv_folder ).
     io_xml->add( iv_name = 'CLASS'
                  ig_data = lv_class ).
+    io_xml->add( iv_name = 'MIMETYPE'
+                 ig_data = lv_mimetype ).
+
+    " No API? Read directly
+    SELECT SINGLE prop01 FROM smimloio INTO lv_abap_language_version WHERE loio_id = ms_item-obj_name.
+    IF sy-subrc = 0.
+      clear_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+
+      io_xml->add( iv_name = 'ABAP_LANGUAGE_VERSION'
+                   ig_data = lv_abap_language_version ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
