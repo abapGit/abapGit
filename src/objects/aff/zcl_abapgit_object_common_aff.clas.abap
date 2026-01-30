@@ -48,10 +48,7 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
     "! Delivers an instance of AFF object handler ({@link IF_AFF_OBJECT_HANDLER})
     METHODS get_object_handler
       RETURNING
-        VALUE(ro_object_handler) TYPE REF TO object
-      RAISING
-        zcx_abapgit_exception.
-
+        VALUE(ro_object_handler) TYPE REF TO object.
 
     METHODS create_aff_setting_deserialize FINAL
       RETURNING
@@ -97,7 +94,10 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     TRY.
         lo_handler = get_object_handler( ).
 
-        lv_is_supported = zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( is_item-obj_type ).
+        IF lo_handler IS NOT INITIAL.
+          " Additional gate to allow usage of object type in abapGit
+          lv_is_supported = zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( is_item-obj_type ).
+        ENDIF.
       CATCH cx_root.
         lv_is_supported = abap_false.
     ENDTRY.
@@ -151,6 +151,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
     CREATE OBJECT lo_handler_factory TYPE ('CL_AFF_OBJECT_HANDLER_FACTORY').
 
+    " If object type is not supported, this call does not throw but returns an initial handler
     CALL METHOD lo_handler_factory->('IF_AFF_OBJECT_HANDLER_FACTORY~GET_OBJECT_HANDLER')
       EXPORTING
         object_type = ms_item-obj_type
@@ -693,4 +694,3 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.
 ENDCLASS.
-
