@@ -693,3 +693,4 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.
 ENDCLASS.
+
