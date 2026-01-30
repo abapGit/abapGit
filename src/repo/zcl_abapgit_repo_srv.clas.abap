@@ -349,6 +349,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     zcl_abapgit_persist_factory=>get_repo( )->delete( ii_repo->get_key( ) ).
     zcl_abapgit_persist_factory=>get_repo_cs( )->delete( ii_repo->get_key( ) ).
+    zcl_abapgit_persist_factory=>get_repo_data( )->delete( ii_repo->get_key( ) ).
 
     " If favorite, remove it
     IF zcl_abapgit_persist_factory=>get_user( )->is_favorite_repo( ii_repo->get_key( ) ) = abap_true.
