@@ -316,7 +316,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
     DATA: lv_url      TYPE skwf_url,
           lv_folder   TYPE abap_bool,
-          lv_mimetype TYPE string,
+
           lv_content  TYPE xstring,
           ls_extra    TYPE ty_extra,
           ls_loio     TYPE skwf_io,
