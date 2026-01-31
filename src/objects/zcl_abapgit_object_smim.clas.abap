@@ -2,10 +2,14 @@ CLASS zcl_abapgit_object_smim DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS c_prop_abap_langu_vers TYPE string VALUE 'MIME_ABAP_LANGUAGE_VRS'.
+    CONSTANTS:
+      c_prop_abap_langu_vers TYPE string VALUE 'MIME_ABAP_LANGUAGE_VRS',
+      c_prop_description     TYPE string VALUE 'DESCRIPTION',
+      c_prop_folder_id       TYPE string VALUE 'KW_PARENT_FOLDER_ID'.
 
     TYPES:
       BEGIN OF ty_extra,
@@ -154,12 +158,12 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
       TABLES
         properties_result = lt_loio_props.
 
-    READ TABLE lt_loio_props INTO ls_loio_prop WITH KEY name = skwfc_prop_description.
+    READ TABLE lt_loio_props INTO ls_loio_prop WITH KEY name = c_prop_description.
     IF sy-subrc = 0.
       cs_extra-description = ls_loio_prop-value.
     ENDIF.
 
-    READ TABLE lt_loio_props INTO ls_loio_prop WITH KEY name = skwfc_prop_folder_id.
+    READ TABLE lt_loio_props INTO ls_loio_prop WITH KEY name = c_prop_folder_id.
     IF sy-subrc = 0.
       cs_extra-parent_folder_id = ls_loio_prop-value.
     ENDIF.
@@ -235,7 +239,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
     DATA lt_properties TYPE STANDARD TABLE OF sdokpropty WITH DEFAULT KEY.
     DATA lv_abap_language_version TYPE uccheck.
 
-    ls_property-name  = skwfc_prop_description.
+    ls_property-name  = c_prop_description.
     ls_property-value = is_extra-description.
     INSERT ls_property INTO TABLE lt_properties.
 
