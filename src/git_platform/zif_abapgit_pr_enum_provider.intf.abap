@@ -13,6 +13,7 @@ INTERFACE zif_abapgit_pr_enum_provider
       is_for_upstream TYPE abap_bool,
       draft           TYPE abap_bool,
       html_url        TYPE string,
+      labels          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
     END OF ty_pull_request.
   TYPES:
     ty_pull_requests TYPE STANDARD TABLE OF ty_pull_request WITH KEY base_url number.
