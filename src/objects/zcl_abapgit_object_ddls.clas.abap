@@ -53,8 +53,6 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
   METHOD clear_baseinfo.
 
     DATA li_json TYPE REF TO zif_abapgit_ajson.
-    DATA li_item TYPE REF TO zif_abapgit_ajson.
-    DATA li_iterator TYPE REF TO zif_abapgit_ajson_iterator.
 
     TRY.
         li_json = zcl_abapgit_ajson=>parse( iv_json ).
