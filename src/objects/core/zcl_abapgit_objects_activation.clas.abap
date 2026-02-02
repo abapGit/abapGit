@@ -53,7 +53,7 @@ CLASS zcl_abapgit_objects_activation DEFINITION
       c_sqsc       TYPE c LENGTH 4  VALUE 'SQSC',
       c_stob       TYPE c LENGTH 4  VALUE 'STOB',
       c_ntab       TYPE c LENGTH 14 VALUE 'NTTT NTTB NTDT',
-      c_ddls       TYPE c LENGTH 24 VALUE 'DDLS DRUL DTDC DTEB',
+      c_cds        TYPE c LENGTH 29 VALUE 'DDLS DRUL DTDC DTSC DTEB DESD',
       c_switches   TYPE c LENGTH 24 VALUE 'SF01 SF02 SFSW SFBS SFBF',
       c_para       TYPE c LENGTH 4  VALUE 'PARA', " can be referenced by DTEL
       c_enhd       TYPE c LENGTH 4  VALUE 'ENHD',
@@ -566,7 +566,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
        c_technset NS iv_obj_type AND c_f4_objects NS iv_obj_type AND
        c_enqueue  NS iv_obj_type AND c_sqsc       NS iv_obj_type AND
        c_stob     NS iv_obj_type AND c_ntab       NS iv_obj_type AND
-       c_ddls     NS iv_obj_type AND c_para       NS iv_obj_type AND
+       c_cds      NS iv_obj_type AND c_para       NS iv_obj_type AND
        c_switches NS iv_obj_type AND iv_obj_type <> c_enhd       AND
        c_aspect   NS iv_obj_type AND c_scalarfunc NS iv_obj_type.
       rv_result = abap_false.
