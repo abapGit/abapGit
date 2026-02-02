@@ -27,14 +27,14 @@ CLASS lcl_popup_to_confirm DEFINITION.
 
   PRIVATE SECTION.
 
-    CLASS-DATA mo_popup TYPE REF TO zcl_abapgit_popup_to_confirm.
+    CLASS-DATA go_popup TYPE REF TO zcl_abapgit_popup_to_confirm.
 
 ENDCLASS.
 
 CLASS lcl_popup_to_confirm IMPLEMENTATION.
 
   METHOD create.
-    mo_popup = zcl_abapgit_popup_to_confirm=>create(
+    go_popup = zcl_abapgit_popup_to_confirm=>create(
       iv_titlebar              = iv_titlebar
       iv_text_question         = iv_text_question
       iv_text_button_1         = iv_text_button_1
@@ -48,15 +48,15 @@ CLASS lcl_popup_to_confirm IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD render.
-    IF mo_popup IS INITIAL OR mo_popup->was_closed( ) = abap_true.
+    IF go_popup IS INITIAL OR go_popup->was_closed( ) = abap_true.
       ri_html = zcl_abapgit_html=>create( ).
     ELSE.
-      ri_html = zcl_abapgit_gui_in_page_modal=>create( mo_popup ).
+      ri_html = zcl_abapgit_gui_in_page_modal=>create( go_popup ).
     ENDIF.
   ENDMETHOD.
 
   METHOD close.
-    mo_popup->close( ).
+    go_popup->close( ).
   ENDMETHOD.
 
 ENDCLASS.

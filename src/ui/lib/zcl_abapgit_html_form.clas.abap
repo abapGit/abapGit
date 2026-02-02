@@ -209,13 +209,11 @@ CLASS zcl_abapgit_html_form DEFINITION
     METHODS render_field_icon
       IMPORTING
         !ii_html  TYPE REF TO zif_abapgit_html
-        !is_field TYPE zif_abapgit_html_form=>ty_field
-        !is_attr  TYPE ty_attr .
+        !is_field TYPE zif_abapgit_html_form=>ty_field.
     METHODS render_field_freetext
       IMPORTING
         !ii_html  TYPE REF TO zif_abapgit_html
-        !is_field TYPE zif_abapgit_html_form=>ty_field
-        !is_attr  TYPE ty_attr .
+        !is_field TYPE zif_abapgit_html_form=>ty_field.
 ENDCLASS.
 
 
@@ -686,15 +684,13 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
         render_field_icon(
           ii_html  = ii_html
-          is_field = is_field
-          is_attr  = ls_attr ).
+          is_field = is_field ).
 
       WHEN zif_abapgit_html_form=>c_field_type-freetext.
 
         render_field_freetext(
           ii_html  = ii_html
-          is_field = is_field
-          is_attr  = ls_attr ).
+          is_field = is_field ).
 
       WHEN OTHERS.
         ASSERT 1 = 0.
