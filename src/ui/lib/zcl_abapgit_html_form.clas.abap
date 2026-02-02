@@ -121,6 +121,21 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_name       TYPE csequence
       RETURNING
         VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
+    METHODS icon
+      IMPORTING
+        !iv_icon       TYPE csequence
+        !iv_name       TYPE csequence
+        !iv_hint       TYPE csequence OPTIONAL
+        !iv_height     TYPE i DEFAULT 40
+        !iv_width      TYPE i DEFAULT 40
+      RETURNING
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
+    METHODS freetext
+      IMPORTING
+        !iv_text       TYPE csequence
+        !iv_name       TYPE csequence
+      RETURNING
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
     METHODS get_fields
       RETURNING
         VALUE(rt_fields) TYPE zif_abapgit_html_form=>ty_fields .
@@ -187,6 +202,16 @@ CLASS zcl_abapgit_html_form DEFINITION
         !ii_html TYPE REF TO zif_abapgit_html
         !is_cmd  TYPE zif_abapgit_html_form=>ty_command .
     METHODS render_field_hidden
+      IMPORTING
+        !ii_html  TYPE REF TO zif_abapgit_html
+        !is_field TYPE zif_abapgit_html_form=>ty_field
+        !is_attr  TYPE ty_attr .
+    METHODS render_field_icon
+      IMPORTING
+        !ii_html  TYPE REF TO zif_abapgit_html
+        !is_field TYPE zif_abapgit_html_form=>ty_field
+        !is_attr  TYPE ty_attr .
+    METHODS render_field_freetext
       IMPORTING
         !ii_html  TYPE REF TO zif_abapgit_html
         !is_field TYPE zif_abapgit_html_form=>ty_field
@@ -274,6 +299,21 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD freetext.
+
+    DATA ls_field LIKE LINE OF mt_fields.
+
+    ls_field-type  = zif_abapgit_html_form=>c_field_type-freetext.
+    ls_field-name  = iv_name.
+    ls_field-label = iv_text.
+
+    APPEND ls_field TO mt_fields.
+
+    ro_self = me.
+
+  ENDMETHOD.
+
+
   METHOD get_fields.
     rt_fields = mt_fields.
   ENDMETHOD.
@@ -285,6 +325,25 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     ls_field-type  = zif_abapgit_html_form=>c_field_type-hidden.
     ls_field-name  = iv_name.
+    APPEND ls_field TO mt_fields.
+
+    ro_self = me.
+
+  ENDMETHOD.
+
+
+  METHOD icon.
+
+    DATA ls_field LIKE LINE OF mt_fields.
+
+    " Icons from MIME repository at /SAP/PUBLIC/BC/ICONS
+    ls_field-type  = zif_abapgit_html_form=>c_field_type-icon.
+    ls_field-name  = iv_name.
+    ls_field-label = iv_icon.
+    ls_field-hint  = iv_hint.
+    ls_field-rows  = iv_height.
+    ls_field-cols  = iv_width.
+
     APPEND ls_field TO mt_fields.
 
     ro_self = me.
@@ -486,7 +545,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
       WHEN zif_abapgit_html_form=>c_cmd_type-input_main.
 
-        ii_html->add( |<input type="submit" value="{ is_cmd-label }" class="main">| ).
+        ii_html->add( |<input type="submit" value="{ is_cmd-label }" class="main" id="main-button">| ).
 
       WHEN OTHERS.
         ASSERT 0 = 1.
@@ -623,6 +682,20 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
           is_field = is_field
           is_attr  = ls_attr ).
 
+      WHEN zif_abapgit_html_form=>c_field_type-icon.
+
+        render_field_icon(
+          ii_html  = ii_html
+          is_field = is_field
+          is_attr  = ls_attr ).
+
+      WHEN zif_abapgit_html_form=>c_field_type-freetext.
+
+        render_field_freetext(
+          ii_html  = ii_html
+          is_field = is_field
+          is_attr  = ls_attr ).
+
       WHEN OTHERS.
         ASSERT 1 = 0.
     ENDCASE.
@@ -657,9 +730,53 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_field_freetext.
+
+    ii_html->add( '<div class="freetext">' ).
+    ii_html->add( is_field-label ).
+    ii_html->add( '</div>' ).
+
+  ENDMETHOD.
+
+
   METHOD render_field_hidden.
 
     ii_html->add( |<input type="hidden" name="{ is_field-name }" id="{ is_field-name }" value="{ is_attr-value }">| ).
+
+  ENDMETHOD.
+
+
+  METHOD render_field_icon.
+
+    DATA li_api TYPE REF TO if_mr_api.
+    DATA lv_url TYPE skwf_url.
+    DATA lv_content TYPE xstring.
+    DATA lv_image TYPE string.
+
+    lv_url = '/SAP/PUBLIC/BC/Icons/' && is_field-label.
+
+    li_api = cl_mime_repository_api=>if_mr_api~get_api( ).
+    li_api->get(
+      EXPORTING
+        i_url              = lv_url
+      IMPORTING
+        e_content          = lv_content
+      EXCEPTIONS
+        parameter_missing  = 1
+        error_occured      = 2
+        not_found          = 3
+        permission_failure = 4
+        OTHERS             = 5 ).
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    lv_image = cl_http_utility=>encode_x_base64( lv_content ).
+
+    ii_html->add( '<div class="icon">' ).
+    ii_html->add( |<img src="data:image/gif;base64,{ lv_image }" id="{ is_field-name }" alt="{ is_field-hint }"|
+               && | width="{ is_field-cols }" height="{ is_field-rows }">| ).
+    ii_html->add( '</div>' ).
 
   ENDMETHOD.
 
