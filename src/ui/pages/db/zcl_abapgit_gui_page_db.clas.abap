@@ -587,7 +587,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
         lcl_popup_to_confirm=>create(
           iv_text_question   = |Are you sure you want to delete the entry "{ ls_db-type } { ls_db-value }"?|
-          iv_action_button_1 = c_action-delete_confirmed
+          iv_action_button_1 = |{ c_action-delete_confirmed }?type={ ls_db-type }&value={ ls_db-value }|
           iv_action_button_2 = c_action-cancel ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
