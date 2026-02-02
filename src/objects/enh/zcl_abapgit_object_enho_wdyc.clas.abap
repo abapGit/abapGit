@@ -3,12 +3,15 @@ CLASS zcl_abapgit_object_enho_wdyc DEFINITION PUBLIC.
   PUBLIC SECTION.
     METHODS: constructor
       IMPORTING
-        is_item TYPE zif_abapgit_definitions=>ty_item.
+        is_item                  TYPE zif_abapgit_definitions=>ty_item
+        iv_abap_language_version TYPE uccheck.
+
     INTERFACES: zif_abapgit_object_enho.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item.
+    DATA mv_abap_language_version TYPE uccheck.
 
 ENDCLASS.
 
@@ -19,6 +22,7 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
+    mv_abap_language_version = iv_abap_language_version.
   ENDMETHOD.
 
 
@@ -41,15 +45,28 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
     lv_enhname = ms_item-obj_name.
     lv_package = iv_package.
     TRY.
-        cl_enh_factory=>create_enhancement(
-          EXPORTING
-            enhname     = lv_enhname
-            enhtype     = ''
-            enhtooltype = cl_wdr_cfg_enhancement=>tooltype
-          IMPORTING
-            enhancement = li_tool
-          CHANGING
-            devclass    = lv_package ).
+        TRY.
+            cl_enh_factory=>create_enhancement(
+              EXPORTING
+                enhname               = lv_enhname
+                enhtype               = ''
+                enhtooltype           = cl_wdr_cfg_enhancement=>tooltype
+                abap_language_version = mv_abap_language_version " not on lower releases
+              IMPORTING
+                enhancement           = li_tool
+              CHANGING
+                devclass              = lv_package ).
+          CATCH cx_root.
+            cl_enh_factory=>create_enhancement(
+              EXPORTING
+                enhname     = lv_enhname
+                enhtype     = ''
+                enhtooltype = cl_wdr_cfg_enhancement=>tooltype
+              IMPORTING
+                enhancement = li_tool
+              CHANGING
+                devclass    = lv_package ).
+        ENDTRY.
 
         lo_wdyconf ?= li_tool.
 
@@ -111,7 +128,7 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
         document      = li_document.
 
     ii_xml->add_xml( iv_name = 'ENHANCEMENT_DATA'
-                     ii_xml = li_element ).
+                     ii_xml  = li_element ).
 
   ENDMETHOD.
 ENDCLASS.
