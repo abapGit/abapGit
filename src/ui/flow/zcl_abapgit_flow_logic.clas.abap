@@ -568,6 +568,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
     DATA lt_pulls TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests.
     DATA ls_pull LIKE LINE OF lt_pulls.
+    DATA lv_index TYPE i.
 
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
 
@@ -580,6 +581,8 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     lt_pulls = zcl_abapgit_pr_enumerator=>new( iv_url )->get_pulls( ).
 
     LOOP AT ct_features ASSIGNING <ls_branch>.
+      lv_index = sy-tabix.
+
       READ TABLE lt_pulls INTO ls_pull WITH KEY head_branch = <ls_branch>-branch-display_name.
       IF sy-subrc <> 0.
         CONTINUE.
@@ -587,6 +590,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
       READ TABLE ls_pull-labels WITH KEY table_line = 'no-merge' TRANSPORTING NO FIELDS.
       IF sy-subrc = 0.
+        DELETE ct_features INDEX lv_index.
         CONTINUE.
       ENDIF.
 
