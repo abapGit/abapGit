@@ -245,7 +245,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
         obj_type TYPE tadir-object,
         obj_name TYPE tadir-obj_name,
         devclass TYPE devclass,
-      END OF ls_item .
+      END OF ls_item.
 
     TRY.
         MOVE-CORRESPONDING ms_item TO ls_item.
