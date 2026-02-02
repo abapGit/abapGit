@@ -581,15 +581,22 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
     LOOP AT ct_features ASSIGNING <ls_branch>.
       READ TABLE lt_pulls INTO ls_pull WITH KEY head_branch = <ls_branch>-branch-display_name.
-      IF sy-subrc = 0.
-        " remove markdown formatting,
-        REPLACE ALL OCCURRENCES OF '`' IN ls_pull-title WITH ''.
-
-        <ls_branch>-pr-title = |{ ls_pull-title } #{ ls_pull-number }|.
-        <ls_branch>-pr-url = ls_pull-html_url.
-        <ls_branch>-pr-number = ls_pull-number.
-        <ls_branch>-pr-draft = ls_pull-draft.
+      IF sy-subrc <> 0.
+        CONTINUE.
       ENDIF.
+
+      READ TABLE ls_pull-labels WITH KEY table_line = 'no-merge' TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        CONTINUE.
+      ENDIF.
+
+      " remove markdown formatting,
+      REPLACE ALL OCCURRENCES OF '`' IN ls_pull-title WITH ''.
+
+      <ls_branch>-pr-title = |{ ls_pull-title } #{ ls_pull-number }|.
+      <ls_branch>-pr-url = ls_pull-html_url.
+      <ls_branch>-pr-number = ls_pull-number.
+      <ls_branch>-pr-draft = ls_pull-draft.
     ENDLOOP.
 
   ENDMETHOD.
