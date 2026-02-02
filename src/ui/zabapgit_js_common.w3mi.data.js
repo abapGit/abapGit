@@ -2506,7 +2506,7 @@ function toggleSticky() {
 
 // Toggle display of warning message when using Edge (based on Chromium) browser control
 // Todo: Remove once https://github.com/abapGit/abapGit/issues/4841 is fixed
-function toggleBrowserControlWarning(){
+function toggleBrowserControlWarning() {
   if (!navigator.userAgent.includes("Edg")){
     var elBrowserControlWarning = document.getElementById("browser-control-warning");
     if (elBrowserControlWarning) {
@@ -2527,15 +2527,15 @@ function displayBrowserControlFooter() {
 
 // Prevents keyboard navigation to elements outside the modal popup
 function trapFocus() {
-  const modal = document.getElementById('modal');
+  const modal = document.getElementById("modal");
 
-  var focusableSelectors = 'button, [href], input, select, textarea, [tabindex]';
+  var focusableSelectors = "button, [href], input, select, textarea, [tabindex]";
   var focusableElements = modal.querySelectorAll(focusableSelectors);
 
   // Filter out elements with tabindex="-1"
   var focusable = [];
   for (var i = 0; i < focusableElements.length; i++) {
-    if (focusableElements[i].getAttribute('tabindex') !== '-1') {
+    if (focusableElements[i].getAttribute("tabindex") !== "-1") {
       focusable.push(focusableElements[i]);
     }
   }
@@ -2546,7 +2546,7 @@ function trapFocus() {
   var lastElement = focusable[focusable.length - 1];
 
   // Focus the main button when modal opens
-  setInitialFocus('main-button');
+  setInitialFocus("main-button");
 
   modal.onkeydown = function(e) {
     var keyCode = e.keyCode || e.which;
@@ -2567,5 +2567,5 @@ function trapFocus() {
         }
       }
     }
-  }
+  };
 }
