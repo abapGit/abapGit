@@ -20,10 +20,10 @@ CLASS lcl_stream DEFINITION FINAL.
 
     METHODS eat_offset_and_length
       IMPORTING
-        iv_instruction   TYPE ty_hex
+        iv_instruction TYPE ty_hex
       EXPORTING
-        VALUE(ev_offset) TYPE i
-        VALUE(ev_length) TYPE i.
+        ev_offset      TYPE i
+        ev_length      TYPE i.
 
   PRIVATE SECTION.
     DATA mv_data TYPE xstring.
