@@ -174,10 +174,8 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
     ls_e071-obj_name = ms_item-obj_name.
     INSERT ls_e071 INTO TABLE lt_e071.
 
-    IF sy-batch IS INITIAL.
-      " Avoid output of log (see TR_FLUSH_LOG)
-      EXPORT gv_mem_file = lv_mem_file TO MEMORY ID 'prot_file'.
-    ENDIF.
+    " Avoid output of log (see TR_FLUSH_LOG)
+    EXPORT gv_mem_file = lv_mem_file TO MEMORY ID 'prot_file'.
 
     CALL FUNCTION 'PRGN_AFTER_IMP_SUSO_SAP_ALL'
       EXPORTING
