@@ -964,7 +964,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       TRY.
           SELECT SINGLE rfcscope rfcvers INTO CORRESPONDING FIELDS OF ls_function FROM ('TFDIR')
             WHERE funcname = <ls_func>-funcname.          "#EC CI_SUBRC
-        CATCH cx_root ##NO_HANDLER.
+        CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
       ENDTRY.
 
       APPEND ls_function TO rt_functions.
