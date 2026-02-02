@@ -35,12 +35,37 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !cg_data TYPE any
       RAISING
         zcx_abapgit_exception .
+    METHODS clear_baseinfo
+      IMPORTING
+        !iv_json       TYPE string
+      RETURNING
+        VALUE(rv_json) TYPE string
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
+
+
+  METHOD clear_baseinfo.
+
+    DATA li_json TYPE REF TO zif_abapgit_ajson.
+    DATA li_item TYPE REF TO zif_abapgit_ajson.
+    DATA li_iterator TYPE REF TO zif_abapgit_ajson_iterator.
+
+    TRY.
+        li_json = zcl_abapgit_ajson=>parse( iv_json ).
+        li_json = li_json->filter( zcl_abapgit_ajson_filter_lib=>create_empty_filter( ) ).
+        rv_json = li_json->stringify( 2 ).
+      CATCH zcx_abapgit_ajson_error.
+        " fallback to original value
+        rv_json = iv_json.
+    ENDTRY.
+
+  ENDMETHOD.
 
 
   METHOD clear_fields.
@@ -300,7 +325,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
     TRY.
         io_xml->read( EXPORTING iv_name = 'DDLS'
-                      CHANGING cg_data  = <lg_data> ).
+                      CHANGING  cg_data = <lg_data> ).
 
         ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_source>.
         ASSERT sy-subrc = 0.
@@ -503,7 +528,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
               ASSERT sy-subrc = 0.
               mo_files->add_string(
                 iv_ext    = 'baseinfo'
-                iv_string = <lg_field> ).
+                iv_string = clear_baseinfo( <lg_field> ) ).
               EXIT.
             ENDIF.
           ENDLOOP.
