@@ -141,6 +141,8 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
   METHOD convert_list.
 
     DATA lt_items TYPE string_table.
+    DATA lt_labels TYPE string_table.
+    DATA lv_label_i TYPE string.
     DATA lv_i TYPE string.
     FIELD-SYMBOLS <ls_p> LIKE LINE OF rt_pulls.
 
@@ -157,6 +159,12 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
       <ls_p>-created_at      = ii_json->get( |/{ lv_i }/created_at| ).
       <ls_p>-draft           = ii_json->get_boolean( |/{ lv_i }/draft| ).
       <ls_p>-html_url        = ii_json->get( |/{ lv_i }/html_url| ).
+
+      lt_labels = ii_json->members( |/{ lv_i }/labels| ).
+      LOOP AT lt_labels INTO lv_label_i.
+        APPEND ii_json->get( |/{ lv_i }/labels/{ lv_label_i }/name| ) TO <ls_p>-labels.
+      ENDLOOP.
+
     ENDLOOP.
 
   ENDMETHOD.
