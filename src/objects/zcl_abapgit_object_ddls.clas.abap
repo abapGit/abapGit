@@ -234,16 +234,25 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA:
-      lt_deltab TYPE TABLE OF dcdeltb,
-      ls_deltab TYPE dcdeltb,
-      lt_gentab TYPE TABLE OF dcgentb,
-      lv_rc     TYPE sy-subrc.
+      lt_deltab   TYPE TABLE OF dcdeltb,
+      ls_deltab   TYPE dcdeltb,
+      lt_gentab   TYPE TABLE OF dcgentb,
+      lv_rc       TYPE sy-subrc,
+      lv_subrc    TYPE sy-subrc,
+      lv_template TYPE ddmass-logname,
+      lv_logname  TYPE ddmass-logname,
+      lv_prid     TYPE sytabix.
 
     " CL_DD_DDL_HANDLER->DELETE does not work for CDS views that reference other views
     " To drop any views regardless of reference, we use delnoref = false
     ls_deltab-objtyp  = 'DDLS'.
     ls_deltab-objname = ms_item-obj_name.
     APPEND ls_deltab TO lt_deltab.
+
+    CONCATENATE syst-uname '&DATE&&TIME&' INTO lv_template.
+    PERFORM stdo_log_open IN PROGRAM radbtout USING 'T' 'N' 1
+      'single_style' ##NO_TEXT
+      lv_template '' lv_logname lv_prid.
 
     CALL FUNCTION 'DD_MASS_ACT_C3'
       EXPORTING
@@ -252,7 +261,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         write_log      = abap_false
         delall         = abap_true
         delnoref       = abap_false
-        prid           = -1
+        prid           = lv_prid
       IMPORTING
         act_rc         = lv_rc
       TABLES
@@ -263,7 +272,12 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         no_objects     = 2
         locked         = 3
         OTHERS         = 4.
-    IF sy-subrc <> 0.
+    lv_subrc = sy-subrc.
+
+    PERFORM stdo_close IN PROGRAM radbtout
+      USING lv_prid.
+
+    IF lv_subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
