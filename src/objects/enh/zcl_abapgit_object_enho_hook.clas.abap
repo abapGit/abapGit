@@ -54,7 +54,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENHO_HOOK IMPLEMENTATION.
+CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
 
 
   METHOD add_sources.

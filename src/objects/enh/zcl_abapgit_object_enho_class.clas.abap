@@ -38,7 +38,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENHO_CLASS IMPLEMENTATION.
+CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
 
 
   METHOD adjust_generated_comments.

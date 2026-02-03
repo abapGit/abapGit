@@ -20,7 +20,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENHO_INTF IMPLEMENTATION.
+CLASS zcl_abapgit_object_enho_intf IMPLEMENTATION.
 
 
   METHOD constructor.

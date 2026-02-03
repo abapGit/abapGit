@@ -17,7 +17,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENHO_BADI IMPLEMENTATION.
+CLASS zcl_abapgit_object_enho_badi IMPLEMENTATION.
 
 
   METHOD constructor.
