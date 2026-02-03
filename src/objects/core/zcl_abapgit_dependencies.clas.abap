@@ -109,6 +109,7 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
             <ls_tadir>-korrnum = '750000'.
           ENDIF.
         WHEN 'ENQU'.
+        WHEN 'ENQU'.
           " ENQU before TABL
           <ls_tadir>-korrnum = '725000'.
         WHEN 'DDLS'.
@@ -146,6 +147,10 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           <ls_tadir>-korrnum = '551000'.
         WHEN 'IATU'.
           <ls_tadir>-korrnum = '550000'.
+        WHEN 'SOD1'.
+          <ls_tadir>-korrnum = '311000'.
+        WHEN 'SOD2'.
+          <ls_tadir>-korrnum = '310000'.
         WHEN 'ACID'.
           " ACID after PROG/FUGR/CLAS
           <ls_tadir>-korrnum = '300000'.
