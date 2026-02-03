@@ -30,45 +30,34 @@ CLASS lcl_stream IMPLEMENTATION.
                lc_32 TYPE x VALUE '20',
                lc_64 TYPE x VALUE '40'.
 
-    DATA lv_x TYPE x.
-
-    ev_offset = 0.
-    IF iv_instruction BIT-AND lc_1 = lc_1.
-      lv_x = mv_data+mv_position(1).
+    IF iv_instruction O lc_1.
+      ev_offset   = mv_data+mv_position(1).
       mv_position = mv_position + 1.
-      ev_offset = lv_x.
     ENDIF.
-    IF iv_instruction BIT-AND lc_2 = lc_2.
-      lv_x = mv_data+mv_position(1).
+    IF iv_instruction O lc_2.
+      ev_offset   = ev_offset + mv_data+mv_position(1) * 256.
       mv_position = mv_position + 1.
-      ev_offset = ev_offset + lv_x * 256.
     ENDIF.
-    IF iv_instruction BIT-AND lc_4 = lc_4.
-      lv_x = mv_data+mv_position(1).
+    IF iv_instruction O lc_4.
+      ev_offset   = ev_offset + mv_data+mv_position(1) * 65536.
       mv_position = mv_position + 1.
-      ev_offset = ev_offset + lv_x * 65536.
     ENDIF.
-    IF iv_instruction BIT-AND lc_8 = lc_8.
-      lv_x = mv_data+mv_position(1).
+    IF iv_instruction O lc_8.
+      ev_offset   = ev_offset + mv_data+mv_position(1) * 16777216.
       mv_position = mv_position + 1.
-      ev_offset = ev_offset + lv_x * 16777216.
     ENDIF.
 
-    ev_length = 0.
-    IF iv_instruction BIT-AND lc_16 = lc_16.
-      lv_x = mv_data+mv_position(1).
+    IF iv_instruction O lc_16.
+      ev_length   = mv_data+mv_position(1).
       mv_position = mv_position + 1.
-      ev_length = lv_x.
     ENDIF.
-    IF iv_instruction BIT-AND lc_32 = lc_32.
-      lv_x = mv_data+mv_position(1).
+    IF iv_instruction O lc_32.
+      ev_length   = ev_length + mv_data+mv_position(1) * 256.
       mv_position = mv_position + 1.
-      ev_length = ev_length + lv_x * 256.
     ENDIF.
-    IF iv_instruction BIT-AND lc_64 = lc_64.
-      lv_x = mv_data+mv_position(1).
+    IF iv_instruction O lc_64.
+      ev_length   = ev_length + mv_data+mv_position(1) * 65536.
       mv_position = mv_position + 1.
-      ev_length = ev_length + lv_x * 65536.
     ENDIF.
 
     IF ev_length = 0.
