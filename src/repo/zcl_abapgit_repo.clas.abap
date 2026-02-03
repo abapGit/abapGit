@@ -32,14 +32,12 @@ CLASS zcl_abapgit_repo DEFINITION
     ALIASES get_dot_apack                 FOR zif_abapgit_repo~get_dot_apack.
     ALIASES delete_checks                 FOR zif_abapgit_repo~delete_checks.
     ALIASES set_files_remote              FOR zif_abapgit_repo~set_files_remote.
-    ALIASES get_unsupported_objects_local FOR zif_abapgit_repo~get_unsupported_objects_local.
     ALIASES set_local_settings            FOR zif_abapgit_repo~set_local_settings.
     ALIASES switch_repo_type              FOR zif_abapgit_repo~switch_repo_type.
     ALIASES refresh_local_object          FOR zif_abapgit_repo~refresh_local_object.
     ALIASES refresh_local_objects         FOR zif_abapgit_repo~refresh_local_objects.
     ALIASES get_data_config               FOR zif_abapgit_repo~get_data_config.
     ALIASES bind_listener                 FOR zif_abapgit_repo~bind_listener.
-    ALIASES remove_ignored_files          FOR zif_abapgit_repo~remove_ignored_files.
 
     METHODS constructor
       IMPORTING
@@ -54,7 +52,6 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mi_log TYPE REF TO zif_abapgit_log .
     DATA mi_listener TYPE REF TO zif_abapgit_repo_listener .
     DATA mo_apack_reader TYPE REF TO zcl_abapgit_apack_reader .
-    DATA mi_data_config TYPE REF TO zif_abapgit_data_config .
 
     METHODS find_remote_dot_apack
       RETURNING
@@ -122,6 +119,11 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS check_abap_language_version
       RAISING
         zcx_abapgit_exception .
+    METHODS remove_ignored_files
+      CHANGING
+        ct_files TYPE zif_abapgit_git_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
     METHODS remove_locally_excluded_files
       CHANGING
         !ct_rem_files TYPE zif_abapgit_git_definitions=>ty_files_tt OPTIONAL
@@ -130,6 +132,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
 
 ENDCLASS.
+
 
 
 CLASS zcl_abapgit_repo IMPLEMENTATION.
@@ -208,13 +211,18 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD deserialize_data.
 
     DATA:
+      li_config        TYPE REF TO zif_abapgit_data_config,
       lt_updated_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt,
       lt_result        TYPE zif_abapgit_data_deserializer=>ty_results.
+
+    " Get remote data config
+    CREATE OBJECT li_config TYPE zcl_abapgit_data_config.
+    li_config->from_json( mt_remote ).
 
     "Deserialize data
     lt_result = zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
       iv_package = get_package( )
-      ii_config  = get_data_config( )
+      ii_config  = li_config
       it_files   = get_files_remote( ) ).
 
     "Save deserialized data to DB and add entries to transport requests
@@ -222,7 +230,15 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       it_result = lt_result
       is_checks = is_checks ).
 
-    INSERT LINES OF lt_updated_files INTO TABLE ct_files.
+    " Save local data config if any configuration was loaded
+    IF li_config->get_configs( ) IS NOT INITIAL.
+      li_config->zif_abapgit_data_persistence~save_config( ms_data-key ).
+    ENDIF.
+
+    " Add updated files to result list
+    IF lt_updated_files IS NOT INITIAL.
+      INSERT LINES OF lt_updated_files INTO TABLE ct_files.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -294,6 +310,27 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
         is_meta        = ls_meta_slug
         is_change_mask = is_change_mask ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD remove_ignored_files.
+
+    DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
+    DATA lv_index TYPE sy-index.
+
+    FIELD-SYMBOLS <ls_files> LIKE LINE OF ct_files.
+
+    lo_dot = get_dot_abapgit( ).
+
+    " Skip ignored files
+    LOOP AT ct_files ASSIGNING <ls_files>.
+      lv_index = sy-tabix.
+      IF lo_dot->is_ignored( iv_path     = <ls_files>-path
+                             iv_filename = <ls_files>-filename ) = abap_true.
+        DELETE ct_files INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -574,26 +611,17 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~get_data_config.
 
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
-
-    IF mi_data_config IS BOUND.
-      ri_config = mi_data_config.
-      RETURN.
-    ENDIF.
-
+    " Get local data config
     CREATE OBJECT ri_config TYPE zcl_abapgit_data_config.
+    ri_config->zif_abapgit_data_persistence~load_config( ms_data-key ).
 
-    READ TABLE mt_remote ASSIGNING <ls_remote>
-      WITH KEY file_path
-      COMPONENTS path = zif_abapgit_data_config=>c_default_path.
-    IF sy-subrc = 0.
+    " If nothing is defined, get remote data config and save it locally (if not empty)
+    IF ri_config->get_configs( ) IS INITIAL.
       ri_config->from_json( mt_remote ).
-    ENDIF.
 
-* offline repos does not have the remote files before the zip is choosen
-* so make sure the json is read after zip file is loaded
-    IF lines( mt_remote ) > 0.
-      mi_data_config = ri_config.
+      IF ri_config->get_configs( ) IS NOT INITIAL.
+        ri_config->zif_abapgit_data_persistence~save_config( ms_data-key ).
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -740,29 +768,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_repo~get_unsupported_objects_local.
-
-    DATA: lt_tadir           TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lt_supported_types TYPE zif_abapgit_objects=>ty_types_tt.
-
-    FIELD-SYMBOLS: <ls_tadir>  LIKE LINE OF lt_tadir,
-                   <ls_object> LIKE LINE OF rt_objects.
-
-    lt_tadir = get_tadir_objects( ).
-
-    lt_supported_types = zcl_abapgit_objects=>supported_list( ).
-    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      READ TABLE lt_supported_types WITH KEY table_line = <ls_tadir>-object TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
-        APPEND INITIAL LINE TO rt_objects ASSIGNING <ls_object>.
-        MOVE-CORRESPONDING <ls_tadir> TO <ls_object>.
-        <ls_object>-obj_type = <ls_tadir>-object.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_repo~has_remote_source.
     rv_yes = boolc( lines( mt_remote ) > 0 ).
   ENDMETHOD.
@@ -833,27 +838,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     mv_request_local_refresh = abap_true.
     get_files_local( ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_repo~remove_ignored_files.
-
-    DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
-    DATA lv_index TYPE sy-index.
-
-    FIELD-SYMBOLS <ls_files> LIKE LINE OF ct_files.
-
-    lo_dot = get_dot_abapgit( ).
-
-    " Skip ignored files
-    LOOP AT ct_files ASSIGNING <ls_files>.
-      lv_index = sy-tabix.
-      IF lo_dot->is_ignored( iv_path     = <ls_files>-path
-                             iv_filename = <ls_files>-filename ) = abap_true.
-        DELETE ct_files INDEX lv_index.
-      ENDIF.
-    ENDLOOP.
 
   ENDMETHOD.
 

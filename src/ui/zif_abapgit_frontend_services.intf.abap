@@ -46,7 +46,7 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
       iv_no_auth_check TYPE abap_bool DEFAULT abap_false
       VALUE(it_data)   TYPE STANDARD TABLE
     RAISING
-      zcx_abapgit_exception.
+      zcx_abapgit_exception.                             "#EC CI_VALPAR
 
   METHODS execute
     IMPORTING

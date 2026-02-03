@@ -113,11 +113,6 @@ INTERFACE zif_abapgit_repo
   METHODS set_files_remote
     IMPORTING
       it_files TYPE zif_abapgit_git_definitions=>ty_files_tt .
-  METHODS get_unsupported_objects_local
-    RETURNING
-      VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_items_tt
-    RAISING
-      zcx_abapgit_exception .
   METHODS set_local_settings
     IMPORTING
       is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
@@ -145,10 +140,5 @@ INTERFACE zif_abapgit_repo
   METHODS bind_listener
     IMPORTING
       ii_listener TYPE REF TO zif_abapgit_repo_listener .
-  METHODS remove_ignored_files
-    CHANGING
-      ct_files TYPE zif_abapgit_git_definitions=>ty_files_tt
-    RAISING
-      zcx_abapgit_exception .
 
 ENDINTERFACE.

@@ -191,9 +191,6 @@ CLASS ltd_repo_online IMPLEMENTATION.
   METHOD zif_abapgit_repo~get_tadir_objects.
   ENDMETHOD.
 
-  METHOD zif_abapgit_repo~get_unsupported_objects_local.
-  ENDMETHOD.
-
   METHOD zif_abapgit_repo_online~get_url.
   ENDMETHOD.
 
@@ -213,9 +210,6 @@ CLASS ltd_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_repo~refresh_local_objects.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_repo~remove_ignored_files.
   ENDMETHOD.
 
   METHOD zif_abapgit_repo_online~select_branch.

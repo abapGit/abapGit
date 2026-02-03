@@ -90,7 +90,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
+CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
 
 
   METHOD change_sicf.
@@ -172,9 +172,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
       <ls_sots_use> LIKE LINE OF lt_sots_use.
 
     io_xml->read( EXPORTING iv_name = 'SOTS'
-                  CHANGING cg_data = lt_sots ).
+                  CHANGING  cg_data = lt_sots ).
     io_xml->read( EXPORTING iv_name = 'SOTS_USE'
-                  CHANGING cg_data = lt_sots_use ).
+                  CHANGING  cg_data = lt_sots_use ).
 
     LOOP AT lt_sots_use ASSIGNING <ls_sots_use>.
       <ls_sots_use>-obj_name = ms_item-obj_name.
@@ -397,12 +397,12 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
 
     zcl_abapgit_sots_handler=>read_sots(
       EXPORTING
-        iv_object   = ms_item-obj_type
-        iv_obj_name = ms_item-obj_name
+        iv_object      = ms_item-obj_type
+        iv_obj_name    = ms_item-obj_name
         io_i18n_params = mo_i18n_params
       IMPORTING
-        et_sots     = lt_sots
-        et_sots_use = lt_sots_use ).
+        et_sots        = lt_sots
+        et_sots_use    = lt_sots_use ).
 
     LOOP AT lt_sots_use ASSIGNING <ls_sots_use>.
       CLEAR <ls_sots_use>-obj_name.
@@ -432,7 +432,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
 
     DATA: ls_icfservice TYPE icfservice.
 
-    read( EXPORTING iv_clear = abap_false
+    read( EXPORTING iv_clear      = abap_false
           IMPORTING es_icfservice = ls_icfservice ).
 
     rv_user = ls_icfservice-icf_muser.
@@ -510,13 +510,13 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
           lt_icfhandler TYPE TABLE OF icfhandler.
 
     io_xml->read( EXPORTING iv_name = 'URL'
-                  CHANGING cg_data = lv_url ).
+                  CHANGING  cg_data = lv_url ).
     io_xml->read( EXPORTING iv_name = 'ICFSERVICE'
-                  CHANGING cg_data = ls_icfservice ).
+                  CHANGING  cg_data = ls_icfservice ).
     io_xml->read( EXPORTING iv_name = 'ICFDOCU'
-                  CHANGING cg_data = ls_icfdocu ).
+                  CHANGING  cg_data = ls_icfdocu ).
     io_xml->read( EXPORTING iv_name = 'ICFHANDLER_TABLE'
-                  CHANGING cg_data = lt_icfhandler ).
+                  CHANGING  cg_data = lt_icfhandler ).
 
     lv_exists = zif_abapgit_object~exists( ).
     IF lv_exists = abap_false.
@@ -685,6 +685,20 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
       CLEAR ls_icfservice-icfaltnme_orig.
     ENDIF.
     CLEAR ls_icfservice-icfbitmap.
+
+    " Clear settings that are only relevant for redirects
+    IF ls_icfservice-kind401 <> 'X'.
+      CLEAR: ls_icfservice-httpcde401, ls_icfservice-url401, ls_icfservice-formflg401.
+    ENDIF.
+    IF ls_icfservice-kind500 <> 'X'.
+      CLEAR: ls_icfservice-httpcde500, ls_icfservice-url500.
+    ENDIF.
+    IF ls_icfservice-kindlpag <> 'X'.
+      CLEAR: ls_icfservice-httpcdelpag, ls_icfservice-urllpag.
+    ENDIF.
+    IF ls_icfservice-kindnfpag <> 'X'.
+      CLEAR: ls_icfservice-httpcdenfpag, ls_icfservice-urlnfpag.
+    ENDIF.
 
     io_xml->add( iv_name = 'URL'
                  ig_data = lv_url ).

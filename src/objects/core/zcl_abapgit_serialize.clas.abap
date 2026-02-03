@@ -94,11 +94,11 @@ CLASS zcl_abapgit_serialize DEFINITION
         zcx_abapgit_exception .
     METHODS add_objects
       IMPORTING
-        !iv_package     TYPE devclass
-        !ii_log         TYPE REF TO zif_abapgit_log
-        !it_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
+        !iv_package TYPE devclass
+        !ii_log     TYPE REF TO zif_abapgit_log
+        !it_filter  TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
       CHANGING
-        VALUE(ct_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !ct_files   TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
     METHODS determine_rfc_server_group

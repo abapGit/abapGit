@@ -176,8 +176,9 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
   METHOD get_object_data.
 
     FIELD-SYMBOLS:
-      <ls_service_binding> TYPE any,
-      <lv_language>        TYPE data.
+      <lv_abap_language_version> TYPE uccheck,
+      <ls_service_binding>       TYPE any,
+      <lv_language>              TYPE data.
 
     ASSIGN mr_service_binding->* TO <ls_service_binding>.
     ASSERT sy-subrc = 0.
@@ -191,10 +192,14 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
     " We have to set the language explicitly,
     " because otherwise the description isn't stored
-    ASSIGN COMPONENT 'METADATA-LANGUAGE' OF STRUCTURE <ls_service_binding>
-           TO <lv_language>.
+    ASSIGN COMPONENT 'METADATA-LANGUAGE' OF STRUCTURE <ls_service_binding> TO <lv_language>.
     ASSERT sy-subrc = 0.
     <lv_language> = mv_language.
+
+    ASSIGN COMPONENT 'METADATA-ABAP_LANGU_VERSION' OF STRUCTURE <ls_service_binding> TO <lv_abap_language_version>.
+    IF sy-subrc = 0.
+      set_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+    ENDIF.
 
     CREATE OBJECT ro_object_data TYPE ('CL_SRVB_OBJECT_DATA').
     ro_object_data->set_data( p_data = <ls_service_binding> ).
@@ -599,7 +604,8 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
       lx_error              TYPE REF TO cx_root.
 
     FIELD-SYMBOLS:
-      <ls_service_binding> TYPE any.
+      <lv_abap_language_version> TYPE uccheck,
+      <ls_service_binding>       TYPE any.
 
     ASSIGN mr_service_binding->* TO <ls_service_binding>.
     ASSERT sy-subrc = 0.
@@ -618,6 +624,12 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         li_object_data_model->get_data( IMPORTING p_data = <ls_service_binding> ).
 
         clear_fields( CHANGING cs_service_binding = <ls_service_binding> ).
+
+        ASSIGN COMPONENT 'METADATA-ABAP_LANGU_VERSION'
+          OF STRUCTURE <ls_service_binding> TO <lv_abap_language_version>.
+        IF sy-subrc = 0.
+          clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+        ENDIF.
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).

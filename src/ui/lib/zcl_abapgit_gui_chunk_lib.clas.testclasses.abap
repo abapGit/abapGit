@@ -264,10 +264,6 @@ CLASS ltd_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_repo~get_unsupported_objects_local.
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_repo~refresh_local_object.
 
   ENDMETHOD.
@@ -289,10 +285,6 @@ CLASS ltd_repo IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_repo~bind_listener.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_repo~remove_ignored_files.
 
   ENDMETHOD.
 
