@@ -278,7 +278,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ENDIF.
 
     LOOP AT ls_feature-changed_files INTO ls_remote WHERE remote_sha1 IS NOT INITIAL.
-      READ TABLE lt_objects INTO ls_object WITH KEY sha1 = ls_remote-remote_sha1.
+      READ TABLE lt_objects INTO ls_object USING KEY sha WITH KEY sha1 = ls_remote-remote_sha1.
       IF sy-subrc = 0.
         CLEAR ls_file.
         ls_file-path = ls_remote-path.
