@@ -251,7 +251,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
     CONCATENATE syst-uname '&DATE&&TIME&' INTO lv_template.
     PERFORM stdo_log_open IN PROGRAM radbtout USING 'T' 'N' 1
-      'single_style' ##NO_TEXT
+      'single_style'
       lv_template '' lv_logname lv_prid.
 
     CALL FUNCTION 'DD_MASS_ACT_C3'
