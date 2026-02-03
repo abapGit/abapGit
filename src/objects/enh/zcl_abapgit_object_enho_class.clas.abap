@@ -8,8 +8,10 @@ CLASS zcl_abapgit_object_enho_class DEFINITION
 
     METHODS constructor
       IMPORTING
-        !is_item  TYPE zif_abapgit_definitions=>ty_item
-        !io_files TYPE REF TO zcl_abapgit_objects_files.
+        !is_item                 TYPE zif_abapgit_definitions=>ty_item
+        !io_files                TYPE REF TO zcl_abapgit_objects_files
+        iv_abap_language_version TYPE uccheck.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS adjust_generated_comments
@@ -30,6 +32,7 @@ CLASS zcl_abapgit_object_enho_class DEFINITION
 
     DATA: ms_item TYPE zif_abapgit_definitions=>ty_item.
     DATA: mo_files TYPE REF TO zcl_abapgit_objects_files.
+    DATA mv_abap_language_version TYPE uccheck.
 
 ENDCLASS.
 
@@ -59,6 +62,7 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
   METHOD constructor.
     ms_item = is_item.
     mo_files = io_files.
+    mv_abap_language_version = iv_abap_language_version.
   ENDMETHOD.
 
 
@@ -76,7 +80,7 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
                    <ls_file>   TYPE zif_abapgit_git_definitions=>ty_file.
 
     ii_xml->read( EXPORTING iv_name = 'TAB_METHODS'
-                  CHANGING cg_data = lt_tab_methods ).
+                  CHANGING  cg_data = lt_tab_methods ).
 
     lv_new_em = abap_false.
     lt_files = mo_files->get_files( ).
@@ -100,9 +104,9 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
 
       TRY.
           io_class->add_change_new_method_source(
-              clsname    = <ls_method>-methkey-clsname
-              methname   = lv_methname
-              methsource = lt_abap ).
+            clsname    = <ls_method>-methkey-clsname
+            methname   = lv_methname
+            methsource = lt_abap ).
         CATCH cx_enh_root INTO lx_enh_root.
           zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
       ENDTRY.
@@ -164,29 +168,43 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
           lx_enh_root  TYPE REF TO cx_enh_root.
 
     ii_xml->read( EXPORTING iv_name = 'SHORTTEXT'
-                  CHANGING cg_data  = lv_shorttext ).
+                  CHANGING  cg_data = lv_shorttext ).
     ii_xml->read( EXPORTING iv_name = 'OWR_METHODS'
-                  CHANGING cg_data  = lt_owr ).
+                  CHANGING  cg_data = lt_owr ).
     ii_xml->read( EXPORTING iv_name = 'PRE_METHODS'
-                  CHANGING cg_data  = lt_pre ).
+                  CHANGING  cg_data = lt_pre ).
     ii_xml->read( EXPORTING iv_name = 'POST_METHODS'
-                  CHANGING cg_data  = lt_post ).
+                  CHANGING  cg_data = lt_post ).
     ii_xml->read( EXPORTING iv_name = 'CLASS'
-                  CHANGING cg_data  = lv_class ).
+                  CHANGING  cg_data = lv_class ).
     lt_source = mo_files->read_abap( ).
 
     lv_enhname = ms_item-obj_name.
     lv_package = iv_package.
     TRY.
-        cl_enh_factory=>create_enhancement(
-          EXPORTING
-            enhname     = lv_enhname
-            enhtype     = ''
-            enhtooltype = cl_enh_tool_class=>tooltype
-          IMPORTING
-            enhancement = li_tool
-          CHANGING
-            devclass    = lv_package ).
+        TRY.
+            cl_enh_factory=>create_enhancement(
+              EXPORTING
+                enhname               = lv_enhname
+                enhtype               = ''
+                enhtooltype           = cl_enh_tool_class=>tooltype
+                abap_language_version = mv_abap_language_version " not on lower releases
+              IMPORTING
+                enhancement           = li_tool
+              CHANGING
+                devclass              = lv_package ).
+          CATCH cx_root.
+            cl_enh_factory=>create_enhancement(
+              EXPORTING
+                enhname     = lv_enhname
+                enhtype     = ''
+                enhtooltype = cl_enh_tool_class=>tooltype
+              IMPORTING
+                enhancement = li_tool
+              CHANGING
+                devclass    = lv_package ).
+        ENDTRY.
+
         lo_enh_class ?= li_tool.
 
         lo_enh_class->if_enh_object_docu~set_shorttext( lv_shorttext ).
