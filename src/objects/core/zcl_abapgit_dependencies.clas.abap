@@ -109,7 +109,6 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
             <ls_tadir>-korrnum = '750000'.
           ENDIF.
         WHEN 'ENQU'.
-        WHEN 'ENQU'.
           " ENQU before TABL
           <ls_tadir>-korrnum = '725000'.
         WHEN 'DDLS'.
