@@ -61,87 +61,87 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-NAME'
+        iv_fieldname = 'METADATA-NAME'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-TYPE'
+        iv_fieldname = 'METADATA-TYPE'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-MASTER_SYSTEM'
+        iv_fieldname = 'METADATA-MASTER_SYSTEM'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-VERSION'
+        iv_fieldname = 'METADATA-VERSION'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'REF_OBJECT-URI'
+        iv_fieldname = 'REF_OBJECT-URI'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'REF_OBJECT-DESCRIPTION'
+        iv_fieldname = 'REF_OBJECT-DESCRIPTION'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_AT'
+        iv_fieldname = 'METADATA-CREATED_AT'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_BY'
+        iv_fieldname = 'METADATA-CREATED_BY'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_AT'
+        iv_fieldname = 'METADATA-CHANGED_AT'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_BY'
+        iv_fieldname = 'METADATA-CHANGED_BY'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-MASTER_LANGUAGE'
+        iv_fieldname = 'METADATA-MASTER_LANGUAGE'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-RESPONSIBLE'
+        iv_fieldname = 'METADATA-RESPONSIBLE'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-PACKAGE_REF'
+        iv_fieldname = 'METADATA-PACKAGE_REF'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-LINKS'
+        iv_fieldname = 'METADATA-LINKS'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
   ENDMETHOD.
 
@@ -313,9 +313,9 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
 
     TRY.
         mi_persistence->get(
-            p_object_key           = mv_object_key
-            p_version              = 'A'
-            p_existence_check_only = abap_true ).
+          p_object_key           = mv_object_key
+          p_version              = 'A'
+          p_existence_check_only = abap_true ).
         rv_bool = abap_true.
 
       CATCH cx_swb_exception.

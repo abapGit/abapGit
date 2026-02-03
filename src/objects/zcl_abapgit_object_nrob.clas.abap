@@ -153,9 +153,9 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
     FIELD-SYMBOLS <lv_any> TYPE any.
 
     io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
-                  CHANGING cg_data = ls_attributes ).
+                  CHANGING  cg_data = ls_attributes ).
     io_xml->read( EXPORTING iv_name = 'TEXT'
-                  CHANGING cg_data = ls_text ).
+                  CHANGING  cg_data = ls_text ).
 
     ASSIGN COMPONENT 'CHANGED_AT' OF STRUCTURE ls_attributes TO <lv_any>.
     IF sy-subrc = 0.
