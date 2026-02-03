@@ -239,8 +239,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA ls_file        LIKE LINE OF lt_files.
     DATA ls_feature     LIKE LINE OF ms_information-features.
     DATA ls_remote      LIKE LINE OF ls_feature-changed_files.
-    DATA lv_blob        TYPE xstring.
     DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
+    DATA lt_sha1        TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
+    DATA lt_objects     TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA ls_object      LIKE LINE OF lt_objects.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_feature-changed_objects.
     FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
@@ -266,16 +268,25 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       iv_key    = lv_key ).
 
     LOOP AT ls_feature-changed_files INTO ls_remote WHERE remote_sha1 IS NOT INITIAL.
-* todo: refactor to single call,
-      lv_blob = zcl_abapgit_git_factory=>get_v2_porcelain( )->fetch_blob(
+      INSERT ls_remote-remote_sha1 INTO TABLE lt_sha1.
+    ENDLOOP.
+
+    IF lines( lt_sha1 ) > 0.
+      lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->fetch_blobs(
         iv_url  = li_repo_online->get_url( )
-        iv_sha1 = ls_remote-remote_sha1 ).
-      CLEAR ls_file.
-      ls_file-path = ls_remote-path.
-      ls_file-sha1 = ls_remote-remote_sha1.
-      ls_file-filename = ls_remote-filename.
-      ls_file-data = lv_blob.
-      INSERT ls_file INTO TABLE lt_files.
+        it_sha1 = lt_sha1 ).
+    ENDIF.
+
+    LOOP AT ls_feature-changed_files INTO ls_remote WHERE remote_sha1 IS NOT INITIAL.
+      READ TABLE lt_objects INTO ls_object WITH KEY sha1 = ls_remote-remote_sha1.
+      IF sy-subrc = 0.
+        CLEAR ls_file.
+        ls_file-path = ls_remote-path.
+        ls_file-sha1 = ls_remote-remote_sha1.
+        ls_file-filename = ls_remote-filename.
+        ls_file-data = ls_object-data.
+        INSERT ls_file INTO TABLE lt_files.
+      ENDIF.
     ENDLOOP.
     ls_file = li_repo_online->zif_abapgit_repo~get_dot_abapgit( )->to_file( ).
     INSERT ls_file INTO TABLE lt_files.
