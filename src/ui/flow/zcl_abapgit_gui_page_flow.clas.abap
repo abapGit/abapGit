@@ -277,6 +277,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ls_file-data = lv_blob.
       INSERT ls_file INTO TABLE lt_files.
     ENDLOOP.
+    ls_file = li_repo_online->zif_abapgit_repo~get_dot_abapgit( )->to_file( ).
+    INSERT ls_file INTO TABLE lt_files.
+
     li_repo_online->zif_abapgit_repo~set_files_remote( lt_files ).
 
     rs_handled-page = zcl_abapgit_gui_page_stage=>create(
