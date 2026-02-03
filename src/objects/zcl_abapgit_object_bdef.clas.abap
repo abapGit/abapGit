@@ -221,10 +221,11 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
       lr_data     TYPE REF TO data.
 
     FIELD-SYMBOLS:
-      <lv_metadata_node> TYPE any,
-      <ls_metadata>      TYPE any,
-      <lv_source>        TYPE any,
-      <lg_data>          TYPE any.
+      <lv_abap_language_version> TYPE uccheck,
+      <lv_metadata_node>         TYPE any,
+      <ls_metadata>              TYPE any,
+      <lv_source>                TYPE any,
+      <lg_data>                  TYPE any.
 
     CREATE DATA lr_data TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
     ASSIGN lr_data->* TO <lg_data>.
@@ -242,6 +243,11 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
         iv_name = 'BDEF'
       CHANGING
         cg_data = <ls_metadata> ).
+
+    ASSIGN COMPONENT 'ABAP_LANGU_VERSION' OF STRUCTURE <ls_metadata> TO <lv_abap_language_version>.
+    IF sy-subrc = 0.
+      set_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+    ENDIF.
 
     <lv_metadata_node> = <ls_metadata>.
 
@@ -571,9 +577,10 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
       lv_source             TYPE string.
 
     FIELD-SYMBOLS:
-      <ls_behaviour_definition> TYPE any,
-      <lv_metadata>             TYPE any,
-      <lv_source>               TYPE string.
+      <lv_abap_language_version> TYPE uccheck,
+      <ls_behaviour_definition>  TYPE any,
+      <lv_metadata>              TYPE any,
+      <lv_source>                TYPE string.
 
     ASSIGN mr_behaviour_definition->* TO <ls_behaviour_definition>.
     ASSERT sy-subrc = 0.
@@ -591,6 +598,11 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
         ASSIGN COMPONENT 'METADATA' OF STRUCTURE <ls_behaviour_definition> TO <lv_metadata>.
         ASSERT sy-subrc = 0.
         clear_fields( CHANGING cs_metadata = <lv_metadata> ).
+
+        ASSIGN COMPONENT 'ABAP_LANGU_VERSION' OF STRUCTURE <lv_metadata> TO <lv_abap_language_version>.
+        IF sy-subrc = 0.
+          clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+        ENDIF.
 
         ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_behaviour_definition> TO <lv_source>.
         ASSERT sy-subrc = 0.
