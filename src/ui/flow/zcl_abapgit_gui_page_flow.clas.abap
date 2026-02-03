@@ -338,8 +338,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
             OR is_feature-branch-up_to_date = abap_true.
 * its only remote, so there is no changes to stage
           lo_toolbar->add( iv_txt = 'Stage and Commit'
-                         iv_act = |{ c_action-stage_and_commit }{ lv_extra }|
-                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+                           iv_act = |{ c_action-stage_and_commit }{ lv_extra }|
+                           iv_opt = zif_abapgit_html=>c_html_opt-strong ).
         ENDIF.
       ENDIF.
     ENDIF.
