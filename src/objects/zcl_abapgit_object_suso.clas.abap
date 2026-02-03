@@ -34,7 +34,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_suso IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SUSO IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -309,7 +309,7 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
           <lv_field> = lv_abap_language_version.
         ENDIF.
 
-        MODIFY tobj_attr FROM <ls_tobj_attr>.
+        MODIFY ('TOBJ_ATTR') FROM <ls_tobj_attr>.
       CATCH cx_root ##NO_HANDLER.
     ENDTRY.
 

@@ -104,9 +104,9 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
 
     cl_o2_api_pages=>create_new_page(
       EXPORTING
-        p_pageattrs = is_page_attributes
+        p_pageattrs           = is_page_attributes
       IMPORTING
-        p_page      = ro_page
+        p_page                = ro_page
       EXCEPTIONS
         object_already_exists = 1
         invalid_name          = 2
@@ -161,7 +161,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
 
     io_page->get_page(
       IMPORTING
-        p_content = lt_content
+        p_content    = lt_content
       EXCEPTIONS
         invalid_call = 1
         page_deleted = 2
@@ -409,11 +409,11 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_remote_page> LIKE LINE OF lt_pages_info.
 
     io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
-                  CHANGING cg_data = ls_attributes ).
+                  CHANGING  cg_data = ls_attributes ).
     io_xml->read( EXPORTING iv_name = 'NAVGRAPH'
-                  CHANGING cg_data = lt_navgraph ).
+                  CHANGING  cg_data = lt_navgraph ).
     io_xml->read( EXPORTING iv_name = 'PAGES'
-                  CHANGING cg_data = lt_pages_info ).
+                  CHANGING  cg_data = lt_pages_info ).
 
     ls_attributes-devclass = iv_package.
 
@@ -457,18 +457,18 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
 
       cl_o2_api_pages=>load(
         EXPORTING
-          p_pagekey             = ls_pagekey
+          p_pagekey            = ls_pagekey
         IMPORTING
-          p_page                = lo_page
+          p_page               = lo_page
         EXCEPTIONS
-          object_not_existing   = 1
-          version_not_existing  = 2
-          OTHERS                = 3 ).
+          object_not_existing  = 1
+          version_not_existing = 2
+          OTHERS               = 3 ).
 
       CASE sy-subrc.
         WHEN 0.
 
-          ls_local_page = read_page( is_page = <ls_remote_page>-attributes
+          ls_local_page = read_page( is_page         = <ls_remote_page>-attributes
                                      iv_no_files_add = abap_true ).
 
         WHEN 1.
@@ -661,11 +661,11 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
                  ig_data = lt_pages_info ).
 
     zcl_abapgit_sotr_handler=>read_sotr(
-      iv_pgmid    = 'LIMU'
-      iv_object   = 'WAPP'
-      iv_obj_name = ms_item-obj_name
+      iv_pgmid       = 'LIMU'
+      iv_object      = 'WAPP'
+      iv_obj_name    = ms_item-obj_name
       io_i18n_params = mo_i18n_params
-      io_xml      = io_xml ).
+      io_xml         = io_xml ).
 
   ENDMETHOD.
 ENDCLASS.
