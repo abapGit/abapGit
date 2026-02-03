@@ -17,7 +17,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_enho_badi IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_ENHO_BADI IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -28,13 +28,13 @@ CLASS zcl_abapgit_object_enho_badi IMPLEMENTATION.
 
   METHOD zif_abapgit_object_enho~deserialize.
 
-    DATA: lv_spot_name TYPE enhspotname,
-          lv_shorttext TYPE string,
-          lv_enhname   TYPE enhname,
+    DATA: lv_spot_name TYPE        enhspotname,
+          lv_shorttext TYPE        string,
+          lv_enhname   TYPE        enhname,
           lo_badi      TYPE REF TO cl_enh_tool_badi_impl,
           li_tool      TYPE REF TO if_enh_tool,
-          lv_package   TYPE devclass,
-          lt_impl      TYPE enh_badi_impl_data_it,
+          lv_package   TYPE        devclass,
+          lt_impl      TYPE        enh_badi_impl_data_it,
           lx_enh_root  TYPE REF TO cx_enh_root.
 
     FIELD-SYMBOLS: <ls_impl> LIKE LINE OF lt_impl.
@@ -50,7 +50,7 @@ CLASS zcl_abapgit_object_enho_badi IMPLEMENTATION.
     lv_package = iv_package.
     TRY.
         TRY.
-            cl_enh_factory=>create_enhancement(
+            CALL METHOD ('CL_ENH_FACTORY')=>create_enhancement
               EXPORTING
                 enhname               = lv_enhname
                 enhtype               = cl_abstract_enh_tool_redef=>credefinition
@@ -59,7 +59,7 @@ CLASS zcl_abapgit_object_enho_badi IMPLEMENTATION.
               IMPORTING
                 enhancement           = li_tool
               CHANGING
-                devclass              = lv_package ).
+                devclass              = lv_package.
           CATCH cx_root.
             cl_enh_factory=>create_enhancement(
               EXPORTING
