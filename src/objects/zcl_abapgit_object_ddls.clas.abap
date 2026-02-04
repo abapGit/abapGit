@@ -34,7 +34,11 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       CHANGING
         !cg_data TYPE any
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+    METHODS get_log_uuid
+      RETURNING
+        VALUE(rv_log_uuid) TYPE sysuuid_c32.
+
 
 ENDCLASS.
 
@@ -238,10 +242,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
       ls_deltab   TYPE dcdeltb,
       lt_gentab   TYPE TABLE OF dcgentb,
       lv_rc       TYPE sy-subrc,
-      lv_subrc    TYPE sy-subrc,
-      lv_template TYPE ddmass-logname,
-      lv_logname  TYPE ddmass-logname,
-      lv_prid     TYPE sytabix.
+      lv_logname  TYPE ddmass-logname.
 
     " CL_DD_DDL_HANDLER->DELETE does not work for CDS views that reference other views
     " To drop any views regardless of reference, we use delnoref = false
@@ -249,19 +250,23 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
     ls_deltab-objname = ms_item-obj_name.
     APPEND ls_deltab TO lt_deltab.
 
-    CONCATENATE syst-uname '&DATE&&TIME&' INTO lv_template.
-    PERFORM stdo_log_open IN PROGRAM radbtout USING 'T' 'N' 1
-      'single_style'
-      lv_template '' lv_logname lv_prid.
+    " protname in DDPRS is 40 chars long!
+    lv_logname = |DEL_{ get_log_uuid( ) }|.
+
+    if ii_log is not initial.
+      ii_log->add_info( |> Mass deletion 1 DDIC object| ).
+      ii_log->add_info( |Log name: { lv_logname }| ).
+    endif.
 
     CALL FUNCTION 'DD_MASS_ACT_C3'
       EXPORTING
         ddmode         = 'O'
         inactive       = abap_true
-        write_log      = abap_false
+        write_log      = abap_true
+        logname        = lv_logname
         delall         = abap_true
         delnoref       = abap_false
-        prid           = lv_prid
+        prid           = 1
       IMPORTING
         act_rc         = lv_rc
       TABLES
@@ -272,12 +277,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         no_objects     = 2
         locked         = 3
         OTHERS         = 4.
-    lv_subrc = sy-subrc.
-
-    PERFORM stdo_close IN PROGRAM radbtout
-      USING lv_prid.
-
-    IF lv_subrc <> 0.
+    IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
@@ -551,4 +551,20 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
                  ig_data = <lg_data> ).
 
   ENDMETHOD.
+
+  METHOD get_log_uuid.
+
+    DATA lv_tstmpl TYPE timestampl.
+
+    TRY.
+        cl_system_uuid=>convert_uuid_x16_static( EXPORTING uuid     = cl_system_uuid=>create_uuid_x16_static( )
+                                                 IMPORTING uuid_c32 = rv_log_uuid ).
+      CATCH cx_uuid_error.
+        GET TIME STAMP FIELD lv_tstmpl.
+        DATA(lv_tstmp_string) = CONV string( lv_tstmpl ).
+        rv_log_uuid = |{ sy-uname }{ lv_tstmp_string }|.
+    ENDTRY.
+
+  ENDMETHOD.
+
 ENDCLASS.

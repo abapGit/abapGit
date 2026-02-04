@@ -118,6 +118,7 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_package   TYPE devclass
         !is_item      TYPE zif_abapgit_definitions=>ty_item
         !iv_transport TYPE trkorr
+        !ii_log       TYPE REF TO zif_abapgit_log OPTIONAL
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_steps
