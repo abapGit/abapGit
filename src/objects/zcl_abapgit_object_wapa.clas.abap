@@ -407,6 +407,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
           lt_local_pages    TYPE o2pagelist.
 
     FIELD-SYMBOLS: <ls_remote_page> LIKE LINE OF lt_pages_info.
+    FIELD-SYMBOLS <lv_abap_language_version> TYPE uccheck.
 
     io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
                   CHANGING  cg_data = ls_attributes ).
@@ -414,6 +415,11 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
                   CHANGING  cg_data = lt_navgraph ).
     io_xml->read( EXPORTING iv_name = 'PAGES'
                   CHANGING  cg_data = lt_pages_info ).
+
+    ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE ls_attributes TO <lv_abap_language_version>.
+    IF sy-subrc = 0.
+      set_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+    ENDIF.
 
     ls_attributes-devclass = iv_package.
 
@@ -606,6 +612,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
           lo_bsp        TYPE REF TO cl_o2_api_application.
 
     FIELD-SYMBOLS: <ls_page> LIKE LINE OF lt_pages.
+    FIELD-SYMBOLS <lv_abap_language_version> TYPE uccheck.
 
     lv_name = ms_item-obj_name.
 
@@ -633,6 +640,11 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
            ls_attributes-changedby,
            ls_attributes-changedon,
            ls_attributes-devclass.
+
+    ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE ls_attributes TO <lv_abap_language_version>.
+    IF sy-subrc = 0.
+      clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+    ENDIF.
 
     io_xml->add( iv_name = 'ATTRIBUTES'
                  ig_data = ls_attributes ).
