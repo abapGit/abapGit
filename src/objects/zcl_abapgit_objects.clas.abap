@@ -118,6 +118,7 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_package   TYPE devclass
         !is_item      TYPE zif_abapgit_definitions=>ty_item
         !iv_transport TYPE trkorr
+        !ii_log       TYPE REF TO zif_abapgit_log
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_steps
@@ -491,7 +492,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             delete_object(
               iv_package   = <ls_tadir>-devclass
               is_item      = ls_item
-              iv_transport = is_checks-transport-transport ).
+              iv_transport = is_checks-transport-transport
+              ii_log       = ii_log ).
 
             INSERT <ls_tadir> INTO TABLE lt_deleted.
             DELETE lt_tadir.
@@ -544,7 +546,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     li_obj = create_object( is_item ).
     li_obj->delete( iv_package   = iv_package
-                    iv_transport = iv_transport ).
+                    iv_transport = iv_transport
+                    ii_log       = ii_log ).
 
   ENDMETHOD.
 
@@ -1013,6 +1016,37 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_prog_enho_include.
+
+    DATA lv_enho_name TYPE enhname.
+
+    " ENHO includes ending in 'E' or 'EIMP' at position 31 shouldn't be in TADIR
+    " but appear due to bug (SAP note 1025291). Skip them, sources are in ENHO.
+
+    " Format: <enho_name><padding_with_=><E/EIMP>
+    " Example: ZMM_SOME_ENHANCEMENT==========E
+
+    IF NOT ( iv_obj_name+30(4) = 'EIMP' OR
+             iv_obj_name+30(4) = 'E   ' ).
+      RETURN.
+    ENDIF.
+
+    " Extract enhancement name: first 30 chars, strip trailing '='
+    lv_enho_name = iv_obj_name(30).
+    SHIFT lv_enho_name RIGHT DELETING TRAILING '='.
+    SHIFT lv_enho_name LEFT DELETING LEADING space.
+
+    " Check if corresponding ENHO exists
+    SELECT SINGLE obj_name FROM tadir INTO lv_enho_name
+      WHERE pgmid = 'R3TR'
+      AND object = 'ENHO'
+      AND obj_name = lv_enho_name.
+
+    rv_bool = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+
   METHOD is_supported.
 
     TRY.
@@ -1356,36 +1390,4 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
-
-  METHOD is_prog_enho_include.
-
-    DATA lv_enho_name TYPE enhname.
-
-    " ENHO includes ending in 'E' or 'EIMP' at position 31 shouldn't be in TADIR
-    " but appear due to bug (SAP note 1025291). Skip them, sources are in ENHO.
-
-    " Format: <enho_name><padding_with_=><E/EIMP>
-    " Example: ZMM_SOME_ENHANCEMENT==========E
-
-    IF NOT ( iv_obj_name+30(4) = 'EIMP' OR
-             iv_obj_name+30(4) = 'E   ' ).
-      RETURN.
-    ENDIF.
-
-    " Extract enhancement name: first 30 chars, strip trailing '='
-    lv_enho_name = iv_obj_name(30).
-    SHIFT lv_enho_name RIGHT DELETING TRAILING '='.
-    SHIFT lv_enho_name LEFT DELETING LEADING space.
-
-    " Check if corresponding ENHO exists
-    SELECT SINGLE obj_name FROM tadir INTO lv_enho_name
-      WHERE pgmid = 'R3TR'
-      AND object = 'ENHO'
-      AND obj_name = lv_enho_name.
-
-    rv_bool = boolc( sy-subrc = 0 ).
-
-  ENDMETHOD.
-
 ENDCLASS.

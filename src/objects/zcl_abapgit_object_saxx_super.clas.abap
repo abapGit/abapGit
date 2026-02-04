@@ -61,6 +61,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
+
   METHOD constructor.
 
     super->constructor(
@@ -72,6 +73,7 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
     mv_object_key = ms_item-obj_name.
 
   ENDMETHOD.
+
 
   METHOD create_channel_objects.
 
@@ -223,7 +225,8 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
     IF zif_abapgit_object~exists( ) = abap_true.
       zif_abapgit_object~delete( iv_package   = iv_package
-                                 iv_transport = iv_transport ).
+                                 iv_transport = iv_transport
+                                 ii_log       = ii_log ).
     ENDIF.
 
     TRY.
@@ -367,5 +370,4 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
                  ig_data = <lg_data> ).
 
   ENDMETHOD.
-
 ENDCLASS.
