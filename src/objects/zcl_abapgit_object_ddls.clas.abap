@@ -253,10 +253,10 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
     " protname in DDPRS is 40 chars long!
     lv_logname = |DEL_{ get_log_uuid( ) }|.
 
-    if ii_log is not initial.
+    IF ii_log IS NOT INITIAL.
       ii_log->add_info( |> Mass deletion 1 DDIC object| ).
       ii_log->add_info( |Log name: { lv_logname }| ).
-    endif.
+    ENDIF.
 
     CALL FUNCTION 'DD_MASS_ACT_C3'
       EXPORTING
@@ -554,14 +554,15 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
   METHOD get_log_uuid.
 
-    DATA lv_tstmpl TYPE timestampl.
+    DATA lv_tstmpl       TYPE timestampl.
+    DATA lv_tstmp_string TYPE string.
 
     TRY.
         cl_system_uuid=>convert_uuid_x16_static( EXPORTING uuid     = cl_system_uuid=>create_uuid_x16_static( )
                                                  IMPORTING uuid_c32 = rv_log_uuid ).
       CATCH cx_uuid_error.
         GET TIME STAMP FIELD lv_tstmpl.
-        DATA(lv_tstmp_string) = CONV string( lv_tstmpl ).
+        lv_tstmp_string = CONV string( lv_tstmpl ).
         rv_log_uuid = |{ sy-uname }{ lv_tstmp_string }|.
     ENDTRY.
 

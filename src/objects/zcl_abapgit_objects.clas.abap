@@ -545,7 +545,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     li_obj = create_object( is_item ).
     li_obj->delete( iv_package   = iv_package
-                    iv_transport = iv_transport ).
+                    iv_transport = iv_transport
+                    ii_log       = ii_log ).
 
   ENDMETHOD.
 
