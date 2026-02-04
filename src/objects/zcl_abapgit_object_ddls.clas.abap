@@ -125,6 +125,23 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_log_uuid.
+
+    DATA lv_tstmpl       TYPE timestampl.
+    DATA lv_tstmp_string TYPE string.
+
+    TRY.
+        cl_system_uuid=>convert_uuid_x16_static( EXPORTING uuid     = cl_system_uuid=>create_uuid_x16_static( )
+                                                 IMPORTING uuid_c32 = rv_log_uuid ).
+      CATCH cx_uuid_error.
+        GET TIME STAMP FIELD lv_tstmpl.
+        lv_tstmp_string = lv_tstmpl.
+        rv_log_uuid = |{ sy-uname }{ lv_tstmp_string }|.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD is_baseinfo_supported.
 
     DATA:
@@ -291,6 +308,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         p_operation   = 'DELETE'
       EXCEPTIONS
         OTHERS        = 0.
+
   ENDMETHOD.
 
 
@@ -551,21 +569,4 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
                  ig_data = <lg_data> ).
 
   ENDMETHOD.
-
-  METHOD get_log_uuid.
-
-    DATA lv_tstmpl       TYPE timestampl.
-    DATA lv_tstmp_string TYPE string.
-
-    TRY.
-        cl_system_uuid=>convert_uuid_x16_static( EXPORTING uuid     = cl_system_uuid=>create_uuid_x16_static( )
-                                                 IMPORTING uuid_c32 = rv_log_uuid ).
-      CATCH cx_uuid_error.
-        GET TIME STAMP FIELD lv_tstmpl.
-        lv_tstmp_string = lv_tstmpl.
-        rv_log_uuid = |{ sy-uname }{ lv_tstmp_string }|.
-    ENDTRY.
-
-  ENDMETHOD.
-
 ENDCLASS.
