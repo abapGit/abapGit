@@ -562,7 +562,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
                                                  IMPORTING uuid_c32 = rv_log_uuid ).
       CATCH cx_uuid_error.
         GET TIME STAMP FIELD lv_tstmpl.
-        lv_tstmp_string = CONV string( lv_tstmpl ).
+        lv_tstmp_string = lv_tstmpl.
         rv_log_uuid = |{ sy-uname }{ lv_tstmp_string }|.
     ENDTRY.
 
