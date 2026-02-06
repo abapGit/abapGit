@@ -133,6 +133,7 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
           lt_objm  TYPE tt_objm,
           ls_tobj  TYPE ty_tobj.
 
+    FIELD-SYMBOLS <lv_abap_language_version> TYPE uccheck.
 
     io_xml->read( EXPORTING iv_name = 'OBJH'
                   CHANGING  cg_data = ls_objh ).
@@ -144,6 +145,11 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
                   CHANGING  cg_data = lt_objsl ).
     io_xml->read( EXPORTING iv_name = 'OBJM'
                   CHANGING  cg_data = lt_objm ).
+
+    ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE ls_objh TO <lv_abap_language_version>.
+    IF sy-subrc = 0.
+      set_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+    ENDIF.
 
     CALL FUNCTION 'OBJ_GENERATE'
       EXPORTING
@@ -296,6 +302,8 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
           ls_tobj     TYPE ty_tobj,
           lv_type_pos TYPE i.
 
+    FIELD-SYMBOLS <lv_abap_language_version> TYPE uccheck.
+
     lv_type_pos = strlen( ms_item-obj_name ) - 1.
 
     ls_objh-objectname = ms_item-obj_name(lv_type_pos).
@@ -328,6 +336,11 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
 
     CLEAR: ls_objh-luser,
            ls_objh-ldate.
+
+    ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE ls_objh TO <lv_abap_language_version>.
+    IF sy-subrc = 0.
+      clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+    ENDIF.
 
     SORT lt_objs BY objectname objecttype tabname.
     SORT lt_objsl BY objectname objecttype trwcount.

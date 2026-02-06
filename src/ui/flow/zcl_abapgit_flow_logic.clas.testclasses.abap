@@ -319,6 +319,9 @@ CLASS lcl_gitv2 IMPLEMENTATION.
   METHOD zif_abapgit_gitv2_porcelain~fetch_blob.
     RETURN.
   ENDMETHOD.
+  METHOD zif_abapgit_gitv2_porcelain~fetch_blobs.
+    RETURN.
+  ENDMETHOD.
 ENDCLASS.
 
 CLASS lcl_sap_package DEFINITION FINAL.

@@ -17,7 +17,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
 
 
   METHOD factory.
@@ -90,10 +90,10 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lv_parent    TYPE enhspotcompositename,
-          lv_spot_name TYPE enhspotname,
-          lv_tool      TYPE enhspottooltype,
-          lv_package   LIKE iv_package,
+    DATA: lv_parent    TYPE        enhspotcompositename,
+          lv_spot_name TYPE        enhspotname,
+          lv_tool      TYPE        enhspottooltype,
+          lv_package   LIKE        iv_package,
           lx_enh_root  TYPE REF TO cx_enh_root,
           li_spot_ref  TYPE REF TO if_enh_spot_tool,
           li_enhs      TYPE REF TO zif_abapgit_object_enhs.
@@ -117,7 +117,7 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
 
     TRY.
         TRY.
-            cl_enh_factory=>create_enhancement_spot(
+            CALL METHOD ('CL_ENH_FACTORY')=>create_enhancement_spot
               EXPORTING
                 spot_name             = lv_spot_name
                 tooltype              = lv_tool
@@ -127,7 +127,7 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
               IMPORTING
                 spot                  = li_spot_ref
               CHANGING
-                devclass              = lv_package ).
+                devclass              = lv_package.
           CATCH cx_root.
             cl_enh_factory=>create_enhancement_spot(
               EXPORTING

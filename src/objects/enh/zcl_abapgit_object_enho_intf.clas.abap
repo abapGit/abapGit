@@ -49,7 +49,7 @@ CLASS zcl_abapgit_object_enho_intf IMPLEMENTATION.
     lv_package = iv_package.
     TRY.
         TRY.
-            cl_enh_factory=>create_enhancement(
+            CALL METHOD ('CL_ENH_FACTORY')=>create_enhancement
               EXPORTING
                 enhname               = lv_enhname
                 enhtype               = ''
@@ -58,7 +58,7 @@ CLASS zcl_abapgit_object_enho_intf IMPLEMENTATION.
               IMPORTING
                 enhancement           = li_tool
               CHANGING
-                devclass              = lv_package ).
+                devclass              = lv_package.
           CATCH cx_root.
             cl_enh_factory=>create_enhancement(
               EXPORTING
