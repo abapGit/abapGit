@@ -338,6 +338,10 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
         rv_ignored = abap_true.
         RETURN.
       ENDIF.
+      IF lv_ignore(1) = '!' AND lv_name CP lv_ignore+1(*).
+        rv_ignored = abap_false.
+        RETURN.
+      ENDIF.
     ENDLOOP.
 
     " Ignore all files outside of starting folder tree
