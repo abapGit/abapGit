@@ -77,6 +77,8 @@
     "align_pseudo_comments": false,
     "invalid_table_index": true,
     "tables_declared_locally": true,
+    "fm_global_parameters_obsolete": true,
+    "parser_bad_exceptions": true,
     "unused_macros": true,
     "align_parameters": false,
     "allowed_object_naming": true,
