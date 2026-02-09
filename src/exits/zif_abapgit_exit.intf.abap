@@ -113,6 +113,7 @@ INTERFACE zif_abapgit_exit PUBLIC.
 
   METHODS deserialize_postprocess
     IMPORTING
+      !iv_package       TYPE devclass OPTIONAL
       !is_step          TYPE zif_abapgit_objects=>ty_step_data OPTIONAL
       !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
       !it_remote        TYPE zif_abapgit_git_definitions=>ty_files_tt OPTIONAL
