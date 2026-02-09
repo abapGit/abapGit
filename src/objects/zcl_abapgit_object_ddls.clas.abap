@@ -39,9 +39,7 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING
         !iv_json       TYPE string
       RETURNING
-        VALUE(rv_json) TYPE string
-      RAISING
-        zcx_abapgit_exception.
+        VALUE(rv_json) TYPE string.
 
 ENDCLASS.
 
@@ -52,13 +50,15 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
   METHOD clear_baseinfo.
 
-* to prevent diffs across various releases
+    " To prevent diffs across various releases
     DATA li_json TYPE REF TO zif_abapgit_ajson.
 
     TRY.
-        li_json = zcl_abapgit_ajson=>parse( iv_json ).
+        li_json = zcl_abapgit_ajson=>parse(
+          iv_json            = iv_json
+          iv_keep_item_order = abap_true ).
         li_json = li_json->filter( zcl_abapgit_ajson_filter_lib=>create_empty_filter( ) ).
-        rv_json = li_json->stringify( 2 ).
+        rv_json = li_json->stringify( 2 ) && |\n|.
       CATCH zcx_abapgit_ajson_error.
         " fallback to original value
         rv_json = iv_json.
