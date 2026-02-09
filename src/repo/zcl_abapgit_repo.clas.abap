@@ -558,6 +558,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     li_exit->deserialize_postprocess(
       EXPORTING
+        iv_package       = get_package( )
         it_remote        = mt_remote
         ii_log           = ii_log
       CHANGING
