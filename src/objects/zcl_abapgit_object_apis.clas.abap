@@ -80,6 +80,8 @@ CLASS zcl_abapgit_object_apis IMPLEMENTATION.
 
     DATA lo_db   TYPE REF TO object.
     DATA lr_data TYPE REF TO data.
+    DATA lx_error TYPE REF TO cx_root.
+
     FIELD-SYMBOLS <ls_api_key> TYPE any.
 
 
@@ -88,13 +90,17 @@ CLASS zcl_abapgit_object_apis IMPLEMENTATION.
     <ls_api_key> = ms_item-obj_name.
     ASSERT <ls_api_key> IS NOT INITIAL.
 
-    CALL METHOD ('CL_ARS_STATE_DB_ACCESS')=>('GET_INSTANCE')
-      RECEIVING
-        ro_state_db_access = lo_db.
+    TRY.
+        CALL METHOD ('CL_ARS_STATE_DB_ACCESS')=>('GET_INSTANCE')
+          RECEIVING
+            ro_state_db_access = lo_db.
 
-    CALL METHOD lo_db->('IF_ARS_STATE_DB_ACCESS~DELETE')
-      EXPORTING
-        is_api_key = <ls_api_key>.
+        CALL METHOD lo_db->('IF_ARS_STATE_DB_ACCESS~DELETE')
+          EXPORTING
+            is_api_key = <ls_api_key>.
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -105,6 +111,8 @@ CLASS zcl_abapgit_object_apis IMPLEMENTATION.
 
     DATA lr_data              TYPE REF TO data.
     DATA lo_db                TYPE REF TO object.
+    DATA lx_error TYPE REF TO cx_root.
+
     FIELD-SYMBOLS <ls_data>   TYPE any.
     FIELD-SYMBOLS <lt_data_states> TYPE ANY TABLE.
     FIELD-SYMBOLS <ls_header> TYPE any.
@@ -158,14 +166,18 @@ CLASS zcl_abapgit_object_apis IMPLEMENTATION.
       INSERT <ls_row> INTO TABLE <lt_states>.
     ENDLOOP.
 
-    CALL METHOD ('CL_ARS_STATE_DB_ACCESS')=>('GET_INSTANCE')
-      RECEIVING
-        ro_state_db_access = lo_db.
+    TRY.
+        CALL METHOD ('CL_ARS_STATE_DB_ACCESS')=>('GET_INSTANCE')
+          RECEIVING
+            ro_state_db_access = lo_db.
 
-    CALL METHOD lo_db->('IF_ARS_STATE_DB_ACCESS~SAVE')
-      EXPORTING
-        is_header         = <ls_header>
-        it_release_states = <lt_states>.
+        CALL METHOD lo_db->('IF_ARS_STATE_DB_ACCESS~SAVE')
+          EXPORTING
+            is_header         = <ls_header>
+            it_release_states = <lt_states>.
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
 
     tadir_insert( iv_package ).
 
@@ -239,6 +251,8 @@ CLASS zcl_abapgit_object_apis IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA lr_data TYPE REF TO data.
+    DATA lx_error TYPE REF TO cx_root.
+
     FIELD-SYMBOLS <ls_data> TYPE any.
 
     CREATE DATA lr_data TYPE (c_model).
@@ -246,9 +260,13 @@ CLASS zcl_abapgit_object_apis IMPLEMENTATION.
 
     initialize( ).
 
-    CALL METHOD mo_handler->('IF_ARS_API_ABAPGIT~GET_API_STATE')
-      RECEIVING
-        rs_apis_object = <ls_data>.
+    TRY.
+        CALL METHOD mo_handler->('IF_ARS_API_ABAPGIT~GET_API_STATE')
+          RECEIVING
+            rs_apis_object = <ls_data>.
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
 
     io_xml->add( iv_name = 'APIS'
                  ig_data = <ls_data> ).
