@@ -518,6 +518,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD zif_abapgit_repo~deserialize.
 
     DATA lt_updated_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt.
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
 
     find_remote_dot_abapgit( ).
     find_remote_dot_apack( ).
@@ -551,6 +552,16 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
         is_checks = is_checks
       CHANGING
         ct_files  = lt_updated_files ).
+
+*   Call postprocessing
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+
+    li_exit->deserialize_postprocess(
+      EXPORTING
+        it_remote        = mt_remote
+        ii_log           = ii_log
+      CHANGING
+        ct_updated_files = lt_updated_files ).
 
     CLEAR mt_local. " Should be before CS update which uses NEW local
 
