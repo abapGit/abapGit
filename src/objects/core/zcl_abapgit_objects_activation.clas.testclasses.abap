@@ -76,6 +76,10 @@ CLASS ltcl_tests IMPLEMENTATION.
       act = mo_cut->is_ddic_type( 'PROG' )
       exp = abap_false ).
 
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->is_ddic_type( 'DESD' )
+      exp = abap_true ).
+
   ENDMETHOD.
 
   METHOD get_ddic_type.
