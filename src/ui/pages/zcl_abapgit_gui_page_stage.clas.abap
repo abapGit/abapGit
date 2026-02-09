@@ -25,7 +25,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         iv_seed          TYPE string OPTIONAL
         iv_sci_result    TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
         ii_obj_filter    TYPE REF TO zif_abapgit_object_filter OPTIONAL
-        ii_force_refresh TYPE abap_bool DEFAULT abap_true
+        ii_force_refresh TYPE abap_bool
       RETURNING
         VALUE(ri_page)   TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -37,7 +37,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         iv_seed          TYPE string OPTIONAL
         iv_sci_result    TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
         ii_obj_filter    TYPE REF TO zif_abapgit_object_filter OPTIONAL
-        ii_force_refresh TYPE abap_bool DEFAULT abap_true
+        ii_force_refresh TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
 
