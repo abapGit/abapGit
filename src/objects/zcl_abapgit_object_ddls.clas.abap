@@ -52,6 +52,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
   METHOD clear_baseinfo.
 
+* to prevent diffs across various releases
     DATA li_json TYPE REF TO zif_abapgit_ajson.
 
     TRY.
