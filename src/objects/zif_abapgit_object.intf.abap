@@ -29,6 +29,7 @@ INTERFACE zif_abapgit_object PUBLIC.
     IMPORTING
       !iv_package   TYPE devclass
       !iv_transport TYPE trkorr
+      !ii_log       TYPE REF TO zif_abapgit_log
     RAISING
       zcx_abapgit_exception .
 
