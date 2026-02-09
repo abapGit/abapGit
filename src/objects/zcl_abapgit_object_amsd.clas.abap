@@ -53,11 +53,10 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lv_value> TYPE data.
 
-    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_logical_db_schema
-           TO <lv_value>.
-    ASSERT sy-subrc = 0.
-
-    CLEAR: <lv_value>.
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_logical_db_schema TO <lv_value>.
+    IF sy-subrc = 0.
+      CLEAR <lv_value>.
+    ENDIF.
 
   ENDMETHOD.
 
