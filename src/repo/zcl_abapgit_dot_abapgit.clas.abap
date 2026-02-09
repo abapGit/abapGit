@@ -326,7 +326,7 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
     ENDIF.
 
     " Ignore all files matching pattern in ignore list
-    LOOP AT ms_data-ignore INTO lv_ignore.
+    LOOP AT ms_data-ignore INTO lv_ignore WHERE table_line IS NOT INITIAL.
       " # needs to be escaped since it's the escape character
       " and used as namespace separator in filenames, for example
       lv_ignore = replace(
