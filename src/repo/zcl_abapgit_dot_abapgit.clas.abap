@@ -325,7 +325,18 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    " Ignore all files outside of starting folder tree
+    IF ms_data-starting_folder <> '/' AND NOT lv_name CP lv_starting.
+      rv_ignored = abap_true.
+    ENDIF.
+
+    " Allow all files in data folder
+    IF iv_path = zif_abapgit_data_config=>c_default_path.
+      rv_ignored = abap_false.
+    ENDIF.
+
     " Ignore all files matching pattern in ignore list
+    " Patterns are read top-to-bottom with later ones overriding earlier (like .gitignore)
     LOOP AT ms_data-ignore INTO lv_ignore WHERE table_line IS NOT INITIAL.
       " # needs to be escaped since it's the escape character
       " and used as namespace separator in filenames, for example
@@ -336,22 +347,11 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
         occ  = 0 ).
       IF lv_name CP lv_ignore.
         rv_ignored = abap_true.
-        RETURN.
       ENDIF.
       IF lv_ignore(1) = '!' AND lv_name CP lv_ignore+1(*).
         rv_ignored = abap_false.
-        RETURN.
       ENDIF.
     ENDLOOP.
-
-    " Ignore all files outside of starting folder tree
-    IF ms_data-starting_folder <> '/' AND NOT lv_name CP lv_starting.
-      rv_ignored = abap_true.
-    ENDIF.
-
-    IF iv_path = zif_abapgit_data_config=>c_default_path.
-      rv_ignored = abap_false.
-    ENDIF.
 
   ENDMETHOD.
 
