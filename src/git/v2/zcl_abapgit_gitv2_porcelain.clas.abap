@@ -216,6 +216,34 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gitv2_porcelain~fetch_blobs.
+
+    DATA lv_xstring   TYPE xstring.
+    DATA lt_arguments TYPE string_table.
+    DATA lv_argument  TYPE string.
+    DATA lv_sha1      LIKE LINE OF it_sha1.
+
+
+    ASSERT lines( it_sha1 ) > 0.
+
+    LOOP AT it_sha1 INTO lv_sha1.
+      lv_argument = |want { lv_sha1 }|.
+      APPEND lv_argument TO lt_arguments.
+    ENDLOOP.
+    APPEND 'no-progress' TO lt_arguments.
+    APPEND 'done' TO lt_arguments.
+
+    lv_xstring = send_command(
+      iv_url       = iv_url
+      iv_service   = c_service-upload
+      iv_command   = |fetch|
+      it_arguments = lt_arguments ).
+
+    rt_objects = decode_pack( lv_xstring ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gitv2_porcelain~list_branches.
     DATA lv_xstring   TYPE xstring.
     DATA lt_arguments TYPE string_table.
