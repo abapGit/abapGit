@@ -17,7 +17,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
+CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
 
 
   METHOD factory.
@@ -101,7 +101,8 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
 
     IF zif_abapgit_object~exists( ) = abap_true.
       zif_abapgit_object~delete( iv_package   = iv_package
-                                 iv_transport = iv_transport ).
+                                 iv_transport = iv_transport
+                                 ii_log       = ii_log ).
     ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'TOOL'
