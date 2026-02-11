@@ -193,8 +193,9 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
         IF is_stage_allowed( ) = abap_true.
 
           rs_handled-page   = zcl_abapgit_gui_page_stage=>create(
-            ii_repo_online = li_repo_online
-            iv_sci_result  = status( ) ).
+            ii_repo_online   = li_repo_online
+            iv_sci_result    = status( )
+            ii_force_refresh = abap_true ).
 
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 

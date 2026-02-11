@@ -385,6 +385,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   METHOD files_local.
 
 * serializes objects, including .abapgit.xml, apack, and takes into account local settings
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
 
     add_dot_abapgit( CHANGING ct_files = rt_files ).
 
@@ -406,6 +407,16 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         iv_package = iv_package
         ii_log     = ii_log
         it_filter  = it_filter
+      CHANGING
+        ct_files   = rt_files ).
+
+*   Call postprocessing
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+
+    li_exit->serialize_postprocess(
+      EXPORTING
+        iv_package = iv_package
+        ii_log     = ii_log
       CHANGING
         ct_files   = rt_files ).
 
@@ -710,7 +721,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     DATA: lv_max      TYPE i,
           lv_count    TYPE i,
           li_progress TYPE REF TO zif_abapgit_progress,
-          li_exit     TYPE REF TO zif_abapgit_exit,
           lo_timer    TYPE REF TO zcl_abapgit_timer,
           lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
@@ -763,16 +773,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     WAIT UNTIL mv_free = lv_max UP TO 120 SECONDS.
     rt_files = mt_files.
     FREE mt_files.
-
-*   Call postprocessing
-    li_exit = zcl_abapgit_exit=>get_instance( ).
-
-    li_exit->serialize_postprocess(
-      EXPORTING
-        iv_package = iv_package
-        ii_log     = ii_log
-      CHANGING
-        ct_files   = rt_files ).
 
     lo_timer->end( abap_true ).
 
