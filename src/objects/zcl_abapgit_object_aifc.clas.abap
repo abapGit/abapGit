@@ -202,10 +202,8 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        io_xml->read( EXPORTING
-                    iv_name = '/AIF/T_FINF'
-                  CHANGING
-                    cg_data = <lt_table> ).
+        io_xml->read( EXPORTING iv_name = '/AIF/T_FINF'
+                      CHANGING  cg_data = <lt_table> ).
 
         READ TABLE <lt_table> ASSIGNING <ls_table> INDEX 1.
         IF sy-subrc = 0.
@@ -242,10 +240,19 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
     DATA: lx_root TYPE REF TO cx_root.
     DATA: lo_log TYPE REF TO object.
 
+    DATA:
+      BEGIN OF ls_item,
+        obj_type TYPE tadir-object,
+        obj_name TYPE tadir-obj_name,
+        devclass TYPE devclass,
+      END OF ls_item.
+
     TRY.
+        MOVE-CORRESPONDING ms_item TO ls_item.
+
         CREATE OBJECT lo_log TYPE ('/AIF/CL_ABAPGIT_BAL_LOG')
           EXPORTING ir_git_log = io_log
-                    is_item = ms_item.
+                    is_item = ls_item.
 
         CALL METHOD mo_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~INITIALIZE_CONTENT_COMPRESS')
           EXPORTING
@@ -309,7 +316,31 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~delete.
-    zcx_abapgit_exception=>raise( 'Delete not supported.' ).
+
+    DATA lx_root TYPE REF TO cx_root.
+
+    TRY.
+        DELETE FROM ('/AIF/ICD_DATA')
+          WHERE depl_scenario = ms_icd_data_key-depl_scenario
+            AND ns            = ms_icd_data_key-ns
+            AND ifname        = ms_icd_data_key-ifname
+            AND ifver2        = ms_icd_data_key-ifver2.
+
+        DELETE FROM ('/AIF/ICD_SCINF')
+          WHERE depl_scenario = ms_icd_data_key-depl_scenario
+            AND ns            = ms_icd_data_key-ns
+            AND ifname        = ms_icd_data_key-ifname
+            AND ifver2        = ms_icd_data_key-ifver2.
+
+      CATCH cx_root INTO lx_root.
+        zcx_abapgit_exception=>raise( iv_text     = 'Delete not possible'
+                                      ix_previous = lx_root ).
+    ENDTRY.
+
+    tadir_delete( ).
+
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
@@ -340,15 +371,13 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
           zcx_abapgit_exception=>raise( 'AIF interface checks failed' ).
         ENDIF.
 
-        io_xml->read( EXPORTING
-                        iv_name = `Content_table`
-                      CHANGING
-                        cg_data = lt_content ).
+        io_xml->read( EXPORTING iv_name = `Content_table`
+                      CHANGING  cg_data = lt_content ).
 
 
         LOOP AT lt_content REFERENCE INTO lr_content.
           TRY.
-              lv_tablename = cl_abap_dyn_prg=>check_table_name_str( val = lr_content->tabname
+              lv_tablename = cl_abap_dyn_prg=>check_table_name_str( val      = lr_content->tabname
                                                                     packages = '' ).
             CATCH cx_abap_not_a_table INTO lx_abap_not_a_table.
               zcx_abapgit_exception=>raise_with_text( lx_abap_not_a_table ).
@@ -366,13 +395,11 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
             zcx_abapgit_exception=>raise( 'Field Symbol not assigned' ).
           ENDIF.
 
-          io_xml->read( EXPORTING
-                          iv_name = lr_content->tabname
-                        CHANGING
-                          cg_data = <lt_table> ).
+          io_xml->read( EXPORTING iv_name = lr_content->tabname
+                        CHANGING  cg_data = <lt_table> ).
 
           handle_table_data( iv_tabname = lr_content->tabname
-                             it_data = <lt_table> ).
+                             it_data    = <lt_table> ).
 
           IF lr_content->tabname = '/AIF/T_FINF'.
             READ TABLE <lt_table> ASSIGNING <ls_table> INDEX 1.
@@ -402,8 +429,8 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
           RETURN.
         ENDIF.
 
-        get_content_compress( io_log = ii_log
-                              is_ifkeys = ls_ifkey
+        get_content_compress( io_log     = ii_log
+                              is_ifkeys  = ls_ifkey
                               iv_package = iv_package ).
 
 
@@ -420,7 +447,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
         ENDIF.
 
       CATCH cx_root INTO lx_root.
-        ii_log->add_exception( ix_exc = lx_root
+        ii_log->add_exception( ix_exc  = lx_root
                                is_item = ms_item ).
     ENDTRY.
   ENDMETHOD.
@@ -515,21 +542,12 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
     DATA ls_icd_data_key TYPE ty_icd_data_key.
     DATA lt_ifdata TYPE ty_table_data_t.
 
-    DATA lr_data TYPE REF TO data.
-    FIELD-SYMBOLS <ls_data> TYPE any.
-
     DATA lt_content TYPE ty_content_t.
     DATA ls_content TYPE ty_content_s.
     DATA lr_ifdata TYPE REF TO ty_table_data_s.
     FIELD-SYMBOLS <lt_table> TYPE ANY TABLE.
 
     TRY.
-
-        ASSIGN lr_data TO <ls_data>.
-        IF NOT <ls_data> IS ASSIGNED.
-          RETURN.
-        ENDIF.
-
         ls_icd_data_key-depl_scenario = ms_icd_data_key-depl_scenario.
         ls_icd_data_key-ns = ms_icd_data_key-ns.
         ls_icd_data_key-ifname = ms_icd_data_key-ifname.
@@ -563,7 +581,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
                      ig_data = lt_content ).
 
       CATCH cx_root INTO lx_root.
-        zcx_abapgit_exception=>raise( iv_text = 'Serialize not possible'
+        zcx_abapgit_exception=>raise( iv_text     = 'Serialize not possible'
                                       ix_previous = lx_root ).
     ENDTRY.
   ENDMETHOD.
