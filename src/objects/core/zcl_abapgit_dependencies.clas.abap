@@ -84,10 +84,6 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           <ls_tadir>-korrnum = '999000'.
         WHEN 'DOMA'.
           <ls_tadir>-korrnum = '900000'.
-        WHEN 'SPRX'.
-          <ls_tadir>-korrnum = '850000'.
-        WHEN 'WEBI'.
-          <ls_tadir>-korrnum = '840000'.
         WHEN 'PARA'.
           " PARA after DTEL
           <ls_tadir>-korrnum = '810000'.
@@ -189,6 +185,11 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
         WHEN 'SAPC'.
           " SAPC after SICF
           <ls_tadir>-korrnum = '140000'.
+        WHEN 'SPRX'.
+          " SPRX generates objects, so remove those early
+          <ls_tadir>-korrnum = '135000'.
+        WHEN 'WEBI'.
+          <ls_tadir>-korrnum = '134000'.
         WHEN 'PINF'.
           " PINF before exposed objects
           <ls_tadir>-korrnum = '130000'.
