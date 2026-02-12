@@ -1,0 +1,16 @@
+name: notify-monorepo
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.MONOREPO_DISPATCH_TOKEN }}
+          repository: nova-software-ai/monorepo
+          event-type: abapgit-push
+          client-payload: '{"ref": "${{ github.sha }}"}'
