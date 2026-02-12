@@ -854,6 +854,10 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     CLEAR: ls_package_data-devclass,
            ls_package_data-parentcl.
 
+    " Clear language fields to prevents diffs, package has to match repo language. Filled since 816
+    CLEAR: ls_package_data-language,
+           ls_package_data-masterlang.
+
     " Clear administrative data to prevent diffs
     CLEAR: ls_package_data-created_by,
            ls_package_data-created_on,
