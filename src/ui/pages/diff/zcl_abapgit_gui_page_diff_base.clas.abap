@@ -947,7 +947,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
         CLEAR: ls_stats-insert, ls_stats-delete.
       ENDIF.
 
-      " Count of updated lines (yellow) is only show in split view
+      " Count of updated lines (yellow) is only shown in split view
       IF mv_unified = abap_true.
         ls_stats-insert = ls_stats-insert + ls_stats-update.
         ls_stats-delete = ls_stats-delete + ls_stats-update.
