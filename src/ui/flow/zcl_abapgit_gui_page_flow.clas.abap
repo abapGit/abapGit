@@ -292,7 +292,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     set_branch(
       iv_branch = lv_branch
       iv_key    = lv_key ).
-    COMMIT WORK. " to release lock
+    COMMIT WORK AND WAIT. " to release lock
 
     li_repo_online->zif_abapgit_repo~set_files_remote( lt_files ).
 
