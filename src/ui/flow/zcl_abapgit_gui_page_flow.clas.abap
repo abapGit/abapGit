@@ -264,11 +264,6 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ENDLOOP.
     CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
 
-    set_branch(
-      iv_branch = lv_branch
-      iv_key    = lv_key ).
-    COMMIT WORK. " to release lock
-
     LOOP AT ls_feature-changed_files INTO ls_remote WHERE remote_sha1 IS NOT INITIAL.
       INSERT ls_remote-remote_sha1 INTO TABLE lt_sha1.
     ENDLOOP.
@@ -294,6 +289,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     INSERT ls_file INTO TABLE lt_files.
 
     li_repo_online->zif_abapgit_repo~set_files_remote( lt_files ).
+
+    set_branch(
+      iv_branch = lv_branch
+      iv_key    = lv_key ).
+    COMMIT WORK. " to release lock
 
     rs_handled-page = zcl_abapgit_gui_page_stage=>create(
       ii_force_refresh = abap_false
