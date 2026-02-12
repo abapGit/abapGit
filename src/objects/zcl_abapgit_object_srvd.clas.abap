@@ -393,6 +393,9 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
 
         tadir_insert( iv_package ).
 
+        " exists() can return false even when a ghost WB entry remains
+        " (e.g. after incomplete delete/activation). In that case CREATE
+        " throws CX_WB_OBJECT_ALREADY_EXISTS and we fall through to UPDATE.
         TRY.
             IF zif_abapgit_object~exists( ) = abap_false.
               CASE <lv_category>.
