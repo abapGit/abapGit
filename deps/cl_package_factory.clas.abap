@@ -83,6 +83,16 @@ CLASS cl_package_factory IMPLEMENTATION.
 
     CREATE OBJECT lo_package TYPE cl_package_factory.
     lo_package->ls_tdevc = ls_tdevc.
+
+    lo_package->if_package~wbo_korr_flag = ls_tdevc-korrflag.
+    lo_package->if_package~package_name = ls_tdevc-devclass.
+    lo_package->if_package~short_text = ls_tdevc-ctext.
+    lo_package->if_package~super_package_name = ls_tdevc-parentcl.
+    lo_package->if_package~software_component = ls_tdevc-dlvunit.
+    lo_package->if_package~application_component = ls_tdevc-component.
+    lo_package->if_package~transport_layer = ls_tdevc-pdevclass.
+    lo_package->if_package~changed_by = ls_tdevc-changed_by.
+
     e_package ?= lo_package.
   ENDMETHOD.
 

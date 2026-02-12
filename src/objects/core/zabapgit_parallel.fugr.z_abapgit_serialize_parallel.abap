@@ -2,10 +2,7 @@ FUNCTION z_abapgit_serialize_parallel.
 *"----------------------------------------------------------------------
 *"*"Local Interface:
 *"  IMPORTING
-*"     VALUE(IV_OBJ_TYPE) TYPE  TADIR-OBJECT
-*"     VALUE(IV_OBJ_NAME) TYPE  TADIR-OBJ_NAME
-*"     VALUE(IV_DEVCLASS) TYPE  TADIR-DEVCLASS
-*"     VALUE(IV_SRCSYSTEM) TYPE  TADIR-SRCSYSTEM
+*"     VALUE(IS_TADIR) TYPE  TADIR
 *"     VALUE(IV_ABAP_LANGUAGE_VERS) TYPE  UCCHECK
 *"     VALUE(IV_LANGUAGE) TYPE  SY-LANGU
 *"     VALUE(IV_PATH) TYPE  STRING
@@ -20,17 +17,18 @@ FUNCTION z_abapgit_serialize_parallel.
 *"      ERROR
 *"----------------------------------------------------------------------
 
-  DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item,
-        lx_error TYPE REF TO zcx_abapgit_exception,
-        lv_text  TYPE c LENGTH 200,
+  DATA: ls_item        TYPE zif_abapgit_definitions=>ty_item,
+        lx_error       TYPE REF TO zcx_abapgit_exception,
+        lv_text        TYPE c LENGTH 200,
         ls_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params,
-        ls_files TYPE zif_abapgit_objects=>ty_serialization.
+        ls_files       TYPE zif_abapgit_objects=>ty_serialization.
 
   TRY.
-      ls_item-obj_type  = iv_obj_type.
-      ls_item-obj_name  = iv_obj_name.
-      ls_item-devclass  = iv_devclass.
-      ls_item-srcsystem = iv_srcsystem.
+      ls_item-obj_type  = is_tadir-object.
+      ls_item-obj_name  = is_tadir-obj_name.
+      ls_item-devclass  = is_tadir-devclass.
+      ls_item-srcsystem = is_tadir-srcsystem.
+      ls_item-origlang  = is_tadir-masterlang.
       ls_item-abap_language_version = iv_abap_language_vers.
 
       ls_i18n_params-main_language         = iv_language.
