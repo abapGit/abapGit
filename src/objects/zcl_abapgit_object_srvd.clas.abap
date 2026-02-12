@@ -395,7 +395,7 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
 
         TRY.
             IF zif_abapgit_object~exists( ) = abap_false.
-          CASE <lv_category>.
+              CASE <lv_category>.
             WHEN '1'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
               CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CREATE')
                 EXPORTING
