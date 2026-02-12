@@ -85,20 +85,8 @@
      <SHORT_TEXT>abapGit - Serialize Object</SHORT_TEXT>
      <IMPORT>
       <RSIMP>
-       <PARAMETER>IV_OBJ_TYPE</PARAMETER>
-       <TYP>TADIR-OBJECT</TYP>
-      </RSIMP>
-      <RSIMP>
-       <PARAMETER>IV_OBJ_NAME</PARAMETER>
-       <TYP>TADIR-OBJ_NAME</TYP>
-      </RSIMP>
-      <RSIMP>
-       <PARAMETER>IV_DEVCLASS</PARAMETER>
-       <TYP>TADIR-DEVCLASS</TYP>
-      </RSIMP>
-      <RSIMP>
-       <PARAMETER>IV_SRCSYSTEM</PARAMETER>
-       <TYP>TADIR-SRCSYSTEM</TYP>
+       <PARAMETER>IS_TADIR</PARAMETER>
+       <TYP>TADIR</TYP>
       </RSIMP>
       <RSIMP>
        <PARAMETER>IV_ABAP_LANGUAGE_VERS</PARAMETER>
@@ -146,24 +134,8 @@
      </EXCEPTION>
      <DOCUMENTATION>
       <RSFDO>
-       <PARAMETER>IV_OBJ_TYPE</PARAMETER>
+       <PARAMETER>IS_TADIR</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>Object Type</STEXT>
-      </RSFDO>
-      <RSFDO>
-       <PARAMETER>IV_OBJ_NAME</PARAMETER>
-       <KIND>P</KIND>
-       <STEXT>Object Name in Object Directory</STEXT>
-      </RSFDO>
-      <RSFDO>
-       <PARAMETER>IV_DEVCLASS</PARAMETER>
-       <KIND>P</KIND>
-       <STEXT>Package</STEXT>
-      </RSFDO>
-      <RSFDO>
-       <PARAMETER>IV_SRCSYSTEM</PARAMETER>
-       <KIND>P</KIND>
-       <STEXT>Original System of Object</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>IV_ABAP_LANGUAGE_VERS</PARAMETER>
