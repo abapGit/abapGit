@@ -393,6 +393,7 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
 
         tadir_insert( iv_package ).
 
+        TRY.
         IF zif_abapgit_object~exists( ) = abap_false.
           CASE <lv_category>.
             WHEN '1'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
@@ -421,6 +422,9 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
               zcx_abapgit_exception=>raise( |Category '{ <lv_category> }' not supported| ).
           ENDCASE.
         ELSE.
+          RAISE EXCEPTION TYPE cx_wb_object_already_exists.
+        ENDIF.
+        CATCH cx_wb_object_already_exists.
           CASE <lv_category>.
             WHEN '1'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
               lo_merged_data_all = merge_object_data( lo_object_data ).
@@ -448,7 +452,7 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
             WHEN OTHERS.
               zcx_abapgit_exception=>raise( |Category '{ <lv_category> }' not supported| ).
           ENDCASE.
-        ENDIF.
+        ENDTRY.
 
         corr_insert( iv_package ).
 
