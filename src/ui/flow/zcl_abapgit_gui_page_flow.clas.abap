@@ -215,6 +215,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     set_branch(
       iv_branch = lv_branch
       iv_key    = lv_key ).
+    COMMIT WORK. " to release lock
 
     rs_handled-page = zcl_abapgit_gui_page_pull=>create(
       ii_repo       = li_repo_online
@@ -266,6 +267,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     set_branch(
       iv_branch = lv_branch
       iv_key    = lv_key ).
+    COMMIT WORK. " to release lock
 
     LOOP AT ls_feature-changed_files INTO ls_remote WHERE remote_sha1 IS NOT INITIAL.
       INSERT ls_remote-remote_sha1 INTO TABLE lt_sha1.
