@@ -288,12 +288,13 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ls_file = li_repo_online->zif_abapgit_repo~get_dot_abapgit( )->to_file( ).
     INSERT ls_file INTO TABLE lt_files.
 
-    li_repo_online->zif_abapgit_repo~set_files_remote( lt_files ).
-
+* note: this resets files in remote, so call before set_files_remote()
     set_branch(
       iv_branch = lv_branch
       iv_key    = lv_key ).
     COMMIT WORK. " to release lock
+
+    li_repo_online->zif_abapgit_repo~set_files_remote( lt_files ).
 
     rs_handled-page = zcl_abapgit_gui_page_stage=>create(
       ii_force_refresh = abap_false
