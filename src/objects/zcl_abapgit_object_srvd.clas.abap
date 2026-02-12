@@ -396,62 +396,62 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
         TRY.
             IF zif_abapgit_object~exists( ) = abap_false.
               CASE <lv_category>.
-            WHEN '1'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
-              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CREATE')
-                EXPORTING
-                  io_object_data    = lo_object_data
-                  data_selection    = 'AL' "if_wb_object_data_selection_co=>c_all_data
-                  version           = 'I' "swbm_version_inactive
-                  package           = iv_package
-                  transport_request = iv_transport.
-            WHEN '2'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_compound_s.
-              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CREATE')
-                EXPORTING
-                  io_object_data    = lo_object_data
-                  data_selection    = 'P' "if_wb_object_data_selection_co=>c_properties
-                  version           = 'I' "swbm_version_inactive
-                  package           = iv_package
-                  transport_request = iv_transport.
-              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
-                EXPORTING
-                  io_object_data    = lo_object_data
-                  data_selection    = 'D' "if_wb_object_data_selection_co=>c_data_content
-                  version           = 'I' "swbm_version_inactive
-                  transport_request = iv_transport.
-            WHEN OTHERS.
-              zcx_abapgit_exception=>raise( |Category '{ <lv_category> }' not supported| ).
-          ENDCASE.
-        ELSE.
-          RAISE EXCEPTION TYPE cx_wb_object_already_exists.
-        ENDIF.
-        CATCH cx_wb_object_already_exists.
-          CASE <lv_category>.
-            WHEN '1'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
-              lo_merged_data_all = merge_object_data( lo_object_data ).
-              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
-                EXPORTING
-                  io_object_data    = lo_merged_data_all
-                  data_selection    = 'AL' "if_wb_object_data_selection_co=>c_all_data
-                  version           = 'I' "swbm_version_inactive
-                  transport_request = iv_transport.
-            WHEN '2'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_compound_s.
-              lo_merged_data_prop = merge_object_data( lo_object_data ).
-              lo_merged_data_cont = merge_object_data( lo_object_data ).
-              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
-                EXPORTING
-                  io_object_data    = lo_merged_data_prop
-                  data_selection    = 'P' "if_wb_object_data_selection_co=>c_properties
-                  version           = 'I' "swbm_version_inactive
-                  transport_request = iv_transport.
-              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
-                EXPORTING
-                  io_object_data    = lo_merged_data_cont
-                  data_selection    = 'D' "if_wb_object_data_selection_co=>c_data_content
-                  version           = 'I' "swbm_version_inactive
-                  transport_request = iv_transport.
-            WHEN OTHERS.
-              zcx_abapgit_exception=>raise( |Category '{ <lv_category> }' not supported| ).
-          ENDCASE.
+                WHEN '1'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
+                  CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CREATE')
+                    EXPORTING
+                      io_object_data    = lo_object_data
+                      data_selection    = 'AL' "if_wb_object_data_selection_co=>c_all_data
+                      version           = 'I' "swbm_version_inactive
+                      package           = iv_package
+                      transport_request = iv_transport.
+                WHEN '2'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_compound_s.
+                  CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CREATE')
+                    EXPORTING
+                      io_object_data    = lo_object_data
+                      data_selection    = 'P' "if_wb_object_data_selection_co=>c_properties
+                      version           = 'I' "swbm_version_inactive
+                      package           = iv_package
+                      transport_request = iv_transport.
+                  CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+                    EXPORTING
+                      io_object_data    = lo_object_data
+                      data_selection    = 'D' "if_wb_object_data_selection_co=>c_data_content
+                      version           = 'I' "swbm_version_inactive
+                      transport_request = iv_transport.
+                WHEN OTHERS.
+                  zcx_abapgit_exception=>raise( |Category '{ <lv_category> }' not supported| ).
+              ENDCASE.
+            ELSE.
+              RAISE EXCEPTION TYPE cx_wb_object_already_exists.
+            ENDIF.
+          CATCH cx_wb_object_already_exists.
+            CASE <lv_category>.
+              WHEN '1'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
+                lo_merged_data_all = merge_object_data( lo_object_data ).
+                CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+                  EXPORTING
+                    io_object_data    = lo_merged_data_all
+                    data_selection    = 'AL' "if_wb_object_data_selection_co=>c_all_data
+                    version           = 'I' "swbm_version_inactive
+                    transport_request = iv_transport.
+              WHEN '2'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_compound_s.
+                lo_merged_data_prop = merge_object_data( lo_object_data ).
+                lo_merged_data_cont = merge_object_data( lo_object_data ).
+                CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+                  EXPORTING
+                    io_object_data    = lo_merged_data_prop
+                    data_selection    = 'P' "if_wb_object_data_selection_co=>c_properties
+                    version           = 'I' "swbm_version_inactive
+                    transport_request = iv_transport.
+                CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+                  EXPORTING
+                    io_object_data    = lo_merged_data_cont
+                    data_selection    = 'D' "if_wb_object_data_selection_co=>c_data_content
+                    version           = 'I' "swbm_version_inactive
+                    transport_request = iv_transport.
+              WHEN OTHERS.
+                zcx_abapgit_exception=>raise( |Category '{ <lv_category> }' not supported| ).
+            ENDCASE.
         ENDTRY.
 
         corr_insert( iv_package ).
