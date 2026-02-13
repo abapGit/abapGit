@@ -136,6 +136,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
         <ls_repo_item>-changes   = 0.
         <ls_repo_item>-path      = <ls_status>-path.
         <ls_repo_item>-srcsystem = <ls_status>-srcsystem.
+        <ls_repo_item>-origlang  = <ls_status>-origlang.
         CREATE OBJECT lo_state.
       ENDAT.
 
