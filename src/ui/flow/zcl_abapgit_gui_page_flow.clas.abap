@@ -215,6 +215,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     set_branch(
       iv_branch = lv_branch
       iv_key    = lv_key ).
+    COMMIT WORK AND WAIT. " to release lock
 
     rs_handled-page = zcl_abapgit_gui_page_pull=>create(
       ii_repo       = li_repo_online
@@ -263,10 +264,6 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ENDLOOP.
     CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
 
-    set_branch(
-      iv_branch = lv_branch
-      iv_key    = lv_key ).
-
     LOOP AT ls_feature-changed_files INTO ls_remote WHERE remote_sha1 IS NOT INITIAL.
       INSERT ls_remote-remote_sha1 INTO TABLE lt_sha1.
     ENDLOOP.
@@ -290,6 +287,12 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ENDLOOP.
     ls_file = li_repo_online->zif_abapgit_repo~get_dot_abapgit( )->to_file( ).
     INSERT ls_file INTO TABLE lt_files.
+
+* note: this resets files in remote, so call before set_files_remote()
+    set_branch(
+      iv_branch = lv_branch
+      iv_key    = lv_key ).
+    COMMIT WORK AND WAIT. " to release lock
 
     li_repo_online->zif_abapgit_repo~set_files_remote( lt_files ).
 
