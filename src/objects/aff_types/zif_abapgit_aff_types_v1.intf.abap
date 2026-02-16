@@ -29,25 +29,16 @@ INTERFACE zif_abapgit_aff_types_v1 PUBLIC.
     END OF co_abap_language_version_cloud.
 
   TYPES ty_description_60 TYPE c LENGTH 60.
+
+  TYPES ty_description_80 TYPE c LENGTH 80.
+
   TYPES ty_description_100 TYPE c LENGTH 100.
 
   TYPES ty_object_name_30 TYPE c LENGTH 30.
 
+  TYPES ty_object_name_40 TYPE c LENGTH 40.
+
   TYPES ty_original_language TYPE sy-langu.
-
-  TYPES:
-    BEGIN OF ty_header_60_src,
-      description           TYPE ty_description_60,
-      original_language     TYPE ty_original_language,
-      abap_language_version TYPE ty_abap_language_version_src,
-    END OF ty_header_60_src.
-
-  TYPES:
-    BEGIN OF ty_header_60_cloud,
-      description           TYPE ty_description_60,
-      original_language     TYPE ty_original_language,
-      abap_language_version TYPE ty_abap_language_version_cloud,
-    END OF ty_header_60_cloud.
 
   TYPES:
     BEGIN OF ty_header_60,
@@ -57,10 +48,38 @@ INTERFACE zif_abapgit_aff_types_v1 PUBLIC.
     END OF ty_header_60.
 
   TYPES:
+    BEGIN OF ty_header_60_cloud,
+      description           TYPE ty_description_60,
+      original_language     TYPE ty_original_language,
+      abap_language_version TYPE ty_abap_language_version_cloud,
+    END OF ty_header_60_cloud.
+
+  TYPES:
     BEGIN OF ty_header_60_no_abap_lv,
       description       TYPE ty_description_60,
       original_language TYPE ty_original_language,
     END OF ty_header_60_no_abap_lv.
+
+  TYPES:
+    BEGIN OF ty_header_60_src,
+      description           TYPE ty_description_60,
+      original_language     TYPE ty_original_language,
+      abap_language_version TYPE ty_abap_language_version_src,
+    END OF ty_header_60_src.
+
+  TYPES:
+    BEGIN OF ty_header_80,
+      description           TYPE ty_description_80,
+      original_language     TYPE ty_original_language,
+      abap_language_version TYPE ty_abap_language_version,
+    END OF ty_header_80.
+
+  TYPES:
+    BEGIN OF ty_header_80_cloud,
+      description           TYPE ty_description_80,
+      original_language     TYPE ty_original_language,
+      abap_language_version TYPE ty_abap_language_version_cloud,
+    END OF ty_header_80_cloud.
 
   TYPES:
     BEGIN OF ty_header_100,
@@ -68,6 +87,13 @@ INTERFACE zif_abapgit_aff_types_v1 PUBLIC.
       original_language     TYPE ty_original_language,
       abap_language_version TYPE ty_abap_language_version,
     END OF ty_header_100.
+
+  TYPES:
+    BEGIN OF ty_header_100_cloud,
+      description           TYPE ty_description_100,
+      original_language     TYPE ty_original_language,
+      abap_language_version TYPE ty_abap_language_version_cloud,
+    END OF ty_header_100_cloud.
 
   TYPES:
     BEGIN OF ty_header_only_description,

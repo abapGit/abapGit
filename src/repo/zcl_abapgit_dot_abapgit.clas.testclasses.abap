@@ -104,6 +104,16 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
       act = lv_ignored
       exp = abap_true ).
 
+    " Don't ignore file
+    lo_dot->add_ignore( iv_path = '!' && lc_root
+                        iv_filename = 'abaplint.json' ).
+
+    lv_ignored = lo_dot->is_ignored( iv_path = lc_root
+                                     iv_filename = 'abaplint.json' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_ignored
+      exp = abap_false ).
+
   ENDMETHOD.
 
 ENDCLASS.
