@@ -8,7 +8,7 @@ Legend
 + : added
 - : removed
 
-2026-01-27 v1.133.0
+2026-02-17 v1.133.0
 -------------------
 
 ! Clear `ACTFLAG` and `RESERVEDTE` for DDIC objects (#7319)
@@ -16,6 +16,7 @@ Legend
 ! SUSH: Fix "lead application does not exist" (#7495)
 ! TRAN: Include SU22 data (#7497, #7537)
 ! SRVB: Auto-publish service bindings (#7523)
+! Call deserialize post-processing exit at end of deserializing (#7569)
 + PO syntax highlighting (#7338)
 + Repo list: add clear filter (#7344)
 + CLAS: Deserialize sub-component docs (#7360)
@@ -28,6 +29,15 @@ Legend
 + TABU: Support local storage of data config (#7498, #7502, #7520)
 + Repo View: Add hotkey for "filename toggle" (#7519)
 + Feature/validate after push exit (#7521)
++ DESD: Add support for Dictionary External Schema Definition (#7538)
++ ENHO, ENHS: Add ABAP Language Version support (#7540)
++ SMIM: Enhanced format and ABAP Language Version support (#7544)
++ FUGR/FUNC: add scope and interface contract (#7545)
++ SRVB, SRVD, SUSH, SUSO: Add ABAP Language Version support (#7541)
++ TABU: Local storage of data config (#7520, )
++ Add ABAP Language Version support to more objects (#7525)
++ Support "do not ignore" files in repo settings (#7565)
++ AFF: update types + add DOMA (#7584)
 * Stage+commit page: dont show commit id (#7308)
 * Git: optimize delta calculation (#7306)
 * Fix diff resetting .abapgit.xml (#7310)
@@ -80,6 +90,20 @@ Legend
 * TABU: fix dump when pulling (#7516)
 * CHDO: Fix deletion of generated objects (#7522)
 * TABU: avoid transport popup for local tables (#7517)
+* Fix detection of text/binary files (#7546)
+* SICF: Clear settings that are not relevant (#7548)
+* DDLS: Add protocol for deletions (#7561)
+* AMSD, APIS, AREA: Fix exception handling (#7539)
+* DRUL, DTDC: Clear master_system (#7553)
+* Move serialize post-processing exit to end of serializing (#7568)
+* SUSO: Fix log output (#7554)
+* SOD1, SOD2: Clear user names, timestamp (#7558)
+* SPRX: Fix exists, active, delete (#7560)
+* Fix: TADIR-MASTERLANG is lost (#7576)
+* AIFC: Fix dumps and add deletion (#7552)
+* SRVD: handle CX_WB_OBJECT_ALREADY_EXISTS on CREATE by falling back to UPDATE (#7577)
+* Diff view: Fix delta count in unified view (#7542)
+* DEVC: Clear LANGUAGE and MASTERLANG (#7581)
 
 2025-06-25 v1.132.0
 -------------------
