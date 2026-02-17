@@ -1,4 +1,4 @@
-CLASS lcl_package_to_path DEFINITION.
+CLASS lcl_package_to_path_cache DEFINITION.
 
   PUBLIC SECTION.
 
@@ -34,7 +34,7 @@ CLASS lcl_package_to_path DEFINITION.
 
 ENDCLASS.
 
-CLASS lcl_package_to_path IMPLEMENTATION.
+CLASS lcl_package_to_path_cache IMPLEMENTATION.
 
   METHOD get.
 
@@ -67,7 +67,7 @@ CLASS lcl_package_to_path IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_path_to_package DEFINITION.
+CLASS lcl_path_to_package_cache DEFINITION.
 
   PUBLIC SECTION.
 
@@ -103,7 +103,7 @@ CLASS lcl_path_to_package DEFINITION.
 
 ENDCLASS.
 
-CLASS lcl_path_to_package IMPLEMENTATION.
+CLASS lcl_path_to_package_cache IMPLEMENTATION.
 
   METHOD get.
 

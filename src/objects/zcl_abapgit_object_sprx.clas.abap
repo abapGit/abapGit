@@ -65,8 +65,8 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
 
     TRY.
         cl_proxy_utils=>check_sprx_tadir(
-            objects = lt_abap_keys
-            repair  = abap_true ).
+          objects = lt_abap_keys
+          repair  = abap_true ).
 
       CATCH cx_proxy_gen_error INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
@@ -101,16 +101,16 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
     "Thereby the dependent objects will be deleted
     TRY.
         lo_proxy = cl_proxy_fact=>load_by_abap_name(
-                       object   = mv_object
-                       obj_name = mv_obj_name ).
+          object   = mv_object
+          obj_name = mv_obj_name ).
 
 
         lt_delta = lo_proxy->get_delta_all( ).
 
         ls_db_data = cl_proxy_db=>serialize(
-                         proxy    = lo_proxy
-                         inactive = abap_false
-                         delta    = lt_delta ).
+          proxy    = lo_proxy
+          inactive = abap_false
+          delta    = lt_delta ).
 
         et_sproxhdr_new = ls_db_data-sproxhdr.
         et_sproxdat_new = ls_db_data-sproxdat.
@@ -201,14 +201,14 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
       lt_sproxintf_new TYPE sprx_matchintf_t.
 
     cl_proxy_data=>db_save(
-        sproxhdr_old  = lt_sproxhdr_old
-        sproxdat_old  = lt_sproxdat_old
-        sproxsvar_old = lt_sproxsvar_old
-        sproxintf_old = lt_sproxintf_old
-        sproxhdr_new  = it_sproxhdr_new
-        sproxdat_new  = it_sproxdat_new
-        sproxsvar_new = lt_sproxsvar_new
-        sproxintf_new = lt_sproxintf_new ).
+      sproxhdr_old  = lt_sproxhdr_old
+      sproxdat_old  = lt_sproxdat_old
+      sproxsvar_old = lt_sproxsvar_old
+      sproxintf_old = lt_sproxintf_old
+      sproxhdr_new  = it_sproxhdr_new
+      sproxdat_new  = it_sproxdat_new
+      sproxsvar_new = lt_sproxsvar_new
+      sproxintf_new = lt_sproxintf_new ).
 
   ENDMETHOD.
 
@@ -263,19 +263,21 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
             ct_log           = lt_log.
       CATCH cx_root.
         cl_proxy_data=>delete_single_proxy(
-           EXPORTING
-             object           = lv_object
-             obj_name         = lv_obj_name
-             i_transport      = lv_transp_flag
-           CHANGING
-             c_return_code    = lv_return_code
-             ct_log           = lt_log ).
+          EXPORTING
+            object        = lv_object
+            obj_name      = lv_obj_name
+            i_transport   = lv_transp_flag
+          CHANGING
+            c_return_code = lv_return_code
+            ct_log        = lt_log ).
     ENDTRY.
     IF lv_return_code <> 0.
       zcx_abapgit_exception=>raise( 'SPRX: Error from DELETE_SINGLE_PROXY' ).
     ENDIF.
 
     corr_insert( iv_package ).
+
+    tadir_delete( ).
 
   ENDMETHOD.
 
@@ -291,7 +293,7 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
 
     delta_handling(
       EXPORTING
-        ii_xml = io_xml
+        ii_xml          = io_xml
       IMPORTING
         et_sproxhdr_new = lt_sproxhdr_new
         et_sproxdat_new = lt_sproxdat_new ).
@@ -309,19 +311,16 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA:
-      lv_status      TYPE prx_status,
-      lv_status_text TYPE prx_status_t.
+    DATA lv_status TYPE prx_status.
 
     cl_proxy_data=>db_get_status(
       EXPORTING
-        object      = mv_object
-        obj_name    = mv_obj_name
+        object   = mv_object
+        obj_name = mv_obj_name
       IMPORTING
-        status      = lv_status
-        status_text = lv_status_text ).
+        status   = lv_status ).
 
-    rv_bool = boolc( lv_status = if_proxy=>c_state_active ).
+    rv_bool = boolc( lv_status = if_proxy=>c_state_active OR lv_status = if_proxy=>c_state_inactive ).
 
   ENDMETHOD.
 
@@ -347,7 +346,18 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_active.
-    rv_active = abap_true. "dummy implementation
+
+    DATA lv_status TYPE prx_status.
+
+    cl_proxy_data=>db_get_status(
+      EXPORTING
+        object   = mv_object
+        obj_name = mv_obj_name
+      IMPORTING
+        status   = lv_status ).
+
+    rv_active = boolc( lv_status = if_proxy=>c_state_active ).
+
   ENDMETHOD.
 
 
@@ -414,12 +424,12 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
     ENDLOOP.
 
     io_xml->add(
-        iv_name = c_proxy-header
-        ig_data = ls_sprx_db_data-sproxhdr ).
+      iv_name = c_proxy-header
+      ig_data = ls_sprx_db_data-sproxhdr ).
 
     io_xml->add(
-        iv_name = c_proxy-data
-        ig_data = ls_sprx_db_data-sproxdat ).
+      iv_name = c_proxy-data
+      ig_data = ls_sprx_db_data-sproxdat ).
 
   ENDMETHOD.
 ENDCLASS.

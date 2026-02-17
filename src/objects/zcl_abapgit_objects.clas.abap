@@ -123,6 +123,7 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_steps
       IMPORTING
+        !iv_package     TYPE devclass
         !it_steps       TYPE zif_abapgit_objects=>ty_step_data_tt
         !ii_log         TYPE REF TO zif_abapgit_log
         !iv_transport   TYPE trkorr
@@ -133,6 +134,7 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_step
       IMPORTING
+        !iv_package   TYPE devclass
         !is_step      TYPE zif_abapgit_objects=>ty_step_data
         !ii_log       TYPE REF TO zif_abapgit_log
         !iv_transport TYPE trkorr
@@ -739,6 +741,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     "run deserialize for all steps and its objects
     deserialize_steps(
       EXPORTING
+        iv_package     = ii_repo->get_package( )
         it_steps       = lt_steps
         ii_log         = ii_log
         io_i18n_params = lo_i18n_params
@@ -879,8 +882,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 *   Call postprocessing
     li_exit = zcl_abapgit_exit=>get_instance( ).
 
-    li_exit->deserialize_postprocess( is_step = is_step
-                                      ii_log  = ii_log ).
+    li_exit->deserialize_postprocess(
+      iv_package = iv_package
+      is_step    = is_step
+      ii_log     = ii_log ).
 
   ENDMETHOD.
 
@@ -893,6 +898,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       IF <ls_step>-step_id <> zif_abapgit_object=>gc_step_id-lxe.
         deserialize_step(
           EXPORTING
+            iv_package   = iv_package
             is_step      = <ls_step>
             ii_log       = ii_log
             iv_transport = iv_transport
