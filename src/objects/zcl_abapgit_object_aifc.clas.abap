@@ -599,8 +599,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
               WHERE depl_scenario = ms_icd_data_key-depl_scenario
                 AND ns            = ms_icd_data_key-ns
                 AND ifname        = ms_icd_data_key-ifname
-                AND ifver2        = ms_icd_data_key-ifver2 ##SUBRC_OK.
-
+                AND ifver2        = ms_icd_data_key-ifver2.
             IF sy-subrc = 0.
               clear_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
 
