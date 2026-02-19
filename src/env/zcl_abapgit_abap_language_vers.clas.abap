@@ -7,8 +7,7 @@ CLASS zcl_abapgit_abap_language_vers DEFINITION
 
     CONSTANTS:
       c_any_abap_language_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version VALUE '*',
-      c_no_abap_language_version  TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version VALUE '-',
-      c_feature_flag              TYPE string VALUE 'ALAV'.
+      c_no_abap_language_version  TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version VALUE '-'.
 
     METHODS constructor
       IMPORTING
@@ -91,9 +90,7 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
 
     mo_dot_abapgit = io_dot_abapgit.
 
-    IF zcl_abapgit_feature=>is_enabled( c_feature_flag ) = abap_false.
-      mv_has_abap_language_vers = abap_undefined.
-    ELSEIF get_abap_language_vers_by_repo( ) = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
+    IF get_abap_language_vers_by_repo( ) = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
       mv_has_abap_language_vers = abap_undefined.
     ELSEIF get_abap_language_vers_by_repo( ) = zif_abapgit_dot_abapgit=>c_abap_language_version-ignore.
       mv_has_abap_language_vers = abap_false.

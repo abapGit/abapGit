@@ -87,7 +87,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -125,8 +125,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
   METHOD get_form_schema.
 
     ro_form = zcl_abapgit_html_form=>create(
-                iv_form_id   = 'repo-settings-form'
-                iv_help_page = 'https://docs.abapgit.org/settings-dot-abapgit.html' ).
+      iv_form_id   = 'repo-settings-form'
+      iv_help_page = 'https://docs.abapgit.org/settings-dot-abapgit.html' ).
 
     ro_form->start_group(
       iv_name        = c_id-dot
@@ -218,29 +218,27 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       iv_hint        = 'Sets the source system of objects during deserialize in downstream systems'
                        && ' (use "SID" to force the source system to sy-sysid)' ).
 
-    IF zcl_abapgit_feature=>is_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
-      ro_form->radio(
-        iv_name        = c_id-abap_langu_vers
-        iv_default_value = ''
-        iv_condense    = abap_true
-        iv_label       = 'ABAP Language Version'
-        iv_hint        = 'Define the ABAP language version for objects in the repository'
-      )->option(
-        iv_label       = 'Any (Object-specific ABAP Language Version)'
-        iv_value       = ''
-      )->option(
-        iv_label       = 'Ignore (ABAP Language Version not serialized)'
-        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-ignore
-      )->option(
-        iv_label       = 'Standard ABAP'
-        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-standard
-      )->option(
-        iv_label       = 'ABAP for Key Users'
-        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-key_user
-      )->option(
-        iv_label       = 'ABAP for Cloud Development'
-        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development ).
-    ENDIF.
+    ro_form->radio(
+      iv_name        = c_id-abap_langu_vers
+      iv_default_value = ''
+      iv_condense    = abap_true
+      iv_label       = 'ABAP Language Version'
+      iv_hint        = 'Define the ABAP language version for objects in the repository'
+    )->option(
+      iv_label       = 'Any (Object-specific ABAP Language Version)'
+      iv_value       = ''
+    )->option(
+      iv_label       = 'Ignore (ABAP Language Version not serialized)'
+      iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-ignore
+    )->option(
+      iv_label       = 'Standard ABAP'
+      iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-standard
+    )->option(
+      iv_label       = 'ABAP for Key Users'
+      iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-key_user
+    )->option(
+      iv_label       = 'ABAP for Cloud Development'
+      iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development ).
 
     ro_form->command(
       iv_label       = 'Save Settings'
@@ -347,11 +345,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       iv_key = |{ c_id-requirements }-{ zif_abapgit_html_form=>c_rows }|
       iv_val = |{ mv_requirements_count }| ).
 
-    IF zcl_abapgit_feature=>is_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
-      ro_form_data->set(
-        iv_key = c_id-abap_langu_vers
-        iv_val = ls_dot-abap_language_version ).
-    ENDIF.
+    ro_form_data->set(
+      iv_key = c_id-abap_langu_vers
+      iv_val = ls_dot-abap_language_version ).
 
     ro_form_data->set(
       iv_key = c_id-original_system
@@ -377,10 +373,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
     lo_dot->set_starting_folder( mo_form_data->get( c_id-starting_folder ) ).
     lo_dot->set_version_constant( mo_form_data->get( c_id-version_constant ) ).
     lo_dot->set_original_system( mo_form_data->get( c_id-original_system ) ).
-
-    IF zcl_abapgit_feature=>is_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
-      lo_dot->set_abap_language_version( mo_form_data->get( c_id-abap_langu_vers ) ).
-    ENDIF.
+    lo_dot->set_abap_language_version( mo_form_data->get( c_id-abap_langu_vers ) ).
 
     lo_dot->set_i18n_languages(
       zcl_abapgit_lxe_texts=>convert_lang_string_to_table(
@@ -395,7 +388,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
     " Remove all ignores
     lt_ignore = lo_dot->get_data( )-ignore.
     LOOP AT lt_ignore INTO lv_ignore.
-      lo_dot->remove_ignore( iv_path = ''
+      lo_dot->remove_ignore( iv_path     = ''
                              iv_filename = lv_ignore ).
     ENDLOOP.
 
@@ -404,7 +397,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
     LOOP AT lt_ignore INTO lv_ignore.
       lv_ignore = condense( lv_ignore ).
       IF lv_ignore IS NOT INITIAL.
-        lo_dot->add_ignore( iv_path = ''
+        lo_dot->add_ignore( iv_path     = ''
                             iv_filename = lv_ignore ).
       ENDIF.
     ENDLOOP.
