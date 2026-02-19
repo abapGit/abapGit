@@ -378,6 +378,9 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
   METHOD delete_branch.
 
+    ASSERT is_branch-sha1 IS NOT INITIAL.
+    ASSERT is_branch-name IS NOT INITIAL.
+
     zcl_abapgit_git_transport=>receive_pack(
       iv_url         = iv_url
       iv_old         = is_branch-sha1

@@ -61,87 +61,87 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-NAME'
+        iv_fieldname = 'METADATA-NAME'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-TYPE'
+        iv_fieldname = 'METADATA-TYPE'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-MASTER_SYSTEM'
+        iv_fieldname = 'METADATA-MASTER_SYSTEM'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-VERSION'
+        iv_fieldname = 'METADATA-VERSION'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'REF_OBJECT-URI'
+        iv_fieldname = 'REF_OBJECT-URI'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'REF_OBJECT-DESCRIPTION'
+        iv_fieldname = 'REF_OBJECT-DESCRIPTION'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_AT'
+        iv_fieldname = 'METADATA-CREATED_AT'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_BY'
+        iv_fieldname = 'METADATA-CREATED_BY'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_AT'
+        iv_fieldname = 'METADATA-CHANGED_AT'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_BY'
+        iv_fieldname = 'METADATA-CHANGED_BY'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-MASTER_LANGUAGE'
+        iv_fieldname = 'METADATA-MASTER_LANGUAGE'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-RESPONSIBLE'
+        iv_fieldname = 'METADATA-RESPONSIBLE'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-PACKAGE_REF'
+        iv_fieldname = 'METADATA-PACKAGE_REF'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-LINKS'
+        iv_fieldname = 'METADATA-LINKS'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
   ENDMETHOD.
 
@@ -249,6 +249,7 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
     FIELD-SYMBOLS <ls_metadata> TYPE any.
     FIELD-SYMBOLS <lv_created_by> TYPE syuname.
     FIELD-SYMBOLS <lv_created_at> TYPE p.
+    FIELD-SYMBOLS <lv_abap_language_version> TYPE uccheck.
 
     ASSIGN mr_data->* TO <ls_data>.
     ASSERT sy-subrc = 0.
@@ -269,6 +270,11 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
       ASSIGN COMPONENT 'CREATED_BY' OF STRUCTURE <ls_metadata> TO <lv_created_by>.
       IF sy-subrc = 0 AND <lv_created_by> IS INITIAL.
         <lv_created_by> = sy-uname.
+      ENDIF.
+
+      ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_metadata> TO <lv_abap_language_version>.
+      IF sy-subrc = 0.
+        set_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
       ENDIF.
     ENDIF.
 
@@ -313,9 +319,9 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
 
     TRY.
         mi_persistence->get(
-            p_object_key           = mv_object_key
-            p_version              = 'A'
-            p_existence_check_only = abap_true ).
+          p_object_key           = mv_object_key
+          p_version              = 'A'
+          p_existence_check_only = abap_true ).
         rv_bool = abap_true.
 
       CATCH cx_swb_exception.
@@ -383,6 +389,7 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
       lx_error              TYPE REF TO cx_root.
 
     FIELD-SYMBOLS <ls_data> TYPE any.
+    FIELD-SYMBOLS <lv_abap_language_version> TYPE uccheck.
 
     ASSIGN mr_data->* TO <ls_data>.
     ASSERT sy-subrc = 0.
@@ -399,6 +406,11 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
 
         clear_fields( CHANGING cs_data = <ls_data> ).
 
+
+        ASSIGN COMPONENT 'METADATA-ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_data> TO <lv_abap_language_version>.
+        IF sy-subrc = 0.
+          clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+        ENDIF.
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.

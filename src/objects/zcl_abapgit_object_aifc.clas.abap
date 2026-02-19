@@ -240,10 +240,19 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
     DATA: lx_root TYPE REF TO cx_root.
     DATA: lo_log TYPE REF TO object.
 
+    DATA:
+      BEGIN OF ls_item,
+        obj_type TYPE tadir-object,
+        obj_name TYPE tadir-obj_name,
+        devclass TYPE devclass,
+      END OF ls_item.
+
     TRY.
+        MOVE-CORRESPONDING ms_item TO ls_item.
+
         CREATE OBJECT lo_log TYPE ('/AIF/CL_ABAPGIT_BAL_LOG')
           EXPORTING ir_git_log = io_log
-                    is_item = ms_item.
+                    is_item = ls_item.
 
         CALL METHOD mo_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~INITIALIZE_CONTENT_COMPRESS')
           EXPORTING
@@ -307,7 +316,31 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~delete.
-    zcx_abapgit_exception=>raise( 'Delete not supported.' ).
+
+    DATA lx_root TYPE REF TO cx_root.
+
+    TRY.
+        DELETE FROM ('/AIF/ICD_DATA')
+          WHERE depl_scenario = ms_icd_data_key-depl_scenario
+            AND ns            = ms_icd_data_key-ns
+            AND ifname        = ms_icd_data_key-ifname
+            AND ifver2        = ms_icd_data_key-ifver2.
+
+        DELETE FROM ('/AIF/ICD_SCINF')
+          WHERE depl_scenario = ms_icd_data_key-depl_scenario
+            AND ns            = ms_icd_data_key-ns
+            AND ifname        = ms_icd_data_key-ifname
+            AND ifver2        = ms_icd_data_key-ifver2.
+
+      CATCH cx_root INTO lx_root.
+        zcx_abapgit_exception=>raise( iv_text     = 'Delete not possible'
+                                      ix_previous = lx_root ).
+    ENDTRY.
+
+    tadir_delete( ).
+
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
@@ -523,21 +556,12 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
     DATA lt_ifdata TYPE ty_table_data_t.
     DATA lv_abap_language_version TYPE uccheck.
 
-    DATA lr_data TYPE REF TO data.
-    FIELD-SYMBOLS <ls_data> TYPE any.
-
     DATA lt_content TYPE ty_content_t.
     DATA ls_content TYPE ty_content_s.
     DATA lr_ifdata TYPE REF TO ty_table_data_s.
     FIELD-SYMBOLS <lt_table> TYPE ANY TABLE.
 
     TRY.
-
-        ASSIGN lr_data TO <ls_data>.
-        IF NOT <ls_data> IS ASSIGNED.
-          RETURN.
-        ENDIF.
-
         ls_icd_data_key-depl_scenario = ms_icd_data_key-depl_scenario.
         ls_icd_data_key-ns = ms_icd_data_key-ns.
         ls_icd_data_key-ifname = ms_icd_data_key-ifname.

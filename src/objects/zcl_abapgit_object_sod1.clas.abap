@@ -83,6 +83,18 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
       CHANGING
         cs_metadata  = <ls_content_data> ).
 
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'CREATE_USER'
+      CHANGING
+        cs_metadata  = <ls_content_data> ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'CREATE_TIMESTAMP'
+      CHANGING
+        cs_metadata  = <ls_content_data> ).
+
   ENDMETHOD.
 
 

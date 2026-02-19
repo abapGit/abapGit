@@ -53,11 +53,10 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lv_value> TYPE data.
 
-    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_logical_db_schema
-           TO <lv_value>.
-    ASSERT sy-subrc = 0.
-
-    CLEAR: <lv_value>.
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_logical_db_schema TO <lv_value>.
+    IF sy-subrc = 0.
+      CLEAR <lv_value>.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -66,25 +65,43 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_AT'
+        iv_fieldname         = 'METADATA-CREATED_AT'
       CHANGING
         cs_logical_db_schema = cs_logical_db_schema ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_BY'
+        iv_fieldname         = 'METADATA-CREATED_BY'
       CHANGING
         cs_logical_db_schema = cs_logical_db_schema ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_AT'
+        iv_fieldname         = 'METADATA-CHANGED_AT'
       CHANGING
         cs_logical_db_schema = cs_logical_db_schema ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_BY'
+        iv_fieldname         = 'METADATA-CHANGED_BY'
+      CHANGING
+        cs_logical_db_schema = cs_logical_db_schema ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname         = 'METADATA-RESPONSIBLE'
+      CHANGING
+        cs_logical_db_schema = cs_logical_db_schema ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname         = 'METADATA-MASTER_SYSTEM'
+      CHANGING
+        cs_logical_db_schema = cs_logical_db_schema ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname         = 'METADATA-PACKAGE_REF'
       CHANGING
         cs_logical_db_schema = cs_logical_db_schema ).
 
@@ -301,9 +318,9 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
 
     TRY.
         mi_persistence->get(
-            p_object_key           = mv_logical_db_schema_key
-            p_version              = 'A'
-            p_existence_check_only = abap_true ).
+          p_object_key           = mv_logical_db_schema_key
+          p_version              = 'A'
+          p_existence_check_only = abap_true ).
         rv_bool = abap_true.
 
       CATCH cx_swb_exception.
@@ -391,8 +408,8 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
     ENDTRY.
 
     io_xml->add(
-        iv_name = 'AMSD'
-        ig_data = <ls_logical_db_schema> ).
+      iv_name = 'AMSD'
+      ig_data = <ls_logical_db_schema> ).
 
   ENDMETHOD.
 ENDCLASS.

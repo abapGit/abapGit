@@ -215,6 +215,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     set_branch(
       iv_branch = lv_branch
       iv_key    = lv_key ).
+    COMMIT WORK AND WAIT. " to release lock
 
     rs_handled-page = zcl_abapgit_gui_page_pull=>create(
       ii_repo       = li_repo_online
@@ -230,16 +231,23 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   METHOD call_stage_commit.
 
-    DATA lv_key          TYPE zif_abapgit_persistence=>ty_value.
-    DATA lv_branch       TYPE string.
-    DATA lo_filter       TYPE REF TO lcl_filter.
-    DATA lt_filter       TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lv_index        TYPE i.
-    DATA li_repo_online  TYPE REF TO zif_abapgit_repo_online.
-    DATA ls_feature      LIKE LINE OF ms_information-features.
+    DATA lv_key         TYPE zif_abapgit_persistence=>ty_value.
+    DATA lv_branch      TYPE string.
+    DATA lo_filter      TYPE REF TO lcl_filter.
+    DATA lt_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lv_index       TYPE i.
+    DATA lt_files       TYPE zif_abapgit_git_definitions=>ty_files_tt.
+    DATA ls_file        LIKE LINE OF lt_files.
+    DATA ls_feature     LIKE LINE OF ms_information-features.
+    DATA ls_remote      LIKE LINE OF ls_feature-changed_files.
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
+    DATA lt_sha1        TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
+    DATA lt_objects     TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA ls_object      LIKE LINE OF lt_objects.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_feature-changed_objects.
     FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
+
 
     lv_key = ii_event->query( )->get( 'KEY' ).
     lv_index = ii_event->query( )->get( 'INDEX' ).
@@ -256,9 +264,37 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ENDLOOP.
     CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
 
+    LOOP AT ls_feature-changed_files INTO ls_remote WHERE remote_sha1 IS NOT INITIAL.
+      INSERT ls_remote-remote_sha1 INTO TABLE lt_sha1.
+    ENDLOOP.
+
+    IF lines( lt_sha1 ) > 0.
+      lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->fetch_blobs(
+        iv_url  = li_repo_online->get_url( )
+        it_sha1 = lt_sha1 ).
+    ENDIF.
+
+    LOOP AT ls_feature-changed_files INTO ls_remote WHERE remote_sha1 IS NOT INITIAL.
+      READ TABLE lt_objects INTO ls_object WITH KEY sha COMPONENTS sha1 = ls_remote-remote_sha1.
+      IF sy-subrc = 0.
+        CLEAR ls_file.
+        ls_file-path = ls_remote-path.
+        ls_file-sha1 = ls_remote-remote_sha1.
+        ls_file-filename = ls_remote-filename.
+        ls_file-data = ls_object-data.
+        INSERT ls_file INTO TABLE lt_files.
+      ENDIF.
+    ENDLOOP.
+    ls_file = li_repo_online->zif_abapgit_repo~get_dot_abapgit( )->to_file( ).
+    INSERT ls_file INTO TABLE lt_files.
+
+* note: this resets files in remote, so call before set_files_remote()
     set_branch(
       iv_branch = lv_branch
       iv_key    = lv_key ).
+    COMMIT WORK AND WAIT. " to release lock
+
+    li_repo_online->zif_abapgit_repo~set_files_remote( lt_files ).
 
     rs_handled-page = zcl_abapgit_gui_page_stage=>create(
       ii_force_refresh = abap_false
@@ -338,8 +374,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
             OR is_feature-branch-up_to_date = abap_true.
 * its only remote, so there is no changes to stage
           lo_toolbar->add( iv_txt = 'Stage and Commit'
-                         iv_act = |{ c_action-stage_and_commit }{ lv_extra }|
-                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+                           iv_act = |{ c_action-stage_and_commit }{ lv_extra }|
+                           iv_opt = zif_abapgit_html=>c_html_opt-strong ).
         ENDIF.
       ENDIF.
     ENDIF.
@@ -574,16 +610,17 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
           ri_html->add( 'Branch up to date: False' ).
         ENDIF.
       ENDIF.
-
-      IF ms_user_settings-show_details = abap_true AND is_feature-transport-users IS NOT INITIAL.
-        ri_html->add( |<br>| ).
-        ri_html->add( |Transport users: { concat_lines_of(
-            table = is_feature-transport-users
-            sep   = |, | ) }| ).
-      ENDIF.
     ELSE.
       ri_html->add( |No PR found| ).
     ENDIF.
+
+    IF ms_user_settings-show_details = abap_true AND is_feature-transport-users IS NOT INITIAL.
+      ri_html->add( |<br>| ).
+      ri_html->add( |Transport users: { concat_lines_of(
+          table = is_feature-transport-users
+          sep   = |, | ) }| ).
+    ENDIF.
+
     ri_html->add( |<br>| ).
 
     IF is_feature-transport IS NOT INITIAL.

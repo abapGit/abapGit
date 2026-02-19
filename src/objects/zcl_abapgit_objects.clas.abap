@@ -118,10 +118,12 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_package   TYPE devclass
         !is_item      TYPE zif_abapgit_definitions=>ty_item
         !iv_transport TYPE trkorr
+        !ii_log       TYPE REF TO zif_abapgit_log
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_steps
       IMPORTING
+        !iv_package     TYPE devclass
         !it_steps       TYPE zif_abapgit_objects=>ty_step_data_tt
         !ii_log         TYPE REF TO zif_abapgit_log
         !iv_transport   TYPE trkorr
@@ -132,6 +134,7 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_step
       IMPORTING
+        !iv_package   TYPE devclass
         !is_step      TYPE zif_abapgit_objects=>ty_step_data
         !ii_log       TYPE REF TO zif_abapgit_log
         !iv_transport TYPE trkorr
@@ -491,7 +494,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             delete_object(
               iv_package   = <ls_tadir>-devclass
               is_item      = ls_item
-              iv_transport = is_checks-transport-transport ).
+              iv_transport = is_checks-transport-transport
+              ii_log       = ii_log ).
 
             INSERT <ls_tadir> INTO TABLE lt_deleted.
             DELETE lt_tadir.
@@ -544,7 +548,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     li_obj = create_object( is_item ).
     li_obj->delete( iv_package   = iv_package
-                    iv_transport = iv_transport ).
+                    iv_transport = iv_transport
+                    ii_log       = ii_log ).
 
   ENDMETHOD.
 
@@ -736,6 +741,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     "run deserialize for all steps and its objects
     deserialize_steps(
       EXPORTING
+        iv_package     = ii_repo->get_package( )
         it_steps       = lt_steps
         ii_log         = ii_log
         io_i18n_params = lo_i18n_params
@@ -876,8 +882,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 *   Call postprocessing
     li_exit = zcl_abapgit_exit=>get_instance( ).
 
-    li_exit->deserialize_postprocess( is_step = is_step
-                                      ii_log  = ii_log ).
+    li_exit->deserialize_postprocess(
+      iv_package = iv_package
+      is_step    = is_step
+      ii_log     = ii_log ).
 
   ENDMETHOD.
 
@@ -890,6 +898,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       IF <ls_step>-step_id <> zif_abapgit_object=>gc_step_id-lxe.
         deserialize_step(
           EXPORTING
+            iv_package   = iv_package
             is_step      = <ls_step>
             ii_log       = ii_log
             iv_transport = iv_transport
@@ -1009,6 +1018,37 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         " Ignore errors and assume active state
         rv_active = abap_true.
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD is_prog_enho_include.
+
+    DATA lv_enho_name TYPE enhname.
+
+    " ENHO includes ending in 'E' or 'EIMP' at position 31 shouldn't be in TADIR
+    " but appear due to bug (SAP note 1025291). Skip them, sources are in ENHO.
+
+    " Format: <enho_name><padding_with_=><E/EIMP>
+    " Example: ZMM_SOME_ENHANCEMENT==========E
+
+    IF NOT ( iv_obj_name+30(4) = 'EIMP' OR
+             iv_obj_name+30(4) = 'E   ' ).
+      RETURN.
+    ENDIF.
+
+    " Extract enhancement name: first 30 chars, strip trailing '='
+    lv_enho_name = iv_obj_name(30).
+    SHIFT lv_enho_name RIGHT DELETING TRAILING '='.
+    SHIFT lv_enho_name LEFT DELETING LEADING space.
+
+    " Check if corresponding ENHO exists
+    SELECT SINGLE obj_name FROM tadir INTO lv_enho_name
+      WHERE pgmid = 'R3TR'
+      AND object = 'ENHO'
+      AND obj_name = lv_enho_name.
+
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -1356,36 +1396,4 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
-
-  METHOD is_prog_enho_include.
-
-    DATA lv_enho_name TYPE enhname.
-
-    " ENHO includes ending in 'E' or 'EIMP' at position 31 shouldn't be in TADIR
-    " but appear due to bug (SAP note 1025291). Skip them, sources are in ENHO.
-
-    " Format: <enho_name><padding_with_=><E/EIMP>
-    " Example: ZMM_SOME_ENHANCEMENT==========E
-
-    IF NOT ( iv_obj_name+30(4) = 'EIMP' OR
-             iv_obj_name+30(4) = 'E   ' ).
-      RETURN.
-    ENDIF.
-
-    " Extract enhancement name: first 30 chars, strip trailing '='
-    lv_enho_name = iv_obj_name(30).
-    SHIFT lv_enho_name RIGHT DELETING TRAILING '='.
-    SHIFT lv_enho_name LEFT DELETING LEADING space.
-
-    " Check if corresponding ENHO exists
-    SELECT SINGLE obj_name FROM tadir INTO lv_enho_name
-      WHERE pgmid = 'R3TR'
-      AND object = 'ENHO'
-      AND obj_name = lv_enho_name.
-
-    rv_bool = boolc( sy-subrc = 0 ).
-
-  ENDMETHOD.
-
 ENDCLASS.

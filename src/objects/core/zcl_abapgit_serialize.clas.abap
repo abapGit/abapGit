@@ -385,6 +385,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   METHOD files_local.
 
 * serializes objects, including .abapgit.xml, apack, and takes into account local settings
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
 
     add_dot_abapgit( CHANGING ct_files = rt_files ).
 
@@ -406,6 +407,16 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         iv_package = iv_package
         ii_log     = ii_log
         it_filter  = it_filter
+      CHANGING
+        ct_files   = rt_files ).
+
+*   Call postprocessing
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+
+    li_exit->serialize_postprocess(
+      EXPORTING
+        iv_package = iv_package
+        ii_log     = ii_log
       CHANGING
         ct_files   = rt_files ).
 
@@ -633,13 +644,10 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         DESTINATION IN GROUP mv_group
         CALLING on_end_of_task ON END OF TASK
         EXPORTING
-          iv_obj_type             = is_tadir-object
-          iv_obj_name             = is_tadir-obj_name
-          iv_devclass             = is_tadir-devclass
-          iv_path                 = is_tadir-path
-          iv_srcsystem            = is_tadir-srcsystem
+          is_tadir                = is_tadir
           iv_abap_language_vers   = lv_abap_language_version
           iv_language             = ms_i18n_params-main_language
+          iv_path                 = is_tadir-path
           iv_main_language_only   = lv_main_language_only
           iv_suppress_po_comments = ms_i18n_params-suppress_po_comments
           it_translation_langs    = ms_i18n_params-translation_languages
@@ -674,6 +682,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     ls_file_item-item-obj_name  = is_tadir-obj_name.
     ls_file_item-item-devclass  = is_tadir-devclass.
     ls_file_item-item-srcsystem = is_tadir-srcsystem.
+    ls_file_item-item-origlang  = is_tadir-masterlang.
     IF mo_abap_language_version IS NOT INITIAL.
       ls_file_item-item-abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
     ENDIF.
@@ -710,7 +719,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     DATA: lv_max      TYPE i,
           lv_count    TYPE i,
           li_progress TYPE REF TO zif_abapgit_progress,
-          li_exit     TYPE REF TO zif_abapgit_exit,
           lo_timer    TYPE REF TO zcl_abapgit_timer,
           lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
@@ -763,16 +771,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     WAIT UNTIL mv_free = lv_max UP TO 120 SECONDS.
     rt_files = mt_files.
     FREE mt_files.
-
-*   Call postprocessing
-    li_exit = zcl_abapgit_exit=>get_instance( ).
-
-    li_exit->serialize_postprocess(
-      EXPORTING
-        iv_package = iv_package
-        ii_log     = ii_log
-      CHANGING
-        ct_files   = rt_files ).
 
     lo_timer->end( abap_true ).
 
