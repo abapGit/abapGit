@@ -345,6 +345,11 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_key = |{ c_id-requirements }-{ zif_abapgit_html_form=>c_rows }|
       iv_val = |{ mv_requirements_count }| ).
 
+    " In case "undefined" made it to the DB, we reset to initial which is the default
+    IF ls_dot-abap_language_version = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
+      CLEAR ls_dot-abap_language_version.
+    ENDIF.
+
     ro_form_data->set(
       iv_key = c_id-abap_langu_vers
       iv_val = ls_dot-abap_language_version ).

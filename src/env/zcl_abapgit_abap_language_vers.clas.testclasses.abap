@@ -119,8 +119,8 @@ CLASS ltcl_abap_language_version DEFINITION FOR TESTING RISK LEVEL HARMLESS
           iv_new      TYPE abap_bool.
 
     METHODS:
-      repo_setting_feature_on FOR TESTING,
-      object_type_feature_on FOR TESTING,
+      repo_setting FOR TESTING,
+      object_type FOR TESTING,
       is_import_allowed FOR TESTING,
       check_abap_language_vers_same FOR TESTING RAISING zcx_abapgit_exception,
       check_abap_language_vers_diff FOR TESTING.
@@ -180,7 +180,7 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD repo_setting_feature_on.
+  METHOD repo_setting.
 
     DATA lv_version TYPE string.
 
@@ -271,7 +271,7 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD object_type_feature_on.
+  METHOD object_type.
 
     DATA lv_version TYPE string.
 
