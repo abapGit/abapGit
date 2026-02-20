@@ -204,6 +204,12 @@ CLASS zcl_abapgit_objects DEFINITION
       RETURNING
         VALUE(rv_extra) TYPE string.
 
+    CLASS-METHODS collect_packages
+      IMPORTING
+        !it_steps          TYPE zif_abapgit_objects=>ty_step_data_tt
+      RETURNING
+        VALUE(rt_packages) TYPE zif_abapgit_sap_package=>ty_devclass_tt .
+
     CLASS-METHODS is_type_supported_exit
       IMPORTING
         !iv_obj_type   TYPE zif_abapgit_definitions=>ty_item-obj_type
@@ -347,6 +353,21 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     IF lv_error = abap_true.
       zcx_abapgit_exception=>raise( 'Error trying to overwrite object from different system' ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD collect_packages.
+
+    DATA ls_deser TYPE zif_abapgit_objects=>ty_deserialization.
+
+    FIELD-SYMBOLS <ls_step> TYPE zif_abapgit_objects=>ty_step_data.
+
+    LOOP AT it_steps ASSIGNING <ls_step>.
+      LOOP AT <ls_step>-objects INTO ls_deser.
+        COLLECT ls_deser-package INTO rt_packages.
+      ENDLOOP.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -746,7 +767,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       CHANGING
         ct_files       = rt_accessed_files ).
 
-    zcl_abapgit_package_tree=>update( ii_repo->get_package( ) ).
+    zcl_abapgit_package_tree=>update( collect_packages( lt_steps ) ).
 
     " Set the original system for all updated objects to what's defined in repo settings
     update_original_system(
