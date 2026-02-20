@@ -367,7 +367,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     LOOP AT it_steps ASSIGNING <ls_step>.
       LOOP AT <ls_step>-objects INTO ls_deser.
-        COLLECT ls_deser-package INTO rt_packages.
+        IF ls_deser-package IS NOT INITIAL.
+          COLLECT ls_deser-package INTO rt_packages.
+        ENDIF.
       ENDLOOP.
     ENDLOOP.
 
