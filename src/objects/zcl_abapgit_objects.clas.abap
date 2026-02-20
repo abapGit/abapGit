@@ -210,6 +210,11 @@ CLASS zcl_abapgit_objects DEFINITION
         !it_results        TYPE zif_abapgit_definitions=>ty_results_tt
       RETURNING
         VALUE(rt_packages) TYPE zif_abapgit_sap_package=>ty_devclass_tt .
+    CLASS-METHODS update_package_trees
+      IMPORTING
+        !it_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt
+      RAISING
+        zcx_abapgit_exception .
 
     CLASS-METHODS is_type_supported_exit
       IMPORTING
@@ -775,13 +780,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       CHANGING
         ct_files       = rt_accessed_files ).
 
-    DATA(lt_packages) = collect_packages(
+    update_package_trees( collect_packages(
       it_steps   = lt_steps
-      it_results = lt_results ).
-
-    LOOP AT lt_packages INTO DATA(lv_package).
-      zcl_abapgit_factory=>get_sap_package( lv_package )->update_tree( ).
-    ENDLOOP.
+      it_results = lt_results ) ).
 
     " Set the original system for all updated objects to what's defined in repo settings
     update_original_system(
@@ -1344,6 +1345,17 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
     gv_supported_obj_types_loaded = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD update_package_trees.
+
+    DATA lv_package TYPE devclass.
+
+    LOOP AT it_packages INTO lv_package.
+      zcl_abapgit_factory=>get_sap_package( lv_package )->update_tree( ).
+    ENDLOOP.
 
   ENDMETHOD.
 

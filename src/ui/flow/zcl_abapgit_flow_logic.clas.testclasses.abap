@@ -375,6 +375,9 @@ CLASS lcl_sap_package IMPLEMENTATION.
   METHOD zif_abapgit_sap_package~get_default_transport_layer.
     RETURN.
   ENDMETHOD.
+  METHOD zif_abapgit_sap_package~update_tree.
+    RETURN.
+  ENDMETHOD.
 ENDCLASS.
 
 CLASS lcl_repo DEFINITION FINAL.
