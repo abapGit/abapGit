@@ -207,6 +207,7 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS collect_packages
       IMPORTING
         !it_steps          TYPE zif_abapgit_objects=>ty_step_data_tt
+        !it_results        TYPE zif_abapgit_definitions=>ty_results_tt
       RETURNING
         VALUE(rt_packages) TYPE zif_abapgit_sap_package=>ty_devclass_tt .
 
@@ -359,7 +360,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD collect_packages.
 
-    DATA ls_deser TYPE zif_abapgit_objects=>ty_deserialization.
+    DATA ls_deser  TYPE zif_abapgit_objects=>ty_deserialization.
+    DATA ls_result TYPE zif_abapgit_definitions=>ty_result.
 
     FIELD-SYMBOLS <ls_step> TYPE zif_abapgit_objects=>ty_step_data.
 
@@ -367,6 +369,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       LOOP AT <ls_step>-objects INTO ls_deser.
         COLLECT ls_deser-package INTO rt_packages.
       ENDLOOP.
+    ENDLOOP.
+
+    LOOP AT it_results INTO ls_result WHERE packmove = abap_true.
+      COLLECT ls_result-package INTO rt_packages.
     ENDLOOP.
 
   ENDMETHOD.
@@ -767,7 +773,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       CHANGING
         ct_files       = rt_accessed_files ).
 
-    zcl_abapgit_package_tree=>update( collect_packages( lt_steps ) ).
+    zcl_abapgit_package_tree=>update( collect_packages(
+      it_steps   = lt_steps
+      it_results = lt_results ) ).
 
     " Set the original system for all updated objects to what's defined in repo settings
     update_original_system(
