@@ -373,7 +373,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
-    LOOP AT it_results INTO ls_result WHERE packmove = abap_true.
+    LOOP AT it_results INTO ls_result WHERE packmove = abap_true AND package IS NOT INITIAL.
       COLLECT ls_result-package INTO rt_packages.
     ENDLOOP.
 
