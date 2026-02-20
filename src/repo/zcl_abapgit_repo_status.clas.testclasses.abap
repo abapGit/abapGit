@@ -129,6 +129,10 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~update_tree.
+    RETURN.
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_namespace~exists.
     rv_yes = boolc( iv_namespace <> 'NOTEXIST' ).
   ENDMETHOD.
