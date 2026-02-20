@@ -775,9 +775,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       CHANGING
         ct_files       = rt_accessed_files ).
 
-    zcl_abapgit_package_tree=>update( collect_packages(
+    DATA(lt_packages) = collect_packages(
       it_steps   = lt_steps
-      it_results = lt_results ) ).
+      it_results = lt_results ).
+
+    LOOP AT lt_packages INTO DATA(lv_package).
+      zcl_abapgit_factory=>get_sap_package( lv_package )->update_tree( ).
+    ENDLOOP.
 
     " Set the original system for all updated objects to what's defined in repo settings
     update_original_system(
