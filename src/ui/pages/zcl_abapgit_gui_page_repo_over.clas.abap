@@ -291,7 +291,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_allow_order_by = abap_true
     )->add_column(
       iv_tech_name      = 'BRANCH'
-      iv_display_name   = 'Branch/Tag'
+      iv_display_name   = 'Branch/Tag/Commit'
       iv_allow_order_by = abap_true
     )->add_column(
       iv_tech_name      = 'DESERIALIZED_BY'
