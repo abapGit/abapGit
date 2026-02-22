@@ -79,4 +79,7 @@ INTERFACE zif_abapgit_sap_package
       iv_obj_type TYPE tadir-object
     RAISING
       zcx_abapgit_exception.
+  METHODS update_tree
+    RAISING
+      zcx_abapgit_exception .
 ENDINTERFACE.

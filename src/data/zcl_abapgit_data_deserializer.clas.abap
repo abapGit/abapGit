@@ -88,6 +88,10 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
     ASSIGN ir_data->* TO <lg_tab>.
 
+    IF is_file-data IS INITIAL.
+      RETURN.
+    ENDIF.
+
     TRY.
         lo_ajson = zcl_abapgit_ajson=>parse( zcl_abapgit_convert=>xstring_to_string_utf8( is_file-data ) ).
         lo_ajson->to_abap_corresponding_only( ).

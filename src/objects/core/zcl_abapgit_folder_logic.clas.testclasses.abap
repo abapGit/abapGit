@@ -124,6 +124,10 @@ CLASS ltcl_folder_logic_package IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~update_tree.
+    RETURN.
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltcl_folder_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
@@ -157,6 +161,10 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~check_object_type.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~update_tree.
     RETURN.
   ENDMETHOD.
 
@@ -390,6 +398,10 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~update_tree.
+    RETURN.
+  ENDMETHOD.
+
   " Test packages:
   "
   " /TEST/TOOLS
@@ -550,6 +562,10 @@ CLASS ltcl_folder_logic_no_parent IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~check_object_type.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~update_tree.
     RETURN.
   ENDMETHOD.
 

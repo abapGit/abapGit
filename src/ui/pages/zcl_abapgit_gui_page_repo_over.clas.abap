@@ -291,7 +291,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_allow_order_by = abap_true
     )->add_column(
       iv_tech_name      = 'BRANCH'
-      iv_display_name   = 'Branch/Tag'
+      iv_display_name   = 'Branch/Tag/Commit'
       iv_allow_order_by = abap_true
     )->add_column(
       iv_tech_name      = 'DESERIALIZED_BY'
@@ -522,17 +522,17 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_typ = zif_abapgit_html=>c_action_type-separator ).
 
     lo_toolbar_more_sub->add(
-      iv_txt   = |Remove Repository|
-      iv_title = |Remove abapGit's records of the repository (the system's |
-              && |development objects will remain unaffected)|
-      iv_act   = |{ zif_abapgit_definitions=>c_action-repo_remove }{ lc_dummy_key }|
+      iv_txt      = |Remove Repository|
+      iv_title    = |Remove abapGit's records of the repository (the system's |
+                    && |development objects will remain unaffected)|
+      iv_act      = |{ zif_abapgit_definitions=>c_action-repo_remove }{ lc_dummy_key }|
       iv_class    = |{ lc_action_class }|
       iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar_more_sub->add(
       iv_txt      = |Remove Objects|
       iv_title    = |Delete all development objects belonging to this package |
-                 && |(and subpackages) from the system, but keep repository in abapGit|
+                    && |(and subpackages) from the system, but keep repository in abapGit|
       iv_act      = |{ zif_abapgit_definitions=>c_action-repo_delete_objects }{ lc_dummy_key }|
       iv_class    = |{ lc_action_class }|
       iv_li_class = |{ lc_action_class }| ).
@@ -540,7 +540,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     lo_toolbar_more_sub->add(
       iv_txt      = |Uninstall|
       iv_title    = |Delete all development objects belonging to this package |
-                 && |(and subpackages) from the system, and remove the repository from abapGit|
+                    && |(and subpackages) from the system, and remove the repository from abapGit|
       iv_act      = |{ zif_abapgit_definitions=>c_action-repo_purge }{ lc_dummy_key }|
       iv_class    = |{ lc_action_class }|
       iv_li_class = |{ lc_action_class }| ).
@@ -714,6 +714,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   METHOD render_table_item.
 
     DATA:
+      li_repo_online    TYPE REF TO zif_abapgit_repo_online,
       lv_is_online_repo TYPE abap_bool,
       lv_repo_type_icon TYPE string,
       lv_favorite_icon  TYPE string,
@@ -800,10 +801,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     " Branch
     IF is_repo-branch IS INITIAL.
       ii_html->td( ).
-    ELSE.
-      ii_html->td( ii_content = zcl_abapgit_gui_chunk_lib=>render_branch_name(
-        iv_branch   = is_repo-branch
-        iv_repo_key = is_repo-key ) ).
+    ELSEIF is_repo-offline = abap_false.
+      li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( is_repo-key ).
+      ii_html->td( ii_content = zcl_abapgit_gui_chunk_lib=>render_branch_name( ii_repo_online = li_repo_online ) ).
     ENDIF.
 
     " Details: deserialized by
@@ -815,7 +815,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     " Details: deserialized at
     ii_html->td(
-      iv_class = 'ro-detail'
+      iv_class   = 'ro-detail'
       iv_content = is_repo-deserialized_at ).
 
     " Details: created by
@@ -827,12 +827,12 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     " Details: created at
     ii_html->td(
-      iv_class = 'ro-detail'
+      iv_class   = 'ro-detail'
       iv_content = is_repo-created_at ).
 
     " Details: repo key
     ii_html->td(
-      iv_class = 'ro-detail'
+      iv_class   = 'ro-detail'
       iv_content = |{ is_repo-key }| ).
 
     " Go-to action
