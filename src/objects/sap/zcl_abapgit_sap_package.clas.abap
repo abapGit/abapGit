@@ -471,6 +471,21 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_sap_package~update_tree.
+
+    DATA lv_tree TYPE string.
+
+* update package tree for SE80
+    lv_tree = 'EU_' && mv_package.
+    CALL FUNCTION 'WB_TREE_ACTUALIZE'
+      EXPORTING
+        tree_name              = lv_tree
+        without_crossreference = abap_true
+        with_tcode_index       = abap_true.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_sap_package~validate_name.
 
     IF mv_package IS INITIAL.
