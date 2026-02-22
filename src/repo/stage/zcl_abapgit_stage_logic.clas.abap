@@ -118,9 +118,9 @@ CLASS zcl_abapgit_stage_logic IMPLEMENTATION.
     rs_files-remote = ii_repo_online->get_files_remote( ii_obj_filter ).
 
     IF ii_obj_filter IS INITIAL.
-      rs_files-local  = ii_repo_online->get_files_local( ).
+      rs_files-local = ii_repo_online->get_files_local( ).
     ELSE.
-      rs_files-local  = ii_repo_online->get_files_local_filtered( ii_obj_filter ).
+      rs_files-local = ii_repo_online->get_files_local_filtered( ii_obj_filter ).
     ENDIF.
 
     rs_files-status = zcl_abapgit_repo_status=>calculate( ii_repo       = ii_repo_online

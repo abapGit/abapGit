@@ -103,6 +103,10 @@ CLASS ltcl_sap_package IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~update_tree.
+    RETURN.
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltcl_resolve_packages DEFINITION FOR TESTING

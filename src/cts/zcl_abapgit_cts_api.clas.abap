@@ -295,32 +295,6 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_cts_api~read_request_and_tasks.
-
-    DATA lt_request_headers TYPE trwbo_request_headers.
-    DATA ls_row             LIKE LINE OF lt_request_headers.
-    DATA ls_task            LIKE LINE OF rt_tasks.
-
-    CALL FUNCTION 'TR_READ_REQUEST_WITH_TASKS'
-      EXPORTING
-        iv_trkorr          = iv_request
-      IMPORTING
-        et_request_headers = lt_request_headers
-      EXCEPTIONS
-        invalid_input      = 1
-        OTHERS             = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-    LOOP AT lt_request_headers INTO ls_row.
-      ls_task-trkorr  = ls_row-trkorr.
-      ls_task-as4user = ls_row-as4user.
-
-      INSERT ls_task INTO TABLE rt_tasks.
-    ENDLOOP.
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_cts_api~confirm_transport_messages.
 
@@ -526,7 +500,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
             AND lokey <= ls_lock_key-hi.                  "#EC PORTABLE
           IF lv_request IS INITIAL.
             lv_request = <ls_tlock>-trkorr.
-          ELSE.
+          ELSEIF lv_request <> <ls_tlock>-trkorr.
             lv_request = zif_abapgit_definitions=>c_multiple_transports.
             EXIT.
           ENDIF.
@@ -730,6 +704,34 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
         INTO rv_description
         WHERE trkorr = iv_trkorr ##SUBRC_OK. "#EC CI_NOORDER
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~read_request_and_tasks.
+
+    DATA lt_request_headers TYPE trwbo_request_headers.
+    DATA ls_row             LIKE LINE OF lt_request_headers.
+    DATA ls_task            LIKE LINE OF rt_tasks.
+
+    CALL FUNCTION 'TR_READ_REQUEST_WITH_TASKS'
+      EXPORTING
+        iv_trkorr          = iv_request
+      IMPORTING
+        et_request_headers = lt_request_headers
+      EXCEPTIONS
+        invalid_input      = 1
+        OTHERS             = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    LOOP AT lt_request_headers INTO ls_row.
+      ls_task-trkorr  = ls_row-trkorr.
+      ls_task-as4user = ls_row-as4user.
+
+      INSERT ls_task INTO TABLE rt_tasks.
+    ENDLOOP.
 
   ENDMETHOD.
 
