@@ -26,14 +26,23 @@ CLASS ltcl_filters_test IMPLEMENTATION.
       iv_path = '/a'
       iv_val  = '1' ).
     li_json->set(
+      iv_ignore_empty = abap_false
       iv_path = '/b'
       iv_val  = '' ).
     li_json->set(
       iv_path = '/c'
       iv_val  = '3' ).
     li_json->set(
+      iv_ignore_empty = abap_false
       iv_path = '/d'
       iv_val  = 0 ).
+    li_json->set_boolean(
+      iv_path = '/e'
+      iv_val  = abap_false ).
+    li_json->set_boolean(
+      iv_path = '/f'
+      iv_val  = abap_true ).
+    li_json->set_null( '/g' ).
 
     li_json_filtered = zcl_abapgit_ajson=>create_from(
       ii_source_json = li_json
@@ -41,7 +50,7 @@ CLASS ltcl_filters_test IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = li_json_filtered->stringify( )
-      exp = '{"a":"1","c":"3"}' ).
+      exp = '{"a":"1","c":"3","e":false,"f":true,"g":null}' ).
 
   ENDMETHOD.
 
@@ -55,12 +64,15 @@ CLASS ltcl_filters_test IMPLEMENTATION.
       iv_path = '/a'
       iv_val  = '1' ).
     li_json->set(
+      iv_ignore_empty = abap_false
       iv_path = '/b/c'
       iv_val  = '' ).
     li_json->set(
+      iv_ignore_empty = abap_false
       iv_path = '/b/d'
       iv_val  = 0 ).
     li_json->set(
+      iv_ignore_empty = abap_false
       iv_path = '/d/e'
       iv_val  = 0 ).
 
@@ -209,12 +221,14 @@ CLASS ltcl_filters_test IMPLEMENTATION.
       iv_path = '/a'
       iv_val  = '1' ).
     li_json->set(
+      iv_ignore_empty = abap_false
       iv_path = '/b'
       iv_val  = '' ).
     li_json->set(
       iv_path = '/c'
       iv_val  = '3' ).
     li_json->set(
+      iv_ignore_empty = abap_false
       iv_path = '/d'
       iv_val  = 0 ).
 
