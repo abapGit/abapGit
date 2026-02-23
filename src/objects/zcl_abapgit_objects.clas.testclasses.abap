@@ -461,7 +461,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
   METHOD then_exception_shd_be_raised.
 
     cl_abap_unit_assert=>assert_equals(
-      exp = |Object TABL Z_TEST_TABL is locked. Action not possible.|
+      exp = |Object TABL Z_TEST_TABL is locked by an editor, user, or ABAP process. Action not possible.|
       act = mv_exception_text ).
 
   ENDMETHOD.
