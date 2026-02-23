@@ -30,6 +30,8 @@ CLASS lcl_stream IMPLEMENTATION.
                lc_32 TYPE x VALUE '20',
                lc_64 TYPE x VALUE '40'.
 
+    ev_offset = 0.
+
     IF iv_instruction O lc_1.
       ev_offset   = mv_data+mv_position(1).
       mv_position = mv_position + 1.
