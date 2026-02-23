@@ -347,6 +347,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
     DATA: lx_root TYPE REF TO cx_root.
     DATA: lt_content TYPE ty_content_t.
+    DATA lv_abap_language_version TYPE uccheck.
 
     DATA lr_tabledescr TYPE REF TO cl_abap_tabledescr.
     DATA lr_structdescr TYPE REF TO cl_abap_structdescr.
@@ -361,10 +362,6 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
 
     DATA lv_tablename TYPE string.
     FIELD-SYMBOLS: <lv_value> TYPE any.
-
-    IF iv_step <> zif_abapgit_object=>gc_step_id-abap.
-      RETURN.
-    ENDIF.
 
     TRY.
         IF execute_checks( io_xml ) = abap_false.
@@ -445,6 +442,22 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
         IF compress_interface( ls_ifkey ) = abap_false.
           RETURN.
         ENDIF.
+
+        " No API for updating ABAP Language Version?
+        TRY.
+            io_xml->read( EXPORTING iv_name = 'ABAP_LANGUAGE_VERSION'
+                          CHANGING  cg_data = lv_abap_language_version ).
+
+            set_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+
+            UPDATE ('/AIF/ICD_DATA') SET abap_language_version = lv_abap_language_version
+              WHERE depl_scenario = ms_icd_data_key-depl_scenario
+                AND ns            = ms_icd_data_key-ns
+                AND ifname        = ms_icd_data_key-ifname
+                AND ifver2        = ms_icd_data_key-ifver2 ##SUBRC_OK.
+
+          CATCH cx_root ##NO_HANDLER.
+        ENDTRY.
 
       CATCH cx_root INTO lx_root.
         ii_log->add_exception( ix_exc  = lx_root
@@ -541,6 +554,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
     DATA lx_root TYPE REF TO cx_root.
     DATA ls_icd_data_key TYPE ty_icd_data_key.
     DATA lt_ifdata TYPE ty_table_data_t.
+    DATA lv_abap_language_version TYPE uccheck.
 
     DATA lt_content TYPE ty_content_t.
     DATA ls_content TYPE ty_content_s.
@@ -579,6 +593,21 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
 
         io_xml->add( iv_name = `Content_table`
                      ig_data = lt_content ).
+
+        TRY.
+            SELECT SINGLE ('ABAP_LANGUAGE_VERSION') FROM ('/AIF/ICD_DATA') INTO lv_abap_language_version
+              WHERE depl_scenario = ms_icd_data_key-depl_scenario
+                AND ns            = ms_icd_data_key-ns
+                AND ifname        = ms_icd_data_key-ifname
+                AND ifver2        = ms_icd_data_key-ifver2.
+            IF sy-subrc = 0.
+              clear_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+
+              io_xml->add( iv_name = 'ABAP_LANGUAGE_VERSION'
+                           ig_data = lv_abap_language_version ).
+            ENDIF.
+          CATCH cx_root ##NO_HANDLER.
+        ENDTRY.
 
       CATCH cx_root INTO lx_root.
         zcx_abapgit_exception=>raise( iv_text     = 'Serialize not possible'
