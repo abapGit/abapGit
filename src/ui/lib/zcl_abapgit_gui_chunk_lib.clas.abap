@@ -362,6 +362,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       lv_selected_commit  TYPE string,
       lv_commit_short_sha TYPE string,
       lv_text             TYPE string,
+      lv_act              TYPE string,
       lv_icon             TYPE string,
       lv_hint             TYPE string,
       lv_class            TYPE string,
@@ -398,15 +399,18 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
         lv_class = 'branch branch_branch'.
         lv_icon  = 'code-branch/grey70'.
         lv_hint  = 'Current branch'.
+        lv_act   = zif_abapgit_definitions=>c_action-git_branch_switch.
       WHEN zif_abapgit_git_definitions=>c_git_branch_type-annotated_tag
         OR zif_abapgit_git_definitions=>c_git_branch_type-lightweight_tag.
         lv_class = 'branch'.
         lv_icon  = 'tag-solid/grey70'.
         lv_hint  = 'Current tag'.
+        lv_act   = zif_abapgit_definitions=>c_action-git_tag_switch.
       WHEN OTHERS.
         lv_class = 'branch branch_branch'.
         lv_icon  = 'code-branch/grey70'.
         lv_hint  = 'Current commit'.
+        lv_act   = zif_abapgit_definitions=>c_action-repo_remote_settings.
     ENDCASE.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -414,7 +418,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ri_html->add_icon( iv_name = lv_icon
                        iv_hint = lv_hint ).
     IF iv_interactive = abap_true.
-      ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?key={ lv_key }|
+      ri_html->add_a( iv_act = |{ lv_act }?key={ lv_key }|
                       iv_txt = lv_text ).
     ELSE.
       ri_html->add( lv_text ).
