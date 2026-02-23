@@ -49,6 +49,7 @@ CLASS lcl_stream IMPLEMENTATION.
       mv_position = mv_position + 1.
     ENDIF.
 
+    ev_length = 0.
     IF iv_instruction O lc_16.
       ev_length   = mv_data+mv_position(1).
       mv_position = mv_position + 1.
