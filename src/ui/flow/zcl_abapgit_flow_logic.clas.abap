@@ -747,8 +747,6 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       CHANGING
         cs_information     = rs_information ).
 
-    SORT rs_information-features BY full_match transport-trkorr DESCENDING.
-
   ENDMETHOD.
 
 

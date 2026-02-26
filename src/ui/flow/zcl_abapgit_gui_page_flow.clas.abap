@@ -745,6 +745,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         SORT ct_features BY transport-changed_at DESCENDING.
       WHEN c_sort_order-default.
         " Keep the default order (no sorting needed)
+        SORT ct_features BY full_match transport-trkorr DESCENDING.
       WHEN OTHERS.
         " Keep the default order for unknown sort orders
     ENDCASE.
