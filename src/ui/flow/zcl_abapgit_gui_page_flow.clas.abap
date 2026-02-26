@@ -34,7 +34,13 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         show_details        TYPE string VALUE 'show_details',
         rollback_pr         TYPE string VALUE 'rollback_pr',
         update_all_branches TYPE string VALUE 'update_all_branches',
+        sort_order          TYPE string VALUE 'sort_order',
       END OF c_action .
+    CONSTANTS:
+      BEGIN OF c_sort_order,
+        default            TYPE string VALUE 'default',
+        transport_descend  TYPE string VALUE 'transport_descend',
+      END OF c_sort_order .
     DATA ms_information TYPE zif_abapgit_flow_logic=>ty_information .
     DATA ms_user_settings TYPE zif_abapgit_persist_user=>ty_flow_settings.
 
@@ -127,6 +133,18 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
         zcx_abapgit_exception .
+
+    METHODS build_sort_order_dropdown
+      RETURNING
+        VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
+
+    METHODS sort_features
+      CHANGING
+        ct_features TYPE zif_abapgit_flow_logic=>ty_features
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -139,6 +157,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     ro_toolbar->add( iv_txt = 'User Filter'
                      io_sub = build_user_filter_dropdown( ) ).
+
+    ro_toolbar->add( iv_txt = 'Sort Order'
+                     io_sub = build_sort_order_dropdown( ) ).
 
     ro_toolbar->add( iv_txt = 'Advanced'
                      io_sub = build_advanced_dropdown( ) ).
@@ -416,6 +437,30 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD build_sort_order_dropdown.
+
+    DATA lv_current_sort TYPE string.
+
+    CREATE OBJECT ro_toolbar.
+
+    IF ms_user_settings-sort_order IS INITIAL.
+      lv_current_sort = c_sort_order-default.
+    ELSE.
+      lv_current_sort = ms_user_settings-sort_order.
+    ENDIF.
+
+    ro_toolbar->add(
+      iv_txt = 'Default'
+      iv_chk = boolc( lv_current_sort = c_sort_order-default )
+      iv_act = |{ c_action-sort_order }?order={ c_sort_order-default }| ).
+
+    ro_toolbar->add(
+      iv_txt = 'Most Recent Transport'
+      iv_chk = boolc( lv_current_sort = c_sort_order-transport_descend )
+      iv_act = |{ c_action-sort_order }?order={ c_sort_order-transport_descend }| ).
+
+  ENDMETHOD.
+
 
   METHOD set_branch.
 
@@ -476,6 +521,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         rs_handled = call_stage_commit( ii_event ).
       WHEN c_action-pull.
         rs_handled = call_pull( ii_event ).
+      WHEN c_action-sort_order.
+        ms_user_settings-sort_order = ii_event->query( )->get( 'ORDER' ).
+        zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN OTHERS.
         ls_event_result = zcl_abapgit_flow_exit=>get_instance( )->on_event(
           ii_event    = ii_event
@@ -680,6 +729,28 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD sort_features.
+
+    DATA lv_sort_order TYPE string.
+
+    IF ms_user_settings-sort_order IS INITIAL.
+      lv_sort_order = c_sort_order-default.
+    ELSE.
+      lv_sort_order = ms_user_settings-sort_order.
+    ENDIF.
+
+    CASE lv_sort_order.
+      WHEN c_sort_order-transport_descend.
+        " Sort by transport changed_at in descending order (most recent first)
+        SORT ct_features BY transport-changed_at DESCENDING.
+      WHEN c_sort_order-default.
+        " Keep the default order (no sorting needed)
+      WHEN OTHERS.
+        " Keep the default order for unknown sort orders
+    ENDCASE.
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_gui_renderable~render.
 
@@ -700,6 +771,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     IF ms_information IS INITIAL.
       ms_information = zcl_abapgit_flow_logic=>get( ).
     ENDIF.
+
+    sort_features( CHANGING ct_features = ms_information-features ).
 
     ri_html->add( build_main_toolbar( )->render( iv_right = abap_true ) ).
 

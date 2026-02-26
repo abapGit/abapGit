@@ -33,11 +33,12 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
   PRIVATE SECTION.
 
     TYPES: BEGIN OF ty_transport,
-             trkorr   TYPE trkorr,
-             title    TYPE string,
-             object   TYPE tadir-object,
-             obj_name TYPE tadir-obj_name,
-             devclass TYPE tadir-devclass,
+             trkorr     TYPE trkorr,
+             title      TYPE string,
+             object     TYPE tadir-object,
+             obj_name   TYPE tadir-obj_name,
+             devclass   TYPE tadir-devclass,
+             changed_at TYPE timestamp,
            END OF ty_transport.
 
     TYPES ty_transports_tt TYPE STANDARD TABLE OF ty_transport WITH NON-UNIQUE KEY trkorr.
@@ -530,6 +531,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     DATA lv_obj_name TYPE tadir-obj_name.
     DATA lt_date     TYPE zif_abapgit_cts_api=>ty_date_range.
     DATA ls_date     LIKE LINE OF lt_date.
+    DATA ls_e070     TYPE zif_abapgit_cts_api=>ty_transport_data.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
 
@@ -544,6 +546,14 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     LOOP AT lt_trkorr INTO lv_trkorr.
       ls_result-trkorr = lv_trkorr.
       ls_result-title  = zcl_abapgit_factory=>get_cts_api( )->read_description( lv_trkorr ).
+
+      TRY.
+          ls_e070 = zcl_abapgit_factory=>get_cts_api( )->read( lv_trkorr ).
+          CONVERT DATE ls_e070-as4date TIME '000000' INTO TIME STAMP ls_result-changed_at TIME ZONE sy-zonlo.
+        CATCH zcx_abapgit_exception.
+          " If we can't read the transport data, use current timestamp as fallback
+          GET TIME STAMP FIELD ls_result-changed_at.
+      ENDTRY.
 
       lt_objects = zcl_abapgit_factory=>get_cts_api( )->list_r3tr_by_request( lv_trkorr ).
       LOOP AT lt_objects ASSIGNING <ls_object> WHERE object <> 'CINS' AND object <> 'NOTE'.
@@ -868,6 +878,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
         IF sy-subrc = 0.
           <ls_feature>-transport-trkorr = <ls_transport>-trkorr.
           <ls_feature>-transport-title = <ls_transport>-title.
+          <ls_feature>-transport-changed_at = <ls_transport>-changed_at.
 
           add_objects_and_files_from_tr(
             EXPORTING
@@ -909,6 +920,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       ls_result-repo = build_repo_data( ii_repo ).
       ls_result-transport-trkorr = <ls_transport>-trkorr.
       ls_result-transport-title = <ls_transport>-title.
+      ls_result-transport-changed_at = <ls_transport>-changed_at.
 
       add_objects_and_files_from_tr(
         EXPORTING
