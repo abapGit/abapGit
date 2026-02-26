@@ -147,6 +147,14 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS get_latest_task_timestamp
+      IMPORTING
+        iv_trkorr            TYPE trkorr
+      RETURNING
+        VALUE(rv_changed_at) TYPE timestamp
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -531,8 +539,6 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     DATA lv_obj_name TYPE tadir-obj_name.
     DATA lt_date     TYPE zif_abapgit_cts_api=>ty_date_range.
     DATA ls_date     LIKE LINE OF lt_date.
-    DATA ls_e070     TYPE zif_abapgit_cts_api=>ty_transport_data.
-
     FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
 
 * only look for transports that are created/changed in the last two years
@@ -546,14 +552,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     LOOP AT lt_trkorr INTO lv_trkorr.
       ls_result-trkorr = lv_trkorr.
       ls_result-title  = zcl_abapgit_factory=>get_cts_api( )->read_description( lv_trkorr ).
-
-      TRY.
-          ls_e070 = zcl_abapgit_factory=>get_cts_api( )->read( lv_trkorr ).
-          CONVERT DATE ls_e070-as4date TIME '000000' INTO TIME STAMP ls_result-changed_at TIME ZONE sy-zonlo.
-        CATCH zcx_abapgit_exception.
-          " If we can't read the transport data, use current timestamp as fallback
-          GET TIME STAMP FIELD ls_result-changed_at.
-      ENDTRY.
+      ls_result-changed_at = get_latest_task_timestamp( lv_trkorr ).
 
       lt_objects = zcl_abapgit_factory=>get_cts_api( )->list_r3tr_by_request( lv_trkorr ).
       LOOP AT lt_objects ASSIGNING <ls_object> WHERE object <> 'CINS' AND object <> 'NOTE'.
@@ -570,6 +569,36 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       ENDLOOP.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD get_latest_task_timestamp.
+
+    DATA lt_tasks    TYPE zif_abapgit_cts_api=>ty_request_and_tasks_tt.
+    DATA ls_task     LIKE LINE OF lt_tasks.
+    DATA lv_max_date TYPE d.
+    DATA lv_max_time TYPE t.
+
+    TRY.
+        lt_tasks = zcl_abapgit_factory=>get_cts_api( )->read_request_and_tasks( iv_trkorr ).
+
+        LOOP AT lt_tasks INTO ls_task.
+          IF ls_task-as4date > lv_max_date
+              OR ( ls_task-as4date = lv_max_date AND ls_task-as4time > lv_max_time ).
+            lv_max_date = ls_task-as4date.
+            lv_max_time = ls_task-as4time.
+          ENDIF.
+        ENDLOOP.
+
+        IF lv_max_date IS NOT INITIAL.
+          CONVERT DATE lv_max_date TIME lv_max_time INTO TIME STAMP rv_changed_at TIME ZONE sy-zonlo.
+        ELSE.
+          GET TIME STAMP FIELD rv_changed_at.
+        ENDIF.
+      CATCH zcx_abapgit_exception.
+        GET TIME STAMP FIELD rv_changed_at.
+    ENDTRY.
 
   ENDMETHOD.
 
