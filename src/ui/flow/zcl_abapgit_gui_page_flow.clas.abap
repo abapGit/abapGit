@@ -455,7 +455,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       iv_act = |{ c_action-sort_order }?order={ c_sort_order-default }| ).
 
     ro_toolbar->add(
-      iv_txt = 'Most Recent Transport'
+      iv_txt = 'Recently Modified Transport'
       iv_chk = boolc( lv_current_sort = c_sort_order-transport_descend )
       iv_act = |{ c_action-sort_order }?order={ c_sort_order-transport_descend }| ).
 
