@@ -487,7 +487,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     CREATE OBJECT ri_checksums TYPE zcl_abapgit_repo_checksums
       EXPORTING
-        iv_repo_key = ms_data-key.
+        ii_repo = me.
 
   ENDMETHOD.
 

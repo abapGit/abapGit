@@ -9,7 +9,7 @@ CLASS zcl_abapgit_repo_checksums DEFINITION
 
     METHODS constructor
       IMPORTING
-        !iv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key
+        !ii_repo TYPE REF TO zif_abapgit_repo
       RAISING
         zcx_abapgit_exception.
 
@@ -112,9 +112,8 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
 
 
   METHOD constructor.
-    ASSERT iv_repo_key IS NOT INITIAL.
-    mv_repo_key = iv_repo_key.
-    mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
+
+    mi_repo = ii_repo.
     " Should be safe as repo_srv is supposed to be single source of repo instances
   ENDMETHOD.
 
