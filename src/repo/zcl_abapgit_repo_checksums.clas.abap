@@ -113,6 +113,7 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
 
   METHOD constructor.
 
+    mv_repo_key = ii_repo->get_key( ).
     mi_repo = ii_repo.
     " Should be safe as repo_srv is supposed to be single source of repo instances
   ENDMETHOD.
