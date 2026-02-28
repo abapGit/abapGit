@@ -2506,7 +2506,7 @@ function toggleSticky() {
 
 // Toggle display of warning message when using Edge (based on Chromium) browser control
 // Todo: Remove once https://github.com/abapGit/abapGit/issues/4841 is fixed
-function toggleBrowserControlWarning(){
+function toggleBrowserControlWarning() {
   if (!navigator.userAgent.includes("Edg")){
     var elBrowserControlWarning = document.getElementById("browser-control-warning");
     if (elBrowserControlWarning) {
@@ -2519,4 +2519,56 @@ function toggleBrowserControlWarning(){
 function displayBrowserControlFooter() {
   var out = document.getElementById("browser-control-footer");
   out.innerHTML = " - " + ( navigator.userAgent.includes("Edg") ? "Edge" : "IE"  );
+}
+
+/**********************************************************
+ * Popup Control
+ **********************************************************/
+
+// Prevents keyboard navigation to elements outside the modal popup
+function trapFocus() {
+  const modal = document.getElementById("modal");
+  if (!modal) return;
+
+  var focusableSelectors = "button, [href], input, select, textarea, [tabindex]";
+  var focusableElements = modal.querySelectorAll(focusableSelectors);
+
+  // Filter out elements with tabindex="-1"
+  var focusable = [];
+  for (var i = 0; i < focusableElements.length; i++) {
+    if (focusableElements[i].getAttribute("tabindex") !== "-1") {
+      focusable.push(focusableElements[i]);
+    }
+  }
+
+  if (focusable.length === 0) return;
+
+  var firstElement = focusable[0];
+  var lastElement = focusable[focusable.length - 1];
+
+  // Focus the main button when modal opens, if it exists
+  if (document.querySelector(".main-button")) {
+    setInitialFocus("main-button");
+  }
+
+  modal.onkeydown = function(e) {
+    var keyCode = e.keyCode || e.which;
+
+    // Tab key
+    if (keyCode === 9) {
+      if (e.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        }
+      } else {
+        // Tab only
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
+      }
+    }
+  };
 }
