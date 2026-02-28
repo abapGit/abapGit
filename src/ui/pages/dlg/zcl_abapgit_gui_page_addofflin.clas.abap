@@ -111,8 +111,8 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
   METHOD get_form_schema.
 
     ro_form = zcl_abapgit_html_form=>create(
-                iv_form_id   = 'add-repo-offline-form'
-                iv_help_page = 'https://docs.abapgit.org/guide-offline-install.html' ).
+      iv_form_id   = 'add-repo-offline-form'
+      iv_help_page = 'https://docs.abapgit.org/guide-offline-install.html' ).
 
     ro_form->text(
       iv_name        = c_id-name
@@ -156,28 +156,26 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
       iv_label       = 'Serialize Main Language Only'
       iv_hint        = 'Ignore translations, serialize just main language' ).
 
-    IF zcl_abapgit_feature=>is_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
-      ro_form->radio(
-        iv_name        = c_id-abap_lang_vers
-        iv_default_value = ''
-        iv_label       = 'ABAP Language Version'
-        iv_hint        = 'Define the ABAP language version for objects in the repository'
-      )->option(
-        iv_label       = 'Any'
-        iv_value       = ''
-      )->option(
-        iv_label       = 'Ignore'
-        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-ignore
-      )->option(
-        iv_label       = 'Standard'
-        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-standard
-      )->option(
-        iv_label       = 'For Key Users'
-        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-key_user
-      )->option(
-        iv_label       = 'For Cloud Development'
-        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development ).
-    ENDIF.
+    ro_form->radio(
+      iv_name        = c_id-abap_lang_vers
+      iv_default_value = ''
+      iv_label       = 'ABAP Language Version'
+      iv_hint        = 'Define the ABAP language version for objects in the repository'
+    )->option(
+      iv_label       = 'Any'
+      iv_value       = ''
+    )->option(
+      iv_label       = 'Ignore'
+      iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-ignore
+    )->option(
+      iv_label       = 'Standard'
+      iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-standard
+    )->option(
+      iv_label       = 'For Key Users'
+      iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-key_user
+    )->option(
+      iv_label       = 'For Cloud Development'
+      iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development ).
 
     ro_form->command(
       iv_label       = 'Create Offline Repo'
