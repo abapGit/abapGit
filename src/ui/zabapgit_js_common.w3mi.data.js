@@ -2528,6 +2528,7 @@ function displayBrowserControlFooter() {
 // Prevents keyboard navigation to elements outside the modal popup
 function trapFocus() {
   const modal = document.getElementById("modal");
+  if (!modal) return;
 
   var focusableSelectors = "button, [href], input, select, textarea, [tabindex]";
   var focusableElements = modal.querySelectorAll(focusableSelectors);
@@ -2545,8 +2546,10 @@ function trapFocus() {
   var firstElement = focusable[0];
   var lastElement = focusable[focusable.length - 1];
 
-  // Focus the main button when modal opens
-  setInitialFocus("main-button");
+  // Focus the main button when modal opens, if it exists
+  if (document.querySelector(".main-button")) {
+    setInitialFocus("main-button");
+  }
 
   modal.onkeydown = function(e) {
     var keyCode = e.keyCode || e.which;

@@ -56,7 +56,9 @@ CLASS lcl_popup_to_confirm IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD close.
-    go_popup->close( ).
+    IF go_popup IS BOUND.
+      go_popup->close( ).
+    ENDIF.
   ENDMETHOD.
 
 ENDCLASS.
