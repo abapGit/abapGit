@@ -13,13 +13,15 @@ CLASS zcl_abapgit_objects_generic DEFINITION
         zcx_abapgit_exception .
     METHODS delete
       IMPORTING
-        !iv_package TYPE devclass
+        !iv_package       TYPE devclass
+        !iv_cus_transport TYPE trkorr OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize
       IMPORTING
-        !iv_package TYPE devclass
-        !io_xml     TYPE REF TO zif_abapgit_xml_input
+        !iv_package       TYPE devclass
+        !io_xml           TYPE REF TO zif_abapgit_xml_input
+        !iv_cus_transport TYPE trkorr OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS exists
@@ -54,7 +56,8 @@ CLASS zcl_abapgit_objects_generic DEFINITION
     METHODS before_export .
     METHODS corr_insert
       IMPORTING
-        !iv_package TYPE devclass
+        !iv_package       TYPE devclass
+        !iv_cus_transport TYPE trkorr OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_data
