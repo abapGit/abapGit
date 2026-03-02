@@ -377,7 +377,6 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
   METHOD update_repo_checksums.
 
     DATA:
-      lv_key       TYPE zif_abapgit_persistence=>ty_repo-key,
       lo_checksums TYPE REF TO zcl_abapgit_repo_checksums,
       lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 
@@ -385,9 +384,7 @@ CLASS zcl_abapgit_gui_page_chg_pckg IMPLEMENTATION.
       <ls_checksum> LIKE LINE OF lt_checksums,
       <ls_map>      LIKE LINE OF it_mapping.
 
-    lv_key = mi_repo->get_key( ).
-
-    CREATE OBJECT lo_checksums EXPORTING iv_repo_key = lv_key.
+    CREATE OBJECT lo_checksums EXPORTING ii_repo = mi_repo.
 
     lt_checksums = lo_checksums->zif_abapgit_repo_checksums~get( ).
 

@@ -729,6 +729,8 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     LOOP AT lt_request_headers INTO ls_row.
       ls_task-trkorr  = ls_row-trkorr.
       ls_task-as4user = ls_row-as4user.
+      ls_task-as4date = ls_row-as4date.
+      ls_task-as4time = ls_row-as4time.
 
       INSERT ls_task INTO TABLE rt_tasks.
     ENDLOOP.
