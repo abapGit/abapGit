@@ -261,15 +261,15 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
   METHOD corr_insert.
 
-    DATA ls_dd02l_dummy TYPE dd02l.
-    DATA lv_category    TYPE objcateg.
-    DATA lv_tabname     TYPE tabname.
-    DATA ls_task        TYPE trwbo_request_header.
-    DATA lv_objtype     TYPE e071-object.
-    DATA lv_obj_name    TYPE e071-obj_name.
-    DATA lt_tasks  TYPE  trwbo_request_headers.
+    DATA: ls_dd02l_dummy TYPE dd02l,
+          lv_category    TYPE objcateg,
+          lv_tabname     TYPE tabname,
+          ls_task        TYPE trwbo_request_header,
+          lv_objtype     TYPE e071-object,
+          lv_obj_name    TYPE e071-obj_name,
+          lt_tasks       TYPE trwbo_request_headers.
 
-    CONSTANTS: lc_customizing type objcateg VALUE 'CUST'.
+    CONSTANTS: lc_customizing TYPE objcateg VALUE 'CUST'.
 
     lv_tabname = get_primary_table( ).
 
@@ -298,7 +298,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
           invalid_input      = 1
           OTHERS             = 2.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error reading task for transport { iv_cus_transport }| ) .
+        zcx_abapgit_exception=>raise( |Error reading task for transport { iv_cus_transport }| ).
       ENDIF.
 
       READ TABLE lt_tasks INTO ls_task WITH KEY strkorr = iv_cus_transport.
@@ -374,7 +374,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
     validate( io_xml ).
 
     delete( iv_package       = iv_package
-            iv_cus_transport = iv_cus_transport  ).
+            iv_cus_transport = iv_cus_transport ).
 
     deserialize_data(
       io_xml     = io_xml
