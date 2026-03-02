@@ -1,4 +1,3 @@
-
 CLASS zcl_abapgit_repo DEFINITION
   PUBLIC
   ABSTRACT
