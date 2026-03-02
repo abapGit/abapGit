@@ -72,7 +72,7 @@ CLASS zcl_abapgit_repo_cs_migration IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key = iv_repo_key ).
+    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_repo_key ).
 
     CREATE OBJECT lo_cs EXPORTING ii_repo = li_repo.
     lo_cs->force_write( ls_repo_extract-local_checksums ).
