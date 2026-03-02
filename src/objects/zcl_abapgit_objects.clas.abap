@@ -326,7 +326,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
       IF li_obj->is_locked( ) = abap_true.
         zcx_abapgit_exception=>raise( |Object { <ls_item>-obj_type } { <ls_item>-obj_name } |
-                                   && |is locked by an editor, user, or ABAP process. Action not possible.| ).
+                                   && |is open or being edited by a user.| ).
       ENDIF.
 
     ENDLOOP.
