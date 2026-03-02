@@ -62,6 +62,9 @@ span.separator {
 .crossout     { text-decoration: line-through !important; }
 .right        { text-align:right; }
 .center       { text-align:center; }
+.left         { text-align:left; }
+.top          { vertical-align: top; }
+.bottom       { vertical-align: bottom; }
 .paddings     { padding: 0.5em 0.5em; }
 .pad-sides    { padding-left: 0.3em; padding-right: 0.3em; }
 .pad-1em      { padding: 1em 1em; }
