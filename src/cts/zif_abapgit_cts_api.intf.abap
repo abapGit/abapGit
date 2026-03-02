@@ -182,6 +182,8 @@ INTERFACE zif_abapgit_cts_api
   TYPES: BEGIN OF ty_request_and_tasks,
            trkorr  TYPE trkorr,
            as4user TYPE sy-uname,
+           as4date TYPE d,
+           as4time TYPE t,
          END OF ty_request_and_tasks.
   TYPES: ty_request_and_tasks_tt TYPE STANDARD TABLE OF ty_request_and_tasks WITH DEFAULT KEY.
 
