@@ -261,12 +261,83 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
   METHOD corr_insert.
 
+    DATA ls_dd02l_dummy TYPE dd02l.
+    DATA lv_category    TYPE objcateg.
+    DATA lv_tabname     TYPE tabname.
+    DATA ls_task        TYPE trwbo_request_header.
+    DATA lv_objtype     TYPE e071-object.
+    DATA lv_obj_name    TYPE e071-obj_name.
+    DATA lt_tasks  TYPE  trwbo_request_headers.
+
+    CONSTANTS: lc_customizing type objcateg VALUE 'CUST'.
+
+    lv_tabname = get_primary_table( ).
+
+    CALL FUNCTION 'TR_TABLE_CATEGORY'
+      EXPORTING
+        wi_tabname      = lv_tabname
+        wi_dd02l        = ls_dd02l_dummy
+      IMPORTING
+        we_category     = lv_category
+      EXCEPTIONS
+        table_not_activ = 1
+        inttab_table    = 2
+        OTHERS          = 3.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error reading transport category for table { lv_tabname }| ).
+    ENDIF.
+
+    IF lv_category = lc_customizing AND iv_cus_transport IS SUPPLIED.
+
+      CALL FUNCTION 'TR_READ_REQUEST_WITH_TASKS'
+        EXPORTING
+          iv_trkorr          = iv_cus_transport
+        IMPORTING
+          et_request_headers = lt_tasks
+        EXCEPTIONS
+          invalid_input      = 1
+          OTHERS             = 2.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Error reading task for transport { iv_cus_transport }| ) .
+      ENDIF.
+
+      READ TABLE lt_tasks INTO ls_task WITH KEY strkorr = iv_cus_transport.
+      IF sy-subrc = 0.
+
+        lv_objtype = ms_item-obj_type.
+        lv_obj_name = ms_item-obj_name.
+
+        CALL FUNCTION 'TLOGO_OBJECT_APPEND'
+          EXPORTING
+            korrnr                      = ls_task-trkorr
+            objtype                     = lv_objtype
+            obj_name                    = lv_obj_name
+          EXCEPTIONS
+            korrnr_already_released     = 1
+            korrnr_locked               = 2
+            korrnr_not_exists           = 3
+            korrnr_not_korr             = 4
+            korr_other_user             = 5
+            no_logical_object           = 6
+            object_has_no_tadir         = 7
+            object_locked_in_other_korr = 8
+            obj_name_too_long_or_space  = 9
+            error_append_to_comm        = 10
+            OTHERS                      = 11.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( |Error appending logical object { ms_item-obj_name } to customizing transport| ).
+        ENDIF.
+      ELSE.
+        zcx_abapgit_exception=>raise( |Error appending logical object { ms_item-obj_name } to customizing transport| ).
+      ENDIF.
+    ELSE.
 * this will also insert into TADIR
-    zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
-      iv_object   = ms_item-obj_type
-      iv_obj_name = ms_item-obj_name
-      iv_package  = iv_package
-      iv_language = mv_language ).
+      zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
+        iv_object   = ms_item-obj_type
+        iv_obj_name = ms_item-obj_name
+        iv_package  = iv_package
+        iv_language = mv_language ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -292,7 +363,8 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    corr_insert( iv_package ).
+    corr_insert( iv_package       = iv_package
+                 iv_cus_transport = iv_cus_transport ).
 
   ENDMETHOD.
 
@@ -301,7 +373,8 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
     validate( io_xml ).
 
-    delete( iv_package ).
+    delete( iv_package       = iv_package
+            iv_cus_transport = iv_cus_transport  ).
 
     deserialize_data(
       io_xml     = io_xml
@@ -309,7 +382,8 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
     after_import( ).
 
-    corr_insert( iv_package ).
+    corr_insert( iv_package       = iv_package
+                 iv_cus_transport = iv_cus_transport ).
 
   ENDMETHOD.
 
