@@ -236,9 +236,10 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
 * https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#merge-a-pull-request
 
     DATA lv_url          TYPE string.
-    DATA lv_json         TYPE string.
     DATA lv_commit_title TYPE string.
+    DATA li_json         TYPE REF TO zif_abapgit_ajson.
     DATA li_response     TYPE REF TO zif_abapgit_http_response.
+    DATA lx_ajson        TYPE REF TO zcx_abapgit_ajson_error.
 
     lv_url = mv_repo_url && '/pulls/' && iv_pull_number && '/merge'.
 
@@ -248,15 +249,22 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
       lv_commit_title = |Merge pull request #{ iv_pull_number }|.
     ENDIF.
 
-    lv_json = |\{\n| &&
-              |  "commit_title": "{ lv_commit_title }",\n| &&
-              |  "merge_method": "squash"\n| &&
-              |\}|.
+    TRY.
+        li_json = zcl_abapgit_ajson=>create_empty( ).
+        li_json->set_string(
+          iv_path = '/commit_title'
+          iv_val  = lv_commit_title ).
+        li_json->set_string(
+          iv_path = '/merge_method'
+          iv_val  = 'squash' ).
 
-    li_response = mi_http_agent->request(
-      iv_url     = lv_url
-      iv_method  = zif_abapgit_http_agent=>c_methods-put
-      iv_payload = lv_json ).
+        li_response = mi_http_agent->request(
+          iv_url     = lv_url
+          iv_method  = zif_abapgit_http_agent=>c_methods-put
+          iv_payload = li_json->stringify( ) ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+    ENDTRY.
 
     IF li_response->is_ok( ) = abap_false.
       zcx_abapgit_exception=>raise( |Error merging pull request: { li_response->error( ) }| ).
