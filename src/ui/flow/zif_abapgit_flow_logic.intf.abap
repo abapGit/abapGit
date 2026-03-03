@@ -36,6 +36,7 @@ INTERFACE zif_abapgit_flow_logic
              url    TYPE string,
              number TYPE i,
              draft  TYPE abap_bool,
+             author TYPE string,
            END OF pr,
            BEGIN OF transport,
              trkorr     TYPE trkorr,

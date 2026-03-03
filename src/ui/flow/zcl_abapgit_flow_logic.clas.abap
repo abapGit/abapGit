@@ -640,6 +640,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       <ls_branch>-pr-url = ls_pull-html_url.
       <ls_branch>-pr-number = ls_pull-number.
       <ls_branch>-pr-draft = ls_pull-draft.
+      <ls_branch>-pr-author = ls_pull-user.
     ENDLOOP.
 
   ENDMETHOD.

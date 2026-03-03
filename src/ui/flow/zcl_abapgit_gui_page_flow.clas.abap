@@ -642,6 +642,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ri_html->add( 'Status: Ready for Review' ).
       ENDIF.
 
+      IF ms_user_settings-show_details = abap_true AND is_feature-pr-author IS NOT INITIAL.
+        ri_html->add( |<br>| ).
+        ri_html->add( |PR Author: { is_feature-pr-author }| ).
+      ENDIF.
+
       IF ms_user_settings-show_details = abap_true.
         ri_html->add( |<br>| ).
         ri_html->add( |First commit: { is_feature-branch-first_commit(7) }| ).
