@@ -822,7 +822,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     IF ms_user_settings-username_filter IS NOT INITIAL.
       lv_filter = |, user filter: { ms_user_settings-username_filter }|.
     ENDIF.
-    ri_html->add( |<small>{ lines( ms_information-features ) } features in { lo_timer->end( ) }{ lv_filter }</small>| ).
+    ri_html->add( |<small>{ lines( ms_information-features ) } features| &&
+      | in { lo_timer->end( ) }{ lv_filter }, SAP user: { sy-uname }</small>| ).
 
     ri_html->add( '</div>' ).
 
