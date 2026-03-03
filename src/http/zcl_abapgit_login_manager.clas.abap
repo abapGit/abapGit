@@ -43,6 +43,13 @@ CLASS zcl_abapgit_login_manager DEFINITION
         VALUE(rv_auth) TYPE string
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS get_username
+      IMPORTING
+        !iv_uri            TYPE string
+      RETURNING
+        VALUE(rv_username) TYPE string
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -97,6 +104,25 @@ CLASS zcl_abapgit_login_manager IMPLEMENTATION.
     READ TABLE gt_auth INTO ls_auth WITH KEY uri = zcl_abapgit_url=>host( iv_uri ).
     IF sy-subrc = 0.
       rv_auth = ls_auth-authorization.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_username.
+
+    DATA lv_auth    TYPE string.
+    DATA lv_decoded TYPE string.
+
+    lv_auth = get( iv_uri ).
+    IF lv_auth IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    IF lv_auth CP 'Basic *'.
+      lv_auth = lv_auth+6.
+      lv_decoded = cl_http_utility=>decode_base64( lv_auth ).
+      SPLIT lv_decoded AT ':' INTO rv_username lv_decoded.
     ENDIF.
 
   ENDMETHOD.

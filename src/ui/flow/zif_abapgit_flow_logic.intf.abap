@@ -36,6 +36,7 @@ INTERFACE zif_abapgit_flow_logic
              url    TYPE string,
              number TYPE i,
              draft  TYPE abap_bool,
+             author TYPE string,
            END OF pr,
            BEGIN OF transport,
              trkorr     TYPE trkorr,
@@ -56,6 +57,7 @@ INTERFACE zif_abapgit_flow_logic
             errors               TYPE string_table,
             transport_duplicates TYPE ty_transport_duplicates_tt,
             enabled_repositories TYPE i,
+            github_username      TYPE string,
          END OF ty_information.
 
   CONSTANTS c_main TYPE string VALUE 'main'.
