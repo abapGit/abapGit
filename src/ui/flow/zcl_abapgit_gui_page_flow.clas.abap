@@ -593,9 +593,17 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF ms_user_settings-username_filter IS NOT INITIAL AND is_feature-transport-trkorr IS NOT INITIAL.
-      READ TABLE is_feature-transport-users WITH KEY table_line = ms_user_settings-username_filter TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
+    IF ms_user_settings-username_filter IS NOT INITIAL.
+      IF is_feature-transport-trkorr IS NOT INITIAL.
+        READ TABLE is_feature-transport-users WITH KEY table_line = ms_user_settings-username_filter TRANSPORTING NO FIELDS.
+        IF sy-subrc <> 0.
+          rv_skip = abap_true.
+          RETURN.
+        ENDIF.
+      ELSEIF is_feature-pr-author IS NOT INITIAL
+          AND ms_information-github_username IS NOT INITIAL
+          AND ms_user_settings-username_filter = sy-uname
+          AND is_feature-pr-author <> ms_information-github_username.
         rv_skip = abap_true.
         RETURN.
       ENDIF.
