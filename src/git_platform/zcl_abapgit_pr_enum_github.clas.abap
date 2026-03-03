@@ -25,7 +25,8 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
 
     METHODS merge_pull_request
       IMPORTING
-        iv_pull_number TYPE i
+        iv_pull_number  TYPE i
+        iv_commit_title TYPE clike OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
@@ -234,14 +235,21 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
   METHOD merge_pull_request.
 * https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#merge-a-pull-request
 
-    DATA lv_url      TYPE string.
-    DATA lv_json     TYPE string.
-    DATA li_response TYPE REF TO zif_abapgit_http_response.
+    DATA lv_url          TYPE string.
+    DATA lv_json         TYPE string.
+    DATA lv_commit_title TYPE string.
+    DATA li_response     TYPE REF TO zif_abapgit_http_response.
 
     lv_url = mv_repo_url && '/pulls/' && iv_pull_number && '/merge'.
 
+    IF iv_commit_title IS NOT INITIAL.
+      lv_commit_title = iv_commit_title.
+    ELSE.
+      lv_commit_title = |Merge pull request #{ iv_pull_number }|.
+    ENDIF.
+
     lv_json = |\{\n| &&
-              |  "commit_title": "Merge pull request #{ iv_pull_number }",\n| &&
+              |  "commit_title": "{ lv_commit_title }",\n| &&
               |  "merge_method": "squash"\n| &&
               |\}|.
 
