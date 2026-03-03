@@ -93,6 +93,10 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS call_update_all_branches
+      RAISING
+        zcx_abapgit_exception.
+
     METHODS skip_show
       IMPORTING
         is_feature     TYPE zif_abapgit_flow_logic=>ty_feature
@@ -201,6 +205,21 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       rs_handled-page  = zcl_abapgit_gui_page_flowcons=>create( li_repo ).
       rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD call_update_all_branches.
+
+    DATA ls_result TYPE zcl_abapgit_flow_logic=>ty_update_result.
+    DATA lv_msg    TYPE string.
+
+    ASSERT ms_information IS NOT INITIAL.
+
+    ls_result = zcl_abapgit_flow_logic=>update_all_branches( ms_information-features ).
+
+    lv_msg = |Updated { ls_result-updated } branches, { ls_result-errors } errors, { ls_result-skipped } skipped|.
+    MESSAGE lv_msg TYPE 'S'.
 
   ENDMETHOD.
 
@@ -508,7 +527,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         MESSAGE 'Rollback PR functionality is not yet implemented.' TYPE 'I'.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-update_all_branches.
-        MESSAGE 'Update all branches functionality is not yet implemented.' TYPE 'I'.
+        call_update_all_branches( ).
+        refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-refresh.
         refresh( ).
@@ -593,9 +613,17 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF ms_user_settings-username_filter IS NOT INITIAL AND is_feature-transport-trkorr IS NOT INITIAL.
-      READ TABLE is_feature-transport-users WITH KEY table_line = ms_user_settings-username_filter TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
+    IF ms_user_settings-username_filter IS NOT INITIAL.
+      IF is_feature-transport-trkorr IS NOT INITIAL.
+        READ TABLE is_feature-transport-users WITH KEY table_line = ms_user_settings-username_filter TRANSPORTING NO FIELDS.
+        IF sy-subrc <> 0.
+          rv_skip = abap_true.
+          RETURN.
+        ENDIF.
+      ELSEIF is_feature-pr-author IS NOT INITIAL
+          AND ms_information-github_username IS NOT INITIAL
+          AND ms_user_settings-username_filter = sy-uname
+          AND is_feature-pr-author <> ms_information-github_username.
         rv_skip = abap_true.
         RETURN.
       ENDIF.
@@ -640,6 +668,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ri_html->add( 'Status: Draft' ).
       ELSE.
         ri_html->add( 'Status: Ready for Review' ).
+      ENDIF.
+
+      IF ms_user_settings-show_details = abap_true AND is_feature-pr-author IS NOT INITIAL.
+        ri_html->add( |<br>| ).
+        ri_html->add( |PR Author: { is_feature-pr-author }| ).
       ENDIF.
 
       IF ms_user_settings-show_details = abap_true.
@@ -817,7 +850,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     IF ms_user_settings-username_filter IS NOT INITIAL.
       lv_filter = |, user filter: { ms_user_settings-username_filter }|.
     ENDIF.
-    ri_html->add( |<small>{ lines( ms_information-features ) } features in { lo_timer->end( ) }{ lv_filter }</small>| ).
+    ri_html->add( |<small>{ lines( ms_information-features ) } features| &&
+      | in { lo_timer->end( ) }{ lv_filter }| &&
+      |, SAP user: { sy-uname }| &&
+      |, GitHub user: { ms_information-github_username }| &&
+      |</small>| ).
 
     ri_html->add( '</div>' ).
 
