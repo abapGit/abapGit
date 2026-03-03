@@ -214,9 +214,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA ls_result TYPE zcl_abapgit_flow_logic=>ty_update_result.
     DATA lv_msg    TYPE string.
 
-    IF ms_information IS INITIAL.
-      ms_information = zcl_abapgit_flow_logic=>get( ).
-    ENDIF.
+    ASSERT ms_information IS NOT INITIAL.
 
     ls_result = zcl_abapgit_flow_logic=>update_all_branches( ms_information-features ).
 
