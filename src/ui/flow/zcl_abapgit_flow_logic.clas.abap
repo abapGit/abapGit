@@ -155,6 +155,12 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS find_github_username
+      IMPORTING
+        it_repos           TYPE ty_repos_tt
+      RETURNING
+        VALUE(rv_username) TYPE string.
+
 ENDCLASS.
 
 
@@ -603,6 +609,28 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD find_github_username.
+
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
+    DATA li_exit        TYPE REF TO zif_abapgit_flow_exit.
+
+    READ TABLE it_repos INTO li_repo_online INDEX 1.
+    IF sy-subrc = 0.
+      TRY.
+          rv_username = zcl_abapgit_login_manager=>get_username( li_repo_online->get_url( ) ).
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+    TRY.
+        li_exit = zcl_abapgit_flow_exit=>get_instance( ).
+        li_exit->change_github_username( CHANGING cv_username = rv_username ).
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD find_prs.
 
     DATA lt_pulls TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests.
@@ -659,7 +687,6 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
     DATA lt_local TYPE zif_abapgit_flow_logic=>ty_local_files.
     DATA lt_real_transports LIKE lt_all_transports.
-    DATA li_exit TYPE REF TO zif_abapgit_flow_exit.
 
     FIELD-SYMBOLS <ls_feature> LIKE LINE OF lt_features.
     FIELD-SYMBOLS <ls_path_name> LIKE LINE OF <ls_feature>-changed_files.
@@ -670,18 +697,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 * list branches on favorite + flow enabled + transported repos
     lt_repos = list_repos( ).
     rs_information-enabled_repositories = lines( lt_repos ).
-
-    READ TABLE lt_repos INTO li_repo_online INDEX 1.
-    IF sy-subrc = 0.
-      TRY.
-          rs_information-github_username = zcl_abapgit_login_manager=>get_username(
-            li_repo_online->get_url( ) ).
-        CATCH zcx_abapgit_exception ##NO_HANDLER.
-      ENDTRY.
-    ENDIF.
-
-    li_exit = zcl_abapgit_flow_exit=>get_instance( ).
-    li_exit->change_github_username( CHANGING cv_username = rs_information-github_username ).
+    rs_information-github_username = find_github_username( lt_repos ).
 
     LOOP AT lt_repos INTO li_repo_online.
 
