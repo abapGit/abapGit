@@ -34,6 +34,7 @@ INTERFACE zif_abapgit_persist_user
             hide_conflicts      TYPE abap_bool,
             show_details        TYPE abap_bool,
             username_filter     TYPE syuname,
+            sort_order          TYPE string,
           END OF ty_flow_settings.
 
   METHODS get_changes_only

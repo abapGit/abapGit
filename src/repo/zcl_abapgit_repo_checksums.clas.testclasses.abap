@@ -394,7 +394,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
     CREATE OBJECT li_cut TYPE zcl_abapgit_repo_checksums
       EXPORTING
-        iv_repo_key = '1'.
+        ii_repo = lo_mock.
 
     cl_abap_unit_assert=>assert_equals(
       act = li_cut->get( )
@@ -430,7 +430,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
     CREATE OBJECT li_cut TYPE zcl_abapgit_repo_checksums
       EXPORTING
-        iv_repo_key = '1'.
+        ii_repo = lo_mock.
 
     li_cut->rebuild( ).
 
@@ -468,7 +468,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
     CREATE OBJECT li_cut TYPE zcl_abapgit_repo_checksums
       EXPORTING
-        iv_repo_key = '1'.
+        ii_repo = lo_mock.
 
     li_cut->update( lo_f_builder->mt_tab ).
 
@@ -534,7 +534,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
     CREATE OBJECT li_cut TYPE zcl_abapgit_repo_checksums
       EXPORTING
-        iv_repo_key = '1'.
+        ii_repo = lo_mock.
 
     li_cut->rebuild( ).
 
