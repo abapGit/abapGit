@@ -72,7 +72,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_login_manager IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
 
 
   METHOD append.
@@ -120,7 +120,8 @@ CLASS zcl_abapgit_login_manager IMPLEMENTATION.
     ENDIF.
 
     IF lv_auth CP 'Basic *'.
-      lv_decoded = cl_http_utility=>decode_base64( lv_auth+6 ).
+      lv_auth = lv_auth+6.
+      lv_decoded = cl_http_utility=>decode_base64( lv_auth ).
       SPLIT lv_decoded AT ':' INTO rv_username lv_decoded.
     ENDIF.
 
