@@ -17,21 +17,19 @@ INTERFACE zif_abapgit_object PUBLIC.
 
   METHODS deserialize
     IMPORTING
-      !iv_package       TYPE devclass
-      !io_xml           TYPE REF TO zif_abapgit_xml_input
-      !iv_step          TYPE zif_abapgit_objects=>ty_deserialization_step
-      !ii_log           TYPE REF TO zif_abapgit_log
-      !iv_transport     TYPE trkorr
-      !iv_cus_transport TYPE trkorr OPTIONAL
+      !iv_package   TYPE devclass
+      !io_xml       TYPE REF TO zif_abapgit_xml_input
+      !iv_step      TYPE zif_abapgit_objects=>ty_deserialization_step
+      !ii_log       TYPE REF TO zif_abapgit_log
+      !iv_transport TYPE trkorr
     RAISING
       zcx_abapgit_exception .
 
   METHODS delete
     IMPORTING
-      !iv_package       TYPE devclass
-      !iv_transport     TYPE trkorr
-      !ii_log           TYPE REF TO zif_abapgit_log
-      !iv_cus_transport TYPE trkorr OPTIONAL
+      !iv_package   TYPE devclass
+      !iv_transport TYPE trkorr
+      !ii_log       TYPE REF TO zif_abapgit_log
     RAISING
       zcx_abapgit_exception .
 

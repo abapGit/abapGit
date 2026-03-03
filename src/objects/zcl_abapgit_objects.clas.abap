@@ -120,25 +120,23 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_steps
       IMPORTING
-        !iv_package       TYPE devclass
-        !it_steps         TYPE zif_abapgit_objects=>ty_step_data_tt
-        !ii_log           TYPE REF TO zif_abapgit_log
-        !iv_transport     TYPE trkorr
-        !iv_cus_transport TYPE trkorr
-        !io_i18n_params   TYPE REF TO zcl_abapgit_i18n_params
+        !iv_package     TYPE devclass
+        !it_steps       TYPE zif_abapgit_objects=>ty_step_data_tt
+        !ii_log         TYPE REF TO zif_abapgit_log
+        !iv_transport   TYPE trkorr
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params
       CHANGING
-        !ct_files         TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
+        !ct_files       TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_step
       IMPORTING
-        !iv_package       TYPE devclass
-        !is_step          TYPE zif_abapgit_objects=>ty_step_data
-        !ii_log           TYPE REF TO zif_abapgit_log
-        !iv_transport     TYPE trkorr
-        !iv_cus_transport TYPE trkorr
+        !iv_package   TYPE devclass
+        !is_step      TYPE zif_abapgit_objects=>ty_step_data
+        !ii_log       TYPE REF TO zif_abapgit_log
+        !iv_transport TYPE trkorr
       CHANGING
-        !ct_files         TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
+        !ct_files     TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_lxe
@@ -774,14 +772,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     "run deserialize for all steps and its objects
     deserialize_steps(
       EXPORTING
-        iv_package       = ii_repo->get_package( )
-        it_steps         = lt_steps
-        ii_log           = ii_log
-        io_i18n_params   = lo_i18n_params
-        iv_transport     = is_checks-transport-transport
-        iv_cus_transport = is_checks-customizing-transport
+        iv_package     = ii_repo->get_package( )
+        it_steps       = lt_steps
+        ii_log         = ii_log
+        io_i18n_params = lo_i18n_params
+        iv_transport   = is_checks-transport-transport
       CHANGING
-        ct_files         = rt_accessed_files ).
+        ct_files       = rt_accessed_files ).
 
     update_package_trees( collect_packages(
       it_steps   = lt_steps
@@ -870,12 +867,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                      | { <ls_obj>-item-obj_type } { <ls_obj>-item-obj_name }| ).
 
       TRY.
-          <ls_obj>-obj->deserialize( iv_package       = <ls_obj>-package
-                                     io_xml           = <ls_obj>-xml
-                                     iv_step          = is_step-step_id
-                                     ii_log           = ii_log
-                                     iv_transport     = iv_transport
-                                     iv_cus_transport = iv_cus_transport ).
+          <ls_obj>-obj->deserialize( iv_package   = <ls_obj>-package
+                                     io_xml       = <ls_obj>-xml
+                                     iv_step      = is_step-step_id
+                                     ii_log       = ii_log
+                                     iv_transport = iv_transport ).
 
           lo_base ?= <ls_obj>-obj.
           APPEND LINES OF lo_base->get_accessed_files( ) TO ct_files.
@@ -935,13 +931,12 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       IF <ls_step>-step_id <> zif_abapgit_object=>gc_step_id-lxe.
         deserialize_step(
           EXPORTING
-            iv_package       = iv_package
-            is_step          = <ls_step>
-            ii_log           = ii_log
-            iv_transport     = iv_transport
-            iv_cus_transport = iv_cus_transport
+            iv_package   = iv_package
+            is_step      = <ls_step>
+            ii_log       = ii_log
+            iv_transport = iv_transport
           CHANGING
-            ct_files         = ct_files ).
+            ct_files     = ct_files ).
       ELSEIF io_i18n_params->is_lxe_applicable( ) = abap_true.
         deserialize_lxe(
           EXPORTING
