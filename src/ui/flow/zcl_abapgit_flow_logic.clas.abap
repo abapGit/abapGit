@@ -659,6 +659,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
     DATA lt_local TYPE zif_abapgit_flow_logic=>ty_local_files.
     DATA lt_real_transports LIKE lt_all_transports.
+    DATA li_exit TYPE REF TO zif_abapgit_flow_exit.
 
     FIELD-SYMBOLS <ls_feature> LIKE LINE OF lt_features.
     FIELD-SYMBOLS <ls_path_name> LIKE LINE OF <ls_feature>-changed_files.
@@ -678,6 +679,9 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
         CATCH zcx_abapgit_exception ##NO_HANDLER.
       ENDTRY.
     ENDIF.
+
+    li_exit = zcl_abapgit_flow_exit=>get_instance( ).
+    li_exit->change_github_username( CHANGING cv_username = rs_information-github_username ).
 
     LOOP AT lt_repos INTO li_repo_online.
 
