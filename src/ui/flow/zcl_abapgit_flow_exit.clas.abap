@@ -90,4 +90,15 @@ CLASS zcl_abapgit_flow_exit IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
+  METHOD zif_abapgit_flow_exit~change_github_username.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->change_github_username( CHANGING cv_username = cv_username ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

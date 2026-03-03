@@ -169,6 +169,12 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS find_github_username
+      IMPORTING
+        it_repos           TYPE ty_repos_tt
+      RETURNING
+        VALUE(rv_username) TYPE string.
+
 ENDCLASS.
 
 
@@ -617,6 +623,28 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD find_github_username.
+
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
+    DATA li_exit        TYPE REF TO zif_abapgit_flow_exit.
+
+    READ TABLE it_repos INTO li_repo_online INDEX 1.
+    IF sy-subrc = 0.
+      TRY.
+          rv_username = zcl_abapgit_login_manager=>get_username( li_repo_online->get_url( ) ).
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+    TRY.
+        li_exit = zcl_abapgit_flow_exit=>get_instance( ).
+        li_exit->change_github_username( CHANGING cv_username = rv_username ).
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD find_prs.
 
     DATA lt_pulls TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests.
@@ -654,6 +682,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       <ls_branch>-pr-url = ls_pull-html_url.
       <ls_branch>-pr-number = ls_pull-number.
       <ls_branch>-pr-draft = ls_pull-draft.
+      <ls_branch>-pr-author = ls_pull-user.
     ENDLOOP.
 
   ENDMETHOD.
@@ -682,6 +711,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 * list branches on favorite + flow enabled + transported repos
     lt_repos = list_repos( ).
     rs_information-enabled_repositories = lines( lt_repos ).
+    rs_information-github_username = find_github_username( lt_repos ).
 
     LOOP AT lt_repos INTO li_repo_online.
 
