@@ -29,6 +29,20 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
         VALUE(rt_repos)   TYPE ty_repos_tt
       RAISING
         zcx_abapgit_exception.
+
+    TYPES: BEGIN OF ty_update_result,
+             updated TYPE i,
+             errors  TYPE i,
+             skipped TYPE i,
+           END OF ty_update_result.
+
+    CLASS-METHODS update_all_branches
+      IMPORTING
+        it_features      TYPE zif_abapgit_flow_logic=>ty_features
+      RETURNING
+        VALUE(rs_result) TYPE ty_update_result
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -790,6 +804,61 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       li_online ?= li_repo.
       INSERT li_online INTO TABLE rt_repos.
     ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD update_all_branches.
+
+    DATA ls_feature      LIKE LINE OF it_features.
+    DATA li_repo_online  TYPE REF TO zif_abapgit_repo_online.
+    DATA lo_github       TYPE REF TO zcl_abapgit_pr_enum_github.
+    DATA lv_previous_key TYPE zif_abapgit_persistence=>ty_value.
+    DATA lv_url          TYPE string.
+    DATA lv_user         TYPE string.
+    DATA lv_repo         TYPE string.
+
+    LOOP AT it_features INTO ls_feature.
+      IF ls_feature-branch-up_to_date <> abap_false.
+        CONTINUE.
+      ENDIF.
+      IF ls_feature-pr-number IS INITIAL.
+        rs_result-skipped = rs_result-skipped + 1.
+        CONTINUE.
+      ENDIF.
+
+      IF lv_previous_key <> ls_feature-repo-key.
+        li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( ls_feature-repo-key ).
+        lv_url = li_repo_online->get_url( ).
+
+        FIND FIRST OCCURRENCE OF REGEX 'github\.com\/([^\/]+)\/([^\/]+)'
+          IN lv_url
+          SUBMATCHES lv_user lv_repo ##REGEX_POSIX.
+        IF sy-subrc <> 0.
+          rs_result-skipped = rs_result-skipped + 1.
+          CONTINUE.
+        ENDIF.
+        lv_repo = replace(
+          val = lv_repo
+          regex = '\.git$'
+          with = '' ) ##REGEX_POSIX.
+
+        CREATE OBJECT lo_github
+          EXPORTING
+            iv_user_and_repo = |{ lv_user }/{ lv_repo }|
+            ii_http_agent    = zcl_abapgit_http_agent=>create( ).
+        lv_previous_key = ls_feature-repo-key.
+      ENDIF.
+
+      TRY.
+          lo_github->update_pull_request_branch(
+            iv_pull_number       = ls_feature-pr-number
+            iv_expected_head_sha = ls_feature-branch-sha1 ).
+          rs_result-updated = rs_result-updated + 1.
+        CATCH zcx_abapgit_exception.
+          rs_result-errors = rs_result-errors + 1.
+      ENDTRY.
+    ENDLOOP.
+
   ENDMETHOD.
 
 

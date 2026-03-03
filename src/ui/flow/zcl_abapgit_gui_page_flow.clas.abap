@@ -93,6 +93,10 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS call_update_all_branches
+      RAISING
+        zcx_abapgit_exception.
+
     METHODS skip_show
       IMPORTING
         is_feature     TYPE zif_abapgit_flow_logic=>ty_feature
@@ -201,6 +205,23 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       rs_handled-page  = zcl_abapgit_gui_page_flowcons=>create( li_repo ).
       rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD call_update_all_branches.
+
+    DATA ls_result TYPE zcl_abapgit_flow_logic=>ty_update_result.
+    DATA lv_msg    TYPE string.
+
+    IF ms_information IS INITIAL.
+      ms_information = zcl_abapgit_flow_logic=>get( ).
+    ENDIF.
+
+    ls_result = zcl_abapgit_flow_logic=>update_all_branches( ms_information-features ).
+
+    lv_msg = |Updated { ls_result-updated } branches, { ls_result-errors } errors, { ls_result-skipped } skipped|.
+    MESSAGE lv_msg TYPE 'S'.
 
   ENDMETHOD.
 
@@ -508,7 +529,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         MESSAGE 'Rollback PR functionality is not yet implemented.' TYPE 'I'.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-update_all_branches.
-        MESSAGE 'Update all branches functionality is not yet implemented.' TYPE 'I'.
+        call_update_all_branches( ).
+        refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-refresh.
         refresh( ).
