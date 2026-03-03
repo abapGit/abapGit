@@ -42,4 +42,10 @@ INTERFACE zif_abapgit_flow_exit
     RAISING
       zcx_abapgit_exception.
 
+  METHODS change_github_username
+    CHANGING
+      cv_username TYPE string
+    RAISING
+      zcx_abapgit_exception.
+
 ENDINTERFACE.
