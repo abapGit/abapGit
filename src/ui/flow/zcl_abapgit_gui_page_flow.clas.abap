@@ -823,7 +823,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       lv_filter = |, user filter: { ms_user_settings-username_filter }|.
     ENDIF.
     ri_html->add( |<small>{ lines( ms_information-features ) } features| &&
-      | in { lo_timer->end( ) }{ lv_filter }, SAP user: { sy-uname }</small>| ).
+      | in { lo_timer->end( ) }{ lv_filter }| &&
+      |, SAP user: { sy-uname }| &&
+      |, GitHub user: { ms_information-github_username }| &&
+      |</small>| ).
 
     ri_html->add( '</div>' ).
 

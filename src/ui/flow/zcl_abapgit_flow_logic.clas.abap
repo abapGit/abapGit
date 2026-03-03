@@ -670,6 +670,15 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     lt_repos = list_repos( ).
     rs_information-enabled_repositories = lines( lt_repos ).
 
+    READ TABLE lt_repos INTO li_repo_online INDEX 1.
+    IF sy-subrc = 0.
+      TRY.
+          rs_information-github_username = zcl_abapgit_login_manager=>get_username(
+            li_repo_online->get_url( ) ).
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
     LOOP AT lt_repos INTO li_repo_online.
 
       lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
