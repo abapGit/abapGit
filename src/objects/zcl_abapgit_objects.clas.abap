@@ -134,9 +134,9 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_package TYPE devclass
         !is_step    TYPE zif_abapgit_objects=>ty_step_data
         !ii_log     TYPE REF TO zif_abapgit_log
-        !is_checks  TYPE zif_abapgit_definitions=>ty_deserialize_checks
       CHANGING
         !ct_files   TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
+        !cs_checks  TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_lxe
@@ -851,7 +851,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lo_base           TYPE REF TO zcl_abapgit_objects_super,
           lx_exc            TYPE REF TO zcx_abapgit_exception,
           lv_transport      TYPE trkorr,
-          lv_obj_trkorr_cat TYPE trcateg.
+          lv_obj_trkorr_cat TYPE trcateg,
+          ls_transport_type TYPE zif_abapgit_definitions=>ty_transport_type.
 
     FIELD-SYMBOLS: <ls_obj> LIKE LINE OF is_step-objects.
 
@@ -871,9 +872,14 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
       lv_obj_trkorr_cat = zcl_abapgit_factory=>get_cts_api( )->get_object_transport_category( <ls_obj>-item-obj_type ).
       IF lv_obj_trkorr_cat = zif_abapgit_cts_api=>c_obj_transport_category-client_specific_customizing.
-        lv_transport = is_checks-customizing-transport.
+        IF cs_checks-customizing-transport IS INITIAL.
+          ls_transport_type-request = zif_abapgit_cts_api=>c_transport_type-cust_request.
+          ls_transport_type-task    = zif_abapgit_cts_api=>c_transport_type-cust_task.
+          cs_checks-customizing-transport = zcl_abapgit_ui_factory=>get_popups( )->popup_transport_request( ls_transport_type ).
+        ENDIF.
+        lv_transport = cs_checks-customizing-transport.
       ELSE.
-        lv_transport = is_checks-transport-transport.
+        lv_transport = cs_checks-transport-transport.
       ENDIF.
 
       TRY.
@@ -935,7 +941,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD deserialize_steps.
 
+    DATA: ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
     FIELD-SYMBOLS <ls_step> LIKE LINE OF it_steps.
+
+    ls_checks = is_checks.
 
     LOOP AT it_steps ASSIGNING <ls_step>.
       IF <ls_step>-step_id <> zif_abapgit_object=>gc_step_id-lxe.
@@ -944,9 +953,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             iv_package   = iv_package
             is_step      = <ls_step>
             ii_log       = ii_log
-            is_checks    = is_checks
           CHANGING
-            ct_files     = ct_files ).
+            ct_files     = ct_files
+            cs_checks    = ls_checks ).
       ELSEIF io_i18n_params->is_lxe_applicable( ) = abap_true.
         deserialize_lxe(
           EXPORTING

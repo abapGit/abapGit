@@ -74,15 +74,19 @@ CLASS zcl_abapgit_cts_api DEFINITION
     "! @parameter rv_transportable | Transportable
     METHODS is_object_type_transportable
       IMPORTING
-        iv_program_id           TYPE tadir-pgmid DEFAULT 'R3TR'
-        iv_object_type          TYPE trobjtype
+        !iv_program_id          TYPE tadir-pgmid DEFAULT 'R3TR'
+        !iv_object_type         TYPE trobjtype
       RETURNING
         VALUE(rv_transportable) TYPE abap_bool .
+    "! Insert logical object into customizing request
+    "! @parameter iv_transport | Transport
+    "! @parameter iv_object | Object type
+    "! @parameter iv_obj_name | Object Name
     METHODS insert_cust_logical_object
       IMPORTING
-        iv_transport TYPE trkorr
-        iv_object    TYPE e071-object
-        iv_obj_name  TYPE e071-obj_name
+        !iv_transport TYPE trkorr
+        !iv_object    TYPE e071-object
+        !iv_obj_name  TYPE e071-obj_name
       RAISING
         zcx_abapgit_exception.
 ENDCLASS.
@@ -559,7 +563,8 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
   METHOD zif_abapgit_cts_api~insert_transport_object.
 
     DATA: lv_object_category   TYPE trcateg,
-          lv_is_logical_object TYPE abap_bool.
+          lv_is_logical_object TYPE abap_bool,
+          lv_obj_name          TYPE trobj_name.
 
     lv_object_category = zif_abapgit_cts_api~get_object_transport_category( iv_object ).
     lv_is_logical_object = zif_abapgit_cts_api~is_logical_object( iv_object ).
@@ -567,9 +572,10 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     IF lv_object_category = zif_abapgit_cts_api=>c_obj_transport_category-client_specific_customizing AND
        lv_is_logical_object = abap_true.
 
+      lv_obj_name = iv_obj_name.
       insert_cust_logical_object( iv_transport = iv_transport
                                   iv_object    = iv_object
-                                  iv_obj_name  = iv_obj_name ).
+                                  iv_obj_name  = lv_obj_name ).
 
     ELSE.
 
@@ -863,7 +869,8 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ELSE.
-      zcx_abapgit_exception=>raise( |Error inserting logical object { iv_obj_name } into customizing transport { iv_transport }| ).
+      zcx_abapgit_exception=>raise(
+        |Error inserting logical object { iv_obj_name } into customizing transport { iv_transport }| ).
     ENDIF.
 
   ENDMETHOD.

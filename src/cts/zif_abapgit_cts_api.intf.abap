@@ -208,7 +208,7 @@ INTERFACE zif_abapgit_cts_api
   "! @parameter rv_category | Object category. See c_obj_transport_category constants
   METHODS get_object_transport_category
     IMPORTING
-      !iv_pgmid          TYPE pgmid DEFAULT 'R3TR'
+      !iv_pgmid          TYPE tadir-pgmid DEFAULT 'R3TR'
       !iv_object         TYPE trobjtype
     RETURNING
       VALUE(rv_category) TYPE trcateg.
@@ -219,7 +219,7 @@ INTERFACE zif_abapgit_cts_api
   "! @parameter rv_is_logical_object | True if an object is a logical object
   METHODS is_logical_object
     IMPORTING
-      !iv_pgmid                   TYPE pgmid DEFAULT 'R3TR'
+      !iv_pgmid                   TYPE tadir-pgmid DEFAULT 'R3TR'
       !iv_object                  TYPE trobjtype
     RETURNING
       VALUE(rv_is_logical_object) TYPE abap_bool.
