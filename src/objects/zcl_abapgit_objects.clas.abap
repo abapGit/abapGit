@@ -123,7 +123,7 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_package     TYPE devclass
         !it_steps       TYPE zif_abapgit_objects=>ty_step_data_tt
         !ii_log         TYPE REF TO zif_abapgit_log
-        !iv_transport   TYPE trkorr
+        !is_checks      TYPE zif_abapgit_definitions=>ty_deserialize_checks
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params
       CHANGING
         !ct_files       TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
@@ -131,12 +131,12 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_step
       IMPORTING
-        !iv_package   TYPE devclass
-        !is_step      TYPE zif_abapgit_objects=>ty_step_data
-        !ii_log       TYPE REF TO zif_abapgit_log
-        !iv_transport TYPE trkorr
+        !iv_package TYPE devclass
+        !is_step    TYPE zif_abapgit_objects=>ty_step_data
+        !ii_log     TYPE REF TO zif_abapgit_log
+        !is_checks  TYPE zif_abapgit_definitions=>ty_deserialize_checks
       CHANGING
-        !ct_files     TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
+        !ct_files   TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_lxe
@@ -776,7 +776,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         it_steps       = lt_steps
         ii_log         = ii_log
         io_i18n_params = lo_i18n_params
-        iv_transport   = is_checks-transport-transport
+        is_checks      = is_checks
       CHANGING
         ct_files       = rt_accessed_files ).
 
@@ -846,10 +846,12 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD deserialize_step.
 
-    DATA: li_progress TYPE REF TO zif_abapgit_progress,
-          li_exit     TYPE REF TO zif_abapgit_exit,
-          lo_base     TYPE REF TO zcl_abapgit_objects_super,
-          lx_exc      TYPE REF TO zcx_abapgit_exception.
+    DATA: li_progress       TYPE REF TO zif_abapgit_progress,
+          li_exit           TYPE REF TO zif_abapgit_exit,
+          lo_base           TYPE REF TO zcl_abapgit_objects_super,
+          lx_exc            TYPE REF TO zcx_abapgit_exception,
+          lv_transport      TYPE trkorr,
+          lv_obj_trkorr_cat TYPE trcateg.
 
     FIELD-SYMBOLS: <ls_obj> LIKE LINE OF is_step-objects.
 
@@ -866,12 +868,20 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         iv_text    = |Step { is_step-order } - { is_step-descr }:| &&
                      | { <ls_obj>-item-obj_type } { <ls_obj>-item-obj_name }| ).
 
+
+      lv_obj_trkorr_cat = zcl_abapgit_factory=>get_cts_api( )->get_object_transport_category( <ls_obj>-item-obj_type ).
+      IF lv_obj_trkorr_cat = zif_abapgit_cts_api=>c_obj_transport_category-client_specific_customizing.
+        lv_transport = is_checks-customizing-transport.
+      ELSE.
+        lv_transport = is_checks-transport-transport.
+      ENDIF.
+
       TRY.
           <ls_obj>-obj->deserialize( iv_package   = <ls_obj>-package
                                      io_xml       = <ls_obj>-xml
                                      iv_step      = is_step-step_id
                                      ii_log       = ii_log
-                                     iv_transport = iv_transport ).
+                                     iv_transport = lv_transport ).
 
           lo_base ?= <ls_obj>-obj.
           APPEND LINES OF lo_base->get_accessed_files( ) TO ct_files.
@@ -934,7 +944,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             iv_package   = iv_package
             is_step      = <ls_step>
             ii_log       = ii_log
-            iv_transport = iv_transport
+            is_checks    = is_checks
           CHANGING
             ct_files     = ct_files ).
       ELSEIF io_i18n_params->is_lxe_applicable( ) = abap_true.

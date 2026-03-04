@@ -74,10 +74,17 @@ CLASS zcl_abapgit_cts_api DEFINITION
     "! @parameter rv_transportable | Transportable
     METHODS is_object_type_transportable
       IMPORTING
-        !iv_program_id          TYPE tadir-pgmid DEFAULT 'R3TR'
-        !iv_object_type         TYPE trobjtype
+        iv_program_id           TYPE tadir-pgmid DEFAULT 'R3TR'
+        iv_object_type          TYPE trobjtype
       RETURNING
         VALUE(rv_transportable) TYPE abap_bool .
+    METHODS insert_cust_logical_object
+      IMPORTING
+        iv_transport TYPE trkorr
+        iv_object    TYPE e071-object
+        iv_obj_name  TYPE e071-obj_name
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -551,23 +558,40 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
   METHOD zif_abapgit_cts_api~insert_transport_object.
 
-    CALL FUNCTION 'RS_CORR_INSERT'
-      EXPORTING
-        object              = iv_obj_name
-        object_class        = iv_object
-        devclass            = iv_package
-        master_language     = iv_language
-        korrnum             = iv_transport
-        mode                = iv_mode
-        global_lock         = abap_true
-        suppress_dialog     = abap_true
-      EXCEPTIONS
-        cancelled           = 1
-        permission_failure  = 2
-        unknown_objectclass = 3
-        OTHERS              = 4.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
+    DATA: lv_object_category   TYPE trcateg,
+          lv_is_logical_object TYPE abap_bool.
+
+    lv_object_category = zif_abapgit_cts_api~get_object_transport_category( iv_object ).
+    lv_is_logical_object = zif_abapgit_cts_api~is_logical_object( iv_object ).
+
+    IF lv_object_category = zif_abapgit_cts_api=>c_obj_transport_category-client_specific_customizing AND
+       lv_is_logical_object = abap_true.
+
+      insert_cust_logical_object( iv_transport = iv_transport
+                                  iv_object    = iv_object
+                                  iv_obj_name  = iv_obj_name ).
+
+    ELSE.
+
+      CALL FUNCTION 'RS_CORR_INSERT'
+        EXPORTING
+          object              = iv_obj_name
+          object_class        = iv_object
+          devclass            = iv_package
+          master_language     = iv_language
+          korrnum             = iv_transport
+          mode                = iv_mode
+          global_lock         = abap_true
+          suppress_dialog     = abap_true
+        EXCEPTIONS
+          cancelled           = 1
+          permission_failure  = 2
+          unknown_objectclass = 3
+          OTHERS              = 4.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
     ENDIF.
 
   ENDMETHOD.
@@ -702,7 +726,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 * fallback to any language
       SELECT SINGLE as4text FROM e07t
         INTO rv_description
-        WHERE trkorr = iv_trkorr ##SUBRC_OK. "#EC CI_NOORDER
+        WHERE trkorr = iv_trkorr ##SUBRC_OK.            "#EC CI_NOORDER
     ENDIF.
 
   ENDMETHOD.
@@ -766,4 +790,82 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_cts_api~get_object_transport_category.
+
+    DATA ls_e071 TYPE e071.
+
+    ls_e071-pgmid = iv_pgmid.
+    ls_e071-object = iv_object.
+
+    CALL FUNCTION 'TR_CHECK_TYPE'
+      EXPORTING
+        wi_e071     = ls_e071
+      IMPORTING
+        we_category = rv_category.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_cts_api~is_logical_object.
+
+    DATA ls_e071 TYPE e071.
+
+    ls_e071-pgmid = iv_pgmid.
+    ls_e071-object = iv_object.
+
+    CALL FUNCTION 'TR_CHECK_TYPE'
+      EXPORTING
+        wi_e071     = ls_e071
+      IMPORTING
+        ev_logo_obj = rv_is_logical_object.
+
+  ENDMETHOD.
+
+
+  METHOD insert_cust_logical_object.
+
+    DATA: lt_tasks TYPE trwbo_request_headers,
+          ls_task  TYPE trwbo_request_header.
+
+    CALL FUNCTION 'TR_READ_REQUEST_WITH_TASKS'
+      EXPORTING
+        iv_trkorr          = iv_transport
+      IMPORTING
+        et_request_headers = lt_tasks
+      EXCEPTIONS
+        invalid_input      = 1
+        OTHERS             = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    READ TABLE lt_tasks INTO ls_task WITH KEY strkorr = iv_transport.
+    IF sy-subrc = 0.
+
+      CALL FUNCTION 'TLOGO_OBJECT_APPEND'
+        EXPORTING
+          korrnr                      = ls_task-trkorr
+          objtype                     = iv_object
+          obj_name                    = iv_obj_name
+        EXCEPTIONS
+          korrnr_already_released     = 1
+          korrnr_locked               = 2
+          korrnr_not_exists           = 3
+          korrnr_not_korr             = 4
+          korr_other_user             = 5
+          no_logical_object           = 6
+          object_has_no_tadir         = 7
+          object_locked_in_other_korr = 8
+          obj_name_too_long_or_space  = 9
+          error_append_to_comm        = 10
+          OTHERS                      = 11.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+    ELSE.
+      zcx_abapgit_exception=>raise( |Error inserting logical object { iv_obj_name } into customizing transport { iv_transport }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

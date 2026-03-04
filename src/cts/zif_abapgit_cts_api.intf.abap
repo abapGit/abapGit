@@ -195,4 +195,33 @@ INTERFACE zif_abapgit_cts_api
     RAISING
       zcx_abapgit_exception.
 
+  CONSTANTS:
+    BEGIN OF c_obj_transport_category,
+      client_specific_customizing TYPE trcateg VALUE 'CUST',
+      repository_objects          TYPE trcateg VALUE 'SYST',
+      system_customizing          TYPE trcateg VALUE 'CUSY',
+    END OF c_obj_transport_category.
+
+  "! Get an object's transport category
+  "! @parameter iv_pgmid | Program ID / R3TR and LIMU are relevant
+  "! @parameter iv_object | Object type
+  "! @parameter rv_category | Object category. See c_obj_transport_category constants
+  METHODS get_object_transport_category
+    IMPORTING
+      !iv_pgmid          TYPE pgmid DEFAULT 'R3TR'
+      !iv_object         TYPE trobjtype
+    RETURNING
+      VALUE(rv_category) TYPE trcateg.
+
+  "! Check if an object is a logical object
+  "! @parameter iv_pgmid | Program ID / R3TR and LIMU are relevant
+  "! @parameter iv_object | Object type
+  "! @parameter rv_is_logical_object | True if an object is a logical object
+  METHODS is_logical_object
+    IMPORTING
+      !iv_pgmid                   TYPE pgmid DEFAULT 'R3TR'
+      !iv_object                  TYPE trobjtype
+    RETURNING
+      VALUE(rv_is_logical_object) TYPE abap_bool.
+
 ENDINTERFACE.
