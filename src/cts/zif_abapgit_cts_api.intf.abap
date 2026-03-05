@@ -197,9 +197,9 @@ INTERFACE zif_abapgit_cts_api
 
   CONSTANTS:
     BEGIN OF c_obj_transport_category,
-      client_specific_customizing TYPE trcateg VALUE 'CUST',
-      repository_objects          TYPE trcateg VALUE 'SYST',
-      system_customizing          TYPE trcateg VALUE 'CUSY',
+      client_specific_customizing TYPE e070-korrdev VALUE 'CUST',
+      repository_objects          TYPE e070-korrdev VALUE 'SYST',
+      system_customizing          TYPE e070-korrdev VALUE 'CUSY',
     END OF c_obj_transport_category.
 
   "! Get an object's transport category
@@ -211,7 +211,7 @@ INTERFACE zif_abapgit_cts_api
       !iv_pgmid          TYPE tadir-pgmid DEFAULT 'R3TR'
       !iv_object         TYPE trobjtype
     RETURNING
-      VALUE(rv_category) TYPE trcateg.
+      VALUE(rv_category) TYPE e070-korrdev.
 
   "! Check if an object is a logical object
   "! @parameter iv_pgmid | Program ID / R3TR and LIMU are relevant

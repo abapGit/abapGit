@@ -562,7 +562,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
   METHOD zif_abapgit_cts_api~insert_transport_object.
 
-    DATA: lv_object_category   TYPE trcateg,
+    DATA: lv_object_category   TYPE e070-korrdev,
           lv_is_logical_object TYPE abap_bool,
           lv_obj_name          TYPE trobj_name.
 

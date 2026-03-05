@@ -227,8 +227,13 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
   METHOD deserialize_checks.
 
-    DATA: lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
-          li_package TYPE REF TO zif_abapgit_sap_package.
+    DATA: lt_results             TYPE zif_abapgit_definitions=>ty_results_tt,
+          li_package             TYPE REF TO zif_abapgit_sap_package,
+          lv_object_category     TYPE e070-korrdev,
+          lv_is_logical_object   TYPE abap_bool,
+          ls_cust_transport_type TYPE zif_abapgit_definitions=>ty_transport_type.
+
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
 
     " get unfiltered status to evaluate properly which warnings are required
     lt_results = zcl_abapgit_repo_status=>calculate( ii_repo ).
@@ -258,6 +263,27 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
                                             ii_repo           = ii_repo
                                             iv_transport_type = rs_checks-transport-type ).
       ENDIF.
+
+      "Check if Customizing logical objects are present in the result list and set Customizing transport required
+      LOOP AT lt_results ASSIGNING <ls_result> WHERE obj_type IS NOT INITIAL.
+        lv_object_category = zcl_abapgit_factory=>get_cts_api( )->get_object_transport_category( <ls_result>-obj_type ).
+        lv_is_logical_object = zcl_abapgit_factory=>get_cts_api( )->is_logical_object( <ls_result>-obj_type ).
+
+        IF lv_object_category = zif_abapgit_cts_api=>c_obj_transport_category-client_specific_customizing AND
+           lv_is_logical_object = abap_true.
+
+          rs_checks-customizing-required = abap_true.
+          ls_cust_transport_type-request = zif_abapgit_cts_api=>c_transport_type-cust_request.
+          ls_cust_transport_type-task    = zif_abapgit_cts_api=>c_transport_type-cust_task.
+          rs_checks-customizing-type = ls_cust_transport_type.
+          rs_checks-customizing-transport = determine_transport_request(
+                                                ii_repo           = ii_repo
+                                                iv_transport_type = rs_checks-customizing-type ).
+          EXIT.
+
+        ENDIF.
+      ENDLOOP.
+
     ENDIF.
 
   ENDMETHOD.
