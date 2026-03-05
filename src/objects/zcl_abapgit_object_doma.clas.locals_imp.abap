@@ -1,3 +1,4 @@
+
 CLASS lcl_doma_data DEFINITION.
   PUBLIC SECTION.
     DATA dd01v TYPE dd01v.
@@ -20,7 +21,7 @@ CLASS lcl_aff_type_mapping DEFINITION.
           VALUE(rv_aff_type) TYPE string,
       map_data_type_to_ddic
         IMPORTING
-          iv_aff_type         TYPE string
+          iv_aff_type         TYPE char04
         RETURNING
           VALUE(rv_ddic_type) TYPE dd01v-datatype.
 ENDCLASS.
@@ -76,7 +77,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     " Map fixed values and intervals
     FIELD-SYMBOLS <ls_dd07v> TYPE dd07v.
     DATA ls_single_value TYPE zif_abapgit_aff_doma_v1=>ty_single_value.
-    DATA ls_interval_value TYPE zif_abapgit_aff_doma_v1=>ty_interval_value.
+    DATA ls_interval_value TYPE zif_abapgit_aff_doma_v1=>ty_intervals_value.
 
     LOOP AT lo_doma_data->dd07v ASSIGNING <ls_dd07v>.
       IF <ls_dd07v>-domvalue_l = <ls_dd07v>-domvalue_h.
@@ -151,7 +152,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     ENDLOOP.
 
     " Map fixed value intervals
-    FIELD-SYMBOLS <ls_interval_value> TYPE zif_abapgit_aff_doma_v1=>ty_interval_value.
+    FIELD-SYMBOLS <ls_interval_value> TYPE zif_abapgit_aff_doma_v1=>ty_intervals_value.
     LOOP AT ls_data_aff-fixed_value_intervals ASSIGNING <ls_interval_value>.
       CLEAR ls_dd07v.
       ls_dd07v-domname = lo_doma_data->dd01v-domname.
@@ -350,11 +351,11 @@ CLASS lcl_aff_metadata_handler DEFINITION.
           zcx_abapgit_exception,
       deserialize
         IMPORTING
-          iv_json          TYPE xstring
-          iv_object_name   TYPE string
+          iv_json        TYPE xstring
+          iv_object_name TYPE sobj_name
         EXPORTING
-          es_dd01v         TYPE dd01v
-          et_dd07v         TYPE dd07v_tab
+          es_dd01v       TYPE dd01v
+          et_dd07v       TYPE dd07v_tab
         RAISING
           zcx_abapgit_exception.
   PRIVATE SECTION.
