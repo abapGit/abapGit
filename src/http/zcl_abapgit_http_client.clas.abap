@@ -99,7 +99,7 @@ CLASS zcl_abapgit_http_client IMPLEMENTATION.
 
     IF iv_content_regex IS NOT INITIAL.
       lv_data = mi_client->response->get_cdata( ).
-      FIND REGEX iv_content_regex IN lv_data.
+      FIND REGEX iv_content_regex IN lv_data ##REGEX_POSIX.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Wrong Content sent by server' ).
       ENDIF.

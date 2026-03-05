@@ -44,6 +44,11 @@ INCLUDE zabapgit_authorizations_exit IF FOUND.
 * place the object in a different package than ZABAPGIT
 INCLUDE zabapgit_user_exit IF FOUND.
 
+* place all implementations of ZIF_ABAPGIT_BACKGROUND in following include,
+* if using the development version of abapGit create a global classes instead
+* place the object in a different package than ZABAPGIT
+INCLUDE zabapgit_background_user_exit IF FOUND.
+
 INCLUDE zabapgit_gui_pages_userexit IF FOUND.
 
 INCLUDE zabapgit_forms.

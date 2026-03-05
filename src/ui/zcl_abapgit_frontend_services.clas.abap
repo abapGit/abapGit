@@ -27,11 +27,11 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
 
     DATA lv_len TYPE i.
 
-    FIND FIRST OCCURRENCE OF REGEX '^/(.*/)?' IN iv_fullname MATCH LENGTH lv_len.
+    FIND FIRST OCCURRENCE OF REGEX '^/(.*/)?' IN iv_fullname MATCH LENGTH lv_len ##REGEX_POSIX.
     IF sy-subrc = 0.
       rv_path = iv_fullname(lv_len).
     ELSE.
-      FIND FIRST OCCURRENCE OF REGEX '^(.*\\)?' IN iv_fullname MATCH LENGTH lv_len.
+      FIND FIRST OCCURRENCE OF REGEX '^(.*\\)?' IN iv_fullname MATCH LENGTH lv_len ##REGEX_POSIX.
       IF sy-subrc = 0.
         rv_path = iv_fullname(lv_len).
       ENDIF.

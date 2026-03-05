@@ -254,7 +254,7 @@ function RepoOverViewHelper(opts) {
     this.focusFilterKey = opts.focusFilterKey;
   }
   this.setHooks();
-  this.pageId                   = "RepoOverViewHelperState"; // constant is OK for this case
+  this.pageId                   = (opts && opts.pageId) ? opts.pageId : "RepoOverViewHelperState";
   this.isDetailsDisplayed       = false;
   this.isOnlyFavoritesDisplayed = false;
   this.detailCssClass           = findStyleSheetByName(".repo-overview .ro-detail");
@@ -2347,8 +2347,8 @@ function enumerateUiActions() {
     }
   }
 
-  // toolbars
-  [].slice.call(document.querySelectorAll(".nav-container > ul[id*=toolbar]"))
+  // toolbars and actionbars
+  [].slice.call(document.querySelectorAll(".nav-container > ul[id*=toolbar], .nav-container > ul[id*=actionbar]"))
     .filter(function(toolbar) {
       return (toolbar && toolbar.nodeName === "UL");
     }).forEach(function(toolbar) {

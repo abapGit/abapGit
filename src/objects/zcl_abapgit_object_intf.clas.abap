@@ -129,8 +129,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA li_aff_registry TYPE REF TO zif_abapgit_aff_registry.
-
     super->constructor(
       is_item        = is_item
       iv_language    = iv_language
@@ -139,9 +137,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     mi_object_oriented_object_fct = zcl_abapgit_oo_factory=>get_by_type( ms_item-obj_type ).
 
-    CREATE OBJECT li_aff_registry TYPE zcl_abapgit_aff_registry.
-
-    mv_aff_enabled = li_aff_registry->is_supported_object_type( 'INTF' ).
+    mv_aff_enabled = zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( 'INTF' ).
 
   ENDMETHOD.
 
@@ -284,6 +280,41 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         ENDIF.
         zcx_abapgit_exception=>raise_with_text( lx_proxy_fault ).
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD extract_languages_for_transl.
+    DATA: lv_desc              TYPE seocompotx,
+          lv_desc_int          TYPE seoclasstx,
+          lv_desc_sub          TYPE seosubcotx,
+          lv_unique            TYPE sy-langu,
+          lv_sap2              TYPE string,
+          lt_unique_language   TYPE STANDARD TABLE OF sy-langu,
+          lv_original_language TYPE sy-langu.
+
+
+    lv_original_language = mo_i18n_params->ms_params-main_language.
+
+    LOOP AT is_intf-description INTO lv_desc WHERE langu <> lv_original_language.
+      APPEND lv_desc-langu TO lt_unique_language.
+    ENDLOOP.
+
+    LOOP AT is_intf-description_int INTO lv_desc_int WHERE langu <> lv_original_language.
+      APPEND lv_desc_int-langu TO lt_unique_language.
+    ENDLOOP.
+
+    LOOP AT is_intf-description_sub INTO lv_desc_sub WHERE langu <> lv_original_language.
+      APPEND lv_desc_sub-langu TO lt_unique_language.
+    ENDLOOP.
+
+    SORT lt_unique_language ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM lt_unique_language.
+
+    LOOP AT lt_unique_language INTO lv_unique.
+      lv_sap2 = zcl_abapgit_convert=>language_sap1_to_sap2( lv_unique ).
+      APPEND lv_sap2 TO rs_result.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -673,7 +704,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     ls_class_key-clsname = ms_item-obj_name.
 
-    rv_bool = mi_object_oriented_object_fct->exists( ls_class_key ).
+    rv_bool = mi_object_oriented_object_fct->exists( ls_class_key-clsname ).
 
     IF rv_bool = abap_true.
       SELECT SINGLE category FROM seoclassdf INTO lv_category
@@ -708,6 +739,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-early TO rt_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
   ENDMETHOD.
 
 
@@ -777,39 +809,4 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     serialize_xml( io_xml ).
 
   ENDMETHOD.
-
-  METHOD extract_languages_for_transl.
-    DATA: lv_desc              TYPE seocompotx,
-          lv_desc_int          TYPE seoclasstx,
-          lv_desc_sub          TYPE seosubcotx,
-          lv_unique            TYPE sy-langu,
-          lv_sap2              TYPE string,
-          lt_unique_language   TYPE STANDARD TABLE OF sy-langu,
-          lv_original_language TYPE sy-langu.
-
-
-    lv_original_language = mo_i18n_params->ms_params-main_language.
-
-    LOOP AT is_intf-description INTO lv_desc WHERE langu <> lv_original_language.
-      APPEND lv_desc-langu TO lt_unique_language.
-    ENDLOOP.
-
-    LOOP AT is_intf-description_int INTO lv_desc_int WHERE langu <> lv_original_language.
-      APPEND lv_desc_int-langu TO lt_unique_language.
-    ENDLOOP.
-
-    LOOP AT is_intf-description_sub INTO lv_desc_sub WHERE langu <> lv_original_language.
-      APPEND lv_desc_sub-langu TO lt_unique_language.
-    ENDLOOP.
-
-    SORT lt_unique_language ASCENDING.
-    DELETE ADJACENT DUPLICATES FROM lt_unique_language.
-
-    LOOP AT lt_unique_language INTO lv_unique.
-      lv_sap2 = zcl_abapgit_convert=>language_sap1_to_sap2( lv_unique ).
-      APPEND lv_sap2 TO rs_result.
-    ENDLOOP.
-
-  ENDMETHOD.
-
 ENDCLASS.

@@ -27,7 +27,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
+CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
 
 
   METHOD get_ecatt_sp.
@@ -129,7 +129,6 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
     ENDTRY.
 
     ASSIGN ecatt_object TO <lg_ecatt_sp>.
-    ASSERT sy-subrc = 0.
 
     lo_ecatt_sp = <lg_ecatt_sp>.
 
@@ -162,13 +161,12 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
       CATCH cx_ecatt_apl INTO lx_ecatt.
         lv_exc_occ = 'X'.
     ENDTRY.
-* Devesh,C5129871  18.07.2011  Releasing enqueue after uploading
-*begin
+    " Releasing enqueue after uploading
     TRY.
         ecatt_object->close_object( im_suppress_events = 'X' ).
-      CATCH cx_ecatt_apl INTO lx_ecatt.
+      CATCH cx_ecatt_apl INTO lx_ecatt ##NO_HANDLER.
     ENDTRY.
-*end
+
 *     get devclass from existing object
     TRY.
         cl_apl_ecatt_object=>get_tadir_entry(

@@ -6,8 +6,10 @@ CLASS zcl_abapgit_dependencies DEFINITION
   PUBLIC SECTION.
 
     CLASS-METHODS resolve
+      IMPORTING
+        !iv_skip_ddic TYPE abap_bool DEFAULT abap_false
       CHANGING
-        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !ct_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -61,7 +63,7 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
     INSERT ls_ddls_name INTO TABLE lt_ddls_name.
 
     PERFORM ('DDLS_GET_DEP') IN PROGRAM ('RADMASDL')
-                             TABLES lt_ddls_name rt_dependency.
+                             TABLES lt_ddls_name rt_dependency ##PERF_NO_FORM.
 
   ENDMETHOD.
 
@@ -82,10 +84,6 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           <ls_tadir>-korrnum = '999000'.
         WHEN 'DOMA'.
           <ls_tadir>-korrnum = '900000'.
-        WHEN 'SPRX'.
-          <ls_tadir>-korrnum = '850000'.
-        WHEN 'WEBI'.
-          <ls_tadir>-korrnum = '840000'.
         WHEN 'PARA'.
           " PARA after DTEL
           <ls_tadir>-korrnum = '810000'.
@@ -119,7 +117,7 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           " AUTH after DCLS
           <ls_tadir>-korrnum = '715000'.
         WHEN 'SUSH'.
-          " SUSH after SUSC
+          " SUSH after SUSC, SRVB, and G4BA
           <ls_tadir>-korrnum = '712000'.
         WHEN 'SUSC'.
           " SUSC after SUSO
@@ -130,12 +128,24 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
         WHEN 'DCLS'.
           " AUTH and SUSO after DCLS
           <ls_tadir>-korrnum = '705000'.
+        WHEN 'G4BA' OR 'G4BS' OR 'IWMO' OR 'IWSV' OR 'IWVB'.
+          " after SRVB
+          <ls_tadir>-korrnum = '610000'.
+        WHEN 'SRVD'.
+          " after SRVB
+          <ls_tadir>-korrnum = '600500'.
+        WHEN 'SRVB'.
+          <ls_tadir>-korrnum = '600000'.
         WHEN 'IASP'.
           <ls_tadir>-korrnum = '552000'.
         WHEN 'IARP'.
           <ls_tadir>-korrnum = '551000'.
         WHEN 'IATU'.
           <ls_tadir>-korrnum = '550000'.
+        WHEN 'SOD1'.
+          <ls_tadir>-korrnum = '311000'.
+        WHEN 'SOD2'.
+          <ls_tadir>-korrnum = '310000'.
         WHEN 'ACID'.
           " ACID after PROG/FUGR/CLAS
           <ls_tadir>-korrnum = '300000'.
@@ -175,6 +185,11 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
         WHEN 'SAPC'.
           " SAPC after SICF
           <ls_tadir>-korrnum = '140000'.
+        WHEN 'SPRX'.
+          " SPRX generates objects, so remove those early
+          <ls_tadir>-korrnum = '135000'.
+        WHEN 'WEBI'.
+          <ls_tadir>-korrnum = '134000'.
         WHEN 'PINF'.
           " PINF before exposed objects
           <ls_tadir>-korrnum = '130000'.
@@ -183,7 +198,9 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
       ENDCASE.
     ENDLOOP.
 
-    resolve_ddic( CHANGING ct_tadir = ct_tadir ).
+    IF iv_skip_ddic = abap_false.
+      resolve_ddic( CHANGING ct_tadir = ct_tadir ).
+    ENDIF.
     resolve_packages( CHANGING ct_tadir = ct_tadir ).
 
     SORT ct_tadir BY korrnum ASCENDING.

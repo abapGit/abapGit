@@ -16,7 +16,7 @@ CLASS zcl_abapgit_adt_link DEFINITION
 
     CLASS-METHODS link_transport
       IMPORTING
-        iv_transport TYPE trkorr
+        iv_transport   TYPE trkorr
       RETURNING
         VALUE(rv_link) TYPE string.
 

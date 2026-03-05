@@ -203,7 +203,7 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
   METHOD get_version_constant_value.
     DATA: lv_version_class     TYPE seoclsname,
           lv_version_component TYPE string.
-    FIELD-SYMBOLS: <lv_version> TYPE string.
+    FIELD-SYMBOLS: <lv_version> TYPE simple.
 
     IF iv_version_constant NP '*=>*'.
       zcx_abapgit_exception=>raise( 'Version constant needs to use the format CLASS/INTERFACE=>CONSTANT' ).
@@ -243,12 +243,12 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
     SPLIT iv_version AT '-' INTO lv_version lv_prerelease.
 
     FIND FIRST OCCURRENCE OF REGEX lc_version_pattern
-      IN lv_version SUBMATCHES lv_version_n.
+      IN lv_version SUBMATCHES lv_version_n ##REGEX_POSIX.
 
     IF lv_prerelease IS NOT INITIAL.
 
       FIND FIRST OCCURRENCE OF REGEX lc_prerelease_pattern
-        IN lv_prerelease SUBMATCHES lv_prerelease_n.
+        IN lv_prerelease SUBMATCHES lv_prerelease_n ##REGEX_POSIX.
 
     ENDIF.
 

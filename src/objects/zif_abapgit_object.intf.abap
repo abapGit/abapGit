@@ -1,12 +1,12 @@
-INTERFACE zif_abapgit_object
-  PUBLIC .
+INTERFACE zif_abapgit_object PUBLIC.
 
   CONSTANTS:
     BEGIN OF gc_step_id,
-      early TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `EARLY`,
-      abap  TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `ABAP`,
-      ddic  TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `DDIC`,
-      late  TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `LATE`,
+      early TYPE zif_abapgit_objects=>ty_deserialization_step VALUE 'EARLY',
+      abap  TYPE zif_abapgit_objects=>ty_deserialization_step VALUE 'ABAP',
+      ddic  TYPE zif_abapgit_objects=>ty_deserialization_step VALUE 'DDIC',
+      late  TYPE zif_abapgit_objects=>ty_deserialization_step VALUE 'LATE',
+      lxe   TYPE zif_abapgit_objects=>ty_deserialization_step VALUE 'LXE',
     END OF gc_step_id.
 
   METHODS serialize
@@ -19,7 +19,7 @@ INTERFACE zif_abapgit_object
     IMPORTING
       !iv_package   TYPE devclass
       !io_xml       TYPE REF TO zif_abapgit_xml_input
-      !iv_step      TYPE zif_abapgit_definitions=>ty_deserialization_step
+      !iv_step      TYPE zif_abapgit_objects=>ty_deserialization_step
       !ii_log       TYPE REF TO zif_abapgit_log
       !iv_transport TYPE trkorr
     RAISING
@@ -29,6 +29,7 @@ INTERFACE zif_abapgit_object
     IMPORTING
       !iv_package   TYPE devclass
       !iv_transport TYPE trkorr
+      !ii_log       TYPE REF TO zif_abapgit_log
     RAISING
       zcx_abapgit_exception .
 
@@ -78,7 +79,7 @@ INTERFACE zif_abapgit_object
 
   METHODS get_deserialize_steps
     RETURNING
-      VALUE(rt_steps) TYPE zif_abapgit_definitions=>ty_deserialization_step_tt .
+      VALUE(rt_steps) TYPE zif_abapgit_objects=>ty_deserialization_step_tt.
 
   METHODS get_deserialize_order
     IMPORTING
@@ -88,22 +89,22 @@ INTERFACE zif_abapgit_object
 
   CLASS-METHODS map_filename_to_object
     IMPORTING
-      !iv_filename TYPE string
-      !iv_path     TYPE string OPTIONAL
-      !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit OPTIONAL
-      !iv_package  TYPE devclass OPTIONAL
+      !iv_item_part_of_filename TYPE string
+      !iv_path                  TYPE string OPTIONAL
+      !io_dot                   TYPE REF TO zcl_abapgit_dot_abapgit OPTIONAL
+      !iv_package               TYPE devclass OPTIONAL
     CHANGING
-      cs_item      TYPE zif_abapgit_definitions=>ty_item
+      cs_item                   TYPE zif_abapgit_definitions=>ty_item
     RAISING
       zcx_abapgit_exception.
 
   CLASS-METHODS map_object_to_filename
     IMPORTING
-      !is_item    TYPE zif_abapgit_definitions=>ty_item
-      !iv_ext     TYPE string
-      !iv_extra   TYPE clike
+      !is_item                  TYPE zif_abapgit_definitions=>ty_item
+      !iv_ext                   TYPE string
+      !iv_extra                 TYPE clike
     CHANGING
-      cv_filename TYPE string
+      !cv_item_part_of_filename TYPE string
     RAISING
       zcx_abapgit_exception.
 

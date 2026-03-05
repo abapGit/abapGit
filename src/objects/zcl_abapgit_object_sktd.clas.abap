@@ -15,7 +15,7 @@ CLASS zcl_abapgit_object_sktd DEFINITION
         !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_type_not_supported.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -61,87 +61,87 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-NAME'
+        iv_fieldname = 'METADATA-NAME'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-TYPE'
+        iv_fieldname = 'METADATA-TYPE'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-MASTER_SYSTEM'
+        iv_fieldname = 'METADATA-MASTER_SYSTEM'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-VERSION'
+        iv_fieldname = 'METADATA-VERSION'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'REF_OBJECT-URI'
+        iv_fieldname = 'REF_OBJECT-URI'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'REF_OBJECT-DESCRIPTION'
+        iv_fieldname = 'REF_OBJECT-DESCRIPTION'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_AT'
+        iv_fieldname = 'METADATA-CREATED_AT'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_BY'
+        iv_fieldname = 'METADATA-CREATED_BY'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_AT'
+        iv_fieldname = 'METADATA-CHANGED_AT'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_BY'
+        iv_fieldname = 'METADATA-CHANGED_BY'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-MASTER_LANGUAGE'
+        iv_fieldname = 'METADATA-MASTER_LANGUAGE'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-RESPONSIBLE'
+        iv_fieldname = 'METADATA-RESPONSIBLE'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-PACKAGE_REF'
+        iv_fieldname = 'METADATA-PACKAGE_REF'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-LINKS'
+        iv_fieldname = 'METADATA-LINKS'
       CHANGING
-        cs_data = cs_data ).
+        cs_data      = cs_data ).
 
   ENDMETHOD.
 
@@ -161,7 +161,7 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
         CREATE OBJECT mi_persistence TYPE ('CL_KTD_OBJECT_PERSIST').
 
       CATCH cx_sy_create_error.
-        zcx_abapgit_exception=>raise( |SKTD not supported by your NW release| ).
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDTRY.
 
   ENDMETHOD.
@@ -246,6 +246,10 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
     DATA li_object_data_model  TYPE REF TO if_wb_object_data_model.
 
     FIELD-SYMBOLS <ls_data> TYPE any.
+    FIELD-SYMBOLS <ls_metadata> TYPE any.
+    FIELD-SYMBOLS <lv_created_by> TYPE syuname.
+    FIELD-SYMBOLS <lv_created_at> TYPE p.
+    FIELD-SYMBOLS <lv_abap_language_version> TYPE uccheck.
 
     ASSIGN mr_data->* TO <ls_data>.
     ASSERT sy-subrc = 0.
@@ -255,6 +259,24 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
         iv_name = 'SKTD'
       CHANGING
         cg_data = <ls_data> ).
+
+    " update( ) requires created_at and created_by to be set
+    ASSIGN COMPONENT 'METADATA' OF STRUCTURE <ls_data> TO <ls_metadata>.
+    IF sy-subrc = 0.
+      ASSIGN COMPONENT 'CREATED_AT' OF STRUCTURE <ls_metadata> TO <lv_created_at>.
+      IF sy-subrc = 0 AND <lv_created_at> IS INITIAL.
+        GET TIME STAMP FIELD <lv_created_at>.
+      ENDIF.
+      ASSIGN COMPONENT 'CREATED_BY' OF STRUCTURE <ls_metadata> TO <lv_created_by>.
+      IF sy-subrc = 0 AND <lv_created_by> IS INITIAL.
+        <lv_created_by> = sy-uname.
+      ENDIF.
+
+      ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_metadata> TO <lv_abap_language_version>.
+      IF sy-subrc = 0.
+        set_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+      ENDIF.
+    ENDIF.
 
     li_wb_object_operator = get_wb_object_operator( ).
 
@@ -297,9 +319,9 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
 
     TRY.
         mi_persistence->get(
-            p_object_key           = mv_object_key
-            p_version              = 'A'
-            p_existence_check_only = abap_true ).
+          p_object_key           = mv_object_key
+          p_version              = 'A'
+          p_existence_check_only = abap_true ).
         rv_bool = abap_true.
 
       CATCH cx_swb_exception.
@@ -321,6 +343,7 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
   ENDMETHOD.
 
 
@@ -366,6 +389,7 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
       lx_error              TYPE REF TO cx_root.
 
     FIELD-SYMBOLS <ls_data> TYPE any.
+    FIELD-SYMBOLS <lv_abap_language_version> TYPE uccheck.
 
     ASSIGN mr_data->* TO <ls_data>.
     ASSERT sy-subrc = 0.
@@ -382,6 +406,11 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
 
         clear_fields( CHANGING cs_data = <ls_data> ).
 
+
+        ASSIGN COMPONENT 'METADATA-ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_data> TO <lv_abap_language_version>.
+        IF sy-subrc = 0.
+          clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+        ENDIF.
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.

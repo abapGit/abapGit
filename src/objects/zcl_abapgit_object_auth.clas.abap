@@ -159,7 +159,7 @@ CLASS zcl_abapgit_object_auth IMPLEMENTATION.
       CALL FUNCTION 'SU20_MAINTAIN_SNGL'
         EXPORTING
           id_field    = mv_fieldname
-          id_wbo_mode = abap_false.
+          id_wbo_mode = abap_false ##EXISTS.
       rv_exit = abap_true.
     ENDIF.
   ENDMETHOD.

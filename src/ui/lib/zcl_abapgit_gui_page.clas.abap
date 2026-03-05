@@ -410,6 +410,8 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
       lo_page_menu = ms_control-page_menu_provider->get_menu( ).
     ENDIF.
 
+    zcl_abapgit_exit=>get_instance( )->enhance_any_toolbar( lo_page_menu ).
+
     lv_page_title = ms_control-page_title.
     IF ms_control-page_title_provider IS BOUND.
       lv_page_title = ms_control-page_title_provider->get_page_title( ).

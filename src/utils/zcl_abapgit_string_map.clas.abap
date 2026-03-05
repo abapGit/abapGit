@@ -68,7 +68,7 @@ CLASS zcl_abapgit_string_map DEFINITION
     METHODS freeze .
     METHODS merge
       IMPORTING
-        !io_string_map TYPE REF TO zcl_abapgit_string_map
+        !io_string_map     TYPE REF TO zcl_abapgit_string_map
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_string_map
       RAISING

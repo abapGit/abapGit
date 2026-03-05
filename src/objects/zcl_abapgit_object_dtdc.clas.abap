@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_dtdc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_type_not_supported.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -71,60 +71,66 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_AT'
+        iv_fieldname     = 'METADATA-CREATED_AT'
       CHANGING
         cs_dynamic_cache = cs_dynamic_cache ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_BY'
+        iv_fieldname     = 'METADATA-CREATED_BY'
       CHANGING
         cs_dynamic_cache = cs_dynamic_cache ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_AT'
+        iv_fieldname     = 'METADATA-CHANGED_AT'
       CHANGING
         cs_dynamic_cache = cs_dynamic_cache ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_BY'
+        iv_fieldname     = 'METADATA-CHANGED_BY'
       CHANGING
         cs_dynamic_cache = cs_dynamic_cache ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-MASTER_LANGUAGE'
+        iv_fieldname     = 'METADATA-MASTER_LANGUAGE'
       CHANGING
         cs_dynamic_cache = cs_dynamic_cache ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-RESPONSIBLE'
+        iv_fieldname     = 'METADATA-MASTER_SYSTEM'
       CHANGING
         cs_dynamic_cache = cs_dynamic_cache ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-PACKAGE_REF'
+        iv_fieldname     = 'METADATA-RESPONSIBLE'
       CHANGING
         cs_dynamic_cache = cs_dynamic_cache ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-ABAP_LANGUAGE_VERSION'
-      CHANGING
-        cs_dynamic_cache = cs_dynamic_cache ).
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-ABAP_LANGU_VERSION'
+        iv_fieldname     = 'METADATA-PACKAGE_REF'
       CHANGING
         cs_dynamic_cache = cs_dynamic_cache ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'CONTENT-SOURCE'
+        iv_fieldname     = 'METADATA-ABAP_LANGUAGE_VERSION'
+      CHANGING
+        cs_dynamic_cache = cs_dynamic_cache ).
+    clear_field(
+      EXPORTING
+        iv_fieldname     = 'METADATA-ABAP_LANGU_VERSION'
+      CHANGING
+        cs_dynamic_cache = cs_dynamic_cache ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname     = 'CONTENT-SOURCE'
       CHANGING
         cs_dynamic_cache = cs_dynamic_cache ).
 
@@ -151,7 +157,7 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
         CREATE OBJECT mi_persistence TYPE ('CL_DTDC_OBJECT_PERSIST').
 
       CATCH cx_sy_create_error.
-        zcx_abapgit_exception=>raise( |DTDC not supported by your NW release| ).
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDTRY.
 
   ENDMETHOD.
@@ -303,8 +309,9 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
       lx_error              TYPE REF TO cx_root.
 
     FIELD-SYMBOLS:
-      <ls_dynamic_cache> TYPE any,
-      <lv_source>        TYPE data.
+      <lv_abap_language_version> TYPE uccheck,
+      <ls_dynamic_cache>         TYPE any,
+      <lv_source>                TYPE data.
 
     ASSIGN mr_dynamic_cache->* TO <ls_dynamic_cache>.
     ASSERT sy-subrc = 0.
@@ -364,6 +371,18 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
 
         CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~ACTIVATE').
 
+        ASSIGN COMPONENT 'METADATA-ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_dynamic_cache>
+          TO <lv_abap_language_version>.
+        IF sy-subrc = 0.
+          set_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+
+          TRY.
+              UPDATE ('DDDTDC_SOURCE') SET abap_language_version = <lv_abap_language_version>
+                WHERE dtdc_name = ms_item-obj_name.
+            CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
+          ENDTRY.
+        ENDIF.
+
         corr_insert( iv_package ).
 
       CATCH cx_root INTO lx_error.
@@ -377,9 +396,9 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
 
     TRY.
         mi_persistence->get(
-            p_object_key           = mv_dynamic_cache_key
-            p_version              = 'A'
-            p_existence_check_only = abap_true ).
+          p_object_key           = mv_dynamic_cache_key
+          p_version              = 'A'
+          p_existence_check_only = abap_true ).
         rv_bool = abap_true.
 
       CATCH cx_swb_exception.
@@ -446,8 +465,9 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
       lv_source             TYPE string.
 
     FIELD-SYMBOLS:
-      <ls_dynamic_cache> TYPE any,
-      <lv_source>        TYPE string.
+      <lv_abap_language_version> TYPE uccheck,
+      <ls_dynamic_cache>         TYPE any,
+      <lv_source>                TYPE string.
 
     ASSIGN mr_dynamic_cache->* TO <ls_dynamic_cache>.
     ASSERT sy-subrc = 0.
@@ -474,13 +494,18 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
+    ASSIGN COMPONENT 'METADATA-ABAP_LANGUAGE_VERSION' OF STRUCTURE <ls_dynamic_cache> TO <lv_abap_language_version>.
+    IF sy-subrc = 0.
+      <lv_abap_language_version> = get_abap_language_version( ).
+    ENDIF.
+
     io_xml->add(
-        iv_name = 'DTDC'
-        ig_data = <ls_dynamic_cache> ).
+      iv_name = 'DTDC'
+      ig_data = <ls_dynamic_cache> ).
 
     mo_files->add_string(
-        iv_ext    = 'asdtdc'
-        iv_string = lv_source ).
+      iv_ext    = 'asdtdc'
+      iv_string = lv_source ).
 
   ENDMETHOD.
 ENDCLASS.

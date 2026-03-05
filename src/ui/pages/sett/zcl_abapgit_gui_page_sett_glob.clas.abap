@@ -71,7 +71,7 @@ CLASS zcl_abapgit_gui_page_sett_glob DEFINITION
     CLASS-METHODS read_proxy_bypass
       IMPORTING
         io_form_data TYPE REF TO zcl_abapgit_string_map
-        io_settings TYPE REF TO zcl_abapgit_settings
+        io_settings  TYPE REF TO zcl_abapgit_settings
       RAISING
         zcx_abapgit_exception.
     METHODS save_proxy_bypass
@@ -172,7 +172,7 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
       iv_readonly    = zcl_abapgit_factory=>get_environment( )->is_merged( )
     )->text(
       iv_name        = c_id-experimental_features
-      iv_label       = 'Experimental Features'
+      iv_label       = 'Experimental Features (might require restarting abapGit)'
       iv_readonly    = zcl_abapgit_factory=>get_environment( )->is_merged( )
       iv_hint        = 'Set to "X" to enable all features or add feature values as a comma-separated list' ).
 

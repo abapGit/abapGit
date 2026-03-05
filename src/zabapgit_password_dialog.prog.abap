@@ -165,7 +165,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
 
     DATA lv_host TYPE string.
 
-    FIND REGEX 'https?://([^/^:]*)' IN iv_repo_url SUBMATCHES lv_host.
+    FIND REGEX 'https?://([^/^:]*)' IN iv_repo_url SUBMATCHES lv_host ##REGEX_POSIX.
     IF lv_host IS NOT INITIAL AND lv_host <> space.
       CLEAR sc_title.
       CONCATENATE 'Login:' lv_host INTO sc_title IN CHARACTER MODE SEPARATED BY space.
@@ -181,7 +181,7 @@ FORM password_popup
         pv_repo_url TYPE string
       CHANGING
         cv_user     TYPE string
-        cv_pass     TYPE string.
+        cv_pass     TYPE string ##CALLED.
 
   lcl_password_dialog=>popup(
     EXPORTING

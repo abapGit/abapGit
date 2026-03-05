@@ -1,16 +1,27 @@
 CLASS zcl_abapgit_stage_logic DEFINITION
   PUBLIC
-  CREATE PRIVATE
-  GLOBAL FRIENDS zcl_abapgit_factory .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_stage_logic .
+    INTERFACES zif_abapgit_stage_logic.
+
+    CLASS-METHODS get_stage_logic
+      RETURNING
+        VALUE(ri_logic) TYPE REF TO zif_abapgit_stage_logic.
+
+    CLASS-METHODS set_stage_logic
+      IMPORTING
+        ii_logic TYPE REF TO zif_abapgit_stage_logic.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    CLASS-DATA gi_stage_logic TYPE REF TO zif_abapgit_stage_logic.
+
     CLASS-METHODS:
       remove_ignored
-        IMPORTING io_repo  TYPE REF TO zcl_abapgit_repo_online
+        IMPORTING ii_repo  TYPE REF TO zif_abapgit_repo
         CHANGING  cs_files TYPE zif_abapgit_definitions=>ty_stage_files,
       remove_identical
         CHANGING cs_files TYPE zif_abapgit_definitions=>ty_stage_files.
@@ -20,6 +31,17 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_stage_logic IMPLEMENTATION.
+
+
+  METHOD get_stage_logic.
+
+    IF gi_stage_logic IS INITIAL.
+      CREATE OBJECT gi_stage_logic TYPE zcl_abapgit_stage_logic.
+    ENDIF.
+
+    ri_logic = gi_stage_logic.
+
+  ENDMETHOD.
 
 
   METHOD remove_identical.
@@ -59,7 +81,7 @@ CLASS zcl_abapgit_stage_logic IMPLEMENTATION.
     LOOP AT cs_files-remote ASSIGNING <ls_remote>.
       lv_index = sy-tabix.
 
-      IF io_repo->get_dot_abapgit( )->is_ignored(
+      IF ii_repo->get_dot_abapgit( )->is_ignored(
           iv_path     = <ls_remote>-path
           iv_filename = <ls_remote>-filename ) = abap_true.
         DELETE cs_files-remote INDEX lv_index.
@@ -74,7 +96,7 @@ CLASS zcl_abapgit_stage_logic IMPLEMENTATION.
     LOOP AT cs_files-local ASSIGNING <ls_local>.
       lv_index = sy-tabix.
 
-      IF io_repo->get_dot_abapgit( )->is_ignored(
+      IF ii_repo->get_dot_abapgit( )->is_ignored(
           iv_path     = <ls_local>-file-path
           iv_filename = <ls_local>-file-filename ) = abap_true.
         DELETE cs_files-local INDEX lv_index.
@@ -85,22 +107,27 @@ CLASS zcl_abapgit_stage_logic IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_stage_logic.
+    gi_stage_logic = ii_logic.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_stage_logic~get.
 
     " Getting REMOTE before LOCAL is critical to ensure that DATA config is loaded first
-    rs_files-remote = io_repo->get_files_remote( ii_obj_filter ).
+    rs_files-remote = ii_repo_online->get_files_remote( ii_obj_filter ).
 
     IF ii_obj_filter IS INITIAL.
-      rs_files-local  = io_repo->get_files_local( ).
+      rs_files-local = ii_repo_online->get_files_local( ).
     ELSE.
-      rs_files-local  = io_repo->get_files_local_filtered( ii_obj_filter ).
+      rs_files-local = ii_repo_online->get_files_local_filtered( ii_obj_filter ).
     ENDIF.
 
-    rs_files-status = zcl_abapgit_repo_status=>calculate( ii_repo       = io_repo
+    rs_files-status = zcl_abapgit_repo_status=>calculate( ii_repo       = ii_repo_online
                                                           ii_obj_filter = ii_obj_filter ).
 
     remove_identical( CHANGING cs_files = rs_files ).
-    remove_ignored( EXPORTING io_repo  = io_repo
+    remove_ignored( EXPORTING ii_repo  = ii_repo_online
                     CHANGING  cs_files = rs_files ).
 
   ENDMETHOD.

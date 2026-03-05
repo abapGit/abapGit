@@ -47,7 +47,7 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
               no_show_permission             = 7
               permission_failure             = 8
               request_language_denied        = 9
-              OTHERS                         = 10.
+              OTHERS                         = 10 ##FM_SUBRC_OK.
         CATCH cx_sy_dyn_call_param_not_found.
           CALL FUNCTION 'RS_ACCESS_PERMISSION'
             EXPORTING
@@ -67,7 +67,7 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
               no_show_permission       = 7
               permission_failure       = 8
               request_language_denied  = 9
-              OTHERS                   = 10.
+              OTHERS                   = 10 ##FM_SUBRC_OK.
       ENDTRY.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).

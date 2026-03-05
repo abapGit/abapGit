@@ -19,14 +19,14 @@ CLASS ltcl_packages IMPLEMENTATION.
 
   METHOD test_package.
 
-    DATA lo_packages TYPE REF TO zcl_abapgit_persist_packages.
-    DATA ls_package TYPE zcl_abapgit_persist_packages=>ty_package.
+    DATA li_packages TYPE REF TO zif_abapgit_persist_packages.
+    DATA ls_package TYPE zif_abapgit_persist_packages=>ty_package.
     DATA lx_error TYPE REF TO zcx_abapgit_exception.
 
-    lo_packages = zcl_abapgit_persist_packages=>get_instance( ).
+    li_packages = zcl_abapgit_persist_factory=>get_packages( ).
 
     TRY.
-        lo_packages->modify(
+        li_packages->modify(
           iv_package    = c_package
           iv_component  = c_component
           iv_comp_posid = c_comp_posid ).
@@ -35,7 +35,7 @@ CLASS ltcl_packages IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        ls_package = lo_packages->read( c_package ).
+        ls_package = li_packages->read( c_package ).
 
         cl_abap_unit_assert=>assert_equals(
           act = ls_package-component
@@ -53,13 +53,13 @@ CLASS ltcl_packages IMPLEMENTATION.
 
   METHOD teardown.
 
-    DATA lo_packages TYPE REF TO zcl_abapgit_persist_packages.
+    DATA li_packages TYPE REF TO zif_abapgit_persist_packages.
 
-    lo_packages = zcl_abapgit_persist_packages=>get_instance( ).
+    li_packages = zcl_abapgit_persist_factory=>get_packages( ).
 
     " Remove test data
     TRY.
-        lo_packages->modify( c_package ).
+        li_packages->modify( c_package ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
 

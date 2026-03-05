@@ -116,6 +116,12 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS set_original_system
       IMPORTING
         !iv_original_system TYPE csequence .
+    METHODS get_objs_without_translation
+      RETURNING
+        VALUE(rt_list) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit-without_translation.
+    METHODS set_objs_without_translation
+      IMPORTING
+        !it_list TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit-without_translation.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -263,6 +269,11 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_objs_without_translation.
+    rt_list = ms_data-without_translation.
+  ENDMETHOD.
+
+
   METHOD get_original_system.
     rv_original_system = ms_data-original_system.
   ENDMETHOD.
@@ -314,22 +325,33 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    " Ignore all files matching pattern in ignore list
-    LOOP AT ms_data-ignore INTO lv_ignore.
-      IF lv_name CP lv_ignore.
-        rv_ignored = abap_true.
-        RETURN.
-      ENDIF.
-    ENDLOOP.
-
     " Ignore all files outside of starting folder tree
     IF ms_data-starting_folder <> '/' AND NOT lv_name CP lv_starting.
       rv_ignored = abap_true.
     ENDIF.
 
+    " Allow all files in data folder
     IF iv_path = zif_abapgit_data_config=>c_default_path.
       rv_ignored = abap_false.
     ENDIF.
+
+    " Ignore all files matching pattern in ignore list
+    " Patterns are read top-to-bottom with later ones overriding earlier (like .gitignore)
+    LOOP AT ms_data-ignore INTO lv_ignore WHERE table_line IS NOT INITIAL.
+      " # needs to be escaped since it's the escape character
+      " and used as namespace separator in filenames, for example
+      lv_ignore = replace(
+        val  = lv_ignore
+        sub  = '#'
+        with = '##'
+        occ  = 0 ).
+      IF lv_name CP lv_ignore.
+        rv_ignored = abap_true.
+      ENDIF.
+      IF lv_ignore(1) = '!' AND lv_name CP lv_ignore+1(*).
+        rv_ignored = abap_false.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -377,6 +399,11 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_objs_without_translation.
+    ms_data-without_translation = it_list.
+  ENDMETHOD.
+
+
   METHOD set_original_system.
     ms_data-original_system = iv_original_system.
   ENDMETHOD.
@@ -417,7 +444,7 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
     REPLACE FIRST OCCURRENCE
       OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
       IN rv_xml
-      WITH '<?xml version="1.0" encoding="utf-8"?>'.
+      WITH '<?xml version="1.0" encoding="utf-8"?>' ##REGEX_POSIX.
     ASSERT sy-subrc = 0.
 
   ENDMETHOD.

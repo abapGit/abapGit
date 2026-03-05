@@ -21,7 +21,9 @@ INTERFACE zif_abapgit_cts_api
   TYPES:
     BEGIN OF ty_transport_data,
       trstatus TYPE e070-trstatus,
+      as4date  TYPE d,
       keys     TYPE STANDARD TABLE OF ty_transport_key WITH DEFAULT KEY,
+      as4user  TYPE sy-uname,
     END OF ty_transport_data .
   TYPES:
     BEGIN OF ty_transport_obj,
@@ -57,15 +59,17 @@ INTERFACE zif_abapgit_cts_api
   METHODS confirm_transport_messages
     RETURNING
       VALUE(rv_messages_confirmed) TYPE abap_bool .
+
   METHODS create_transport_entries
     IMPORTING
       !iv_transport TYPE trkorr
-      !it_table_ins TYPE ANY TABLE
-      !it_table_upd TYPE ANY TABLE
-      !it_table_del TYPE ANY TABLE
+      !it_table_ins TYPE ANY TABLE OPTIONAL
+      !it_table_upd TYPE ANY TABLE OPTIONAL
+      !it_table_del TYPE ANY TABLE OPTIONAL
       !iv_tabname   TYPE tabname
     RAISING
       zcx_abapgit_exception .
+
   METHODS get_r3tr_obj_for_limu_obj
     IMPORTING
       !iv_object   TYPE tadir-object
@@ -75,6 +79,7 @@ INTERFACE zif_abapgit_cts_api
       !ev_obj_name TYPE trobj_name
     RAISING
       zcx_abapgit_exception .
+
   METHODS get_transports_for_list
     IMPORTING
       !it_items            TYPE zif_abapgit_definitions=>ty_items_tt
@@ -82,6 +87,7 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rt_transports) TYPE ty_transport_list
     RAISING
       zcx_abapgit_exception .
+
   "! Returns the transport request / task the object is currently in
   "! @parameter is_item | Object
   "! @parameter rv_transport | Transport request / task
@@ -93,19 +99,22 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rv_transport) TYPE trkorr
     RAISING
       zcx_abapgit_exception .
+
   METHODS insert_transport_object
     IMPORTING
-      !iv_pgmid    TYPE tadir-pgmid DEFAULT 'R3TR'
-      !iv_object   TYPE tadir-object
-      !iv_obj_name TYPE csequence
-      !iv_package  TYPE devclass
-      !iv_language TYPE sy-langu DEFAULT sy-langu
-      !iv_mode     TYPE c DEFAULT 'I'
+      !iv_pgmid     TYPE tadir-pgmid DEFAULT 'R3TR'
+      !iv_object    TYPE tadir-object
+      !iv_obj_name  TYPE csequence
+      !iv_package   TYPE devclass
+      !iv_transport TYPE trkorr OPTIONAL
+      !iv_language  TYPE sy-langu DEFAULT sy-langu
+      !iv_mode      TYPE c DEFAULT 'I'
     EXPORTING
-      !ev_object   TYPE tadir-object
-      !ev_obj_name TYPE trobj_name
+      !ev_object    TYPE tadir-object
+      !ev_obj_name  TYPE trobj_name
     RAISING
       zcx_abapgit_exception .
+
   "! Check if change recording is possible for the given package
   "! @parameter iv_package | Package
   "! @parameter rv_possible | Change recording is possible
@@ -117,13 +126,17 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rv_possible) TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
-  METHODS list_open_requests_by_user
+
+  TYPES ty_date_range TYPE RANGE OF sy-datum.
+
+  METHODS list_open_requests
     IMPORTING
-      !iv_user         TYPE sy-uname DEFAULT sy-uname
+      !it_date         TYPE ty_date_range OPTIONAL
     RETURNING
       VALUE(rt_trkorr) TYPE ty_trkorr_tt
     RAISING
       zcx_abapgit_exception .
+
   METHODS list_r3tr_by_request
     IMPORTING
       !iv_request    TYPE trkorr
@@ -131,6 +144,7 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rt_list) TYPE ty_transport_obj_tt
     RAISING
       zcx_abapgit_exception .
+
   METHODS read
     IMPORTING
       !iv_trkorr        TYPE trkorr
@@ -138,16 +152,19 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rs_request) TYPE ty_transport_data
     RAISING
       zcx_abapgit_exception .
+
   METHODS read_description
     IMPORTING
       !iv_trkorr            TYPE trkorr
     RETURNING
       VALUE(rv_description) TYPE string .
+
   METHODS read_user
     IMPORTING
       !iv_trkorr      TYPE trkorr
     RETURNING
       VALUE(rv_uname) TYPE uname .
+
   METHODS validate_transport_request
     IMPORTING
       !iv_transport_request TYPE trkorr
@@ -161,4 +178,21 @@ INTERFACE zif_abapgit_cts_api
       !iv_transport_type_to   TYPE trfunction
     RAISING
       zcx_abapgit_exception.
+
+  TYPES: BEGIN OF ty_request_and_tasks,
+           trkorr  TYPE trkorr,
+           as4user TYPE sy-uname,
+           as4date TYPE d,
+           as4time TYPE t,
+         END OF ty_request_and_tasks.
+  TYPES: ty_request_and_tasks_tt TYPE STANDARD TABLE OF ty_request_and_tasks WITH DEFAULT KEY.
+
+  METHODS read_request_and_tasks
+    IMPORTING
+      iv_request      TYPE trkorr
+    RETURNING
+      VALUE(rt_tasks) TYPE ty_request_and_tasks_tt
+    RAISING
+      zcx_abapgit_exception.
+
 ENDINTERFACE.

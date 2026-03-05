@@ -6,8 +6,6 @@ INTERFACE zif_abapgit_git_definitions
   TYPES:
     ty_type    TYPE c LENGTH 6 .
   TYPES:
-    ty_bitbyte TYPE c LENGTH 8 .
-  TYPES:
     ty_sha1    TYPE c LENGTH 40 .
   TYPES: ty_sha1_tt TYPE STANDARD TABLE OF ty_sha1 WITH DEFAULT KEY .
   TYPES:
@@ -78,10 +76,11 @@ INTERFACE zif_abapgit_git_definitions
 
   CONSTANTS:
     BEGIN OF c_chmod,
-      file       TYPE ty_chmod VALUE '100644',
-      executable TYPE ty_chmod VALUE '100755',
-      dir        TYPE ty_chmod VALUE '40000 ',
-      submodule  TYPE ty_chmod VALUE '160000',
+      file          TYPE ty_chmod VALUE '100644',
+      executable    TYPE ty_chmod VALUE '100755',
+      dir           TYPE ty_chmod VALUE '40000 ',
+      submodule     TYPE ty_chmod VALUE '160000',
+      symbolic_link TYPE ty_chmod VALUE '120000',
     END OF c_chmod .
 
   TYPES:
@@ -146,5 +145,15 @@ INTERFACE zif_abapgit_git_definitions
       tags         TYPE string VALUE 'refs/tags/*',
       peel         TYPE string VALUE '^{}',
     END OF c_git_branch.
+
+  TYPES ty_head_type TYPE c LENGTH 1.
+  CONSTANTS:
+    BEGIN OF c_head_types,
+      all          TYPE ty_head_type VALUE 'A',
+      branch       TYPE ty_head_type VALUE 'B',
+      tag          TYPE ty_head_type VALUE 'T',
+      commit       TYPE ty_head_type VALUE 'C',
+      pull_request TYPE ty_head_type VALUE 'P',
+    END OF c_head_types.
 
 ENDINTERFACE.

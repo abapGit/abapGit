@@ -18,10 +18,10 @@ INTERFACE zif_abapgit_html_viewer
 
   EVENTS sapevent
     EXPORTING
-      VALUE(action) TYPE c OPTIONAL
-      VALUE(frame) TYPE c OPTIONAL
-      VALUE(getdata) TYPE c OPTIONAL
-      VALUE(postdata) TYPE ty_post_data OPTIONAL
+      VALUE(action)      TYPE c OPTIONAL
+      VALUE(frame)       TYPE c OPTIONAL
+      VALUE(getdata)     TYPE c OPTIONAL
+      VALUE(postdata)    TYPE ty_post_data OPTIONAL
       VALUE(query_table) TYPE ty_query_table OPTIONAL .
 
   METHODS load_data

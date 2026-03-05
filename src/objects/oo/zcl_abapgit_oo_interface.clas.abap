@@ -212,7 +212,7 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
             component_error = 4
             no_access       = 5
             other           = 6
-            OTHERS          = 7.
+            OTHERS          = 7 ##FM_SUBRC_OK.
       CATCH cx_sy_dyn_call_param_not_found.
         CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
           EXPORTING
@@ -229,7 +229,7 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
             component_error = 4
             no_access       = 5
             other           = 6
-            OTHERS          = 7.
+            OTHERS          = 7 ##FM_SUBRC_OK.
     ENDTRY.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
@@ -291,9 +291,11 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~exists.
+    DATA ls_object_name TYPE seoclskey.
+    ls_object_name = iv_object_name.
     CALL FUNCTION 'SEO_INTERFACE_EXISTENCE_CHECK'
       EXPORTING
-        intkey        = is_object_name
+        intkey        = ls_object_name
       EXCEPTIONS
         not_specified = 1
         not_existing  = 2
@@ -368,5 +370,4 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Interface { ls_intkey-clsname } has syntax errors | ).
     ENDIF.
   ENDMETHOD.
-
 ENDCLASS.

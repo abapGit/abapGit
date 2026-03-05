@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_srvb DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_type_not_supported.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -45,6 +45,12 @@ CLASS zcl_abapgit_object_srvb DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception .
     METHODS is_ai_supported
       RETURNING VALUE(rv_ai_supported) TYPE abap_bool.
+
+    METHODS publish
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS unpublish.
 
     DATA:
       mi_persistence           TYPE REF TO if_wb_object_persist,
@@ -129,6 +135,18 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
       CHANGING
         cs_service_binding = cs_service_binding ).
 
+    clear_field(
+      EXPORTING
+        iv_fieldname       = 'METADATA-RESPONSIBLE'
+      CHANGING
+        cs_service_binding = cs_service_binding ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname       = 'METADATA-MASTER_LANGUAGE'
+      CHANGING
+        cs_service_binding = cs_service_binding ).
+
   ENDMETHOD.
 
 
@@ -147,7 +165,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         CREATE OBJECT mi_persistence TYPE ('CL_SRVB_OBJECT_PERSIST').
 
       CATCH cx_sy_create_error.
-        zcx_abapgit_exception=>raise( |SRVB not supported by your NW release| ).
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDTRY.
 
     mv_is_inactive_supported = is_ai_supported( ).
@@ -158,8 +176,9 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
   METHOD get_object_data.
 
     FIELD-SYMBOLS:
-      <ls_service_binding> TYPE any,
-      <lv_language>        TYPE data.
+      <lv_abap_language_version> TYPE uccheck,
+      <ls_service_binding>       TYPE any,
+      <lv_language>              TYPE data.
 
     ASSIGN mr_service_binding->* TO <ls_service_binding>.
     ASSERT sy-subrc = 0.
@@ -173,10 +192,14 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
     " We have to set the language explicitly,
     " because otherwise the description isn't stored
-    ASSIGN COMPONENT 'METADATA-LANGUAGE' OF STRUCTURE <ls_service_binding>
-           TO <lv_language>.
+    ASSIGN COMPONENT 'METADATA-LANGUAGE' OF STRUCTURE <ls_service_binding> TO <lv_language>.
     ASSERT sy-subrc = 0.
     <lv_language> = mv_language.
+
+    ASSIGN COMPONENT 'METADATA-ABAP_LANGU_VERSION' OF STRUCTURE <ls_service_binding> TO <lv_abap_language_version>.
+    IF sy-subrc = 0.
+      set_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+    ENDIF.
 
     CREATE OBJECT ro_object_data TYPE ('CL_SRVB_OBJECT_DATA').
     ro_object_data->set_data( p_data = <ls_service_binding> ).
@@ -289,6 +312,93 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD publish.
+
+    DATA lx_error TYPE REF TO cx_root.
+    DATA lr_create_info TYPE REF TO data.
+    DATA lo_publishing_config TYPE REF TO object.
+
+    FIELD-SYMBOLS <ls_create_info> TYPE any.
+    FIELD-SYMBOLS <lv_description> TYPE any.
+    FIELD-SYMBOLS <lv_field> TYPE any.
+    FIELD-SYMBOLS <ls_service_binding> TYPE any.
+
+    ASSIGN mr_service_binding->* TO <ls_service_binding>.
+    ASSERT sy-subrc = 0.
+
+    ASSIGN COMPONENT 'PUBLISHED' OF STRUCTURE <ls_service_binding> TO <lv_field>.
+    IF sy-subrc <> 0 OR <lv_field> <> abap_true.
+      RETURN.
+    ENDIF.
+
+    TRY.
+        CREATE DATA lr_create_info TYPE ('/IWFND/IF_V4_PUBLISHING_TYPES=>TY_S_CREATE_GROUP_INFO').
+        ASSIGN lr_create_info->* TO <ls_create_info>.
+        ASSERT sy-subrc = 0.
+
+        ASSIGN COMPONENT 'LANGUAGE' OF STRUCTURE <ls_create_info> TO <lv_field>.
+        <lv_field> = mv_language.
+        ASSIGN COMPONENT 'DESCRIPTION' OF STRUCTURE <ls_create_info> TO <lv_field>.
+        ASSIGN COMPONENT 'METADATA-DESCRIPTION' OF STRUCTURE <ls_service_binding> TO <lv_description>.
+        <lv_field> = <lv_description>.
+        ASSIGN COMPONENT 'GROUP_ID' OF STRUCTURE <ls_create_info> TO <lv_field>.
+        <lv_field> = |{ ms_item-obj_name }|.
+
+        CALL METHOD ('/IWFND/CL_V4_PUBLISHING_CONFIG')=>('GET_INSTANCE')
+          RECEIVING
+            ro_publishing_config = lo_publishing_config.
+
+        CALL METHOD lo_publishing_config->('PUBLISH_GROUP')
+          EXPORTING
+            is_create_info      = <ls_create_info>
+            iv_system_alias     = 'LOCAL'
+            iv_suppress_dialog  = abap_true
+            iv_do_not_transport = abap_true.
+
+        " Do we use OAuth 2.0 scope?
+        " CALL METHOD ('/IWFND/CL_V4_COF_FACADE')=>('CREATE_OAUTH2_SCOPE')
+        "   EXPORTING
+        "     iv_service_group_id = <lv_field>
+
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD unpublish.
+
+    DATA lo_publishing_config TYPE REF TO object.
+
+    " If it's published, we unpublish it
+    TRY.
+        CALL METHOD ('/IWFND/CL_V4_PUBLISHING_DBA')=>('CHECK_IS_GROUP_PUBLISHED')
+          EXPORTING
+            iv_group_id = |{ ms_item-obj_name }|.
+
+        CALL METHOD ('/IWFND/CL_V4_PUBLISHING_CONFIG')=>('GET_INSTANCE')
+          RECEIVING
+            ro_publishing_config = lo_publishing_config.
+
+        CALL METHOD lo_publishing_config->('DELETE_GROUP')
+          EXPORTING
+            iv_group_id         = |{ ms_item-obj_name }|
+            iv_suppress_dialog  = abap_true
+            iv_do_not_transport = abap_true.
+
+        " Do we use OAuth 2.0 scope?
+        " CALL METHOD ('/IWFND/CL_V4_COF_FACADE')=>('DELETE_OAUTH2_SCOPE')
+        "   EXPORTING
+        "     iv_service_group_id = |{ ms_item-obj_name }|
+
+      CATCH cx_root ##NO_HANDLER.
+        " not published i.e. good to go
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
 
     DATA:
@@ -315,6 +425,8 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
     DATA: lx_error TYPE REF TO cx_swb_exception.
 
+    unpublish( ).
+
     TRY.
         mi_persistence->delete( mv_service_binding_key ).
 
@@ -331,13 +443,15 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-
     DATA:
       lo_object_data        TYPE REF TO if_wb_object_data_model,
       lx_error              TYPE REF TO cx_root,
       lo_wb_object_operator TYPE REF TO object,
       lo_merged_data_all    TYPE REF TO if_wb_object_data_model,
       lv_version            TYPE r3state.
+
+    " To make changes, object must be unpublished
+    unpublish( ).
 
     TRY.
         lo_object_data = get_object_data( io_xml ).
@@ -383,7 +497,11 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
+    " Publish service binding
+    publish( ).
+
     zcl_abapgit_objects_activation=>add_item( ms_item ).
+
   ENDMETHOD.
 
 
@@ -486,7 +604,8 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
       lx_error              TYPE REF TO cx_root.
 
     FIELD-SYMBOLS:
-      <ls_service_binding> TYPE any.
+      <lv_abap_language_version> TYPE uccheck,
+      <ls_service_binding>       TYPE any.
 
     ASSIGN mr_service_binding->* TO <ls_service_binding>.
     ASSERT sy-subrc = 0.
@@ -505,6 +624,12 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         li_object_data_model->get_data( IMPORTING p_data = <ls_service_binding> ).
 
         clear_fields( CHANGING cs_service_binding = <ls_service_binding> ).
+
+        ASSIGN COMPONENT 'METADATA-ABAP_LANGU_VERSION'
+          OF STRUCTURE <ls_service_binding> TO <lv_abap_language_version>.
+        IF sy-subrc = 0.
+          clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+        ENDIF.
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).

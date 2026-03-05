@@ -197,6 +197,9 @@ CLASS zcl_abapgit_object_stvi IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
+    SORT ls_transaction_variant-shdtvsvciu ASCENDING.
+    SORT ls_transaction_variant-shdfvguicu ASCENDING.
+
 *   Clear all user details
     CLEAR: ls_transaction_variant-shdtvciu-crdate,
            ls_transaction_variant-shdtvciu-cruser,

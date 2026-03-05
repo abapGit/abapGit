@@ -30,6 +30,8 @@ CLASS zcl_abapgit_log_viewer DEFINITION
         source    TYPE icon_d,
         callstack TYPE icon_d,
         cell_type TYPE salv_t_int4_column,
+        id        TYPE sy-msgid,
+        number    TYPE sy-msgno,
       END OF ty_log_out.
     TYPES:
       ty_log_outs TYPE STANDARD TABLE OF ty_log_out
@@ -91,7 +93,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
+CLASS zcl_abapgit_log_viewer IMPLEMENTATION.
 
 
   METHOD calculate_cell_type.
@@ -230,7 +232,7 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
 
       CLEAR: ls_log.
 
-      ls_log-msg = lr_message->text.
+      ls_log-msg       = lr_message->text.
       ls_log-exception = lr_message->exception.
 
       CASE lr_message->type.
@@ -268,6 +270,10 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
           CATCH cx_sy_move_cast_error ##NO_HANDLER.
         ENDTRY.
 
+      ELSEIF lr_message->id IS NOT INITIAL AND lr_message->number IS NOT INITIAL.
+        ls_log-id       = lr_message->id.
+        ls_log-number   = lr_message->number.
+        ls_log-longtext = icon_system_help.
       ENDIF.
 
       ls_log-obj_type = lr_message->obj_type.
@@ -387,6 +393,16 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
           lo_column->set_technical( abap_true ).
         ENDIF.
 
+        LOOP AT gt_log TRANSPORTING NO FIELDS WHERE id IS NOT INITIAL.
+          EXIT.
+        ENDLOOP.
+        IF sy-subrc <> 0.
+          lo_column = lo_columns->get_column( |ID| ).
+          lo_column->set_technical( abap_true ).
+          lo_column = lo_columns->get_column( |NUMBER| ).
+          lo_column->set_technical( abap_true ).
+        ENDIF.
+
         ls_position = zcl_abapgit_popups=>center(
           iv_width  = 125
           iv_height = 20 ).
@@ -424,31 +440,34 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
           lt_dummy2      TYPE TABLE OF dval,
           ls_help_info   TYPE help_info.
 
-    IF is_log-exception IS NOT BOUND.
+    IF is_log-exception IS BOUND.
+      TRY.
+          lx_abapgit ?= is_log-exception.
+        CATCH cx_sy_move_cast_error.
+          RETURN.
+      ENDTRY.
+
+      lv_docu_object = lx_abapgit->if_t100_message~t100key-msgid && lx_abapgit->if_t100_message~t100key-msgno.
+      ls_help_info-messageid  = lx_abapgit->if_t100_message~t100key-msgid.
+      ls_help_info-messagenr  = lx_abapgit->if_t100_message~t100key-msgno.
+      ls_help_info-msgv1      = lx_abapgit->msgv1.
+      ls_help_info-msgv2      = lx_abapgit->msgv2.
+      ls_help_info-msgv3      = lx_abapgit->msgv3.
+      ls_help_info-msgv4      = lx_abapgit->msgv4.
+    ELSEIF is_log-id IS NOT INITIAL AND is_log-number IS NOT INITIAL.
+      lv_docu_object          = is_log-id && is_log-number.
+      ls_help_info-messageid  = is_log-id.
+      ls_help_info-messagenr  = is_log-number.
+    ELSE.
       RETURN.
     ENDIF.
 
-    TRY.
-        lx_abapgit ?= is_log-exception.
-      CATCH cx_sy_move_cast_error.
-        RETURN.
-    ENDTRY.
-
-    lv_docu_object   = lx_abapgit->if_t100_message~t100key-msgid.
-    lv_docu_object+2 = lx_abapgit->if_t100_message~t100key-msgno.
-
     ls_help_info-call       = 'D'.
     ls_help_info-spras      = sy-langu.
-    ls_help_info-messageid  = lx_abapgit->if_t100_message~t100key-msgid.
-    ls_help_info-messagenr  = lx_abapgit->if_t100_message~t100key-msgno.
     ls_help_info-message    = is_log-msg.
     ls_help_info-title      = 'Longtext'.
     ls_help_info-docuid     = 'NA'.
-    ls_help_info-docuobject = lv_docu_object.
-    ls_help_info-msgv1      = lx_abapgit->msgv1.
-    ls_help_info-msgv2      = lx_abapgit->msgv2.
-    ls_help_info-msgv3      = lx_abapgit->msgv3.
-    ls_help_info-msgv4      = lx_abapgit->msgv4.
+    ls_help_info-docuobject = condense( lv_docu_object ).
 
     CALL FUNCTION 'HELP_START'
       EXPORTING

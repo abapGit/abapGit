@@ -27,6 +27,8 @@ CLASS zcl_abapgit_path DEFINITION
       IMPORTING iv_path            TYPE string
       RETURNING VALUE(rv_filename) TYPE string.
 
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -115,7 +117,7 @@ CLASS ZCL_ABAPGIT_PATH IMPLEMENTATION.
 
     FIND FIRST OCCURRENCE OF REGEX '^/(.*/)?' IN iv_fullpath
       MATCH COUNT lv_cnt
-      MATCH LENGTH lv_len.
+      MATCH LENGTH lv_len ##REGEX_POSIX.
 
     IF lv_cnt > 0.
       ev_path     = iv_fullpath+0(lv_len).

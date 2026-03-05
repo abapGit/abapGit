@@ -7,13 +7,45 @@ CLASS zcl_abapgit_object_wdcc DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_object .
+    METHODS constructor
+      IMPORTING
+        is_item        TYPE zif_abapgit_definitions=>ty_item
+        iv_language    TYPE spras
+        io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_type_not_supported.
   PROTECTED SECTION.
+    METHODS after_import
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
+
+  METHOD constructor.
+
+    DATA:
+      ls_orig_config      TYPE wdy_config_data.
+
+    FIELD-SYMBOLS:
+      <lv_data> TYPE data.
+
+    super->constructor(
+      is_item = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
+
+    ASSIGN COMPONENT 'CONFIG_IDPAR' OF STRUCTURE ls_orig_config TO <lv_data>.
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -48,19 +80,15 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     ls_config_key-config_type = ms_item-obj_name+32(2).
     ls_config_key-config_var = ms_item-obj_name+34(6).
 
-    TRY.
-        " does not exist in 702
-        CALL METHOD cl_wdr_cfg_persistence_utils=>('DELETE_CONFIGURATION')
-          EXPORTING
-            config_key = ls_config_key
-          RECEIVING
-            subrc      = lv_subrc.
-        IF lv_subrc <> 0.
-          zcx_abapgit_exception=>raise( 'Error deleting WDCC: ' && ms_item-obj_name ).
-        ENDIF.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'Object type WDCC not supported for this release' ).
-    ENDTRY.
+    " does not exist in 702
+    CALL METHOD cl_wdr_cfg_persistence_utils=>('DELETE_CONFIGURATION')
+      EXPORTING
+        config_key = ls_config_key
+      RECEIVING
+        subrc      = lv_subrc.
+    IF lv_subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error deleting WDCC: ' && ms_item-obj_name ).
+    ENDIF.
 
     corr_insert( iv_package ).
 
@@ -97,10 +125,6 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     IF sy-subrc = 0.
       io_xml->read( EXPORTING iv_name = 'CONFIG_IDPAR'
                      CHANGING cg_data = <lv_data> ).
-    ELSE.
-      ii_log->add_error( iv_msg  = |Object type WDCC not supported for this release|
-                         is_item = ms_item ).
-      RETURN.
     ENDIF.
 
     ASSIGN COMPONENT 'CONFIG_TYPEPAR' OF STRUCTURE ls_orig_config TO <lv_data>.
@@ -133,7 +157,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     REPLACE FIRST OCCURRENCE
       OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
       IN lv_xml_string
-      WITH '<?xml version="1.0"?>'.
+      WITH '<?xml version="1.0"?>' ##REGEX_POSIX.
     ASSERT sy-subrc = 0.
 
     lv_xml_xstring = zcl_abapgit_convert=>string_to_xstring( lv_xml_string ).
@@ -230,7 +254,30 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
 
     tadir_insert( iv_package ).
 
+    after_import( ).
+
     corr_insert( iv_package ).
+
+  ENDMETHOD.
+
+  METHOD after_import.
+
+    DATA: lt_cts_object_entry TYPE STANDARD TABLE OF e071 WITH DEFAULT KEY,
+          ls_cts_object_entry LIKE LINE OF lt_cts_object_entry,
+          lt_cts_key          TYPE STANDARD TABLE OF e071k WITH DEFAULT KEY.
+
+    ls_cts_object_entry-pgmid    = 'R3TR'.
+    ls_cts_object_entry-object   = ms_item-obj_type.
+    ls_cts_object_entry-obj_name = ms_item-obj_name.
+    INSERT ls_cts_object_entry INTO TABLE lt_cts_object_entry.
+
+    CALL FUNCTION 'WDR_CFG_AFTER_IMPORT'
+      EXPORTING
+        iv_tarclient  = sy-mandt
+        iv_is_upgrade = abap_false
+      TABLES
+        tt_e071       = lt_cts_object_entry
+        tt_e071k      = lt_cts_key.
 
   ENDMETHOD.
 
@@ -360,8 +407,6 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
 
       CATCH cx_static_check.
         zcx_abapgit_exception=>raise( 'Error Reading Component Config from DB: ' && ms_item-obj_name ).
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'Object type WDCC not supported for this release' ).
     ENDTRY.
 
     io_xml->add( iv_name = 'CONFIG_ID'
@@ -416,7 +461,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
       REPLACE FIRST OCCURRENCE
         OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
         IN lv_xml_string
-        WITH '<?xml version="1.0" encoding="utf-8"?>'.
+        WITH '<?xml version="1.0" encoding="utf-8"?>' ##REGEX_POSIX.
       ASSERT sy-subrc = 0.
     ENDIF.
 

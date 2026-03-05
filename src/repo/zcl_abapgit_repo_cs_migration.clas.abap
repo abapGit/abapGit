@@ -33,7 +33,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_CS_MIGRATION IMPLEMENTATION.
+CLASS zcl_abapgit_repo_cs_migration IMPLEMENTATION.
 
 
   METHOD clear_repo_metadata.
@@ -50,6 +50,7 @@ CLASS ZCL_ABAPGIT_REPO_CS_MIGRATION IMPLEMENTATION.
 
     DATA lo_cs TYPE REF TO zcl_abapgit_repo_checksums.
     DATA lv_xml TYPE zif_abapgit_persistence=>ty_content-data_str.
+    DATA li_repo TYPE REF TO zif_abapgit_repo.
     DATA:
       BEGIN OF ls_repo_extract,
         local_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt,
@@ -71,7 +72,9 @@ CLASS ZCL_ABAPGIT_REPO_CS_MIGRATION IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    CREATE OBJECT lo_cs EXPORTING iv_repo_key = iv_repo_key.
+    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_repo_key ).
+
+    CREATE OBJECT lo_cs EXPORTING ii_repo = li_repo.
     lo_cs->force_write( ls_repo_extract-local_checksums ).
 
   ENDMETHOD.

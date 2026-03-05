@@ -25,7 +25,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ECATT_SP_DOWNLOAD IMPLEMENTATION.
+CLASS zcl_abapgit_ecatt_sp_download IMPLEMENTATION.
 
 
   METHOD download.
@@ -93,7 +93,7 @@ CLASS ZCL_ABAPGIT_ECATT_SP_DOWNLOAD IMPLEMENTATION.
         CALL METHOD lo_ecatt_sp->('GET_SP_ATTRIBUTES')
           IMPORTING
             e_sp_xml = lv_sp_xml.
-      CATCH cx_ecatt_apl.
+      CATCH cx_ecatt_apl ##NO_HANDLER.
     ENDTRY.
 
     CALL FUNCTION 'SDIXML_XML_TO_DOM'

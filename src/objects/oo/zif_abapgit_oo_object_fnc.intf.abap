@@ -119,7 +119,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         zcx_abapgit_exception,
     exists
       IMPORTING
-        is_object_name   TYPE seoclskey
+        iv_object_name   TYPE seoclsname
       RETURNING
         VALUE(rv_exists) TYPE abap_bool,
     serialize_abap

@@ -1,14 +1,15 @@
 CLASS zcl_abapgit_html DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_html .
+    INTERFACES zif_abapgit_html.
 
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
-    CLASS-METHODS class_constructor .
+    CLASS-METHODS class_constructor.
+
     CLASS-METHODS create
       IMPORTING
         !iv_initial_chunk  TYPE any OPTIONAL
@@ -22,21 +23,25 @@ CLASS zcl_abapgit_html DEFINITION
         !iv_class     TYPE string OPTIONAL
         !iv_onclick   TYPE string OPTIONAL
       RETURNING
-        VALUE(rv_str) TYPE string .
+        VALUE(rv_str) TYPE string.
+
     CLASS-METHODS checkbox
       IMPORTING
         iv_id          TYPE string OPTIONAL
         iv_checked     TYPE abap_bool OPTIONAL
       RETURNING
-        VALUE(rv_html) TYPE string .
+        VALUE(rv_html) TYPE string.
+
     CLASS-METHODS parse_data_attr
       IMPORTING
-        iv_str         TYPE string OPTIONAL
+        iv_str              TYPE string OPTIONAL
       RETURNING
-        VALUE(rs_data_attr) TYPE zif_abapgit_html=>ty_data_attr .
+        VALUE(rs_data_attr) TYPE zif_abapgit_html=>ty_data_attr.
+
     CLASS-METHODS set_debug_mode
       IMPORTING
         iv_mode TYPE abap_bool.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -48,9 +53,11 @@ CLASS zcl_abapgit_html DEFINITION
         within_style    TYPE abap_bool,
         within_js       TYPE abap_bool,
         within_textarea TYPE abap_bool,
+        within_pre      TYPE abap_bool,
         indent          TYPE i,
         indent_str      TYPE string,
-      END OF ty_indent_context .
+      END OF ty_indent_context.
+
     TYPES:
       BEGIN OF ty_study_result,
         style_open     TYPE abap_bool,
@@ -59,33 +66,37 @@ CLASS zcl_abapgit_html DEFINITION
         script_close   TYPE abap_bool,
         textarea_open  TYPE abap_bool,
         textarea_close TYPE abap_bool,
+        pre_open       TYPE abap_bool,
+        pre_close      TYPE abap_bool,
         tag_close      TYPE abap_bool,
         curly_close    TYPE abap_bool,
         openings       TYPE i,
         closings       TYPE i,
         singles        TYPE i,
-      END OF ty_study_result .
+      END OF ty_study_result.
 
-    CLASS-DATA go_single_tags_re TYPE REF TO cl_abap_regex .
-    DATA mt_buffer TYPE string_table .
-    CLASS-DATA gv_spaces TYPE string .
-    CLASS-DATA gv_debug_mode TYPE abap_bool .
+    CLASS-DATA go_single_tags_re TYPE REF TO cl_abap_regex.
+    CLASS-DATA gv_spaces TYPE string.
+    CLASS-DATA gv_debug_mode TYPE abap_bool.
+    DATA mt_buffer TYPE string_table.
 
     METHODS indent_line
       CHANGING
         !cs_context TYPE ty_indent_context
-        !cv_line    TYPE string .
+        !cv_line    TYPE string.
+
     METHODS study_line
       IMPORTING
         !iv_line         TYPE string
         !is_context      TYPE ty_indent_context
       RETURNING
-        VALUE(rs_result) TYPE ty_study_result .
+        VALUE(rs_result) TYPE ty_study_result.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
+CLASS zcl_abapgit_html IMPLEMENTATION.
 
 
   METHOD checkbox.
@@ -111,7 +122,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     CREATE OBJECT go_single_tags_re
       EXPORTING
         pattern     = '<(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|!)'
-        ignore_case = abap_false.
+        ignore_case = abap_false ##REGEX_POSIX.
 
     gv_spaces = repeat(
       val = ` `
@@ -119,10 +130,6 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  METHOD set_debug_mode.
-    gv_debug_mode = iv_mode.
-  ENDMETHOD.
 
   METHOD create.
     CREATE OBJECT ri_instance TYPE zcl_abapgit_html.
@@ -134,11 +141,11 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
   METHOD icon.
 
-    DATA: lv_hint       TYPE string,
-          lv_name       TYPE string,
-          lv_color      TYPE string,
-          lv_class      TYPE string,
-          lv_onclick    TYPE string.
+    DATA: lv_hint    TYPE string,
+          lv_name    TYPE string,
+          lv_color   TYPE string,
+          lv_class   TYPE string,
+          lv_onclick TYPE string.
 
     SPLIT iv_name AT '/' INTO lv_name lv_color.
 
@@ -178,6 +185,17 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       cs_context-within_textarea = abap_false.
       RETURN.
     ELSEIF cs_context-within_textarea = abap_true.
+      RETURN.
+    ENDIF.
+
+    " No indent for pre tags
+    IF ls_study-pre_open = abap_true.
+      cs_context-within_pre = abap_true.
+      RETURN.
+    ELSEIF ls_study-pre_close = abap_true.
+      cs_context-within_pre = abap_false.
+      RETURN.
+    ELSEIF cs_context-within_pre = abap_true.
       RETURN.
     ENDIF.
 
@@ -239,6 +257,11 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_debug_mode.
+    gv_debug_mode = iv_mode.
+  ENDMETHOD.
+
+
   METHOD study_line.
 
     DATA: lv_line TYPE string,
@@ -293,7 +316,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       FIND ALL OCCURRENCES OF '</' IN lv_line MATCH COUNT rs_result-closings.
       IF rs_result-closings <> rs_result-openings.
 * if everything is closings, there are no single tags
-        FIND ALL OCCURRENCES OF REGEX go_single_tags_re IN lv_line MATCH COUNT rs_result-singles.
+        FIND ALL OCCURRENCES OF REGEX go_single_tags_re IN lv_line MATCH COUNT rs_result-singles ##REGEX_POSIX.
       ENDIF.
       rs_result-openings = rs_result-openings - rs_result-closings - rs_result-singles.
 
@@ -306,6 +329,16 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       FIND FIRST OCCURRENCE OF '</TEXTAREA' IN lv_line.
       IF sy-subrc > 0. " Not found
         rs_result-textarea_open = abap_true.
+      ENDIF.
+    ENDIF.
+
+    " Pre (same assumptions as above)
+    IF is_context-within_pre = abap_true AND lv_len >= 5 AND lv_line(5) = '</PRE'.
+      rs_result-pre_close = abap_true.
+    ELSEIF is_context-within_pre = abap_false AND lv_len >= 4 AND lv_line(4) = '<PRE'.
+      FIND FIRST OCCURRENCE OF '</PRE' IN lv_line.
+      IF sy-subrc > 0. " Not found
+        rs_result-pre_open = abap_true.
       ENDIF.
     ENDIF.
 
@@ -470,15 +503,19 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
 
   METHOD zif_abapgit_html~div.
+
     zif_abapgit_html~wrap(
-      iv_tag   = 'div'
-      iv_content = iv_content
-      ii_content = ii_content
+      iv_tag        = 'div'
+      iv_content    = iv_content
+      ii_content    = ii_content
       is_data_attr  = is_data_attr
       it_data_attrs = it_data_attrs
-      iv_id    = iv_id
-      iv_class = iv_class ).
+      iv_id         = iv_id
+      iv_style      = iv_style
+      iv_class      = iv_class ).
+
     ri_self = me.
+
   ENDMETHOD.
 
 
@@ -529,32 +566,40 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
 
   METHOD zif_abapgit_html~td.
+
     zif_abapgit_html~wrap(
       iv_format_single_line = iv_format_single_line
-      iv_tag   = 'td'
-      iv_content = iv_content
-      ii_content = ii_content
-      iv_id    = iv_id
-      iv_class = iv_class
-      is_data_attr  = is_data_attr
-      it_data_attrs = it_data_attrs
-      iv_hint  = iv_hint ).
+      iv_tag                = 'td'
+      iv_content            = iv_content
+      ii_content            = ii_content
+      iv_id                 = iv_id
+      iv_class              = iv_class
+      iv_style              = iv_style
+      is_data_attr          = is_data_attr
+      it_data_attrs         = it_data_attrs
+      iv_hint               = iv_hint ).
+
     ri_self = me.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_html~th.
+
     zif_abapgit_html~wrap(
       iv_format_single_line = iv_format_single_line
-      iv_tag   = 'th'
-      iv_content = iv_content
-      ii_content = ii_content
-      iv_id    = iv_id
-      iv_class = iv_class
-      is_data_attr  = is_data_attr
-      it_data_attrs = it_data_attrs
-      iv_hint  = iv_hint ).
+      iv_tag                = 'th'
+      iv_content            = iv_content
+      ii_content            = ii_content
+      iv_id                 = iv_id
+      iv_class              = iv_class
+      iv_style              = iv_style
+      is_data_attr          = is_data_attr
+      it_data_attrs         = it_data_attrs
+      iv_hint               = iv_hint ).
+
     ri_self = me.
+
   ENDMETHOD.
 
 
@@ -564,10 +609,11 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     DATA lv_close_tag TYPE string.
     DATA ls_data_attr LIKE LINE OF it_data_attrs.
 
-    DATA: lv_class TYPE string,
-          lv_id    TYPE string,
+    DATA: lv_class     TYPE string,
+          lv_style     TYPE string,
+          lv_id        TYPE string,
           lv_data_attr TYPE string,
-          lv_title TYPE string.
+          lv_title     TYPE string.
 
     IF iv_id IS NOT INITIAL.
       lv_id = | id="{ iv_id }"|.
@@ -575,6 +621,10 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     IF iv_class IS NOT INITIAL.
       lv_class = | class="{ iv_class }"|.
+    ENDIF.
+
+    IF iv_style IS NOT INITIAL.
+      lv_style = | style="{ iv_style }"|.
     ENDIF.
 
     IF iv_hint IS NOT INITIAL.
@@ -589,7 +639,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       lv_data_attr = lv_data_attr && | data-{ ls_data_attr-name }="{ ls_data_attr-value }"|.
     ENDLOOP.
 
-    lv_open_tag = |<{ iv_tag }{ lv_id }{ lv_class }{ lv_data_attr }{ lv_title }>|.
+    lv_open_tag = |<{ iv_tag }{ lv_id }{ lv_class }{ lv_style }{ lv_data_attr }{ lv_title }>|.
     lv_close_tag = |</{ iv_tag }>|.
 
     IF ii_content IS NOT BOUND AND iv_content IS INITIAL.

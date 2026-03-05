@@ -193,6 +193,9 @@ CLASS zcl_abapgit_object_scvi IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
+    SORT ls_screen_variant-shdsvfvci ASCENDING.
+    SORT ls_screen_variant-shdguixt ASCENDING.
+
 *   Clear all user details
     CLEAR: ls_screen_variant-shdsvci-crdate,
            ls_screen_variant-shdsvci-cruser,

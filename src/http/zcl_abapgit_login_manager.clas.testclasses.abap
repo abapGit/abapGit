@@ -42,7 +42,7 @@ CLASS ltcl_login_manager IMPLEMENTATION.
 
     DATA lv_auth TYPE string.
 
-    lv_auth = zcl_abapgit_login_manager=>set(
+    lv_auth = zcl_abapgit_login_manager=>set_basic(
       iv_uri      = 'https://github.com/abapGit/abapGit.git'
       iv_username = c_username
       iv_password = c_password ).
@@ -62,7 +62,7 @@ CLASS ltcl_login_manager IMPLEMENTATION.
           lv_auth2 TYPE string.
 
 
-    zcl_abapgit_login_manager=>set(
+    zcl_abapgit_login_manager=>set_basic(
       iv_uri      = lc_github1
       iv_username = c_username
       iv_password = c_password ).

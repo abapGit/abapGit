@@ -13,7 +13,7 @@ INTERFACE zif_abapgit_ajson_mapping
   TYPES:
     BEGIN OF ty_rename,
       from TYPE string,
-      to TYPE string,
+      to   TYPE string,
     END OF ty_rename,
     tty_rename_map TYPE STANDARD TABLE OF ty_rename
       WITH UNIQUE SORTED KEY by_name COMPONENTS from.

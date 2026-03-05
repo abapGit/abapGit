@@ -30,12 +30,14 @@ CLASS zcl_abapgit_background_pull IMPLEMENTATION.
 
     DATA: ls_checks             TYPE zif_abapgit_definitions=>ty_deserialize_checks,
           lo_settings           TYPE REF TO zcl_abapgit_settings,
-          lv_activation_setting TYPE zif_abapgit_definitions=>ty_s_user_settings-activate_wo_popup.
+          li_repo               TYPE REF TO zif_abapgit_repo,
+          lv_activation_setting TYPE zif_abapgit_persist_user=>ty_s_user_settings-activate_wo_popup.
 
     FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ls_checks-overwrite.
 
+    li_repo = ii_repo_online.
 
-    ls_checks = io_repo->deserialize_checks( ).
+    ls_checks = li_repo->deserialize_checks( ).
 
     LOOP AT ls_checks-overwrite ASSIGNING <ls_overwrite>.
       <ls_overwrite>-decision = zif_abapgit_definitions=>c_yes.
@@ -46,7 +48,14 @@ CLASS zcl_abapgit_background_pull IMPLEMENTATION.
 
     lo_settings->set_activate_wo_popup( abap_true ).
 
-    io_repo->deserialize( is_checks = ls_checks
+
+    " pass decisions to delete
+    zcl_abapgit_services_repo=>delete_unnecessary_objects(
+      ii_repo   = li_repo
+      is_checks = ls_checks
+      ii_log    = ii_log ).
+
+    li_repo->deserialize( is_checks = ls_checks
                           ii_log    = ii_log ).
 
     lo_settings->set_activate_wo_popup( lv_activation_setting ).

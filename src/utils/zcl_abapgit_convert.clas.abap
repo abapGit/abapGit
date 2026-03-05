@@ -4,16 +4,6 @@ CLASS zcl_abapgit_convert DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-METHODS bitbyte_to_int
-      IMPORTING
-        !iv_bits      TYPE clike
-      RETURNING
-        VALUE(rv_int) TYPE i .
-    CLASS-METHODS x_to_bitbyte
-      IMPORTING
-        !iv_x             TYPE x
-      RETURNING
-        VALUE(rv_bitbyte) TYPE zif_abapgit_git_definitions=>ty_bitbyte .
     CLASS-METHODS string_to_xstring_utf8
       IMPORTING
         !iv_string        TYPE string
@@ -22,6 +12,14 @@ CLASS zcl_abapgit_convert DEFINITION
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS xstring_to_string_utf8
+      IMPORTING
+        !iv_data         TYPE xsequence
+        !iv_length       TYPE i OPTIONAL
+      RETURNING
+        VALUE(rv_string) TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS xstring_to_string_utf8_raw
       IMPORTING
         !iv_data         TYPE xsequence
         !iv_length       TYPE i OPTIONAL
@@ -85,7 +83,7 @@ CLASS zcl_abapgit_convert DEFINITION
         VALUE(rv_xstr) TYPE xstring .
     CLASS-METHODS xstring_to_bintab
       IMPORTING
-        !iv_xstr   TYPE xstring
+        !iv_xstr   TYPE xsequence
       EXPORTING
         !ev_size   TYPE i
         !et_bintab TYPE STANDARD TABLE .
@@ -97,6 +95,12 @@ CLASS zcl_abapgit_convert DEFINITION
         VALUE(re_lang_sap2) TYPE string
       EXCEPTIONS
         no_assignment.
+
+    CLASS-METHODS language_sap1_to_text
+      IMPORTING
+        im_lang_sap1   TYPE sy-langu
+      RETURNING
+        VALUE(re_text) TYPE string.
 
     CLASS-METHODS language_sap2_to_sap1
       IMPORTING
@@ -144,39 +148,10 @@ ENDCLASS.
 
 CLASS zcl_abapgit_convert IMPLEMENTATION.
 
+
   METHOD base64_to_xstring.
 
     rv_xstr = cl_http_utility=>decode_x_base64( iv_base64 ).
-
-  ENDMETHOD.
-
-
-  METHOD bitbyte_to_int.
-
-    DATA: lv_bitbyte TYPE string,
-          lv_len     TYPE i,
-          lv_offset  TYPE i.
-
-    lv_bitbyte = iv_bits.
-    SHIFT lv_bitbyte LEFT DELETING LEADING '0 '.
-    lv_len     = strlen( lv_bitbyte ).
-    lv_offset  = lv_len - 1.
-
-    rv_int = 0.
-    DO lv_len TIMES.
-
-      IF sy-index = 1.
-        "Initialize
-        IF lv_bitbyte+lv_offset(1) = '1'.
-          rv_int = 1.
-        ENDIF.
-      ELSEIF lv_bitbyte+lv_offset(1) = '1'.
-        rv_int = rv_int + ( 2 ** ( sy-index - 1 ) ).
-      ENDIF.
-
-      lv_offset = lv_offset - 1. "Move Cursor
-
-    ENDDO.
 
   ENDMETHOD.
 
@@ -207,32 +182,6 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD language_sap1_to_bcp47.
-    DATA lv_converter_instance TYPE REF TO object.
-    DATA lv_converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTER`.
-
-    TRY.
-        CALL METHOD (lv_converter_class_name)=>create_instance
-          RECEIVING
-            result = lv_converter_instance.
-
-        TRY.
-            CALL METHOD lv_converter_instance->(`IF_AFF_LANGUAGE_CONVERTER~SAP1_TO_BCP47`)
-              EXPORTING
-                language      = im_lang_sap1
-              RECEIVING
-                result        = re_lang_bcp47.
-          CATCH cx_static_check.
-            RAISE no_assignment.
-        ENDTRY.
-      CATCH cx_sy_dyn_call_error.
-        TRY.
-            re_lang_bcp47 = lcl_bcp47_language_table=>sap1_to_bcp47( im_lang_sap1 ).
-          CATCH zcx_abapgit_exception.
-            RAISE no_assignment.
-        ENDTRY.
-    ENDTRY.
-  ENDMETHOD.
 
   METHOD language_bcp47_to_sap1.
     DATA lv_converter_instance TYPE REF TO object.
@@ -263,7 +212,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
             re_lang_sap1 = lcl_bcp47_language_table=>bcp47_to_sap1( im_lang_bcp47 ).
           CATCH zcx_abapgit_exception.
 
-            CREATE OBJECT lv_regex EXPORTING pattern = `[A-Z0-9]{2}`.
+            CREATE OBJECT lv_regex EXPORTING pattern = `[A-Z0-9]{2}` ##REGEX_POSIX.
             lv_abap_matcher = lv_regex->create_matcher( text = im_lang_bcp47 ).
 
             IF abap_true = lv_abap_matcher->match( ).
@@ -289,6 +238,35 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.
 
+
+  METHOD language_sap1_to_bcp47.
+    DATA lv_converter_instance TYPE REF TO object.
+    DATA lv_converter_class_name TYPE string VALUE `CL_AFF_LANGUAGE_CONVERTER`.
+
+    TRY.
+        CALL METHOD (lv_converter_class_name)=>create_instance
+          RECEIVING
+            result = lv_converter_instance.
+
+        TRY.
+            CALL METHOD lv_converter_instance->(`IF_AFF_LANGUAGE_CONVERTER~SAP1_TO_BCP47`)
+              EXPORTING
+                language = im_lang_sap1
+              RECEIVING
+                result   = re_lang_bcp47.
+          CATCH cx_static_check.
+            RAISE no_assignment.
+        ENDTRY.
+      CATCH cx_sy_dyn_call_error.
+        TRY.
+            re_lang_bcp47 = lcl_bcp47_language_table=>sap1_to_bcp47( im_lang_sap1 ).
+          CATCH zcx_abapgit_exception.
+            RAISE no_assignment.
+        ENDTRY.
+    ENDTRY.
+  ENDMETHOD.
+
+
   METHOD language_sap1_to_sap2.
 
     TRY.
@@ -297,6 +275,11 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
         RAISE no_assignment.
     ENDTRY.
 
+  ENDMETHOD.
+
+
+  METHOD language_sap1_to_text.
+    re_text = lcl_bcp47_language_table=>sap1_to_text( im_lang_sap1 ).
   ENDMETHOD.
 
 
@@ -381,6 +364,42 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD uccp.
+
+    DATA lv_class    TYPE string.
+    DATA lv_xstr     TYPE xstring.
+    DATA lo_instance TYPE REF TO object.
+
+    lv_class = 'CL_ABAP_CONV_IN_CE'.
+
+    TRY.
+        CALL METHOD (lv_class)=>uccp
+          EXPORTING
+            uccp = iv_uccp
+          RECEIVING
+            char = rv_char.
+      CATCH cx_sy_dyn_call_illegal_class.
+        lv_xstr = iv_uccp.
+
+        CALL METHOD ('CL_ABAP_CONV_CODEPAGE')=>create_in
+          EXPORTING
+            codepage = 'UTF-16'
+          RECEIVING
+            instance = lo_instance.
+
+* convert endianness
+        CONCATENATE lv_xstr+1(1) lv_xstr(1) INTO lv_xstr IN BYTE MODE.
+
+        CALL METHOD lo_instance->('IF_ABAP_CONV_IN~CONVERT')
+          EXPORTING
+            source = lv_xstr
+          RECEIVING
+            result = rv_char.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD xstring_remove_bom.
 
     rv_xstr = iv_xstr.
@@ -405,9 +424,12 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
     FIELD-SYMBOLS <lg_line> TYPE any.
 
-
     CLEAR et_bintab.
     ev_size = xstrlen( iv_xstr ).
+
+    IF iv_xstr IS INITIAL.
+      RETURN.
+    ENDIF.
 
     APPEND INITIAL LINE TO et_bintab ASSIGNING <lg_line>.
     lv_struct = boolc(
@@ -418,7 +440,9 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
     <lg_line> = iv_xstr.
 
     lv_length = cl_abap_typedescr=>describe_by_data( <lg_line> )->length.
-    lv_iterations = ev_size DIV lv_length.
+    ASSERT lv_length > 0.
+
+    lv_iterations = ( ev_size - 1 ) DIV lv_length.
 
     DO lv_iterations TIMES.
       lv_offset = sy-index * lv_length.
@@ -459,6 +483,21 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD xstring_to_string_utf8_raw.
+
+    DATA lv_length TYPE i.
+
+    lv_length = iv_length.
+    IF lv_length <= 0.
+      lv_length = xstrlen( iv_data ).
+    ENDIF.
+
+    rv_string = lcl_in=>convert(
+      iv_data   = iv_data
+      iv_length = lv_length ).
+
+  ENDMETHOD.
+
 
   METHOD xstring_to_string_utf8_bom.
 
@@ -479,53 +518,4 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD x_to_bitbyte.
-
-    CLEAR rv_bitbyte.
-
-    GET BIT 1 OF iv_x INTO rv_bitbyte+0(1).
-    GET BIT 2 OF iv_x INTO rv_bitbyte+1(1).
-    GET BIT 3 OF iv_x INTO rv_bitbyte+2(1).
-    GET BIT 4 OF iv_x INTO rv_bitbyte+3(1).
-    GET BIT 5 OF iv_x INTO rv_bitbyte+4(1).
-    GET BIT 6 OF iv_x INTO rv_bitbyte+5(1).
-    GET BIT 7 OF iv_x INTO rv_bitbyte+6(1).
-    GET BIT 8 OF iv_x INTO rv_bitbyte+7(1).
-
-  ENDMETHOD.
-
-  METHOD uccp.
-
-    DATA lv_class    TYPE string.
-    DATA lv_xstr     TYPE xstring.
-    DATA lo_instance TYPE REF TO object.
-
-    lv_class = 'CL_ABAP_CONV_IN_CE'.
-
-    TRY.
-        CALL METHOD (lv_class)=>uccp
-          EXPORTING
-            uccp = iv_uccp
-          RECEIVING
-            char = rv_char.
-      CATCH cx_sy_dyn_call_illegal_class.
-        lv_xstr = iv_uccp.
-
-        CALL METHOD ('CL_ABAP_CONV_CODEPAGE')=>create_in
-          EXPORTING
-            codepage = 'UTF-16'
-          RECEIVING
-            instance = lo_instance.
-
-* convert endianness
-        CONCATENATE lv_xstr+1(1) lv_xstr(1) INTO lv_xstr IN BYTE MODE.
-
-        CALL METHOD lo_instance->('IF_ABAP_CONV_IN~CONVERT')
-          EXPORTING
-            source = lv_xstr
-          RECEIVING
-            result = rv_char.
-    ENDTRY.
-
-  ENDMETHOD.
 ENDCLASS.

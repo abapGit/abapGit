@@ -24,7 +24,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_POPUP_CODE_INSP IMPLEMENTATION.
+CLASS zcl_abapgit_popup_code_insp IMPLEMENTATION.
 
 
   METHOD create.
@@ -34,7 +34,7 @@ CLASS ZCL_ABAPGIT_POPUP_CODE_INSP IMPLEMENTATION.
 
   METHOD fetch_list.
 
-    rt_list = zcl_abapgit_factory=>get_code_inspector( '$TMP' )->list_global_variants( ).
+    rt_list = zcl_abapgit_code_inspector=>get_code_inspector( '$TMP' )->list_global_variants( ).
 
   ENDMETHOD.
 
@@ -44,7 +44,6 @@ CLASS ZCL_ABAPGIT_POPUP_CODE_INSP IMPLEMENTATION.
     FIELD-SYMBOLS <ls_item> TYPE LINE OF zif_abapgit_code_inspector=>ty_variants.
 
     ASSIGN iv_item TO <ls_item>.
-    ASSERT sy-subrc = 0.
 
     ri_html = zcl_abapgit_html=>create( |<b>{ <ls_item>-name }</b> - { <ls_item>-description }| ).
 

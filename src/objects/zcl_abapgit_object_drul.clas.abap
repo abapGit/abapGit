@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_drul DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_type_not_supported.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -66,49 +66,55 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_AT'
+        iv_fieldname       = 'METADATA-CREATED_AT'
       CHANGING
         cs_dependency_rule = cs_dependency_rule ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_BY'
+        iv_fieldname       = 'METADATA-CREATED_BY'
       CHANGING
         cs_dependency_rule = cs_dependency_rule ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_AT'
+        iv_fieldname       = 'METADATA-CHANGED_AT'
       CHANGING
         cs_dependency_rule = cs_dependency_rule ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_BY'
+        iv_fieldname       = 'METADATA-CHANGED_BY'
       CHANGING
         cs_dependency_rule = cs_dependency_rule ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-MASTER_LANGUAGE'
+        iv_fieldname       = 'METADATA-MASTER_LANGUAGE'
       CHANGING
         cs_dependency_rule = cs_dependency_rule ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-RESPONSIBLE'
+        iv_fieldname       = 'METADATA-MASTER_SYSTEM'
       CHANGING
         cs_dependency_rule = cs_dependency_rule ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-PACKAGE_REF'
+        iv_fieldname       = 'METADATA-RESPONSIBLE'
       CHANGING
         cs_dependency_rule = cs_dependency_rule ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'CONTENT-SOURCE'
+        iv_fieldname       = 'METADATA-PACKAGE_REF'
+      CHANGING
+        cs_dependency_rule = cs_dependency_rule ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname       = 'CONTENT-SOURCE'
       CHANGING
         cs_dependency_rule = cs_dependency_rule ).
 
@@ -130,7 +136,7 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
         CREATE OBJECT mi_persistence TYPE ('CL_DRUL_WB_OBJECT_PERSIST').
 
       CATCH cx_sy_create_error.
-        zcx_abapgit_exception=>raise( |DRUL not supported by your NW release| ).
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDTRY.
 
   ENDMETHOD.
@@ -361,9 +367,9 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
 
     TRY.
         mi_persistence->get(
-            p_object_key           = mv_dependency_rule_key
-            p_version              = 'A'
-            p_existence_check_only = abap_true ).
+          p_object_key           = mv_dependency_rule_key
+          p_version              = 'A'
+          p_existence_check_only = abap_true ).
         rv_bool = abap_true.
 
       CATCH cx_swb_exception.
@@ -459,12 +465,12 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
     ENDTRY.
 
     io_xml->add(
-        iv_name = 'DRUL'
-        ig_data = <ls_dependency_rule> ).
+      iv_name = 'DRUL'
+      ig_data = <ls_dependency_rule> ).
 
     mo_files->add_string(
-        iv_ext    = 'asdrul'
-        iv_string = lv_source ).
+      iv_ext    = 'asdrul'
+      iv_string = lv_source ).
 
   ENDMETHOD.
 ENDCLASS.

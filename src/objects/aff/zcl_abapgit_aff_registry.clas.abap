@@ -1,7 +1,8 @@
 CLASS zcl_abapgit_aff_registry DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_aff_factory .
 
   PUBLIC SECTION.
     INTERFACES:
@@ -10,7 +11,6 @@ CLASS zcl_abapgit_aff_registry DEFINITION
     CONSTANTS c_aff_feature TYPE string VALUE 'AFF'.
 
     METHODS constructor.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -46,11 +46,14 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
 
 
   METHOD initialize_registry_table.
+    register( 'APLO' ).
     register( 'BGQC' ).
     register( 'CDBO' ).
     register( 'CHKC' ).
     register( 'CHKO' ).
     register( 'CHKV' ).
+    register( 'COTA' ).
+    register( 'DESD' ).
     register( 'DRTY' ).
     register( 'DTEB' ).
     register( 'DSFI' ).
@@ -63,6 +66,8 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
     register( 'GSMP' ).
     register( iv_obj_type     = 'INTF'
               iv_experimental = abap_true ).
+    register( 'SAJT' ).
+    register( 'SAJC' ).
     register( 'SMBC' ).
     register( 'SWCR' ).
     register( 'NONT' ).
@@ -100,3 +105,4 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 ENDCLASS.
+

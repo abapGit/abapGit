@@ -7,6 +7,7 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
 
     INTERFACES zif_abapgit_persist_repo .
     INTERFACES zif_abapgit_persist_repo_cs .
+    INTERFACES zif_abapgit_persist_repo_data.
 
     METHODS constructor .
     METHODS rewrite_repo_meta
@@ -137,8 +138,8 @@ CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
 
   METHOD get_repo_from_content.
     MOVE-CORRESPONDING from_xml( is_content-data_str ) TO rs_result.
-    IF rs_result-local_settings-write_protected = abap_false AND
-       zcl_abapgit_factory=>get_environment( )->is_repo_object_changes_allowed( ) = abap_false.
+    IF rs_result-local_settings-write_protected = abap_false
+        AND zcl_abapgit_factory=>get_environment( )->is_repo_object_changes_allowed( ) = abap_false.
       rs_result-local_settings-write_protected = abap_true.
     ENDIF.
     rs_result-key = is_content-value.
@@ -211,6 +212,34 @@ CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_persist_repo_data~delete.
+
+    mo_db->delete(
+      iv_type  = zcl_abapgit_persistence_db=>c_type_repo_data
+      iv_value = iv_key ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_repo_data~read.
+
+    rv_json = mo_db->read(
+      iv_type  = zcl_abapgit_persistence_db=>c_type_repo_data
+      iv_value = iv_key ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_repo_data~update.
+
+    mo_db->modify(
+      iv_type  = zcl_abapgit_persistence_db=>c_type_repo_data
+      iv_value = iv_key
+      iv_data  = iv_json ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_persist_repo~add.
 
     DATA: ls_repo        TYPE zif_abapgit_persistence=>ty_repo,
@@ -240,10 +269,7 @@ CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_repo~delete.
 
-    DATA: lo_background TYPE REF TO zcl_abapgit_persist_background.
-
-    CREATE OBJECT lo_background.
-    lo_background->delete( iv_key ).
+    zcl_abapgit_persist_factory=>get_background( )->delete( iv_key ).
 
     mo_db->delete( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
                    iv_value = iv_key ).

@@ -18,7 +18,7 @@ CLASS ltcl_test_checksum_serializer DEFINITION FINAL
         ev_str       TYPE string.
     CLASS-METHODS space_to_separator
       IMPORTING
-        iv_str TYPE string
+        iv_str        TYPE string
       RETURNING
         VALUE(rv_str) TYPE string.
 ENDCLASS.
@@ -283,6 +283,28 @@ CLASS lcl_repo_mock IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_repo_srv~get_label_list.
   ENDMETHOD.
+  METHOD zif_abapgit_repo~create_new_log.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~delete_checks.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~get_dot_apack.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~get_log.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~get_data_config.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~refresh_local_object.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~refresh_local_objects.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~set_files_remote.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~set_local_settings.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~switch_repo_type.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~bind_listener.
+  ENDMETHOD.
 
 ENDCLASS.
 
@@ -372,7 +394,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
     CREATE OBJECT li_cut TYPE zcl_abapgit_repo_checksums
       EXPORTING
-        iv_repo_key = '1'.
+        ii_repo = lo_mock.
 
     cl_abap_unit_assert=>assert_equals(
       act = li_cut->get( )
@@ -408,7 +430,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
     CREATE OBJECT li_cut TYPE zcl_abapgit_repo_checksums
       EXPORTING
-        iv_repo_key = '1'.
+        ii_repo = lo_mock.
 
     li_cut->rebuild( ).
 
@@ -446,7 +468,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
     CREATE OBJECT li_cut TYPE zcl_abapgit_repo_checksums
       EXPORTING
-        iv_repo_key = '1'.
+        ii_repo = lo_mock.
 
     li_cut->update( lo_f_builder->mt_tab ).
 
@@ -512,7 +534,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
     CREATE OBJECT li_cut TYPE zcl_abapgit_repo_checksums
       EXPORTING
-        iv_repo_key = '1'.
+        ii_repo = lo_mock.
 
     li_cut->rebuild( ).
 

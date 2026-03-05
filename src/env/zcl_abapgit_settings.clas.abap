@@ -98,7 +98,7 @@ CLASS zcl_abapgit_settings DEFINITION
         zcx_abapgit_exception .
     METHODS get_user_settings
       RETURNING
-        VALUE(rs_settings) TYPE zif_abapgit_definitions=>ty_s_user_settings
+        VALUE(rs_settings) TYPE zif_abapgit_persist_user=>ty_s_user_settings
       RAISING
         zcx_abapgit_exception .
     METHODS set_xml_settings
@@ -109,7 +109,7 @@ CLASS zcl_abapgit_settings DEFINITION
     METHODS set_defaults .
     METHODS set_user_settings
       IMPORTING
-        !is_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings .
+        !is_user_settings TYPE zif_abapgit_persist_user=>ty_s_user_settings .
     METHODS get_show_default_repo
       RETURNING
         VALUE(rv_show_default_repo) TYPE abap_bool .
@@ -138,24 +138,24 @@ CLASS zcl_abapgit_settings DEFINITION
         VALUE(rv_disable_parallel_proc) TYPE abap_bool .
     METHODS get_icon_scaling
       RETURNING
-        VALUE(rv_scaling) TYPE zif_abapgit_definitions=>ty_s_user_settings-icon_scaling .
+        VALUE(rv_scaling) TYPE zif_abapgit_persist_user=>ty_s_user_settings-icon_scaling .
     METHODS set_icon_scaling
       IMPORTING
-        !iv_scaling TYPE zif_abapgit_definitions=>ty_s_user_settings-icon_scaling .
+        !iv_scaling TYPE zif_abapgit_persist_user=>ty_s_user_settings-icon_scaling .
     METHODS get_ui_theme
       IMPORTING
         !iv_resolve_synced TYPE abap_bool DEFAULT abap_true
       RETURNING
-        VALUE(rv_ui_theme) TYPE zif_abapgit_definitions=>ty_s_user_settings-ui_theme .
+        VALUE(rv_ui_theme) TYPE zif_abapgit_persist_user=>ty_s_user_settings-ui_theme .
     METHODS set_ui_theme
       IMPORTING
-        !iv_ui_theme TYPE zif_abapgit_definitions=>ty_s_user_settings-ui_theme .
+        !iv_ui_theme TYPE zif_abapgit_persist_user=>ty_s_user_settings-ui_theme .
     METHODS get_activate_wo_popup
       RETURNING
-        VALUE(rv_act_wo_popup) TYPE zif_abapgit_definitions=>ty_s_user_settings-activate_wo_popup .
+        VALUE(rv_act_wo_popup) TYPE zif_abapgit_persist_user=>ty_s_user_settings-activate_wo_popup .
     METHODS set_activate_wo_popup
       IMPORTING
-        !iv_act_wo_popup TYPE zif_abapgit_definitions=>ty_s_user_settings-activate_wo_popup .
+        !iv_act_wo_popup TYPE zif_abapgit_persist_user=>ty_s_user_settings-activate_wo_popup .
     METHODS set_default_git_uname
       IMPORTING
         !iv_default_git_uname TYPE string.
@@ -184,7 +184,7 @@ CLASS zcl_abapgit_settings DEFINITION
            END OF ty_s_settings.
 
     DATA: ms_settings      TYPE ty_s_settings,
-          ms_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+          ms_user_settings TYPE zif_abapgit_persist_user=>ty_s_user_settings.
 
     METHODS:
       set_default_link_hint_key.

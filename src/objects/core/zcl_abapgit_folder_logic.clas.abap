@@ -95,7 +95,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
           lv_parentcl     TYPE tdevc-parentcl,
           lv_folder_logic TYPE string.
 
-    rv_path = lcl_package_to_path=>get(
+    rv_path = lcl_package_to_path_cache=>get(
       iv_top     = iv_top
       io_dot     = io_dot
       iv_package = iv_package ).
@@ -171,7 +171,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    lcl_package_to_path=>add(
+    lcl_package_to_path_cache=>add(
       iv_top     = iv_top
       io_dot     = io_dot
       iv_package = iv_package
@@ -197,7 +197,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    rv_package = lcl_path_to_package=>get(
+    rv_package = lcl_path_to_package_cache=>get(
       iv_top  = iv_top
       io_dot  = io_dot
       iv_path = iv_path ).
@@ -267,7 +267,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       lv_parent = rv_package.
     ENDWHILE.
 
-    lcl_path_to_package=>add(
+    lcl_path_to_package_cache=>add(
       iv_top     = iv_top
       io_dot     = io_dot
       iv_path    = iv_path

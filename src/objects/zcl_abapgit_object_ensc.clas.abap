@@ -7,7 +7,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENSC IMPLEMENTATION.
+CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -88,7 +88,8 @@ CLASS ZCL_ABAPGIT_OBJECT_ENSC IMPLEMENTATION.
 
     IF zif_abapgit_object~exists( ) = abap_true.
       zif_abapgit_object~delete( iv_package   = iv_package
-                                 iv_transport = iv_transport ).
+                                 iv_transport = iv_transport
+                                 ii_log       = ii_log ).
     ENDIF.
 
     lv_package = iv_package.

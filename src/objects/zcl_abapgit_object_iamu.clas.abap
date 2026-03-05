@@ -61,7 +61,7 @@ CLASS zcl_abapgit_object_iamu IMPLEMENTATION.
     DATA lv_len TYPE i.
 
     " Try to derive type of MIME object from the long name
-    FIND REGEX '\.(\w)$' IN iv_name SUBMATCHES rv_extension.
+    FIND REGEX '\.(\w)$' IN iv_name SUBMATCHES rv_extension ##REGEX_POSIX.
     IF sy-subrc = 0.
       rv_extension = to_lower( rv_extension ).
     ELSEIF zcl_abapgit_utils=>is_binary( iv_data ) = abap_true.

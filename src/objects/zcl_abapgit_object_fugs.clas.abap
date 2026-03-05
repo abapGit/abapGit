@@ -1,0 +1,17 @@
+CLASS zcl_abapgit_object_fugs DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_object_fugr
+  FINAL
+  CREATE PUBLIC .
+
+  PUBLIC SECTION.
+
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+
+ENDCLASS.
+
+
+
+CLASS zcl_abapgit_object_fugs IMPLEMENTATION.
+ENDCLASS.

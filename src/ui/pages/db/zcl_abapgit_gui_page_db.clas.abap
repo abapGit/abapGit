@@ -95,6 +95,13 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
         VALUE(rs_expl) TYPE ty_explanation
       RAISING
         zcx_abapgit_exception.
+    METHODS explain_content_repo_data
+      IMPORTING
+        !is_data       TYPE zif_abapgit_persistence=>ty_content
+      RETURNING
+        VALUE(rs_expl) TYPE ty_explanation
+      RAISING
+        zcx_abapgit_exception.
     METHODS explain_content_background
       IMPORTING
         !is_data       TYPE zif_abapgit_persistence=>ty_content
@@ -159,6 +166,8 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
     LOOP AT lt_data ASSIGNING <ls_data>.
       IF <ls_data>-type = zcl_abapgit_persistence_db=>c_type_repo_csum.
         CONCATENATE <ls_data>-type '_' <ls_data>-value '.txt' INTO lv_filename.
+      ELSEIF <ls_data>-type = zcl_abapgit_persistence_db=>c_type_repo_data.
+        CONCATENATE <ls_data>-type '_' <ls_data>-value '.json' INTO lv_filename.
       ELSE.
         CONCATENATE <ls_data>-type '_' <ls_data>-value '.xml' INTO lv_filename.
       ENDIF.
@@ -227,6 +236,9 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
       zcl_abapgit_persistence_db=>get_instance( )->delete(
         iv_type  = zcl_abapgit_persistence_db=>c_type_repo_csum
         iv_value = is_key-value ).
+      zcl_abapgit_persistence_db=>get_instance( )->delete(
+        iv_type  = zcl_abapgit_persistence_db=>c_type_repo_data
+        iv_value = is_key-value ).
 
       " Initialize repo list
       zcl_abapgit_repo_srv=>get_instance( )->init( ).
@@ -283,9 +295,13 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
       lv_filename = <ls_zipfile>-name.
       REPLACE '.xml' IN lv_filename WITH ''.
       REPLACE '.txt' IN lv_filename WITH ''.
+      REPLACE '.json' IN lv_filename WITH ''.
       IF lv_filename CP 'REPO_CS*'.
         ls_data-type  = lv_filename(7).
         ls_data-value = lv_filename+8(*).
+      ELSEIF lv_filename CP 'REPO_DATA*'.
+        ls_data-type  = lv_filename(9).
+        ls_data-value = lv_filename+10(*).
       ELSE.
         SPLIT lv_filename AT '_' INTO ls_data-type ls_data-value.
       ENDIF.
@@ -367,7 +383,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
       WHEN zcl_abapgit_persistence_db=>c_type_user.
         lv_descr       = 'Personal Settings'.
-        ls_explanation-value = zcl_abapgit_user_record=>get_instance( is_data-value )->get_name( ).
+        ls_explanation-value = zcl_abapgit_env_factory=>get_user_record( )->get_name( is_data-value ).
 
       WHEN zcl_abapgit_persistence_db=>c_type_settings.
         lv_descr       = 'Global Settings'.
@@ -378,6 +394,10 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
       WHEN zcl_abapgit_persistence_db=>c_type_repo_csum.
         lv_descr       = 'Repo Checksums'.
         ls_explanation = explain_content_repo_cs( is_data ).
+
+      WHEN zcl_abapgit_persistence_db=>c_type_repo_data.
+        lv_descr       = 'Repo Data Config'.
+        ls_explanation = explain_content_repo_data( is_data ).
 
       WHEN OTHERS.
         IF strlen( is_data-data_str ) >= 250.
@@ -421,7 +441,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
     rs_expl-value = |{ zcl_abapgit_repo_srv=>get_instance( )->get( is_data-value )->get_name( ) }|.
 
     FIND FIRST OCCURRENCE OF REGEX '<METHOD>(.*)</METHOD>'
-      IN is_data-data_str IGNORING CASE RESULTS ls_result.
+      IN is_data-data_str IGNORING CASE RESULTS ls_result ##REGEX_POSIX.
     READ TABLE ls_result-submatches INTO ls_match INDEX 1.
     IF sy-subrc = 0.
       lv_class = is_data-data_str+ls_match-offset(ls_match-length).
@@ -449,7 +469,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
       lv_cnt    TYPE i.
 
     FIND FIRST OCCURRENCE OF REGEX '<OFFLINE/>'
-      IN is_data-data_str IGNORING CASE MATCH COUNT lv_cnt.
+      IN is_data-data_str IGNORING CASE MATCH COUNT lv_cnt ##REGEX_POSIX.
     IF lv_cnt > 0.
       rs_expl-extra = 'Online'.
     ELSE.
@@ -457,13 +477,13 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
     ENDIF.
 
     FIND FIRST OCCURRENCE OF REGEX '<DISPLAY_NAME>(.*)</DISPLAY_NAME>'
-      IN is_data-data_str IGNORING CASE RESULTS ls_result.
+      IN is_data-data_str IGNORING CASE RESULTS ls_result ##REGEX_POSIX.
     READ TABLE ls_result-submatches INTO ls_match INDEX 1.
     IF sy-subrc = 0.
       rs_expl-value = is_data-data_str+ls_match-offset(ls_match-length).
     ELSE.
       FIND FIRST OCCURRENCE OF REGEX '<NAME>(.*)</NAME>'
-        IN is_data-data_str IGNORING CASE RESULTS ls_result.
+        IN is_data-data_str IGNORING CASE RESULTS ls_result ##REGEX_POSIX.
       READ TABLE ls_result-submatches INTO ls_match INDEX 1.
       IF sy-subrc = 0.
         rs_expl-value = is_data-data_str+ls_match-offset(ls_match-length).
@@ -472,7 +492,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
     IF rs_expl-value IS INITIAL.
       FIND FIRST OCCURRENCE OF REGEX '<URL>(.*)</URL>'
-        IN is_data-data_str IGNORING CASE RESULTS ls_result.
+        IN is_data-data_str IGNORING CASE RESULTS ls_result ##REGEX_POSIX.
       READ TABLE ls_result-submatches INTO ls_match INDEX 1.
       IF sy-subrc = 0.
         rs_expl-value = is_data-data_str+ls_match-offset(ls_match-length).
@@ -501,6 +521,14 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
           format = cl_abap_format=>e_html_attr ).
       ENDIF.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD explain_content_repo_data.
+
+    rs_expl-extra = 'Data Config'.
+    rs_expl-value = is_data-value.
 
   ENDMETHOD.
 
@@ -534,7 +562,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
     LOOP AT it_db_entries ASSIGNING <ls_db_entry>.
       IF <ls_db_entry>-type = zcl_abapgit_persistence_db=>c_type_repo.
         FIND FIRST OCCURRENCE OF REGEX '<OFFLINE/>'
-          IN <ls_db_entry>-data_str IGNORING CASE MATCH COUNT lv_cnt.
+          IN <ls_db_entry>-data_str IGNORING CASE MATCH COUNT lv_cnt ##REGEX_POSIX.
         IF lv_cnt > 0.
           lv_online = lv_online + 1.
         ELSE.
@@ -577,6 +605,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
     DATA lo_query TYPE REF TO zcl_abapgit_string_map.
 
     lo_query = ii_event->query( ).
+
     CASE ii_event->mv_action.
       WHEN c_action-delete.
         lo_query->to_abap( CHANGING cs_container = ls_db ).
@@ -595,7 +624,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
-    CREATE OBJECT ro_toolbar.
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-database-utility' ).
 
     ro_toolbar->add(
       iv_txt = 'Backup'
@@ -648,7 +677,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
         rs_render-css_class = 'data'.
       WHEN 'cmd'.
         lv_action  = zcl_abapgit_html_action_utils=>dbkey_encode( is_row ).
-        lo_toolbar = zcl_abapgit_html_toolbar=>create(
+        lo_toolbar = zcl_abapgit_html_toolbar=>create( 'actionbar-database-utility'
           )->add(
             iv_txt = 'Display'
             iv_act = |{ zif_abapgit_definitions=>c_action-db_display }?{ lv_action }|
@@ -658,6 +687,9 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
           )->add(
             iv_txt = 'Delete'
             iv_act = |{ c_action-delete }?{ lv_action }| ).
+
+        zcl_abapgit_exit=>get_instance( )->enhance_any_toolbar( lo_toolbar ).
+
         rs_render-html = lo_toolbar->render( ).
 
     ENDCASE.

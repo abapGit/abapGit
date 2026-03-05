@@ -14,7 +14,7 @@ CLASS zcl_abapgit_object_sqsc DEFINITION
         !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_type_not_supported.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -106,6 +106,7 @@ CLASS zcl_abapgit_object_sqsc DEFINITION
           iv_package   TYPE devclass
           iv_transport TYPE trkorr
           iv_interface TYPE ty_abap_name
+          ii_log       TYPE REF TO zif_abapgit_log
         RAISING
           zcx_abapgit_exception.
 ENDCLASS.
@@ -134,7 +135,7 @@ CLASS zcl_abapgit_object_sqsc IMPLEMENTATION.
         ASSERT sy-subrc = 0.
 
       CATCH cx_root.
-        zcx_abapgit_exception=>raise( |SQSC not supported| ).
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDTRY.
 
     <lv_dbproxyname> = ms_item-obj_name.
@@ -164,7 +165,8 @@ CLASS zcl_abapgit_object_sqsc IMPLEMENTATION.
           io_i18n_params = mo_i18n_params.
 
       lo_interface->zif_abapgit_object~delete( iv_package   = iv_package
-                                               iv_transport = iv_transport ).
+                                               iv_transport = iv_transport
+                                               ii_log       = ii_log ).
 
     ENDIF.
 
@@ -219,9 +221,10 @@ CLASS zcl_abapgit_object_sqsc IMPLEMENTATION.
     IF zif_abapgit_object~exists( ) = abap_false.
 
       delete_interface_if_it_exists(
-          iv_package   = iv_package
-          iv_transport = iv_transport
-          iv_interface = ls_proxy-header-interface_pool ).
+        iv_package   = iv_package
+        iv_transport = iv_transport
+        iv_interface = ls_proxy-header-interface_pool
+        ii_log       = ii_log ).
 
       CALL METHOD mo_proxy->('IF_DBPROC_PROXY_UI~CREATE')
         EXPORTING

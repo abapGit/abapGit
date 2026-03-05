@@ -42,6 +42,14 @@ CLASS zcl_abapgit_object_iwvb IMPLEMENTATION.
       iv_table     = '/IWBEP/I_MGW_VAH'
       iv_field     = 'CHANGED_TIMESTMP'
       iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp ).
+
+    IF ms_item-abap_language_version = zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
+      ro_result->add(
+        iv_table     = '/IWBEP/I_MGW_VAH'
+        iv_field     = 'ABAP_LANGUAGE_VERSION'
+        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-abap_language_version ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -131,7 +139,11 @@ CLASS zcl_abapgit_object_iwvb IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
 
-    SUBMIT /iwbep/r_dst_vocan_register
+    DATA lv_prog TYPE progname.
+
+    lv_prog = '/IWBEP/R_DST_VOCAN_REGISTER'.
+
+    SUBMIT (lv_prog)
       WITH ip_aname = ms_item-obj_name
       WITH ip_avers = ms_item-obj_name+32(4)
       AND RETURN.

@@ -34,6 +34,8 @@ CLASS ltcl_html DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
       indent3 FOR TESTING RAISING zcx_abapgit_exception,
       indent4 FOR TESTING RAISING zcx_abapgit_exception,
       indent5 FOR TESTING RAISING zcx_abapgit_exception,
+      indent6 FOR TESTING RAISING zcx_abapgit_exception,
+      indent7 FOR TESTING RAISING zcx_abapgit_exception,
       style1  FOR TESTING RAISING zcx_abapgit_exception.
 
     METHODS:
@@ -129,6 +131,59 @@ CLASS ltcl_html IMPLEMENTATION.
     mo_html->render( ).
 
   ENDMETHOD.
+
+  METHOD indent6.
+
+    " Content of textarea must not be indented
+    DATA lv_exp TYPE string.
+
+    mo_html->add( '<td>' ).
+    mo_html->add( '<textarea name="body" rows="10" cols="72">' ).
+    mo_html->add( 'Some default' ).
+    mo_html->add( 'content' ).
+    mo_html->add( '</textarea>' ).
+    mo_html->add( '</td>' ).
+
+    lv_exp = '<td>' && cl_abap_char_utilities=>newline &&
+             '<textarea name="body" rows="10" cols="72">' && cl_abap_char_utilities=>newline &&
+             'Some default' && cl_abap_char_utilities=>newline &&
+             'content' && cl_abap_char_utilities=>newline &&
+             '</textarea>' && cl_abap_char_utilities=>newline &&
+             '</td>'.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_html->render( )
+      exp = lv_exp ).
+
+  ENDMETHOD.
+
+  METHOD indent7.
+
+    " Content of pre tag must not be indented
+    DATA lv_exp TYPE string.
+
+    mo_html->add( '<td>' ).
+    mo_html->add( '<pre>' ).
+    mo_html->add( 'Do not change' ).
+    mo_html->add( '  the indent' ).
+    mo_html->add( '    here' ).
+    mo_html->add( '</pre>' ).
+    mo_html->add( '</td>' ).
+
+    lv_exp = '<td>' && cl_abap_char_utilities=>newline &&
+             '<pre>' && cl_abap_char_utilities=>newline &&
+             'Do not change' && cl_abap_char_utilities=>newline &&
+             '  the indent' && cl_abap_char_utilities=>newline &&
+             '    here' && cl_abap_char_utilities=>newline &&
+             '</pre>' && cl_abap_char_utilities=>newline &&
+             '</td>'.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_html->render( )
+      exp = lv_exp ).
+
+  ENDMETHOD.
+
 
   METHOD style1.
 

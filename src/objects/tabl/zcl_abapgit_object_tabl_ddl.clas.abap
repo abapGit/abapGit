@@ -103,7 +103,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
+CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
 
 
   METHOD deserialize.
@@ -158,9 +158,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
                  start     TYPE i VALUE 0,
                  colon     TYPE i VALUE 1,
                  type      TYPE i VALUE 2,
-                 aftertype TYPE i VALUE 2,
-                 null      TYPE i VALUE 2,
-                 afternull TYPE i VALUE 2,
+                 aftertype TYPE i VALUE 3,
+                 null      TYPE i VALUE 4,
+                 afternull TYPE i VALUE 5,
                END OF lc_mode.
 
     DATA lv_field  TYPE string.
@@ -225,7 +225,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     DATA lv_value      TYPE string.
 
 
-    REPLACE FIRST OCCURRENCE OF REGEX '^[\n ]*' IN cv_ddl WITH ||.
+    REPLACE FIRST OCCURRENCE OF REGEX '^[\n ]*' IN cv_ddl WITH || ##REGEX_POSIX.
 
     WHILE cv_ddl CP '@*'.
       SPLIT cv_ddl AT |\n| INTO lv_annotation cv_ddl.
@@ -893,8 +893,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
   METHOD unescape_string.
     rv_string = iv_string.
-    REPLACE FIRST OCCURRENCE OF REGEX |^'| IN rv_string WITH ||.
-    REPLACE FIRST OCCURRENCE OF REGEX |'$| IN rv_string WITH ||.
+    REPLACE FIRST OCCURRENCE OF REGEX |^'| IN rv_string WITH || ##REGEX_POSIX.
+    REPLACE FIRST OCCURRENCE OF REGEX |'$| IN rv_string WITH || ##REGEX_POSIX.
     REPLACE ALL OCCURRENCES OF |''| IN rv_string WITH |'|.
   ENDMETHOD.
 ENDCLASS.

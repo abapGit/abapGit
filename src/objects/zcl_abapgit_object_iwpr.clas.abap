@@ -124,7 +124,11 @@ CLASS zcl_abapgit_object_iwpr IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
 
-    SUBMIT /iwbep/r_sbui_service_builder
+    DATA lv_prog TYPE progname.
+
+    lv_prog = '/IWBEP/R_SBUI_SERVICE_BUILDER'.
+
+    SUBMIT (lv_prog)
       WITH i_prname = ms_item-obj_name
       AND RETURN.
 

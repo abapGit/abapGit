@@ -24,6 +24,8 @@ CLASS zcl_abapgit_gui_page_ex_object DEFINITION
         object_type TYPE string VALUE 'object_type',
         object_name TYPE string VALUE 'object_name',
         only_main   TYPE string VALUE 'only_main',
+        i18n_langs  TYPE string VALUE 'i18n_langs',
+        use_lxe     TYPE string VALUE 'use_lxe',
       END OF c_id.
 
     CONSTANTS:
@@ -49,10 +51,11 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_ex_object IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_EX_OBJECT IMPLEMENTATION.
 
 
   METHOD constructor.
+
     super->constructor( ).
     CREATE OBJECT mo_validation_log.
 
@@ -63,29 +66,37 @@ CLASS zcl_abapgit_gui_page_ex_object IMPLEMENTATION.
 
     mo_form = get_form_schema( ).
     mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
+
   ENDMETHOD.
 
 
   METHOD create.
+
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_ex_object.
     CREATE OBJECT lo_component.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Export Objects to Files'
       ii_child_component = lo_component ).
+
   ENDMETHOD.
 
 
   METHOD export_object.
+
     DATA lv_object_type TYPE trobjtype.
     DATA lt_names TYPE STANDARD TABLE OF sobj_name WITH DEFAULT KEY.
     DATA lv_name LIKE LINE OF lt_names.
     DATA lv_list TYPE string.
     DATA lv_only_main TYPE abap_bool.
+    DATA lv_use_lxe TYPE abap_bool.
+    DATA lt_lang_list TYPE zif_abapgit_definitions=>ty_languages.
 
     lv_object_type = mo_form_data->get( c_id-object_type ).
-    lv_list = mo_form_data->get( c_id-object_name ).
-    lv_only_main = mo_form_data->get( c_id-only_main ).
+    lv_list        = mo_form_data->get( c_id-object_name ).
+    lv_only_main   = mo_form_data->get( c_id-only_main ).
+    lv_use_lxe     = mo_form_data->get( c_id-use_lxe ).
+    lt_lang_list   = zcl_abapgit_lxe_texts=>convert_lang_string_to_table( mo_form_data->get( c_id-i18n_langs ) ).
 
     REPLACE ALL OCCURRENCES OF |\r| IN lv_list WITH ''.
     SPLIT lv_list AT |\n| INTO TABLE lt_names.
@@ -96,13 +107,17 @@ CLASS zcl_abapgit_gui_page_ex_object IMPLEMENTATION.
       ENDIF.
       zcl_abapgit_zip=>export_object(
         iv_main_language_only = lv_only_main
+        iv_use_lxe            = lv_use_lxe
+        it_translation_langs  = lt_lang_list
         iv_object_type        = lv_object_type
         iv_object_name        = lv_name ).
     ENDLOOP.
+
   ENDMETHOD.
 
 
   METHOD get_form_schema.
+
     ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'export-object-to-files' ).
 
     ro_form->text(
@@ -121,7 +136,15 @@ CLASS zcl_abapgit_gui_page_ex_object IMPLEMENTATION.
 
     ro_form->checkbox(
       iv_label = 'Only Main Language'
-      iv_name  = c_id-only_main ).
+      iv_name  = c_id-only_main
+    )->checkbox(
+      iv_name        = c_id-use_lxe
+      iv_label       = 'Use LXE Approach for Translations'
+      iv_hint        = 'It''s mandatory to specify the list of languages above in addition to this setting'
+    )->text(
+      iv_name        = c_id-i18n_langs
+      iv_label       = 'Serialize Translations for Additional Languages'
+      iv_hint        = 'Comma-separate 2-letter ISO language codes e.g. "DE,ES,..." - should not include main language' ).
 
     ro_form->command(
       iv_label       = 'Export'
@@ -130,16 +153,28 @@ CLASS zcl_abapgit_gui_page_ex_object IMPLEMENTATION.
     )->command(
       iv_label       = 'Back'
       iv_action      = zif_abapgit_definitions=>c_action-go_back ).
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
+
+    DATA lt_lang_list TYPE zif_abapgit_definitions=>ty_languages.
+
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
       WHEN c_event-export.
 
         mo_validation_log = mo_form_util->validate( mo_form_data ).
+
+        lt_lang_list = zcl_abapgit_lxe_texts=>convert_lang_string_to_table( mo_form_data->get( c_id-i18n_langs ) ).
+        IF mo_form_data->get( c_id-use_lxe ) = abap_true AND lt_lang_list IS INITIAL.
+          mo_validation_log->set(
+            iv_key = c_id-i18n_langs
+            iv_val = 'LXE approach requires a non-empty list of languages' ).
+        ENDIF.
+
         IF mo_validation_log->is_empty( ) = abap_false.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ELSE.
@@ -159,11 +194,14 @@ CLASS zcl_abapgit_gui_page_ex_object IMPLEMENTATION.
         ELSE.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
         ENDIF.
+
     ENDCASE.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_renderable~render.
+
     register_handlers( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -173,5 +211,6 @@ CLASS zcl_abapgit_gui_page_ex_object IMPLEMENTATION.
       io_values         = mo_form_data
       io_validation_log = mo_validation_log ) ).
     ri_html->add( '</div>' ).
+
   ENDMETHOD.
 ENDCLASS.

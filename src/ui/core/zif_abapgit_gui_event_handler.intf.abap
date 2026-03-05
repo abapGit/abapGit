@@ -9,7 +9,7 @@ INTERFACE zif_abapgit_gui_event_handler
 
   METHODS on_event
     IMPORTING
-      ii_event   TYPE REF TO zif_abapgit_gui_event
+      ii_event          TYPE REF TO zif_abapgit_gui_event
     RETURNING
       VALUE(rs_handled) TYPE ty_handling_result
     RAISING

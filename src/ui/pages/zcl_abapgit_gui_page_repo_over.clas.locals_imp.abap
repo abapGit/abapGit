@@ -1,7 +1,7 @@
 CLASS lcl_table_scheme DEFINITION FINAL.
   " TODO: move to a global class, when table is separated as a component
   PUBLIC SECTION.
-    DATA mt_col_spec TYPE zif_abapgit_definitions=>ty_col_spec_tt READ-ONLY.
+    DATA mt_col_spec TYPE zcl_abapgit_gui_chunk_lib=>ty_col_spec_tt READ-ONLY.
 
     METHODS add_column
       IMPORTING
@@ -12,7 +12,7 @@ CLASS lcl_table_scheme DEFINITION FINAL.
         iv_title          TYPE string OPTIONAL
         iv_allow_order_by TYPE any OPTIONAL
       RETURNING
-        VALUE(ro_me) TYPE REF TO lcl_table_scheme.
+        VALUE(ro_me)      TYPE REF TO lcl_table_scheme.
 
 ENDCLASS.
 

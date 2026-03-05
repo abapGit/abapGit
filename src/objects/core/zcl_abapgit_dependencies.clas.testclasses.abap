@@ -42,6 +42,10 @@ CLASS ltcl_sap_package IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~check_object_type.
+    RETURN.
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~list_subpackages.
 
     IF mv_package = 'Z_MAIN'.
@@ -75,6 +79,10 @@ CLASS ltcl_sap_package IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~get. "##needed
+
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~exists. "##needed
 
   ENDMETHOD.
@@ -89,6 +97,14 @@ CLASS ltcl_sap_package IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_package~read_parent. "##needed
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get_default_transport_layer. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~update_tree.
+    RETURN.
   ENDMETHOD.
 
 ENDCLASS.
@@ -126,7 +142,6 @@ CLASS zcl_abapgit_dependencies DEFINITION LOCAL FRIENDS ltcl_resolve_packages.
 CLASS ltcl_resolve_packages IMPLEMENTATION.
 
   METHOD resolve_single.
-
 
     given_tadir( iv_object        = 'DEVC'
                  iv_obj_name      = 'Z_MAIN'
@@ -200,6 +215,103 @@ CLASS ltcl_resolve_packages IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( exp = iv_korrnum
                                         act = <ls_tadir>-korrnum ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_resolve DEFINITION FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    DATA mt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
+
+    METHODS g4ba_after_srvb FOR TESTING RAISING cx_static_check.
+    METHODS sush_after_g4ba FOR TESTING RAISING cx_static_check.
+
+    METHODS given_tadir
+      IMPORTING
+        iv_object   TYPE tadir-object
+        iv_obj_name TYPE tadir-obj_name.
+
+    METHODS then_should_be_deleted_before
+      IMPORTING
+        iv_object_a   TYPE tadir-object
+        iv_obj_name_a TYPE tadir-obj_name
+        iv_object_b   TYPE tadir-object
+        iv_obj_name_b TYPE tadir-obj_name.
+
+ENDCLASS.
+
+CLASS ltcl_resolve IMPLEMENTATION.
+
+  METHOD g4ba_after_srvb.
+
+    given_tadir( iv_object   = 'G4BA'
+                 iv_obj_name = 'ZTEST_G4BA' ).
+
+    given_tadir( iv_object   = 'SRVB'
+                 iv_obj_name = 'ZTEST_SRVB' ).
+
+    zcl_abapgit_dependencies=>resolve(
+      EXPORTING iv_skip_ddic = abap_true
+      CHANGING ct_tadir = mt_tadir ).
+
+    " G4BA should be deleted AFTER SRVB (SRVB deleted first, then G4BA)
+    then_should_be_deleted_before( iv_object_a   = 'SRVB'
+                                   iv_obj_name_a = 'ZTEST_SRVB'
+                                   iv_object_b   = 'G4BA'
+                                   iv_obj_name_b = 'ZTEST_G4BA' ).
+
+  ENDMETHOD.
+
+  METHOD sush_after_g4ba.
+
+    given_tadir( iv_object   = 'SUSH'
+                 iv_obj_name = 'ZTEST_SUSH' ).
+
+    given_tadir( iv_object   = 'G4BA'
+                 iv_obj_name = 'ZTEST_G4BA' ).
+
+    zcl_abapgit_dependencies=>resolve(
+      EXPORTING iv_skip_ddic = abap_true
+      CHANGING ct_tadir = mt_tadir ).
+
+    " SUSH should be deleted AFTER G4BA (G4BA deleted first, then SUSH)
+    then_should_be_deleted_before( iv_object_a   = 'G4BA'
+                                   iv_obj_name_a = 'ZTEST_G4BA'
+                                   iv_object_b   = 'SUSH'
+                                   iv_obj_name_b = 'ZTEST_SUSH' ).
+
+  ENDMETHOD.
+
+  METHOD given_tadir.
+
+    DATA ls_tadir LIKE LINE OF mt_tadir.
+
+    ls_tadir-object   = iv_object.
+    ls_tadir-obj_name = iv_obj_name.
+    INSERT ls_tadir INTO TABLE mt_tadir.
+
+  ENDMETHOD.
+
+  METHOD then_should_be_deleted_before.
+
+    DATA: ls_tadir_a LIKE LINE OF mt_tadir,
+          ls_tadir_b LIKE LINE OF mt_tadir.
+
+    READ TABLE mt_tadir INTO ls_tadir_a
+                        WITH KEY object   = iv_object_a
+                                 obj_name = iv_obj_name_a.
+
+    READ TABLE mt_tadir INTO ls_tadir_b
+                        WITH KEY object   = iv_object_b
+                                 obj_name = iv_obj_name_b.
+
+    cl_abap_unit_assert=>assert_true(
+      act = boolc( ls_tadir_a-korrnum < ls_tadir_b-korrnum )
+      msg = |{ iv_object_a } { iv_obj_name_a } should be deleted before { iv_object_b } { iv_obj_name_b }| ).
 
   ENDMETHOD.
 

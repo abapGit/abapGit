@@ -129,11 +129,11 @@ CLASS lcl_update_calculator DEFINITION
 
     CLASS-METHODS calculate_updated
       IMPORTING
-        it_updated_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
+        it_updated_files     TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
         it_current_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt
-        it_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt
+        it_local_files       TYPE zif_abapgit_definitions=>ty_files_item_tt
       RETURNING
-        VALUE(rt_checksums) TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+        VALUE(rt_checksums)  TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 
   PRIVATE SECTION.
 
@@ -257,4 +257,29 @@ CLASS lcl_update_calculator IMPLEMENTATION.
 
   ENDMETHOD.
 
+ENDCLASS.
+
+
+CLASS lcl_filter DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_object_filter.
+
+    METHODS constructor
+      IMPORTING
+        it_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+
+  PRIVATE SECTION.
+    DATA mt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+ENDCLASS.
+
+CLASS lcl_filter IMPLEMENTATION.
+  METHOD constructor.
+    mt_filter = it_filter.
+    SORT mt_filter.
+    DELETE ADJACENT DUPLICATES FROM mt_filter.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object_filter~get_filter.
+    rt_filter = mt_filter.
+  ENDMETHOD.
 ENDCLASS.

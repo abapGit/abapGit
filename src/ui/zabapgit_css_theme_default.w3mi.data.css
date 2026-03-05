@@ -512,9 +512,6 @@ table.settings_tab input:focus {
   border-color: #ddd;
   background-color: #fff;
 }
-.dialog .radio-container input[type="radio"] + label {
-  color: #808080;
-}
 .dialog .radio-container input[type="radio"]:checked + label {
   background-color: #64a8ff;
   color: #fff;

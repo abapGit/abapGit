@@ -1,3 +1,6 @@
+CLASS ltcl_aff_registry DEFINITION DEFERRED.
+CLASS zcl_abapgit_aff_registry DEFINITION LOCAL FRIENDS ltcl_aff_registry.
+
 "! @testing zcl_abapgit_filename_logic
 CLASS ltcl_aff_registry DEFINITION FINAL FOR TESTING
   DURATION SHORT

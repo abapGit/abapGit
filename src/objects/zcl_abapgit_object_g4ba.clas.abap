@@ -60,6 +60,13 @@ CLASS zcl_abapgit_object_g4ba IMPLEMENTATION.
       iv_field     = 'CHANGED_TS'
       iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp ).
 
+    IF ms_item-abap_language_version = zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
+      ro_result->add(
+        iv_table     = '/IWBEP/I_V4_MSGR'
+        iv_field     = 'ABAP_LANGUAGE_VERSION'
+        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-abap_language_version ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -91,6 +98,9 @@ CLASS zcl_abapgit_object_g4ba IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     get_generic( )->delete( iv_package ).
+
+* SUSH object type checks if the G4BA exists, and blocks deletion if the TADIR exists without deletion flag
+    UPDATE tadir SET delflag = abap_true WHERE pgmid = 'R3TR' AND object = 'G4BA' AND obj_name = ms_item-obj_name.
 
   ENDMETHOD.
 

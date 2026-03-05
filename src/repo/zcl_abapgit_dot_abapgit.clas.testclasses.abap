@@ -1,13 +1,9 @@
-CLASS ltcl_dot_abapgit DEFINITION DEFERRED.
-CLASS zcl_abapgit_dot_abapgit DEFINITION LOCAL FRIENDS ltcl_dot_abapgit.
 
 CLASS ltcl_dot_abapgit DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
-    METHODS:
-      identity FOR TESTING
-        RAISING zcx_abapgit_exception,
-      ignore FOR TESTING.
+    METHODS identity FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS ignore FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -21,10 +17,10 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
 
 
     lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
-    ls_before = lo_dot->ms_data.
+    ls_before = lo_dot->get_data( ).
 
     lo_dot = zcl_abapgit_dot_abapgit=>deserialize( lo_dot->serialize( ) ).
-    ls_after = lo_dot->ms_data.
+    ls_after = lo_dot->get_data( ).
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_after
@@ -94,6 +90,26 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
     " File under starting folder must not be ignored
     lv_ignored = lo_dot->is_ignored( iv_path = lc_path
                                      iv_filename = 'ztest.prog.abap' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_ignored
+      exp = abap_false ).
+
+    " Ignore everything in a namespace
+    lo_dot->add_ignore( iv_path = lc_path
+                        iv_filename = '#namespace#*' ).
+
+    lv_ignored = lo_dot->is_ignored( iv_path = lc_path
+                                     iv_filename = '#namespace#cl_test.clas.abap' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_ignored
+      exp = abap_true ).
+
+    " Don't ignore file
+    lo_dot->add_ignore( iv_path = '!' && lc_root
+                        iv_filename = 'abaplint.json' ).
+
+    lv_ignored = lo_dot->is_ignored( iv_path = lc_root
+                                     iv_filename = 'abaplint.json' ).
     cl_abap_unit_assert=>assert_equals(
       act = lv_ignored
       exp = abap_false ).

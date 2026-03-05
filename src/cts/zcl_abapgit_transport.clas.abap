@@ -71,7 +71,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
+CLASS zcl_abapgit_transport IMPLEMENTATION.
 
 
   METHOD add_all_objects_to_trans_req.
@@ -146,7 +146,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
       lt_objects     TYPE scts_tadir,
       lt_objects_all LIKE lt_objects,
       ls_e071        LIKE LINE OF rt_objects,
-      lo_repo        TYPE REF TO zcl_abapgit_repo,
+      li_repo        TYPE REF TO zif_abapgit_repo,
       lv_package     TYPE zif_abapgit_persistence=>ty_repo-package,
       lt_packages    TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
@@ -154,8 +154,8 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
       <lv_package> TYPE devclass,
       <ls_object>  TYPE tadir.
 
-    lo_repo    ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    lv_package  = lo_repo->get_package( ).
+    li_repo     = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lv_package  = li_repo->get_package( ).
     lt_packages = zcl_abapgit_factory=>get_sap_package( lv_package )->list_subpackages( ).
     INSERT lv_package INTO TABLE lt_packages.
 

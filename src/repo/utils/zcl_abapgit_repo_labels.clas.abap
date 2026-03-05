@@ -106,7 +106,7 @@ CLASS zcl_abapgit_repo_labels IMPLEMENTATION.
     lt_labels = split( iv_labels ).
 
     LOOP AT lt_labels ASSIGNING <lv_lab>.
-      FIND REGEX gv_regex IN <lv_lab>.
+      FIND REGEX gv_regex IN <lv_lab> ##REGEX_POSIX.
       IF sy-subrc = 0.
         APPEND <lv_lab> TO lt_normalized.
       ENDIF.
@@ -136,7 +136,7 @@ CLASS zcl_abapgit_repo_labels IMPLEMENTATION.
       TRY.
           validate_one_label_color( <ls_c> ).
           APPEND <ls_c> TO lt_normalized.
-        CATCH zcx_abapgit_exception.
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
       ENDTRY.
     ENDLOOP.
 
@@ -225,7 +225,7 @@ CLASS zcl_abapgit_repo_labels IMPLEMENTATION.
           ro_map->set(
             iv_key = <ls_c>-label
             iv_val = <ls_c>-color ).
-        CATCH zcx_abapgit_exception.
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
       ENDTRY.
     ENDLOOP.
 
@@ -240,7 +240,7 @@ CLASS zcl_abapgit_repo_labels IMPLEMENTATION.
     lt_labels = split( iv_labels ).
 
     LOOP AT lt_labels ASSIGNING <lv_lab>.
-      FIND REGEX gv_regex IN <lv_lab>.
+      FIND REGEX gv_regex IN <lv_lab> ##REGEX_POSIX.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( |Disallowed chars in label #{ sy-tabix }| ).
       ENDIF.
@@ -278,14 +278,14 @@ CLASS zcl_abapgit_repo_labels IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Color is empty in pair #{ iv_index }| ).
     ENDIF.
 
-    FIND REGEX gv_regex IN is_lc-label.
+    FIND REGEX gv_regex IN is_lc-label ##REGEX_POSIX.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Disallowed chars in label in pair #{ iv_index }| ).
     ENDIF.
 
     ls_parsed_color = parse_color( is_lc-color ).
     IF ls_parsed_color-cls IS NOT INITIAL.
-      FIND REGEX '^[-_A-Za-z]+$' IN ls_parsed_color-cls.
+      FIND REGEX '^[-_A-Za-z]+$' IN ls_parsed_color-cls ##REGEX_POSIX.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( |Disallowed chars in color in pair #{ iv_index }| ).
       ENDIF.
@@ -308,7 +308,7 @@ CLASS zcl_abapgit_repo_labels IMPLEMENTATION.
     DATA lv_len TYPE i.
 
     IF iv_color IS NOT INITIAL.
-      FIND REGEX '^[0-9A-Fa-f]+$' IN iv_color.
+      FIND REGEX '^[0-9A-Fa-f]+$' IN iv_color ##REGEX_POSIX.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( |Disallowed chars in color in pair #{ iv_index }| ).
       ENDIF.

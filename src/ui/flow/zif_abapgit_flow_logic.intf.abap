@@ -1,0 +1,75 @@
+INTERFACE zif_abapgit_flow_logic
+  PUBLIC .
+
+  TYPES:
+    BEGIN OF ty_path_name,
+      path        TYPE string,
+      filename    TYPE string,
+      remote_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1,
+      local_sha1  TYPE zif_abapgit_git_definitions=>ty_sha1,
+    END OF ty_path_name.
+  TYPES:
+    ty_path_name_tt TYPE HASHED TABLE OF ty_path_name WITH UNIQUE KEY path filename.
+
+  TYPES: BEGIN OF ty_branch,
+           display_name        TYPE string,
+           sha1                TYPE zif_abapgit_git_definitions=>ty_sha1,
+           up_to_date          TYPE abap_bool,
+           first_commit        TYPE zif_abapgit_git_definitions=>ty_sha1,
+           latest_merge_commit TYPE zif_abapgit_git_definitions=>ty_sha1,
+         END OF ty_branch.
+
+  TYPES ty_users_tt TYPE SORTED TABLE OF syuname WITH UNIQUE KEY table_line.
+
+  TYPES ty_local_files TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
+    WITH NON-UNIQUE KEY item-obj_type item-obj_name.
+
+  TYPES: BEGIN OF ty_feature,
+           BEGIN OF repo,
+             name    TYPE string,
+             key     TYPE zif_abapgit_persistence=>ty_repo-key,
+             package TYPE devclass,
+           END OF repo,
+           branch          TYPE ty_branch,
+           BEGIN OF pr,
+             title  TYPE string,
+             url    TYPE string,
+             number TYPE i,
+             draft  TYPE abap_bool,
+             author TYPE string,
+           END OF pr,
+           BEGIN OF transport,
+             trkorr     TYPE trkorr,
+             title      TYPE string,
+             users      TYPE ty_users_tt,
+             changed_at TYPE timestamp,
+           END OF transport,
+           full_match      TYPE abap_bool,
+           changed_files   TYPE ty_path_name_tt,
+           changed_objects TYPE zif_abapgit_definitions=>ty_items_ts,
+         END OF ty_feature.
+  TYPES ty_features TYPE STANDARD TABLE OF ty_feature WITH DEFAULT KEY.
+
+  TYPES: ty_transport_duplicates_tt TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_item_signature WITH DEFAULT KEY.
+
+  TYPES: BEGIN OF ty_information,
+            features             TYPE ty_features,
+            errors               TYPE string_table,
+            transport_duplicates TYPE ty_transport_duplicates_tt,
+            enabled_repositories TYPE i,
+            github_username      TYPE string,
+         END OF ty_information.
+
+  CONSTANTS c_main TYPE string VALUE 'main'.
+
+**************************************
+
+  TYPES: BEGIN OF ty_consolidate,
+           errors         TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+           warnings       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+           success        TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+           missing_remote TYPE ty_path_name_tt,
+           only_remote    TYPE ty_path_name_tt,
+         END OF ty_consolidate.
+
+ENDINTERFACE.

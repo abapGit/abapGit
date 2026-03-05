@@ -37,6 +37,12 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     TYPES:
       ty_dd07_texts TYPE STANDARD TABLE OF ty_dd07_text .
 
+    " Fields that are not part of dd01v
+    TYPES:
+      BEGIN OF ty_extra,
+        abap_language_version TYPE c LENGTH 1,
+      END OF ty_extra.
+
     CONSTANTS c_longtext_id_doma TYPE dokil-id VALUE 'DO' ##NO_TEXT.
 
     METHODS serialize_texts
@@ -55,7 +61,7 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS handle_dependencies
       IMPORTING
-        !iv_step TYPE zif_abapgit_definitions=>ty_deserialization_step
+        !iv_step TYPE zif_abapgit_objects=>ty_deserialization_step
       CHANGING
         !cv_exit TYPE dd01v-convexit
         !cv_done TYPE abap_bool.
@@ -218,6 +224,9 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
       WHEN zif_abapgit_object=>gc_step_id-late.
         cv_done = check_exit( cv_exit ).
+
+      WHEN zif_abapgit_object=>gc_step_id-lxe.
+        cv_done = abap_true.
 
       WHEN OTHERS.
         ASSERT 0 = 1.
@@ -481,6 +490,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
     APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
   ENDMETHOD.
 
 
@@ -520,11 +530,13 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     DATA: lv_name    TYPE ddobjname,
           lv_state   TYPE ddgotstate,
           ls_dd01v   TYPE dd01v,
+          ls_extra   TYPE ty_extra,
           lv_masklen TYPE c LENGTH 4,
           lt_dd07v   TYPE TABLE OF dd07v,
           lv_json    TYPE xstring.
 
     FIELD-SYMBOLS <ls_dd07v> TYPE dd07v.
+    FIELD-SYMBOLS <lg_field> TYPE any.
 
     lv_name = ms_item-obj_name.
 
@@ -553,6 +565,11 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
            ls_dd01v-as4date,
            ls_dd01v-as4time,
            ls_dd01v-appexist.
+
+    ASSIGN COMPONENT 'ACTFLAG' OF STRUCTURE ls_dd01v TO <lg_field>.
+    IF sy-subrc = 0.
+      CLEAR <lg_field>.
+    ENDIF.
 
 * make sure XML serialization does not dump if the field contains invalid data
 * note that this is a N field, so '' is not valid

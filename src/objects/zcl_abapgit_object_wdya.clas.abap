@@ -21,7 +21,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_WDYA IMPLEMENTATION.
+CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
 
 
   METHOD read.
@@ -86,7 +86,12 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYA IMPLEMENTATION.
         tadir_insert( iv_package ).
 
         lo_app->if_wdy_md_lockable_object~save_to_database( ).
+
+        lo_app->if_wdy_md_lockable_object~unlock( ).
       CATCH cx_wdy_md_exception.
+        IF lo_app IS NOT INITIAL.
+          lo_app->if_wdy_md_lockable_object~unlock( ).
+        ENDIF.
         zcx_abapgit_exception=>raise( 'error saving WDYA' ).
     ENDTRY.
 

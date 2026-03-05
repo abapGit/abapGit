@@ -52,7 +52,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
     CLASS-METHODS create_branch
       IMPORTING
         !iv_url  TYPE string
-        !iv_name TYPE string
+        !iv_name TYPE csequence
         !iv_from TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
@@ -352,14 +352,14 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
   METHOD delete_annotated_tag.
 
     DATA:
-      lo_branches TYPE REF TO zcl_abapgit_git_branch_list,
+      li_branches TYPE REF TO zif_abapgit_git_branch_list,
       lv_tag      TYPE string,
       ls_tag      TYPE zif_abapgit_git_definitions=>ty_git_branch,
       lt_tags     TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
 
     " For annotated tags, find the correct commit
-    lo_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( iv_url ).
-    lt_tags     = lo_branches->get_tags_only( ).
+    li_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( iv_url ).
+    lt_tags     = li_branches->get_tags_only( ).
     lv_tag      = zcl_abapgit_git_tag=>remove_peel( is_tag-name ).
 
     READ TABLE lt_tags INTO ls_tag WITH KEY name_key COMPONENTS name = lv_tag.
@@ -377,6 +377,9 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
 
   METHOD delete_branch.
+
+    ASSERT is_branch-sha1 IS NOT INITIAL.
+    ASSERT is_branch-name IS NOT INITIAL.
 
     zcl_abapgit_git_transport=>receive_pack(
       iv_url         = iv_url
@@ -626,12 +629,14 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         et_new_objects = rs_result-new_objects
         ev_new_tree    = lv_new_tree ).
 
-    APPEND LINES OF it_old_objects TO rs_result-new_objects.
+    IF rs_result IS SUPPLIED.
+      APPEND LINES OF it_old_objects TO rs_result-new_objects.
 
-    walk( EXPORTING it_objects = rs_result-new_objects
-                    iv_sha1    = lv_new_tree
-                    iv_path    = '/'
-          CHANGING  ct_files   = rs_result-new_files ).
+      walk( EXPORTING it_objects = rs_result-new_objects
+                      iv_sha1    = lv_new_tree
+                      iv_path    = '/'
+            CHANGING  ct_files   = rs_result-new_files ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -809,6 +814,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
       CASE <ls_node>-chmod.
         WHEN zif_abapgit_git_definitions=>c_chmod-file
             OR zif_abapgit_git_definitions=>c_chmod-executable
+            OR zif_abapgit_git_definitions=>c_chmod-symbolic_link
             OR zif_abapgit_git_definitions=>c_chmod-submodule.
           APPEND INITIAL LINE TO rt_expanded ASSIGNING <ls_exp>.
           <ls_exp>-path  = iv_base.
@@ -822,7 +828,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
             iv_base    = iv_base && <ls_node>-name && '/' ).
           APPEND LINES OF lt_expanded TO rt_expanded.
         WHEN OTHERS.
-          zcx_abapgit_exception=>raise( 'walk_tree: unknown chmod' ).
+          zcx_abapgit_exception=>raise( |walk_tree: unknown chmod { <ls_node>-chmod }| ).
       ENDCASE.
     ENDLOOP.
 

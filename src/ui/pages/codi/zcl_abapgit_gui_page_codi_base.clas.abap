@@ -9,14 +9,14 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
 
     CONSTANTS:
       BEGIN OF c_actions,
-        rerun  TYPE string VALUE 'rerun',
-        stage  TYPE string VALUE 'stage',
-        commit TYPE string VALUE 'commit',
+        rerun        TYPE string VALUE 'rerun',
+        stage        TYPE string VALUE 'stage',
+        commit       TYPE string VALUE 'commit',
         filter_kind  TYPE string VALUE 'filter_kind',
         apply_filter TYPE string VALUE 'apply_filter',
       END OF c_actions .
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo.
+    DATA mi_repo TYPE REF TO zif_abapgit_repo.
     DATA mt_result TYPE zif_abapgit_code_inspector=>ty_results.
     DATA mv_summary TYPE string.
 
@@ -37,9 +37,9 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         zcx_abapgit_exception.
     METHODS render_head
       IMPORTING
-        !ii_html       TYPE REF TO zif_abapgit_html
-        !iv_variant    TYPE sci_chkv
-        !iv_summary    TYPE string.
+        !ii_html    TYPE REF TO zif_abapgit_html
+        !iv_variant TYPE sci_chkv
+        !iv_summary TYPE string.
     METHODS render_detail
       IMPORTING
         !ii_html   TYPE REF TO zif_abapgit_html
@@ -52,10 +52,6 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         !it_result TYPE zif_abapgit_code_inspector=>ty_results
       RAISING
         zcx_abapgit_exception.
-    METHODS render_success
-      IMPORTING
-        ii_html TYPE REF TO zif_abapgit_html
-        iv_message TYPE string.
     METHODS build_base_menu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
@@ -75,12 +71,13 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         location TYPE string,
         text     TYPE string,
         nav      TYPE string,
+        author   TYPE c LENGTH 12,
       END OF ty_result_view,
       ty_view_tab TYPE STANDARD TABLE OF ty_result_view WITH DEFAULT KEY.
 
     METHODS convert_result_to_view
       IMPORTING
-        it_result TYPE zif_abapgit_code_inspector=>ty_results
+        it_result      TYPE zif_abapgit_code_inspector=>ty_results
       RETURNING
         VALUE(rt_view) TYPE ty_view_tab.
     METHODS explain_include
@@ -116,10 +113,10 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         zcx_abapgit_exception.
     METHODS render_stat
       IMPORTING
-        !ii_html   TYPE REF TO zif_abapgit_html
-        !iv_count  TYPE i
-        !iv_type   TYPE string
-        !iv_title  TYPE string
+        !ii_html  TYPE REF TO zif_abapgit_html
+        !iv_count TYPE i
+        !iv_type  TYPE string
+        !iv_title TYPE string
       RAISING
         zcx_abapgit_exception.
 
@@ -127,7 +124,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
 
 
   METHOD apply_filter_kind.
@@ -151,7 +148,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     DATA lv_field TYPE abap_compname.
 
     CASE ms_sorting_state-column_id.
-      WHEN 'kind' OR 'obj_type' OR 'location' OR 'text'.
+      WHEN 'kind' OR 'obj_type' OR 'location' OR 'text' OR 'author'.
         lv_field = to_upper( ms_sorting_state-column_id ).
       WHEN OTHERS.
         RETURN.
@@ -168,7 +165,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
   METHOD build_base_menu.
 
-    ro_menu = zcl_abapgit_html_toolbar=>create( )->add(
+    ro_menu = zcl_abapgit_html_toolbar=>create( 'toolbar-code-inspector' )->add(
       iv_txt = 'Re-Run'
       iv_act = c_actions-rerun ).
 
@@ -197,6 +194,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
       <ls_v>-obj_type = <ls_r>-objtype.
       <ls_v>-nav      = build_nav_link( <ls_r> ).
       <ls_v>-text     = <ls_r>-text.
+      <ls_v>-author   = <ls_r>-author.
 
       IF <ls_r>-sobjname IS INITIAL OR
          ( <ls_r>-sobjname = <ls_r>-objname AND
@@ -256,7 +254,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
             ENDIF.
 
         ENDCASE.
-      CATCH cx_root.
+      CATCH cx_root ##NO_HANDLER.
         " leave empty, fallback to default, defined elsewhere
     ENDTRY.
 
@@ -340,7 +338,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
           RETURN.
 
         ENDIF.
-      CATCH zcx_abapgit_exception.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
 
     TRY.
@@ -371,7 +369,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     lv_temp = replace(
       val   = ii_event->mv_action
       regex = |^{ c_ci_sig }|
-      with  = `` ).
+      with  = `` ) ##REGEX_POSIX.
 
     IF lv_temp <> ii_event->mv_action. " CI navigation request detected
       handle_navigation( lv_temp ).
@@ -402,9 +400,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
       iv_summary = mv_summary ).
 
     IF lines( mt_result ) = 0.
-      render_success(
-        ii_html    = ii_html
-        iv_message = iv_success_msg ).
+      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_success( iv_success_msg ) ).
     ELSE.
       render_stats(
         ii_html   = ii_html
@@ -434,6 +430,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
       )->define_column(
         iv_column_id    = 'location'
         iv_column_title = 'Obj. name / location'
+      )->define_column(
+        iv_column_id    = 'author'
+        iv_column_title = 'Changed by'
       )->define_column(
         iv_column_id    = 'text'
         iv_column_title = 'Text' ).
@@ -558,16 +557,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_success.
-
-    ii_html->add( '<div class="dummydiv success">' ).
-    ii_html->add( ii_html->icon( 'check' ) ).
-    ii_html->add( iv_message ).
-    ii_html->add( '</div>' ).
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_html_table~get_row_attrs.
 
     FIELD-SYMBOLS <ls_item> TYPE ty_result_view.
@@ -603,6 +592,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
           iv_txt = <ls_item>-location
           iv_act = <ls_item>-nav
           iv_typ = zif_abapgit_html=>c_action_type-sapevent ).
+      WHEN 'author'.
+        rs_render-content = zcl_abapgit_gui_chunk_lib=>render_user_name( |{ <ls_item>-author }| )->render( ).
       WHEN 'text'.
         rs_render-content = escape(
           val    = <ls_item>-text

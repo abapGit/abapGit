@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_amsd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_type_not_supported.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -53,11 +53,10 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lv_value> TYPE data.
 
-    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_logical_db_schema
-           TO <lv_value>.
-    ASSERT sy-subrc = 0.
-
-    CLEAR: <lv_value>.
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_logical_db_schema TO <lv_value>.
+    IF sy-subrc = 0.
+      CLEAR <lv_value>.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -66,25 +65,43 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_AT'
+        iv_fieldname         = 'METADATA-CREATED_AT'
       CHANGING
         cs_logical_db_schema = cs_logical_db_schema ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_BY'
+        iv_fieldname         = 'METADATA-CREATED_BY'
       CHANGING
         cs_logical_db_schema = cs_logical_db_schema ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_AT'
+        iv_fieldname         = 'METADATA-CHANGED_AT'
       CHANGING
         cs_logical_db_schema = cs_logical_db_schema ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_BY'
+        iv_fieldname         = 'METADATA-CHANGED_BY'
+      CHANGING
+        cs_logical_db_schema = cs_logical_db_schema ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname         = 'METADATA-RESPONSIBLE'
+      CHANGING
+        cs_logical_db_schema = cs_logical_db_schema ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname         = 'METADATA-MASTER_SYSTEM'
+      CHANGING
+        cs_logical_db_schema = cs_logical_db_schema ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname         = 'METADATA-PACKAGE_REF'
       CHANGING
         cs_logical_db_schema = cs_logical_db_schema ).
 
@@ -106,7 +123,7 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
         CREATE OBJECT mi_persistence TYPE ('CL_AMDP_SCHEMA_OBJECT_PERSIST').
 
       CATCH cx_sy_create_error.
-        zcx_abapgit_exception=>raise( |AMSD not supported by your NW release| ).
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDTRY.
 
   ENDMETHOD.
@@ -301,9 +318,9 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
 
     TRY.
         mi_persistence->get(
-            p_object_key           = mv_logical_db_schema_key
-            p_version              = 'A'
-            p_existence_check_only = abap_true ).
+          p_object_key           = mv_logical_db_schema_key
+          p_version              = 'A'
+          p_existence_check_only = abap_true ).
         rv_bool = abap_true.
 
       CATCH cx_swb_exception.
@@ -391,8 +408,8 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
     ENDTRY.
 
     io_xml->add(
-        iv_name = 'AMSD'
-        ig_data = <ls_logical_db_schema> ).
+      iv_name = 'AMSD'
+      ig_data = <ls_logical_db_schema> ).
 
   ENDMETHOD.
 ENDCLASS.

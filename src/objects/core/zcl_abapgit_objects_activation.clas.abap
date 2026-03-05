@@ -46,17 +46,19 @@ CLASS zcl_abapgit_objects_activation DEFINITION
 
     CONSTANTS:
       c_domain     TYPE c LENGTH 9  VALUE 'DOMA DOMD',
-      c_types      TYPE c LENGTH 50 VALUE 'DTEL DTED TABL TABD SQLT SQLD TTYP TTYD VIEW VIED',
+      c_types      TYPE c LENGTH 55 VALUE 'DTEL DTED TABL TABD SQLT SQLD TTYP TTYD VIEW VIED DRTY',
       c_technset   TYPE c LENGTH 24 VALUE 'TABT VIET SQTT INDX XINX',
       c_f4_objects TYPE c LENGTH 35 VALUE 'SHLP SHLD MCOB MCOD MACO MACD MCID',
       c_enqueue    TYPE c LENGTH 9  VALUE 'ENQU ENQD',
       c_sqsc       TYPE c LENGTH 4  VALUE 'SQSC',
       c_stob       TYPE c LENGTH 4  VALUE 'STOB',
       c_ntab       TYPE c LENGTH 14 VALUE 'NTTT NTTB NTDT',
-      c_ddls       TYPE c LENGTH 24 VALUE 'DDLS DRUL DTDC DTEB',
+      c_cds        TYPE c LENGTH 29 VALUE 'DDLS DRUL DTDC DTSC DTEB DESD',
       c_switches   TYPE c LENGTH 24 VALUE 'SF01 SF02 SFSW SFBS SFBF',
       c_para       TYPE c LENGTH 4  VALUE 'PARA', " can be referenced by DTEL
-      c_enhd       TYPE c LENGTH 4  VALUE 'ENHD'.
+      c_enhd       TYPE c LENGTH 4  VALUE 'ENHD',
+      c_scalarfunc TYPE c LENGTH 9  VALUE 'DSFD DSFI',
+      c_aspect     TYPE c LENGTH 4  VALUE 'DRAS'.
 
     CLASS-DATA:
       gt_classes TYPE STANDARD TABLE OF ty_classes WITH DEFAULT KEY .
@@ -308,7 +310,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
               excecution_error       = 1
               cancelled              = 2
               insert_into_corr_error = 3
-              OTHERS                 = 4 ##SUBRC_OK.
+              OTHERS                 = 4 ##FM_SUBRC_OK.
         CATCH cx_sy_dyn_call_param_not_found.
           CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
             EXPORTING
@@ -322,7 +324,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
               excecution_error       = 1
               cancelled              = 2
               insert_into_corr_error = 3
-              OTHERS                 = 4 ##SUBRC_OK.
+              OTHERS                 = 4 ##FM_SUBRC_OK.
       ENDTRY.
       CASE sy-subrc.
         WHEN 1 OR 3 OR 4.
@@ -396,9 +398,18 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
           WHERE type = <ls_message>-show_req->object_type.
       ENDIF.
       LOOP AT <ls_message>-mtext ASSIGNING <lv_msg>.
-        ii_log->add_error(
-          iv_msg  = <lv_msg>
-          is_item = ls_item ).
+        IF sy-tabix = 1.
+          ii_log->add(
+            iv_type   = 'E'
+            iv_msg    = <lv_msg>
+            iv_class  = <ls_message>-message-msgid
+            iv_number = <ls_message>-message-msgno
+            is_item   = ls_item ).
+        ELSE.
+          ii_log->add_error(
+            iv_msg  = <lv_msg>
+            is_item = ls_item ).
+        ENDIF.
       ENDLOOP.
     ENDLOOP.
 
@@ -437,8 +448,10 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
     DELETE lt_lines WHERE class = 'D0' AND number = '319'.
 
     LOOP AT lt_lines ASSIGNING <ls_line>.
-      ii_log->add( iv_msg  = <ls_line>-line
-                   iv_type = <ls_line>-severity ).
+      ii_log->add( iv_msg    = <ls_line>-line
+                   iv_type   = <ls_line>-severity
+                   iv_class  = <ls_line>-class
+                   iv_number = |{ <ls_line>-number }| ).
     ENDLOOP.
 
     ii_log->add_info( |View complete activation log in program RSPUTPRT (type D, log name { iv_logname })| ).
@@ -553,8 +566,9 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
        c_technset NS iv_obj_type AND c_f4_objects NS iv_obj_type AND
        c_enqueue  NS iv_obj_type AND c_sqsc       NS iv_obj_type AND
        c_stob     NS iv_obj_type AND c_ntab       NS iv_obj_type AND
-       c_ddls     NS iv_obj_type AND c_para       NS iv_obj_type AND
-       c_switches NS iv_obj_type AND iv_obj_type <> c_enhd.
+       c_cds      NS iv_obj_type AND c_para       NS iv_obj_type AND
+       c_switches NS iv_obj_type AND iv_obj_type <> c_enhd       AND
+       c_aspect   NS iv_obj_type AND c_scalarfunc NS iv_obj_type.
       rv_result = abap_false.
     ENDIF.
 

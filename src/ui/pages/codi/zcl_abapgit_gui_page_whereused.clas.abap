@@ -15,8 +15,8 @@ CLASS zcl_abapgit_gui_page_whereused DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        iv_package TYPE devclass OPTIONAL
-        ii_repo    TYPE REF TO zif_abapgit_repo OPTIONAL
+        iv_package     TYPE devclass OPTIONAL
+        ii_repo        TYPE REF TO zif_abapgit_repo OPTIONAL
         PREFERRED PARAMETER iv_package
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
@@ -36,6 +36,7 @@ CLASS zcl_abapgit_gui_page_whereused DEFINITION
       BEGIN OF c_action,
         refresh TYPE string VALUE 'refresh',
         show_used_obj TYPE string VALUE 'show_used_obj',
+        show_root_pkg TYPE string VALUE 'show_root_pkg',
       END OF c_action.
 
     CONSTANTS c_title TYPE string VALUE 'Where Used'.
@@ -43,6 +44,7 @@ CLASS zcl_abapgit_gui_page_whereused DEFINITION
     DATA mv_ignore_subpackages TYPE abap_bool.
     DATA mi_table TYPE REF TO zcl_abapgit_html_table.
     DATA mv_show_used_obj TYPE abap_bool.
+    DATA mv_show_root_pkg TYPE abap_bool.
     DATA mt_where_used TYPE zcl_abapgit_where_used_tools=>ty_dependency_tt.
 
     METHODS init_table_component
@@ -103,13 +105,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
   METHOD init_table_component.
 
     DATA ls_sorting_state TYPE zif_abapgit_html_table=>ty_sorting_state.
+    DATA lv_package_col_id TYPE string.
+    DATA lv_package_col_title TYPE string.
 
     IF mi_table IS BOUND.
       RETURN.
     ENDIF.
 
-    IF ls_sorting_state-column_id IS INITIAL.
+    IF mv_show_root_pkg = abap_true.
+      ls_sorting_state-column_id = 'root_package'.
+      lv_package_col_id          = 'root_package'.
+      lv_package_col_title       = 'Root package'.
+    ELSE.
       ls_sorting_state-column_id = 'package'.
+      lv_package_col_id          = 'package'.
+      lv_package_col_title       = 'Package'.
     ENDIF.
 
     mi_table = zcl_abapgit_html_table=>create(
@@ -131,8 +141,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
         iv_group_title = 'Used in'
         iv_group_id    = 'where' " Needed for CSS
       )->define_column(
-        iv_column_id    = 'package'
-        iv_column_title = 'Package'
+        iv_column_id    = lv_package_col_id
+        iv_column_title = lv_package_col_title
       )->define_column(
         iv_column_id    = 'obj_type'
         iv_column_title = 'Type'
@@ -200,6 +210,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
       WHEN c_action-show_used_obj.
         mv_show_used_obj = boolc( mv_show_used_obj = abap_false ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-show_root_pkg.
+        mv_show_root_pkg = boolc( mv_show_root_pkg = abap_false ).
+        CLEAR mi_table. " To reinit structure
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.
@@ -213,6 +227,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
     DATA lv_show_used_txt TYPE string.
+    DATA lv_show_root_txt TYPE string.
 
     IF mv_show_used_obj = abap_true.
       lv_show_used_txt = 'Hide Used Type'.
@@ -220,7 +235,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
       lv_show_used_txt = 'Show Used Type'.
     ENDIF.
 
-    ro_toolbar = zcl_abapgit_html_toolbar=>create(
+    IF mv_show_root_pkg = abap_true.
+      lv_show_root_txt = 'Show parent package'.
+    ELSE.
+      lv_show_root_txt = 'Show root package'.
+    ENDIF.
+
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-where-used'
+      )->add(
+        iv_txt    = lv_show_root_txt
+        iv_title  = 'Show root package or direct parent package'
+        iv_act    = c_action-show_root_pkg
+        iv_hotkey = 'p'
       )->add(
         iv_txt    = lv_show_used_txt
         iv_title  = 'Show/Hide used type or object (when available)'
@@ -229,7 +255,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_WHEREUSED IMPLEMENTATION.
       )->add(
         iv_txt    = 'Refresh'
         iv_act    = c_action-refresh
-        iv_hotkey = 'r' ).
+        iv_hotkey = 'r'
+      )->add(
+        iv_txt    = 'Back'
+        iv_act    = zif_abapgit_definitions=>c_action-go_back ).
 
   ENDMETHOD.
 

@@ -134,7 +134,7 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
 
     TRY.
         rv_xstr = cl_fp_helper=>convert_form_to_xstring( li_fp_form ).
-      CATCH cx_fp_api INTO lx_fp_conv_err.
+      CATCH cx_fp_api INTO lx_fp_conv_err ##NO_HANDLER.
         " Pass - the exception is handled below!
     ENDTRY.
 
@@ -282,10 +282,10 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
 
     DATA: lv_name TYPE fpname.
 
+    " Check for any state
     SELECT SINGLE name FROM fplayout
       INTO lv_name
-      WHERE name = ms_item-obj_name
-      AND state = 'A'.
+      WHERE name = ms_item-obj_name.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.

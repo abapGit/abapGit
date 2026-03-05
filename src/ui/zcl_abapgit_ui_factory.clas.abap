@@ -28,17 +28,11 @@ CLASS zcl_abapgit_ui_factory DEFINITION
         !iv_disable_gui   TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ri_fe_serv) TYPE REF TO zif_abapgit_frontend_services .
-    CLASS-METHODS get_html_viewer
-      IMPORTING
-        !io_container           TYPE REF TO cl_gui_container DEFAULT cl_gui_container=>screen0
-        !iv_disable_query_table TYPE abap_bool DEFAULT abap_true
-      RETURNING
-        VALUE(ri_viewer)        TYPE REF TO zif_abapgit_html_viewer .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-DATA gi_popups TYPE REF TO zif_abapgit_popups .
-    CLASS-DATA gi_html_viewer TYPE REF TO zif_abapgit_html_viewer .
     CLASS-DATA go_gui TYPE REF TO zcl_abapgit_gui .
     CLASS-DATA gi_fe_services TYPE REF TO zif_abapgit_frontend_services .
     CLASS-DATA gi_gui_services TYPE REF TO zif_abapgit_gui_services .
@@ -166,20 +160,6 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
       gi_gui_services ?= get_gui( ).
     ENDIF.
     ri_gui_services = gi_gui_services.
-  ENDMETHOD.
-
-
-  METHOD get_html_viewer.
-
-    IF gi_html_viewer IS NOT BOUND.
-      CREATE OBJECT gi_html_viewer TYPE zcl_abapgit_html_viewer_gui
-        EXPORTING
-          io_container           = io_container
-          iv_disable_query_table = iv_disable_query_table.
-    ENDIF.
-
-    ri_viewer = gi_html_viewer.
-
   ENDMETHOD.
 
 

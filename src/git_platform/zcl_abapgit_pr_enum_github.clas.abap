@@ -13,6 +13,50 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
         !ii_http_agent    TYPE REF TO zif_abapgit_http_agent
       RAISING
         zcx_abapgit_exception.
+
+    METHODS create_pull_request
+      IMPORTING
+        iv_title TYPE clike
+        iv_body  TYPE clike OPTIONAL
+        iv_head  TYPE string
+        iv_base  TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS merge_pull_request
+      IMPORTING
+        iv_pull_number  TYPE i
+        iv_commit_title TYPE clike OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS update_pull_request_branch
+      IMPORTING
+        iv_pull_number       TYPE i
+        iv_expected_head_sha TYPE zif_abapgit_git_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS ready_for_review
+      IMPORTING
+        iv_pull_number TYPE i
+      RAISING
+        zcx_abapgit_exception.
+
+    TYPES: BEGIN OF ty_status,
+             name       TYPE string,
+             status     TYPE string,
+             conclusion TYPE string,
+             title      TYPE string,
+           END OF ty_status.
+    TYPES ty_status_tt TYPE STANDARD TABLE OF ty_status WITH DEFAULT KEY.
+    METHODS get_check_runs
+      IMPORTING
+        iv_ref           TYPE string
+      RETURNING
+        VALUE(rt_status) TYPE ty_status_tt
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -24,6 +68,7 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
 
     DATA mi_http_agent TYPE REF TO zif_abapgit_http_agent.
     DATA mv_repo_url TYPE string.
+    DATA mv_user_and_repo TYPE string.
 
     METHODS fetch_repo_by_url
       IMPORTING
@@ -48,14 +93,14 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
+CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
 
 
   METHOD clean_url.
     rv_url = replace(
       val = iv_url
       regex = '\{.*\}$'
-      with = '' ).
+      with = '' ) ##REGEX_POSIX.
   ENDMETHOD.
 
 
@@ -63,11 +108,17 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
 
     DATA lv_search TYPE string.
 
+    mv_user_and_repo = iv_user_and_repo.
     mv_repo_url   = |https://api.github.com/repos/{ iv_user_and_repo }|.
     mi_http_agent = ii_http_agent.
     mi_http_agent->global_headers( )->set(
       iv_key = 'Accept'
       iv_val = 'application/vnd.github.v3+json' ).
+
+    " https://docs.github.com/en/rest/about-the-rest-api/api-versions
+    mi_http_agent->global_headers( )->set(
+      iv_key = 'X-GitHub-Api-Version'
+      iv_val = '2022-11-28' ).
 
     IF zcl_abapgit_login_manager=>get( mv_repo_url ) IS NOT INITIAL.
       mi_http_agent->global_headers( )->set(
@@ -91,6 +142,8 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
   METHOD convert_list.
 
     DATA lt_items TYPE string_table.
+    DATA lt_labels TYPE string_table.
+    DATA lv_label_i TYPE string.
     DATA lv_i TYPE string.
     FIELD-SYMBOLS <ls_p> LIKE LINE OF rt_pulls.
 
@@ -107,7 +160,48 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
       <ls_p>-created_at      = ii_json->get( |/{ lv_i }/created_at| ).
       <ls_p>-draft           = ii_json->get_boolean( |/{ lv_i }/draft| ).
       <ls_p>-html_url        = ii_json->get( |/{ lv_i }/html_url| ).
+
+      lt_labels = ii_json->members( |/{ lv_i }/labels| ).
+      LOOP AT lt_labels INTO lv_label_i.
+        APPEND ii_json->get( |/{ lv_i }/labels/{ lv_label_i }/name| ) TO <ls_p>-labels.
+      ENDLOOP.
+
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD create_pull_request.
+* https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#create-a-pull-request
+
+    DATA lv_owner    TYPE string.
+    DATA lv_repo     TYPE string.
+    DATA lv_url      TYPE string.
+    DATA lv_json     TYPE string.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+
+    lv_url = mv_repo_url && '/pulls'.
+    SPLIT mv_user_and_repo AT '/' INTO lv_owner lv_repo.
+
+    lv_json = |\{\n| &&
+              |  "owner": "{ lv_owner }",\n| &&
+              |  "repo": "{ lv_repo }",\n| &&
+              |  "title": "{ iv_title }",\n| &&
+              |  "head": "{ iv_head }",\n| &&
+              |  "body": "{ iv_body }",\n| &&
+              |  "maintainer_can_modify": true,\n| &&
+              |  "draft": true,\n| &&
+              |  "base": "{ iv_base }"\n| &&
+              |\}|.
+
+    li_response = mi_http_agent->request(
+      iv_url     = lv_url
+      iv_method  = zif_abapgit_http_agent=>c_methods-post
+      iv_payload = lv_json ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error creating pull request: { li_response->error( ) }| ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -134,6 +228,242 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
     ENDTRY.
 
     rs_info-pulls = convert_list( li_pulls_json ).
+
+  ENDMETHOD.
+
+
+  METHOD merge_pull_request.
+* https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#merge-a-pull-request
+
+    DATA lv_url          TYPE string.
+    DATA lv_commit_title TYPE string.
+    DATA li_json         TYPE REF TO zif_abapgit_ajson.
+    DATA li_response     TYPE REF TO zif_abapgit_http_response.
+    DATA lx_ajson        TYPE REF TO zcx_abapgit_ajson_error.
+
+    lv_url = mv_repo_url && '/pulls/' && iv_pull_number && '/merge'.
+
+    IF iv_commit_title IS NOT INITIAL.
+      lv_commit_title = iv_commit_title.
+    ELSE.
+      lv_commit_title = |Merge pull request #{ iv_pull_number }|.
+    ENDIF.
+
+    TRY.
+        li_json = zcl_abapgit_ajson=>create_empty( ).
+        li_json->set_string(
+          iv_path = '/commit_title'
+          iv_val  = lv_commit_title ).
+        li_json->set_string(
+          iv_path = '/merge_method'
+          iv_val  = 'squash' ).
+
+        li_response = mi_http_agent->request(
+          iv_url     = lv_url
+          iv_method  = zif_abapgit_http_agent=>c_methods-put
+          iv_payload = li_json->stringify( ) ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+    ENDTRY.
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error merging pull request: { li_response->error( ) }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD ready_for_review.
+* https://docs.github.com/en/graphql/reference/mutations#markpullrequestreadyforreview
+* https://gist.github.com/jeromepl/02e70f3ea4a4e8103da6f96f14eb213c
+
+    DATA lv_url      TYPE string.
+    DATA lv_json     TYPE string.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+    DATA lx_ajson    TYPE REF TO zcx_abapgit_ajson_error.
+    DATA lv_node_id  TYPE string.
+
+    lv_url = mv_repo_url && '/pulls/' && iv_pull_number.
+
+    li_response = mi_http_agent->request(
+      iv_url     = lv_url
+      iv_method  = zif_abapgit_http_agent=>c_methods-get ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error getting pull request information: { li_response->error( ) }| ).
+    ENDIF.
+
+    TRY.
+        lv_node_id = li_response->json( )->get( |/node_id| ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+    ENDTRY.
+
+    lv_json = |\{"query": "mutation \{ markPullRequestReadyForReview(input: | &&
+      |\{ pullRequestId: \\"{ lv_node_id }\\" \}) \{ pullRequest \{ id \} \} \}" \}|.
+
+    li_response = mi_http_agent->request(
+      iv_url     = 'https://api.github.com/graphql'
+      iv_method  = zif_abapgit_http_agent=>c_methods-post
+      iv_payload = lv_json ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error setting to ready: { li_response->error( ) }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD update_pull_request_branch.
+* https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#update-a-pull-request-branch
+
+    DATA lv_url      TYPE string.
+    DATA lv_json     TYPE string.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+
+    lv_url = mv_repo_url && '/pulls/' && iv_pull_number && '/update-branch'.
+
+    lv_json = |\{\n| &&
+              |  "expected_head_sha": "{ to_lower( iv_expected_head_sha ) }"\n| &&
+              |\}|.
+
+    li_response = mi_http_agent->request(
+      iv_url     = lv_url
+      iv_method  = zif_abapgit_http_agent=>c_methods-put
+      iv_payload = lv_json ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error updating pull request branch: { li_response->error( ) }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD get_check_runs.
+* https://docs.github.com/en/rest/commits/statuses?apiVersion=2022-11-28#get-the-combined-status-for-a-specific-reference
+
+    DATA lv_url      TYPE string.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+    DATA li_json     TYPE REF TO zif_abapgit_ajson.
+    DATA lt_statuses TYPE string_table.
+    DATA ls_status   TYPE ty_status.
+    DATA lv_item     LIKE LINE OF lt_statuses.
+    DATA lx_ajson    TYPE REF TO zcx_abapgit_ajson_error.
+
+
+    lv_url = mv_repo_url && '/commits/' && iv_ref && '/check-runs'.
+
+    li_response = mi_http_agent->request(
+      iv_url     = lv_url
+      iv_method  = zif_abapgit_http_agent=>c_methods-get ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error getting check-runs for ref { iv_ref }: { li_response->error( ) }| ).
+    ENDIF.
+
+    TRY.
+        li_json = li_response->json( ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+    ENDTRY.
+
+    lt_statuses = li_json->members( '/check_runs' ).
+    LOOP AT lt_statuses INTO lv_item.
+      ls_status-name = li_json->get( |/check_runs/{ lv_item }/name| ).
+      ls_status-status = li_json->get( |/check_runs/{ lv_item }/status| ).
+      ls_status-conclusion = li_json->get( |/check_runs/{ lv_item }/conclusion| ).
+      ls_status-title = li_json->get( |/check_runs/{ lv_item }/output/title| ).
+      APPEND ls_status TO rt_status.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_pr_enum_provider~create_initial_branch.
+* https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#create-or-update-file-contents--parameters
+
+    DATA lv_owner    TYPE string.
+    DATA lv_repo     TYPE string.
+    DATA lv_url      TYPE string.
+    DATA lv_contents TYPE string.
+    DATA lv_json     TYPE string.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+
+    lv_url = mv_repo_url && '/contents/README.md'.
+    SPLIT mv_user_and_repo AT '/' INTO lv_owner lv_repo.
+
+    lv_contents = iv_readme.
+
+    IF lv_contents IS INITIAL.
+      lv_contents = |# { to_upper( lv_repo ) }|.
+    ENDIF.
+
+    lv_json = |\{\n| &&
+              |  "message": "Initial commit",\n| &&
+              |  "content": "{ cl_http_utility=>encode_base64( lv_contents ) }",\n| &&
+              |  "branch": "{ iv_branch_name }"\n| &&
+              |\}|.
+
+    li_response = mi_http_agent->request(
+      iv_url     = lv_url
+      iv_method  = zif_abapgit_http_agent=>c_methods-put
+      iv_payload = lv_json ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error creating initial { iv_branch_name } branch: { li_response->error( ) }| ).
+    ENDIF.
+
+    rv_branch_name = iv_branch_name.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_pr_enum_provider~create_repository.
+* https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#create-an-organization-repository
+
+    DATA lv_owner     TYPE string.
+    DATA lv_repo      TYPE string.
+    DATA lv_url       TYPE string.
+    DATA lv_private   TYPE string.
+    DATA lv_auto_init TYPE string.
+    DATA lv_json      TYPE string.
+    DATA li_response  TYPE REF TO zif_abapgit_http_response.
+
+    SPLIT mv_user_and_repo AT '/' INTO lv_owner lv_repo.
+
+    " repo for organization or authenticated user
+    IF iv_is_org = abap_true.
+      lv_url = |https://api.github.com/orgs/{ lv_owner }/repos|.
+    ELSE.
+      lv_url = |https://api.github.com/user/repos|.
+    ENDIF.
+
+    IF iv_private = abap_true.
+      lv_private = 'true'.
+    ELSE.
+      lv_private = 'false'.
+    ENDIF.
+
+    " create an initial commit with empty README
+    IF iv_auto_init = abap_true.
+      lv_auto_init = 'true'.
+    ELSE.
+      lv_auto_init = 'false'.
+    ENDIF.
+
+    lv_json = |\{\n| &&
+              |  "name": "{ lv_repo }",\n| &&
+              |  "description": "{ iv_description }",\n| &&
+              |  "private": { lv_private },\n| &&
+              |  "auto_init": { lv_auto_init }\n| &&
+              |\}|.
+
+    li_response = mi_http_agent->request(
+      iv_url     = lv_url
+      iv_method  = zif_abapgit_http_agent=>c_methods-post
+      iv_payload = lv_json ).
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error creating repository { mv_user_and_repo }: { li_response->error( ) }| ).
+    ENDIF.
 
   ENDMETHOD.
 

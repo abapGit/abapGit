@@ -151,7 +151,7 @@ CLASS zcl_abapgit_oo_serializer IMPLEMENTATION.
     lv_program = ls_include.
     TRY.
         lt_source = zcl_abapgit_factory=>get_sap_report( )->read_report( lv_program ).
-      CATCH zcx_abapgit_exception.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
 * ignore if the report is not found, sometimes the CCDEF include does not exist
     ENDTRY.
     rt_source = lt_source.

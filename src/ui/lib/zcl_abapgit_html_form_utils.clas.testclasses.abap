@@ -65,9 +65,6 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~popup_to_create_package.
-  ENDMETHOD.
-
   METHOD zif_abapgit_popups~popup_to_create_transp_branch.
   ENDMETHOD.
 

@@ -44,15 +44,33 @@ CLASS zcl_abapgit_data_deserializer DEFINITION
         zcx_abapgit_exception .
     METHODS determine_transport_request
       IMPORTING
-        io_repo                     TYPE REF TO zcl_abapgit_repo
+        ii_repo                     TYPE REF TO zif_abapgit_repo
         iv_transport_type           TYPE zif_abapgit_definitions=>ty_transport_type
       RETURNING
         VALUE(rv_transport_request) TYPE trkorr.
+
     METHODS is_table_allowed_to_edit
       IMPORTING
         !is_result                TYPE zif_abapgit_data_deserializer=>ty_result
       RETURNING
-        VALUE(rv_allowed_to_edit) TYPE abap_bool .
+        VALUE(rv_allowed_to_edit) TYPE abap_bool.
+
+    METHODS is_table_included_in_repo
+      IMPORTING
+        !iv_package           TYPE devclass
+        !iv_tabname           TYPE tabname
+      RETURNING
+        VALUE(rv_is_included) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS is_table_transported
+      IMPORTING
+        !iv_tabname              TYPE tadir-obj_name
+      RETURNING
+        VALUE(rv_is_transported) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -70,8 +88,13 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
     ASSIGN ir_data->* TO <lg_tab>.
 
+    IF is_file-data IS INITIAL.
+      RETURN.
+    ENDIF.
+
     TRY.
         lo_ajson = zcl_abapgit_ajson=>parse( zcl_abapgit_convert=>xstring_to_string_utf8( is_file-data ) ).
+        lo_ajson->to_abap_corresponding_only( ).
         lo_ajson->zif_abapgit_ajson~to_abap( IMPORTING ev_container = <lg_tab> ).
       CATCH zcx_abapgit_ajson_error INTO lx_ajson.
         zcx_abapgit_exception=>raise( lx_ajson->get_text( ) ).
@@ -88,11 +111,11 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
     " Use transport from repo settings if maintained, or determine via user exit.
     " If transport keeps empty here, it'll requested later via popup.
-    rv_transport_request = io_repo->get_local_settings( )-customizing_request.
+    rv_transport_request = ii_repo->get_local_settings( )-customizing_request.
 
     li_exit->determine_transport_request(
       EXPORTING
-        io_repo              = io_repo
+        ii_repo              = ii_repo
         iv_transport_type    = iv_transport_type
       CHANGING
         cv_transport_request = rv_transport_request ).
@@ -106,6 +129,38 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     rv_allowed_to_edit = zcl_abapgit_data_factory=>get_supporter( )->is_object_supported(
       iv_type = is_result-type
       iv_name = is_result-name ).
+
+  ENDMETHOD.
+
+
+  METHOD is_table_included_in_repo.
+
+    DATA:
+      lt_packages TYPE STANDARD TABLE OF devclass WITH DEFAULT KEY,
+      lv_package  TYPE devclass.
+
+    lt_packages = zcl_abapgit_factory=>get_sap_package( iv_package )->list_subpackages( ).
+    INSERT iv_package INTO TABLE lt_packages.
+
+    lv_package = zcl_abapgit_factory=>get_tadir( )->get_object_package(
+      iv_object   = 'TABL'
+      iv_obj_name = |{ iv_tabname }| ).
+
+    READ TABLE lt_packages TRANSPORTING NO FIELDS WITH TABLE KEY table_line = lv_package.
+    rv_is_included = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+
+  METHOD is_table_transported.
+
+    DATA lv_package TYPE devclass.
+
+    lv_package = zcl_abapgit_factory=>get_tadir( )->get_object_package(
+      iv_object   = 'TABL'
+      iv_obj_name = iv_tabname ).
+
+    rv_is_transported = zcl_abapgit_factory=>get_sap_package( lv_package )->are_changes_recorded_in_tr_req( ).
 
   ENDMETHOD.
 
@@ -222,6 +277,8 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       <lt_del> TYPE ANY TABLE,
       <lt_upd> TYPE ANY TABLE.
 
+    li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
+
     LOOP AT it_result INTO ls_result.
       ASSERT ls_result-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
       ASSERT ls_result-name IS NOT INITIAL.
@@ -237,7 +294,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      IF is_table_allowed_to_edit( ls_result ) = abap_false.
+      IF is_table_allowed_to_edit( ls_result ) = abap_false AND ls_result-in_repo = abap_false.
         zcx_abapgit_exception=>raise( |Table { ls_result-name } not supported for updating data| ).
       ENDIF.
 
@@ -251,17 +308,22 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       ASSIGN ls_result-deletes->* TO <lt_del>.
       ASSIGN ls_result-updates->* TO <lt_upd>.
 
-      IF zcl_abapgit_data_utils=>is_customizing_table( ls_result-name ) = abap_true.
-        IF li_cts_api IS INITIAL.
-          li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
+      IF is_table_transported( ls_result-name ) = abap_true.
+        IF zcl_abapgit_data_utils=>is_customizing_table( ls_result-name ) = abap_true.
+          li_cts_api->create_transport_entries(
+            iv_transport = is_checks-customizing-transport
+            it_table_ins = <lt_ins>
+            it_table_upd = <lt_upd>
+            it_table_del = <lt_del>
+            iv_tabname   = |{ ls_result-name }| ).
+        ELSEIF zcl_abapgit_data_utils=>is_application_table( ls_result-name ) = abap_true.
+          li_cts_api->create_transport_entries(
+            iv_transport = is_checks-transport-transport
+            it_table_ins = <lt_ins>
+            it_table_upd = <lt_upd>
+            it_table_del = <lt_del>
+            iv_tabname   = |{ ls_result-name }| ).
         ENDIF.
-
-        li_cts_api->create_transport_entries(
-          iv_transport = is_checks-customizing-transport
-          it_table_ins = <lt_ins>
-          it_table_upd = <lt_upd>
-          it_table_del = <lt_del>
-          iv_tabname   = |{ ls_result-name }| ).
       ENDIF.
 
       INSERT ls_result-file INTO TABLE rt_accessed_files. " data file
@@ -281,6 +343,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     DATA lr_db_data TYPE REF TO data.
     DATA ls_file    LIKE LINE OF it_files.
     DATA ls_result  LIKE LINE OF rt_result.
+    DATA lv_tabname TYPE tabname.
 
     lt_configs = ii_config->get_configs( ).
 
@@ -318,6 +381,13 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
         MOVE-CORRESPONDING ls_file TO ls_result-config. " config file
 
+        " Check if table is included in repo
+        lv_tabname = ls_config-name.
+
+        ls_result-in_repo = is_table_included_in_repo(
+          iv_package = iv_package
+          iv_tabname = lv_tabname ).
+
         INSERT ls_result INTO TABLE rt_result.
       ENDIF.
 
@@ -336,9 +406,9 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       rs_checks-required     = abap_true.
       rs_checks-type-request = zif_abapgit_cts_api=>c_transport_type-cust_request.
       rs_checks-type-task    = zif_abapgit_cts_api=>c_transport_type-cust_task.
-      rs_checks-transport    = determine_transport_request(
-                                 io_repo           = io_repo
-                                 iv_transport_type = rs_checks-type ).
+      rs_checks-transport = determine_transport_request(
+        ii_repo           = ii_repo
+        iv_transport_type = rs_checks-type ).
     ENDIF.
 
   ENDMETHOD.

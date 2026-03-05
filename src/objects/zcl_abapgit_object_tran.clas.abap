@@ -218,11 +218,11 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     ls_bcdata-dynbegin = 'X'.
     APPEND ls_bcdata TO mt_bcdata.
 
-    add_data( iv_fnam     = 'TSTCT-TTEXT'
-              iv_fval     = is_tstct-ttext ).
+    add_data( iv_fnam = 'TSTCT-TTEXT'
+              iv_fval = is_tstct-ttext ).
 
-    add_data( iv_fnam     = 'RSSTCD-S_CLASS'
-              iv_fval     = 'X' ).
+    add_data( iv_fnam = 'RSSTCD-S_CLASS'
+              iv_fval = 'X' ).
 
     add_data( iv_fnam = 'BDC_OKCODE'
               iv_fval = '=ENTR' ).
@@ -232,11 +232,11 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     ls_bcdata-dynbegin = 'X'.
     APPEND ls_bcdata TO mt_bcdata.
 
-    add_data( iv_fnam     = 'RSSTCD-S_TRFRAME'
-              iv_fval     = is_rsstcd-s_trframe ).
+    add_data( iv_fnam = 'RSSTCD-S_TRFRAME'
+              iv_fval = is_rsstcd-s_trframe ).
 
-    add_data( iv_fnam     = 'RSSTCD-S_UPDTASK'
-              iv_fval     = is_rsstcd-s_updtask ).
+    add_data( iv_fnam = 'RSSTCD-S_UPDTASK'
+              iv_fval = is_rsstcd-s_updtask ).
 
     add_data( iv_fnam = 'BDC_OKCODE'
               iv_fval = '=TR_FRAMEWORK' ).
@@ -246,29 +246,29 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     ls_bcdata-dynbegin = 'X'.
     APPEND ls_bcdata TO mt_bcdata.
 
-    add_data( iv_fnam     = 'RSSTCD-CLASSNAME'
-              iv_fval     = is_rsstcd-classname ).
+    add_data( iv_fnam = 'RSSTCD-CLASSNAME'
+              iv_fval = is_rsstcd-classname ).
 
-    add_data( iv_fnam     = 'RSSTCD-METHOD'
-              iv_fval     = is_rsstcd-method ).
+    add_data( iv_fnam = 'RSSTCD-METHOD'
+              iv_fval = is_rsstcd-method ).
 
     IF is_rsstcd-s_local IS NOT INITIAL.
-      add_data( iv_fnam     = 'RSSTCD-S_LOCAL'
-                iv_fval     = is_rsstcd-s_local ).
+      add_data( iv_fnam = 'RSSTCD-S_LOCAL'
+                iv_fval = is_rsstcd-s_local ).
     ENDIF.
 
     IF is_rsstcd-s_updlok IS NOT INITIAL.
-      add_data( iv_fnam     = 'RSSTCD-S_UPDLOK'
-                iv_fval     = is_rsstcd-s_updlok ).
+      add_data( iv_fnam = 'RSSTCD-S_UPDLOK'
+                iv_fval = is_rsstcd-s_updlok ).
     ENDIF.
 
-    add_data( iv_fnam     = 'TSTC-PGMNA'
-              iv_fval     = is_tstc-pgmna ).
+    add_data( iv_fnam = 'TSTC-PGMNA'
+              iv_fval = is_tstc-pgmna ).
 
     IF is_tstcc-s_webgui = '2'.
 
-      add_data( iv_fnam     = 'G_IAC_EWT'
-                iv_fval     = abap_true ).
+      add_data( iv_fnam = 'G_IAC_EWT'
+                iv_fval = abap_true ).
 
       add_data( iv_fnam = 'BDC_OKCODE'
                 iv_fval = 'MAKE_PROFI' ).
@@ -280,29 +280,29 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     ELSEIF is_tstcc-s_webgui IS NOT INITIAL.
 
-      add_data( iv_fnam     = 'TSTCC-S_WEBGUI'
-                iv_fval     = is_tstcc-s_webgui ).
+      add_data( iv_fnam = 'TSTCC-S_WEBGUI'
+                iv_fval = is_tstcc-s_webgui ).
 
     ENDIF.
 
     IF is_tstcc-s_pervas IS NOT INITIAL.
-      add_data( iv_fnam     = 'TSTCC-S_PERVAS'
-                iv_fval     = is_tstcc-s_pervas ).
+      add_data( iv_fnam = 'TSTCC-S_PERVAS'
+                iv_fval = is_tstcc-s_pervas ).
     ENDIF.
 
     IF is_tstcc-s_service IS NOT INITIAL.
-      add_data( iv_fnam     = 'TSTCC-S_SERVICE'
-                iv_fval     = is_tstcc-s_service ).
+      add_data( iv_fnam = 'TSTCC-S_SERVICE'
+                iv_fval = is_tstcc-s_service ).
     ENDIF.
 
     IF is_tstcc-s_platin IS NOT INITIAL.
-      add_data( iv_fnam     = 'TSTCC-S_PLATIN'
-                iv_fval     = is_tstcc-s_platin ).
+      add_data( iv_fnam = 'TSTCC-S_PLATIN'
+                iv_fval = is_tstcc-s_platin ).
     ENDIF.
 
     IF is_tstcc-s_win32 IS NOT INITIAL.
-      add_data( iv_fnam     = 'TSTCC-S_WIN32'
-                iv_fval     = is_tstcc-s_win32 ).
+      add_data( iv_fnam = 'TSTCC-S_WIN32'
+                iv_fval = is_tstcc-s_win32 ).
     ENDIF.
 
     add_data( iv_fnam = 'BDC_OKCODE'
@@ -313,8 +313,8 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     ls_bcdata-dynbegin = 'X'.
     APPEND ls_bcdata TO mt_bcdata.
 
-    add_data( iv_fnam     = 'KO007-L_DEVCLASS'
-              iv_fval     = iv_package ).
+    add_data( iv_fnam = 'KO007-L_DEVCLASS'
+              iv_fval = iv_package ).
 
     add_data( iv_fnam = 'BDC_OKCODE'
               iv_fval = '=ADD' ).
@@ -354,7 +354,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       EXPORTING
         iv_lang_field_name = 'SPRSL'
       CHANGING
-        ct_tab = lt_tpool_i18n ).
+        ct_tab             = lt_tpool_i18n ).
 
     " Force t-code name (security reasons)
     LOOP AT lt_tpool_i18n ASSIGNING <ls_tpool>.
@@ -418,7 +418,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       EXPORTING
         iv_lang_field_name = 'SPRSL'
       CHANGING
-        ct_tab = lt_tpool_i18n ).
+        ct_tab             = lt_tpool_i18n ).
 
     IF lines( lt_tpool_i18n ) > 0.
       SORT lt_tpool_i18n BY sprsl ASCENDING.
@@ -525,13 +525,13 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     CLEAR cs_rsstcd-s_vari.
 
     IF cs_tstcp-param(1) = '\'.             " OO-Transaction without FR
-      split_parameters_comp( EXPORTING ig_type = c_oo_program
+      split_parameters_comp( EXPORTING ig_type  = c_oo_program
                                        ig_param = cs_tstcp-param
                              CHANGING  cg_value = cs_tstc-pgmna ).
-      split_parameters_comp( EXPORTING ig_type = c_oo_class
+      split_parameters_comp( EXPORTING ig_type  = c_oo_class
                                        ig_param = cs_tstcp-param
                              CHANGING  cg_value = cs_rsstcd-classname ).
-      split_parameters_comp( EXPORTING ig_type = c_oo_method
+      split_parameters_comp( EXPORTING ig_type  = c_oo_method
                                        ig_param = cs_tstcp-param
                              CHANGING  cg_value = cs_rsstcd-method ).
 
@@ -575,15 +575,19 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     ELSE.
       cs_rsstcd-st_tcode = space.
       cs_rsstcd-st_prog  = c_true.
+      cs_rsstcd-variant  = cs_tstcp-param.
     ENDIF.
 
     shift_param(
-      CHANGING ct_rsparam = ct_rsparam
-               cs_tstcp   = cs_tstcp ).
+      CHANGING
+        ct_rsparam = ct_rsparam
+        cs_tstcp   = cs_tstcp ).
 
     set_oo_parameters(
-      EXPORTING it_rsparam = ct_rsparam
-      CHANGING cs_rsstcd = cs_rsstcd ).
+      EXPORTING
+        it_rsparam = ct_rsparam
+      CHANGING
+        cs_rsstcd  = cs_rsstcd ).
 
   ENDMETHOD.
 
@@ -679,7 +683,8 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 *               lc_hex_men TYPE x VALUE '01',
                lc_hex_par TYPE x VALUE '02',
                lc_hex_rep TYPE x VALUE '80',
-*               lc_hex_rpv TYPE x VALUE '10',
+               lc_hex_var TYPE x VALUE '90',
+               lc_hex_rpv TYPE x VALUE '10',
                lc_hex_obj TYPE x VALUE '08'.
 
     DATA: lv_dynpro       TYPE d020s-dnum,
@@ -691,23 +696,29 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
           lt_tstca        TYPE ty_tstca,
           lt_param_values TYPE ty_param_values,
           ls_rsstcd       TYPE rsstcd.
+    DATA: ls_item TYPE zif_abapgit_definitions=>ty_item,
+          lr_head TYPE REF TO data,
+          lx_err  TYPE REF TO cx_root,
+          lo_sush TYPE REF TO zcl_abapgit_object_sush.
 
+    FIELD-SYMBOLS <ls_head> TYPE any.
 
     IF zif_abapgit_object~exists( ) = abap_true.
       zif_abapgit_object~delete( iv_package   = iv_package
-                                 iv_transport = iv_transport ).
+                                 iv_transport = iv_transport
+                                 ii_log       = ii_log ).
     ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'TSTC'
-                  CHANGING cg_data = ls_tstc ).
+                  CHANGING  cg_data = ls_tstc ).
     io_xml->read( EXPORTING iv_name = 'TSTCC'
-                  CHANGING cg_data = ls_tstcc ).
+                  CHANGING  cg_data = ls_tstcc ).
     io_xml->read( EXPORTING iv_name = 'TSTCT'
-                  CHANGING cg_data = ls_tstct ).
+                  CHANGING  cg_data = ls_tstct ).
     io_xml->read( EXPORTING iv_name = 'TSTCP'
-                  CHANGING cg_data = ls_tstcp ).
+                  CHANGING  cg_data = ls_tstcp ).
     io_xml->read( EXPORTING iv_name = 'AUTHORIZATIONS'
-                  CHANGING cg_data = lt_tstca ).
+                  CHANGING  cg_data = lt_tstca ).
 
     lv_dynpro = ls_tstc-dypno.
 
@@ -737,11 +748,11 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     CASE lv_type.
       WHEN c_variant_type-object.
 
-        deserialize_oo_transaction( iv_package      = iv_package
-                                    is_tstc         = ls_tstc
-                                    is_tstcc        = ls_tstcc
-                                    is_tstct        = ls_tstct
-                                    is_rsstcd       = ls_rsstcd ).
+        deserialize_oo_transaction( iv_package = iv_package
+                                    is_tstc    = ls_tstc
+                                    is_tstcc   = ls_tstcc
+                                    is_tstct   = ls_tstct
+                                    is_rsstcd  = ls_rsstcd ).
 
       WHEN OTHERS.
 
@@ -782,6 +793,15 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
           zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
 
+        " RPY_TRANSACTION_INSERT does not set the variant flag (x'10') in cinfo for report transactions with variants,
+        " so we update it manually to include both report (x'80') and variant (x'10') flags (i.e., '90' in hexadecimal).
+        IF ls_tstc-cinfo O lc_hex_rpv.
+          UPDATE tstc SET cinfo = lc_hex_var WHERE tcode = ls_tstc-tcode.
+          IF sy-subrc <> 0.
+            zcx_abapgit_exception=>raise( 'Update of TSTC cinfo failed' ).
+          ENDIF.
+        ENDIF.
+
     ENDCASE.
 
     IF lt_tstca IS NOT INITIAL.
@@ -793,13 +813,46 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       deserialize_texts( io_xml ).
     ENDIF.
 
+    " Import SU22 data by reusing SUSH deserializer
+    TRY.
+        CREATE DATA lr_head TYPE ('IF_SU22_ADT_OBJECT=>TS_SU2X_HEAD').
+        ASSIGN lr_head->* TO <ls_head>.
+      CATCH cx_root.
+        RETURN. ">>> no SU22 in this release
+    ENDTRY.
+
+    TRY.
+        io_xml->read( EXPORTING iv_name = 'HEAD'
+                      CHANGING  cg_data = <ls_head> ).
+
+        IF <ls_head> IS NOT INITIAL.
+          ls_item-obj_type    = 'SUSH'.
+          ls_item-obj_name    = ms_item-obj_name.
+          ls_item-obj_name+30 = 'TR'.
+
+          CREATE OBJECT lo_sush TYPE zcl_abapgit_object_sush
+            EXPORTING
+              is_item     = ls_item
+              iv_language = mv_language.
+
+          lo_sush->zif_abapgit_object~deserialize(
+            iv_package   = iv_package
+            io_xml       = io_xml
+            iv_step      = iv_step
+            ii_log       = ii_log
+            iv_transport = iv_transport ).
+        ENDIF.
+
+      CATCH cx_root INTO lx_err.
+        zcx_abapgit_exception=>raise_with_text( lx_err ).
+    ENDTRY.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
 
     DATA: lv_tcode TYPE tstc-tcode.
-
 
     SELECT SINGLE tcode FROM tstc INTO lv_tcode
       WHERE tcode = ms_item-obj_name.                   "#EC CI_GENBUFF
@@ -820,6 +873,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
   ENDMETHOD.
 
 
@@ -845,7 +899,6 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     DATA: lt_bdcdata TYPE TABLE OF bdcdata.
 
     FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
-
 
     APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
     <ls_bdcdata>-program  = 'SAPLSEUK'.
@@ -887,7 +940,9 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
           ls_tstcp       TYPE tstcp,
           lt_tstca       TYPE ty_tstca,
           ls_gui_attr    TYPE tstcc.
-
+    DATA: ls_item TYPE zif_abapgit_definitions=>ty_item,
+          ls_sush TYPE usob_sm,
+          lo_sush TYPE REF TO zcl_abapgit_object_sush.
 
     lv_transaction = ms_item-obj_name.
 
@@ -927,6 +982,24 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts( io_xml ).
+    ENDIF.
+
+    " Add SU22 data by reusing SUSH serializer
+    SELECT SINGLE * FROM usob_sm INTO ls_sush WHERE name = ms_item-obj_name AND type = 'TR'.
+    IF sy-subrc = 0.
+      ls_item-obj_type    = 'SUSH'.
+      ls_item-obj_name    = ms_item-obj_name.
+      ls_item-obj_name+30 = 'TR'.
+
+      TRY.
+          CREATE OBJECT lo_sush TYPE zcl_abapgit_object_sush
+            EXPORTING
+              is_item     = ls_item
+              iv_language = mv_language.
+
+          lo_sush->zif_abapgit_object~serialize( io_xml ).
+        CATCH zcx_abapgit_type_not_supported.
+      ENDTRY.
     ENDIF.
 
   ENDMETHOD.

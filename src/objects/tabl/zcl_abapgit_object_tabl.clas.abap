@@ -12,13 +12,15 @@ CLASS zcl_abapgit_object_tabl DEFINITION
     "! get additional data like table authorization group
     "! @parameter iv_tabname | name of the table
     METHODS read_extras IMPORTING iv_tabname            TYPE ddobjname
-                        RETURNING VALUE(rs_tabl_extras) TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
+                        RETURNING VALUE(rs_tabl_extras) TYPE zif_abapgit_object_tabl=>ty_tabl_extras
+                        RAISING   zcx_abapgit_exception.
 
     "! Update additional data
     "! @parameter iv_tabname | name of the table
     "! @parameter is_tabl_extras | additional table data
     METHODS update_extras IMPORTING iv_tabname     TYPE ddobjname
-                                    is_tabl_extras TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
+                                    is_tabl_extras TYPE zif_abapgit_object_tabl=>ty_tabl_extras
+                          RAISING   zcx_abapgit_exception.
 
     "! Delete additional data
     "! @parameter iv_tabname | name of the table
@@ -75,16 +77,11 @@ CLASS zcl_abapgit_object_tabl DEFINITION
         !cs_internal TYPE zif_abapgit_object_tabl=>ty_internal
       RAISING
         zcx_abapgit_exception .
-    METHODS is_db_table_category
-      IMPORTING
-        !iv_tabclass               TYPE dd02l-tabclass
-      RETURNING
-        VALUE(rv_is_db_table_type) TYPE dd02l-tabclass .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
+CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -214,7 +211,6 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
     DATA lv_result              LIKE sy-subrc.
     DATA lv_package             TYPE devclass.
-    DATA lv_uname               TYPE sy-uname.
     DATA lv_transport           TYPE trkorr.
     DATA ls_edisdef             TYPE edisdef.
     DATA ls_segment_definition  TYPE zif_abapgit_object_tabl=>ty_segment_definition.
@@ -307,24 +303,12 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    lv_uname = sy-uname.
-
-    CALL FUNCTION 'TR_TADIR_INTERFACE'
-      EXPORTING
-        wi_test_modus       = abap_false
-        wi_tadir_pgmid      = 'R3TR'
-        wi_tadir_object     = ms_item-obj_type
-        wi_tadir_obj_name   = ms_item-obj_name
-        wi_tadir_author     = lv_uname
-        wi_tadir_devclass   = iv_package
-        wi_tadir_masterlang = mv_language
-        iv_set_edtflag      = abap_true
-        iv_delflag          = abap_false
-      EXCEPTIONS
-        OTHERS              = 1.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    zcl_abapgit_factory=>get_tadir( )->insert_single(
+      iv_object      = ms_item-obj_type
+      iv_obj_name    = ms_item-obj_name
+      iv_package     = iv_package
+      iv_language    = mv_language
+      iv_set_edtflag = abap_true ).
   ENDMETHOD.
 
 
@@ -449,16 +433,6 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_db_table_category.
-
-    " values from domain TABCLASS
-    rv_is_db_table_type = boolc( iv_tabclass = 'TRANSP'
-                              OR iv_tabclass = 'CLUSTER'
-                              OR iv_tabclass = 'POOL' ).
-
-  ENDMETHOD.
-
-
   METHOD is_idoc_segment.
 
     DATA lv_segment_type TYPE edilsegtyp.
@@ -477,6 +451,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
   METHOD read_extras.
 
     SELECT SINGLE * FROM tddat INTO rs_tabl_extras-tddat WHERE tabname = iv_tabname.
+
+    rs_tabl_extras-abap_language_version = get_abap_language_version( ).
 
   ENDMETHOD.
 
@@ -596,11 +572,23 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
   METHOD update_extras.
 
+    DATA lv_abap_language_version TYPE uccheck.
+
     IF is_tabl_extras-tddat IS INITIAL.
       delete_extras( iv_tabname ).
     ELSE.
       MODIFY tddat FROM is_tabl_extras-tddat.
     ENDIF.
+
+    " Fields that are not part of dd02v
+    TRY.
+        lv_abap_language_version = is_tabl_extras-abap_language_version.
+
+        set_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+
+        UPDATE ('DD02L') SET abap_language_version = lv_abap_language_version WHERE tabname = iv_tabname.
+      CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -654,14 +642,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_objname TYPE rsedd0-ddobjname,
-          lv_no_ask  TYPE abap_bool,
-          lv_subrc   TYPE sy-subrc,
-          BEGIN OF ls_dd02l,
-            tabname  TYPE dd02l-tabname,
-            tabclass TYPE dd02l-tabclass,
-            sqltab   TYPE dd02l-sqltab,
-          END OF ls_dd02l.
+    DATA: lv_objname TYPE rsedd0-ddobjname.
 
     IF zif_abapgit_object~exists( ) = abap_false.
       " Proxies e.g. delete on its own, nothing todo here then.
@@ -672,36 +653,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
     IF delete_idoc_segment( ) = abap_false.
 
-      lv_no_ask = abap_true.
-      SELECT SINGLE tabname tabclass sqltab FROM dd02l
-        INTO CORRESPONDING FIELDS OF ls_dd02l
-        WHERE tabname = ms_item-obj_name
-        AND as4local = 'A'
-        AND as4vers = '0000'.
-      IF sy-subrc = 0 AND is_db_table_category( ls_dd02l-tabclass ) = abap_true.
-
-        CALL FUNCTION 'DD_EXISTS_DATA'
-          EXPORTING
-            reftab          = ls_dd02l-sqltab
-            tabclass        = ls_dd02l-tabclass
-            tabname         = ls_dd02l-tabname
-          IMPORTING
-            subrc           = lv_subrc
-          EXCEPTIONS
-            missing_reftab  = 1
-            sql_error       = 2
-            buffer_overflow = 3
-            unknown_error   = 4
-            OTHERS          = 5.
-
-        IF sy-subrc = 0 AND lv_subrc = 0.
-          lv_no_ask = abap_false.
-        ENDIF.
-
-      ENDIF.
-
+      " User has already confirmed deletion of tables with data in deserialize_checks
       delete_ddic( iv_objtype = 'T'
-                   iv_no_ask  = lv_no_ask ).
+                   iv_no_ask  = abap_true ).
 
       delete_longtexts( c_longtext_id_tabl ).
 
@@ -820,7 +774,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_tabname TYPE dd02l-tabname.
+    DATA lv_tabname TYPE dd02l-tabname.
+    DATA ls_x030l   TYPE x030l.
 
     lv_tabname = ms_item-obj_name.
 
@@ -828,6 +783,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     CALL FUNCTION 'DD_GET_NAMETAB_HEADER'
       EXPORTING
         tabname   = lv_tabname
+      IMPORTING
+        x030l_wa  = ls_x030l
       EXCEPTIONS
         not_found = 1
         OTHERS    = 2.
@@ -838,28 +795,20 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     ENDIF.
     rv_bool = boolc( sy-subrc = 0 ).
 
+    " Skip TABL structures generated by CHDO
+    IF rv_bool = abap_true AND ( ls_x030l-tabtype = 'J' OR ls_x030l-tabtype IS INITIAL ).
+      SELECT SINGLE tabname FROM tcdrs INTO lv_tabname WHERE tabname = lv_tabname.
+      IF sy-subrc = 0.
+        rv_bool = abap_false.
+      ENDIF.
+    ENDIF.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_comparator.
-
-    DATA: li_local_version_output TYPE REF TO zif_abapgit_xml_output,
-          li_local_version_input  TYPE REF TO zif_abapgit_xml_input.
-
-
-    CREATE OBJECT li_local_version_output TYPE zcl_abapgit_xml_output.
-
-    zif_abapgit_object~serialize( li_local_version_output ).
-
-    CREATE OBJECT li_local_version_input
-      TYPE zcl_abapgit_xml_input
-      EXPORTING
-        iv_xml = li_local_version_output->render( ).
-
-    CREATE OBJECT ri_comparator TYPE zcl_abapgit_object_tabl_compar
-      EXPORTING
-        ii_local = li_local_version_input.
-
+    " Moved to zcl_abapgit_objects_compare
+    RETURN.
   ENDMETHOD.
 
 
@@ -870,6 +819,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
   ENDMETHOD.
 
 
@@ -918,6 +868,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
                    <ls_dd08v>      LIKE LINE OF ls_internal-dd08v,
                    <ls_dd35v>      LIKE LINE OF ls_internal-dd35v,
                    <ls_dd36m>      LIKE LINE OF ls_internal-dd36m,
+                   <ls_dd03p>      LIKE LINE OF ls_internal-dd03p,
+                   <lg_field>      TYPE any,
                    <lg_roworcolst> TYPE any.
 
     lv_name = ms_item-obj_name.
@@ -977,6 +929,12 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
       CLEAR <lg_roworcolst>. "To avoid diff errors. This field doesn't exist in all releases
     ENDIF.
 
+    LOOP AT ls_internal-dd03p ASSIGNING <ls_dd03p>.
+      ASSIGN COMPONENT 'ACTFLAG' OF STRUCTURE <ls_dd03p> TO <lg_field>.
+      IF sy-subrc = 0.
+        CLEAR <lg_field>. "To avoid diffs. This field doesn't exist in all releases
+      ENDIF.
+    ENDLOOP.
 
     LOOP AT ls_internal-dd12v ASSIGNING <ls_dd12v>.
       CLEAR: <ls_dd12v>-as4user,
@@ -1019,12 +977,18 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     DELETE ls_internal-dd35v WHERE shlpinher = abap_true.
     LOOP AT ls_internal-dd36m ASSIGNING <ls_dd36m>.
       CLEAR <ls_dd36m>-tabname.
+      CLEAR <ls_dd36m>-rollname.
+      CLEAR <ls_dd36m>-domname.
+      CLEAR <ls_dd36m>-datatype.
+      CLEAR <ls_dd36m>-leng.
       lv_index = sy-tabix.
       READ TABLE ls_internal-dd35v WITH KEY fieldname = <ls_dd36m>-fieldname TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
         DELETE ls_internal-dd36m INDEX lv_index.
       ENDIF.
     ENDLOOP.
+
+    SORT ls_internal-dd36m BY flposition.
 
     IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts( CHANGING cs_internal = ls_internal ).

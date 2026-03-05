@@ -27,16 +27,16 @@ CLASS zcl_abapgit_gui_html_processor DEFINITION
 
     METHODS patch_html
       IMPORTING
-        iv_html TYPE string
+        iv_html     TYPE string
       EXPORTING
-        ev_html TYPE string
+        ev_html     TYPE string
         et_css_urls TYPE string_table
       RAISING
         zcx_abapgit_exception.
 
     METHODS is_preserved
       IMPORTING
-        !iv_css_url TYPE string
+        !iv_css_url   TYPE string
       RETURNING
         VALUE(rv_yes) TYPE abap_bool.
 
@@ -52,11 +52,28 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
+CLASS zcl_abapgit_gui_html_processor IMPLEMENTATION.
 
 
   METHOD constructor.
     mi_asset_man = ii_asset_man.
+  ENDMETHOD.
+
+
+  METHOD find_head_offset.
+
+    rv_head_end = find( val = iv_html
+                        regex = |{ cl_abap_char_utilities=>newline }?\\s*</head>|
+                        case = abap_false ) ##REGEX_POSIX.
+    IF rv_head_end <= 0.
+      rv_head_end = find( val = iv_html
+                          regex = |</head>|
+                          case = abap_false ) ##REGEX_POSIX.
+      IF rv_head_end <= 0.
+        zcx_abapgit_exception=>raise( 'HTML preprocessor: </head> not found' ).
+      ENDIF.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -90,7 +107,7 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
     CREATE OBJECT lo_css_re
       EXPORTING
         ignore_case = abap_true
-        pattern     = lc_css_re.
+        pattern     = lc_css_re ##REGEX_POSIX.
 
     lo_matcher = lo_css_re->create_matcher( text = substring( val = iv_html len = lv_head_end ) ).
     WHILE lo_matcher->find_next( ) = abap_true.
@@ -165,21 +182,4 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-  METHOD find_head_offset.
-
-    rv_head_end = find( val = iv_html
-                        regex = |{ cl_abap_char_utilities=>newline }?\\s*</head>|
-                        case = abap_false ).
-    IF rv_head_end <= 0.
-      rv_head_end = find( val = iv_html
-                          regex = |</head>|
-                          case = abap_false ).
-      IF rv_head_end <= 0.
-        zcx_abapgit_exception=>raise( 'HTML preprocessor: </head> not found' ).
-      ENDIF.
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.

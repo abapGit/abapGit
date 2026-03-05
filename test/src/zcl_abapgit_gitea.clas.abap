@@ -2,7 +2,7 @@ CLASS zcl_abapgit_gitea DEFINITION PUBLIC.
   PUBLIC SECTION.
     CLASS-METHODS create_repo
       IMPORTING
-        iv_name TYPE string
+        iv_name       TYPE string
       RETURNING
         VALUE(rv_url) TYPE string
       RAISING
@@ -23,7 +23,7 @@ CLASS zcl_abapgit_gitea IMPLEMENTATION.
     DATA lv_url      TYPE string.
 
 
-    li_agent = zcl_abapgit_factory=>get_http_agent( ).
+    li_agent = zcl_abapgit_http_agent=>create( ).
 
     li_agent->global_headers( )->set(
       iv_key = 'Accept'
@@ -35,7 +35,7 @@ CLASS zcl_abapgit_gitea IMPLEMENTATION.
 
     lv_url = c_base && '/api/v1/user/repos'.
 
-    zcl_abapgit_login_manager=>set(
+    zcl_abapgit_login_manager=>set_basic(
       iv_uri      = lv_url
       iv_username = c_username
       iv_password = c_password ).

@@ -40,17 +40,17 @@ CLASS zcl_abapgit_ajson_mapping DEFINITION
 
     CLASS-METHODS create_rename
       IMPORTING
-        it_rename_map TYPE zif_abapgit_ajson_mapping=>tty_rename_map
-        iv_rename_by TYPE i DEFAULT rename_by-attr_name
+        it_rename_map     TYPE zif_abapgit_ajson_mapping=>tty_rename_map
+        iv_rename_by      TYPE i DEFAULT rename_by-attr_name
       RETURNING
         VALUE(ri_mapping) TYPE REF TO zif_abapgit_ajson_mapping.
 
     CLASS-METHODS create_compound_mapper
       IMPORTING
-        ii_mapper1 TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
-        ii_mapper2 TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
-        ii_mapper3 TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
-        it_more TYPE zif_abapgit_ajson_mapping=>ty_table_of OPTIONAL
+        ii_mapper1        TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
+        ii_mapper2        TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
+        ii_mapper3        TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
+        it_more           TYPE zif_abapgit_ajson_mapping=>ty_table_of OPTIONAL
       RETURNING
         VALUE(ri_mapping) TYPE REF TO zif_abapgit_ajson_mapping.
 
@@ -62,7 +62,7 @@ CLASS zcl_abapgit_ajson_mapping DEFINITION
       IMPORTING
         iv_first_json_upper TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ri_mapping) TYPE REF TO zif_abapgit_ajson_mapping.
+        VALUE(ri_mapping)   TYPE REF TO zif_abapgit_ajson_mapping.
 
   PROTECTED SECTION.
 

@@ -76,12 +76,14 @@ INTERFACE zif_abapgit_definitions
     END OF ty_transport .
   TYPES:
     BEGIN OF ty_deserialize_checks,
-      overwrite       TYPE ty_overwrite_tt,
-      warning_package TYPE ty_overwrite_tt,
-      requirements    TYPE ty_requirements,
-      dependencies    TYPE ty_dependencies,
-      transport       TYPE ty_transport,
-      customizing     TYPE ty_transport,
+      overwrite             TYPE ty_overwrite_tt,
+      warning_package       TYPE ty_overwrite_tt,
+      data_loss             TYPE ty_overwrite_tt,
+      delete_tabl_with_data TYPE ty_overwrite_tt,
+      requirements          TYPE ty_requirements,
+      dependencies          TYPE ty_dependencies,
+      transport             TYPE ty_transport,
+      customizing           TYPE ty_transport,
     END OF ty_deserialize_checks .
   TYPES:
     BEGIN OF ty_delete_checks,
@@ -156,13 +158,6 @@ INTERFACE zif_abapgit_definitions
       remote TYPE zif_abapgit_git_definitions=>ty_files_tt,
       status TYPE ty_results_ts_path,
     END OF ty_stage_files .
-  TYPES:
-    BEGIN OF ty_tpool.
-      INCLUDE TYPE textpool.
-  TYPES: split TYPE c LENGTH 8.
-  TYPES: END OF ty_tpool .
-  TYPES:
-    ty_tpool_tt TYPE STANDARD TABLE OF ty_tpool WITH DEFAULT KEY .
 
   TYPES:
     BEGIN OF ty_transport_to_branch,
@@ -219,44 +214,10 @@ INTERFACE zif_abapgit_definitions
     END OF ty_repo_item .
   TYPES:
     ty_repo_item_tt TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY .
-  TYPES:
-    BEGIN OF ty_s_user_settings,
-      max_lines              TYPE i,
-      adt_jump_enabled       TYPE abap_bool,
-      show_default_repo      TYPE abap_bool,
-      link_hints_enabled     TYPE abap_bool,
-      link_hint_key          TYPE c LENGTH 1,
-      parallel_proc_disabled TYPE abap_bool,
-      icon_scaling           TYPE c LENGTH 1,
-      ui_theme               TYPE string,
-      hide_sapgui_hint       TYPE abap_bool,
-      activate_wo_popup      TYPE abap_bool,
-      label_colors           TYPE string,
-      default_git_uname      TYPE string,
-      default_git_email      TYPE string,
-    END OF ty_s_user_settings .
-  TYPES:
-    BEGIN OF ty_list_settings,
-      filter           TYPE string,
-      only_favorites   TYPE abap_bool,
-      show_details     TYPE abap_bool,
-      order_by         TYPE string,
-      order_descending TYPE abap_bool,
-    END OF ty_list_settings.
+
   TYPES:
     ty_dokil_tt TYPE STANDARD TABLE OF dokil
                          WITH NON-UNIQUE DEFAULT KEY .
-  TYPES:
-    BEGIN OF ty_col_spec,
-      tech_name      TYPE string,
-      display_name   TYPE string,
-      css_class      TYPE string,
-      add_tz         TYPE abap_bool,
-      title          TYPE string,
-      allow_order_by TYPE abap_bool,
-    END OF ty_col_spec,
-    ty_col_spec_tt TYPE STANDARD TABLE OF ty_col_spec
-                      WITH NON-UNIQUE KEY tech_name.
   TYPES:
     ty_proxy_bypass_url       TYPE c LENGTH 255,
     ty_range_proxy_bypass_url TYPE RANGE OF ty_proxy_bypass_url.
@@ -268,11 +229,6 @@ INTERFACE zif_abapgit_definitions
       prerelase       TYPE string,
       prerelase_patch TYPE i,
     END OF ty_version.
-  TYPES:
-    ty_deserialization_step TYPE string.
-  TYPES:
-    ty_deserialization_step_tt TYPE STANDARD TABLE OF ty_deserialization_step
-                                          WITH DEFAULT KEY .
   TYPES ty_sci_result TYPE c LENGTH 1.
   CONSTANTS:
     BEGIN OF c_sci_result,
@@ -350,6 +306,7 @@ INTERFACE zif_abapgit_definitions
       repo_activate_objects         TYPE string VALUE 'repo_activate_objects',
       repo_add_all_obj_to_trans_req TYPE string VALUE 'repo_add_all_obj_to_trans_req',
       repo_background               TYPE string VALUE 'repo_background',
+      repo_change_package           TYPE string VALUE 'repo_change_package',
       repo_code_inspector           TYPE string VALUE 'repo_code_inspector',
       repo_delete_objects           TYPE string VALUE 'repo_delete_objects',
       repo_infos                    TYPE string VALUE 'repo_infos',
@@ -417,6 +374,10 @@ INTERFACE zif_abapgit_definitions
       main_language_only    TYPE abap_bool,
       translation_languages TYPE ty_languages,
       use_lxe               TYPE abap_bool,
+      suppress_po_comments  TYPE abap_bool,
     END OF ty_i18n_params .
   TYPES ty_trrngtrkor_tt TYPE RANGE OF trkorr.
+
+  CONSTANTS c_multiple_transports TYPE trkorr VALUE 'MULTIPLE'.
+
 ENDINTERFACE.

@@ -17,6 +17,24 @@ CLASS zcl_abapgit_pr_enumerator DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS create_repository
+      IMPORTING
+        iv_description TYPE string OPTIONAL
+        iv_is_org      TYPE abap_bool DEFAULT abap_true
+        iv_private     TYPE abap_bool DEFAULT abap_true
+        iv_auto_init   TYPE abap_bool DEFAULT abap_true
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS create_initial_branch
+      IMPORTING
+        iv_readme             TYPE string OPTIONAL
+        iv_branch_name        TYPE string DEFAULT 'main'
+      RETURNING
+        VALUE(rv_branch_name) TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS new
       IMPORTING
         iv_url             TYPE string
@@ -47,11 +65,24 @@ CLASS zcl_abapgit_pr_enumerator IMPLEMENTATION.
 
   METHOD constructor.
 
-    mv_repo_url = to_lower( iv_url ).
+    mv_repo_url = iv_url.
     TRY.
         mi_enum_provider = create_provider( mv_repo_url ).
-      CATCH zcx_abapgit_exception.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD create_initial_branch.
+
+    IF mi_enum_provider IS NOT BOUND.
+      RETURN.
+    ENDIF.
+
+    rv_branch_name = mi_enum_provider->create_initial_branch(
+      iv_readme      = iv_readme
+      iv_branch_name = iv_branch_name ).
 
   ENDMETHOD.
 
@@ -62,25 +93,53 @@ CLASS zcl_abapgit_pr_enumerator IMPLEMENTATION.
     DATA lv_user TYPE string.
     DATA lv_repo TYPE string.
 
-    li_agent = zcl_abapgit_factory=>get_http_agent( ).
+    li_agent = zcl_abapgit_http_agent=>create( ).
 
     FIND ALL OCCURRENCES OF REGEX 'github\.com\/([^\/]+)\/([^\/]+)'
       IN iv_repo_url
-      SUBMATCHES lv_user lv_repo.
+      SUBMATCHES lv_user lv_repo ##REGEX_POSIX.
     IF sy-subrc = 0.
       lv_repo = replace(
         val = lv_repo
         regex = '\.git$'
-        with = '' ).
+        with = '' ) ##REGEX_POSIX.
       CREATE OBJECT ri_provider TYPE zcl_abapgit_pr_enum_github
         EXPORTING
           iv_user_and_repo = |{ lv_user }/{ lv_repo }|
           ii_http_agent    = li_agent.
-    ELSE.
-      zcx_abapgit_exception=>raise( |PR enumeration is not supported for { iv_repo_url }| ).
+    ENDIF.
+
+* used in integration testing, see /test/ folder
+    FIND ALL OCCURRENCES OF REGEX 'localhost:3050\/([^\/]+)\/([^\/]+)'
+      IN iv_repo_url
+      SUBMATCHES lv_user lv_repo ##REGEX_POSIX.
+    IF sy-subrc = 0.
+      CREATE OBJECT ri_provider TYPE zcl_abapgit_pr_enum_gitea
+        EXPORTING
+          iv_user_and_repo = |{ lv_user }/{ lv_repo }|
+          ii_http_agent    = li_agent.
     ENDIF.
 
     " TODO somewhen more providers
+
+    IF ri_provider IS NOT BOUND.
+      zcx_abapgit_exception=>raise( |PR enumeration is not supported for { iv_repo_url }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD create_repository.
+
+    IF mi_enum_provider IS NOT BOUND.
+      RETURN.
+    ENDIF.
+
+    mi_enum_provider->create_repository(
+      iv_description = iv_description
+      iv_is_org      = iv_is_org
+      iv_private     = iv_private
+      iv_auto_init   = iv_auto_init ).
 
   ENDMETHOD.
 

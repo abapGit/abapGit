@@ -15,11 +15,16 @@ CLASS zcl_abapgit_xml_pretty DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CLASS-METHODS raise_error
+      IMPORTING
+        ii_parser TYPE REF TO if_ixml_parser
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_XML_PRETTY IMPLEMENTATION.
+CLASS zcl_abapgit_xml_pretty IMPLEMENTATION.
 
 
   METHOD print.
@@ -52,7 +57,7 @@ CLASS ZCL_ABAPGIT_XML_PRETTY IMPLEMENTATION.
         rv_xml = iv_xml.
         RETURN.
       ELSE.
-        zcx_abapgit_exception=>raise( 'error parsing xml' ).
+        raise_error( li_parser ).
       ENDIF.
     ENDIF.
 
@@ -75,4 +80,39 @@ CLASS ZCL_ABAPGIT_XML_PRETTY IMPLEMENTATION.
     REPLACE FIRST OCCURRENCE OF 'utf-8' IN rv_xml WITH 'utf-16'.
 
   ENDMETHOD.
+
+
+  METHOD raise_error.
+
+    DATA:
+      lv_num_errors TYPE i,
+      li_error      TYPE REF TO if_ixml_parse_error,
+      lv_reason     TYPE string.
+
+    lv_num_errors = ii_parser->num_errors( ).
+
+    DO lv_num_errors TIMES.
+
+      li_error = ii_parser->get_error(
+                     index        = sy-index
+                     min_severity = if_ixml_parse_error=>co_info ).
+
+      IF li_error IS BOUND.
+        lv_reason = li_error->get_reason( ).
+      ENDIF.
+
+      IF lv_reason IS NOT INITIAL.
+        EXIT.
+      ENDIF.
+
+    ENDDO.
+
+    IF lv_reason IS NOT INITIAL.
+      zcx_abapgit_exception=>raise( lv_reason ).
+    ELSE.
+      zcx_abapgit_exception=>raise( 'error parsing xml' ).
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

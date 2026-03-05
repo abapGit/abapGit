@@ -12,7 +12,7 @@ INTERFACE zif_abapgit_popups
       show_icon TYPE abap_bool,
       center    TYPE abap_bool,
     END OF ty_alv_column,
-    ty_alv_column_tt TYPE TABLE OF ty_alv_column WITH DEFAULT KEY.
+    ty_alv_column_tt TYPE STANDARD TABLE OF ty_alv_column WITH DEFAULT KEY.
 
   TYPES:
     BEGIN OF ty_popup_position,
@@ -85,14 +85,6 @@ INTERFACE zif_abapgit_popups
       !iv_popup_type            TYPE clike DEFAULT 'ICON_MESSAGE_QUESTION'
     RETURNING
       VALUE(rv_answer)          TYPE ty_char1
-    RAISING
-      zcx_abapgit_exception .
-  METHODS popup_to_create_package
-    IMPORTING
-      is_package_data  TYPE zif_abapgit_sap_package=>ty_create OPTIONAL
-    EXPORTING
-      !es_package_data TYPE zif_abapgit_sap_package=>ty_create
-      !ev_create       TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
   METHODS popup_to_create_transp_branch

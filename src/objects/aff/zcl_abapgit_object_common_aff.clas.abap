@@ -30,7 +30,7 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
         !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_type_not_supported.
 
   PROTECTED SECTION.
     TYPES: BEGIN OF ty_extension_mapper_pair,
@@ -48,14 +48,13 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
     "! Delivers an instance of AFF object handler ({@link IF_AFF_OBJECT_HANDLER})
     METHODS get_object_handler
       RETURNING
-        VALUE(ro_object_handler) TYPE REF TO object
-      RAISING
-        zcx_abapgit_exception.
-
+        VALUE(ro_object_handler) TYPE REF TO object.
 
     METHODS create_aff_setting_deserialize FINAL
       RETURNING
-        VALUE(ro_settings_deserialize) TYPE REF TO object.
+        VALUE(ro_settings_deserialize) TYPE REF TO object
+      RAISING
+        zcx_abapgit_exception.
 
   PRIVATE SECTION.
     METHODS is_file_empty
@@ -83,7 +82,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
     DATA:
       lv_is_supported TYPE abap_bool,
-      li_aff_registry TYPE REF TO zif_abapgit_aff_registry,
       lo_handler      TYPE REF TO object.
 
     super->constructor(
@@ -96,17 +94,49 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     TRY.
         lo_handler = get_object_handler( ).
 
-        CREATE OBJECT li_aff_registry TYPE zcl_abapgit_aff_registry.
-
-        lv_is_supported = li_aff_registry->is_supported_object_type( is_item-obj_type ).
+        IF lo_handler IS NOT INITIAL.
+          " Additional gate to allow usage of object type in abapGit
+          lv_is_supported = zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( is_item-obj_type ).
+        ENDIF.
       CATCH cx_root.
         lv_is_supported = abap_false.
     ENDTRY.
 
     IF lv_is_supported IS INITIAL.
-      zcx_abapgit_exception=>raise( |Object type { is_item-obj_type } is not supported by this system| ).
+      RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD create_aff_setting_deserialize.
+    DATA:
+      lv_version TYPE r3state.
+
+    IF zcl_abapgit_objects_activation=>is_ddic_type( ms_item-obj_type ) = abap_true.
+      lv_version = 'I'.
+    ELSE.
+      lv_version = 'A'.
+    ENDIF.
+    IF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version AND
+       ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
+      TRY.
+          CREATE OBJECT ro_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
+            EXPORTING
+              version               = lv_version
+              language              = mv_language
+              user                  = sy-uname
+              abap_language_version = ms_item-abap_language_version.
+        CATCH cx_root.
+          zcx_abapgit_exception=>raise( |System does not supported ABAP language version for AFF| ).
+      ENDTRY.
+    ELSE.
+      CREATE OBJECT ro_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
+        EXPORTING
+          version               = lv_version
+          language              = mv_language
+          user                  = sy-uname.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -121,6 +151,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
     CREATE OBJECT lo_handler_factory TYPE ('CL_AFF_OBJECT_HANDLER_FACTORY').
 
+    " If object type is not supported, this call does not throw but returns an initial handler
     CALL METHOD lo_handler_factory->('IF_AFF_OBJECT_HANDLER_FACTORY~GET_OBJECT_HANDLER')
       EXPORTING
         object_type = ms_item-obj_type
@@ -409,25 +440,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           ix_exc  = lx_exception
           is_item = ms_item ).
     ENDTRY.
-  ENDMETHOD.
-
-
-  METHOD create_aff_setting_deserialize.
-    IF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version AND
-       ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
-      CREATE OBJECT ro_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
-        EXPORTING
-          version               = 'A'
-          language              = mv_language
-          user                  = sy-uname
-          abap_language_version = ms_item-abap_language_version.
-    ELSE.
-      CREATE OBJECT ro_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
-        EXPORTING
-          version               = 'A'
-          language              = mv_language
-          user                  = sy-uname.
-    ENDIF.
   ENDMETHOD.
 
 

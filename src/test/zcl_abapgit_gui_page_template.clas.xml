@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_TEMPLATE</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit GUI page template (for copy/paste)</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Page Template (for copy/paste)</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

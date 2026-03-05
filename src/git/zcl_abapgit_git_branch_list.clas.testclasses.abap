@@ -143,7 +143,7 @@ CLASS ltcl_parse IMPLEMENTATION.
     && '3431633762343666656564396434363835652072'
     && '6566732F68656164732F6D61696E0A30303030'.
 
-    lv_data = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstr ).
+    lv_data = zcl_abapgit_convert=>xstring_to_string_utf8_raw( lv_xstr ).
 
     zcl_abapgit_git_branch_list=>parse_branch_list(
       EXPORTING

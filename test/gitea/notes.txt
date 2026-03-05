@@ -6,3 +6,12 @@ docker-compose logs
 docker-compose down
 
 http://localhost:3050
+
+
+https://docs.gitea.com/api/1.23/#tag/repository/operation/repoListPullRequests
+
+
+
+* Gitea docker image, https://hub.docker.com/r/gitea/gitea
+
+Option to leave Gitea running?

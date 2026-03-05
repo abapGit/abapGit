@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_sotr_handler DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -9,53 +9,66 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
       BEGIN OF ty_sotr,
         header  TYPE sotr_head,
         entries TYPE sotr_text_tt,
-      END OF ty_sotr .
+      END OF ty_sotr.
     TYPES:
-      ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY .
+      ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY.
     TYPES:
-      ty_sotr_use_tt TYPE STANDARD TABLE OF sotr_use WITH DEFAULT KEY .
+      ty_sotr_use_tt TYPE STANDARD TABLE OF sotr_use WITH DEFAULT KEY.
 
     CLASS-METHODS read_sotr
       IMPORTING
-        !iv_pgmid    TYPE pgmid DEFAULT 'R3TR'
-        !iv_object   TYPE trobjtype
-        !iv_obj_name TYPE csequence
-        !io_xml      TYPE REF TO zif_abapgit_xml_output OPTIONAL
+        !iv_pgmid       TYPE tadir-pgmid DEFAULT 'R3TR'
+        !iv_object      TYPE trobjtype
+        !iv_obj_name    TYPE csequence
+        !io_xml         TYPE REF TO zif_abapgit_xml_output OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params
       EXPORTING
-        !et_sotr     TYPE ty_sotr_tt
-        !et_sotr_use TYPE ty_sotr_use_tt
+        !et_sotr        TYPE ty_sotr_tt
+        !et_sotr_use    TYPE ty_sotr_use_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     CLASS-METHODS create_sotr
       IMPORTING
         !iv_package TYPE devclass
         !io_xml     TYPE REF TO zif_abapgit_xml_input
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     CLASS-METHODS create_sotr_from_data
       IMPORTING
         !iv_package  TYPE devclass
         !it_sotr     TYPE ty_sotr_tt
         !it_sotr_use TYPE ty_sotr_use_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     CLASS-METHODS delete_sotr
       IMPORTING
-        !iv_pgmid    TYPE pgmid DEFAULT 'R3TR'
+        !iv_pgmid    TYPE tadir-pgmid DEFAULT 'R3TR'
         !iv_object   TYPE trobjtype
         !iv_obj_name TYPE csequence
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     CLASS-METHODS delete_sotr_package
       IMPORTING
         !iv_package TYPE devclass
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
+    CLASS-METHODS change_sotr_package
+      IMPORTING
+        !iv_old_package TYPE devclass
+        !iv_new_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
+
     CLASS-METHODS get_sotr_usage
       IMPORTING
-        !iv_pgmid          TYPE pgmid
+        !iv_pgmid          TYPE tadir-pgmid
         !iv_object         TYPE trobjtype
         !iv_obj_name       TYPE csequence
       RETURNING
@@ -65,13 +78,67 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
       IMPORTING
         !iv_concept    TYPE sotr_conc
       RETURNING
-        VALUE(rs_sotr) TYPE ty_sotr .
+        VALUE(rs_sotr) TYPE ty_sotr.
+
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
+
+
+  METHOD change_sotr_package.
+
+    DATA lt_concepts TYPE btfr_conc_tt.
+
+    " Short texts
+    SELECT concept FROM sotr_head INTO TABLE lt_concepts
+      WHERE paket = iv_old_package
+      ORDER BY PRIMARY KEY.
+
+    IF lt_concepts IS NOT INITIAL.
+      CALL FUNCTION 'BTFR_CHANGE_PACKAGE'
+        EXPORTING
+          concept_tab         = lt_concepts
+          new_package         = iv_new_package
+          flag_string         = abap_false
+          flag_ignore_system  = abap_true
+        EXCEPTIONS
+          invalid_package     = 1
+          invalid_tadir_entry = 2
+          update_error        = 3
+          OTHERS              = 4.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+    ENDIF.
+
+    CLEAR lt_concepts.
+
+    " Long texts
+    SELECT concept FROM sotr_headu INTO TABLE lt_concepts
+      WHERE paket = iv_old_package
+      ORDER BY PRIMARY KEY.
+
+    IF lt_concepts IS NOT INITIAL.
+      CALL FUNCTION 'BTFR_CHANGE_PACKAGE'
+        EXPORTING
+          concept_tab         = lt_concepts
+          new_package         = iv_new_package
+          flag_string         = abap_true
+          flag_ignore_system  = abap_true
+        EXCEPTIONS
+          invalid_package     = 1
+          invalid_tadir_entry = 2
+          update_error        = 3
+          OTHERS              = 4.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD create_sotr.
@@ -238,15 +305,9 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
       SELECT SINGLE obj_name FROM tadir INTO lv_obj_name
         WHERE pgmid = 'R3TR' AND object = 'SOTR' AND obj_name = iv_package.
       IF sy-subrc = 0.
-        CALL FUNCTION 'TR_TADIR_INTERFACE'
-          EXPORTING
-            wi_delete_tadir_entry = abap_true
-            wi_test_modus         = abap_false
-            wi_tadir_pgmid        = 'R3TR'
-            wi_tadir_object       = 'SOTR'
-            wi_tadir_obj_name     = lv_obj_name
-          EXCEPTIONS
-            OTHERS                = 1 ##FM_SUBRC_OK.
+        zcl_abapgit_factory=>get_tadir( )->delete_single(
+          iv_object   = 'SOTR'
+          iv_obj_name = lv_obj_name ).
 
         IF zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ) = abap_true.
 

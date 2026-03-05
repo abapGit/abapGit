@@ -158,6 +158,8 @@ CLASS zcl_abapgit_object_ucsa IMPLEMENTATION.
 
     tadir_delete( ).
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
@@ -194,6 +196,8 @@ CLASS zcl_abapgit_object_ucsa IMPLEMENTATION.
             version = c_version-active.
 
         tadir_insert( iv_package ).
+
+        corr_insert( iv_package ).
 
       CATCH cx_root INTO lx_root.
         lv_text = lx_root->get_text( ).

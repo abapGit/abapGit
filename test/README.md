@@ -6,9 +6,7 @@ Part of `/src/`
 * Harmless, no changes to the system
 * No network connectivity required
 
-Run manually on ABAP system
-
-Run locally on Node.js 20+ via `npm run unit`
+Run manually on ABAP system, or run locally on Node.js 22+ via `npm install && npm run unit`
 
 Runs automatically for every push, not a required status check
 
@@ -16,18 +14,16 @@ Runs automatically for every push, not a required status check
 
 `ZCL_ABAPGIT_INTEGRATION_GIT`
 
-Not installed on systems, edit in vscode or copy pasta
+Note that the integration tests are not installed on systems, edit in vscode or copy pasta
 
-* Gitea docker image, https://hub.docker.com/r/gitea/gitea
-
-`npm run integration`
-
-Option to leave Gitea running?
+`cd test/gitea && npm install && npm run gitea && cd ../../ && npm run integration`
 
 ## Integration Testing - UI
+
 Playwright, https://playwright.dev
 
-webpack and mocked git/repos?
+todo, webpack and mocked git/repos?
 
 ## Integration Testing - Object Serialization
-https://github.com/abapGit/CI
+
+Ad-hoc via [https://github.com/abapGit/CI](abapGit/CI) tooling

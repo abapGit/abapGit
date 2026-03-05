@@ -2,6 +2,14 @@ CLASS zcl_abapgit_object_jobd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
+    METHODS constructor
+      IMPORTING
+        is_item        TYPE zif_abapgit_definitions=>ty_item
+        iv_language    TYPE spras
+        io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_type_not_supported.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -12,6 +20,24 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_object_jobd IMPLEMENTATION.
+
+  METHOD constructor.
+
+    DATA: lr_job_definition TYPE REF TO data.
+
+    super->constructor(
+        is_item        = is_item
+        iv_language    = iv_language
+        io_files       = io_files
+        io_i18n_params = io_i18n_params ).
+
+    TRY.
+        CREATE DATA lr_job_definition TYPE ('CL_JR_JOB_DEFINITION=>TY_JOB_DEFINITION').
+      CATCH cx_sy_ref_creation.
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
+    ENDTRY.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -74,6 +100,7 @@ CLASS zcl_abapgit_object_jobd IMPLEMENTATION.
 
     DATA: lr_job_definition TYPE REF TO data,
           lo_job_definition TYPE REF TO object,
+          lx_error          TYPE REF TO cx_root,
           lv_name           TYPE ty_jd_name.
 
     FIELD-SYMBOLS: <lg_job_definition> TYPE any,
@@ -105,8 +132,8 @@ CLASS zcl_abapgit_object_jobd IMPLEMENTATION.
           EXPORTING
             im_jd_attributes = <lg_job_definition>.
 
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( |Error deserializing JOBD| ).
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -120,16 +147,11 @@ CLASS zcl_abapgit_object_jobd IMPLEMENTATION.
 
     lv_name = ms_item-obj_name.
 
-    TRY.
-        CALL METHOD ('CL_JR_JD_MANAGER')=>('CHECK_JD_EXISTENCE')
-          EXPORTING
-            im_jd_name     = lv_name
-          IMPORTING
-            ex_is_existing = rv_bool.
-
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( |JOBD not supported| ).
-    ENDTRY.
+    CALL METHOD ('CL_JR_JD_MANAGER')=>('CHECK_JD_EXISTENCE')
+      EXPORTING
+        im_jd_name     = lv_name
+      IMPORTING
+        ex_is_existing = rv_bool.
 
   ENDMETHOD.
 
@@ -240,7 +262,7 @@ CLASS zcl_abapgit_object_jobd IMPLEMENTATION.
         ASSIGN COMPONENT 'CREATED_TIME' OF STRUCTURE <lg_job_definition> TO <lg_field>.
         CLEAR <lg_field>.
 
-        ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <lg_job_definition> TO <lg_field>.
+        ASSIGN COMPONENT 'CHANGEDBY' OF STRUCTURE <lg_job_definition> TO <lg_field>.
         CLEAR <lg_field>.
 
         ASSIGN COMPONENT 'CHANGED_DATE' OF STRUCTURE <lg_job_definition> TO <lg_field>.

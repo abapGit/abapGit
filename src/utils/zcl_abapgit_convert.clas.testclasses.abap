@@ -8,7 +8,6 @@ CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FIN
   PRIVATE SECTION.
     METHODS convert_int FOR TESTING RAISING zcx_abapgit_exception.
     METHODS split_string FOR TESTING.
-    METHODS convert_bitbyte FOR TESTING RAISING zcx_abapgit_exception.
     METHODS string_to_xstring_utf8 FOR TESTING RAISING zcx_abapgit_exception.
     METHODS string_to_xstring_utf8_bom FOR TESTING RAISING zcx_abapgit_exception.
     METHODS xstring_to_string_utf8 FOR TESTING RAISING zcx_abapgit_exception.
@@ -19,6 +18,9 @@ CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FIN
     METHODS string_to_xstring FOR TESTING RAISING zcx_abapgit_exception.
     METHODS xstring_to_bintab FOR TESTING.
     METHODS xstring_to_bintab_with_field FOR TESTING.
+    METHODS xstring_to_bintab_initial FOR TESTING.
+    METHODS xstring_to_bintab_long FOR TESTING.
+    METHODS xstring_to_bintab_exact FOR TESTING.
 
 ENDCLASS.
 
@@ -74,6 +76,89 @@ CLASS ltcl_convert IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD xstring_to_bintab_initial.
+
+    DATA lt_bintab TYPE TABLE OF w3mime.
+    DATA lv_size TYPE i.
+    DATA lv_xstr TYPE xstring.
+
+    zcl_abapgit_convert=>xstring_to_bintab(
+      EXPORTING
+        iv_xstr   = lv_xstr
+      IMPORTING
+        ev_size   = lv_size
+        et_bintab = lt_bintab ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_size
+      exp = 0 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_bintab )
+      exp = 0 ).
+
+  ENDMETHOD.
+
+  METHOD xstring_to_bintab_long.
+
+    DATA lt_bintab TYPE TABLE OF w3mime. " x(255)
+    DATA lv_bin LIKE LINE OF lt_bintab.
+    DATA lv_size TYPE i.
+    DATA lv_xstr TYPE xstring.
+
+    lv_xstr = repeat(
+      val = '1122334455'
+      occ = 200 ).
+
+    zcl_abapgit_convert=>xstring_to_bintab(
+      EXPORTING
+        iv_xstr   = lv_xstr
+      IMPORTING
+        ev_size   = lv_size
+        et_bintab = lt_bintab ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_size
+      exp = 1000 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_bintab )
+      exp = 4 ).
+
+    READ TABLE lt_bintab INTO lv_bin INDEX 4.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_bin-line+230(10)
+      exp = '11223344550000000000' ).
+
+  ENDMETHOD.
+
+  METHOD xstring_to_bintab_exact.
+
+    TYPES ty_line TYPE x LENGTH 5.
+    DATA lv_xdata TYPE x LENGTH 10.
+    DATA lt_bintab TYPE TABLE OF ty_line.
+    DATA lv_size TYPE i.
+
+    lv_xdata = '1122334455FFEEDDCCBB'.
+
+    " must not dump if content fits exactly into bintab
+    zcl_abapgit_convert=>xstring_to_bintab(
+      EXPORTING
+        iv_xstr   = lv_xdata
+      IMPORTING
+        ev_size   = lv_size
+        et_bintab = lt_bintab ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_size
+      exp = 10 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_bintab )
+      exp = 2 ).
+
+  ENDMETHOD.
 
   METHOD string_to_xstring.
 
@@ -198,50 +283,17 @@ CLASS ltcl_convert IMPLEMENTATION.
 
     DATA lv_result TYPE string.
 
+    " Test does not work on non-Unicode but is not important for real-world anyway
+    IF cl_abap_char_utilities=>charsize = 1.
+      RETURN.
+    ENDIF.
+
     " 0xF8-0xFF are not valid in UTF-8
     TRY.
         lv_result = zcl_abapgit_convert=>xstring_to_string_utf8( 'F8FF00' ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
-
-  ENDMETHOD.
-
-  METHOD convert_bitbyte.
-
-    DATA: lv_xstring  TYPE xstring,
-          lv_byte     TYPE x,
-          lv_input    TYPE i,
-          lv_bitbyte  TYPE zif_abapgit_git_definitions=>ty_bitbyte,
-          lv_byteint  TYPE i,
-          lv_xbyteint TYPE xstring,
-          lv_xresult  TYPE xstring,
-          lv_result   TYPE i,
-          lv_offset   TYPE i.
-
-    DO 1000 TIMES.
-
-      lv_result = 0.
-      CLEAR: lv_byteint, lv_xbyteint, lv_xresult.
-
-      lv_input  = sy-index * 64.
-      lv_xstring = zcl_abapgit_convert=>int_to_xstring4( lv_input ).
-      DO 4 TIMES.
-        lv_offset = sy-index - 1.
-        lv_byte = lv_xstring+lv_offset(1).
-        lv_bitbyte = zcl_abapgit_convert=>x_to_bitbyte( lv_byte ).
-        lv_byteint = zcl_abapgit_convert=>bitbyte_to_int( lv_bitbyte ).
-        lv_xbyteint = lv_byteint.
-        CONCATENATE lv_xresult lv_xbyteint INTO lv_xresult
-          IN BYTE MODE.
-      ENDDO.
-      lv_result = zcl_abapgit_convert=>xstring_to_int( lv_xresult ).
-
-      cl_abap_unit_assert=>assert_equals(
-          exp = lv_input
-          act = lv_result ).
-
-    ENDDO.
 
   ENDMETHOD.
 
@@ -331,12 +383,15 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
     DATA lv_result TYPE sy-langu.
     lv_result = zcl_abapgit_convert=>language_bcp47_to_sap1( im_from ).
 
-    cl_abap_unit_assert=>assert_equals( exp = im_to
-                                        act = lv_result ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = im_to
+      act = lv_result
+      msg = |Converting "{ im_from }" should result in "{ im_to }"| ).
   ENDMETHOD.
 
   METHOD assert_bcp47_to_sap1_fail.
     DATA lv_result TYPE string.
+    DATA lv_act TYPE sy-subrc.
 
     zcl_abapgit_convert=>language_bcp47_to_sap1(
       EXPORTING
@@ -345,10 +400,15 @@ CLASS ltcl_bcp47_to_sap1 IMPLEMENTATION.
         re_lang_sap1  = lv_result
       EXCEPTIONS
         no_assignment = 1
-        OTHERS = 2 ).
+        OTHERS        = 2 ).
 
-    cl_abap_unit_assert=>assert_equals( exp = 1
-                                        act = sy-subrc ).
+    " Assert itself might change sy-subrc (it does in 702!)
+    lv_act = sy-subrc.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 1
+      act = lv_act
+      msg = |Converting "{ im_from }" should fail| ).
   ENDMETHOD.
 
   METHOD english.
@@ -466,14 +526,18 @@ CLASS ltcl_sap1_to_bcp47 IMPLEMENTATION.
 
   METHOD assert_sap1_to_bcp47.
     DATA lv_result TYPE string.
+
     lv_result = zcl_abapgit_convert=>language_sap1_to_bcp47( im_from ).
 
-    cl_abap_unit_assert=>assert_equals( exp = im_to
-                                        act = lv_result ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = im_to
+      act = lv_result
+      msg = |Converting "{ im_from }" should result in "{ im_to }"| ).
   ENDMETHOD.
 
   METHOD assert_sap1_to_bcp47_fail.
     DATA lv_result TYPE string.
+    DATA lv_act TYPE sy-subrc.
 
     zcl_abapgit_convert=>language_sap1_to_bcp47(
       EXPORTING
@@ -482,10 +546,15 @@ CLASS ltcl_sap1_to_bcp47 IMPLEMENTATION.
         re_lang_bcp47 = lv_result
       EXCEPTIONS
         no_assignment = 1
-        OTHERS = 2 ).
+        OTHERS        = 2 ).
 
-    cl_abap_unit_assert=>assert_equals( exp = 1
-                                        act = sy-subrc ).
+    " Assert itself might change sy-subrc (it does in 702!)
+    lv_act = sy-subrc.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 1
+      act = lv_act
+      msg = |Converting "{ im_from }" should fail| ).
   ENDMETHOD.
 
   METHOD english.

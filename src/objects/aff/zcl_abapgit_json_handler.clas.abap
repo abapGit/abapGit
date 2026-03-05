@@ -18,7 +18,7 @@ CLASS zcl_abapgit_json_handler DEFINITION
         mappings TYPE ty_json_abap_mappings,
       END OF ty_enum_mapping .
     TYPES:
-      ty_enum_mappings TYPE TABLE OF ty_enum_mapping WITH DEFAULT KEY .
+      ty_enum_mappings TYPE STANDARD TABLE OF ty_enum_mapping WITH DEFAULT KEY .
     TYPES:
       BEGIN OF ty_path_value_pair,
         path  TYPE string,

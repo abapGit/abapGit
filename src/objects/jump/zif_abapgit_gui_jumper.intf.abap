@@ -6,12 +6,12 @@ INTERFACE zif_abapgit_gui_jumper
 
   METHODS jump
     IMPORTING
-      !is_item         TYPE zif_abapgit_definitions=>ty_item
-      !is_sub_item     TYPE zif_abapgit_definitions=>ty_item OPTIONAL
-      !iv_line_number  TYPE i OPTIONAL
-      !iv_new_window   TYPE abap_bool DEFAULT abap_true
+      !is_item        TYPE zif_abapgit_definitions=>ty_item
+      !is_sub_item    TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+      !iv_line_number TYPE i OPTIONAL
+      !iv_new_window  TYPE abap_bool DEFAULT abap_true
     RETURNING
-      VALUE(rv_exit)   TYPE abap_bool
+      VALUE(rv_exit)  TYPE abap_bool
     RAISING
       zcx_abapgit_exception.
 

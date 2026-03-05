@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_WHERE_USED_TOOLS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit where used utilities</DESCRIPT>
+    <DESCRIPT>abapGit - Where-used Utilities</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

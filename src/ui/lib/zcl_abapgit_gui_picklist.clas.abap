@@ -259,10 +259,11 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
+    register_handlers( ).
+
     ri_html = zcl_abapgit_html=>create( mo_form->render(
       io_values         = mo_form_data
       io_validation_log = mo_validation_log ) ).
-    register_handlers( ).
 
   ENDMETHOD.
 ENDCLASS.

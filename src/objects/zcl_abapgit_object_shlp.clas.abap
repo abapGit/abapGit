@@ -7,7 +7,7 @@ CLASS zcl_abapgit_object_shlp DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS handle_dependencies
       IMPORTING
-        !iv_step TYPE zif_abapgit_definitions=>ty_deserialization_step
+        !iv_step TYPE zif_abapgit_objects=>ty_deserialization_step
       CHANGING
         !cv_exit TYPE dd30v-selmexit
         !cv_done TYPE abap_bool.
@@ -73,6 +73,9 @@ CLASS zcl_abapgit_object_shlp IMPLEMENTATION.
 
       WHEN zif_abapgit_object=>gc_step_id-late.
         cv_done = check_exit( cv_exit ).
+
+      WHEN zif_abapgit_object=>gc_step_id-lxe.
+        cv_done = abap_true.
 
       WHEN OTHERS.
         ASSERT 0 = 1.
@@ -187,6 +190,7 @@ CLASS zcl_abapgit_object_shlp IMPLEMENTATION.
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
     APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
   ENDMETHOD.
 
 
@@ -230,7 +234,7 @@ CLASS zcl_abapgit_object_shlp IMPLEMENTATION.
           lt_dd33v TYPE TABLE OF dd33v.
 
     FIELD-SYMBOLS: <ls_dd32p> LIKE LINE OF lt_dd32p.
-
+    FIELD-SYMBOLS <lg_field> TYPE any.
 
     lv_name = ms_item-obj_name.
 
@@ -260,6 +264,11 @@ CLASS zcl_abapgit_object_shlp IMPLEMENTATION.
     CLEAR: ls_dd30v-as4user,
            ls_dd30v-as4date,
            ls_dd30v-as4time.
+
+    ASSIGN COMPONENT 'ACTFLAG' OF STRUCTURE ls_dd30v TO <lg_field>.
+    IF sy-subrc = 0.
+      CLEAR <lg_field>.
+    ENDIF.
 
     LOOP AT lt_dd32p ASSIGNING <ls_dd32p>.
 * clear information inherited from domain

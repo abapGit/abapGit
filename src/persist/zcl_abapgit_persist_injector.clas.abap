@@ -13,9 +13,25 @@ CLASS zcl_abapgit_persist_injector DEFINITION
       IMPORTING
         !ii_repo_cs TYPE REF TO zif_abapgit_persist_repo_cs .
 
+    CLASS-METHODS set_repo_data
+      IMPORTING
+        !ii_repo_data TYPE REF TO zif_abapgit_persist_repo_data.
+
     CLASS-METHODS set_settings
       IMPORTING
         !ii_settings TYPE REF TO zif_abapgit_persist_settings .
+
+    CLASS-METHODS set_background
+      IMPORTING
+        !ii_background TYPE REF TO zif_abapgit_persist_background.
+
+    CLASS-METHODS set_packages
+      IMPORTING
+        !ii_packages TYPE REF TO zif_abapgit_persist_packages.
+
+    CLASS-METHODS set_current_user
+      IMPORTING
+        !ii_current_user TYPE REF TO zif_abapgit_persist_user.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -25,7 +41,28 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSIST_INJECTOR IMPLEMENTATION.
+CLASS zcl_abapgit_persist_injector IMPLEMENTATION.
+
+
+  METHOD set_background.
+
+    zcl_abapgit_persist_factory=>gi_background = ii_background.
+
+  ENDMETHOD.
+
+
+  METHOD set_current_user.
+
+    zcl_abapgit_persist_factory=>gi_current_user = ii_current_user.
+
+  ENDMETHOD.
+
+
+  METHOD set_packages.
+
+    zcl_abapgit_persist_factory=>gi_packages = ii_packages.
+
+  ENDMETHOD.
 
 
   METHOD set_repo.
@@ -38,6 +75,13 @@ CLASS ZCL_ABAPGIT_PERSIST_INJECTOR IMPLEMENTATION.
   METHOD set_repo_cs.
 
     zcl_abapgit_persist_factory=>gi_repo_cs = ii_repo_cs.
+
+  ENDMETHOD.
+
+
+  METHOD set_repo_data.
+
+    zcl_abapgit_persist_factory=>gi_repo_data = ii_repo_data.
 
   ENDMETHOD.
 

@@ -45,7 +45,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_TEMPLATE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_template IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -97,9 +97,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TEMPLATE IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
-    " TODO: top level menu
+    " TODO: top level menu; use unique id
 
-    ro_toolbar = zcl_abapgit_html_toolbar=>create( )->add(
+    ro_toolbar = zcl_abapgit_html_toolbar=>create( 'toolbar-template-id' )->add(
       iv_txt = 'Refresh'
       iv_act = c_action-refresh ).
 

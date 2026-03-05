@@ -6,7 +6,7 @@ CLASS zcl_abapgit_file_deserialize DEFINITION
 
     CLASS-METHODS get_results
       IMPORTING
-        !io_repo          TYPE REF TO zcl_abapgit_repo
+        !ii_repo          TYPE REF TO zif_abapgit_repo
         !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
@@ -139,7 +139,7 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
     DATA lt_results TYPE zif_abapgit_definitions=>ty_results_tt.
 
     lt_results = filter_files_to_deserialize(
-      it_results = zcl_abapgit_repo_status=>calculate( io_repo )
+      it_results = zcl_abapgit_repo_status=>calculate( ii_repo )
       ii_log     = ii_log ).
 
     rt_results = prioritize_deser(
@@ -203,6 +203,9 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
           lt_requires = lt_items.
           DELETE lt_requires WHERE obj_type <> 'SPRX'
             AND obj_type <> 'XSLT'.
+        WHEN 'HTTP'.
+          lt_requires = lt_items.
+          DELETE lt_requires WHERE obj_type <> 'CLAS' AND obj_type <> 'INTF'.
         WHEN 'TABL'.
           lt_requires = lt_items.
           DELETE lt_requires WHERE obj_type <> 'SPRX'.
@@ -214,6 +217,9 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
           DELETE lt_requires WHERE obj_type <> 'IASP'
             AND obj_type <> 'PROG'
             AND obj_type <> 'IARP'.
+        WHEN 'IDOC' OR 'IEXT'.
+          lt_requires = lt_items.
+          DELETE lt_requires WHERE obj_type <> 'TABL'.
         WHEN 'DCLS'.
           lt_requires = lt_items.
           DELETE lt_requires WHERE obj_type <> 'DDLS'.
@@ -245,6 +251,23 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
         WHEN 'ENSC'.
           lt_requires = lt_items.
           DELETE lt_requires WHERE obj_type <> 'ENHS'.
+        WHEN 'IWMO' OR 'IWSV' OR 'IWVB'.
+          lt_requires = lt_items.
+          DELETE lt_requires WHERE obj_type <> 'SRVB'.
+        WHEN 'SUSH'.
+          lt_requires = lt_items.
+          " lead applications must go first since there's a check in when deserializing (see USOBAUTHSTART/USOBHASH)
+          DELETE lt_requires WHERE
+            obj_type <> 'APIS' AND obj_type <> 'DMON' AND obj_type <> 'EEEC' AND obj_type <> 'EEEP' AND
+            obj_type <> 'FUGR' AND obj_type <> 'G4BA' AND obj_type <> 'GSMP' AND obj_type <> 'HTTP' AND
+            obj_type <> 'IDOC' AND obj_type <> 'INA1' AND obj_type <> 'IWSG' AND obj_type <> 'IWSV' AND
+            obj_type <> 'PDWS' AND obj_type <> 'SADT' AND obj_type <> 'SAJC' AND obj_type <> 'SAMC' AND
+            obj_type <> 'SAPC' AND obj_type <> 'SICF' AND obj_type <> 'SQL1' AND obj_type <> 'SUCO' AND
+            obj_type <> 'SUKR' AND obj_type <> 'TRAN' AND obj_type <> 'WAPA' AND obj_type <> 'WDCA' AND
+            obj_type <> 'WDYA'.
+        WHEN 'SRVB'.
+          lt_requires = lt_items.
+          DELETE lt_requires WHERE obj_type <> 'SRVD'.
       ENDCASE.
 * TODO: END extract to object handler method
 

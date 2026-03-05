@@ -406,7 +406,7 @@ CLASS ltcl_split_text IMPLEMENTATION.
   ENDMETHOD.
   METHOD test_set_msg_vars.
 
-    zcx_abapgit_exception=>split_text_to_symsg( iv_text ).
+    cl_message_helper=>set_msg_vars_for_clike( iv_text ).
 
     cl_abap_unit_assert=>assert_equals( act = sy-msgv1
                                         exp = is_msg-v1 ).

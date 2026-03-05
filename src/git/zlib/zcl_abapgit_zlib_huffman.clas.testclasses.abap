@@ -22,6 +22,22 @@ CLASS ltcl_test IMPLEMENTATION.
       EXPORTING
         it_lengths = lt_lengths.
 
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_huffman->get_count( 1 )
+      exp = 0 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_huffman->get_count( 8 )
+      exp = 10 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_huffman->get_symbol( 1 )
+      exp = 0 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_huffman->get_symbol( 10 )
+      exp = 9 ).
+
   ENDMETHOD.
 
   METHOD create2.
@@ -47,6 +63,21 @@ CLASS ltcl_test IMPLEMENTATION.
       EXPORTING
         it_lengths = lt_lengths.
 
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_huffman->get_count( 8 )
+      exp = 152 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_huffman->get_count( 15 )
+      exp = 0 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_huffman->get_symbol( 1 )
+      exp = 256 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_huffman->get_symbol( 288 )
+      exp = 255 ).
 
   ENDMETHOD.
 

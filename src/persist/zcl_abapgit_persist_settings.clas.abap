@@ -14,13 +14,13 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSIST_SETTINGS IMPLEMENTATION.
+CLASS zcl_abapgit_persist_settings IMPLEMENTATION.
 
 
   METHOD zif_abapgit_persist_settings~modify.
 
     DATA: lv_settings      TYPE string,
-          ls_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+          ls_user_settings TYPE zif_abapgit_persist_user=>ty_s_user_settings.
 
 
     lv_settings = io_settings->get_settings_xml( ).
@@ -32,7 +32,7 @@ CLASS ZCL_ABAPGIT_PERSIST_SETTINGS IMPLEMENTATION.
 
     ls_user_settings = io_settings->get_user_settings( ).
 
-    zcl_abapgit_persistence_user=>get_instance( )->set_settings( ls_user_settings ).
+    zcl_abapgit_persist_factory=>get_user( )->set_settings( ls_user_settings ).
 
     " Settings have been modified: Update Buffered Settings
     IF mo_settings IS BOUND.
@@ -61,7 +61,7 @@ CLASS ZCL_ABAPGIT_PERSIST_SETTINGS IMPLEMENTATION.
             iv_type  = zcl_abapgit_persistence_db=>c_type_settings
             iv_value = '' ) ).
 
-        ro_settings->set_user_settings( zcl_abapgit_persistence_user=>get_instance( )->get_settings( ) ).
+        ro_settings->set_user_settings( zcl_abapgit_persist_factory=>get_user( )->get_settings( ) ).
 
       CATCH zcx_abapgit_not_found zcx_abapgit_exception.
 

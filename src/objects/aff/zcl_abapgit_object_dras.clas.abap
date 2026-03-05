@@ -31,19 +31,19 @@ CLASS zcl_abapgit_object_dras IMPLEMENTATION.
           RECEIVING
             handler    = lo_dras_handler.
 
-        CALL METHOD lo_dras_handler->('CHECK_EXISTENCE')
+        CALL METHOD lo_dras_handler->('IF_DD_DRAS_WB_HANDLER~CHECK_EXISTENCE')
           EXPORTING
             iv_as4local = 'A'
           RECEIVING
             rv_exists   = lv_exists.
 
         IF lv_exists = abap_true.
-          CALL METHOD lo_dras_handler->('GET_SOURCE_CONTAINER')
+          CALL METHOD lo_dras_handler->('IF_DD_DRAS_WB_HANDLER~GET_SOURCE_CONTAINER')
             EXPORTING
               iv_as4local = 'A'
             RECEIVING
               ro_result   = lo_dras_source_container.
-          CALL METHOD lo_dras_source_container->('GET_AS4USER')
+          CALL METHOD lo_dras_source_container->('IF_DD_DRAS_SOURCE_CONTAINER~GET_AS4USER')
             RECEIVING
               rv_as4user = rv_user.
         ENDIF.

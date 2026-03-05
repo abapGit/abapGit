@@ -1,6 +1,5 @@
 CLASS zcl_abapgit_injector DEFINITION
   PUBLIC
-  FOR TESTING
   CREATE PRIVATE.
 
   PUBLIC SECTION.
@@ -12,13 +11,7 @@ CLASS zcl_abapgit_injector DEFINITION
       IMPORTING
         !iv_package     TYPE devclass
         !ii_sap_package TYPE REF TO zif_abapgit_sap_package .
-    CLASS-METHODS set_code_inspector
-      IMPORTING
-        !iv_package        TYPE devclass
-        !ii_code_inspector TYPE REF TO zif_abapgit_code_inspector .
-    CLASS-METHODS set_stage_logic
-      IMPORTING
-        !ii_logic TYPE REF TO zif_abapgit_stage_logic .
+    CLASS-METHODS clear_sap_package.
     CLASS-METHODS set_cts_api
       IMPORTING
         !ii_cts_api TYPE REF TO zif_abapgit_cts_api .
@@ -28,9 +21,6 @@ CLASS zcl_abapgit_injector DEFINITION
     CLASS-METHODS set_longtexts
       IMPORTING
         !ii_longtexts TYPE REF TO zif_abapgit_longtexts .
-    CLASS-METHODS set_http_agent
-      IMPORTING
-        !ii_http_agent TYPE REF TO zif_abapgit_http_agent .
     CLASS-METHODS set_lxe_texts
       IMPORTING
         !ii_lxe_texts TYPE REF TO zif_abapgit_lxe_texts .
@@ -46,6 +36,9 @@ CLASS zcl_abapgit_injector DEFINITION
     CLASS-METHODS set_exit
       IMPORTING
         ii_exit TYPE REF TO zif_abapgit_exit.
+    CLASS-METHODS set_default_transport
+      IMPORTING
+        ii_default_transport TYPE REF TO zif_abapgit_default_transport.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -54,29 +47,9 @@ ENDCLASS.
 
 CLASS zcl_abapgit_injector IMPLEMENTATION.
 
-
-  METHOD set_code_inspector.
-
-    DATA: ls_code_inspector LIKE LINE OF zcl_abapgit_factory=>gt_code_inspector.
-    FIELD-SYMBOLS: <ls_code_inspector> LIKE LINE OF zcl_abapgit_factory=>gt_code_inspector.
-
-    READ TABLE zcl_abapgit_factory=>gt_code_inspector
-         ASSIGNING <ls_code_inspector>
-         WITH TABLE KEY package = iv_package.
-    IF sy-subrc <> 0.
-
-      ls_code_inspector-package = iv_package.
-
-      INSERT ls_code_inspector
-             INTO TABLE zcl_abapgit_factory=>gt_code_inspector
-             ASSIGNING <ls_code_inspector>.
-
-    ENDIF.
-
-    <ls_code_inspector>-instance = ii_code_inspector.
-
+  METHOD set_default_transport.
+    zcl_abapgit_factory=>gi_default_transport = ii_default_transport.
   ENDMETHOD.
-
 
   METHOD set_cts_api.
     zcl_abapgit_factory=>gi_cts_api = ii_cts_api.
@@ -95,11 +68,6 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
 
   METHOD set_function_module.
     zcl_abapgit_factory=>gi_function_module = ii_function_module.
-  ENDMETHOD.
-
-
-  METHOD set_http_agent.
-    zcl_abapgit_factory=>gi_http_agent = ii_http_agent.
   ENDMETHOD.
 
 
@@ -140,16 +108,13 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  METHOD set_sap_report.
-    zcl_abapgit_factory=>gi_sap_report = ii_report.
+  METHOD clear_sap_package.
+    CLEAR zcl_abapgit_factory=>gt_sap_package.
   ENDMETHOD.
 
 
-  METHOD set_stage_logic.
-
-    zcl_abapgit_factory=>gi_stage_logic = ii_logic.
-
+  METHOD set_sap_report.
+    zcl_abapgit_factory=>gi_sap_report = ii_report.
   ENDMETHOD.
 
 

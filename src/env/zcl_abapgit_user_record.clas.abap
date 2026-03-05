@@ -1,45 +1,26 @@
 CLASS zcl_abapgit_user_record DEFINITION
   PUBLIC
   FINAL
-  CREATE PRIVATE.
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_env_factory.
 
   PUBLIC SECTION.
     CLASS-METHODS reset.
-    CLASS-METHODS get_instance
-      IMPORTING
-        !iv_user       TYPE sy-uname
-      RETURNING
-        VALUE(ro_user) TYPE REF TO zcl_abapgit_user_record.
-    METHODS constructor
-      IMPORTING
-        !iv_user TYPE sy-uname.
-    METHODS get_name
-      RETURNING
-        VALUE(rv_name) TYPE string.
-    METHODS get_email
-      RETURNING
-        VALUE(rv_email) TYPE string.
-    CLASS-METHODS get_title
-      IMPORTING
-        iv_username     TYPE sy-uname
-      RETURNING
-        VALUE(rv_title) TYPE string.
+
+    INTERFACES zif_abapgit_user_record.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_user,
-        user   TYPE sy-uname,
-        o_user TYPE REF TO zcl_abapgit_user_record,
+        user  TYPE sy-uname,
+        name  TYPE string,
+        email TYPE string,
       END OF ty_user.
 
     CLASS-DATA gt_user TYPE HASHED TABLE OF ty_user WITH UNIQUE KEY user.
 
-    DATA: BEGIN OF ms_user,
-            name  TYPE string,
-            email TYPE string,
-          END OF ms_user .
-
-    METHODS check_user_exists
+    CLASS-METHODS check_user_exists
       IMPORTING
         iv_user     TYPE sy-uname
       EXPORTING
@@ -48,34 +29,50 @@ CLASS zcl_abapgit_user_record DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS get_user_dtls_from_other_clnt
+    CLASS-METHODS get_user_dtls_from_other_clnt
       IMPORTING
-        iv_user TYPE sy-uname.
+        iv_user        TYPE sy-uname
+      RETURNING
+        VALUE(rs_user) TYPE ty_user.
+
+    CLASS-METHODS build_cache
+      IMPORTING
+        iv_user        TYPE sy-uname
+      RETURNING
+        VALUE(rs_user) TYPE ty_user.
+
+    CLASS-METHODS read_cache
+      IMPORTING
+        iv_user        TYPE sy-uname
+      RETURNING
+        VALUE(rs_user) TYPE ty_user.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_user_record IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_USER_RECORD IMPLEMENTATION.
 
 
-  METHOD get_title.
-* the queried username might not exist, so this method is static
+  METHOD build_cache.
 
-    DATA ls_user_address TYPE addr3_val.
+    " Get user details
+    TRY.
+        check_user_exists(
+          EXPORTING
+            iv_user     = iv_user
+          IMPORTING
+            ev_fullname = rs_user-name
+            ev_email    = rs_user-email ).
+      CATCH zcx_abapgit_exception.
+        " Could not find user, try to get from other clients
+        rs_user = get_user_dtls_from_other_clnt( iv_user ).
+    ENDTRY.
 
-    CALL FUNCTION 'SUSR_USER_ADDRESS_READ'
-      EXPORTING
-        user_name              = iv_username
-      IMPORTING
-        user_address           = ls_user_address
-      EXCEPTIONS
-        user_address_not_found = 1
-        OTHERS                 = 2.
-    IF sy-subrc = 0.
-      rv_title = ls_user_address-name_text.
-    ENDIF.
+    rs_user-user = iv_user.
+    INSERT rs_user INTO TABLE gt_user.
 
   ENDMETHOD.
+
 
   METHOD check_user_exists.
 
@@ -109,63 +106,6 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD constructor.
-
-    DATA ls_user TYPE ty_user.
-
-    " Get user details
-    TRY.
-        check_user_exists(
-          EXPORTING
-            iv_user     = iv_user
-          IMPORTING
-            ev_fullname = ms_user-name
-            ev_email    = ms_user-email ).
-      CATCH zcx_abapgit_exception.
-        " Could not find user, try to get from other clients
-        get_user_dtls_from_other_clnt( iv_user ).
-    ENDTRY.
-
-    " If the user has been found add it to the list
-    IF ms_user-name IS NOT INITIAL AND ms_user-email IS NOT INITIAL.
-      ls_user-user = iv_user.
-      ls_user-o_user = me.
-      INSERT ls_user INTO TABLE gt_user.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD get_email.
-
-    rv_email = ms_user-email.
-
-  ENDMETHOD.
-
-
-  METHOD get_instance.
-
-    FIELD-SYMBOLS <ls_user> TYPE ty_user.
-
-    READ TABLE gt_user ASSIGNING <ls_user> WITH TABLE KEY user = iv_user.
-    IF sy-subrc = 0.
-      ro_user = <ls_user>-o_user.
-    ELSE.
-      CREATE OBJECT ro_user
-        EXPORTING
-          iv_user = iv_user.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD get_name.
-
-    rv_name = ms_user-name.
-
-  ENDMETHOD.
-
-
   METHOD get_user_dtls_from_other_clnt.
 
     CONSTANTS lc_cc_category TYPE string VALUE 'C'.
@@ -179,7 +119,7 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
         ORDER BY PRIMARY KEY.
 
     LOOP AT lt_dev_clients ASSIGNING <lv_dev_client>.
-      SELECT SINGLE p~name_text a~smtp_addr INTO (ms_user-name, ms_user-email)
+      SELECT SINGLE u~bname p~name_text a~smtp_addr INTO (rs_user-user, rs_user-name, rs_user-email)
           FROM usr21 AS u
           INNER JOIN adrp AS p ON p~persnumber = u~persnumber
                               AND p~client     = u~mandt
@@ -200,7 +140,61 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD read_cache.
+
+    READ TABLE gt_user INTO rs_user WITH TABLE KEY user = iv_user.
+    IF sy-subrc <> 0.
+      rs_user = build_cache( iv_user ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD reset.
     CLEAR gt_user.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_user_record~get_email.
+
+    rv_email = read_cache( iv_username )-email.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_user_record~get_name.
+
+    rv_name = read_cache( iv_username )-name.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_user_record~get_title.
+* the queried username might not exist, refactored for open-abap compatibility
+
+    DATA lr_addr3             TYPE REF TO data.
+    FIELD-SYMBOLS <ls_addr3>  TYPE any.
+    FIELD-SYMBOLS <lv_simple> TYPE simple.
+
+    TRY.
+        CREATE DATA lr_addr3 TYPE ('ADDR3_VAL').
+      CATCH cx_sy_create_data_error.
+        RETURN.
+    ENDTRY.
+    ASSIGN lr_addr3->* TO <ls_addr3>.
+
+    CALL FUNCTION 'SUSR_USER_ADDRESS_READ'
+      EXPORTING
+        user_name              = iv_username
+      IMPORTING
+        user_address           = <ls_addr3>
+      EXCEPTIONS
+        user_address_not_found = 1
+        OTHERS                 = 2.
+    IF sy-subrc = 0.
+      ASSIGN COMPONENT 'NAME_TEXT' OF STRUCTURE <ls_addr3> TO <lv_simple>.
+      rv_title = <lv_simple>.
+    ENDIF.
+
   ENDMETHOD.
 ENDCLASS.

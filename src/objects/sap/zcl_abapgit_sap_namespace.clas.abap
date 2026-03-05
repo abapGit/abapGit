@@ -69,7 +69,7 @@ CLASS ZCL_ABAPGIT_SAP_NAMESPACE IMPLEMENTATION.
     lv_regex = '^\/[^\/]{1,8}\/'.
 
     TRY.
-        FIND REGEX lv_regex IN iv_obj_with_namespace MATCH LENGTH lv_length.
+        FIND REGEX lv_regex IN iv_obj_with_namespace MATCH LENGTH lv_length ##REGEX_POSIX.
       CATCH cx_root INTO lr_ex.
         zcx_abapgit_exception=>raise( lr_ex->get_text( ) ).
     ENDTRY.

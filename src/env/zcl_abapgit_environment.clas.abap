@@ -2,11 +2,11 @@ CLASS zcl_abapgit_environment DEFINITION
   PUBLIC
   FINAL
   CREATE PRIVATE
-  GLOBAL FRIENDS zcl_abapgit_factory .
+  GLOBAL FRIENDS zcl_abapgit_factory.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_environment .
+    INTERFACES zif_abapgit_environment.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -16,7 +16,7 @@ CLASS zcl_abapgit_environment DEFINITION
 
     METHODS is_system_changes_allowed
       RETURNING
-        VALUE(rv_result) TYPE abap_bool .
+        VALUE(rv_result) TYPE abap_bool.
 ENDCLASS.
 
 
@@ -76,8 +76,71 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_environment~check_parallel_processing.
+
+    " If check fails, see transactions RZ12
+    DATA:
+      lt_setup      TYPE STANDARD TABLE OF rzllitab,
+      ls_setup      LIKE LINE OF lt_setup,
+      lt_erfc_setup TYPE STANDARD TABLE OF rzlliclass,
+      lt_instances  TYPE STANDARD TABLE OF msxxlist WITH DEFAULT KEY.
+
+    " Check if server group for parallel processing exists
+    CALL FUNCTION 'SMLG_GET_SETUP'
+      EXPORTING
+        grouptype          = 'S'
+      TABLES
+        setup              = lt_setup
+        erfc_setup         = lt_erfc_setup
+      EXCEPTIONS
+        foreign_lock       = 1
+        system_failure     = 2
+        invalid_group_type = 3
+        OTHERS             = 4.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_setup INTO ls_setup WITH KEY classname = iv_group.
+    IF sy-subrc = 0 AND ls_setup-applserver IS NOT INITIAL.
+
+      " Check if assigned server instance exists
+      CALL FUNCTION 'TH_SERVER_LIST'
+        TABLES
+          list = lt_instances.
+
+      READ TABLE lt_instances TRANSPORTING NO FIELDS WITH KEY name = ls_setup-applserver.
+      IF sy-subrc = 0.
+        rv_checked = abap_true.
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_environment~compare_with_inactive.
     rv_result = zif_abapgit_environment~is_sap_cloud_platform( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_environment~get_available_user_sessions.
+
+    DATA:
+      lv_act_sessions TYPE i,
+      lv_max_sessions TYPE i,
+      lv_subrc        TYPE sy-subrc.
+
+    CALL FUNCTION 'TH_USER_INFO'
+      IMPORTING
+        act_sessions = lv_act_sessions
+        max_sessions = lv_max_sessions
+        rc           = lv_subrc.
+
+    IF lv_subrc = 0.
+      rv_sessions = lv_max_sessions - lv_act_sessions.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -85,6 +148,78 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
 
     SELECT SINGLE release extrelease FROM cvers INTO (rs_result-release, rs_result-sp)
       WHERE component = 'SAP_BASIS' ##SUBRC_OK.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_environment~get_system_language_filter.
+    DATA lv_translation_detective_lang TYPE spras.
+    DATA lv_pseudo_translation_language TYPE spras.
+    FIELD-SYMBOLS <ls_system_language_filter> LIKE LINE OF rt_system_language_filter.
+
+    " Translation Object Detective
+    " https://help.sap.com/docs/ABAP_PLATFORM_NEW/ceb25152cb0d4adba664cebea2bf4670/88a3d3cbccf64601975acabaccdfde45.html
+    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
+      EXPORTING
+        input            = '1Q'
+      IMPORTING
+        output           = lv_translation_detective_lang
+      EXCEPTIONS
+        unknown_language = 1
+        OTHERS           = 2.
+    IF sy-subrc = 1.
+      " The language for Translation Object Detective was not setup
+    ENDIF.
+    IF NOT lv_translation_detective_lang IS INITIAL.
+      APPEND INITIAL LINE TO rt_system_language_filter ASSIGNING <ls_system_language_filter>.
+      <ls_system_language_filter>-sign = 'E'.
+      <ls_system_language_filter>-option = 'EQ'.
+      <ls_system_language_filter>-low = lv_translation_detective_lang.
+    ENDIF.
+    " 1943470 - Using technical language key 2Q to create pseudo-translations of ABAP developments
+    " https://launchpad.support.sap.com/#/notes/1943470
+    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
+      EXPORTING
+        input            = '2Q'
+      IMPORTING
+        output           = lv_pseudo_translation_language
+      EXCEPTIONS
+        unknown_language = 1
+        OTHERS           = 2.
+    IF sy-subrc = 1.
+      " The language for Pseudo Translation was not setup
+    ENDIF.
+    IF NOT lv_pseudo_translation_language IS INITIAL.
+      APPEND INITIAL LINE TO rt_system_language_filter ASSIGNING <ls_system_language_filter>.
+      <ls_system_language_filter>-sign = 'E'.
+      <ls_system_language_filter>-option = 'EQ'.
+      <ls_system_language_filter>-low = lv_pseudo_translation_language.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_environment~init_parallel_processing.
+
+    DATA: lv_group TYPE rzlli_apcl.
+
+    lv_group = iv_group.
+
+    " SPBT_INITIALIZE gives error PBT_ENV_ALREADY_INITIALIZED if called
+    " multiple times in same session
+    CALL FUNCTION 'SPBT_INITIALIZE'
+      EXPORTING
+        group_name                     = lv_group
+      IMPORTING
+        free_pbt_wps                   = rv_free_work_processes
+      EXCEPTIONS
+        invalid_group_name             = 1
+        internal_error                 = 2
+        pbt_env_already_initialized    = 3
+        currently_no_resources_avail   = 4
+        no_pbt_resources_found         = 5
+        cant_init_different_pbt_groups = 6
+        OTHERS                         = 7 ##FM_SUBRC_OK.
+    " If SPBT_INITIALIZE fails, check transactions RZ12, SM50, SM21, SARFC
 
   ENDMETHOD.
 
@@ -155,50 +290,6 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_environment~get_system_language_filter.
-    DATA lv_translation_detective_lang TYPE spras.
-    DATA lv_pseudo_translation_language TYPE spras.
-    FIELD-SYMBOLS <ls_system_language_filter> LIKE LINE OF rt_system_language_filter.
-
-    " Translation Object Detective
-    " https://help.sap.com/docs/ABAP_PLATFORM_NEW/ceb25152cb0d4adba664cebea2bf4670/88a3d3cbccf64601975acabaccdfde45.html
-    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
-      EXPORTING
-        input            = '1Q'
-      IMPORTING
-        output           = lv_translation_detective_lang
-      EXCEPTIONS
-        unknown_language = 1
-        OTHERS           = 2.
-    IF sy-subrc = 1.
-      " The language for Translation Object Detective was not setup
-    ENDIF.
-    IF NOT lv_translation_detective_lang IS INITIAL.
-      APPEND INITIAL LINE TO rt_system_language_filter ASSIGNING <ls_system_language_filter>.
-      <ls_system_language_filter>-sign = 'E'.
-      <ls_system_language_filter>-option = 'EQ'.
-      <ls_system_language_filter>-low = lv_translation_detective_lang.
-    ENDIF.
-    " 1943470 - Using technical language key 2Q to create pseudo-translations of ABAP developments
-    " https://launchpad.support.sap.com/#/notes/1943470
-    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
-      EXPORTING
-        input            = '2Q'
-      IMPORTING
-        output           = lv_pseudo_translation_language
-      EXCEPTIONS
-        unknown_language = 1
-        OTHERS           = 2.
-    IF sy-subrc = 1.
-      " The language for Pseudo Translation was not setup
-    ENDIF.
-    IF NOT lv_pseudo_translation_language IS INITIAL.
-      APPEND INITIAL LINE TO rt_system_language_filter ASSIGNING <ls_system_language_filter>.
-      <ls_system_language_filter>-sign = 'E'.
-      <ls_system_language_filter>-option = 'EQ'.
-      <ls_system_language_filter>-low = lv_pseudo_translation_language.
-    ENDIF.
-  ENDMETHOD.
 
   METHOD zif_abapgit_environment~is_variant_maintenance.
 
@@ -212,30 +303,4 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
     rv_is_variant_maintenance = boolc( lines( lt_variscreens ) > 0 ).
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_environment~init_parallel_processing.
-
-    DATA: lv_group TYPE rzlli_apcl.
-
-    lv_group = iv_group.
-
-    " SPBT_INITIALIZE gives error PBT_ENV_ALREADY_INITIALIZED if called
-    " multiple times in same session
-    CALL FUNCTION 'SPBT_INITIALIZE'
-      EXPORTING
-        group_name                     = lv_group
-      IMPORTING
-        free_pbt_wps                   = rv_free_work_processes
-      EXCEPTIONS
-        invalid_group_name             = 1
-        internal_error                 = 2
-        pbt_env_already_initialized    = 3
-        currently_no_resources_avail   = 4
-        no_pbt_resources_found         = 5
-        cant_init_different_pbt_groups = 6
-        OTHERS                         = 7.
-    " If SPBT_INITIALIZE fails, check transactions RZ12, SM50, SM21, SARFC
-
-  ENDMETHOD.
-
 ENDCLASS.

@@ -42,6 +42,7 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
         choose_branch   TYPE string VALUE 'choose-branch',
         choose_labels   TYPE string VALUE 'choose-labels',
         add_online_repo TYPE string VALUE 'add-repo-online',
+        create_repo     TYPE string VALUE 'create-repository',
       END OF c_event.
 
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
@@ -114,8 +115,8 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
   METHOD get_form_schema.
 
     ro_form = zcl_abapgit_html_form=>create(
-                iv_form_id   = 'add-repo-online-form'
-                iv_help_page = 'https://docs.abapgit.org/guide-online-install.html' ).
+      iv_form_id   = 'add-repo-online-form'
+      iv_help_page = 'https://docs.abapgit.org/guide-online-install.html' ).
 
     ro_form->text(
       iv_name        = c_id-url
@@ -171,28 +172,26 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
       iv_label       = 'Serialize Main Language Only'
       iv_hint        = 'Ignore translations, serialize just main language' ).
 
-    IF zcl_abapgit_feature=>is_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
-      ro_form->radio(
-        iv_name        = c_id-abap_lang_vers
-        iv_default_value = ''
-        iv_label       = 'ABAP Language Version'
-        iv_hint        = 'Define the ABAP language version for objects in the repository'
-      )->option(
-        iv_label       = 'Any'
-        iv_value       = ''
-      )->option(
-        iv_label       = 'Ignore'
-        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-ignore
-      )->option(
-        iv_label       = 'Standard'
-        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-standard
-      )->option(
-        iv_label       = 'For Key Users'
-        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-key_user
-      )->option(
-        iv_label       = 'For Cloud Development'
-        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development ).
-    ENDIF.
+    ro_form->radio(
+      iv_name        = c_id-abap_lang_vers
+      iv_default_value = ''
+      iv_label       = 'ABAP Language Version'
+      iv_hint        = 'Define the ABAP language version for objects in the repository'
+    )->option(
+      iv_label       = 'Any'
+      iv_value       = ''
+    )->option(
+      iv_label       = 'Ignore'
+      iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-ignore
+    )->option(
+      iv_label       = 'Standard'
+      iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-standard
+    )->option(
+      iv_label       = 'For Key Users'
+      iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-key_user
+    )->option(
+      iv_label       = 'For Cloud Development'
+      iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development ).
 
     ro_form->command(
       iv_label       = 'Create Online Repo'
@@ -201,6 +200,9 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
     )->command(
       iv_label       = 'Create Package'
       iv_action      = c_event-create_package
+    )->command(
+      iv_label       = 'Create GitHub Repo'
+      iv_action      = c_event-create_repo
     )->command(
       iv_label       = 'Back'
       iv_action      = zif_abapgit_definitions=>c_action-go_back ).
@@ -267,24 +269,25 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: ls_repo_params     TYPE zif_abapgit_services_repo=>ty_repo_params,
-          lo_new_online_repo TYPE REF TO zcl_abapgit_repo_online.
+    DATA ls_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params.
+    DATA li_new_repo    TYPE REF TO zif_abapgit_repo.
+    DATA lv_package     TYPE devclass.
 
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
       WHEN c_event-create_package.
-
-        mo_form_data->set(
-          iv_key = c_id-package
-          iv_val = zcl_abapgit_services_repo=>create_package(
-            iv_prefill_package = |{ mo_form_data->get( c_id-package ) }| ) ).
-        IF mo_form_data->get( c_id-package ) IS NOT INITIAL.
-          mo_validation_log = validate_form( mo_form_data ).
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-        ELSE.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+        lv_package = mo_form_data->get( c_id-package ).
+        IF zcl_abapgit_factory=>get_sap_package( lv_package )->exists( ) = abap_true.
+          zcx_abapgit_exception=>raise( |Package { lv_package } already exists| ).
         ENDIF.
+        rs_handled-page  = zcl_abapgit_gui_page_cpackage=>create( lv_package ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+
+      WHEN c_event-create_repo.
+
+        rs_handled-page  = zcl_abapgit_gui_page_cr_repo=>create( mo_form_data->get( c_id-url ) ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_event-choose_package.
 
@@ -335,8 +338,8 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
         IF mo_validation_log->is_empty( ) = abap_true.
           mo_form_data->to_abap( CHANGING cs_container = ls_repo_params ).
-          lo_new_online_repo = zcl_abapgit_services_repo=>new_online( ls_repo_params ).
-          rs_handled-page  = zcl_abapgit_gui_page_repo_view=>create( lo_new_online_repo->get_key( ) ).
+          li_new_repo = zcl_abapgit_services_repo=>new_online( ls_repo_params ).
+          rs_handled-page  = zcl_abapgit_gui_page_repo_view=>create( li_new_repo->get_key( ) ).
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
         ELSE.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render. " Display errors

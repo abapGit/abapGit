@@ -16,10 +16,10 @@ ENDCLASS.
 CLASS ltcl_user_record IMPLEMENTATION.
 
   METHOD test_invalid_user.
-    DATA: lo_user_record TYPE REF TO zcl_abapgit_user_record.
+    DATA li_user_record TYPE REF TO zif_abapgit_user_record.
 
     zcl_abapgit_user_record=>reset( ).
-    lo_user_record = zcl_abapgit_user_record=>get_instance( c_wrong_user ).
+    li_user_record = zcl_abapgit_env_factory=>get_user_record( ).
 
     cl_abap_unit_assert=>assert_equals(
       exp = 0

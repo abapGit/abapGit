@@ -68,7 +68,15 @@ CLASS ltcl_folder_logic_package IMPLEMENTATION.
     INSERT lv_devclass INTO TABLE rt_list.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~check_object_type.
+    RETURN.
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~validate_name.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get_default_transport_layer.
     RETURN.
   ENDMETHOD.
 
@@ -92,6 +100,10 @@ CLASS ltcl_folder_logic_package IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~get.
+    RETURN.
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~exists.
     rv_bool = abap_true.
   ENDMETHOD.
@@ -109,6 +121,10 @@ CLASS ltcl_folder_logic_package IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~create_local.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~update_tree.
     RETURN.
   ENDMETHOD.
 
@@ -140,6 +156,17 @@ CLASS ltcl_folder_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHOR
 ENDCLASS.
 
 CLASS ltcl_folder_logic IMPLEMENTATION.
+  METHOD zif_abapgit_sap_package~get_default_transport_layer.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~check_object_type.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~update_tree.
+    RETURN.
+  ENDMETHOD.
 
   " Test packages:
   "
@@ -180,6 +207,10 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~create_child.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get.
     RETURN.
   ENDMETHOD.
 
@@ -359,6 +390,17 @@ CLASS ltcl_folder_logic_namespaces DEFINITION FOR TESTING RISK LEVEL HARMLESS DU
 ENDCLASS.
 
 CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
+  METHOD zif_abapgit_sap_package~get_default_transport_layer.
+    RETURN. " todo, implement method
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~check_object_type.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~update_tree.
+    RETURN.
+  ENDMETHOD.
 
   " Test packages:
   "
@@ -398,6 +440,10 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~create_child.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get.
     RETURN.
   ENDMETHOD.
 
@@ -507,8 +553,19 @@ CLASS ltcl_folder_logic_no_parent DEFINITION FOR TESTING RISK LEVEL HARMLESS DUR
 ENDCLASS.
 
 CLASS ltcl_folder_logic_no_parent IMPLEMENTATION.
+  METHOD zif_abapgit_sap_package~get_default_transport_layer.
+    RETURN. " todo, implement method
+  ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~validate_name.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~check_object_type.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~update_tree.
     RETURN.
   ENDMETHOD.
 
@@ -533,6 +590,10 @@ CLASS ltcl_folder_logic_no_parent IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~create_child.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get.
     RETURN.
   ENDMETHOD.
 

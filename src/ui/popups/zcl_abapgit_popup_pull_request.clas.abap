@@ -67,7 +67,6 @@ CLASS zcl_abapgit_popup_pull_request IMPLEMENTATION.
     FIELD-SYMBOLS <ls_pr> TYPE zif_abapgit_pr_enum_provider=>ty_pull_request.
 
     ASSIGN iv_item TO <ls_pr>.
-    ASSERT sy-subrc = 0.
 
     ri_html = zcl_abapgit_html=>create( |<b>{ <ls_pr>-number }</b> - { <ls_pr>-title } @{ <ls_pr>-user }| ).
 

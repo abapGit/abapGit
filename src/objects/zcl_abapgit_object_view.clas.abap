@@ -5,18 +5,43 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PROTECTED SECTION.
     "! get additional data like table authorization group
     "! @parameter iv_name | name of the view
-    METHODS read_extras IMPORTING iv_name               TYPE ddobjname
-                        RETURNING VALUE(rs_tabl_extras) TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
+    METHODS read_extras
+      IMPORTING
+        iv_name               TYPE ddobjname
+      RETURNING
+        VALUE(rs_tabl_extras) TYPE zif_abapgit_object_tabl=>ty_tabl_extras
+      RAISING
+        zcx_abapgit_exception.
 
     "! Update additional data
     "! @parameter iv_name | name of the table
+    "! @parameter iv_transport | transport request
     "! @parameter is_tabl_extras | additional view data
-    METHODS update_extras IMPORTING iv_name        TYPE ddobjname
-                                    is_tabl_extras TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
+    METHODS update_extras
+      IMPORTING
+        iv_name        TYPE ddobjname
+        iv_transport   TYPE trkorr
+        is_tabl_extras TYPE zif_abapgit_object_tabl=>ty_tabl_extras
+      RAISING
+        zcx_abapgit_exception.
 
     "! Delete additional data
     "! @parameter iv_name | name of the view
-    METHODS delete_extras IMPORTING iv_name TYPE ddobjname.
+    "! @parameter iv_transport | transport request
+    METHODS delete_extras
+      IMPORTING
+        iv_name      TYPE ddobjname
+        iv_transport TYPE trkorr
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS insert_transport
+      IMPORTING
+        iv_name      TYPE ddobjname
+        iv_transport TYPE trkorr
+      RAISING
+        zcx_abapgit_exception.
+
   PRIVATE SECTION.
     TYPES: ty_dd26v TYPE STANDARD TABLE OF dd26v
                           WITH NON-UNIQUE DEFAULT KEY,
@@ -66,12 +91,16 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_object_view IMPLEMENTATION.
 
 
   METHOD delete_extras.
 
     DELETE FROM tddat WHERE tabname = iv_name.
+
+    insert_transport(
+      iv_name      = iv_name
+      iv_transport = iv_transport ).
 
   ENDMETHOD.
 
@@ -130,9 +159,40 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD insert_transport.
+
+    DATA:
+      ls_key  TYPE tddat,
+      lt_keys TYPE TABLE OF tddat.
+
+    IF iv_transport IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    ls_key-tabname = iv_name.
+    INSERT ls_key INTO TABLE lt_keys.
+
+    zcl_abapgit_factory=>get_cts_api( )->create_transport_entries(
+      iv_transport = iv_transport
+      it_table_ins = lt_keys
+      iv_tabname   = 'TDDAT' ).
+
+  ENDMETHOD.
+
+
   METHOD read_extras.
 
     SELECT SINGLE * FROM tddat INTO rs_tabl_extras-tddat WHERE tabname = iv_name.
+
+    " Fields that are not part of dd25v
+    TRY.
+        SELECT SINGLE abap_language_version FROM ('DD25L') INTO CORRESPONDING FIELDS OF rs_tabl_extras
+          WHERE viewname = iv_name AND as4local = 'A' AND as4vers = '0000'.
+        IF sy-subrc = 0.
+          clear_abap_language_version( CHANGING cv_abap_language_version = rs_tabl_extras-abap_language_version ).
+        ENDIF.
+      CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -237,11 +297,29 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
 
   METHOD update_extras.
 
+    DATA lv_abap_language_version TYPE uccheck.
+
     IF is_tabl_extras-tddat IS INITIAL.
-      delete_extras( iv_name ).
+      delete_extras(
+        iv_name      = iv_name
+        iv_transport = iv_transport ).
     ELSE.
       MODIFY tddat FROM is_tabl_extras-tddat.
+
+      insert_transport(
+        iv_name      = iv_name
+        iv_transport = iv_transport ).
     ENDIF.
+
+    " Fields that are not part of dd25v
+    TRY.
+        lv_abap_language_version = is_tabl_extras-abap_language_version.
+
+        set_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
+
+        UPDATE ('DD25L') SET abap_language_version = lv_abap_language_version WHERE viewname = iv_name.
+      CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -269,7 +347,10 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
 
     lv_objname = ms_item-obj_name.
     delete_ddic( 'V' ).
-    delete_extras( lv_objname ).
+
+    delete_extras(
+      iv_name      = lv_objname
+      iv_transport = iv_transport ).
 
   ENDMETHOD.
 
@@ -304,55 +385,61 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
 
     lv_name = ms_item-obj_name. " type conversion
 
-    LOOP AT lt_dd27p ASSIGNING <ls_dd27p>.
-      <ls_dd27p>-objpos = sy-tabix.
-      <ls_dd27p>-viewname = lv_name.
-      " rollname seems to be mandatory in the API, but is typically not defined in the VIEW
-      SELECT SINGLE rollname FROM dd03l INTO <ls_dd27p>-rollname
-        WHERE tabname = <ls_dd27p>-tabname
-        AND fieldname = <ls_dd27p>-fieldname.
-      IF <ls_dd27p>-rollnamevi IS INITIAL.
-        <ls_dd27p>-rollnamevi = <ls_dd27p>-rollname.
+    IF iv_step = zif_abapgit_object=>gc_step_id-ddic.
+
+      LOOP AT lt_dd27p ASSIGNING <ls_dd27p>.
+        <ls_dd27p>-objpos = sy-tabix.
+        <ls_dd27p>-viewname = lv_name.
+        " rollname seems to be mandatory in the API, but is typically not defined in the VIEW
+        SELECT SINGLE rollname FROM dd03l INTO <ls_dd27p>-rollname
+          WHERE tabname = <ls_dd27p>-tabname
+          AND fieldname = <ls_dd27p>-fieldname.
+        IF <ls_dd27p>-rollnamevi IS INITIAL.
+          <ls_dd27p>-rollnamevi = <ls_dd27p>-rollname.
+        ENDIF.
+      ENDLOOP.
+
+      corr_insert( iv_package = iv_package
+                   ig_object_class = 'DICT' ).
+
+      CALL FUNCTION 'DDIF_VIEW_PUT'
+        EXPORTING
+          name              = lv_name
+          dd25v_wa          = ls_dd25v
+          dd09l_wa          = ls_dd09l
+        TABLES
+          dd26v_tab         = lt_dd26v
+          dd27p_tab         = lt_dd27p
+          dd28j_tab         = lt_dd28j
+          dd28v_tab         = lt_dd28v
+        EXCEPTIONS
+          view_not_found    = 1
+          name_inconsistent = 2
+          view_inconsistent = 3
+          put_failure       = 4
+          put_refused       = 5
+          OTHERS            = 6.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
-    ENDLOOP.
 
-    corr_insert( iv_package = iv_package
-                 ig_object_class = 'DICT' ).
+      IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
+        deserialize_texts(
+          ii_xml   = io_xml
+          is_dd25v = ls_dd25v ).
+      ENDIF.
 
-    CALL FUNCTION 'DDIF_VIEW_PUT'
-      EXPORTING
-        name              = lv_name
-        dd25v_wa          = ls_dd25v
-        dd09l_wa          = ls_dd09l
-      TABLES
-        dd26v_tab         = lt_dd26v
-        dd27p_tab         = lt_dd27p
-        dd28j_tab         = lt_dd28j
-        dd28v_tab         = lt_dd28v
-      EXCEPTIONS
-        view_not_found    = 1
-        name_inconsistent = 2
-        view_inconsistent = 3
-        put_failure       = 4
-        put_refused       = 5
-        OTHERS            = 6.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
+      deserialize_longtexts( ii_xml         = io_xml
+                             iv_longtext_id = c_longtext_id_view ).
+
+      zcl_abapgit_objects_activation=>add_item( ms_item ).
+
+    ELSE.
+      " Late update after activation because activation removes ABAP Language Version (in lower releases?)
+      update_extras( iv_name        = lv_name
+                     iv_transport   = iv_transport
+                     is_tabl_extras = ls_extras ).
     ENDIF.
-
-    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
-      deserialize_texts(
-        ii_xml   = io_xml
-        is_dd25v = ls_dd25v ).
-    ENDIF.
-
-    deserialize_longtexts( ii_xml         = io_xml
-                           iv_longtext_id = c_longtext_id_view ).
-
-    update_extras( iv_name        = lv_name
-                   is_tabl_extras = ls_extras ).
-
-    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.
 
@@ -396,6 +483,8 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 
@@ -441,6 +530,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
           ls_extras TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
 
     FIELD-SYMBOLS: <ls_dd27p> LIKE LINE OF lt_dd27p.
+    FIELD-SYMBOLS <lg_field> TYPE any.
 
     read_view(
       EXPORTING
@@ -462,6 +552,11 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
     CLEAR: ls_dd25v-as4user,
            ls_dd25v-as4date,
            ls_dd25v-as4time.
+
+    ASSIGN COMPONENT 'ACTFLAG' OF STRUCTURE ls_dd25v TO <lg_field>.
+    IF sy-subrc = 0.
+      CLEAR <lg_field>.
+    ENDIF.
 
     CLEAR: ls_dd09l-as4user,
            ls_dd09l-as4date,

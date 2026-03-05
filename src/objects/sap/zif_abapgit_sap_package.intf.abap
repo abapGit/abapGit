@@ -7,6 +7,7 @@ INTERFACE zif_abapgit_sap_package
 
   TYPES: BEGIN OF ty_create,
            devclass  TYPE devclass,
+           korrflag  TYPE abap_bool,
            dlvunit   TYPE tdevc-dlvunit,
            component TYPE c LENGTH 20,
            ctext     TYPE c LENGTH 60,
@@ -15,6 +16,11 @@ INTERFACE zif_abapgit_sap_package
            as4user   TYPE usnam,
          END OF ty_create.
 
+  METHODS get
+    RETURNING
+      VALUE(rs_package) TYPE ty_create
+    RAISING
+      zcx_abapgit_exception .
   METHODS validate_name
     RAISING
       zcx_abapgit_exception .
@@ -41,14 +47,10 @@ INTERFACE zif_abapgit_sap_package
       zcx_abapgit_exception .
   METHODS read_description
     RETURNING
-      VALUE(rv_description) TYPE string
-    RAISING
-      zcx_abapgit_exception .
+      VALUE(rv_description) TYPE string.
   METHODS read_responsible
     RETURNING
-      VALUE(rv_responsible) TYPE usnam
-    RAISING
-      zcx_abapgit_exception .
+      VALUE(rv_responsible) TYPE usnam.
   METHODS create_child
     IMPORTING
       !iv_child TYPE devclass
@@ -65,6 +67,19 @@ INTERFACE zif_abapgit_sap_package
   METHODS get_transport_type
     RETURNING
       VALUE(rs_transport_type) TYPE zif_abapgit_definitions=>ty_transport_type
+    RAISING
+      zcx_abapgit_exception .
+  METHODS get_default_transport_layer
+    RETURNING
+      VALUE(rv_transport_layer) TYPE devlayer
+    RAISING
+      zcx_abapgit_exception.
+  METHODS check_object_type
+    IMPORTING
+      iv_obj_type TYPE tadir-object
+    RAISING
+      zcx_abapgit_exception.
+  METHODS update_tree
     RAISING
       zcx_abapgit_exception .
 ENDINTERFACE.

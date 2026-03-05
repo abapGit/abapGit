@@ -68,16 +68,13 @@ CLASS zcl_abapgit_filename_logic DEFINITION
     CLASS-METHODS object_to_i18n_file
       IMPORTING
         !is_item           TYPE zif_abapgit_definitions=>ty_item
-        !iv_lang           TYPE laiso
+        !iv_lang_suffix    TYPE string
         !iv_ext            TYPE string
       RETURNING
         VALUE(rv_filename) TYPE string.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    CLASS-DATA:
-      go_aff_registry TYPE REF TO zif_abapgit_aff_registry.
 
     CLASS-METHODS name_escape
       IMPORTING
@@ -93,22 +90,22 @@ CLASS zcl_abapgit_filename_logic DEFINITION
 
     CLASS-METHODS map_filename_to_object
       IMPORTING
-        !iv_filename TYPE string
-        !iv_path     TYPE string
-        !iv_package  TYPE devclass
-        !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
+        !iv_item_part_of_filename TYPE string
+        !iv_path                  TYPE string
+        !iv_package               TYPE devclass
+        !io_dot                   TYPE REF TO zcl_abapgit_dot_abapgit
       CHANGING
-        cs_item      TYPE zif_abapgit_definitions=>ty_item
+        cs_item                   TYPE zif_abapgit_definitions=>ty_item
       RAISING
         zcx_abapgit_exception.
 
     CLASS-METHODS map_object_to_filename
       IMPORTING
-        !is_item    TYPE zif_abapgit_definitions=>ty_item
-        !iv_ext     TYPE string
-        !iv_extra   TYPE clike
+        !is_item                 TYPE zif_abapgit_definitions=>ty_item
+        !iv_ext                  TYPE string
+        !iv_extra                TYPE clike
       CHANGING
-        cv_filename TYPE string
+        cv_item_part_of_filename TYPE string
       RAISING
         zcx_abapgit_exception.
 
@@ -125,7 +122,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
 
 
   METHOD detect_obj_definition.
@@ -144,7 +141,9 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
       lv_ext  TYPE string.
 
     " Guess object type and name
-    SPLIT to_upper( iv_filename ) AT '.' INTO lv_name lv_type lv_ext.
+    SPLIT iv_filename AT '.' INTO lv_name lv_type lv_ext.
+    lv_type = to_upper( lv_type ).
+    lv_ext  = to_upper( lv_ext ).
 
     " Handle namespaces
     REPLACE ALL OCCURRENCES OF '#' IN lv_name WITH '/'.
@@ -152,11 +151,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
 
     " Assume AFF namespace convention
-    IF go_aff_registry IS INITIAL.
-      CREATE OBJECT go_aff_registry TYPE zcl_abapgit_aff_registry.
-    ENDIF.
-
-    IF go_aff_registry->is_supported_object_type( |{ lv_type }| ) = abap_true.
+    IF zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( |{ lv_type }| ) = abap_true.
       REPLACE ALL OCCURRENCES OF '(' IN lv_name WITH '/'.
       REPLACE ALL OCCURRENCES OF ')' IN lv_name WITH '/'.
     ENDIF.
@@ -166,12 +161,12 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
 
     CLEAR es_item.
     es_item-obj_type = lv_type.
-    es_item-obj_name = lv_name.
+    es_item-obj_name = to_upper( lv_name ).
 
     " Get mapping specific to object type
     map_filename_to_object(
       EXPORTING
-        iv_filename = iv_filename
+        iv_item_part_of_filename = lv_name " original-cased object name part only
         iv_path     = iv_path
         io_dot      = io_dot
         iv_package  = iv_devclass
@@ -185,6 +180,41 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
       IMPORTING
         ev_is_xml  = ev_is_xml
         ev_is_json = ev_is_json ).
+
+  ENDMETHOD.
+
+
+  METHOD get_lang_and_ext.
+
+    DATA lt_filename_elements TYPE string_table.
+    DATA lv_lang_suffix TYPE string.
+    DATA lv_sap1 TYPE sy-langu.
+
+    SPLIT iv_filename AT '.' INTO TABLE lt_filename_elements.
+
+    READ TABLE lt_filename_elements INDEX lines( lt_filename_elements ) INTO ev_ext.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Could not derive file extension of file { iv_filename }| ).
+    ENDIF.
+
+    READ TABLE lt_filename_elements WITH KEY table_line = `i18n` TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      READ TABLE lt_filename_elements INDEX ( sy-tabix + 1 ) INTO lv_lang_suffix.
+      IF sy-subrc = 0.
+        IF ev_ext = `po`.
+          ev_lang = to_lower( lv_lang_suffix ).
+        ELSEIF ev_ext = `properties`.
+          lv_sap1 = zcl_abapgit_convert=>language_bcp47_to_sap1( lv_lang_suffix ).
+          ev_lang = zcl_abapgit_convert=>language_sap1_to_sap2( lv_sap1 ). " actually it is to_upper( ISO-639 )
+        ELSE.
+          zcx_abapgit_exception=>raise( |Unexpected translation file format { iv_filename }| ).
+        ENDIF.
+      ENDIF.
+    ENDIF.
+
+    IF ev_lang IS INITIAL.
+      CLEAR ev_ext.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -252,7 +282,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
 
         CALL METHOD (lv_class)=>('ZIF_ABAPGIT_OBJECT~MAP_FILENAME_TO_OBJECT')
           EXPORTING
-            iv_filename = iv_filename
+            iv_item_part_of_filename = iv_item_part_of_filename
             iv_path     = iv_path
             io_dot      = io_dot
             iv_package  = iv_package
@@ -277,6 +307,10 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     " This will trigger class constructor of zcl_abapgit_objects_bridge reading table seometarel
     " which is currently not supported by abaplint test runner
 
+    " TODO: maybe refactor the logic, as currently only 2 object types have own naming
+    " the map_* methods are static, so they cannot reuse ms_item passed to the class
+    " and the "custom" naming is scattered among the large codebase
+
     TRY.
         lv_class = 'ZCL_ABAPGIT_OBJECT_' && is_item-obj_type.
 
@@ -286,7 +320,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
             iv_ext      = iv_ext
             iv_extra    = iv_extra
           CHANGING
-            cv_filename = cv_filename.
+            cv_item_part_of_filename = cv_item_part_of_filename.
       CATCH cx_sy_dyn_call_illegal_class ##NO_HANDLER.
     ENDTRY.
 
@@ -320,20 +354,13 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     DATA lv_obj_name TYPE string.
     DATA lv_obj_type TYPE string.
     DATA lv_nb_of_slash TYPE string.
+    DATA lv_keep_case TYPE abap_bool.
 
     " Get escaped object name
     lv_obj_name = to_lower( name_escape( is_item-obj_name ) ).
     lv_obj_type = to_lower( is_item-obj_type ).
 
-    IF iv_extra IS INITIAL.
-      CONCATENATE lv_obj_name '.' lv_obj_type INTO rv_filename.
-    ELSE.
-      CONCATENATE lv_obj_name '.' lv_obj_type '.' iv_extra INTO rv_filename.
-    ENDIF.
-
-    IF iv_ext IS NOT INITIAL.
-      CONCATENATE rv_filename '.' iv_ext INTO rv_filename.
-    ENDIF.
+    rv_filename = lv_obj_name.
 
     " Get mapping specific to object type
     TRY.
@@ -343,14 +370,21 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
             iv_ext      = iv_ext
             iv_extra    = iv_extra
           CHANGING
-            cv_filename = rv_filename ).
+            cv_item_part_of_filename = rv_filename ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
 
-    " Handle namespaces
-    CREATE OBJECT go_aff_registry TYPE zcl_abapgit_aff_registry.
+    CONCATENATE rv_filename '.' lv_obj_type INTO rv_filename.
 
-    IF go_aff_registry->is_supported_object_type( is_item-obj_type ) = abap_true.
+    IF iv_extra IS NOT INITIAL.
+      CONCATENATE rv_filename '.' iv_extra INTO rv_filename.
+    ENDIF.
+
+    IF iv_ext IS NOT INITIAL.
+      CONCATENATE rv_filename '.' iv_ext INTO rv_filename.
+    ENDIF.
+
+    IF zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( is_item-obj_type ) = abap_true.
       FIND ALL OCCURRENCES OF `/` IN rv_filename MATCH COUNT lv_nb_of_slash.
       IF lv_nb_of_slash = 2.
         REPLACE FIRST OCCURRENCE OF `/` IN rv_filename WITH `(`.
@@ -361,59 +395,22 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     ENDIF.
 
     IF iv_ext = 'properties'.
-      RETURN.
+      lv_keep_case = abap_true.
     ENDIF.
 
-    TRANSLATE rv_filename TO LOWER CASE.
+    IF lv_keep_case = abap_false. " The default behavior is to lowercase all filenames
+      TRANSLATE rv_filename TO LOWER CASE.
+    ENDIF.
 
   ENDMETHOD.
 
 
   METHOD object_to_i18n_file.
-    DATA: lv_langu_sap1 TYPE sy-langu,
-          lv_langu_bcp47 TYPE string.
-
-    lv_langu_sap1 = zcl_abapgit_convert=>language_sap2_to_sap1( to_upper( iv_lang ) ).
-    lv_langu_bcp47 = zcl_abapgit_convert=>language_sap1_to_bcp47( lv_langu_sap1 ).
 
     rv_filename = object_to_file(
       is_item  = is_item
-      iv_extra = |i18n.{ lv_langu_bcp47 }|
+      iv_extra = |i18n.{ iv_lang_suffix }|
       iv_ext   = iv_ext ).
 
   ENDMETHOD.
-
-  METHOD get_lang_and_ext.
-
-    DATA lt_filename_elements TYPE string_table.
-    DATA lv_langu_bcp47 TYPE string.
-    DATA lv_sap1 TYPE sy-langu.
-
-    SPLIT iv_filename AT '.' INTO TABLE lt_filename_elements.
-
-    READ TABLE lt_filename_elements INDEX lines( lt_filename_elements ) INTO ev_ext.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Could not derive file extension of file { iv_filename }| ).
-    ENDIF.
-
-    READ TABLE lt_filename_elements WITH KEY table_line = `i18n` TRANSPORTING NO FIELDS.
-    IF sy-subrc = 0.
-      READ TABLE lt_filename_elements INDEX ( sy-tabix + 1 ) INTO lv_langu_bcp47.
-      IF sy-subrc = 0.
-        lv_sap1 = zcl_abapgit_convert=>language_bcp47_to_sap1( lv_langu_bcp47 ).
-        ev_lang = zcl_abapgit_convert=>language_sap1_to_sap2( lv_sap1 ). " actually it is to_upper( ISO-639 )
-
-        " to not break existing PO file implementations
-        IF ev_ext = `po`.
-          ev_lang = to_lower( ev_lang ).
-        ENDIF.
-      ENDIF.
-    ENDIF.
-
-    IF ev_lang IS INITIAL.
-      CLEAR ev_ext.
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.

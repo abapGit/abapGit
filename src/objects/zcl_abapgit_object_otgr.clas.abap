@@ -137,7 +137,7 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
     TRY.
         CREATE DATA lo_parents TYPE TABLE OF ('CLS_TYGR_PARENT').
         ASSIGN lo_parents->* TO <lt_parents>.
-      CATCH cx_sy_create_data_error.
+      CATCH cx_sy_create_data_error ##NO_HANDLER.
     ENDTRY.
 
     IF <lt_parents> IS ASSIGNED.
@@ -288,7 +288,7 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
     TRY.
         CREATE DATA lo_parents TYPE TABLE OF ('CLS_TYGR_PARENT').
         ASSIGN lo_parents->* TO <lt_parents>.
-      CATCH cx_sy_create_data_error.
+      CATCH cx_sy_create_data_error ##NO_HANDLER.
     ENDTRY.
 
     TRY.

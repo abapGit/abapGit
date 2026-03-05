@@ -7,6 +7,14 @@ CLASS zcl_abapgit_object_odso DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_object .
+    METHODS constructor
+      IMPORTING
+        is_item        TYPE zif_abapgit_definitions=>ty_item
+        iv_language    TYPE spras
+        io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_type_not_supported.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -21,6 +29,24 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_object_odso IMPLEMENTATION.
+
+  METHOD constructor.
+
+    DATA: lr_details TYPE REF TO data.
+
+    super->constructor(
+        is_item        = is_item
+        iv_language    = iv_language
+        io_files       = io_files
+        io_i18n_params = io_i18n_params ).
+
+    TRY.
+        CREATE DATA lr_details TYPE ('BAPI6116').
+      CATCH cx_sy_create_data_error.
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
+    ENDTRY.
+
+  ENDMETHOD.
 
 
   METHOD clear_field.
@@ -46,11 +72,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
     FIELD-SYMBOLS: <lg_details> TYPE any,
                    <lg_tstpnm>  TYPE any.
 
-    TRY.
-        CREATE DATA lr_details TYPE ('BAPI6116').
-      CATCH cx_sy_create_data_error.
-        zcx_abapgit_exception=>raise( |ODSO is not supported on this system| ).
-    ENDTRY.
+    CREATE DATA lr_details TYPE ('BAPI6116').
 
     ASSIGN lr_details->* TO <lg_details>.
 
@@ -82,11 +104,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
           lt_msg        TYPE STANDARD TABLE OF bal_s_msg,
           ls_msg        TYPE bal_s_msg.
 
-    TRY.
-        CREATE OBJECT lo_collection TYPE ('CL_RSD_ODSO_COLLECTION').
-      CATCH cx_sy_create_data_error.
-        zcx_abapgit_exception=>raise( |ODSO is not supported on this system| ).
-    ENDTRY.
+    CREATE OBJECT lo_collection TYPE ('CL_RSD_ODSO_COLLECTION').
 
     lv_odsonam = ms_item-obj_name.
     lv_objname = ms_item-obj_name.
@@ -136,15 +154,11 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
       <lt_indexes>     TYPE STANDARD TABLE,
       <lt_index_iobj>  TYPE STANDARD TABLE.
 
-    TRY.
-        CREATE DATA lr_details     TYPE ('BAPI6116').
-        CREATE DATA lr_infoobjects TYPE STANDARD TABLE OF ('BAPI6116IO').
-        CREATE DATA lr_navigation  TYPE STANDARD TABLE OF ('BAPI6116NA').
-        CREATE DATA lr_indexes     TYPE STANDARD TABLE OF ('BAPI6116IN').
-        CREATE DATA lr_index_iobj  TYPE STANDARD TABLE OF ('BAPI6116II').
-      CATCH cx_sy_create_data_error.
-        zcx_abapgit_exception=>raise( |ODSO is not supported on this system| ).
-    ENDTRY.
+    CREATE DATA lr_details     TYPE ('BAPI6116').
+    CREATE DATA lr_infoobjects TYPE STANDARD TABLE OF ('BAPI6116IO').
+    CREATE DATA lr_navigation  TYPE STANDARD TABLE OF ('BAPI6116NA').
+    CREATE DATA lr_indexes     TYPE STANDARD TABLE OF ('BAPI6116IN').
+    CREATE DATA lr_index_iobj  TYPE STANDARD TABLE OF ('BAPI6116II').
 
     ASSIGN lr_details->* TO <lg_details>.
     ASSIGN lr_infoobjects->* TO <lt_infoobjects>.
@@ -326,15 +340,11 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
       <lt_indexes>     TYPE STANDARD TABLE,
       <lt_index_iobj>  TYPE STANDARD TABLE.
 
-    TRY.
-        CREATE DATA lr_details     TYPE ('BAPI6116').
-        CREATE DATA lr_infoobjects TYPE STANDARD TABLE OF ('BAPI6116IO').
-        CREATE DATA lr_navigation  TYPE STANDARD TABLE OF ('BAPI6116NA').
-        CREATE DATA lr_indexes     TYPE STANDARD TABLE OF ('BAPI6116IN').
-        CREATE DATA lr_index_iobj  TYPE STANDARD TABLE OF ('BAPI6116II').
-      CATCH cx_sy_create_data_error.
-        zcx_abapgit_exception=>raise( |ODSO is not supported on this system| ).
-    ENDTRY.
+    CREATE DATA lr_details     TYPE ('BAPI6116').
+    CREATE DATA lr_infoobjects TYPE STANDARD TABLE OF ('BAPI6116IO').
+    CREATE DATA lr_navigation  TYPE STANDARD TABLE OF ('BAPI6116NA').
+    CREATE DATA lr_indexes     TYPE STANDARD TABLE OF ('BAPI6116IN').
+    CREATE DATA lr_index_iobj  TYPE STANDARD TABLE OF ('BAPI6116II').
 
     ASSIGN lr_details->* TO <lg_details>.
     ASSIGN lr_infoobjects->* TO <lt_infoobjects>.

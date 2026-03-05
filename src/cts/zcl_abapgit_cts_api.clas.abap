@@ -21,7 +21,7 @@ CLASS zcl_abapgit_cts_api DEFINITION
     "! @raising zcx_abapgit_exception | Object is not locked in a transport
     METHODS get_current_transport_for_obj
       IMPORTING
-        !iv_program_id      TYPE pgmid DEFAULT 'R3TR'
+        !iv_program_id      TYPE tadir-pgmid DEFAULT 'R3TR'
         !iv_object_type     TYPE trobjtype
         !iv_object_name     TYPE sobj_name
       RETURNING
@@ -36,7 +36,7 @@ CLASS zcl_abapgit_cts_api DEFINITION
     "! @raising zcx_abapgit_exception | Object is not locked in a transport
     METHODS get_current_transport_from_db
       IMPORTING
-        !iv_program_id      TYPE pgmid DEFAULT 'R3TR'
+        !iv_program_id      TYPE tadir-pgmid DEFAULT 'R3TR'
         !iv_object_type     TYPE trobjtype
         !iv_object_name     TYPE sobj_name
       RETURNING
@@ -51,7 +51,7 @@ CLASS zcl_abapgit_cts_api DEFINITION
     "! @raising zcx_abapgit_exception | Object type is not lockable
     METHODS is_object_locked_in_transport
       IMPORTING
-        !iv_program_id   TYPE pgmid DEFAULT 'R3TR'
+        !iv_program_id   TYPE tadir-pgmid DEFAULT 'R3TR'
         !iv_object_type  TYPE trobjtype
         !iv_object_name  TYPE sobj_name
       RETURNING
@@ -64,7 +64,7 @@ CLASS zcl_abapgit_cts_api DEFINITION
     "! @parameter rv_lockable | Lockable
     METHODS is_object_type_lockable
       IMPORTING
-        !iv_program_id     TYPE pgmid DEFAULT 'R3TR'
+        !iv_program_id     TYPE tadir-pgmid DEFAULT 'R3TR'
         !iv_object_type    TYPE trobjtype
       RETURNING
         VALUE(rv_lockable) TYPE abap_bool .
@@ -74,7 +74,7 @@ CLASS zcl_abapgit_cts_api DEFINITION
     "! @parameter rv_transportable | Transportable
     METHODS is_object_type_transportable
       IMPORTING
-        !iv_program_id          TYPE pgmid DEFAULT 'R3TR'
+        !iv_program_id          TYPE tadir-pgmid DEFAULT 'R3TR'
         !iv_object_type         TYPE trobjtype
       RETURNING
         VALUE(rv_transportable) TYPE abap_bool .
@@ -89,6 +89,9 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     DATA: lv_object_lockable   TYPE abap_bool,
           lv_locked            TYPE abap_bool,
           lv_transport_request TYPE trkorr,
+          ls_tlock             TYPE tlock,
+          lt_tlock             TYPE STANDARD TABLE OF tlock WITH DEFAULT KEY,
+          lt_transports        TYPE STANDARD TABLE OF trkorr WITH DEFAULT KEY,
           lv_task              TYPE trkorr,
           lv_tr_object_name    TYPE trobj_name.
 
@@ -104,6 +107,8 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
         we_locked            = lv_locked
         we_lock_order        = lv_transport_request
         we_lock_task         = lv_task
+      TABLES
+        wt_tlock             = lt_tlock
       EXCEPTIONS
         empty_key            = 1
         no_systemname        = 2
@@ -122,7 +127,15 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Object type { iv_program_id }-{ iv_object_type } not lockable| ).
     ENDIF.
 
-    rv_transport = lv_transport_request.
+    LOOP AT lt_tlock INTO ls_tlock.
+      COLLECT ls_tlock-trkorr INTO lt_transports.
+    ENDLOOP.
+
+    IF lines( lt_transports ) = 1.
+      rv_transport = lv_transport_request.
+    ELSE.
+      rv_transport = zif_abapgit_definitions=>c_multiple_transports.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -130,11 +143,13 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
   METHOD get_current_transport_from_db.
 
     " This method is used for objects that are included in transports but not locked
-    " for example, namespaces (NSPC)
+    " for example, namespaces (NSPC) or table entries (TABU)
+    " Ignore unreleased SAP piece lists
     SELECT SINGLE a~trkorr FROM e070 AS a JOIN e071 AS b ON a~trkorr = b~trkorr
       INTO rv_transport
       WHERE ( a~trstatus = 'D' OR a~trstatus = 'L' )
         AND a~trfunction <> 'G'
+        AND NOT ( a~trfunction = 'F' AND ( a~tarsystem = '' OR a~tarsystem = 'SAP' ) )
         AND b~pgmid = iv_program_id AND b~object = iv_object_type AND b~obj_name = iv_object_name.
 
   ENDMETHOD.
@@ -209,7 +224,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       IMPORTING
         pe_result = lv_type_check_result.
 
-    rv_transportable = boolc( lv_type_check_result CA 'RTL' ).
+    rv_transportable = boolc( lv_type_check_result CA 'RTL' OR iv_object_type = 'TABU' ).
   ENDMETHOD.
 
 
@@ -345,6 +360,9 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     DATA lt_table_keys  TYPE STANDARD TABLE OF e071k.
     DATA lv_with_dialog TYPE abap_bool.
 
+    FIELD-SYMBOLS <ls_table> LIKE LINE OF lt_tables.
+    FIELD-SYMBOLS <ls_table_key> LIKE LINE OF lt_table_keys.
+
     cl_table_utilities_brf=>create_transport_entries(
       EXPORTING
         it_table_ins = it_table_ins
@@ -360,6 +378,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     CALL FUNCTION 'TR_OBJECTS_CHECK'
       TABLES
         wt_ko200                = lt_tables
+        wt_e071k                = lt_table_keys
       EXCEPTIONS
         cancel_edit_other_error = 1
         show_only_other_error   = 2
@@ -372,15 +391,24 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       lv_with_dialog = abap_true.
     ENDIF.
 
-    CALL FUNCTION 'TRINT_OBJECTS_CHECK_AND_INSERT'
+    READ TABLE lt_tables ASSIGNING <ls_table> INDEX 1.
+    ASSERT sy-subrc = 0.
+
+    LOOP AT lt_table_keys ASSIGNING <ls_table_key>.
+      <ls_table_key>-objfunc = <ls_table>-objfunc.
+    ENDLOOP.
+
+    CALL FUNCTION 'TR_OBJECT_INSERT'
       EXPORTING
-        iv_order       = iv_transport
-        iv_with_dialog = lv_with_dialog
-      CHANGING
-        ct_ko200       = lt_tables
-        ct_e071k       = lt_table_keys
+        wi_order                = iv_transport
+        wi_ko200                = <ls_table>
+        iv_no_show_option       = abap_true
+      TABLES
+        wt_e071k                = lt_table_keys
       EXCEPTIONS
-        OTHERS         = 1.
+        cancel_edit_other_error = 1
+        show_only_other_error   = 2
+        OTHERS                  = 3.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
@@ -393,26 +421,39 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     CLEAR ev_object.
     CLEAR ev_obj_name.
 
-    IF iv_object = 'MESS'.
-      ev_object = 'MSAG'.
-      ev_obj_name = substring( val = iv_obj_name
-                               len = strlen( iv_obj_name ) - 3 ).
-      RETURN.
-    ENDIF.
+    CASE iv_object.
+      WHEN 'MESS'.
+        ev_object = 'MSAG'.
+        ev_obj_name = substring( val = iv_obj_name
+                                 len = strlen( iv_obj_name ) - 3 ).
+      WHEN 'TABT'.
+* Technical Attributes of a Table
+        ev_object = 'TABL'.
+        ev_obj_name = iv_obj_name.
+      WHEN 'DTED'.
+* Data Element Definition
+        ev_object = 'DTEL'.
+        ev_obj_name = iv_obj_name.
+      WHEN 'DOMD'.
+* Domain Definition
+        ev_object = 'DOMA'.
+        ev_obj_name = iv_obj_name.
+      WHEN OTHERS.
+        CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
+          EXPORTING
+            p_limu_objtype = iv_object
+            p_limu_objname = iv_obj_name
+          IMPORTING
+            p_r3tr_objtype = ev_object
+            p_r3tr_objname = ev_obj_name
+          EXCEPTIONS
+            no_mapping     = 1
+            OTHERS         = 2.
+        IF sy-subrc <> 0 OR ev_obj_name IS INITIAL.
+          zcx_abapgit_exception=>raise( |No R3TR Object found for { iv_object } { iv_obj_name }| ).
+        ENDIF.
+    ENDCASE.
 
-    CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
-      EXPORTING
-        p_limu_objtype = iv_object
-        p_limu_objname = iv_obj_name
-      IMPORTING
-        p_r3tr_objtype = ev_object
-        p_r3tr_objname = ev_obj_name
-      EXCEPTIONS
-        no_mapping     = 1
-        OTHERS         = 2.
-    IF sy-subrc <> 0 OR ev_obj_name IS INITIAL.
-      zcx_abapgit_exception=>raise( |No R3TR Object found for { iv_object } { iv_obj_name }| ).
-    ENDIF.
   ENDMETHOD.
 
 
@@ -457,8 +498,12 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
             WHERE object = ls_lock_key-obj
             AND hikey >= ls_lock_key-low
             AND lokey <= ls_lock_key-hi.                  "#EC PORTABLE
-          lv_request = <ls_tlock>-trkorr.
-          EXIT.
+          IF lv_request IS INITIAL.
+            lv_request = <ls_tlock>-trkorr.
+          ELSEIF lv_request <> <ls_tlock>-trkorr.
+            lv_request = zif_abapgit_definitions=>c_multiple_transports.
+            EXIT.
+          ENDIF.
         ENDLOOP.
       ELSEIF is_object_type_transportable( <ls_item>-obj_type ) = abap_true.
         lv_request = get_current_transport_from_db(
@@ -512,6 +557,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
         object_class        = iv_object
         devclass            = iv_package
         master_language     = iv_language
+        korrnum             = iv_transport
         mode                = iv_mode
         global_lock         = abap_true
         suppress_dialog     = abap_true
@@ -534,30 +580,14 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_cts_api~list_open_requests_by_user.
+  METHOD zif_abapgit_cts_api~list_open_requests.
 
-    TYPES: BEGIN OF ty_e070,
-             trkorr     TYPE e070-trkorr,
-             trfunction TYPE e070-trfunction,
-             strkorr    TYPE e070-strkorr,
-           END OF ty_e070.
-    DATA lt_e070 TYPE STANDARD TABLE OF ty_e070 WITH DEFAULT KEY.
-
-* find all tasks first
-    SELECT trkorr trfunction strkorr
-      FROM e070 INTO TABLE lt_e070
-      WHERE as4user = sy-uname
-      AND trstatus = zif_abapgit_cts_api=>c_transport_status-modifiable
-      AND strkorr <> ''
+    SELECT trkorr FROM e070
+      INTO TABLE rt_trkorr
+      WHERE trstatus = zif_abapgit_cts_api=>c_transport_status-modifiable
+      AND trfunction = zif_abapgit_cts_api=>c_transport_type-wb_request
+      AND as4date IN it_date
       ORDER BY PRIMARY KEY.
-
-    IF lines( lt_e070 ) > 0.
-      SELECT trkorr FROM e070
-        INTO TABLE rt_trkorr
-        FOR ALL ENTRIES IN lt_e070
-        WHERE trkorr = lt_e070-strkorr
-        AND trfunction = zif_abapgit_cts_api=>c_transport_type-wb_request.
-    ENDIF.
 
   ENDMETHOD.
 
@@ -580,6 +610,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
     SELECT trkorr FROM e070 INTO TABLE lt_tasks
       WHERE strkorr = iv_request
+      AND trfunction = zif_abapgit_cts_api=>c_transport_type-wb_task
       ORDER BY PRIMARY KEY.
     IF sy-subrc <> 0.
       RETURN.
@@ -610,7 +641,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
                   ev_object   = ls_list-object
                   ev_obj_name = ls_list-obj_name ).
               INSERT ls_list INTO TABLE rt_list.
-            CATCH zcx_abapgit_exception.
+            CATCH zcx_abapgit_exception ##NO_HANDLER.
           ENDTRY.
       ENDCASE.
     ENDLOOP.
@@ -651,6 +682,8 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
 * move to output structure
     rs_request-trstatus = ls_request-h-trstatus.
+    rs_request-as4date  = ls_request-h-as4date.
+    rs_request-as4user  = ls_request-h-as4user.
     LOOP AT ls_request-keys INTO ls_key.
       APPEND INITIAL LINE TO rs_request-keys ASSIGNING <ls_key>.
       MOVE-CORRESPONDING ls_key TO <ls_key>.
@@ -664,7 +697,43 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     SELECT SINGLE as4text FROM e07t
       INTO rv_description
       WHERE trkorr = iv_trkorr
-      AND langu = sy-langu ##SUBRC_OK.
+      AND langu = sy-langu.
+    IF sy-subrc <> 0.
+* fallback to any language
+      SELECT SINGLE as4text FROM e07t
+        INTO rv_description
+        WHERE trkorr = iv_trkorr ##SUBRC_OK. "#EC CI_NOORDER
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~read_request_and_tasks.
+
+    DATA lt_request_headers TYPE trwbo_request_headers.
+    DATA ls_row             LIKE LINE OF lt_request_headers.
+    DATA ls_task            LIKE LINE OF rt_tasks.
+
+    CALL FUNCTION 'TR_READ_REQUEST_WITH_TASKS'
+      EXPORTING
+        iv_trkorr          = iv_request
+      IMPORTING
+        et_request_headers = lt_request_headers
+      EXCEPTIONS
+        invalid_input      = 1
+        OTHERS             = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    LOOP AT lt_request_headers INTO ls_row.
+      ls_task-trkorr  = ls_row-trkorr.
+      ls_task-as4user = ls_row-as4user.
+      ls_task-as4date = ls_row-as4date.
+      ls_task-as4time = ls_row-as4time.
+
+      INSERT ls_task INTO TABLE rt_tasks.
+    ENDLOOP.
 
   ENDMETHOD.
 

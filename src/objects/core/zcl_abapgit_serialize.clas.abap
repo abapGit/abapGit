@@ -55,6 +55,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     DATA ms_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings.
     DATA ms_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
     DATA mo_abap_language_version TYPE REF TO zcl_abapgit_abap_language_vers.
+    DATA mt_wo_translation_patterns TYPE string_table.
 
     METHODS add_apack
       IMPORTING
@@ -66,6 +67,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     METHODS add_data
       IMPORTING
         !ii_data_config TYPE REF TO zif_abapgit_data_config
+        !ii_log         TYPE REF TO zif_abapgit_log
       CHANGING
         !ct_files       TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
@@ -92,13 +94,18 @@ CLASS zcl_abapgit_serialize DEFINITION
         zcx_abapgit_exception .
     METHODS add_objects
       IMPORTING
-        !iv_package     TYPE devclass
-        !ii_log         TYPE REF TO zif_abapgit_log
-        !it_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
+        !iv_package TYPE devclass
+        !ii_log     TYPE REF TO zif_abapgit_log
+        !it_filter  TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
       CHANGING
-        VALUE(ct_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !ct_files   TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
+    METHODS determine_rfc_server_group
+      RETURNING
+        VALUE(rv_group) TYPE rzlli_apcl
+      RAISING
+        zcx_abapgit_exception.
     METHODS determine_max_processes
       IMPORTING
         !iv_force_sequential TYPE abap_bool DEFAULT abap_false
@@ -120,6 +127,12 @@ CLASS zcl_abapgit_serialize DEFINITION
   PRIVATE SECTION.
 
     METHODS is_parallelization_possible
+      RETURNING
+        VALUE(rv_result) TYPE abap_bool.
+
+    METHODS is_no_parallel
+      IMPORTING
+        !iv_object_type  TYPE tadir-object
       RETURNING
         VALUE(rv_result) TYPE abap_bool.
 
@@ -150,6 +163,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     DATA lt_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
     DATA ls_file LIKE LINE OF lt_files.
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
 
     FIELD-SYMBOLS <ls_return> LIKE LINE OF ct_files.
 
@@ -174,7 +188,13 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       <ls_return>-item-obj_type = zif_abapgit_data_config=>c_data_type-tabu. " todo
     ENDLOOP.
 
-    lt_files = zcl_abapgit_data_factory=>get_serializer( )->serialize( ii_data_config ).
+    TRY.
+        lt_files = zcl_abapgit_data_factory=>get_serializer( )->serialize( ii_data_config ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        ii_log->add_exception( lx_error ).
+        RETURN.
+    ENDTRY.
+
     LOOP AT lt_files INTO ls_file.
       APPEND INITIAL LINE TO ct_files ASSIGNING <ls_return>.
       <ls_return>-file = ls_file.
@@ -255,31 +275,33 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA li_exit TYPE REF TO zif_abapgit_exit.
-
-    mv_group = 'parallel_generators'.
-    li_exit = zcl_abapgit_exit=>get_instance( ).
-    li_exit->change_rfc_server_group( CHANGING cv_group = mv_group ).
+    mv_group = determine_rfc_server_group( ).
 
     mo_dot_abapgit = io_dot_abapgit.
     ms_local_settings = is_local_settings.
 
     IF io_dot_abapgit IS BOUND.
       ms_i18n_params = io_dot_abapgit->determine_i18n_parameters( is_local_settings-main_language_only ).
+      mt_wo_translation_patterns =
+        zcl_abapgit_i18n_params=>normalize_obj_patterns( io_dot_abapgit->get_objs_without_translation( ) ).
     ELSE.
       ms_i18n_params-main_language      = sy-langu.
       ms_i18n_params-main_language_only = is_local_settings-main_language_only.
     ENDIF.
+    ms_i18n_params-suppress_po_comments = is_local_settings-suppress_lxe_po_comments.
 
-    CREATE OBJECT mo_abap_language_version
-      EXPORTING
-        io_dot_abapgit = mo_dot_abapgit.
+    IF mo_dot_abapgit IS NOT INITIAL.
+      CREATE OBJECT mo_abap_language_version
+        EXPORTING
+          io_dot_abapgit = mo_dot_abapgit.
+    ENDIF.
 
   ENDMETHOD.
 
 
   METHOD determine_max_processes.
     DATA: li_exit TYPE REF TO zif_abapgit_exit.
+    DATA lv_available_sessions TYPE i.
 
     IF iv_force_sequential = abap_true.
       rv_processes = 1.
@@ -310,6 +332,21 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     ASSERT rv_processes >= 1.
 
+    " Avoid going over the maximum available user sessions
+    IF sy-batch IS INITIAL.
+      lv_available_sessions = zcl_abapgit_factory=>get_environment( )->get_available_user_sessions( ).
+
+      IF lv_available_sessions = 0.
+        " No available session -> disable parallel processing
+        rv_processes = 1.
+      ELSEIF rv_processes > lv_available_sessions.
+        rv_processes = lv_available_sessions.
+      ENDIF.
+    ENDIF.
+
+    ASSERT rv_processes >= 1.
+
+    " Exit setting has highest priority to change maximum sessions
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->change_max_parallel_processes(
       EXPORTING
@@ -317,7 +354,30 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       CHANGING
         cv_max_processes = rv_processes ).
 
-    ASSERT rv_processes >= 1. " check exit above
+    ASSERT rv_processes >= 1.
+
+  ENDMETHOD.
+
+
+  METHOD determine_rfc_server_group.
+
+    DATA:
+      li_exit   TYPE REF TO zif_abapgit_exit,
+      lv_exists TYPE abap_bool.
+
+    " According to SAP Note 3215918 it's recommended NOT to use this group anymore.
+    " However, we keep it for compatibility. If it does not exist, we switch to the
+    " recommended DEFAULT behaviour.
+    rv_group = 'parallel_generators'.
+
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->change_rfc_server_group( CHANGING cv_group = rv_group ).
+
+    " Check if RFC server group exists and fallback to the default
+    lv_exists = zcl_abapgit_factory=>get_environment( )->check_parallel_processing( rv_group ).
+    IF lv_exists = abap_false.
+      rv_group = ''.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -325,6 +385,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   METHOD files_local.
 
 * serializes objects, including .abapgit.xml, apack, and takes into account local settings
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
 
     add_dot_abapgit( CHANGING ct_files = rt_files ).
 
@@ -337,6 +398,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     add_data(
       EXPORTING
         ii_data_config = ii_data_config
+        ii_log         = ii_log
       CHANGING
         ct_files       = rt_files ).
 
@@ -345,6 +407,16 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         iv_package = iv_package
         ii_log     = ii_log
         it_filter  = it_filter
+      CHANGING
+        ct_files   = rt_files ).
+
+*   Call postprocessing
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+
+    li_exit->serialize_postprocess(
+      EXPORTING
+        iv_package = iv_package
+        ii_log     = ii_log
       CHANGING
         ct_files   = rt_files ).
 
@@ -388,8 +460,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       ENDIF.
 
       lv_filename = zcl_abapgit_filename_logic=>object_to_file(
-        is_item  = ls_item
-        iv_ext   = '*' ).
+        is_item = ls_item
+        iv_ext  = '*' ).
 
       IF mo_dot_abapgit->is_ignored(
         iv_path     = lv_path
@@ -432,7 +504,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   METHOD filter_unsupported_objects.
 
     DATA: ls_unsupported_count TYPE ty_unsupported_count,
-          lt_supported_types   TYPE zcl_abapgit_objects=>ty_types_tt,
+          lt_supported_types   TYPE zif_abapgit_objects=>ty_types_tt,
           lt_unsupported_count TYPE ty_unsupported_count_tt.
 
     FIELD-SYMBOLS: <ls_tadir>             LIKE LINE OF ct_tadir,
@@ -479,11 +551,22 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_no_parallel.
+
+    " Currently know object types that do not support parallel processing:
+    " ECTC/ECTD - ECATT Test Config/Data (see #7148)
+    " Should this list become longer, it should become a flag of the object type serializer
+    IF iv_object_type = 'ECTC' OR iv_object_type = 'ECTD'.
+      rv_result = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD is_parallelization_possible.
 
     rv_result = boolc( zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false
                    AND zcl_abapgit_persist_factory=>get_settings( )->read( )->get_parallel_proc_disabled( ) = abap_false
-                   AND mv_group IS NOT INITIAL
                    " The function module below should always exist here as is_merged evaluated to false above.
                    " It does however not exist in the transpiled version which then causes unit tests to fail.
                    " Therefore the check needs to stay.
@@ -538,33 +621,42 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           lv_task TYPE c LENGTH 32,
           lv_free LIKE mv_free.
     DATA lv_abap_language_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
+    DATA lv_main_language_only TYPE abap_bool.
 
     ASSERT mv_free > 0.
 
-    lv_abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
+    IF mo_abap_language_version IS NOT INITIAL.
+      lv_abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
+    ENDIF.
+
+    lv_main_language_only = ms_i18n_params-main_language_only.
+    IF lv_main_language_only = abap_false AND mt_wo_translation_patterns IS NOT INITIAL.
+      lv_main_language_only = zcl_abapgit_i18n_params=>match_obj_patterns(
+        is_tadir                   = is_tadir
+        it_wo_translation_patterns = mt_wo_translation_patterns ).
+    ENDIF.
 
     DO.
       lv_task = |{ iv_task }-{ sy-index }|.
+      " An initial server group is handled like DEFAULT meaning all instances are used
       CALL FUNCTION 'Z_ABAPGIT_SERIALIZE_PARALLEL'
         STARTING NEW TASK lv_task
         DESTINATION IN GROUP mv_group
         CALLING on_end_of_task ON END OF TASK
         EXPORTING
-          iv_obj_type           = is_tadir-object
-          iv_obj_name           = is_tadir-obj_name
-          iv_devclass           = is_tadir-devclass
-          iv_path               = is_tadir-path
-          iv_srcsystem          = is_tadir-srcsystem
-          iv_abap_language_vers = lv_abap_language_version
-          iv_language           = ms_i18n_params-main_language
-          iv_main_language_only = ms_i18n_params-main_language_only
-          it_translation_langs  = ms_i18n_params-translation_languages
-          iv_use_lxe            = ms_i18n_params-use_lxe
+          is_tadir                = is_tadir
+          iv_abap_language_vers   = lv_abap_language_version
+          iv_language             = ms_i18n_params-main_language
+          iv_path                 = is_tadir-path
+          iv_main_language_only   = lv_main_language_only
+          iv_suppress_po_comments = ms_i18n_params-suppress_po_comments
+          it_translation_langs    = ms_i18n_params-translation_languages
+          iv_use_lxe              = ms_i18n_params-use_lxe
         EXCEPTIONS
-          system_failure        = 1 MESSAGE lv_msg
-          communication_failure = 2 MESSAGE lv_msg
-          resource_failure      = 3
-          OTHERS                = 4.
+          system_failure          = 1 MESSAGE lv_msg
+          communication_failure   = 2 MESSAGE lv_msg
+          resource_failure        = 3
+          OTHERS                  = 4.
       IF sy-subrc = 3.
         lv_free = mv_free.
         WAIT UNTIL mv_free <> lv_free UP TO 1 SECONDS.
@@ -582,27 +674,38 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
   METHOD run_sequential.
 
-    DATA: lx_error     TYPE REF TO zcx_abapgit_exception,
-          ls_file_item TYPE zif_abapgit_objects=>ty_serialization.
+    DATA: lx_error       TYPE REF TO zcx_abapgit_exception,
+          ls_i18n_params LIKE ms_i18n_params,
+          ls_file_item   TYPE zif_abapgit_objects=>ty_serialization.
 
     ls_file_item-item-obj_type  = is_tadir-object.
     ls_file_item-item-obj_name  = is_tadir-obj_name.
     ls_file_item-item-devclass  = is_tadir-devclass.
     ls_file_item-item-srcsystem = is_tadir-srcsystem.
-    ls_file_item-item-abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
+    ls_file_item-item-origlang  = is_tadir-masterlang.
+    IF mo_abap_language_version IS NOT INITIAL.
+      ls_file_item-item-abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
+    ENDIF.
+
+    ls_i18n_params = ms_i18n_params.
+    IF ls_i18n_params-main_language_only = abap_false AND mt_wo_translation_patterns IS NOT INITIAL.
+      ls_i18n_params-main_language_only = zcl_abapgit_i18n_params=>match_obj_patterns(
+        is_tadir                   = is_tadir
+        it_wo_translation_patterns = mt_wo_translation_patterns ).
+    ENDIF.
 
     TRY.
         ls_file_item = zcl_abapgit_objects=>serialize(
           is_item        = ls_file_item-item
-          io_i18n_params = zcl_abapgit_i18n_params=>new( is_params = ms_i18n_params ) ).
+          io_i18n_params = zcl_abapgit_i18n_params=>new( is_params = ls_i18n_params ) ).
 
         add_to_return( is_file_item = ls_file_item
                        iv_path      = is_tadir-path ).
       CATCH zcx_abapgit_exception INTO lx_error.
         IF NOT mi_log IS INITIAL.
           mi_log->add_exception(
-              ix_exc  = lx_error
-              is_item = ls_file_item-item ).
+            ix_exc  = lx_error
+            is_item = ls_file_item-item ).
         ENDIF.
     ENDTRY.
 
@@ -616,7 +719,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     DATA: lv_max      TYPE i,
           lv_count    TYPE i,
           li_progress TYPE REF TO zif_abapgit_progress,
-          li_exit     TYPE REF TO zif_abapgit_exit,
           lo_timer    TYPE REF TO zcl_abapgit_timer,
           lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
@@ -648,7 +750,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       iv_count = lv_count )->start( ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      IF lv_max = 1.
+      IF lv_max = 1 OR is_no_parallel( <ls_tadir>-object ) = abap_true.
         li_progress->show(
           iv_current = sy-tabix
           iv_text    = |Serialize { <ls_tadir>-obj_name }, { lv_max } thread| ).
@@ -669,16 +771,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     WAIT UNTIL mv_free = lv_max UP TO 120 SECONDS.
     rt_files = mt_files.
     FREE mt_files.
-
-*   Call postprocessing
-    li_exit = zcl_abapgit_exit=>get_instance( ).
-
-    li_exit->serialize_postprocess(
-      EXPORTING
-        iv_package = iv_package
-        ii_log     = ii_log
-      CHANGING
-        ct_files   = rt_files ).
 
     lo_timer->end( abap_true ).
 

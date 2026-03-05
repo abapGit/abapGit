@@ -17,7 +17,7 @@ CLASS zcl_abapgit_background_push_au DEFINITION
         VALUE(rv_comment) TYPE string .
     METHODS push_auto
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo_online
+        !ii_repo_online TYPE REF TO zif_abapgit_repo_online
       RAISING
         zcx_abapgit_exception .
     METHODS determine_user_details
@@ -27,8 +27,8 @@ CLASS zcl_abapgit_background_push_au DEFINITION
         VALUE(rs_user) TYPE zif_abapgit_git_definitions=>ty_git_user .
     METHODS push_deletions
       IMPORTING
-        !io_repo  TYPE REF TO zcl_abapgit_repo_online
-        !is_files TYPE zif_abapgit_definitions=>ty_stage_files
+        !ii_repo_online TYPE REF TO zif_abapgit_repo_online
+        !is_files       TYPE zif_abapgit_definitions=>ty_stage_files
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -69,12 +69,12 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
 
   METHOD determine_user_details.
 
-    DATA: lo_user_record TYPE REF TO zcl_abapgit_user_record.
+    DATA li_user_record TYPE REF TO zif_abapgit_user_record.
 
 
-    lo_user_record = zcl_abapgit_user_record=>get_instance( iv_changed_by ).
-    rs_user-name = lo_user_record->get_name( ).
-    rs_user-email = lo_user_record->get_email( ).
+    li_user_record = zcl_abapgit_env_factory=>get_user_record( ).
+    rs_user-name = li_user_record->get_name( iv_changed_by ).
+    rs_user-email = li_user_record->get_email( iv_changed_by ).
 
 *   If no email, fall back to localhost/default email
     IF rs_user-email IS INITIAL.
@@ -99,28 +99,31 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
 
     DATA: ls_comment    TYPE zif_abapgit_git_definitions=>ty_comment,
           ls_files      TYPE zif_abapgit_definitions=>ty_stage_files,
-          lt_changed    TYPE STANDARD TABLE OF ty_changed WITH DEFAULT KEY,
+          lt_changed    TYPE HASHED TABLE OF ty_changed WITH UNIQUE KEY filename path changed_by,
+          ls_changed    TYPE ty_changed,
           lt_users      TYPE STANDARD TABLE OF syuname WITH DEFAULT KEY,
           ls_user_files LIKE ls_files,
           lv_changed_by LIKE LINE OF lt_users,
           lo_stage      TYPE REF TO zcl_abapgit_stage.
 
-    FIELD-SYMBOLS: <ls_changed> LIKE LINE OF lt_changed,
-                   <ls_remote>  LIKE LINE OF ls_files-remote,
-                   <ls_local>   LIKE LINE OF ls_files-local.
+    FIELD-SYMBOLS:
+      <ls_remote> LIKE LINE OF ls_files-remote,
+      <ls_local>  LIKE LINE OF ls_files-local.
 
 
-    ls_files = zcl_abapgit_factory=>get_stage_logic( )->get( io_repo ).
+    ls_files = zcl_abapgit_stage_logic=>get_stage_logic( )->get( ii_repo_online ).
 
     LOOP AT ls_files-local ASSIGNING <ls_local>.
       lv_changed_by = zcl_abapgit_objects=>changed_by(
         is_item     = <ls_local>-item
         iv_filename = <ls_local>-file-filename ).
       APPEND lv_changed_by TO lt_users.
-      APPEND INITIAL LINE TO lt_changed ASSIGNING <ls_changed>.
-      <ls_changed>-changed_by = lv_changed_by.
-      <ls_changed>-filename   = <ls_local>-file-filename.
-      <ls_changed>-path       = <ls_local>-file-path.
+
+      CLEAR ls_changed.
+      ls_changed-changed_by = lv_changed_by.
+      ls_changed-filename   = <ls_local>-file-filename.
+      ls_changed-path       = <ls_local>-file-path.
+      INSERT ls_changed INTO TABLE lt_changed.
     ENDLOOP.
 
     SORT lt_users ASCENDING.
@@ -172,13 +175,13 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
 
       ls_comment-comment = build_comment( ls_user_files ).
 
-      io_repo->push( is_comment = ls_comment
-                     io_stage   = lo_stage ).
+      ii_repo_online->push( is_comment = ls_comment
+                            io_stage   = lo_stage ).
     ENDLOOP.
 
     IF lines( ls_files-remote ) > 0.
-      push_deletions( io_repo  = io_repo
-                      is_files = ls_files ).
+      push_deletions( ii_repo_online  = ii_repo_online
+                      is_files        = ls_files ).
     ENDIF.
 
   ENDMETHOD.
@@ -212,8 +215,8 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
     ls_comment-committer-name  = 'Deletion'.
     ls_comment-committer-email = 'deletion@localhost'.
 
-    io_repo->push( is_comment = ls_comment
-                   io_stage   = lo_stage ).
+    ii_repo_online->push( is_comment = ls_comment
+                          io_stage   = lo_stage ).
 
   ENDMETHOD.
 
@@ -237,14 +240,14 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
     DATA: ls_files TYPE zif_abapgit_definitions=>ty_stage_files.
 
     mi_log = ii_log.
-    ls_files = zcl_abapgit_factory=>get_stage_logic( )->get( io_repo ).
+    ls_files = zcl_abapgit_stage_logic=>get_stage_logic( )->get( ii_repo_online ).
 
     IF lines( ls_files-local ) = 0 AND lines( ls_files-remote ) = 0.
       ii_log->add_info( 'Nothing to stage' ).
       RETURN.
     ENDIF.
 
-    push_auto( io_repo ).
+    push_auto( ii_repo_online ).
 
   ENDMETHOD.
 ENDCLASS.

@@ -133,6 +133,9 @@ CLASS ltcl_json_utils DEFINITION
     METHODS json_sort FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS is_equal FOR TESTING RAISING zcx_abapgit_ajson_error.
 
+    METHODS iterate_array FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS iterate_object FOR TESTING RAISING zcx_abapgit_ajson_error.
+
 ENDCLASS.
 
 CLASS ltcl_json_utils IMPLEMENTATION.
@@ -544,5 +547,151 @@ CLASS ltcl_json_utils IMPLEMENTATION.
       exp = abap_false ).
 
   ENDMETHOD.
+
+
+  METHOD iterate_array.
+
+    DATA li_cut TYPE REF TO zif_abapgit_ajson.
+    DATA li_iterator TYPE REF TO zif_abapgit_ajson_iterator.
+    DATA lx TYPE REF TO zcx_abapgit_ajson_error.
+
+    li_cut = zcl_abapgit_ajson=>create_empty( ).
+    li_cut->touch_array( '/a' ).
+    li_cut->touch_array( '/b' ).
+    li_cut->touch_array( '/c' ).
+    li_cut->touch_array( '/empty' ).
+    li_cut->push(
+      iv_path = '/a'
+      iv_val  = 1 ).
+    li_cut->push(
+      iv_path = '/a'
+      iv_val  = 2 ).
+    li_cut->push(
+      iv_path = '/b'
+      iv_val  = 3 ).
+    li_cut->push(
+      iv_path = '/b'
+      iv_val  = 4 ).
+    li_cut->push(
+      iv_path = '/c'
+      iv_val  = 5 ).
+    li_cut->push(
+      iv_path = '/c'
+      iv_val  = 6 ).
+
+    DATA lt_data TYPE TABLE OF string.
+    DATA li_json_item TYPE REF TO zif_abapgit_ajson.
+
+    li_iterator = zcl_abapgit_ajson_utilities=>iterate_array(
+      ii_json = li_cut
+      iv_path = '/b' ).
+    WHILE li_iterator->has_next( ) = abap_true.
+      li_json_item = li_iterator->next( ).
+      APPEND li_json_item->get( '/' ) TO lt_data.
+    ENDWHILE.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_data )
+      exp = 2 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = concat_lines_of( table = lt_data sep = ',' )
+      exp = '3,4' ).
+
+    CLEAR lt_data.
+    li_iterator = zcl_abapgit_ajson_utilities=>iterate_array(
+      ii_json = li_cut
+      iv_path = '/empty' ).
+    WHILE li_iterator->has_next( ) = abap_true.
+      li_json_item = li_iterator->next( ).
+      APPEND li_json_item->get( '/' ) TO lt_data.
+    ENDWHILE.
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_data )
+      exp = 0 ).
+
+    TRY.
+        zcl_abapgit_ajson_utilities=>iterate_array(
+        ii_json = li_cut
+        iv_path = '/notexisting' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_ajson_error INTO lx.
+        cl_abap_unit_assert=>assert_char_cp(
+        act = lx->get_text( )
+        exp = 'Path not found*' ).
+    ENDTRY.
+
+    TRY.
+        zcl_abapgit_ajson_utilities=>iterate_array(
+        ii_json = li_cut
+        iv_path = '/' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_ajson_error INTO lx.
+        cl_abap_unit_assert=>assert_char_cp(
+        act = lx->get_text( )
+        exp = 'Array expected*' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD iterate_object.
+
+    DATA li_cut TYPE REF TO zif_abapgit_ajson.
+    DATA li_iterator TYPE REF TO zif_abapgit_ajson_iterator.
+    DATA lx TYPE REF TO zcx_abapgit_ajson_error.
+
+    li_cut = zcl_abapgit_ajson=>create_empty( ).
+    li_cut->touch_array( '/array' ).
+    li_cut->set(
+      iv_path = '/b/b'
+      iv_val  = 1 ).
+    li_cut->set(
+      iv_path = '/b/c'
+      iv_val  = 2 ).
+    li_cut->set(
+      iv_path = '/x/y'
+      iv_val  = 3 ).
+
+    DATA lt_data TYPE TABLE OF string.
+    DATA li_json_item TYPE REF TO zif_abapgit_ajson.
+
+    li_iterator = zcl_abapgit_ajson_utilities=>iterate_object(
+      ii_json = li_cut
+      iv_path = '/b' ).
+    WHILE li_iterator->has_next( ) = abap_true.
+      li_json_item = li_iterator->next( ).
+      APPEND li_json_item->get( '/' ) TO lt_data.
+    ENDWHILE.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_data )
+      exp = 2 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = concat_lines_of( table = lt_data sep = ',' )
+      exp = '1,2' ).
+
+    TRY.
+        zcl_abapgit_ajson_utilities=>iterate_object(
+        ii_json = li_cut
+        iv_path = '/notexisting' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_ajson_error INTO lx.
+        cl_abap_unit_assert=>assert_char_cp(
+        act = lx->get_text( )
+        exp = 'Path not found*' ).
+    ENDTRY.
+
+    TRY.
+        zcl_abapgit_ajson_utilities=>iterate_object(
+        ii_json = li_cut
+        iv_path = '/array' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_ajson_error INTO lx.
+        cl_abap_unit_assert=>assert_char_cp(
+        act = lx->get_text( )
+        exp = 'Object expected*' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
 
 ENDCLASS.

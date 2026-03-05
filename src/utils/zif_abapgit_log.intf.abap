@@ -19,6 +19,8 @@ INTERFACE zif_abapgit_log
   TYPES:
     BEGIN OF ty_log_out,
       type      TYPE sy-msgty,
+      id        TYPE sy-msgid,
+      number    TYPE sy-msgno,
       text      TYPE string,
       obj_type  TYPE tadir-object,
       obj_name  TYPE tadir-obj_name,
@@ -29,9 +31,11 @@ INTERFACE zif_abapgit_log
                 WITH NON-UNIQUE DEFAULT KEY .
   TYPES:
     BEGIN OF ty_msg,
-      text TYPE string,
-      type TYPE sy-msgty,
-      level TYPE i,
+      text   TYPE string,
+      type   TYPE sy-msgty,
+      id     TYPE sy-msgid,
+      number TYPE sy-msgno,
+      level  TYPE i,
     END OF ty_msg .
   TYPES:
     ty_msgs TYPE STANDARD TABLE OF ty_msg
@@ -48,10 +52,12 @@ INTERFACE zif_abapgit_log
 
   METHODS add
     IMPORTING
-      !iv_msg  TYPE csequence
-      !iv_type TYPE sy-msgty DEFAULT 'E'
-      !is_item TYPE zif_abapgit_definitions=>ty_item OPTIONAL
-      !ix_exc  TYPE REF TO cx_root OPTIONAL .
+      !iv_msg    TYPE csequence
+      !iv_type   TYPE sy-msgty DEFAULT 'E'
+      !iv_class  TYPE sy-msgid OPTIONAL
+      !iv_number TYPE sy-msgno OPTIONAL
+      !is_item   TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+      !ix_exc    TYPE REF TO cx_root OPTIONAL .
   METHODS add_error
     IMPORTING
       !iv_msg  TYPE csequence
@@ -93,13 +99,13 @@ INTERFACE zif_abapgit_log
       VALUE(rv_title) TYPE string .
   METHODS set_title
     IMPORTING
-      !iv_title TYPE csequence
+      !iv_title     TYPE csequence
     RETURNING
       VALUE(ri_log) TYPE REF TO zif_abapgit_log.
   METHODS merge_with
     IMPORTING
-      ii_log TYPE REF TO zif_abapgit_log
-      iv_min_level TYPE i DEFAULT 0
+      ii_log        TYPE REF TO zif_abapgit_log
+      iv_min_level  TYPE i DEFAULT 0
     RETURNING
       VALUE(ri_log) TYPE REF TO zif_abapgit_log.
   METHODS clone

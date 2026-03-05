@@ -53,7 +53,7 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
 
     DATA mo_settings TYPE REF TO zcl_abapgit_settings.
-    DATA ms_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+    DATA ms_settings TYPE zif_abapgit_persist_user=>ty_s_user_settings.
 
     METHODS validate_form
       IMPORTING
@@ -317,7 +317,7 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
           lo_colors->set(
             iv_key = lv_l
             iv_val = lv_l ).
-        CATCH zcx_abapgit_exception.
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
       ENDTRY.
     ENDLOOP.
 

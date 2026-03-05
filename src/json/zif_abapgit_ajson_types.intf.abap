@@ -16,12 +16,12 @@ INTERFACE zif_abapgit_ajson_types
 
   TYPES:
     BEGIN OF ty_node,
-      path TYPE string,
-      name TYPE string,
-      type TYPE ty_node_type,
-      value TYPE string,
-      index TYPE i,
-      order TYPE i,
+      path     TYPE string,
+      name     TYPE string,
+      type     TYPE ty_node_type,
+      value    TYPE string,
+      index    TYPE i,
+      order    TYPE i,
       children TYPE i,
     END OF ty_node.
   TYPES:

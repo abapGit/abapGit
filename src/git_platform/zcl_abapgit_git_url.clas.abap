@@ -7,9 +7,9 @@ CLASS zcl_abapgit_git_url DEFINITION
 
     METHODS get_commit_display_url
       IMPORTING
-        !io_repo      TYPE REF TO zcl_abapgit_repo_online
+        !ii_repo_online TYPE REF TO zif_abapgit_repo_online
       RETURNING
-        VALUE(rv_url) TYPE string
+        VALUE(rv_url)   TYPE string
       RAISING
         zcx_abapgit_exception .
 
@@ -40,18 +40,21 @@ CLASS zcl_abapgit_git_url IMPLEMENTATION.
   METHOD get_commit_display_url.
 
     DATA li_exit TYPE REF TO zif_abapgit_exit.
+    DATA li_repo TYPE REF TO zif_abapgit_repo.
+
+    li_repo = ii_repo_online.
 
     rv_url = get_default_commit_display_url(
-      iv_repo_url = io_repo->get_url( )
-      iv_hash     = io_repo->get_current_remote( ) ).
+      iv_repo_url = ii_repo_online->get_url( )
+      iv_hash     = ii_repo_online->get_current_remote( ) ).
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->adjust_display_commit_url(
       EXPORTING
-        iv_repo_url    = io_repo->get_url( )
-        iv_repo_name   = io_repo->get_name( )
-        iv_repo_key    = io_repo->get_key( )
-        iv_commit_hash = io_repo->get_current_remote( )
+        iv_repo_url    = ii_repo_online->get_url( )
+        iv_repo_name   = li_repo->get_name( )
+        iv_repo_key    = li_repo->get_key( )
+        iv_commit_hash = ii_repo_online->get_current_remote( )
       CHANGING
         cv_display_url = rv_url ).
 
@@ -71,18 +74,18 @@ CLASS zcl_abapgit_git_url IMPLEMENTATION.
 
     FIND REGEX '^http(?:s)?:\/\/(?:www\.)?(github\.com|bitbucket\.org|gitlab\.com)\/'
       IN rv_commit_url
-      RESULTS ls_result.
+      RESULTS ls_result ##REGEX_POSIX.
     IF sy-subrc = 0.
       READ TABLE ls_result-submatches INDEX 1 ASSIGNING <ls_provider_match>.
       CASE rv_commit_url+<ls_provider_match>-offset(<ls_provider_match>-length).
         WHEN 'github.com'.
-          REPLACE REGEX '\.git$' IN rv_commit_url WITH space.
+          REPLACE REGEX '\.git$' IN rv_commit_url WITH space ##REGEX_POSIX.
           rv_commit_url = rv_commit_url && |/commit/| && iv_hash.
         WHEN 'bitbucket.org'.
-          REPLACE REGEX '\.git$' IN rv_commit_url WITH space.
+          REPLACE REGEX '\.git$' IN rv_commit_url WITH space ##REGEX_POSIX.
           rv_commit_url = rv_commit_url && |/commits/| && iv_hash.
         WHEN 'gitlab.com'.
-          REPLACE REGEX '\.git$' IN rv_commit_url WITH space.
+          REPLACE REGEX '\.git$' IN rv_commit_url WITH space ##REGEX_POSIX.
           rv_commit_url = rv_commit_url && |/-/commit/| && iv_hash.
       ENDCASE.
     ENDIF.
@@ -98,12 +101,12 @@ CLASS zcl_abapgit_git_url IMPLEMENTATION.
 
     " Provider-specific check for URLs that don't work
     IF lv_provider CS 'gitlab.com'.
-      FIND REGEX '\.git$' IN iv_url IGNORING CASE.
+      FIND REGEX '\.git$' IN iv_url IGNORING CASE ##REGEX_POSIX.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Repo URL for GitLab must end in ".git"' ).
       ENDIF.
     ELSEIF lv_provider CS 'dev.azure.com'.
-      FIND REGEX '\.git$' IN iv_url IGNORING CASE.
+      FIND REGEX '\.git$' IN iv_url IGNORING CASE ##REGEX_POSIX.
       IF sy-subrc = 0.
         zcx_abapgit_exception=>raise( 'Repo URL for Azure DevOps must not end in ".git"' ).
       ENDIF.
