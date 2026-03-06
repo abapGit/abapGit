@@ -29,15 +29,30 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
         VALUE(rt_repos)   TYPE ty_repos_tt
       RAISING
         zcx_abapgit_exception.
+
+    TYPES: BEGIN OF ty_update_result,
+             updated TYPE i,
+             errors  TYPE i,
+             skipped TYPE i,
+           END OF ty_update_result.
+
+    CLASS-METHODS update_all_branches
+      IMPORTING
+        it_features      TYPE zif_abapgit_flow_logic=>ty_features
+      RETURNING
+        VALUE(rs_result) TYPE ty_update_result
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES: BEGIN OF ty_transport,
-             trkorr   TYPE trkorr,
-             title    TYPE string,
-             object   TYPE tadir-object,
-             obj_name TYPE tadir-obj_name,
-             devclass TYPE tadir-devclass,
+             trkorr     TYPE trkorr,
+             title      TYPE string,
+             object     TYPE tadir-object,
+             obj_name   TYPE tadir-obj_name,
+             devclass   TYPE tadir-devclass,
+             changed_at TYPE timestamp,
            END OF ty_transport.
 
     TYPES ty_transports_tt TYPE STANDARD TABLE OF ty_transport WITH NON-UNIQUE KEY trkorr.
@@ -145,6 +160,20 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
         VALUE(rt_users) TYPE zif_abapgit_flow_logic=>ty_users_tt
       RAISING
         zcx_abapgit_exception.
+
+    CLASS-METHODS get_latest_task_timestamp
+      IMPORTING
+        iv_trkorr            TYPE trkorr
+      RETURNING
+        VALUE(rv_changed_at) TYPE timestamp
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS find_github_username
+      IMPORTING
+        it_repos           TYPE ty_repos_tt
+      RETURNING
+        VALUE(rv_username) TYPE string.
 
 ENDCLASS.
 
@@ -530,7 +559,6 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     DATA lv_obj_name TYPE tadir-obj_name.
     DATA lt_date     TYPE zif_abapgit_cts_api=>ty_date_range.
     DATA ls_date     LIKE LINE OF lt_date.
-
     FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
 
 * only look for transports that are created/changed in the last two years
@@ -544,6 +572,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     LOOP AT lt_trkorr INTO lv_trkorr.
       ls_result-trkorr = lv_trkorr.
       ls_result-title  = zcl_abapgit_factory=>get_cts_api( )->read_description( lv_trkorr ).
+      ls_result-changed_at = get_latest_task_timestamp( lv_trkorr ).
 
       lt_objects = zcl_abapgit_factory=>get_cts_api( )->list_r3tr_by_request( lv_trkorr ).
       LOOP AT lt_objects ASSIGNING <ls_object> WHERE object <> 'CINS' AND object <> 'NOTE'.
@@ -560,6 +589,58 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       ENDLOOP.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD get_latest_task_timestamp.
+
+    DATA lt_tasks    TYPE zif_abapgit_cts_api=>ty_request_and_tasks_tt.
+    DATA ls_task     LIKE LINE OF lt_tasks.
+    DATA lv_max_date TYPE d.
+    DATA lv_max_time TYPE t.
+
+    TRY.
+        lt_tasks = zcl_abapgit_factory=>get_cts_api( )->read_request_and_tasks( iv_trkorr ).
+
+        LOOP AT lt_tasks INTO ls_task.
+          IF ls_task-as4date > lv_max_date
+              OR ( ls_task-as4date = lv_max_date AND ls_task-as4time > lv_max_time ).
+            lv_max_date = ls_task-as4date.
+            lv_max_time = ls_task-as4time.
+          ENDIF.
+        ENDLOOP.
+
+        IF lv_max_date IS NOT INITIAL.
+          CONVERT DATE lv_max_date TIME lv_max_time INTO TIME STAMP rv_changed_at TIME ZONE sy-zonlo.
+        ELSE.
+          GET TIME STAMP FIELD rv_changed_at.
+        ENDIF.
+      CATCH zcx_abapgit_exception.
+        GET TIME STAMP FIELD rv_changed_at.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD find_github_username.
+
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
+    DATA li_exit        TYPE REF TO zif_abapgit_flow_exit.
+
+    READ TABLE it_repos INTO li_repo_online INDEX 1.
+    IF sy-subrc = 0.
+      TRY.
+          rv_username = zcl_abapgit_login_manager=>get_username( li_repo_online->get_url( ) ).
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+    TRY.
+        li_exit = zcl_abapgit_flow_exit=>get_instance( ).
+        li_exit->change_github_username( CHANGING cv_username = rv_username ).
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -601,6 +682,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       <ls_branch>-pr-url = ls_pull-html_url.
       <ls_branch>-pr-number = ls_pull-number.
       <ls_branch>-pr-draft = ls_pull-draft.
+      <ls_branch>-pr-author = ls_pull-user.
     ENDLOOP.
 
   ENDMETHOD.
@@ -629,6 +711,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 * list branches on favorite + flow enabled + transported repos
     lt_repos = list_repos( ).
     rs_information-enabled_repositories = lines( lt_repos ).
+    rs_information-github_username = find_github_username( lt_repos ).
 
     LOOP AT lt_repos INTO li_repo_online.
 
@@ -708,8 +791,6 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       CHANGING
         cs_information     = rs_information ).
 
-    SORT rs_information-features BY full_match transport-trkorr DESCENDING.
-
   ENDMETHOD.
 
 
@@ -753,6 +834,61 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       li_online ?= li_repo.
       INSERT li_online INTO TABLE rt_repos.
     ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD update_all_branches.
+
+    DATA ls_feature      LIKE LINE OF it_features.
+    DATA li_repo_online  TYPE REF TO zif_abapgit_repo_online.
+    DATA lo_github       TYPE REF TO zcl_abapgit_pr_enum_github.
+    DATA lv_previous_key TYPE zif_abapgit_persistence=>ty_value.
+    DATA lv_url          TYPE string.
+    DATA lv_user         TYPE string.
+    DATA lv_repo         TYPE string.
+
+    LOOP AT it_features INTO ls_feature.
+      IF ls_feature-branch-up_to_date <> abap_false.
+        CONTINUE.
+      ENDIF.
+      IF ls_feature-pr-number IS INITIAL.
+        rs_result-skipped = rs_result-skipped + 1.
+        CONTINUE.
+      ENDIF.
+
+      IF lv_previous_key <> ls_feature-repo-key.
+        li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( ls_feature-repo-key ).
+        lv_url = li_repo_online->get_url( ).
+
+        FIND FIRST OCCURRENCE OF REGEX 'github\.com\/([^\/]+)\/([^\/]+)'
+          IN lv_url
+          SUBMATCHES lv_user lv_repo ##REGEX_POSIX.
+        IF sy-subrc <> 0.
+          rs_result-skipped = rs_result-skipped + 1.
+          CONTINUE.
+        ENDIF.
+        lv_repo = replace(
+          val = lv_repo
+          regex = '\.git$'
+          with = '' ) ##REGEX_POSIX.
+
+        CREATE OBJECT lo_github
+          EXPORTING
+            iv_user_and_repo = |{ lv_user }/{ lv_repo }|
+            ii_http_agent    = zcl_abapgit_http_agent=>create( ).
+        lv_previous_key = ls_feature-repo-key.
+      ENDIF.
+
+      TRY.
+          lo_github->update_pull_request_branch(
+            iv_pull_number       = ls_feature-pr-number
+            iv_expected_head_sha = ls_feature-branch-sha1 ).
+          rs_result-updated = rs_result-updated + 1.
+        CATCH zcx_abapgit_exception.
+          rs_result-errors = rs_result-errors + 1.
+      ENDTRY.
+    ENDLOOP.
+
   ENDMETHOD.
 
 
@@ -868,6 +1004,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
         IF sy-subrc = 0.
           <ls_feature>-transport-trkorr = <ls_transport>-trkorr.
           <ls_feature>-transport-title = <ls_transport>-title.
+          <ls_feature>-transport-changed_at = <ls_transport>-changed_at.
 
           add_objects_and_files_from_tr(
             EXPORTING
@@ -909,6 +1046,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       ls_result-repo = build_repo_data( ii_repo ).
       ls_result-transport-trkorr = <ls_transport>-trkorr.
       ls_result-transport-title = <ls_transport>-title.
+      ls_result-transport-changed_at = <ls_transport>-changed_at.
 
       add_objects_and_files_from_tr(
         EXPORTING

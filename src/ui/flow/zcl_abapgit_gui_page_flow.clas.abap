@@ -34,7 +34,13 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         show_details        TYPE string VALUE 'show_details',
         rollback_pr         TYPE string VALUE 'rollback_pr',
         update_all_branches TYPE string VALUE 'update_all_branches',
+        sort_order          TYPE string VALUE 'sort_order',
       END OF c_action .
+    CONSTANTS:
+      BEGIN OF c_sort_order,
+        default            TYPE string VALUE 'default',
+        transport_descend  TYPE string VALUE 'transport_descend',
+      END OF c_sort_order .
     DATA ms_information TYPE zif_abapgit_flow_logic=>ty_information .
     DATA ms_user_settings TYPE zif_abapgit_persist_user=>ty_flow_settings.
 
@@ -87,6 +93,10 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS call_update_all_branches
+      RAISING
+        zcx_abapgit_exception.
+
     METHODS skip_show
       IMPORTING
         is_feature     TYPE zif_abapgit_flow_logic=>ty_feature
@@ -127,6 +137,18 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
         zcx_abapgit_exception .
+
+    METHODS build_sort_order_dropdown
+      RETURNING
+        VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
+
+    METHODS sort_features
+      CHANGING
+        ct_features TYPE zif_abapgit_flow_logic=>ty_features
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -139,6 +161,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     ro_toolbar->add( iv_txt = 'User Filter'
                      io_sub = build_user_filter_dropdown( ) ).
+
+    ro_toolbar->add( iv_txt = 'Sort Order'
+                     io_sub = build_sort_order_dropdown( ) ).
 
     ro_toolbar->add( iv_txt = 'Advanced'
                      io_sub = build_advanced_dropdown( ) ).
@@ -180,6 +205,21 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       rs_handled-page  = zcl_abapgit_gui_page_flowcons=>create( li_repo ).
       rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD call_update_all_branches.
+
+    DATA ls_result TYPE zcl_abapgit_flow_logic=>ty_update_result.
+    DATA lv_msg    TYPE string.
+
+    ASSERT ms_information IS NOT INITIAL.
+
+    ls_result = zcl_abapgit_flow_logic=>update_all_branches( ms_information-features ).
+
+    lv_msg = |Updated { ls_result-updated } branches, { ls_result-errors } errors, { ls_result-skipped } skipped|.
+    MESSAGE lv_msg TYPE 'S'.
 
   ENDMETHOD.
 
@@ -416,6 +456,30 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD build_sort_order_dropdown.
+
+    DATA lv_current_sort TYPE string.
+
+    CREATE OBJECT ro_toolbar.
+
+    IF ms_user_settings-sort_order IS INITIAL.
+      lv_current_sort = c_sort_order-default.
+    ELSE.
+      lv_current_sort = ms_user_settings-sort_order.
+    ENDIF.
+
+    ro_toolbar->add(
+      iv_txt = 'Default'
+      iv_chk = boolc( lv_current_sort = c_sort_order-default )
+      iv_act = |{ c_action-sort_order }?order={ c_sort_order-default }| ).
+
+    ro_toolbar->add(
+      iv_txt = 'Recently Modified Transport'
+      iv_chk = boolc( lv_current_sort = c_sort_order-transport_descend )
+      iv_act = |{ c_action-sort_order }?order={ c_sort_order-transport_descend }| ).
+
+  ENDMETHOD.
+
 
   METHOD set_branch.
 
@@ -463,7 +527,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         MESSAGE 'Rollback PR functionality is not yet implemented.' TYPE 'I'.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-update_all_branches.
-        MESSAGE 'Update all branches functionality is not yet implemented.' TYPE 'I'.
+        call_update_all_branches( ).
+        refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-refresh.
         refresh( ).
@@ -476,6 +541,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         rs_handled = call_stage_commit( ii_event ).
       WHEN c_action-pull.
         rs_handled = call_pull( ii_event ).
+      WHEN c_action-sort_order.
+        ms_user_settings-sort_order = ii_event->query( )->get( 'ORDER' ).
+        zcl_abapgit_persist_factory=>get_user( )->set_flow_settings( ms_user_settings ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN OTHERS.
         ls_event_result = zcl_abapgit_flow_exit=>get_instance( )->on_event(
           ii_event    = ii_event
@@ -544,9 +613,17 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF ms_user_settings-username_filter IS NOT INITIAL AND is_feature-transport-trkorr IS NOT INITIAL.
-      READ TABLE is_feature-transport-users WITH KEY table_line = ms_user_settings-username_filter TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
+    IF ms_user_settings-username_filter IS NOT INITIAL.
+      IF is_feature-transport-trkorr IS NOT INITIAL.
+        READ TABLE is_feature-transport-users WITH KEY table_line = ms_user_settings-username_filter TRANSPORTING NO FIELDS.
+        IF sy-subrc <> 0.
+          rv_skip = abap_true.
+          RETURN.
+        ENDIF.
+      ELSEIF is_feature-pr-author IS NOT INITIAL
+          AND ms_information-github_username IS NOT INITIAL
+          AND ms_user_settings-username_filter = sy-uname
+          AND is_feature-pr-author <> ms_information-github_username.
         rv_skip = abap_true.
         RETURN.
       ENDIF.
@@ -591,6 +668,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ri_html->add( 'Status: Draft' ).
       ELSE.
         ri_html->add( 'Status: Ready for Review' ).
+      ENDIF.
+
+      IF ms_user_settings-show_details = abap_true AND is_feature-pr-author IS NOT INITIAL.
+        ri_html->add( |<br>| ).
+        ri_html->add( |PR Author: { is_feature-pr-author }| ).
       ENDIF.
 
       IF ms_user_settings-show_details = abap_true.
@@ -680,6 +762,29 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD sort_features.
+
+    DATA lv_sort_order TYPE string.
+
+    IF ms_user_settings-sort_order IS INITIAL.
+      lv_sort_order = c_sort_order-default.
+    ELSE.
+      lv_sort_order = ms_user_settings-sort_order.
+    ENDIF.
+
+    CASE lv_sort_order.
+      WHEN c_sort_order-transport_descend.
+        " Sort by transport changed_at in descending order (most recent first)
+        SORT ct_features BY transport-changed_at DESCENDING.
+      WHEN c_sort_order-default.
+        " Keep the default order (no sorting needed)
+        SORT ct_features BY full_match transport-trkorr DESCENDING.
+      WHEN OTHERS.
+        " Keep the default order for unknown sort orders
+    ENDCASE.
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_gui_renderable~render.
 
@@ -700,6 +805,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     IF ms_information IS INITIAL.
       ms_information = zcl_abapgit_flow_logic=>get( ).
     ENDIF.
+
+    sort_features( CHANGING ct_features = ms_information-features ).
 
     ri_html->add( build_main_toolbar( )->render( iv_right = abap_true ) ).
 
@@ -743,7 +850,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     IF ms_user_settings-username_filter IS NOT INITIAL.
       lv_filter = |, user filter: { ms_user_settings-username_filter }|.
     ENDIF.
-    ri_html->add( |<small>{ lines( ms_information-features ) } features in { lo_timer->end( ) }{ lv_filter }</small>| ).
+    ri_html->add( |<small>{ lines( ms_information-features ) } features| &&
+      | in { lo_timer->end( ) }{ lv_filter }| &&
+      |, SAP user: { sy-uname }| &&
+      |, GitHub user: { ms_information-github_username }| &&
+      |</small>| ).
 
     ri_html->add( '</div>' ).
 
