@@ -13,13 +13,15 @@ CLASS zcl_abapgit_objects_generic DEFINITION
         zcx_abapgit_exception .
     METHODS delete
       IMPORTING
-        !iv_package TYPE devclass
+        !iv_package   TYPE devclass
+        !iv_transport TYPE trkorr
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize
       IMPORTING
-        !iv_package TYPE devclass
-        !io_xml     TYPE REF TO zif_abapgit_xml_input
+        !iv_package   TYPE devclass
+        !io_xml       TYPE REF TO zif_abapgit_xml_input
+        !iv_transport TYPE trkorr
       RAISING
         zcx_abapgit_exception .
     METHODS exists
@@ -54,7 +56,8 @@ CLASS zcl_abapgit_objects_generic DEFINITION
     METHODS before_export .
     METHODS corr_insert
       IMPORTING
-        !iv_package TYPE devclass
+        !iv_package   TYPE devclass
+        !iv_transport TYPE trkorr
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_data
@@ -260,10 +263,11 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
 * this will also insert into TADIR
     zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
-      iv_object   = ms_item-obj_type
-      iv_obj_name = ms_item-obj_name
-      iv_package  = iv_package
-      iv_language = mv_language ).
+      iv_object    = ms_item-obj_type
+      iv_obj_name  = ms_item-obj_name
+      iv_package   = iv_package
+      iv_transport = iv_transport
+      iv_language  = mv_language ).
 
   ENDMETHOD.
 
@@ -289,7 +293,8 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    corr_insert( iv_package ).
+    corr_insert( iv_package   = iv_package
+                 iv_transport = iv_transport ).
 
   ENDMETHOD.
 
@@ -298,7 +303,8 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
     validate( io_xml ).
 
-    delete( iv_package ).
+    delete( iv_package   = iv_package
+            iv_transport = iv_transport ).
 
     deserialize_data(
       io_xml     = io_xml
@@ -306,7 +312,8 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
     after_import( ).
 
-    corr_insert( iv_package ).
+    corr_insert( iv_package   = iv_package
+                 iv_transport = iv_transport ).
 
   ENDMETHOD.
 

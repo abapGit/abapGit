@@ -616,7 +616,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     delete_docu_usp( ).
 
     " the deletion of the tables of the entity
-    get_generic( )->delete( iv_package ).
+    get_generic( )->delete( iv_package   = iv_package
+                            iv_transport = iv_transport ).
 
   ENDMETHOD.
 
@@ -628,8 +629,9 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     is_name_permitted( ).
 
     get_generic( )->deserialize(
-      iv_package = iv_package
-      io_xml     = io_xml ).
+      iv_package   = iv_package
+      io_xml       = io_xml
+      iv_transport = iv_transport ).
 
     deserialize_docu_uen( io_xml ).
     deserialize_docu_url( io_xml ).
