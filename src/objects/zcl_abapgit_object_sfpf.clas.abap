@@ -15,7 +15,7 @@ CLASS zcl_abapgit_object_sfpf DEFINITION
         !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_type_not_supported.
 
     CLASS-METHODS fix_oref
       IMPORTING
@@ -59,11 +59,11 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
             )->get_version_info( ).
 
         IF lv_version IS INITIAL.
-          zcx_abapgit_exception=>raise( 'Object SFPF not supported, Adobe Document Service(ADS) is not configured.' ).
+          RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
         ENDIF.
 
       CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'Object SFPF not supported, Adobe Document Service(ADS) is not configured.' ).
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
     ENDTRY.
 
   ENDMETHOD.
