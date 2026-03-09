@@ -37,14 +37,6 @@ CLASS zcl_abapgit_objects_generic DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
 
-    TYPES:
-      BEGIN OF ty_s_objkey,
-        num   TYPE n LENGTH 3,
-        value TYPE c LENGTH 128,
-      END OF ty_s_objkey .
-    TYPES:
-      ty_t_objkey TYPE SORTED TABLE OF ty_s_objkey WITH UNIQUE KEY num .
-
     DATA ms_object_header TYPE objh .
     DATA:
       mt_object_table TYPE STANDARD TABLE OF objsl WITH DEFAULT KEY .
@@ -285,9 +277,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
   METHOD delete.
 
-    DATA: lt_e071    TYPE e071tab,
-          lt_e071k   TYPE e071k_t,
-          lt_where   TYPE ty_where_tab,
+    DATA: lt_where   TYPE ty_where_tab,
           lv_primary TYPE objsl-tobj_name.
 
     FIELD-SYMBOLS: <ls_e071>  TYPE e071,
@@ -467,14 +457,13 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
           lv_wline_ch     TYPE i,
           lv_ap_count     TYPE i,
           lt_dfies        TYPE TABLE OF dfies,
-          lv_save_tabname TYPE dd03p-tabname,
           lv_charsize     TYPE i,
           lv_table        TYPE sobj_name.
 
     lv_charsize = cl_abap_char_utilities=>charsize.
 
     lv_table = iv_tabname.
-    lt_dfies = get_key_fields( iv_table = lv_table ).
+    lt_dfies = get_key_fields( lv_table ).
 
     lv_strlen_ch = strlen( iv_tabkey ).
 
@@ -516,43 +505,41 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
         CONCATENATE ls_wline-line 'EQ' '''' '''' INTO ls_wline-line SEPARATED BY space.
 
-      ELSE. " Insert the key field value
-        IF ls_dfies-datatype = 'CHAR'.
+      ELSEIF ls_dfies-datatype = 'CHAR'.
 
-          lv_wline_ch = strlen( ls_wline-line ).
-          FIND ALL OCCURRENCES OF '''' IN ls_value-line MATCH COUNT lv_ap_count.
-          lv_ap_count = lv_ap_count + strlen( ls_value-line ).
+        lv_wline_ch = strlen( ls_wline-line ).
+        FIND ALL OCCURRENCES OF '''' IN ls_value-line MATCH COUNT lv_ap_count.
+        lv_ap_count = lv_ap_count + strlen( ls_value-line ).
 
-          IF sy-subrc = 0.
-            REPLACE ALL OCCURRENCES OF '''' IN ls_value-line WITH ''''''.
-          ENDIF.
-          lv_wline_ch = lv_wline_ch + lv_ap_count.
+        IF sy-subrc = 0.
+          REPLACE ALL OCCURRENCES OF '''' IN ls_value-line WITH ''''''.
+        ENDIF.
+        lv_wline_ch = lv_wline_ch + lv_ap_count.
 
-          " Check for string longer that 72 char of wline
-          IF lv_wline_ch > 66.
-            IF lv_ap_count > 70.
-              CLEAR lv_langu_key.
-              EXIT.
-            ELSE.
-
-              CONCATENATE ls_wline-line 'EQ' INTO ls_wline-line SEPARATED BY space.
-              APPEND ls_wline TO lt_wheretab.
-              CONCATENATE ls_wline-line 'EQ' INTO ls_wline-line SEPARATED BY space.
-              CONCATENATE '''' ls_value-line '''' INTO ls_wline-line.
-
-            ENDIF.
+        " Check for string longer that 72 char of wline
+        IF lv_wline_ch > 66.
+          IF lv_ap_count > 70.
+            CLEAR lv_langu_key.
+            EXIT.
           ELSE.
 
-            CONCATENATE ls_wline-line 'EQ' '''' INTO ls_wline-line SEPARATED BY space.
-            CONCATENATE ls_wline-line ls_value-line '''' INTO ls_wline-line.
+            CONCATENATE ls_wline-line 'EQ' INTO ls_wline-line SEPARATED BY space.
+            APPEND ls_wline TO lt_wheretab.
+            CONCATENATE ls_wline-line 'EQ' INTO ls_wline-line SEPARATED BY space.
+            CONCATENATE '''' ls_value-line '''' INTO ls_wline-line.
 
           ENDIF.
-        ELSE. " Other Types
+        ELSE.
 
           CONCATENATE ls_wline-line 'EQ' '''' INTO ls_wline-line SEPARATED BY space.
           CONCATENATE ls_wline-line ls_value-line '''' INTO ls_wline-line.
 
         ENDIF.
+      ELSE. " Other Types
+
+        CONCATENATE ls_wline-line 'EQ' '''' INTO ls_wline-line SEPARATED BY space.
+        CONCATENATE ls_wline-line ls_value-line '''' INTO ls_wline-line.
+
       ENDIF.
 
       APPEND ls_wline TO lt_wheretab.
@@ -577,10 +564,9 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
     DATA: lr_ref   TYPE REF TO data,
           lt_where TYPE ty_where_tab.
 
-    FIELD-SYMBOLS: <lt_data>         TYPE STANDARD TABLE,
-                   <ls_object_table> LIKE LINE OF mt_object_table,
-                   <ls_e071>         TYPE e071,
-                   <ls_e071k>        TYPE e071k.
+    FIELD-SYMBOLS: <lt_data>  TYPE STANDARD TABLE,
+                   <ls_e071>  TYPE e071,
+                   <ls_e071k> TYPE e071k.
 
     " Each logical object table listed once.
     LOOP AT mt_resolved_e071 ASSIGNING <ls_e071>.
@@ -660,14 +646,12 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
   METHOD resolve_logical_object.
 
     DATA: ls_e071                  TYPE e071,
-          lt_e071k_tab             TYPE STANDARD TABLE OF e071k,
-          lt_e071_tab              TYPE STANDARD TABLE OF e071,
           lv_lang_string           TYPE c LENGTH 50,
           lt_langu                 TYPE STANDARD TABLE OF t002-spras,
           lt_translation_languages LIKE mo_i18n_params->ms_params-translation_languages.
 
     ls_e071-object = ms_item-obj_type.
-    ls_e071-obj_name =  ms_item-obj_name.
+    ls_e071-obj_name = ms_item-obj_name.
 
     IF mo_i18n_params IS BOUND.
       lt_translation_languages = mo_i18n_params->ms_params-translation_languages.

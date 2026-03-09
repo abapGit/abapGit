@@ -520,4 +520,17 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~suppress_gen_obj_after_import.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          rv_suppress = gi_exit->suppress_gen_obj_after_import( ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

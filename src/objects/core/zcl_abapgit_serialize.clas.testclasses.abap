@@ -278,6 +278,9 @@ CLASS ltd_exit IMPLEMENTATION.
     mv_max_parallel_processes = iv_max_parallel_processes.
   ENDMETHOD.
 
+  METHOD zif_abapgit_exit~suppress_gen_obj_after_import.
+  ENDMETHOD.
+
 ENDCLASS.
 
 
