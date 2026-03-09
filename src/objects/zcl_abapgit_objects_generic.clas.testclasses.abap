@@ -92,7 +92,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     DATA: lo_cut            TYPE REF TO zcl_abapgit_objects_generic,
           ls_item           TYPE zif_abapgit_definitions=>ty_item,
-          lt_resolved_e071k TYPE e071k_t,
+          lt_resolved_e071k TYPE zcl_abapgit_objects_generic=>ty_e071k_tab,
           ls_resolved_e071k LIKE LINE OF lt_resolved_e071k,
           lt_exp_where_tab  TYPE zcl_abapgit_objects_generic=>ty_where_tab,
           ls_exp_where_tab  LIKE LINE OF lt_exp_where_tab,
@@ -142,12 +142,12 @@ CLASS ltcl_test IMPLEMENTATION.
 
     DATA: lo_cut                TYPE REF TO zcl_abapgit_objects_generic,
           ls_item               TYPE zif_abapgit_definitions=>ty_item,
-          lt_exp_resolved_e071  TYPE e071tab,
+          lt_exp_resolved_e071  TYPE zcl_abapgit_objects_generic=>ty_e071_tab,
           ls_exp_resolved_e071  LIKE LINE OF lt_exp_resolved_e071,
-          lt_exp_resolved_e071k TYPE e071k_t,
+          lt_exp_resolved_e071k TYPE zcl_abapgit_objects_generic=>ty_e071k_tab,
           ls_exp_resolved_e071k LIKE LINE OF lt_exp_resolved_e071k,
-          lt_act_resolved_e071  TYPE e071tab,
-          lt_act_resolved_e071k TYPE e071k_t.
+          lt_act_resolved_e071  TYPE zcl_abapgit_objects_generic=>ty_e071_tab,
+          lt_act_resolved_e071k TYPE zcl_abapgit_objects_generic=>ty_e071k_tab.
 
 * assumption: this object exists in all SAP systems
     ls_item-obj_type = 'NSPC'.
