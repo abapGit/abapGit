@@ -82,17 +82,23 @@ CLASS zcl_abapgit_objects_generic DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    TYPES: ty_where_tab TYPE STANDARD TABLE OF vimwheretb WITH DEFAULT KEY.
+    TYPES: BEGIN OF ty_where,
+             line TYPE sychar72,
+           END OF ty_where.
+
+    TYPES: ty_where_tab TYPE STANDARD TABLE OF ty_where WITH DEFAULT KEY,
+           ty_e071_tab  TYPE STANDARD TABLE OF e071 WITH DEFAULT KEY,
+           ty_e071k_tab TYPE STANDARD TABLE OF e071k WITH DEFAULT KEY.
 
     CONSTANTS: c_feature_object LIKE ms_item-obj_type VALUE 'PMKC'.
 
     DATA: mo_i18n_params    TYPE REF TO zcl_abapgit_i18n_params,
-          mt_resolved_e071  TYPE e071tab,
-          mt_resolved_e071k TYPE e071k_t.
+          mt_resolved_e071  TYPE ty_e071_tab,
+          mt_resolved_e071k TYPE ty_e071k_tab.
 
     METHODS resolve_logical_object
-      EXPORTING et_resolved_e071  TYPE e071tab
-                et_resolved_e071k TYPE e071k_t
+      EXPORTING et_resolved_e071  TYPE ty_e071_tab
+                et_resolved_e071k TYPE ty_e071k_tab
       RAISING   zcx_abapgit_exception.
     METHODS get_where_clause
       IMPORTING
@@ -647,7 +653,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
     DATA: ls_e071                  TYPE e071,
           lv_lang_string           TYPE c LENGTH 50,
-          lt_langu                 TYPE STANDARD TABLE OF t002-spras,
+          lt_langu                 TYPE STANDARD TABLE OF spras,
           lt_translation_languages LIKE mo_i18n_params->ms_params-translation_languages.
 
     ls_e071-object = ms_item-obj_type.
