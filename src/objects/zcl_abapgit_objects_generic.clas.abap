@@ -6,9 +6,10 @@ CLASS zcl_abapgit_objects_generic DEFINITION
 
     METHODS constructor
       IMPORTING
-        !is_item       TYPE zif_abapgit_definitions=>ty_item
-        !iv_language   TYPE spras DEFAULT sy-langu
-        io_field_rules TYPE REF TO zif_abapgit_field_rules OPTIONAL
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras DEFAULT sy-langu
+        !io_field_rules TYPE REF TO zif_abapgit_field_rules OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS delete
@@ -66,13 +67,6 @@ CLASS zcl_abapgit_objects_generic DEFINITION
         !iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception .
-    METHODS distribute_name_to_components
-      IMPORTING
-        !it_key_component TYPE ddfields
-      CHANGING
-        !ct_objkey        TYPE ty_t_objkey
-        !cs_objkey        TYPE ty_s_objkey
-        !cv_non_value_pos TYPE numc3 .
     METHODS get_key_fields
       IMPORTING
         !iv_table      TYPE objsl-tobj_name
@@ -85,30 +79,38 @@ CLASS zcl_abapgit_objects_generic DEFINITION
         VALUE(rv_table) TYPE objsl-tobj_name
       RAISING
         zcx_abapgit_exception .
-    METHODS get_where_clause
-      IMPORTING
-        !iv_tobj_name   TYPE objsl-tobj_name
-      RETURNING
-        VALUE(rv_where) TYPE string
-      RAISING
-        zcx_abapgit_exception .
     METHODS serialize_data
       IMPORTING
         !io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
-    METHODS split_value_to_keys
-      IMPORTING
-        !it_key_component TYPE ddfields
-      CHANGING
-        !ct_objkey        TYPE ty_t_objkey
-        !cs_objkey        TYPE ty_s_objkey
-        !cv_non_value_pos TYPE numc3 .
     METHODS validate
       IMPORTING
         !io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
+
+    TYPES: ty_where_tab TYPE STANDARD TABLE OF vimwheretb WITH DEFAULT KEY.
+
+    CONSTANTS: c_feature_object LIKE ms_item-obj_type VALUE 'PMKC'.
+
+    DATA: mo_i18n_params    TYPE REF TO zcl_abapgit_i18n_params,
+          mt_resolved_e071  TYPE e071tab,
+          mt_resolved_e071k TYPE e071k_t.
+
+    METHODS resolve_logical_object
+      EXPORTING et_resolved_e071  TYPE e071tab
+                et_resolved_e071k TYPE e071k_t
+      RAISING   zcx_abapgit_exception.
+    METHODS get_where_clause
+      IMPORTING
+        iv_tabname      TYPE tabname
+        iv_tabkey       TYPE trobj_name
+      RETURNING
+        VALUE(rt_where) TYPE ty_where_tab
+      RAISING
+        zcx_abapgit_exception .
+
   PRIVATE SECTION.
 
     DATA mo_field_rules TYPE REF TO zif_abapgit_field_rules .
@@ -135,31 +137,37 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
     DATA: lt_cts_object_entry TYPE STANDARD TABLE OF e071 WITH DEFAULT KEY,
           ls_cts_object_entry LIKE LINE OF lt_cts_object_entry,
-          lt_cts_key          TYPE STANDARD TABLE OF e071k WITH DEFAULT KEY.
+          lt_cts_key          TYPE STANDARD TABLE OF e071k WITH DEFAULT KEY,
+          lv_suppress_call    TYPE abap_bool VALUE abap_false,
+          li_exit             TYPE REF TO zif_abapgit_exit.
 
     FIELD-SYMBOLS <ls_object_method> LIKE LINE OF mt_object_method.
 
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    lv_suppress_call = li_exit->suppress_gen_obj_after_import( ).
 
-    ls_cts_object_entry-pgmid    = 'R3TR'.
-    ls_cts_object_entry-object   = ms_item-obj_type.
-    ls_cts_object_entry-obj_name = ms_item-obj_name.
-    INSERT ls_cts_object_entry INTO TABLE lt_cts_object_entry.
+    IF lv_suppress_call <> abap_true.
+      ls_cts_object_entry-pgmid    = 'R3TR'.
+      ls_cts_object_entry-object   = ms_item-obj_type.
+      ls_cts_object_entry-obj_name = ms_item-obj_name.
+      INSERT ls_cts_object_entry INTO TABLE lt_cts_object_entry.
 
-    READ TABLE mt_object_method ASSIGNING <ls_object_method>
-      WITH KEY
-        objectname = ms_item-obj_type
-        objecttype = 'L'
-        method = 'AFTER_IMP'.
-    IF sy-subrc = 0.
+      READ TABLE mt_object_method ASSIGNING <ls_object_method>
+        WITH KEY
+          objectname = ms_item-obj_type
+          objecttype = 'L'
+          method = 'AFTER_IMP'.
+      IF sy-subrc = 0.
 * client is actually optional for most AIM, but let's supply it and hope
 * that those client-independent-ones just ignore it
-      CALL FUNCTION <ls_object_method>-methodname
-        EXPORTING
-          iv_tarclient  = sy-mandt
-          iv_is_upgrade = abap_false
-        TABLES
-          tt_e071       = lt_cts_object_entry
-          tt_e071k      = lt_cts_key.
+        CALL FUNCTION <ls_object_method>-methodname
+          EXPORTING
+            iv_tarclient  = sy-mandt
+            iv_is_upgrade = abap_false
+          TABLES
+            tt_e071       = lt_cts_object_entry
+            tt_e071k      = lt_cts_key.
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -223,7 +231,6 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
     CONSTANTS lc_logical_transport_object TYPE c LENGTH 1 VALUE 'L'.
 
-
     SELECT SINGLE * FROM objh INTO ms_object_header
       WHERE objectname = is_item-obj_type
       AND objecttype = lc_logical_transport_object.
@@ -255,6 +262,10 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
     ms_item = is_item.
     mv_language = iv_language.
     mo_field_rules = io_field_rules.
+    mo_i18n_params = io_i18n_params.
+
+    resolve_logical_object( IMPORTING et_resolved_e071  = mt_resolved_e071
+                                      et_resolved_e071k = mt_resolved_e071k ).
 
   ENDMETHOD.
 
@@ -274,23 +285,35 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
   METHOD delete.
 
-    DATA: lv_where   TYPE string,
+    DATA: lt_e071    TYPE e071tab,
+          lt_e071k   TYPE e071k_t,
+          lt_where   TYPE ty_where_tab,
           lv_primary TYPE objsl-tobj_name.
 
-    FIELD-SYMBOLS <ls_table> LIKE LINE OF mt_object_table.
-
+    FIELD-SYMBOLS: <ls_e071>  TYPE e071,
+                   <ls_e071k> TYPE e071k.
 
     lv_primary = get_primary_table( ).
 
-    LOOP AT mt_object_table ASSIGNING <ls_table>.
-      lv_where = get_where_clause( <ls_table>-tobj_name ).
-      ASSERT NOT lv_where IS INITIAL.
+    "Each logical object table listed once.
+    LOOP AT mt_resolved_e071 ASSIGNING <ls_e071>.
+      "Multiple keys can be specified per table.
+      LOOP AT mt_resolved_e071k ASSIGNING <ls_e071k> WHERE mastername = <ls_e071>-obj_name.
 
-      DELETE FROM (<ls_table>-tobj_name) WHERE (lv_where).
+        lt_where = get_where_clause( iv_tabname = <ls_e071k>-objname
+                                     iv_tabkey  = <ls_e071k>-tabkey ).
 
-      IF <ls_table>-tobj_name = lv_primary.
-        ASSERT sy-dbcnt <= 1. "Just to be on the very safe side
-      ENDIF.
+        ASSERT lt_where IS NOT INITIAL.
+
+        DELETE FROM (<ls_e071k>-objname) WHERE (lt_where).
+
+        "Object PMKC has more than 1 entry in the primary table
+        IF <ls_e071>-obj_name = lv_primary AND ms_item-obj_type <> c_feature_object.
+          ASSERT sy-dbcnt <= 1. "Just to be on the very safe side
+        ENDIF.
+
+        CLEAR lt_where.
+      ENDLOOP.
     ENDLOOP.
 
     corr_insert( iv_package   = iv_package
@@ -320,116 +343,61 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
   METHOD deserialize_data.
 
-    DATA: lr_ref TYPE REF TO data.
+    DATA: lr_ref   TYPE REF TO data,
+          lv_table TYPE sobj_name.
 
-    FIELD-SYMBOLS: <lt_data>  TYPE STANDARD TABLE,
-                   <ls_table> LIKE LINE OF mt_object_table.
+    FIELD-SYMBOLS: <lt_data>          TYPE STANDARD TABLE,
+                   <ls_resolved_e071> TYPE e071.
 
+    LOOP AT mt_resolved_e071 ASSIGNING <ls_resolved_e071>.
 
-    LOOP AT mt_object_table ASSIGNING <ls_table>.
-
-      CREATE DATA lr_ref TYPE STANDARD TABLE OF (<ls_table>-tobj_name).
+      CREATE DATA lr_ref TYPE STANDARD TABLE OF (<ls_resolved_e071>-obj_name).
       ASSIGN lr_ref->* TO <lt_data>.
 
-      io_xml->read(
-        EXPORTING
-          iv_name = <ls_table>-tobj_name
-        CHANGING
-          cg_data = <lt_data> ).
-      apply_fill_logic(
-        EXPORTING
-          iv_table   = <ls_table>-tobj_name
-          iv_package = iv_package
-        CHANGING
-          ct_data    = <lt_data> ).
+      io_xml->read( EXPORTING iv_name = <ls_resolved_e071>-obj_name
+                    CHANGING  cg_data = <lt_data> ).
 
-      INSERT (<ls_table>-tobj_name) FROM TABLE <lt_data>.
+      lv_table = <ls_resolved_e071>-obj_name.
+
+      apply_fill_logic( EXPORTING iv_table   = lv_table
+                                  iv_package = iv_package
+                        CHANGING  ct_data    = <lt_data> ).
+
+      INSERT (<ls_resolved_e071>-obj_name) FROM TABLE <lt_data>.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error inserting data, { <ls_table>-tobj_name }| ).
+        zcx_abapgit_exception=>raise( |Error inserting data, { <ls_resolved_e071>-obj_name }| ).
       ENDIF.
 
     ENDLOOP.
 
   ENDMETHOD.
-
-
-  METHOD distribute_name_to_components.
-
-    DATA: lt_key_component_uncovered  LIKE it_key_component,
-          ls_key_component_uncovered  LIKE LINE OF lt_key_component_uncovered,
-          ls_objkey_sub               LIKE cs_objkey,
-          lv_objkey_sub_pos           TYPE i,
-          lv_remaining_length         TYPE i,
-          lv_count_components_covered LIKE ls_objkey_sub-num.
-
-    DATA lv_len LIKE ls_key_component_uncovered-leng.
-
-
-    lt_key_component_uncovered = it_key_component.
-    ls_objkey_sub-num = cs_objkey-num.
-    lv_objkey_sub_pos = 0.
-
-*    we want to fill the attribute values which are not covered by explicit key components yet
-    lv_count_components_covered = ls_objkey_sub-num - 1.
-    DO lv_count_components_covered TIMES.
-      DELETE lt_key_component_uncovered INDEX 1.
-    ENDDO.
-
-    LOOP AT lt_key_component_uncovered INTO ls_key_component_uncovered.
-      CLEAR ls_objkey_sub-value.
-
-*      Some datatype used in the key might exceed the total remaining characters length (e. g. SICF)
-      TRY.
-          lv_remaining_length = strlen( |{ substring( val = cs_objkey-value
-                                                      off = lv_objkey_sub_pos ) }| ).
-        CATCH cx_sy_range_out_of_bounds.
-          lv_remaining_length = 0.
-          RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>>>
-      ENDTRY.
-      IF ls_key_component_uncovered-leng <= lv_remaining_length.
-        lv_len = ls_key_component_uncovered-leng.
-      ELSE.
-        lv_len = lv_remaining_length.
-      ENDIF.
-
-      ls_objkey_sub-value = |{ substring( val = cs_objkey-value
-                                          off = lv_objkey_sub_pos
-                                          len = lv_len ) }|.
-      ls_objkey_sub-num = cv_non_value_pos.
-
-      INSERT ls_objkey_sub INTO TABLE ct_objkey.
-
-      lv_objkey_sub_pos = lv_objkey_sub_pos + ls_key_component_uncovered-leng.
-      cv_non_value_pos = cv_non_value_pos + 1.
-      CLEAR ls_objkey_sub.
-
-      IF lv_objkey_sub_pos = strlen( cs_objkey-value ).
-        cs_objkey-num = cv_non_value_pos.
-        EXIT. "end splitting - all characters captured
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
 
   METHOD exists.
 
-    DATA: lv_where_clause TYPE string,
-          lv_primary      TYPE objsl-tobj_name,
-          lr_table_line   TYPE REF TO data.
+    DATA: lt_where      TYPE ty_where_tab,
+          ls_e071k      TYPE e071k,
+          lr_table_line TYPE REF TO data,
+          lv_primary    TYPE objsl-tobj_name.
 
     FIELD-SYMBOLS: <lg_table_line> TYPE any.
 
-
     lv_primary = get_primary_table( ).
 
-    lv_where_clause = get_where_clause( lv_primary ).
+    READ TABLE mt_resolved_e071k INTO ls_e071k WITH KEY objname = lv_primary.
+    IF sy-subrc = 0.
 
-    CREATE DATA lr_table_line TYPE (lv_primary).
-    ASSIGN lr_table_line->* TO <lg_table_line>.
+      lt_where = get_where_clause( iv_tabname = ls_e071k-objname
+                                   iv_tabkey  = ls_e071k-tabkey ).
 
-    SELECT SINGLE * FROM (lv_primary) INTO <lg_table_line> WHERE (lv_where_clause).
-    rv_bool = boolc( sy-dbcnt > 0 ).
+      CREATE DATA lr_table_line TYPE (lv_primary).
+      ASSIGN lr_table_line->* TO <lg_table_line>.
+
+      SELECT SINGLE * FROM (lv_primary) INTO <lg_table_line> WHERE (lt_where).
+      rv_bool = boolc( sy-dbcnt > 0 ).
+
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -485,142 +453,112 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
   METHOD get_where_clause.
 
-    DATA: lv_objkey_pos      TYPE i,
-          lv_next_objkey_pos TYPE i,
-          lv_value_pos       TYPE i,
-          lv_objkey_length   TYPE i,
-          lt_objkey          TYPE ty_t_objkey,
-          ls_objkey          LIKE LINE OF lt_objkey,
-          lv_non_value_pos   TYPE numc3,
-          lt_key_fields      TYPE ddfields.
+    "Based on RKE_TRANSPORT_BUILD_WHERETAB
+    DATA: ls_dfies        TYPE dfies,
+          lv_strlen_ch    TYPE i,
+          lv_langu_key(1) TYPE c,
+          lv_first(1)     TYPE c VALUE 'X',
+          lt_wheretab     TYPE TABLE OF vimwheretb,
+          lt_ftab         TYPE TABLE OF vimwheretb,
+          ls_value        TYPE vimwheretb,
+          ls_wline        TYPE vimwheretb,
+          ls_fline        TYPE vimwheretb,
+          lv_offset_ch    TYPE i,
+          lv_wline_ch     TYPE i,
+          lv_ap_count     TYPE i,
+          lt_dfies        TYPE TABLE OF dfies,
+          lv_save_tabname TYPE dd03p-tabname,
+          lv_charsize     TYPE i,
+          lv_table        TYPE sobj_name.
 
-    DATA: lv_is_asterix      TYPE abap_bool,
-          lv_where_statement TYPE string,
-          lv_key_pos         TYPE i,
-          lv_value128        TYPE string.
+    lv_charsize = cl_abap_char_utilities=>charsize.
 
-    FIELD-SYMBOLS <ls_object_table> LIKE LINE OF mt_object_table.
+    lv_table = iv_tabname.
+    lt_dfies = get_key_fields( iv_table = lv_table ).
 
-    FIELD-SYMBOLS <ls_table_field> LIKE LINE OF lt_key_fields.
+    lv_strlen_ch = strlen( iv_tabkey ).
 
+    CLEAR: lv_langu_key.
 
-    READ TABLE mt_object_table ASSIGNING <ls_object_table> WITH KEY tobj_name = iv_tobj_name.
-    ASSERT sy-subrc = 0.
+    LOOP AT lt_dfies INTO ls_dfies.
 
-    lt_key_fields = get_key_fields( iv_tobj_name ).
+      lv_offset_ch = ls_dfies-offset / lv_charsize.
 
-*   analyze the object key and compose the key (table)
-    CLEAR lt_objkey.
-    CLEAR ls_objkey.
-    lv_objkey_pos = 0.
-    lv_non_value_pos = 1.
-    lv_value_pos = 0.
-    lv_objkey_length = strlen( <ls_object_table>-tobjkey ).
+      " Quit if string is completely processed
+      IF lv_offset_ch >= lv_strlen_ch.
+        EXIT.
+      ENDIF.
 
-    WHILE lv_objkey_pos <= lv_objkey_length.
-      ls_objkey-num = lv_non_value_pos.
-*     command
-      IF <ls_object_table>-tobjkey+lv_objkey_pos(1) = '/'.
-        IF NOT ls_objkey-value IS INITIAL.
-*        We reached the end of a key-definition.
-*        this key part may address multiple fields.
-*        E. g. six characters may address one boolean field and a five-digit version field.
-*        Thus, we need to analyze the remaining key components which have not been covered yet.
-          split_value_to_keys(
-            EXPORTING
-              it_key_component = lt_key_fields
-            CHANGING
-              ct_objkey        = lt_objkey
-              cs_objkey        = ls_objkey
-              cv_non_value_pos = lv_non_value_pos ).
+      ls_value-line = iv_tabkey+lv_offset_ch(ls_dfies-leng).
+
+      IF lv_first IS INITIAL.
+        ls_wline-line = 'AND'.
+      ENDIF.
+
+      CLEAR lv_first.
+
+      CONCATENATE ls_wline-line ls_dfies-fieldname INTO ls_wline-line SEPARATED BY space.
+      IF ls_dfies-datatype = 'LANG'.
+
+        ls_fline-line = ls_dfies-fieldname.
+        APPEND ls_fline TO lt_ftab.
+        CONCATENATE ls_wline-line 'EQ' '''' INTO ls_wline-line SEPARATED BY space.
+        CONCATENATE ls_wline-line ls_value-line '''' INTO ls_wline-line.
+        lv_langu_key = 'X'.
+
+      ELSEIF ls_value-line CS '*'. " Handle generic keys
+
+        CONCATENATE ls_wline-line 'LIKE' '''' INTO ls_wline-line SEPARATED BY space.
+        TRANSLATE ls_value-line USING '*%'.
+        CONCATENATE ls_wline-line ls_value-line '''' INTO ls_wline-line.
+
+      ELSEIF ls_value-line IS INITIAL. " Key field is empty
+
+        CONCATENATE ls_wline-line 'EQ' '''' '''' INTO ls_wline-line SEPARATED BY space.
+
+      ELSE. " Insert the key field value
+        IF ls_dfies-datatype = 'CHAR'.
+
+          lv_wline_ch = strlen( ls_wline-line ).
+          FIND ALL OCCURRENCES OF '''' IN ls_value-line MATCH COUNT lv_ap_count.
+          lv_ap_count = lv_ap_count + strlen( ls_value-line ).
+
+          IF sy-subrc = 0.
+            REPLACE ALL OCCURRENCES OF '''' IN ls_value-line WITH ''''''.
+          ENDIF.
+          lv_wline_ch = lv_wline_ch + lv_ap_count.
+
+          " Check for string longer that 72 char of wline
+          IF lv_wline_ch > 66.
+            IF lv_ap_count > 70.
+              CLEAR lv_langu_key.
+              EXIT.
+            ELSE.
+
+              CONCATENATE ls_wline-line 'EQ' INTO ls_wline-line SEPARATED BY space.
+              APPEND ls_wline TO lt_wheretab.
+              CONCATENATE ls_wline-line 'EQ' INTO ls_wline-line SEPARATED BY space.
+              CONCATENATE '''' ls_value-line '''' INTO ls_wline-line.
+
+            ENDIF.
+          ELSE.
+
+            CONCATENATE ls_wline-line 'EQ' '''' INTO ls_wline-line SEPARATED BY space.
+            CONCATENATE ls_wline-line ls_value-line '''' INTO ls_wline-line.
+
+          ENDIF.
+        ELSE. " Other Types
+
+          CONCATENATE ls_wline-line 'EQ' '''' INTO ls_wline-line SEPARATED BY space.
+          CONCATENATE ls_wline-line ls_value-line '''' INTO ls_wline-line.
+
         ENDIF.
-        lv_next_objkey_pos = lv_objkey_pos + 1.
-*       '*' means all further key values
-        IF <ls_object_table>-tobjkey+lv_next_objkey_pos(1) = '*'.
-          ls_objkey-value = '*'.
-          INSERT ls_objkey INTO TABLE lt_objkey.
-          CLEAR ls_objkey.
-          lv_non_value_pos = lv_non_value_pos + 1.
-          lv_objkey_pos = lv_objkey_pos + 1.
-*       object name
-        ELSEIF <ls_object_table>-tobjkey+lv_next_objkey_pos(1) = '&'.
-          ls_objkey-value = ms_item-obj_name.
-*    The object name might comprise multiple key components (e. g. WDCC)
-*    This string needs to be split
-          distribute_name_to_components(
-            EXPORTING
-              it_key_component = lt_key_fields
-            CHANGING
-              ct_objkey        = lt_objkey
-              cs_objkey        = ls_objkey
-              cv_non_value_pos = lv_non_value_pos ).
-          CLEAR ls_objkey.
-          lv_objkey_pos = lv_objkey_pos + 1.
-*       language
-        ELSEIF <ls_object_table>-tobjkey+lv_next_objkey_pos(1) = 'L'.
-          ls_objkey-value = mv_language.
-          INSERT ls_objkey INTO TABLE lt_objkey.
-          CLEAR ls_objkey.
-          lv_non_value_pos = lv_non_value_pos + 1.
-          lv_objkey_pos = lv_objkey_pos + 1.
-*       Client
-        ELSEIF <ls_object_table>-tobjkey+lv_next_objkey_pos(1) = 'C'.
-          ls_objkey-value = sy-mandt.
-          INSERT ls_objkey INTO TABLE lt_objkey.
-          CLEAR ls_objkey.
-          lv_non_value_pos = lv_non_value_pos + 1.
-          lv_objkey_pos = lv_objkey_pos + 1.
-        ENDIF.
-        lv_value_pos = 0.
-*     value
-      ELSE.
-        ls_objkey-value+lv_value_pos(1) = <ls_object_table>-tobjkey+lv_objkey_pos(1).
-        lv_value_pos = lv_value_pos + 1.
       ENDIF.
 
-      lv_objkey_pos = lv_objkey_pos + 1.
-    ENDWHILE.
-
-*    Similarly to that, fixed values might be supplied in the object key which actually make up key components
-    IF NOT ls_objkey-value IS INITIAL.
-      split_value_to_keys(
-        EXPORTING
-          it_key_component = lt_key_fields
-        CHANGING
-          ct_objkey        = lt_objkey
-          cs_objkey        = ls_objkey
-          cv_non_value_pos = lv_non_value_pos ).
-    ENDIF.
-
-*   compose the where clause
-    lv_is_asterix = abap_false.
-    lv_key_pos = 1.
-
-    LOOP AT lt_key_fields ASSIGNING <ls_table_field>.
-      READ TABLE lt_objkey INTO ls_objkey
-        WITH TABLE KEY num = lv_key_pos.
-      IF sy-subrc <> 0 OR <ls_table_field>-fieldname = 'LANGU'.
-        CLEAR ls_objkey.
-        lv_key_pos = lv_key_pos + 1.
-        CONTINUE.
-      ENDIF.
-      IF ls_objkey-value = '*'.
-        lv_is_asterix = abap_true.
-      ENDIF.
-      IF lv_is_asterix = abap_true.
-        CONTINUE.
-      ENDIF.
-      IF NOT lv_where_statement IS INITIAL.
-        CONCATENATE lv_where_statement 'AND' INTO lv_where_statement
-          SEPARATED BY space.
-      ENDIF.
-      lv_value128 = cl_abap_dyn_prg=>quote( ls_objkey-value ).
-      CONCATENATE lv_where_statement <ls_table_field>-fieldname '='
-        lv_value128 INTO lv_where_statement SEPARATED BY space.
-      lv_key_pos = lv_key_pos + 1.
+      APPEND ls_wline TO lt_wheretab.
     ENDLOOP.
 
-    rv_where = condense( lv_where_statement ).
+    rt_where = lt_wheretab.
 
   ENDMETHOD.
 
@@ -637,69 +575,39 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
   METHOD serialize_data.
 
     DATA: lr_ref   TYPE REF TO data,
-          lv_where TYPE string.
+          lt_where TYPE ty_where_tab.
 
     FIELD-SYMBOLS: <lt_data>         TYPE STANDARD TABLE,
-                   <ls_object_table> LIKE LINE OF mt_object_table.
+                   <ls_object_table> LIKE LINE OF mt_object_table,
+                   <ls_e071>         TYPE e071,
+                   <ls_e071k>        TYPE e071k.
 
+    " Each logical object table listed once.
+    LOOP AT mt_resolved_e071 ASSIGNING <ls_e071>.
 
-    LOOP AT mt_object_table ASSIGNING <ls_object_table>.
-
-      CREATE DATA lr_ref TYPE STANDARD TABLE OF (<ls_object_table>-tobj_name).
+      CREATE DATA lr_ref TYPE STANDARD TABLE OF (<ls_e071>-obj_name).
       ASSIGN lr_ref->* TO <lt_data>.
 
-      lv_where = get_where_clause( <ls_object_table>-tobj_name ).
+      " Multiple keys can be specified per master table.
+      LOOP AT mt_resolved_e071k ASSIGNING <ls_e071k> WHERE objname = <ls_e071>-obj_name.
 
-      SELECT * FROM (<ls_object_table>-tobj_name)
-        INTO TABLE <lt_data>
-        WHERE (lv_where)
-        ORDER BY PRIMARY KEY.
+        lt_where = get_where_clause( iv_tabname = <ls_e071k>-objname
+                                     iv_tabkey  = <ls_e071k>-tabkey ).
 
-      apply_clear_logic( EXPORTING iv_table = <ls_object_table>-tobj_name
+        SELECT *
+               FROM (<ls_e071k>-objname)
+               APPENDING TABLE <lt_data>
+               WHERE (lt_where)
+               ORDER BY PRIMARY KEY.
+
+      ENDLOOP.
+
+      apply_clear_logic( EXPORTING iv_table = |{ <ls_e071k>-objname }|
                          CHANGING  ct_data  = <lt_data> ).
 
-      io_xml->add(
-        iv_name = <ls_object_table>-tobj_name
-        ig_data = <lt_data> ).
+      io_xml->add( iv_name = |{ <ls_e071k>-objname }|
+                   ig_data = <lt_data> ).
 
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD split_value_to_keys.
-
-    DATA: lt_key_component_uncovered LIKE it_key_component,
-          ls_dummy                   LIKE LINE OF ct_objkey,
-          ls_key_component_uncovered LIKE LINE OF lt_key_component_uncovered,
-          ls_objkey_sub              LIKE cs_objkey,
-          lv_objkey_sub_pos          TYPE i.
-
-
-    lt_key_component_uncovered = it_key_component.
-
-*    we want to fill the attribute values which are not covered by explicit key components yet
-    LOOP AT ct_objkey INTO ls_dummy.
-      DELETE lt_key_component_uncovered INDEX 1.
-    ENDLOOP.
-
-    ls_objkey_sub-num = cs_objkey-num.
-    lv_objkey_sub_pos = 0.
-    LOOP AT lt_key_component_uncovered INTO ls_key_component_uncovered.
-      CLEAR ls_objkey_sub-value.
-      ls_objkey_sub-value = cs_objkey-value+lv_objkey_sub_pos(ls_key_component_uncovered-leng).
-      ls_objkey_sub-num = cv_non_value_pos.
-
-      INSERT ls_objkey_sub INTO TABLE ct_objkey.
-
-      lv_objkey_sub_pos = lv_objkey_sub_pos + ls_key_component_uncovered-leng.
-      cv_non_value_pos = cv_non_value_pos + 1.
-      CLEAR ls_objkey_sub.
-
-      IF lv_objkey_sub_pos = strlen( cs_objkey-value ).
-        cs_objkey-num = cv_non_value_pos.
-        EXIT. "end splitting - all characters captured
-      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
@@ -707,37 +615,107 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
   METHOD validate.
 
-    DATA: lv_where   TYPE string,
-          lv_primary TYPE objsl-tobj_name,
-          lr_ref     TYPE REF TO data.
+    DATA: lt_where   TYPE ty_where_tab,
+          lr_ref     TYPE REF TO data,
+          ls_e071k   TYPE e071k,
+          lv_primary TYPE objsl-tobj_name.
 
     FIELD-SYMBOLS: <lt_data> TYPE STANDARD TABLE.
 
-
     lv_primary = get_primary_table( ).
 
-    CREATE DATA lr_ref TYPE STANDARD TABLE OF (lv_primary).
-    ASSIGN lr_ref->* TO <lt_data>.
+    READ TABLE mt_resolved_e071k INTO ls_e071k WITH KEY objname = lv_primary.
+    IF sy-subrc = 0.
 
-    io_xml->read(
-      EXPORTING
-        iv_name = lv_primary
-      CHANGING
-        cg_data = <lt_data> ).
+      lt_where = get_where_clause( iv_tabname = ls_e071k-objname
+                                   iv_tabkey  = ls_e071k-tabkey ).
 
-    IF lines( <lt_data> ) = 0.
-      zcx_abapgit_exception=>raise( |Primary table { lv_primary } not found in imported container| ).
-    ELSEIF lines( <lt_data> ) <> 1.
-      zcx_abapgit_exception=>raise( |Primary table { lv_primary } contains more than one instance!| ).
-    ENDIF.
+      CREATE DATA lr_ref TYPE STANDARD TABLE OF (lv_primary).
+      ASSIGN lr_ref->* TO <lt_data>.
 
-    lv_where = get_where_clause( lv_primary ).
+      io_xml->read(
+        EXPORTING
+          iv_name = lv_primary
+        CHANGING
+          cg_data = <lt_data> ).
+
+      IF lines( <lt_data> ) = 0.
+        zcx_abapgit_exception=>raise( |Primary table { lv_primary } not found in imported container| ).
+      ELSEIF lines( <lt_data> ) <> 1.
+        zcx_abapgit_exception=>raise( |Primary table { lv_primary } contains more than one instance!| ).
+      ENDIF.
 
 *  validate that max one local instance was affected by the import
-    SELECT COUNT(*) FROM (lv_primary) WHERE (lv_where).
-    IF sy-dbcnt > 1.
-      zcx_abapgit_exception=>raise( |More than one instance exists locally in primary table { lv_primary }| ).
+      SELECT COUNT(*) FROM (lv_primary) WHERE (lt_where).
+      IF sy-dbcnt > 1 AND ms_item-obj_type <> c_feature_object. " Primary table has more than 1 entry for PMKC
+        zcx_abapgit_exception=>raise( |More than one instance exists locally in primary table { lv_primary }| ).
+      ENDIF.
+    ELSE.
+      zcx_abapgit_exception=>raise( |Primary table could not be determined { lv_primary }| ).
     ENDIF.
 
   ENDMETHOD.
+
+
+  METHOD resolve_logical_object.
+
+    DATA: ls_e071                  TYPE e071,
+          lt_e071k_tab             TYPE STANDARD TABLE OF e071k,
+          lt_e071_tab              TYPE STANDARD TABLE OF e071,
+          lv_lang_string           TYPE c LENGTH 50,
+          lt_langu                 TYPE STANDARD TABLE OF t002-spras,
+          lt_translation_languages LIKE mo_i18n_params->ms_params-translation_languages.
+
+    ls_e071-object = ms_item-obj_type.
+    ls_e071-obj_name =  ms_item-obj_name.
+
+    IF mo_i18n_params IS BOUND.
+      lt_translation_languages = mo_i18n_params->ms_params-translation_languages.
+
+      IF mo_i18n_params->ms_params-translation_languages IS NOT INITIAL.
+        SELECT spras INTO TABLE lt_langu
+               FROM t002
+               FOR ALL ENTRIES IN lt_translation_languages
+               WHERE laiso = lt_translation_languages-table_line.
+      ENDIF.
+
+      APPEND mo_i18n_params->ms_params-main_language TO lt_langu.
+      CONCATENATE LINES OF lt_langu INTO lv_lang_string.
+
+      CONDENSE lv_lang_string.
+
+      CALL FUNCTION 'RESOLVE_LOGICAL_OBJECT'
+        EXPORTING
+          e071_entry                = ls_e071
+          iv_languages              = lv_lang_string
+        TABLES
+          e071k_tab                 = et_resolved_e071k
+          e071_tab                  = et_resolved_e071
+        EXCEPTIONS
+          no_logical_object         = 1
+          logical_object_with_tadir = 2
+          OTHERS                    = 3.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Error Resolving Logical Object { ms_item-obj_name }| ).
+      ENDIF.
+    ELSE.
+      "No i18n object passed to constructor
+      CALL FUNCTION 'RESOLVE_LOGICAL_OBJECT'
+        EXPORTING
+          e071_entry                = ls_e071
+        TABLES
+          e071k_tab                 = et_resolved_e071k
+          e071_tab                  = et_resolved_e071
+        EXCEPTIONS
+          no_logical_object         = 1
+          logical_object_with_tadir = 2
+          OTHERS                    = 3.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Error Resolving Logical Object { ms_item-obj_name }| ).
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

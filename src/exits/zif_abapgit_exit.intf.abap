@@ -199,4 +199,10 @@ INTERFACE zif_abapgit_exit PUBLIC.
       !is_repo_meta TYPE zif_abapgit_persistence=>ty_repo
       !ii_html      TYPE REF TO zif_abapgit_html.
 
+  "! Suppress generic object after import call.
+  "! @parameter rv_suppress | If true, it suppress the after import call
+  METHODS suppress_gen_obj_after_import
+    RETURNING
+      VALUE(rv_suppress) TYPE abap_bool.
+
 ENDINTERFACE.

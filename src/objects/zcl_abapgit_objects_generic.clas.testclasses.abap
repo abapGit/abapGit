@@ -10,8 +10,7 @@ CLASS ltcl_test DEFINITION FOR TESTING
       get_primary_table FOR TESTING RAISING zcx_abapgit_exception,
       get_key_fields FOR TESTING RAISING zcx_abapgit_exception,
       get_where_clause FOR TESTING RAISING zcx_abapgit_exception,
-      distribute_name_to_components FOR TESTING RAISING zcx_abapgit_exception,
-      split_value_to_keys FOR TESTING RAISING zcx_abapgit_exception.
+      resolve_logical_object FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -91,8 +90,15 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD get_where_clause.
 
-    DATA: lo_cut  TYPE REF TO zcl_abapgit_objects_generic,
-          ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA: lo_cut            TYPE REF TO zcl_abapgit_objects_generic,
+          ls_item           TYPE zif_abapgit_definitions=>ty_item,
+          lt_resolved_e071k TYPE e071k_t,
+          ls_resolved_e071k LIKE LINE OF lt_resolved_e071k,
+          lt_exp_where_tab  TYPE zcl_abapgit_objects_generic=>ty_where_tab,
+          ls_exp_where_tab  LIKE LINE OF lt_exp_where_tab,
+          lt_act_where_tab  TYPE zcl_abapgit_objects_generic=>ty_where_tab,
+          lv_tab_name       TYPE tabname.
+
 
 * assumption: this object exists in all SAP systems
     ls_item-obj_type = 'NSPC'.
@@ -103,125 +109,89 @@ CLASS ltcl_test IMPLEMENTATION.
         is_item     = ls_item
         iv_language = zif_abapgit_definitions=>c_english.
 
-    cl_abap_unit_assert=>assert_equals(
-      exp = `NAMESPACE = '/BIC/'`
-      act = lo_cut->get_where_clause( 'TRNSPACET' ) ).
+    lo_cut->resolve_logical_object( IMPORTING et_resolved_e071k = lt_resolved_e071k ).
 
-    cl_abap_unit_assert=>assert_equals(
-      exp = `NAMESPACE = '/BIC/' AND SPRAS = 'E'`
-      act = lo_cut->get_where_clause( 'TRNSPACETT' ) ).
+    READ TABLE lt_resolved_e071k INTO ls_resolved_e071k INDEX 1.
+    lv_tab_name = ls_resolved_e071k-mastername.
+    lt_act_where_tab = lo_cut->get_where_clause( iv_tabname = lv_tab_name
+                                                 iv_tabkey  = ls_resolved_e071k-tabkey ).
+
+    ls_exp_where_tab-line = ` NAMESPACE EQ '/BIC/'`.
+    APPEND ls_exp_where_tab TO lt_exp_where_tab.
+
+    cl_abap_unit_assert=>assert_equals( exp = lt_exp_where_tab
+                                        act = lt_act_where_tab ).
+
+    CLEAR ls_exp_where_tab.
+
+    READ TABLE lt_resolved_e071k INTO ls_resolved_e071k INDEX 2.
+    lv_tab_name = ls_resolved_e071k-mastername.
+    lt_act_where_tab = lo_cut->get_where_clause( iv_tabname = lv_tab_name
+                                                 iv_tabkey  = ls_resolved_e071k-tabkey ).
+
+    ls_exp_where_tab-line = ` NAMESPACE EQ '/BIC/'`.
+    ls_exp_where_tab-line = `AND SPRAS EQ 'E'`.
+    APPEND ls_exp_where_tab TO lt_exp_where_tab.
+
+    cl_abap_unit_assert=>assert_equals( exp = lt_exp_where_tab
+                                        act = lt_act_where_tab ).
 
   ENDMETHOD.
 
-  METHOD distribute_name_to_components.
+  METHOD resolve_logical_object.
 
-    DATA: lo_cut           TYPE REF TO zcl_abapgit_objects_generic,
-          ls_item          TYPE zif_abapgit_definitions=>ty_item,
-          lt_objkey        TYPE zcl_abapgit_objects_generic=>ty_t_objkey,
-          ls_objkey        LIKE LINE OF lt_objkey,
-          lv_non_value_pos TYPE numc3,
-          lt_key_fields    TYPE ddfields.
+    DATA: lo_cut                TYPE REF TO zcl_abapgit_objects_generic,
+          ls_item               TYPE zif_abapgit_definitions=>ty_item,
+          lt_exp_resolved_e071  TYPE e071tab,
+          ls_exp_resolved_e071  LIKE LINE OF lt_exp_resolved_e071,
+          lt_exp_resolved_e071k TYPE e071k_t,
+          ls_exp_resolved_e071k LIKE LINE OF lt_exp_resolved_e071k,
+          lt_act_resolved_e071  TYPE e071tab,
+          lt_act_resolved_e071k TYPE e071k_t.
 
 * assumption: this object exists in all SAP systems
-    ls_item-obj_type = 'WDCC'.
-    ls_item-obj_name = 'WDR_CHIP_TEST'.
-    ls_item-obj_name+32 = '09'.
-    ls_item-obj_name+34 = 'TEST'.
+    ls_item-obj_type = 'NSPC'.
+    ls_item-obj_name = '/BIC/'.
 
     CREATE OBJECT lo_cut
       EXPORTING
         is_item     = ls_item
         iv_language = zif_abapgit_definitions=>c_english.
 
-    lt_key_fields = lo_cut->get_key_fields( 'WDY_CONFIG_DATA' ).
+    ls_exp_resolved_e071-pgmid = 'R3TR'.
+    ls_exp_resolved_e071-object = 'TABU'.
+    ls_exp_resolved_e071-obj_name = 'TRNSPACET'.
+    ls_exp_resolved_e071-objfunc = 'K'.
+    APPEND ls_exp_resolved_e071 TO lt_exp_resolved_e071.
 
-    lv_non_value_pos = '001'.
-    ls_objkey-num    = '001'.
-    ls_objkey-value  = ls_item-obj_name.
+    ls_exp_resolved_e071-obj_name = 'TRNSPACETT'.
+    APPEND ls_exp_resolved_e071 TO lt_exp_resolved_e071.
 
-    lo_cut->distribute_name_to_components(
-      EXPORTING
-        it_key_component = lt_key_fields
-      CHANGING
-        ct_objkey        = lt_objkey
-        cs_objkey        = ls_objkey
-        cv_non_value_pos = lv_non_value_pos ).
 
-    cl_abap_unit_assert=>assert_equals(
-      exp = 3
-      act = lines( lt_objkey ) ).
+    ls_exp_resolved_e071k-pgmid = 'R3TR'.
+    ls_exp_resolved_e071k-object = 'TABU'.
+    ls_exp_resolved_e071k-objname = 'TRNSPACET'.
+    ls_exp_resolved_e071k-mastertype = 'TABU'.
+    ls_exp_resolved_e071k-mastername = 'TRNSPACET'.
+    ls_exp_resolved_e071k-tabkey = '/BIC/'.
+    APPEND ls_exp_resolved_e071k TO lt_exp_resolved_e071k.
 
-    READ TABLE lt_objkey INTO ls_objkey INDEX 2.
 
-    cl_abap_unit_assert=>assert_equals(
-      exp = '002'
-      act = ls_objkey-num ).
+    ls_exp_resolved_e071k-objname = 'TRNSPACETT'.
+    ls_exp_resolved_e071k-mastertype = 'TABU'.
+    ls_exp_resolved_e071k-mastername = 'TRNSPACETT'.
+    ls_exp_resolved_e071k-tabkey = '/BIC/     E'.
+    APPEND ls_exp_resolved_e071k TO lt_exp_resolved_e071k.
 
-    cl_abap_unit_assert=>assert_equals(
-      exp = '09'
-      act = ls_objkey-value ).
+    lo_cut->resolve_logical_object( IMPORTING et_resolved_e071  = lt_act_resolved_e071
+                                              et_resolved_e071k = lt_act_resolved_e071k ).
 
-    READ TABLE lt_objkey INTO ls_objkey INDEX 3.
+    cl_abap_unit_assert=>assert_equals( exp = lt_exp_resolved_e071
+                                        act = lt_act_resolved_e071 ).
 
-    cl_abap_unit_assert=>assert_equals(
-      exp = '003'
-      act = ls_objkey-num ).
+    cl_abap_unit_assert=>assert_equals( exp = lt_exp_resolved_e071k
+                                        act = lt_act_resolved_e071k ).
 
-    cl_abap_unit_assert=>assert_equals(
-      exp = 'TEST'
-      act = ls_objkey-value ).
-
-  ENDMETHOD.
-
-  METHOD split_value_to_keys.
-
-    DATA: lo_cut           TYPE REF TO zcl_abapgit_objects_generic,
-          ls_item          TYPE zif_abapgit_definitions=>ty_item,
-          lt_objkey        TYPE zcl_abapgit_objects_generic=>ty_t_objkey,
-          ls_objkey        LIKE LINE OF lt_objkey,
-          lv_non_value_pos TYPE numc3,
-          lt_key_fields    TYPE ddfields.
-
-* assumption: this object exists in all SAP systems
-    ls_item-obj_type = 'ASFC'.
-    ls_item-obj_name = 'SAP_AS_TEST_002'.
-
-    CREATE OBJECT lo_cut
-      EXPORTING
-        is_item     = ls_item
-        iv_language = zif_abapgit_definitions=>c_english.
-
-    lt_key_fields = lo_cut->get_key_fields( 'AIND_STR4' ).
-
-    ls_objkey-num    = '001'.
-    ls_objkey-value  = ls_item-obj_name.
-    APPEND ls_objkey TO lt_objkey.
-
-    lv_non_value_pos = '002'.
-    ls_objkey-num    = '002'.
-    ls_objkey-value  = 'S0099'.
-
-    lo_cut->split_value_to_keys(
-      EXPORTING
-        it_key_component = lt_key_fields
-      CHANGING
-        ct_objkey        = lt_objkey
-        cs_objkey        = ls_objkey
-        cv_non_value_pos = lv_non_value_pos ).
-
-    cl_abap_unit_assert=>assert_equals(
-      exp = 3
-      act = lines( lt_objkey ) ).
-
-    READ TABLE lt_objkey INTO ls_objkey INDEX 3.
-
-    cl_abap_unit_assert=>assert_equals(
-      exp = '003'
-      act = ls_objkey-num ).
-
-    cl_abap_unit_assert=>assert_equals(
-      exp = '0099'
-      act = ls_objkey-value ).
 
   ENDMETHOD.
 
