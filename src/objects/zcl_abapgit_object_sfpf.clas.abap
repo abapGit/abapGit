@@ -8,6 +8,15 @@ CLASS zcl_abapgit_object_sfpf DEFINITION
 
     INTERFACES zif_abapgit_object .
 
+    METHODS constructor
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS fix_oref
       IMPORTING
         !ii_document TYPE REF TO if_ixml_document
@@ -32,6 +41,32 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
 
+
+  METHOD constructor.
+
+    DATA: lv_version TYPE string.
+
+    super->constructor(
+        is_item        = is_item
+        iv_language    = iv_language
+        io_files       = io_files
+        io_i18n_params = io_i18n_params ).
+
+    TRY.
+
+        lv_version = cl_fp=>get_reference(
+            )->create_pdf_object( connection = cl_fp=>get_ads_connection( )
+            )->get_version_info( ).
+
+        IF lv_version IS INITIAL.
+          zcx_abapgit_exception=>raise( 'Object SFPF not supported, Adobe Document Service(ADS) is not configured.' ).
+        ENDIF.
+
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( 'Object SFPF not supported, Adobe Document Service(ADS) is not configured.' ).
+    ENDTRY.
+
+  ENDMETHOD.
 
   METHOD fix_oref.
 
