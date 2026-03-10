@@ -8,6 +8,15 @@ CLASS zcl_abapgit_object_sfpf DEFINITION
 
     INTERFACES zif_abapgit_object .
 
+    METHODS constructor
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_type_not_supported.
+
     CLASS-METHODS fix_oref
       IMPORTING
         !ii_document TYPE REF TO if_ixml_document
@@ -32,6 +41,32 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
 
+
+  METHOD constructor.
+
+    DATA: lv_version TYPE string.
+
+    super->constructor(
+        is_item        = is_item
+        iv_language    = iv_language
+        io_files       = io_files
+        io_i18n_params = io_i18n_params ).
+
+    TRY.
+
+        lv_version = cl_fp=>get_reference(
+            )->create_pdf_object( connection = cl_fp=>get_ads_connection( )
+            )->get_version_info( ).
+
+        IF lv_version IS INITIAL.
+          RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
+        ENDIF.
+
+      CATCH cx_root.
+        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
+    ENDTRY.
+
+  ENDMETHOD.
 
   METHOD fix_oref.
 
