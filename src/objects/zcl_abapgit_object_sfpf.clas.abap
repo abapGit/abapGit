@@ -8,15 +8,6 @@ CLASS zcl_abapgit_object_sfpf DEFINITION
 
     INTERFACES zif_abapgit_object .
 
-    METHODS constructor
-      IMPORTING
-        !is_item        TYPE zif_abapgit_definitions=>ty_item
-        !iv_language    TYPE spras
-        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
-        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
-      RAISING
-        zcx_abapgit_type_not_supported.
-
     CLASS-METHODS fix_oref
       IMPORTING
         !ii_document TYPE REF TO if_ixml_document
@@ -28,6 +19,9 @@ CLASS zcl_abapgit_object_sfpf DEFINITION
     CONSTANTS c_layout_file_ext TYPE string VALUE 'xdp'.
 
     METHODS:
+      check_ads_connection
+        RAISING
+          zcx_abapgit_exception,
       load
         RETURNING VALUE(ri_wb_form) TYPE REF TO if_fp_wb_form
         RAISING   zcx_abapgit_exception,
@@ -40,33 +34,6 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
-
-
-  METHOD constructor.
-
-    DATA: lv_version TYPE string.
-
-    super->constructor(
-        is_item        = is_item
-        iv_language    = iv_language
-        io_files       = io_files
-        io_i18n_params = io_i18n_params ).
-
-    TRY.
-
-        lv_version = cl_fp=>get_reference(
-            )->create_pdf_object( connection = cl_fp=>get_ads_connection( )
-            )->get_version_info( ).
-
-        IF lv_version IS INITIAL.
-          RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
-        ENDIF.
-
-      CATCH cx_root.
-        RAISE EXCEPTION TYPE zcx_abapgit_type_not_supported EXPORTING obj_type = is_item-obj_type.
-    ENDTRY.
-
-  ENDMETHOD.
 
   METHOD fix_oref.
 
@@ -249,6 +216,24 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD check_ads_connection.
+
+    DATA lv_version TYPE string.
+
+    TRY.
+        lv_version = cl_fp=>get_reference(
+            )->create_pdf_object( connection = cl_fp=>get_ads_connection( )
+            )->get_version_info( ).
+        IF lv_version IS INITIAL.
+          zcx_abapgit_exception=>raise( 'SFPF: ADS connection not configured' ).
+        ENDIF.
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( 'SFPF: ADS connection not configured' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_xstr      TYPE xstring,
@@ -258,6 +243,7 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
           li_form      TYPE REF TO if_fp_form,
           lx_fp_err    TYPE REF TO cx_fp_api.
 
+    check_ads_connection( ).
 
     lv_name = ms_item-obj_name.
     lv_xstr = cl_ixml_80_20=>render_to_xstring( io_xml->get_raw( ) ).
