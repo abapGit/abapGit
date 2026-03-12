@@ -366,15 +366,10 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     IF li_repo->get_local_settings( )-code_inspector_check_variant IS NOT INITIAL.
 
-      TRY.
-          ri_page = zcl_abapgit_gui_page_code_insp=>create(
-            ii_repo                  = li_repo
-            iv_raise_when_no_results = abap_true
-            iv_followup_action       = 'patch' ).
-
-        CATCH zcx_abapgit_exception.
-          lv_sci_result = zif_abapgit_definitions=>c_sci_result-passed.
-      ENDTRY.
+      ri_page = zcl_abapgit_gui_page_code_insp=>create(
+        ii_repo                  = li_repo
+        iv_raise_when_no_results = abap_true
+        iv_followup_action       = zcl_abapgit_gui_page_codi_base=>c_actions-patch ).
 
     ENDIF.
 
