@@ -45,6 +45,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_interactive_branch   TYPE abap_bool DEFAULT abap_false
         !iv_interactive_favorite TYPE abap_bool DEFAULT abap_true
         !io_news                 TYPE REF TO zcl_abapgit_repo_news OPTIONAL
+        !iv_sci_result           TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
       RETURNING
         VALUE(ri_html)           TYPE REF TO zif_abapgit_html
       RAISING
@@ -1027,6 +1028,11 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ri_html->add( '</td>' ).
 
     ri_html->add( '<td class="repo_attr right">' ).
+
+    " SCI result
+    render_sci_result(
+      ii_html       = ri_html
+      iv_sci_result = iv_sci_result ).
 
     " Fav
     IF abap_true = zcl_abapgit_persist_factory=>get_user( )->is_favorite_repo( ii_repo->get_key( ) ).

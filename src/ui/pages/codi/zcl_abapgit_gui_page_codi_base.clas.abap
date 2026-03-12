@@ -11,6 +11,7 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
       BEGIN OF c_actions,
         rerun        TYPE string VALUE 'rerun',
         stage        TYPE string VALUE 'stage',
+        patch        TYPE string VALUE 'patch',
         commit       TYPE string VALUE 'commit',
         filter_kind  TYPE string VALUE 'filter_kind',
         apply_filter TYPE string VALUE 'apply_filter',
