@@ -45,7 +45,8 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_interactive_branch   TYPE abap_bool DEFAULT abap_false
         !iv_interactive_favorite TYPE abap_bool DEFAULT abap_true
         !io_news                 TYPE REF TO zcl_abapgit_repo_news OPTIONAL
-        !iv_sci_result           TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
+        !iv_sci_result           TYPE zif_abapgit_definitions=>ty_sci_result
+          DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
       RETURNING
         VALUE(ri_html)           TYPE REF TO zif_abapgit_html
       RAISING
