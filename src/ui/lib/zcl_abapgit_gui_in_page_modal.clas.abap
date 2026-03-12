@@ -64,6 +64,10 @@ CLASS zcl_abapgit_gui_in_page_modal IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     CREATE OBJECT lo_style.
 
+    IF mi_child IS INITIAL.
+      RETURN.
+    ENDIF.
+
     IF ms_attrs-width IS NOT INITIAL.
       lo_style->add( |width:{ ms_attrs-width }px;| ).
     ENDIF.
@@ -71,7 +75,7 @@ CLASS zcl_abapgit_gui_in_page_modal IMPLEMENTATION.
       lo_style->add( |height:{ ms_attrs-height }px;| ).
     ENDIF.
 
-    ri_html->add( |<div class="modal" style="{ lo_style->join_w_space_and_flush( ) }">| ).
+    ri_html->add( |<div id="modal" class="modal" style="{ lo_style->join_w_space_and_flush( ) }">| ).
     ri_html->add( |<div class="modal-guts">| ).
     ri_html->add( mi_child->render( ) ).
     ri_html->add( |</div>| ).
