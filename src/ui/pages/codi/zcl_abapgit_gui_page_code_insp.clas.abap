@@ -265,7 +265,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     ls_hotkey_action-action = mv_followup_action.
     IF ls_hotkey_action-action = c_actions-patch.
       ls_hotkey_action-description = |Patch|.
-      ls_hotkey_action-hotkey = |p|.
+      ls_hotkey_action-hotkey = |a|.
     ELSE.
       ls_hotkey_action-description = |Stage|.
       ls_hotkey_action-hotkey = |s|.
