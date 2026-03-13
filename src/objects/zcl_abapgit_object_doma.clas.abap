@@ -378,29 +378,24 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       " AFF/JSON deserialization
       TRY.
           lv_json = mo_files->read_raw( 'json' ).
-
-          lcl_aff_metadata_handler=>deserialize(
-            EXPORTING
-              iv_json        = lv_json
-              iv_object_name = ms_item-obj_name
-            IMPORTING
-              es_dd01v       = ls_dd01v
-              et_dd07v       = lt_dd07v ).
-
         CATCH zcx_abapgit_exception.
-          " If JSON file not found, fall back to XML
-          io_xml->read( EXPORTING iv_name = 'DD01V'
-                        CHANGING  cg_data = ls_dd01v ).
-          io_xml->read( EXPORTING iv_name = 'DD07V_TAB'
-                        CHANGING  cg_data = lt_dd07v ).
       ENDTRY.
+    ENDIF.
 
+    IF lv_json IS NOT INITIAL.
+      lcl_aff_metadata_handler=>deserialize(
+        EXPORTING
+          iv_json        = lv_json
+          iv_object_name = ms_item-obj_name
+        IMPORTING
+          es_dd01v       = ls_dd01v
+          et_dd07v       = lt_dd07v ).
     ELSE.
-      " XML deserialization (existing behavior)
+      " If JSON file not found, fall back to XML
       io_xml->read( EXPORTING iv_name = 'DD01V'
-                    CHANGING  cg_data = ls_dd01v ).
+                        CHANGING  cg_data = ls_dd01v ).
       io_xml->read( EXPORTING iv_name = 'DD07V_TAB'
-                    CHANGING  cg_data = lt_dd07v ).
+                        CHANGING  cg_data = lt_dd07v ).
     ENDIF.
 
     handle_dependencies(
