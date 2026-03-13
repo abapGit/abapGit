@@ -39,7 +39,10 @@ CLASS ltcl_test IMPLEMENTATION.
     CREATE OBJECT li_xml_in TYPE zcl_abapgit_xml_input EXPORTING iv_xml = lv_xml.
     CREATE OBJECT lo_log TYPE zcl_abapgit_log.
 
-    lo_doma = zcl_abapgit_objects=>create_object( ls_item ).
+    CREATE OBJECT lo_doma TYPE zcl_abapgit_object_doma
+      EXPORTING
+        iv_language = sy-langu
+        is_item     = ls_item.
 
     lo_doma->deserialize(
       iv_package   = '$TMP'
