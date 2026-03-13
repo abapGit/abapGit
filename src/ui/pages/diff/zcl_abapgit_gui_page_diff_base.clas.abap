@@ -102,6 +102,9 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         iv_action TYPE clike
       RAISING
         zcx_abapgit_exception .
+    METHODS get_sci_result
+      RETURNING
+        VALUE(rv_sci_result) TYPE zif_abapgit_definitions=>ty_sci_result .
     METHODS refresh_full
       RAISING
         zcx_abapgit_exception .
@@ -685,6 +688,13 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
       CATCH zcx_abapgit_exception.
         rv_page_layout = zcl_abapgit_gui_page=>c_page_layout-full_width.
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD get_sci_result.
+
+    rv_sci_result = zif_abapgit_definitions=>c_sci_result-no_run.
 
   ENDMETHOD.
 
@@ -1454,7 +1464,9 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
     IF mi_repo IS NOT INITIAL.
       ri_html->add( `<div class="repo">` ).
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mi_repo ) ).
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
+        ii_repo        = mi_repo
+        iv_sci_result  = get_sci_result( ) ) ).
       ri_html->add( `</div>` ).
     ENDIF.
 

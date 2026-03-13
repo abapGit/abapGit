@@ -323,8 +323,9 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
                       AND method <> zif_abapgit_definitions=>c_method-rm.
 
     ri_page  = zcl_abapgit_gui_page_patch=>create(
-      iv_key   = lv_key
-      it_files = lt_files ).
+      iv_key        = lv_key
+      it_files      = lt_files
+      iv_sci_result = mv_sci_result ).
 
   ENDMETHOD.
 
@@ -379,9 +380,6 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ri_html->add( '<input class="stage-filter" id="objectSearch"' &&
                   ' type="search" placeholder="Filter Objects"' &&
                   | value="{ mv_filter_value }">| ).
-    zcl_abapgit_gui_chunk_lib=>render_sci_result(
-      ii_html       = ri_html
-      iv_sci_result = mv_sci_result ).
     ri_html->add( '</td>' ).
 
     ri_html->add( '</tr>' ).
@@ -799,7 +797,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
       ii_repo               = mi_repo
       iv_show_commit        = abap_false
-      iv_interactive_branch = abap_true ) ).
+      iv_interactive_branch = abap_true
+      iv_sci_result         = mv_sci_result ) ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
     ri_html->add( render_main_language_warning( ) ).
 
