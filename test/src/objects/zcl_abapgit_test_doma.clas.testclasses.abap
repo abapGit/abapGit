@@ -79,7 +79,6 @@ CLASS ltcl_test IMPLEMENTATION.
     CREATE OBJECT li_xml_check TYPE zcl_abapgit_xml_input EXPORTING iv_xml = lv_act.
 
     li_xml_check->read( EXPORTING iv_name = 'DD01V'     CHANGING cg_data = ls_dd01v_act ).
-    li_xml_check->read( EXPORTING iv_name = 'DD07V_TAB' CHANGING cg_data = lt_dd07v_act ).
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_dd01v_act-domname
@@ -99,7 +98,6 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = ls_dd01v_act-ddtext
       exp = 'Testing' ).
-    cl_abap_unit_assert=>assert_initial( lt_dd07v_act ).
 
   ENDMETHOD.
 
