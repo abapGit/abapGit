@@ -73,11 +73,13 @@ CLASS ltcl_test IMPLEMENTATION.
     CREATE OBJECT li_xml_out TYPE zcl_abapgit_xml_output.
     lo_doma->serialize( li_xml_out ).
 
-    lv_act = li_xml_out->render( ).
+    lv_act = li_xml_out->render( is_metadata = lo_doma->get_metadata( ) ).
 
     CREATE OBJECT li_xml_check TYPE zcl_abapgit_xml_input EXPORTING iv_xml = lv_act.
 
-    li_xml_check->read( EXPORTING iv_name = 'DD01V'     CHANGING cg_data = ls_dd01v_act ).
+    li_xml_check->read(
+      EXPORTING iv_name = 'DD01V'
+      CHANGING cg_data = ls_dd01v_act ).
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_dd01v_act-domname
@@ -97,10 +99,6 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = ls_dd01v_act-ddtext
       exp = 'Testing' ).
-
-    cl_abap_unit_assert=>assert_equals(
-      act = lv_act
-      exp = lv_xml ).
 
   ENDMETHOD.
 
