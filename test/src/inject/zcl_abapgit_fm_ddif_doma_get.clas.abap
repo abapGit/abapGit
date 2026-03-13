@@ -19,8 +19,12 @@ CLASS zcl_abapgit_fm_ddif_doma_get IMPLEMENTATION.
     ls_dd01v-ddtext     = 'Testing'.
 
     li_config = result->get_output_configuration( ).
-    li_config->set_exporting_parameter( name = 'GOTSTATE' value = lv_state ).
-    li_config->set_exporting_parameter( name = 'DD01V_WA' value = ls_dd01v ).
+    li_config->set_exporting_parameter(
+      name  = 'GOTSTATE'
+      value = lv_state ).
+    li_config->set_exporting_parameter(
+      name  = 'DD01V_WA'
+      value = ls_dd01v ).
 
   ENDMETHOD.
 ENDCLASS.

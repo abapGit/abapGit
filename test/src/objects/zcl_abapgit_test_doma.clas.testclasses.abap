@@ -18,14 +18,17 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD deserialize_serialize.
 
-    DATA ls_item       TYPE zif_abapgit_definitions=>ty_item.
-    DATA lo_doma       TYPE REF TO zif_abapgit_object.
-    DATA li_xml_in     TYPE REF TO zif_abapgit_xml_input.
-    DATA li_xml_out    TYPE REF TO zif_abapgit_xml_output.
-    DATA lv_xml        TYPE string.
-    DATA lv_act        TYPE string.
-    DATA lo_log        TYPE REF TO zif_abapgit_log.
+    DATA ls_item        TYPE zif_abapgit_definitions=>ty_item.
+    DATA lo_doma        TYPE REF TO zif_abapgit_object.
+    DATA li_xml_in      TYPE REF TO zif_abapgit_xml_input.
+    DATA li_xml_out     TYPE REF TO zif_abapgit_xml_output.
+    DATA lv_xml         TYPE string.
+    DATA lv_act         TYPE string.
+    DATA lo_log         TYPE REF TO zif_abapgit_log.
     DATA lo_i18n_params TYPE REF TO zcl_abapgit_i18n_params.
+    DATA li_xml_check   TYPE REF TO zif_abapgit_xml_input.
+    DATA ls_dd01v_act   TYPE dd01v.
+    DATA lt_dd07v_act   TYPE dd07v_tab.
 
     ls_item-obj_type = 'DOMA'.
     ls_item-obj_name = 'ZABAPGIT_TEST_DOMA'.
@@ -68,10 +71,6 @@ CLASS ltcl_test IMPLEMENTATION.
 
 ******************
 
-    DATA li_xml_check TYPE REF TO zif_abapgit_xml_input.
-    DATA ls_dd01v_act TYPE dd01v.
-    DATA lt_dd07v_act TYPE dd07v_tab.
-
     CREATE OBJECT li_xml_out TYPE zcl_abapgit_xml_output.
     lo_doma->serialize( li_xml_out ).
 
@@ -82,12 +81,24 @@ CLASS ltcl_test IMPLEMENTATION.
     li_xml_check->read( EXPORTING iv_name = 'DD01V'     CHANGING cg_data = ls_dd01v_act ).
     li_xml_check->read( EXPORTING iv_name = 'DD07V_TAB' CHANGING cg_data = lt_dd07v_act ).
 
-    cl_abap_unit_assert=>assert_equals( act = ls_dd01v_act-domname    exp = 'ZABAPGIT_TEST_DOMA' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_dd01v_act-ddlanguage exp = 'E' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_dd01v_act-datatype   exp = 'CHAR' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_dd01v_act-leng       exp = '000001' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_dd01v_act-outputlen  exp = '000001' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_dd01v_act-ddtext     exp = 'Testing' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_dd01v_act-domname
+      exp = 'ZABAPGIT_TEST_DOMA' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_dd01v_act-ddlanguage
+      exp = 'E' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_dd01v_act-datatype
+      exp = 'CHAR' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_dd01v_act-leng
+      exp = '000001' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_dd01v_act-outputlen
+      exp = '000001' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_dd01v_act-ddtext
+      exp = 'Testing' ).
     cl_abap_unit_assert=>assert_initial( lt_dd07v_act ).
 
   ENDMETHOD.

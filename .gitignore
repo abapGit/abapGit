@@ -14,3 +14,4 @@ list.txt
 /blob-report/
 /playwright/.cache/
 .DS_Store
+.claude
