@@ -19,6 +19,7 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION
         io_stage                 TYPE REF TO zcl_abapgit_stage OPTIONAL
         iv_check_variant         TYPE sci_chkv OPTIONAL
         iv_raise_when_no_results TYPE abap_bool DEFAULT abap_false
+        iv_followup_action       TYPE string DEFAULT c_actions-stage
       RETURNING
         VALUE(ri_page)           TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -30,6 +31,7 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION
         io_stage                 TYPE REF TO zcl_abapgit_stage OPTIONAL
         iv_check_variant         TYPE sci_chkv OPTIONAL
         iv_raise_when_no_results TYPE abap_bool DEFAULT abap_false
+        iv_followup_action       TYPE string DEFAULT c_actions-stage
       RAISING
         zcx_abapgit_exception.
 
@@ -37,7 +39,8 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION
   PRIVATE SECTION.
 
     DATA mo_stage         TYPE REF TO zcl_abapgit_stage.
-    DATA mv_check_variant TYPE sci_chkv.
+    DATA mv_check_variant    TYPE sci_chkv.
+    DATA mv_followup_action  TYPE string.
 
     METHODS:
       run_code_inspector
@@ -90,6 +93,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     mi_repo = ii_repo.
     mo_stage = io_stage.
     mv_check_variant = iv_check_variant.
+    mv_followup_action = iv_followup_action.
     determine_check_variant( ).
     run_code_inspector( ).
 
@@ -109,7 +113,8 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
         ii_repo                  = ii_repo
         io_stage                 = io_stage
         iv_check_variant         = iv_check_variant
-        iv_raise_when_no_results = iv_raise_when_no_results.
+        iv_raise_when_no_results = iv_raise_when_no_results
+        iv_followup_action       = iv_followup_action.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create( lo_component ).
 
@@ -205,6 +210,22 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
         ENDIF.
 
+      WHEN c_actions-patch.
+
+        IF is_stage_allowed( ) = abap_true.
+
+          rs_handled-page = zcl_abapgit_gui_page_patch=>create(
+            iv_key        = mi_repo->get_key( )
+            iv_sci_result = status( ) ).
+
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+
+        ELSE.
+
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+        ENDIF.
+
       WHEN c_actions-commit.
 
         li_repo_online ?= mi_repo.
@@ -241,9 +262,14 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
     ls_hotkey_action-ui_component = 'Code Inspector'.
 
-    ls_hotkey_action-description = |Stage|.
-    ls_hotkey_action-action = c_actions-stage.
-    ls_hotkey_action-hotkey = |s|.
+    ls_hotkey_action-action = mv_followup_action.
+    IF ls_hotkey_action-action = c_actions-patch.
+      ls_hotkey_action-description = |Patch|.
+      ls_hotkey_action-hotkey = |a|.
+    ELSE.
+      ls_hotkey_action-description = |Stage|.
+      ls_hotkey_action-hotkey = |s|.
+    ENDIF.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-description = |Re-Run|.
@@ -276,6 +302,13 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
       ro_toolbar->add(
         iv_txt = 'Commit'
         iv_act = c_actions-commit
+        iv_opt = lv_opt ).
+
+    ELSEIF mv_followup_action = c_actions-patch.
+
+      ro_toolbar->add(
+        iv_txt = 'Patch'
+        iv_act = c_actions-patch
         iv_opt = lv_opt ).
 
     ELSE.
