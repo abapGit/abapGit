@@ -1,11 +1,20 @@
 CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL CRITICAL FINAL.
 
   PRIVATE SECTION.
+    METHODS setup RAISING cx_static_check.
+    METHODS teardown RAISING cx_static_check.
     METHODS deserialize_serialize FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
 CLASS ltcl_test IMPLEMENTATION.
+  METHOD setup.
+    zcl_abapgit_inject_setup=>setup( ).
+  ENDMETHOD.
+
+  METHOD teardown.
+    zcl_abapgit_inject_setup=>teardown( ).
+  ENDMETHOD.
 
   METHOD deserialize_serialize.
 
