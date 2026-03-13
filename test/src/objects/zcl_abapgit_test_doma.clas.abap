@@ -1,0 +1,7 @@
+CLASS zcl_abapgit_test_doma DEFINITION PUBLIC.
+  PUBLIC SECTION.
+ENDCLASS.
+
+CLASS zcl_abapgit_test_doma IMPLEMENTATION.
+
+ENDCLASS.
