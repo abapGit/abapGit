@@ -3,7 +3,7 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL CRITICAL FINAL.
   PRIVATE SECTION.
     METHODS setup RAISING cx_static_check.
     METHODS teardown RAISING cx_static_check.
-    METHODS deserialize_serialize FOR TESTING RAISING cx_static_check.
+    METHODS deserialize_serialize_xml FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -16,7 +16,7 @@ CLASS ltcl_test IMPLEMENTATION.
     zcl_abapgit_inject_setup=>teardown( ).
   ENDMETHOD.
 
-  METHOD deserialize_serialize.
+  METHOD deserialize_serialize_xml.
 
     DATA ls_item        TYPE zif_abapgit_definitions=>ty_item.
     DATA lo_doma        TYPE REF TO zif_abapgit_object.
