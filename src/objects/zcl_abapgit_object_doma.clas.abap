@@ -592,7 +592,6 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
       " Note: Translation handling for AFF format not yet implemented
       " Translation files would be handled similar to INTF serialization
-
     ELSE.
       " XML serialization (existing behavior)
       io_xml->add( iv_name = 'DD01V'

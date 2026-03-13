@@ -374,6 +374,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     DATA ls_data_aff TYPE zif_abapgit_aff_doma_v1=>ty_main.
     DATA lo_doma_data TYPE REF TO lcl_doma_data.
     DATA lt_enum_mappings TYPE zcl_abapgit_json_handler=>ty_enum_mappings.
+    DATA lx_exception TYPE REF TO cx_root.
 
     CREATE OBJECT lo_doma_data.
     lo_doma_data->ms_dd01v = is_dd01v.
@@ -389,9 +390,14 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     lt_enum_mappings = get_enum_mappings( ).
 
     CREATE OBJECT lo_aff_handler.
-    rv_json = lo_aff_handler->serialize(
-      iv_data          = ls_data_aff
-      iv_enum_mappings = lt_enum_mappings ).
+
+    TRY.
+        rv_json = lo_aff_handler->serialize(
+          iv_data          = ls_data_aff
+          iv_enum_mappings = lt_enum_mappings ).
+      CATCH cx_root INTO lx_exception.
+        zcx_abapgit_exception=>raise_with_text( lx_exception ).
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -402,18 +408,24 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     DATA lo_doma_data TYPE REF TO lcl_doma_data.
     DATA lt_enum_mappings TYPE zcl_abapgit_json_handler=>ty_enum_mappings.
     DATA lv_json_string TYPE string.
+    DATA lx_exception TYPE REF TO cx_root.
 
     lt_enum_mappings = get_enum_mappings( ).
 
     lv_json_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_json ).
 
     CREATE OBJECT lo_json_handler.
-    lo_json_handler->deserialize(
-      EXPORTING
-        iv_content       = lv_json_string
-        iv_enum_mappings = lt_enum_mappings
-      IMPORTING
-        ev_data          = ls_data_aff ).
+
+    TRY.
+        lo_json_handler->deserialize(
+          EXPORTING
+            iv_content       = lv_json_string
+            iv_enum_mappings = lt_enum_mappings
+          IMPORTING
+            ev_data          = ls_data_aff ).
+      CATCH cx_root INTO lx_exception.
+        zcx_abapgit_exception=>raise_with_text( lx_exception ).
+    ENDTRY.
 
     CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
     lo_aff_mapper->to_abapgit(
