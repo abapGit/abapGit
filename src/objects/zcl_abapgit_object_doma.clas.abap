@@ -129,7 +129,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
   METHOD deserialize_texts.
 
     DATA: lv_name       TYPE ddobjname,
-          lv_valpos     TYPE valpos,
+          lv_valpos     TYPE dd07v-valpos,
           ls_dd01v_tmp  TYPE dd01v,
           lt_dd07v_tmp  TYPE TABLE OF dd07v,
           lt_i18n_langs TYPE TABLE OF langu,
