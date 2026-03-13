@@ -28,7 +28,6 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lo_i18n_params TYPE REF TO zcl_abapgit_i18n_params.
     DATA li_xml_check   TYPE REF TO zif_abapgit_xml_input.
     DATA ls_dd01v_act   TYPE dd01v.
-    DATA lt_dd07v_act   TYPE dd07v_tab.
 
     ls_item-obj_type = 'DOMA'.
     ls_item-obj_name = 'ZABAPGIT_TEST_DOMA'.
@@ -98,6 +97,10 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = ls_dd01v_act-ddtext
       exp = 'Testing' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_act
+      exp = lv_xml ).
 
   ENDMETHOD.
 
