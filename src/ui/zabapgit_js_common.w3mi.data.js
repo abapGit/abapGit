@@ -2526,6 +2526,7 @@ function displayBrowserControlFooter() {
  **********************************************************/
 
 // Prevents keyboard navigation to elements outside the modal popup
+// eslint-disable-next-line no-unused-vars
 function trapFocus() {
   const modal = document.getElementById("modal");
   if (!modal) return;
