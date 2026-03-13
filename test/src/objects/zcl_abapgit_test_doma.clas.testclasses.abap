@@ -48,6 +48,8 @@ CLASS ltcl_test IMPLEMENTATION.
       iv_transport = ''
       io_xml       = li_xml_in ).
 
+******************
+
     CREATE OBJECT li_xml_out TYPE zcl_abapgit_xml_output.
     lo_doma->serialize( li_xml_out ).
 
