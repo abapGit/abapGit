@@ -25,6 +25,7 @@
     "zcl_abapgit_object_devc",
     "zcl_abapgit_object_filter_obj",
     "zcl_abapgit_object_intf",
+    "zcl_abapgit_object_doma",
     "zcl_abapgit_object_zag",
     "zcl_abapgit_objects_bridge",
     "zcl_abapgit_objects_files",
