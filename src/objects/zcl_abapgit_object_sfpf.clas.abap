@@ -19,6 +19,9 @@ CLASS zcl_abapgit_object_sfpf DEFINITION
     CONSTANTS c_layout_file_ext TYPE string VALUE 'xdp'.
 
     METHODS:
+      check_ads_connection
+        RAISING
+          zcx_abapgit_exception,
       load
         RETURNING VALUE(ri_wb_form) TYPE REF TO if_fp_wb_form
         RAISING   zcx_abapgit_exception,
@@ -31,7 +34,6 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
-
 
   METHOD fix_oref.
 
@@ -214,6 +216,24 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD check_ads_connection.
+
+    DATA lv_version TYPE string.
+
+    TRY.
+        lv_version = cl_fp=>get_reference(
+            )->create_pdf_object( connection = cl_fp=>get_ads_connection( )
+            )->get_version_info( ).
+        IF lv_version IS INITIAL.
+          zcx_abapgit_exception=>raise( 'SFPF: ADS connection not configured' ).
+        ENDIF.
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( 'SFPF: ADS connection not configured' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_xstr      TYPE xstring,
@@ -223,6 +243,7 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
           li_form      TYPE REF TO if_fp_form,
           lx_fp_err    TYPE REF TO cx_fp_api.
 
+    check_ads_connection( ).
 
     lv_name = ms_item-obj_name.
     lv_xstr = cl_ixml_80_20=>render_to_xstring( io_xml->get_raw( ) ).

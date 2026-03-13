@@ -124,6 +124,9 @@ CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
         ls_file-data = convert_itab_to_json(
           ir_data         = lr_data
           iv_skip_initial = ls_config-skip_initial ).
+        IF ls_file-data IS INITIAL.
+          ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( '[]' ).
+        ENDIF.
       ELSE.
         ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( '[]' ).
       ENDIF.

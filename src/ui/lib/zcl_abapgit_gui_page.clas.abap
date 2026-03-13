@@ -511,7 +511,9 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     ri_html->add( '<div class="not_sticky">' ).
 
+    ri_html->add( '<div id="main">' ).
     ri_html->add( render_content( ) ). " TODO -> render child
+    ri_html->add( '</div>' ).
 
     ri_html->add( render_hotkey_overview( ) ).
     ri_html->add( render_error_message_box( ) ).
