@@ -18,6 +18,7 @@ CLASS zcl_abapgit_inject_fm IMPLEMENTATION.
     DATA lt_deps    TYPE if_function_test_environment=>tt_function_dependencies.
     DATA lv_dep     LIKE LINE OF lt_deps.
     DATA lo_handler TYPE REF TO zcl_abapgit_inject_fm.
+    DATA lo_doma_put_handler TYPE REF TO zcl_abapgit_fm_ddif_doma_put.
 
 
     INSERT 'ENQUEUE_EZABAPGIT' INTO TABLE lt_deps.
@@ -25,11 +26,17 @@ CLASS zcl_abapgit_inject_fm IMPLEMENTATION.
     INSERT 'SAPGUI_PROGRESS_INDICATOR' INTO TABLE lt_deps.
     INSERT 'TR_OBJECT_TABLE' INTO TABLE lt_deps.
     INSERT 'SEO_INTERFACE_IMPLEM_GET_ALL' INTO TABLE lt_deps.
+    INSERT 'DDIF_DOMA_PUT' INTO TABLE lt_deps.
     gi_env = cl_function_test_environment=>create( lt_deps ).
 
     CREATE OBJECT lo_handler.
+    CREATE OBJECT lo_doma_put_handler.
     LOOP AT lt_deps INTO lv_dep.
-      gi_env->get_double( lv_dep )->configure_call( )->ignore_all_parameters( )->then_answer( lo_handler ).
+      IF lv_dep = 'DDIF_DOMA_PUT'.
+        gi_env->get_double( lv_dep )->configure_call( )->ignore_all_parameters( )->then_answer( lo_doma_put_handler ).
+      ELSE.
+        gi_env->get_double( lv_dep )->configure_call( )->ignore_all_parameters( )->then_answer( lo_handler ).
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
