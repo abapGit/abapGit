@@ -37,12 +37,6 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     TYPES:
       ty_dd07_texts TYPE STANDARD TABLE OF ty_dd07_text .
 
-    " Fields that are not part of dd01v
-    TYPES:
-      BEGIN OF ty_extra,
-        abap_language_version TYPE c LENGTH 1,
-      END OF ty_extra.
-
     CONSTANTS c_longtext_id_doma TYPE dokil-id VALUE 'DO' ##NO_TEXT.
 
     METHODS serialize_texts
@@ -85,13 +79,14 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
   METHOD constructor.
 
+    DATA li_aff_registry TYPE REF TO zif_abapgit_aff_registry.
+
     super->constructor(
       is_item        = is_item
       iv_language    = iv_language
       io_files       = io_files
       io_i18n_params = io_i18n_params ).
 
-    DATA li_aff_registry TYPE REF TO zif_abapgit_aff_registry.
     CREATE OBJECT li_aff_registry TYPE zcl_abapgit_aff_registry.
     mv_aff_enabled = li_aff_registry->is_supported_object_type( 'DOMA' ).
 
@@ -530,7 +525,6 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     DATA: lv_name    TYPE ddobjname,
           lv_state   TYPE ddgotstate,
           ls_dd01v   TYPE dd01v,
-          ls_extra   TYPE ty_extra,
           lv_masklen TYPE c LENGTH 4,
           lt_dd07v   TYPE TABLE OF dd07v,
           lv_json    TYPE xstring.

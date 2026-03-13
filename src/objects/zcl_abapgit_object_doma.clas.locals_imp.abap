@@ -1,8 +1,8 @@
 
 CLASS lcl_doma_data DEFINITION.
   PUBLIC SECTION.
-    DATA dd01v TYPE dd01v.
-    DATA dd07v TYPE dd07v_tab.
+    DATA ms_dd01v TYPE dd01v.
+    DATA ms_dd07v TYPE dd07v_tab.
 ENDCLASS.
 
 CLASS lcl_doma_data IMPLEMENTATION.
@@ -18,10 +18,10 @@ CLASS lcl_aff_type_mapping DEFINITION.
         IMPORTING
           iv_ddic_type       TYPE dd01v-datatype
         RETURNING
-          VALUE(rv_aff_type) TYPE string,
+          VALUE(rv_aff_type) TYPE zif_abapgit_aff_doma_v1=>ty_data_type,
       map_data_type_to_ddic
         IMPORTING
-          iv_aff_type         TYPE char04
+          iv_aff_type         TYPE zif_abapgit_aff_doma_v1=>ty_data_type
         RETURNING
           VALUE(rv_ddic_type) TYPE dd01v-datatype.
 ENDCLASS.
@@ -31,6 +31,11 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
   METHOD zif_abapgit_aff_type_mapping~to_aff.
     DATA lo_doma_data TYPE REF TO lcl_doma_data.
     DATA ls_data_aff TYPE zif_abapgit_aff_doma_v1=>ty_main.
+
+    " Map fixed values and intervals
+    FIELD-SYMBOLS <ls_dd07v> TYPE dd07v.
+    DATA ls_single_value TYPE zif_abapgit_aff_doma_v1=>ty_single_value.
+    DATA ls_interval_value TYPE zif_abapgit_aff_doma_v1=>ty_intervals_value.
 
     " Convert input data to DOMA structure
     TRY.
@@ -44,42 +49,37 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     ls_data_aff-format_version = '1'.
 
     " Map header
-    ls_data_aff-header-description = lo_doma_data->dd01v-ddtext.
-    ls_data_aff-header-original_language = lo_doma_data->dd01v-ddlanguage.
+    ls_data_aff-header-description = lo_doma_data->ms_dd01v-ddtext.
+    ls_data_aff-header-original_language = lo_doma_data->ms_dd01v-ddlanguage.
     ls_data_aff-header-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
 
     " Map format
-    ls_data_aff-format-data_type = map_data_type_to_aff( lo_doma_data->dd01v-datatype ).
-    ls_data_aff-format-length = lo_doma_data->dd01v-leng.
-    IF lo_doma_data->dd01v-decimals IS NOT INITIAL.
-      ls_data_aff-format-decimals = lo_doma_data->dd01v-decimals.
+    ls_data_aff-format-data_type = map_data_type_to_aff( lo_doma_data->ms_dd01v-datatype ).
+    ls_data_aff-format-length = lo_doma_data->ms_dd01v-leng.
+    IF lo_doma_data->ms_dd01v-decimals IS NOT INITIAL.
+      ls_data_aff-format-decimals = lo_doma_data->ms_dd01v-decimals.
     ENDIF.
 
     " Map output characteristics
-    IF lo_doma_data->dd01v-outputlen IS NOT INITIAL
-        OR lo_doma_data->dd01v-convexit IS NOT INITIAL
-        OR lo_doma_data->dd01v-lowercase IS NOT INITIAL
-        OR lo_doma_data->dd01v-signflag IS NOT INITIAL.
-      IF lo_doma_data->dd01v-outputlen IS NOT INITIAL.
-        ls_data_aff-output_characteristics-length = lo_doma_data->dd01v-outputlen.
+    IF lo_doma_data->ms_dd01v-outputlen IS NOT INITIAL
+        OR lo_doma_data->ms_dd01v-convexit IS NOT INITIAL
+        OR lo_doma_data->ms_dd01v-lowercase IS NOT INITIAL
+        OR lo_doma_data->ms_dd01v-signflag IS NOT INITIAL.
+      IF lo_doma_data->ms_dd01v-outputlen IS NOT INITIAL.
+        ls_data_aff-output_characteristics-length = lo_doma_data->ms_dd01v-outputlen.
       ENDIF.
-      IF lo_doma_data->dd01v-convexit IS NOT INITIAL.
-        ls_data_aff-output_characteristics-conversion_routine = lo_doma_data->dd01v-convexit.
+      IF lo_doma_data->ms_dd01v-convexit IS NOT INITIAL.
+        ls_data_aff-output_characteristics-conversion_routine = lo_doma_data->ms_dd01v-convexit.
       ENDIF.
-      IF lo_doma_data->dd01v-lowercase IS NOT INITIAL.
+      IF lo_doma_data->ms_dd01v-lowercase IS NOT INITIAL.
         ls_data_aff-output_characteristics-case_sensitive = abap_true.
       ENDIF.
-      IF lo_doma_data->dd01v-signflag IS NOT INITIAL.
+      IF lo_doma_data->ms_dd01v-signflag IS NOT INITIAL.
         ls_data_aff-output_characteristics-negative_values = abap_true.
       ENDIF.
     ENDIF.
 
-    " Map fixed values and intervals
-    FIELD-SYMBOLS <ls_dd07v> TYPE dd07v.
-    DATA ls_single_value TYPE zif_abapgit_aff_doma_v1=>ty_single_value.
-    DATA ls_interval_value TYPE zif_abapgit_aff_doma_v1=>ty_intervals_value.
-
-    LOOP AT lo_doma_data->dd07v ASSIGNING <ls_dd07v>.
+    LOOP AT lo_doma_data->ms_dd07v ASSIGNING <ls_dd07v>.
       IF <ls_dd07v>-domvalue_l = <ls_dd07v>-domvalue_h.
         " Single value
         ls_single_value-fixed_value = <ls_dd07v>-domvalue_l.
@@ -95,8 +95,8 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     ENDLOOP.
 
     " Map value table
-    IF lo_doma_data->dd01v-entitytab IS NOT INITIAL.
-      ls_data_aff-value_table-name = lo_doma_data->dd01v-entitytab.
+    IF lo_doma_data->ms_dd01v-entitytab IS NOT INITIAL.
+      ls_data_aff-value_table-name = lo_doma_data->ms_dd01v-entitytab.
     ENDIF.
 
     es_data = ls_data_aff.
@@ -107,67 +107,68 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     DATA lo_doma_data TYPE REF TO lcl_doma_data.
     DATA ls_dd07v TYPE dd07v.
     DATA lv_valpos TYPE i.
+    FIELD-SYMBOLS <ls_single_value> TYPE zif_abapgit_aff_doma_v1=>ty_single_value.
+    FIELD-SYMBOLS <ls_interval_value> TYPE zif_abapgit_aff_doma_v1=>ty_intervals_value.
 
     ls_data_aff = iv_data.
 
     CREATE OBJECT lo_doma_data.
 
     " Map header
-    lo_doma_data->dd01v-domname = to_upper( iv_object_name ).
-    lo_doma_data->dd01v-ddtext = ls_data_aff-header-description.
-    lo_doma_data->dd01v-ddlanguage = ls_data_aff-header-original_language.
+    lo_doma_data->ms_dd01v-domname = to_upper( iv_object_name ).
+    lo_doma_data->ms_dd01v-ddtext = ls_data_aff-header-description.
+    lo_doma_data->ms_dd01v-ddlanguage = ls_data_aff-header-original_language.
 
     " Map format
-    lo_doma_data->dd01v-datatype = map_data_type_to_ddic( ls_data_aff-format-data_type ).
-    lo_doma_data->dd01v-leng = ls_data_aff-format-length.
-    lo_doma_data->dd01v-decimals = ls_data_aff-format-decimals.
+    lo_doma_data->ms_dd01v-datatype = map_data_type_to_ddic( ls_data_aff-format-data_type ).
+    lo_doma_data->ms_dd01v-leng = ls_data_aff-format-length.
+    lo_doma_data->ms_dd01v-decimals = ls_data_aff-format-decimals.
 
     " Map output characteristics
     IF ls_data_aff-output_characteristics-length IS NOT INITIAL.
-      lo_doma_data->dd01v-outputlen = ls_data_aff-output_characteristics-length.
+      lo_doma_data->ms_dd01v-outputlen = ls_data_aff-output_characteristics-length.
     ENDIF.
     IF ls_data_aff-output_characteristics-conversion_routine IS NOT INITIAL.
-      lo_doma_data->dd01v-convexit = ls_data_aff-output_characteristics-conversion_routine.
+      lo_doma_data->ms_dd01v-convexit = ls_data_aff-output_characteristics-conversion_routine.
     ENDIF.
     IF ls_data_aff-output_characteristics-case_sensitive = abap_true.
-      lo_doma_data->dd01v-lowercase = abap_true.
+      lo_doma_data->ms_dd01v-lowercase = abap_true.
     ENDIF.
     IF ls_data_aff-output_characteristics-negative_values = abap_true.
-      lo_doma_data->dd01v-signflag = abap_true.
+      lo_doma_data->ms_dd01v-signflag = abap_true.
     ENDIF.
 
     " Map fixed values
     lv_valpos = 1.
-    FIELD-SYMBOLS <ls_single_value> TYPE zif_abapgit_aff_doma_v1=>ty_single_value.
+
     LOOP AT ls_data_aff-fixed_values ASSIGNING <ls_single_value>.
       CLEAR ls_dd07v.
-      ls_dd07v-domname = lo_doma_data->dd01v-domname.
+      ls_dd07v-domname = lo_doma_data->ms_dd01v-domname.
       ls_dd07v-valpos = lv_valpos.
       ls_dd07v-domvalue_l = <ls_single_value>-fixed_value.
       ls_dd07v-domvalue_h = <ls_single_value>-fixed_value.
       ls_dd07v-ddtext = <ls_single_value>-description.
-      ls_dd07v-ddlanguage = lo_doma_data->dd01v-ddlanguage.
-      APPEND ls_dd07v TO lo_doma_data->dd07v.
+      ls_dd07v-ddlanguage = lo_doma_data->ms_dd01v-ddlanguage.
+      APPEND ls_dd07v TO lo_doma_data->ms_dd07v.
       lv_valpos = lv_valpos + 1.
     ENDLOOP.
 
     " Map fixed value intervals
-    FIELD-SYMBOLS <ls_interval_value> TYPE zif_abapgit_aff_doma_v1=>ty_intervals_value.
     LOOP AT ls_data_aff-fixed_value_intervals ASSIGNING <ls_interval_value>.
       CLEAR ls_dd07v.
-      ls_dd07v-domname = lo_doma_data->dd01v-domname.
+      ls_dd07v-domname = lo_doma_data->ms_dd01v-domname.
       ls_dd07v-valpos = lv_valpos.
       ls_dd07v-domvalue_l = <ls_interval_value>-low_limit.
       ls_dd07v-domvalue_h = <ls_interval_value>-high_limit.
       ls_dd07v-ddtext = <ls_interval_value>-description.
-      ls_dd07v-ddlanguage = lo_doma_data->dd01v-ddlanguage.
-      APPEND ls_dd07v TO lo_doma_data->dd07v.
+      ls_dd07v-ddlanguage = lo_doma_data->ms_dd01v-ddlanguage.
+      APPEND ls_dd07v TO lo_doma_data->ms_dd07v.
       lv_valpos = lv_valpos + 1.
     ENDLOOP.
 
     " Map value table
     IF ls_data_aff-value_table-name IS NOT INITIAL.
-      lo_doma_data->dd01v-entitytab = ls_data_aff-value_table-name.
+      lo_doma_data->ms_dd01v-entitytab = ls_data_aff-value_table-name.
     ENDIF.
 
     es_data = lo_doma_data.
@@ -375,8 +376,8 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     DATA lt_enum_mappings TYPE zcl_abapgit_json_handler=>ty_enum_mappings.
 
     CREATE OBJECT lo_doma_data.
-    lo_doma_data->dd01v = is_dd01v.
-    lo_doma_data->dd07v = it_dd07v.
+    lo_doma_data->ms_dd01v = is_dd01v.
+    lo_doma_data->ms_dd07v = it_dd07v.
 
     CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
     lo_aff_mapper->to_aff(
@@ -422,8 +423,8 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
       IMPORTING
         es_data        = lo_doma_data ).
 
-    es_dd01v = lo_doma_data->dd01v.
-    et_dd07v = lo_doma_data->dd07v.
+    es_dd01v = lo_doma_data->ms_dd01v.
+    et_dd07v = lo_doma_data->ms_dd07v.
 
   ENDMETHOD.
 
