@@ -37,6 +37,12 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     TYPES:
       ty_dd07_texts TYPE STANDARD TABLE OF ty_dd07_text .
 
+    " Fields that are not part of dd01v
+    TYPES:
+      BEGIN OF ty_extra,
+        abap_language_version TYPE c LENGTH 1,
+      END OF ty_extra.
+
     CONSTANTS c_longtext_id_doma TYPE dokil-id VALUE 'DO' ##NO_TEXT.
 
     METHODS serialize_texts
@@ -369,6 +375,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     DATA: lv_name  TYPE ddobjname,
           lv_done  TYPE abap_bool,
           ls_dd01v TYPE dd01v,
+          ls_extra TYPE ty_extra,
           lt_dd07v TYPE TABLE OF dd07v,
           lv_json  TYPE xstring.
 
@@ -434,6 +441,18 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
         OTHERS            = 6.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    IF mv_aff_enabled = abap_false.
+      io_xml->read( EXPORTING iv_name = 'DD01L_EXTRA'
+                    CHANGING  cg_data = ls_extra ).
+
+      TRY.
+          set_abap_language_version( CHANGING cv_abap_language_version = ls_extra-abap_language_version ).
+
+          UPDATE ('DD01L') SET abap_language_version = ls_extra-abap_language_version WHERE domname = lv_name.
+        CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
+      ENDTRY.
     ENDIF.
 
     IF mv_aff_enabled = abap_true.
@@ -520,6 +539,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     DATA: lv_name    TYPE ddobjname,
           lv_state   TYPE ddgotstate,
           ls_dd01v   TYPE dd01v,
+          ls_extra   TYPE ty_extra,
           lv_masklen TYPE c LENGTH 4,
           lt_dd07v   TYPE TABLE OF dd07v,
           lv_json    TYPE xstring.
@@ -598,6 +618,11 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
                    ig_data = ls_dd01v ).
       io_xml->add( iv_name = 'DD07V_TAB'
                    ig_data = lt_dd07v ).
+
+      ls_extra-abap_language_version = get_abap_language_version( ).
+
+      io_xml->add( iv_name = 'DD01L_EXTRA'
+                   ig_data = ls_extra ).
 
       IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
         serialize_texts(
