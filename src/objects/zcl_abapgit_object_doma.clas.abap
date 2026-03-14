@@ -2,8 +2,20 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
+
+    METHODS constructor
+      IMPORTING
+        is_item        TYPE zif_abapgit_definitions=>ty_item
+        iv_language    TYPE spras
+        io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    DATA mv_aff_enabled TYPE abap_bool.
 
     TYPES:
       BEGIN OF ty_dd01_text,
@@ -71,6 +83,22 @@ ENDCLASS.
 CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
 
+  METHOD constructor.
+
+    DATA li_aff_registry TYPE REF TO zif_abapgit_aff_registry.
+
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
+
+    CREATE OBJECT li_aff_registry TYPE zcl_abapgit_aff_registry.
+    mv_aff_enabled = li_aff_registry->is_supported_object_type( 'DOMA' ).
+
+  ENDMETHOD.
+
+
   METHOD adjust_exit.
 
     DATA lv_function TYPE funcname.
@@ -107,7 +135,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
   METHOD deserialize_texts.
 
     DATA: lv_name       TYPE ddobjname,
-          lv_valpos     TYPE valpos,
+          lv_valpos     TYPE dd07v-valpos,
           ls_dd01v_tmp  TYPE dd01v,
           lt_dd07v_tmp  TYPE TABLE OF dd07v,
           lt_i18n_langs TYPE TABLE OF langu,
@@ -348,14 +376,34 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
           lv_done  TYPE abap_bool,
           ls_dd01v TYPE dd01v,
           ls_extra TYPE ty_extra,
-          lt_dd07v TYPE TABLE OF dd07v.
+          lt_dd07v TYPE TABLE OF dd07v,
+          lv_json  TYPE xstring.
 
     FIELD-SYMBOLS <ls_dd07v> TYPE dd07v.
 
-    io_xml->read( EXPORTING iv_name = 'DD01V'
-                  CHANGING  cg_data = ls_dd01v ).
-    io_xml->read( EXPORTING iv_name = 'DD07V_TAB'
-                  CHANGING  cg_data = lt_dd07v ).
+    IF mv_aff_enabled = abap_true.
+      " AFF/JSON deserialization
+      TRY.
+          lv_json = mo_files->read_raw( 'json' ).
+        CATCH zcx_abapgit_exception.
+      ENDTRY.
+    ENDIF.
+
+    IF lv_json IS NOT INITIAL.
+      lcl_aff_metadata_handler=>deserialize(
+        EXPORTING
+          iv_json        = lv_json
+          iv_object_name = ms_item-obj_name
+        IMPORTING
+          es_dd01v       = ls_dd01v
+          et_dd07v       = lt_dd07v ).
+    ELSE.
+      " If JSON file not found, fall back to XML
+      io_xml->read( EXPORTING iv_name = 'DD01V'
+                        CHANGING  cg_data = ls_dd01v ).
+      io_xml->read( EXPORTING iv_name = 'DD07V_TAB'
+                        CHANGING  cg_data = lt_dd07v ).
+    ENDIF.
 
     handle_dependencies(
       EXPORTING
@@ -395,26 +443,32 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    " Fields that are not part of dd01v
-    io_xml->read( EXPORTING iv_name = 'DD01L_EXTRA'
-                  CHANGING  cg_data = ls_extra ).
+    IF mv_aff_enabled = abap_false.
+      io_xml->read( EXPORTING iv_name = 'DD01L_EXTRA'
+                    CHANGING  cg_data = ls_extra ).
 
-    TRY.
-        set_abap_language_version( CHANGING cv_abap_language_version = ls_extra-abap_language_version ).
+      TRY.
+          set_abap_language_version( CHANGING cv_abap_language_version = ls_extra-abap_language_version ).
 
-        UPDATE ('DD01L') SET abap_language_version = ls_extra-abap_language_version WHERE domname = lv_name.
-      CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
-    ENDTRY.
-
-    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
-      deserialize_texts(
-        ii_xml   = io_xml
-        is_dd01v = ls_dd01v
-        it_dd07v = lt_dd07v ).
+          UPDATE ('DD01L') SET abap_language_version = ls_extra-abap_language_version WHERE domname = lv_name.
+        CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
+      ENDTRY.
     ENDIF.
 
-    deserialize_longtexts( ii_xml         = io_xml
-                           iv_longtext_id = c_longtext_id_doma ).
+    IF mv_aff_enabled = abap_true.
+      " Note: Translation handling for AFF format not yet implemented
+      " Translation files would be handled similar to INTF deserialization
+    ELSE.
+      IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
+        deserialize_texts(
+          ii_xml   = io_xml
+          is_dd01v = ls_dd01v
+          it_dd07v = lt_dd07v ).
+      ENDIF.
+
+      deserialize_longtexts( ii_xml         = io_xml
+                             iv_longtext_id = c_longtext_id_doma ).
+    ENDIF.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
@@ -487,7 +541,8 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
           ls_dd01v   TYPE dd01v,
           ls_extra   TYPE ty_extra,
           lv_masklen TYPE c LENGTH 4,
-          lt_dd07v   TYPE TABLE OF dd07v.
+          lt_dd07v   TYPE TABLE OF dd07v,
+          lv_json    TYPE xstring.
 
     FIELD-SYMBOLS <ls_dd07v> TYPE dd07v.
     FIELD-SYMBOLS <lg_field> TYPE any.
@@ -545,24 +600,39 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       CLEAR <ls_dd07v>-domname.
     ENDLOOP.
 
-    io_xml->add( iv_name = 'DD01V'
-                 ig_data = ls_dd01v ).
-    io_xml->add( iv_name = 'DD07V_TAB'
-                 ig_data = lt_dd07v ).
-
-    ls_extra-abap_language_version = get_abap_language_version( ).
-
-    io_xml->add( iv_name = 'DD01L_EXTRA'
-                 ig_data = ls_extra ).
-
-    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
-      serialize_texts(
-        ii_xml   = io_xml
+    IF mv_aff_enabled = abap_true.
+      " AFF/JSON serialization
+      lv_json = lcl_aff_metadata_handler=>serialize(
+        is_dd01v = ls_dd01v
         it_dd07v = lt_dd07v ).
-    ENDIF.
 
-    serialize_longtexts( ii_xml         = io_xml
-                         iv_longtext_id = c_longtext_id_doma ).
+      mo_files->add_raw(
+        iv_ext  = 'json'
+        iv_data = lv_json ).
+
+      " Note: Translation handling for AFF format not yet implemented
+      " Translation files would be handled similar to INTF serialization
+    ELSE.
+      " XML serialization (existing behavior)
+      io_xml->add( iv_name = 'DD01V'
+                   ig_data = ls_dd01v ).
+      io_xml->add( iv_name = 'DD07V_TAB'
+                   ig_data = lt_dd07v ).
+
+      ls_extra-abap_language_version = get_abap_language_version( ).
+
+      io_xml->add( iv_name = 'DD01L_EXTRA'
+                   ig_data = ls_extra ).
+
+      IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
+        serialize_texts(
+          ii_xml   = io_xml
+          it_dd07v = lt_dd07v ).
+      ENDIF.
+
+      serialize_longtexts( ii_xml         = io_xml
+                           iv_longtext_id = c_longtext_id_doma ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
