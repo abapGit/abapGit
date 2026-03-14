@@ -145,6 +145,8 @@ CLASS ltcl_test_aff IMPLEMENTATION.
     DATA lo_files       TYPE REF TO zcl_abapgit_objects_files.
     DATA lt_files       TYPE zif_abapgit_git_definitions=>ty_files_tt.
     DATA lv_json        TYPE string.
+    DATA lv_exp         TYPE string.
+    DATA lv_is_equal    TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_file> LIKE LINE OF lt_files.
 
@@ -202,17 +204,30 @@ CLASS ltcl_test_aff IMPLEMENTATION.
       EXIT.
     ENDLOOP.
 
-    cl_abap_unit_assert=>assert_not_initial( lv_json ).
+    lv_exp = `{` && cl_abap_char_utilities=>newline &&
+             `  "formatVersion": "1",` && cl_abap_char_utilities=>newline &&
+             `  "header": {` && cl_abap_char_utilities=>newline &&
+             `    "description": "Testing",` && cl_abap_char_utilities=>newline &&
+             `    "originalLanguage": "en"` && cl_abap_char_utilities=>newline &&
+             `  },` && cl_abap_char_utilities=>newline &&
+             `  "format": {` && cl_abap_char_utilities=>newline &&
+             `    "dataType": "CHAR",` && cl_abap_char_utilities=>newline &&
+             `    "length": 1,` && cl_abap_char_utilities=>newline &&
+             `    "decimals": 0` && cl_abap_char_utilities=>newline &&
+             `  },` && cl_abap_char_utilities=>newline &&
+             `  "outputCharacteristics": {` && cl_abap_char_utilities=>newline &&
+             `    "style": "00",` && cl_abap_char_utilities=>newline &&
+             `    "length": 1` && cl_abap_char_utilities=>newline &&
+             `  }` && cl_abap_char_utilities=>newline &&
+             `}` && cl_abap_char_utilities=>newline.
 
-    FIND FIRST OCCURRENCE OF 'Testing' IN lv_json.
-    cl_abap_unit_assert=>assert_equals(
-      act = sy-subrc
-      exp = 0 ).
+    lv_is_equal = zcl_abapgit_ajson_utilities=>new( )->is_equal(
+      iv_json_a = lv_json
+      iv_json_b = lv_exp ).
 
-    FIND FIRST OCCURRENCE OF 'CHAR' IN lv_json.
     cl_abap_unit_assert=>assert_equals(
-      act = sy-subrc
-      exp = 0 ).
+      act = lv_is_equal
+      exp = abap_true ).
 
   ENDMETHOD.
 
