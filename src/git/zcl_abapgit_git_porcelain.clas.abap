@@ -84,6 +84,11 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         VALUE(rt_expanded) TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS filter_expanded
+      IMPORTING
+        !it_wanted_files TYPE string_table
+      CHANGING
+        !ct_expanded     TYPE zif_abapgit_git_definitions=>ty_expanded_tt .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -128,11 +133,6 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         VALUE(rt_files) TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception.
-    CLASS-METHODS filter_expanded
-      IMPORTING
-        !it_wanted_files TYPE string_table
-      CHANGING
-        !ct_expanded     TYPE zif_abapgit_git_definitions=>ty_expanded_tt .
     CLASS-METHODS walk
       IMPORTING
         !it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
