@@ -375,6 +375,8 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     DATA lo_doma_data TYPE REF TO lcl_doma_data.
     DATA lt_enum_mappings TYPE zcl_abapgit_json_handler=>ty_enum_mappings.
     DATA lx_exception TYPE REF TO cx_root.
+    DATA lt_skip_paths TYPE zcl_abapgit_json_handler=>ty_skip_paths.
+    DATA ls_skip_path  TYPE zcl_abapgit_json_handler=>ty_path_value_pair.
 
     CREATE OBJECT lo_doma_data.
     lo_doma_data->ms_dd01v = is_dd01v.
@@ -389,12 +391,20 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
 
     lt_enum_mappings = get_enum_mappings( ).
 
+    ls_skip_path-path  = '/format/decimals'.
+    ls_skip_path-value = '0'.
+    APPEND ls_skip_path TO lt_skip_paths.
+    ls_skip_path-path  = '/outputCharacteristics/style'.
+    ls_skip_path-value = '00'.
+    APPEND ls_skip_path TO lt_skip_paths.
+
     CREATE OBJECT lo_aff_handler.
 
     TRY.
         rv_json = lo_aff_handler->serialize(
           iv_data          = ls_data_aff
-          iv_enum_mappings = lt_enum_mappings ).
+          iv_enum_mappings = lt_enum_mappings
+          iv_skip_paths    = lt_skip_paths ).
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.

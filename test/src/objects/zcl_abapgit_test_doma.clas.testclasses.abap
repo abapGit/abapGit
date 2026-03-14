@@ -212,11 +212,9 @@ CLASS ltcl_test_aff IMPLEMENTATION.
              `  },` && cl_abap_char_utilities=>newline &&
              `  "format": {` && cl_abap_char_utilities=>newline &&
              `    "dataType": "CHAR",` && cl_abap_char_utilities=>newline &&
-             `    "length": 1,` && cl_abap_char_utilities=>newline &&
-             `    "decimals": 0` && cl_abap_char_utilities=>newline &&
+             `    "length": 1` && cl_abap_char_utilities=>newline &&
              `  },` && cl_abap_char_utilities=>newline &&
              `  "outputCharacteristics": {` && cl_abap_char_utilities=>newline &&
-             `    "style": "00",` && cl_abap_char_utilities=>newline &&
              `    "length": 1` && cl_abap_char_utilities=>newline &&
              `  }` && cl_abap_char_utilities=>newline &&
              `}` && cl_abap_char_utilities=>newline.
