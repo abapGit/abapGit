@@ -24,6 +24,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         !iv_url          TYPE string
         !iv_branch_name  TYPE string
         !iv_deepen_level TYPE i DEFAULT 1
+        !it_wanted_files TYPE string_table OPTIONAL
       RETURNING
         VALUE(rs_result) TYPE ty_pull_result
       RAISING
@@ -33,6 +34,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         !iv_url          TYPE string
         !iv_commit_hash  TYPE zif_abapgit_git_definitions=>ty_sha1
         !iv_deepen_level TYPE i DEFAULT 1
+        !it_wanted_files TYPE string_table OPTIONAL
       RETURNING
         VALUE(rs_result) TYPE ty_pull_result
       RAISING
@@ -119,12 +121,18 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         VALUE(rt_folders) TYPE ty_folders_tt .
     CLASS-METHODS pull
       IMPORTING
-        !iv_commit      TYPE zif_abapgit_git_definitions=>ty_sha1
-        !it_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
+        !iv_commit       TYPE zif_abapgit_git_definitions=>ty_sha1
+        !it_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
+        !it_wanted_files TYPE string_table OPTIONAL
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception.
+    CLASS-METHODS filter_expanded
+      IMPORTING
+        !it_wanted_files TYPE string_table
+      CHANGING
+        !ct_expanded     TYPE zif_abapgit_git_definitions=>ty_expanded_tt .
     CLASS-METHODS walk
       IMPORTING
         !it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
@@ -496,8 +504,13 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
   METHOD pull.
 
-    DATA: ls_object TYPE zif_abapgit_definitions=>ty_object,
-          ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA: ls_object   TYPE zif_abapgit_definitions=>ty_object,
+          ls_commit   TYPE zcl_abapgit_git_pack=>ty_commit,
+          lt_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt,
+          ls_blob     TYPE zif_abapgit_definitions=>ty_object,
+          ls_file     LIKE LINE OF rt_files.
+
+    FIELD-SYMBOLS: <ls_exp> LIKE LINE OF lt_expanded.
 
     READ TABLE it_objects INTO ls_object
       WITH KEY type COMPONENTS
@@ -510,10 +523,38 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     ls_commit = zcl_abapgit_git_pack=>decode_commit( ls_object-data ).
 
-    walk( EXPORTING it_objects = it_objects
-                    iv_sha1    = ls_commit-tree
-                    iv_path    = '/'
-          CHANGING  ct_files   = rt_files ).
+    IF it_wanted_files IS INITIAL.
+      " No filter → full walk using objects already in pack
+      walk( EXPORTING it_objects = it_objects
+                      iv_sha1    = ls_commit-tree
+                      iv_path    = '/'
+            CHANGING  ct_files   = rt_files ).
+      RETURN.
+    ENDIF.
+
+    " Phase 2: build expanded tree locally — trees already in it_objects from upload_pack
+    lt_expanded = full_tree( it_objects = it_objects
+                             iv_parent  = iv_commit ).
+
+    " Filter to only the requested files
+    filter_expanded( EXPORTING it_wanted_files = it_wanted_files
+                     CHANGING  ct_expanded     = lt_expanded ).
+
+    " Phase 3: read blob content from it_objects — already downloaded by upload_pack
+    LOOP AT lt_expanded ASSIGNING <ls_exp>.
+      READ TABLE it_objects INTO ls_blob
+        WITH KEY type COMPONENTS
+          type = zif_abapgit_git_definitions=>c_type-blob
+          sha1 = <ls_exp>-sha1.
+      CLEAR ls_file.
+      ls_file-path     = <ls_exp>-path.
+      ls_file-filename = <ls_exp>-name.
+      IF sy-subrc = 0.
+        ls_file-data = ls_blob-data.
+        ls_file-sha1 = ls_blob-sha1.
+      ENDIF.
+      APPEND ls_file TO rt_files.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -526,11 +567,12 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         iv_branch_name  = iv_branch_name
         iv_deepen_level = iv_deepen_level
       IMPORTING
-        et_objects      = rs_result-objects
-        ev_branch       = rs_result-commit ).
+        et_objects = rs_result-objects
+        ev_branch  = rs_result-commit ).
 
-    rs_result-files = pull( iv_commit  = rs_result-commit
-                            it_objects = rs_result-objects ).
+    rs_result-files = pull( iv_commit       = rs_result-commit
+                            it_objects      = rs_result-objects
+                            it_wanted_files = it_wanted_files ).
 
   ENDMETHOD.
 
@@ -543,11 +585,12 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         iv_hash         = iv_commit_hash
         iv_deepen_level = iv_deepen_level
       IMPORTING
-        et_objects      = rs_result-objects
-        ev_commit       = rs_result-commit ).
+        et_objects = rs_result-objects
+        ev_commit  = rs_result-commit ).
 
-    rs_result-files = pull( iv_commit  = rs_result-commit
-                            it_objects = rs_result-objects ).
+    rs_result-files = pull( iv_commit       = rs_result-commit
+                            it_objects      = rs_result-objects
+                            it_wanted_files = it_wanted_files ).
 
   ENDMETHOD.
 
@@ -786,6 +829,39 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
                       iv_sha1    = <ls_node>-sha1
                       iv_path    = lv_path
             CHANGING  ct_files   = ct_files ).
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD filter_expanded.
+
+    " it_wanted_files contains lowercase obj_name prefixes, e.g. 'zcl_myclass.'
+    " An entry matches if its filename starts with any of those prefixes.
+    " Root-level dot-files (e.g. .abapgit.xml) are always kept.
+    DATA lv_lower  TYPE string.
+    DATA lv_match  TYPE abap_bool.
+    DATA lv_prefix TYPE string.
+    FIELD-SYMBOLS <ls_exp> LIKE LINE OF ct_expanded.
+
+    LOOP AT ct_expanded ASSIGNING <ls_exp>.
+      " Always keep root-level dot-files
+      IF <ls_exp>-path = zif_abapgit_definitions=>c_root_dir
+          AND <ls_exp>-name+0(1) = '.'.
+        CONTINUE.
+      ENDIF.
+
+      lv_lower = to_lower( <ls_exp>-name ).
+      lv_match = abap_false.
+      LOOP AT it_wanted_files INTO lv_prefix.
+        IF lv_lower CP lv_prefix && '*'.
+          lv_match = abap_true.
+          EXIT.
+        ENDIF.
+      ENDLOOP.
+      IF lv_match = abap_false.
+        DELETE ct_expanded.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.

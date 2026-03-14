@@ -17,6 +17,7 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
 
     DATA mt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt .
     DATA mv_head_symref TYPE string .
+    DATA mv_capabilities TYPE string .
 
     CLASS-METHODS skip_first_pkt
       IMPORTING
@@ -34,10 +35,11 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS parse_branch_list
       IMPORTING
-        !iv_data        TYPE string
+        !iv_data          TYPE string
       EXPORTING
-        !et_list        TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
-        !ev_head_symref TYPE string
+        !et_list          TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
+        !ev_head_symref   TYPE string
+        !ev_capabilities  TYPE string
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS parse_head_params
@@ -59,7 +61,8 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
         iv_data        = iv_data
       IMPORTING
         et_list        = mt_branches
-        ev_head_symref = mv_head_symref ).
+        ev_head_symref = mv_head_symref
+        ev_capabilities = mv_capabilities ).
 
   ENDMETHOD.
 
@@ -129,6 +132,11 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_git_branch_list~get_capabilities.
+    rv_capabilities = mv_capabilities.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_git_branch_list~get_tags_only.
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF mt_branches.
 
@@ -153,7 +161,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF et_list.
 
-    CLEAR: et_list, ev_head_symref.
+    CLEAR: et_list, ev_head_symref, ev_capabilities.
 
     lv_data = skip_first_pkt( iv_data ).
     SPLIT lv_data AT cl_abap_char_utilities=>newline INTO TABLE lt_result.
@@ -170,6 +178,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
         lv_char = zcl_abapgit_git_utils=>get_null( ).
 
         SPLIT lv_name AT lv_char INTO lv_name lv_head_params.
+        ev_capabilities = lv_head_params.
         ev_head_symref = parse_head_params( lv_head_params ).
         IF ev_head_symref IS INITIAL AND lv_name CS 'refs/heads/'.
           ev_head_symref = lv_name.

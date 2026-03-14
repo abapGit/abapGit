@@ -18,7 +18,9 @@ CLASS ltcl_parse DEFINITION FOR TESTING
       parse_works FOR TESTING RAISING zcx_abapgit_exception,
       captcha_response_is_caught FOR TESTING RAISING zcx_abapgit_exception,
       parse_raw FOR TESTING RAISING cx_static_check,
-      use_refs_if_head_is_missing FOR TESTING RAISING cx_static_check.
+      use_refs_if_head_is_missing FOR TESTING RAISING cx_static_check,
+      get_capabilities_with_filter FOR TESTING RAISING cx_static_check,
+      get_capabilities_no_filter FOR TESTING RAISING zcx_abapgit_exception.
 
     DATA: mt_data TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
 
@@ -154,6 +156,84 @@ CLASS ltcl_parse IMPLEMENTATION.
     cl_abap_unit_assert=>assert_char_cp(
       act = lv_ref
       exp = 'refs/heads/main' ).
+
+  ENDMETHOD.
+
+  METHOD get_capabilities_with_filter.
+    " The parse_raw hex contains capabilities including 'filter'.
+    " Verify that get_capabilities() exposes the capability string.
+    DATA lv_xstr TYPE xstring.
+    DATA lv_data TYPE string.
+    DATA lv_capa TYPE string.
+    DATA lo_list TYPE REF TO zif_abapgit_git_branch_list.
+
+    lv_xstr = '303031652320736572766963653D6769742D7570'
+    && '6C6F61642D7061636B0A30303030303135346639'
+    && '6563323364366439333561613764633236656531'
+    && '3431633762343666656564396434363835652048'
+    && '454144006D756C74695F61636B207468696E2D70'
+    && '61636B20736964652D62616E6420736964652D62'
+    && '616E642D36346B206F66732D64656C7461207368'
+    && '616C6C6F772064656570656E2D73696E63652064'
+    && '656570656E2D6E6F742064656570656E2D72656C'
+    && '6174697665206E6F2D70726F677265737320696E'
+    && '636C7564652D746167206D756C74695F61636B5F'
+    && '64657461696C656420616C6C6F772D7469702D73'
+    && '6861312D696E2D77616E7420616C6C6F772D7265'
+    && '61636861626C652D736861312D696E2D77616E74'
+    && '206E6F2D646F6E652073796D7265663D48454144'
+    && '3A726566732F68656164732F6D61696E2066696C'
+    && '746572206F626A6563742D666F726D61743D7368'
+    && '6131206167656E743D6769742F6769746875622D'
+    && '673964323537636462383634300A303033646639'
+    && '6563323364366439333561613764633236656531'
+    && '3431633762343666656564396434363835652072'
+    && '6566732F68656164732F6D61696E0A30303030'.
+
+    lv_data = zcl_abapgit_convert=>xstring_to_string_utf8_raw( lv_xstr ).
+
+    lo_list = NEW zcl_abapgit_git_branch_list( lv_data ).
+    lv_capa = lo_list->get_capabilities( ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act  = lv_capa
+      exp  = '*filter*'
+      msg  = 'Server capability string should contain filter' ).
+
+  ENDMETHOD.
+
+  METHOD get_capabilities_no_filter.
+    " A minimal info/refs response without filter in capabilities.
+    " get_capabilities() should return a string that does NOT contain 'filter'.
+    DATA lv_data TYPE string.
+    DATA lv_capa TYPE string.
+    DATA lo_list TYPE REF TO zif_abapgit_git_branch_list.
+    DATA lv_null TYPE c LENGTH 1.
+
+    lv_null = zcl_abapgit_git_utils=>get_null( ).
+
+    " Build a minimal pktline: service header + one ref with basic caps (no filter)
+    lv_data = '001e# service=git-upload-pack'
+      && cl_abap_char_utilities=>newline
+      && '00000090'
+      && 'aabbcc0011223344556677889900aabbcc001122 HEAD'
+      && lv_null
+      && 'side-band-64k no-progress multi_ack symref=HEAD:refs/heads/main'
+      && cl_abap_char_utilities=>newline
+      && '003faabbcc0011223344556677889900aabbcc001122 refs/heads/main'
+      && cl_abap_char_utilities=>newline
+      && '0000'.
+
+    lo_list = NEW zcl_abapgit_git_branch_list( lv_data ).
+    lv_capa = lo_list->get_capabilities( ).
+
+    cl_abap_unit_assert=>assert_not_initial(
+      act = lv_capa
+      msg = 'Capabilities string should not be empty' ).
+
+    cl_abap_unit_assert=>assert_true(
+      act = xsdbool( NOT ( lv_capa CS 'filter' ) )
+      msg = 'Capabilities string should not contain filter' ).
 
   ENDMETHOD.
 
