@@ -846,12 +846,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD deserialize_step.
 
-    DATA: li_progress       TYPE REF TO zif_abapgit_progress,
-          li_exit           TYPE REF TO zif_abapgit_exit,
-          lo_base           TYPE REF TO zcl_abapgit_objects_super,
-          lx_exc            TYPE REF TO zcx_abapgit_exception,
-          lv_transport      TYPE trkorr,
-          lv_obj_trkorr_cat TYPE e070-korrdev.
+    DATA: li_progress  TYPE REF TO zif_abapgit_progress,
+          li_exit      TYPE REF TO zif_abapgit_exit,
+          lo_base      TYPE REF TO zcl_abapgit_objects_super,
+          lx_exc       TYPE REF TO zcx_abapgit_exception,
+          lv_transport TYPE trkorr.
 
     FIELD-SYMBOLS: <ls_obj> LIKE LINE OF is_step-objects.
 
@@ -868,9 +867,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         iv_text    = |Step { is_step-order } - { is_step-descr }:| &&
                      | { <ls_obj>-item-obj_type } { <ls_obj>-item-obj_name }| ).
 
-
-      lv_obj_trkorr_cat = zcl_abapgit_factory=>get_cts_api( )->get_object_transport_category( <ls_obj>-item-obj_type ).
-      IF lv_obj_trkorr_cat = zif_abapgit_cts_api=>c_obj_transport_category-client_specific_customizing.
+      IF zcl_abapgit_factory=>get_cts_api( )->is_object_type_customizing( <ls_obj>-item-obj_type  ) = abap_true.
         lv_transport = is_checks-customizing-transport.
       ELSE.
         lv_transport = is_checks-transport-transport.
