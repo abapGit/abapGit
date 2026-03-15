@@ -597,6 +597,11 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         zcl_abapgit_ui_factory=>get_popups( )->popup_transport_request( cs_checks-transport-type ).
     ENDIF.
 
+    IF cs_checks-customizing-required = abap_true AND cs_checks-customizing-transport IS INITIAL.
+      cs_checks-customizing-transport =
+        zcl_abapgit_ui_factory=>get_popups( )->popup_transport_request( cs_checks-customizing-type ).
+    ENDIF.
+
     " Update decisions
     LOOP AT cs_checks-overwrite ASSIGNING <ls_overwrite>.
       READ TABLE lt_decision ASSIGNING <ls_decision> WITH KEY object_type_and_name COMPONENTS

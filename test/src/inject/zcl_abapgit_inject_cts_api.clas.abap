@@ -50,5 +50,7 @@ CLASS zcl_abapgit_inject_cts_api IMPLEMENTATION.
   METHOD zif_abapgit_cts_api~change_transport_type.
     RETURN. " todo, implement method
   ENDMETHOD.
-
+  METHOD zif_abapgit_cts_api~is_object_type_customizing.
+    RETURN. " todo, implement method
+  ENDMETHOD.
 ENDCLASS.

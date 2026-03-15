@@ -119,6 +119,12 @@ CLASS zcl_abapgit_objects_check DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS is_customizing_included
+      IMPORTING
+        it_results       TYPE zif_abapgit_definitions=>ty_results_tt
+      RETURNING
+        VALUE(rv_result) TYPE abap_bool.
+
 ENDCLASS.
 
 
@@ -255,8 +261,17 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
       IF NOT rs_checks-transport-required IS INITIAL.
         rs_checks-transport-type = li_package->get_transport_type( ).
         rs_checks-transport-transport = determine_transport_request(
-                                            ii_repo           = ii_repo
-                                            iv_transport_type = rs_checks-transport-type ).
+          ii_repo           = ii_repo
+          iv_transport_type = rs_checks-transport-type ).
+      ENDIF.
+
+      IF is_customizing_included( lt_results ) = abap_true.
+        rs_checks-customizing-required     = abap_true.
+        rs_checks-customizing-type-request = zif_abapgit_cts_api=>c_transport_type-cust_request.
+        rs_checks-customizing-type-task    = zif_abapgit_cts_api=>c_transport_type-cust_task.
+        rs_checks-customizing-transport    = determine_transport_request(
+          ii_repo           = ii_repo
+          iv_transport_type = rs_checks-customizing-type ).
       ENDIF.
     ENDIF.
 
@@ -275,6 +290,29 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         iv_transport_type    = iv_transport_type
       CHANGING
         cv_transport_request = rv_transport_request ).
+
+  ENDMETHOD.
+
+
+  METHOD is_customizing_included.
+
+    DATA lt_objects TYPE STANDARD TABLE OF tadir-object WITH KEY table_line.
+
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results,
+                   <lv_object> LIKE LINE OF lt_objects.
+
+    "Check if customizing logical objects are present in the result list and set customizing transport required
+
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type IS NOT INITIAL.
+      COLLECT <ls_result>-obj_type INTO lt_objects.
+    ENDLOOP.
+
+    LOOP AT lt_objects ASSIGNING <lv_object>.
+      IF zcl_abapgit_factory=>get_cts_api( )->is_object_type_customizing( <lv_object> ) = abap_true.
+        rv_result = abap_true.
+        EXIT.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 

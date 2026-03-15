@@ -195,4 +195,15 @@ INTERFACE zif_abapgit_cts_api
     RAISING
       zcx_abapgit_exception.
 
+  "! Check if an object is customizing i.e. needs a workbench or customizing transport
+  "! @parameter iv_pgmid | Program ID / R3TR and LIMU are relevant
+  "! @parameter iv_object | Object type
+  "! @parameter rv_is_customizing_object | True if an object requires a customizing transport
+  METHODS is_object_type_customizing
+    IMPORTING
+      !iv_pgmid                       TYPE tadir-pgmid DEFAULT 'R3TR'
+      !iv_object                      TYPE tadir-object
+    RETURNING
+      VALUE(rv_is_customizing_object) TYPE abap_bool.
+
 ENDINTERFACE.
