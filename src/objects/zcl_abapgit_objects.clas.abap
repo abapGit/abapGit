@@ -867,7 +867,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         iv_text    = |Step { is_step-order } - { is_step-descr }:| &&
                      | { <ls_obj>-item-obj_type } { <ls_obj>-item-obj_name }| ).
 
-      IF zcl_abapgit_factory=>get_cts_api( )->is_object_type_customizing( <ls_obj>-item-obj_type  ) = abap_true.
+      IF zcl_abapgit_factory=>get_cts_api( )->is_object_type_customizing( <ls_obj>-item-obj_type ) = abap_true.
         lv_transport = is_checks-customizing-transport.
       ELSE.
         lv_transport = is_checks-transport-transport.
