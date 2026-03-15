@@ -861,7 +861,5 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    ENDIF.
-
   ENDMETHOD.
 ENDCLASS.
