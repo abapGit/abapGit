@@ -500,7 +500,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 * this will update the SEO* database tables
     TRY.
-        lo_update->revert_scan_result( ).
+        lo_update->revert_scan_result( abap_true ).
       CATCH cx_oo_source_save_failure INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
