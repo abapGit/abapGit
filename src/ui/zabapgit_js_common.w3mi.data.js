@@ -359,11 +359,19 @@ RepoOverViewHelper.prototype.updateActionLinks = function(selectedRow) {
   // now we have a repo selected, determine which action buttons are relevant
   var selectedRepoKey       = selectedRow.dataset.key;
   var selectedRepoIsOffline = selectedRow.dataset.offline === "X";
+  var reKey                 = /key=(#|\d+)$/;
+  var newKey                = "key=" + selectedRepoKey;
 
   var actionLinks = document.querySelectorAll("a.action_link");
   actionLinks.forEach(function(link) {
     // adjust repo key in urls
-    link.href = link.href.replace(/\?key=(#|\d+)/, "?key=" + selectedRepoKey);
+    link.href = link.href.replace(reKey, newKey);
+
+    // SAP GUI for HTML rewrites links and saves the original in hrefsav
+    // see /sap/public/icmandir/its/lsgui/js/htmlviewer.js
+    if (link.hrefsav) {
+      link.hrefsav = link.hrefsav.replace(reKey, newKey);
+    }
 
     // toggle button visibility
     if (link.classList.contains("action_offline_repo")) {
