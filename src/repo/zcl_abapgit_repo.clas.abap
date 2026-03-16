@@ -595,9 +595,12 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     lt_dependencies = get_dot_apack( )->get_manifest_descriptor( )-dependencies.
     rs_checks-dependencies-met = zcl_abapgit_apack_helper=>are_dependencies_met( lt_dependencies ).
 
-    rs_checks-customizing = zcl_abapgit_data_factory=>get_deserializer( )->deserialize_check(
-      ii_repo   = me
-      ii_config = get_data_config( ) ).
+    " Customizing details might have already been set in zcl_abapgit_objects=>deserialize_checks().
+    IF rs_checks-customizing IS INITIAL.
+      rs_checks-customizing = zcl_abapgit_data_factory=>get_deserializer( )->deserialize_check(
+        ii_repo   = me
+        ii_config = get_data_config( ) ).
+    ENDIF.
 
   ENDMETHOD.
 

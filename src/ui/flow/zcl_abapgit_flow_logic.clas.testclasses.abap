@@ -257,6 +257,9 @@ CLASS lcl_cts IMPLEMENTATION.
   METHOD zif_abapgit_cts_api~change_transport_type.
     RETURN. " todo, implement method
   ENDMETHOD.
+  METHOD zif_abapgit_cts_api~is_object_type_customizing.
+    RETURN.
+  ENDMETHOD.
 ENDCLASS.
 
 CLASS lcl_branch_list DEFINITION FINAL.
