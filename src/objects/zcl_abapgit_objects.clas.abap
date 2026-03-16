@@ -363,6 +363,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD class_name.
+
+    CONCATENATE 'ZCL_ABAPGIT_OBJECT_' is_item-obj_type INTO rv_class_name.
+
+  ENDMETHOD.
+
+
   METHOD collect_packages.
 
     DATA ls_deser  TYPE zif_abapgit_objects=>ty_deserialization.
@@ -381,13 +388,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     LOOP AT it_results INTO ls_result WHERE packmove = abap_true AND package IS NOT INITIAL.
       COLLECT ls_result-package INTO rt_packages.
     ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD class_name.
-
-    CONCATENATE 'ZCL_ABAPGIT_OBJECT_' is_item-obj_type INTO rv_class_name.
 
   ENDMETHOD.
 
@@ -627,7 +627,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     lt_results = zcl_abapgit_file_deserialize=>get_results(
       ii_repo = ii_repo
-      ii_log = ii_log ).
+      ii_log  = ii_log ).
 
     IF lt_results IS INITIAL.
       RETURN.
@@ -704,8 +704,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
           ls_item-devclass = lv_package.
           ls_item-abap_language_version = lo_abap_language_vers->get_abap_language_vers_by_objt(
-                                                                    iv_object_type = ls_item-obj_type
-                                                                    iv_package = lv_package ).
+            iv_object_type = ls_item-obj_type
+            iv_package     = lv_package ).
 
           IF <ls_result>-packmove = abap_true.
             " Move object to new package
@@ -757,9 +757,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           ENDLOOP.
 
         CATCH zcx_abapgit_exception INTO lx_exc.
-          ii_log->add_exception( ix_exc = lx_exc
+          ii_log->add_exception( ix_exc  = lx_exc
                                  is_item = ls_item ).
-          ii_log->add_error( iv_msg = |Import of object { ls_item-obj_name } failed|
+          ii_log->add_error( iv_msg  = |Import of object { ls_item-obj_name } failed|
                              is_item = ls_item ).
           "object should not be part of any deserialization step
           CONTINUE.
@@ -883,13 +883,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lo_base ?= <ls_obj>-obj.
           APPEND LINES OF lo_base->get_accessed_files( ) TO ct_files.
 
-          ii_log->add_success( iv_msg = |Object { <ls_obj>-item-obj_name } imported|
+          ii_log->add_success( iv_msg  = |Object { <ls_obj>-item-obj_name } imported|
                                is_item = <ls_obj>-item ).
 
         CATCH zcx_abapgit_exception INTO lx_exc.
-          ii_log->add_exception( ix_exc = lx_exc
+          ii_log->add_exception( ix_exc  = lx_exc
                                  is_item = <ls_obj>-item ).
-          ii_log->add_error( iv_msg = |Import of object { <ls_obj>-item-obj_name } failed|
+          ii_log->add_error( iv_msg  = |Import of object { <ls_obj>-item-obj_name } failed|
                              is_item = <ls_obj>-item ).
       ENDTRY.
 
@@ -938,12 +938,12 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       IF <ls_step>-step_id <> zif_abapgit_object=>gc_step_id-lxe.
         deserialize_step(
           EXPORTING
-            iv_package   = iv_package
-            is_step      = <ls_step>
-            ii_log       = ii_log
-            is_checks    = is_checks
+            iv_package = iv_package
+            is_step    = <ls_step>
+            ii_log     = ii_log
+            is_checks  = is_checks
           CHANGING
-            ct_files     = ct_files ).
+            ct_files   = ct_files ).
       ELSEIF io_i18n_params->is_lxe_applicable( ) = abap_true.
         deserialize_lxe(
           EXPORTING
@@ -1356,17 +1356,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD update_package_trees.
-
-    DATA lv_package TYPE devclass.
-
-    LOOP AT it_packages INTO lv_package.
-      zcl_abapgit_factory=>get_sap_package( lv_package )->update_tree( ).
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD update_original_system.
 
     DATA:
@@ -1426,4 +1415,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD update_package_trees.
+
+    DATA lv_package TYPE devclass.
+
+    LOOP AT it_packages INTO lv_package.
+      zcl_abapgit_factory=>get_sap_package( lv_package )->update_tree( ).
+    ENDLOOP.
+
+  ENDMETHOD.
 ENDCLASS.
