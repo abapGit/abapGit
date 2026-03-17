@@ -131,7 +131,13 @@ function submitSapeventForm(params, action, method, form) {
     || document.createElement("form");
 
   form.setAttribute("method", method || "post");
-  if (/sapevent/i.test(action)) {
+  var form_action = form.getAttribute("action");
+
+  // SAP GUI for HTML: inside an HTML control, form actions look as follows:
+  // ~control=116&~event=OnSAPEvent&ALINK=1&frameName=&PARAMS=stage_commit
+  if (/~control=/i.test(form_action)) {
+    form.setAttribute("action", form_action.replace(/PARAMS=.*$/, "PARAMS=" + action));
+  } else if (/sapevent/i.test(action)) {
     form.setAttribute("action", action);
   } else {
     form.setAttribute("action", getSapeventPrefix() + "SAPEVENT:" + action);
