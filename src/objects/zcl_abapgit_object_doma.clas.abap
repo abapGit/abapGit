@@ -85,7 +85,6 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA li_aff_registry TYPE REF TO zif_abapgit_aff_registry.
 
     super->constructor(
       is_item        = is_item
