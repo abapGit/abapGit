@@ -117,18 +117,25 @@ ENDCLASS.
 CLASS ltcl_test_aff IMPLEMENTATION.
   METHOD setup.
     DATA lo_settings TYPE REF TO zcl_abapgit_settings.
+    DATA li_registry TYPE REF TO zif_abapgit_aff_registry.
 
     zcl_abapgit_inject_setup=>setup( ).
 
     lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
     lo_settings->set_experimental_features( zcl_abapgit_aff_registry=>c_aff_feature ).
+
+    " make sure to reset the aff registry in case other tests have set it
+    zcl_abapgit_aff_injector=>set_registry( li_registry ).
   ENDMETHOD.
 
   METHOD teardown.
     DATA lo_settings TYPE REF TO zcl_abapgit_settings.
+    DATA li_registry TYPE REF TO zif_abapgit_aff_registry.
 
     lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
     lo_settings->set_experimental_features( '' ).
+
+    zcl_abapgit_aff_injector=>set_registry( li_registry ).
 
     zcl_abapgit_inject_setup=>teardown( ).
   ENDMETHOD.
