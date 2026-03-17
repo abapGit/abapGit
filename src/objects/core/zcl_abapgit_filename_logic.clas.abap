@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_filename_logic DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -44,7 +44,7 @@ CLASS zcl_abapgit_filename_logic DEFINITION
         !ev_is_xml   TYPE abap_bool
         !ev_is_json  TYPE abap_bool
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
     CLASS-METHODS i18n_file_to_object
       IMPORTING
@@ -55,7 +55,7 @@ CLASS zcl_abapgit_filename_logic DEFINITION
         !ev_lang     TYPE laiso
         !ev_ext      TYPE string
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
     CLASS-METHODS object_to_file
       IMPORTING
@@ -63,7 +63,7 @@ CLASS zcl_abapgit_filename_logic DEFINITION
         !iv_ext            TYPE string
         !iv_extra          TYPE clike OPTIONAL
       RETURNING
-        VALUE(rv_filename) TYPE string .
+        VALUE(rv_filename) TYPE string.
 
     CLASS-METHODS object_to_i18n_file
       IMPORTING
@@ -122,7 +122,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
+CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
 
 
   METHOD detect_obj_definition.
@@ -167,11 +167,11 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
     map_filename_to_object(
       EXPORTING
         iv_item_part_of_filename = lv_name " original-cased object name part only
-        iv_path     = iv_path
-        io_dot      = io_dot
-        iv_package  = iv_devclass
+        iv_path                  = iv_path
+        io_dot                   = io_dot
+        iv_package               = iv_devclass
       CHANGING
-        cs_item     = es_item ).
+        cs_item                  = es_item ).
 
     detect_obj_definition(
       EXPORTING
@@ -283,11 +283,11 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
         CALL METHOD (lv_class)=>('ZIF_ABAPGIT_OBJECT~MAP_FILENAME_TO_OBJECT')
           EXPORTING
             iv_item_part_of_filename = iv_item_part_of_filename
-            iv_path     = iv_path
-            io_dot      = io_dot
-            iv_package  = iv_package
+            iv_path                  = iv_path
+            io_dot                   = io_dot
+            iv_package               = iv_package
           CHANGING
-            cs_item     = cs_item.
+            cs_item                  = cs_item.
       CATCH cx_sy_dyn_call_illegal_class.
         " Map data config to TABU object type
         IF cs_item-obj_type = 'CONF'.
@@ -316,9 +316,9 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
 
         CALL METHOD (lv_class)=>('ZIF_ABAPGIT_OBJECT~MAP_OBJECT_TO_FILENAME')
           EXPORTING
-            is_item     = is_item
-            iv_ext      = iv_ext
-            iv_extra    = iv_extra
+            is_item                  = is_item
+            iv_ext                   = iv_ext
+            iv_extra                 = iv_extra
           CHANGING
             cv_item_part_of_filename = cv_item_part_of_filename.
       CATCH cx_sy_dyn_call_illegal_class ##NO_HANDLER.
@@ -366,9 +366,9 @@ CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
     TRY.
         map_object_to_filename(
           EXPORTING
-            is_item     = is_item
-            iv_ext      = iv_ext
-            iv_extra    = iv_extra
+            is_item                  = is_item
+            iv_ext                   = iv_ext
+            iv_extra                 = iv_extra
           CHANGING
             cv_item_part_of_filename = rv_filename ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
