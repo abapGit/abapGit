@@ -13,14 +13,14 @@ CLASS zcl_abapgit_objects_files DEFINITION
     METHODS constructor
       IMPORTING
         !is_item TYPE zif_abapgit_definitions=>ty_item
-        !iv_path TYPE string OPTIONAL .
+        !iv_path TYPE string OPTIONAL.
     METHODS add_string
       IMPORTING
         !iv_extra  TYPE clike OPTIONAL
         !iv_ext    TYPE string
         !iv_string TYPE string
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS read_string
       IMPORTING
         !iv_extra        TYPE clike OPTIONAL
@@ -28,7 +28,7 @@ CLASS zcl_abapgit_objects_files DEFINITION
       RETURNING
         VALUE(rv_string) TYPE string
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS add_xml
       IMPORTING
         !iv_extra     TYPE clike OPTIONAL
@@ -36,14 +36,14 @@ CLASS zcl_abapgit_objects_files DEFINITION
         !iv_normalize TYPE abap_bool DEFAULT abap_true
         !is_metadata  TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS read_xml
       IMPORTING
         !iv_extra     TYPE clike OPTIONAL
       RETURNING
         VALUE(ri_xml) TYPE REF TO zif_abapgit_xml_input
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS read_abap
       IMPORTING
         !iv_extra      TYPE clike OPTIONAL
@@ -51,16 +51,16 @@ CLASS zcl_abapgit_objects_files DEFINITION
       RETURNING
         VALUE(rt_abap) TYPE abaptxt255_tab
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS add_abap
       IMPORTING
         !iv_extra TYPE clike OPTIONAL
         !it_abap  TYPE STANDARD TABLE
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS add
       IMPORTING
-        !is_file TYPE zif_abapgit_git_definitions=>ty_file .
+        !is_file TYPE zif_abapgit_git_definitions=>ty_file.
     METHODS add_raw
       IMPORTING
         !iv_extra TYPE clike OPTIONAL
@@ -73,25 +73,25 @@ CLASS zcl_abapgit_objects_files DEFINITION
       RETURNING
         VALUE(rv_data) TYPE xstring
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS get_files
       RETURNING
-        VALUE(rt_files) TYPE zif_abapgit_git_definitions=>ty_files_tt .
+        VALUE(rt_files) TYPE zif_abapgit_git_definitions=>ty_files_tt.
     METHODS set_files
       IMPORTING
-        !it_files TYPE zif_abapgit_git_definitions=>ty_files_tt .
+        !it_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
     METHODS get_accessed_files
       RETURNING
-        VALUE(rt_files) TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt .
+        VALUE(rt_files) TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt.
     METHODS contains_file
       IMPORTING
         !iv_extra         TYPE clike OPTIONAL
         !iv_ext           TYPE string
       RETURNING
-        VALUE(rv_present) TYPE abap_bool .
+        VALUE(rv_present) TYPE abap_bool.
     METHODS get_file_pattern
       RETURNING
-        VALUE(rv_pattern) TYPE string .
+        VALUE(rv_pattern) TYPE string.
     METHODS is_json_metadata
       RETURNING
         VALUE(rv_result) TYPE abap_bool.
@@ -99,12 +99,12 @@ CLASS zcl_abapgit_objects_files DEFINITION
       IMPORTING
         !ii_i18n_file TYPE REF TO zif_abapgit_i18n_file
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS read_i18n_files
       RETURNING
         VALUE(rt_i18n_files) TYPE zif_abapgit_i18n_file=>ty_table_of
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
 
@@ -115,13 +115,13 @@ CLASS zcl_abapgit_objects_files DEFINITION
       RETURNING
         VALUE(rv_data) TYPE xstring
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
   PRIVATE SECTION.
 
-    DATA ms_item TYPE zif_abapgit_definitions=>ty_item .
-    DATA mt_accessed_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt .
-    DATA mt_files TYPE zif_abapgit_git_definitions=>ty_files_tt .
-    DATA mv_path TYPE string .
+    DATA ms_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA mt_accessed_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt.
+    DATA mt_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
+    DATA mv_path TYPE string.
 
     METHODS mark_accessed
       IMPORTING
@@ -133,7 +133,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
+CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
 
   METHOD add.
@@ -174,9 +174,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     ls_file-path     = '/'.
     ls_file-filename = zcl_abapgit_filename_logic=>object_to_i18n_file(
-      is_item  = ms_item
+      is_item        = ms_item
       iv_lang_suffix = ii_i18n_file->lang_suffix( )
-      iv_ext   = ii_i18n_file->ext( ) ).
+      iv_ext         = ii_i18n_file->ext( ) ).
 
     APPEND ls_file TO mt_files.
 
@@ -221,7 +221,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
           ls_file TYPE zif_abapgit_git_definitions=>ty_file.
 
     lv_xml = ii_xml->render( iv_normalize = iv_normalize
-                             is_metadata = is_metadata ).
+                             is_metadata  = is_metadata ).
     ls_file-path = '/'.
 
     ls_file-filename = zcl_abapgit_filename_logic=>object_to_file(
@@ -284,8 +284,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
   METHOD get_file_pattern.
     rv_pattern = zcl_abapgit_filename_logic=>object_to_file(
-      is_item  = ms_item
-      iv_ext   = '*' ).
+      is_item = ms_item
+      iv_ext  = '*' ).
     " Escape special characters for use with 'covers pattern' (CP)
     REPLACE ALL OCCURRENCES OF '#' IN rv_pattern WITH '##'.
     REPLACE ALL OCCURRENCES OF '+' IN rv_pattern WITH '#+'.

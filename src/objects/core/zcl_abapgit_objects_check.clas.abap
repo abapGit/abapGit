@@ -269,7 +269,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         rs_checks-customizing-required     = abap_true.
         rs_checks-customizing-type-request = zif_abapgit_cts_api=>c_transport_type-cust_request.
         rs_checks-customizing-type-task    = zif_abapgit_cts_api=>c_transport_type-cust_task.
-        rs_checks-customizing-transport    = determine_transport_request(
+        rs_checks-customizing-transport = determine_transport_request(
           ii_repo           = ii_repo
           iv_transport_type = rs_checks-customizing-type ).
       ENDIF.

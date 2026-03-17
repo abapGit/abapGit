@@ -439,7 +439,7 @@ CLASS zcl_abapgit_status_calc IMPLEMENTATION.
       APPEND INITIAL LINE TO ct_results ASSIGNING <ls_result>.
 
       <ls_result> = build_new_remote(
-        is_remote   = <ls_remote>
+        is_remote    = <ls_remote>
         it_items_idx = it_items_idx
         it_state_idx = it_state_idx ).
 
