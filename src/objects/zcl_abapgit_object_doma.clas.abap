@@ -93,8 +93,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       io_files       = io_files
       io_i18n_params = io_i18n_params ).
 
-    CREATE OBJECT li_aff_registry TYPE zcl_abapgit_aff_registry.
-    mv_aff_enabled = li_aff_registry->is_supported_object_type( 'DOMA' ).
+    mv_aff_enabled = zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( 'DOMA' ).
 
   ENDMETHOD.
 
