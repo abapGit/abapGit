@@ -510,9 +510,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                      iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
     zcl_abapgit_html_toolbar_lib=>render_repo_settings_dropdown(
-        io_toolbar = ro_toolbar
-        iv_key     = mv_key
-        iv_opt     = zif_abapgit_html=>c_html_opt-strong ).
+      io_toolbar = ro_toolbar
+      iv_key     = mv_key
+      iv_opt     = zif_abapgit_html=>c_html_opt-strong ).
 
   ENDMETHOD.
 
