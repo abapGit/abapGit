@@ -68,8 +68,7 @@ CLASS zcl_abapgit_html_toolbar_lib IMPLEMENTATION.
       iv_txt   = 'Stats'
       iv_act   = |{ zif_abapgit_definitions=>c_action-repo_infos }?key={ iv_key }|
       iv_class = iv_class
-      iv_title = `Statistics`
-    ).
+      iv_title = `Statistics` ).
 
   ENDMETHOD.
 
