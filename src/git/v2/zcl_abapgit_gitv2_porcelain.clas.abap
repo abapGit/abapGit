@@ -467,6 +467,10 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     " Fetch the commit + all tree objects up to iv_max_depth levels deep.
     " Uses filter tree:<N> which sends only trees at depth <= N from commit.
     " iv_max_depth=0 falls back to filter blob:none (full tree).
+    "
+    " Note: servers advertising 'filter' capability may not support filter tree:<N>
+    " (a newer extension). If the server returns an empty/malformed pack, fall back
+    " to filter blob:none which all partial-clone-capable servers support.
 
     DATA lv_xstring   TYPE xstring.
     DATA lt_arguments TYPE string_table.
@@ -486,7 +490,25 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
 
     lv_xstring = send_command( iv_url = iv_url iv_service = c_service-upload
                                iv_command = |fetch| it_arguments = lt_arguments ).
-    rt_objects = decode_pack( lv_xstring ).
+
+    TRY.
+        rt_objects = decode_pack( lv_xstring ).
+      CATCH zcx_abapgit_exception INTO DATA(lx_exc).
+        " filter tree:<N> is not universally supported — fall back to filter blob:none
+        IF iv_max_depth > 0.
+          CLEAR lt_arguments.
+          APPEND |want { iv_commit }| TO lt_arguments.
+          APPEND 'deepen 1'           TO lt_arguments.
+          APPEND 'filter blob:none'   TO lt_arguments.
+          APPEND 'no-progress'        TO lt_arguments.
+          APPEND 'done'               TO lt_arguments.
+          lv_xstring = send_command( iv_url = iv_url iv_service = c_service-upload
+                                     iv_command = |fetch| it_arguments = lt_arguments ).
+          rt_objects = decode_pack( lv_xstring ).
+        ELSE.
+          RAISE EXCEPTION lx_exc.
+        ENDIF.
+    ENDTRY.
 
   ENDMETHOD.
 
