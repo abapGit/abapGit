@@ -308,16 +308,16 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
     var indexOfSelected = rows.indexOf(selected);
     var lastRow         = rows.length - 1;
 
-    if (keycode == 13 && document.activeElement.tagName.toLowerCase() != "input") {
+    if (keycode === 13 && document.activeElement.tagName.toLowerCase() !== "input") {
       // "enter" to open, unless command field has focus
       self.openSelectedRepo();
-    } else if ((keycode == 52 || keycode == 56) && indexOfSelected > 0) {
+    } else if ((keycode === 52 || keycode === 56) && indexOfSelected > 0) {
       // "4,8" for previous, digits are the numlock keys
       // NB: numpad must be activated, keypress does not detect arrows
       //     if we need arrows it will be keydown. But then mind the keycodes, they may change !
       //     e.g. 100 is 'd' with keypress (and conflicts with diff hotkey), and also it is arrow-left keydown
       self.selectRowByIndex(indexOfSelected - 1);
-    } else if ((keycode == 54 || keycode == 50) && indexOfSelected < lastRow) {
+    } else if ((keycode === 54 || keycode === 50) && indexOfSelected < lastRow) {
       // "6,2" for next
       self.selectRowByIndex(indexOfSelected + 1);
     }
@@ -516,7 +516,7 @@ function StageHelper(params) {
     remove : "R",
     ignore : "I",
     reset  : "?",
-    isValid: function(status) { return "ARI?".indexOf(status) == -1 }
+    isValid: function(status) { return "ARI?".indexOf(status) === -1 }
   };
 
   this.TEMPLATES = {
@@ -631,7 +631,7 @@ StageHelper.prototype.onTableClick = function(event) {
     } else return;
   } else return;
 
-  if (["TD", "TH"].indexOf(td.tagName) == -1 || td.className != "cmd") return;
+  if (["TD", "TH"].indexOf(td.tagName) === -1 || td.className !== "cmd") return;
 
   var status    = this.STATUS[target.innerText]; // Convert anchor text to status
   var targetRow = td.parentNode;
@@ -759,7 +759,7 @@ StageHelper.prototype.updateRowStatus = function(row, status) {
 StageHelper.prototype.updateRowCommand = function(row, status) {
   var cell = row.cells[this.colIndex["cmd"]];
   if (status === this.STATUS.reset) {
-    cell.innerHTML = (row.className == "local")
+    cell.innerHTML = (row.className === "local")
       ? this.TEMPLATES.cmdLocal
       :     this.TEMPLATES.cmdRemote;
   } else {
@@ -1137,8 +1137,8 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
 
   var td = e.target;
 
-  while (td != undefined && td.tagName != "TD" && td.tagName != "TBODY") td = td.parentElement;
-  if (td == undefined) return;
+  while (td !== undefined && td.tagName !== "TD" && td.tagName !== "TBODY") td = td.parentElement;
+  if (td === undefined) return;
   var table = td.parentElement.parentElement;
 
   var patchColumnCount = 0;
@@ -1149,7 +1149,7 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
   if (td.classList.contains("diff_left")) {
     table.classList.remove("diff_select_right");
     table.classList.add("diff_select_left");
-    if (window.getSelection() && this.selectedColumnIdx != splitCodeLeftColumnIdx + patchColumnCount) {
+    if (window.getSelection() && this.selectedColumnIdx !== splitCodeLeftColumnIdx + patchColumnCount) {
       // De-select to avoid effect of dragging selection in case the right column was first selected
       if (document.body.createTextRange) { // All IE but Edge
         // document.getSelection().removeAllRanges() may trigger error
@@ -1168,7 +1168,7 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
   } else if (td.classList.contains("diff_right")) {
     table.classList.remove("diff_select_left");
     table.classList.add("diff_select_right");
-    if (window.getSelection() && this.selectedColumnIdx != splitCodeRightColumnIdx + patchColumnCount) {
+    if (window.getSelection() && this.selectedColumnIdx !== splitCodeRightColumnIdx + patchColumnCount) {
       if (document.body.createTextRange) { // All IE but Edge
         // document.getSelection().removeAllRanges() may trigger error
         // so use this code which is equivalent but does not fail
@@ -1198,11 +1198,11 @@ DiffColumnSelection.prototype.copyEventListener = function(e) {
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
   var td = e.target;
 
-  while (td != undefined && td.tagName != "TD" && td.tagName != "TBODY") td = td.parentElement;
-  if (td != undefined) {
+  while (td !== undefined && td.tagName !== "TD" && td.tagName !== "TBODY") td = td.parentElement;
+  if (td !== undefined) {
     // Use window.clipboardData instead of e.clipboardData
     // (https://stackoverflow.com/questions/23470958/ie-10-copy-paste-issue)
-    var clipboardData = (e.clipboardData == undefined ? window.clipboardData : e.clipboardData);
+    var clipboardData = (e.clipboardData === undefined ? window.clipboardData : e.clipboardData);
     var text          = this.getSelectedText();
     clipboardData.setData("text", text);
     e.preventDefault();
