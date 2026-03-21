@@ -227,6 +227,7 @@
     "forbidden_void_type": {
       "check": [
         "^boole_d$",
+        "^char04$",
         "^char10$",
         "^char12$",
         "^char2$",
@@ -249,8 +250,8 @@
         "^cl_wer_const$",
         "^cl_xco_",
         "^cx_aff_",
-        "^cx_wb_object_operation_error$",
         "^cx_sy_itab_line_not_found$",
+        "^cx_wb_object_operation_error$",
         "^cx_xco_",
         "^flag$",
         "^i18_a_langiso2$",
@@ -279,6 +280,7 @@
         "^syst_langu$",
         "^syst_title$",
         "^syuzeit$",
+        "^valpos$",
         "^xubname$"
       ]
     },

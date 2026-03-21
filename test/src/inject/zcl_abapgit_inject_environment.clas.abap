@@ -47,7 +47,7 @@ CLASS zcl_abapgit_inject_environment IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~get_system_language_filter.
-    ASSERT 1 = 'decoupled'.
+    RETURN.
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~is_variant_maintenance.
