@@ -61,9 +61,9 @@ CLASS zcl_abapgit_gitv2_porcelain DEFINITION
 
     CLASS-METHODS fetch_trees_at_depth
       IMPORTING
-        !iv_url          TYPE string
-        !iv_commit       TYPE zif_abapgit_git_definitions=>ty_sha1
-        !iv_max_depth    TYPE i
+        !iv_url           TYPE string
+        !iv_commit        TYPE zif_abapgit_git_definitions=>ty_sha1
+        !iv_max_depth     TYPE i
       RETURNING
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
