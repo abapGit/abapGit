@@ -418,7 +418,6 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
     TRY.
         zcl_abapgit_gitv2_porcelain=>walk_tree_from_objects(
           EXPORTING
-            iv_url          = ''
             it_objects      = lt_objects
             iv_base         = '/'
             it_wanted_paths = lt_wanted

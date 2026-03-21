@@ -551,8 +551,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
           type = zif_abapgit_git_definitions=>c_type-blob
           sha1 = <ls_exp>-sha1.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise(
-          |Blob not found for entry "{ <ls_exp>-path }{ <ls_exp>-name }"| ).
+        zcx_abapgit_exception=>raise( |Blob not found for entry "{ <ls_exp>-path }{ <ls_exp>-name }"| ).
       ENDIF.
       CLEAR ls_file.
       ls_file-path     = <ls_exp>-path.
