@@ -48,22 +48,22 @@ CLASS zcl_abapgit_gitv2_porcelain DEFINITION
 
     CLASS-METHODS path_needed
       IMPORTING
-        !iv_path              TYPE string
-        !it_wanted_paths      TYPE string_table OPTIONAL
+        !iv_path         TYPE string
+        !it_wanted_paths TYPE string_table OPTIONAL
       RETURNING
-        VALUE(rv_needed)      TYPE abap_bool.
+        VALUE(rv_needed) TYPE abap_bool.
 
     CLASS-METHODS compute_max_depth
       IMPORTING
         !it_wanted_paths TYPE string_table OPTIONAL
       RETURNING
-        VALUE(rv_depth) TYPE i.
+        VALUE(rv_depth)  TYPE i.
 
     CLASS-METHODS fetch_trees_at_depth
       IMPORTING
-        !iv_url        TYPE string
-        !iv_commit     TYPE zif_abapgit_git_definitions=>ty_sha1
-        !iv_max_depth  TYPE i
+        !iv_url          TYPE string
+        !iv_commit       TYPE zif_abapgit_git_definitions=>ty_sha1
+        !iv_max_depth    TYPE i
       RETURNING
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
@@ -530,12 +530,6 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
 
     DATA ls_commit   TYPE zcl_abapgit_git_pack=>ty_commit.
     DATA ls_object   LIKE LINE OF it_objects.
-    DATA lt_nodes    TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
-    DATA ls_exp      LIKE LINE OF ct_expanded.
-    DATA lv_sub_path TYPE string.
-    DATA lv_tree_sha TYPE zif_abapgit_git_definitions=>ty_sha1.
-
-    FIELD-SYMBOLS: <ls_node> LIKE LINE OF lt_nodes.
 
     " Get the root tree SHA1 from the commit
     READ TABLE it_objects INTO ls_object
