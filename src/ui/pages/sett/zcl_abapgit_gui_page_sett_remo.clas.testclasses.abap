@@ -110,6 +110,9 @@ CLASS ltd_branch_list IMPLEMENTATION.
   METHOD zif_abapgit_git_branch_list~get_tags_only.
     RETURN.
   ENDMETHOD.
+  METHOD zif_abapgit_git_branch_list~get_capabilities.
+    RETURN.
+  ENDMETHOD.
 
 ENDCLASS.
 
