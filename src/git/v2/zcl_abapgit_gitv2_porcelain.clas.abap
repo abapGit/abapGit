@@ -71,7 +71,6 @@ CLASS zcl_abapgit_gitv2_porcelain DEFINITION
 
     CLASS-METHODS walk_tree_from_objects
       IMPORTING
-        !iv_url          TYPE string
         !it_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
         !iv_base         TYPE string
         !it_wanted_paths TYPE string_table OPTIONAL
@@ -82,7 +81,6 @@ CLASS zcl_abapgit_gitv2_porcelain DEFINITION
 
     CLASS-METHODS walk_tree_level
       IMPORTING
-        !iv_url          TYPE string
         !it_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
         !iv_tree_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1
         !iv_base         TYPE string
@@ -327,7 +325,9 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     DATA lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA lv_max_depth TYPE i.
 
-    " Determine needed fetch depth: wanted path /a/b/c/ = depth 3 from root
+    " Determine fetch depth: count '/' chars in deepest wanted path.
+    " e.g. /src/pkg/ has 3 slashes -> depth 3. filter tree:<N> sends
+    " commit + trees at depth <= N levels from the commit root tree.
     lv_max_depth = compute_max_depth( it_wanted_paths ).
 
     " Fetch the commit + all trees up to lv_max_depth in one request.
@@ -340,7 +340,6 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     " Walk tree locally - all needed objects are already in lt_objects
     walk_tree_from_objects(
       EXPORTING
-        iv_url          = iv_url
         it_objects      = lt_objects
         iv_base         = '/'
         it_wanted_paths = it_wanted_paths
@@ -430,7 +429,9 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
   METHOD compute_max_depth.
 
     " Count the number of '/' separators in the deepest wanted path.
-    " e.g. '/src/pkg/sub/' has 3 slashes -> depth = 3.
+    " e.g. '/src/pkg/' has 3 slashes -> depth 3, '/src/' has 2 -> depth 2.
+    " This matches filter tree:<N> semantics: N = number of tree levels
+    " to send from the commit root (root tree = 0, its children = 1, etc.).
     " Returns 0 (no filter -> use filter blob:none full fetch).
 
     DATA lv_wanted    TYPE string.
@@ -542,7 +543,6 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     " Delegate to recursive tree walker using the commit's root tree
     walk_tree_level(
       EXPORTING
-        iv_url          = iv_url
         it_objects      = it_objects
         iv_tree_sha1    = ls_commit-tree
         iv_base         = iv_base
@@ -561,7 +561,6 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     DATA lt_nodes    TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
     DATA ls_exp      LIKE LINE OF ct_expanded.
     DATA lv_sub_path TYPE string.
-    DATA lt_fetched  TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA lv_needed   TYPE abap_bool.
 
     FIELD-SYMBOLS: <ls_node> LIKE LINE OF lt_nodes.
@@ -571,18 +570,8 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
         type = zif_abapgit_git_definitions=>c_type-tree
         sha1 = iv_tree_sha1.
     IF sy-subrc <> 0.
-      " Tree not in cache - fall back to fetching it
-      lt_fetched = fetch_trees_at_depth(
-        iv_url       = iv_url
-        iv_commit    = iv_tree_sha1
-        iv_max_depth = 0 ).
-      READ TABLE lt_fetched INTO ls_object
-        WITH KEY type COMPONENTS
-          type = zif_abapgit_git_definitions=>c_type-tree
-          sha1 = iv_tree_sha1.
-      IF sy-subrc <> 0.
-        RETURN.
-      ENDIF.
+      " Tree not in cache - depth-limited fetch may have excluded it; skip
+      RETURN.
     ENDIF.
 
     lt_nodes = zcl_abapgit_git_pack=>decode_tree( ls_object-data ).
@@ -597,7 +586,6 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
           IF lv_needed = abap_true.
             walk_tree_level(
               EXPORTING
-                iv_url          = iv_url
                 it_objects      = it_objects
                 iv_tree_sha1    = <ls_node>-sha1
                 iv_base         = lv_sub_path

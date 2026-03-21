@@ -23,6 +23,8 @@ CLASS ltcl_git_porcelain DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHO
         RAISING zcx_abapgit_exception,
       pull_full_walk_no_filter FOR TESTING
         RAISING zcx_abapgit_exception,
+      pull_filtered_walk_with_files FOR TESTING
+        RAISING zcx_abapgit_exception,
       filter_expanded_keeps_match FOR TESTING
         RAISING zcx_abapgit_exception,
       filter_expanded_no_match FOR TESTING
@@ -251,6 +253,92 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
     cl_abap_unit_assert=>assert_not_initial(
       act = ls_file-data
       msg = 'Blob data must be populated by full walk' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_file-data
+      exp = lv_blob_data
+      msg = 'Blob data must match original content' ).
+
+  ENDMETHOD.
+
+  METHOD pull_filtered_walk_with_files.
+    " pull with it_wanted_files returns only matching files with blob data
+
+    DATA lt_objects       TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA ls_obj           LIKE LINE OF lt_objects.
+    DATA lt_nodes         TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA ls_node          LIKE LINE OF lt_nodes.
+    DATA lt_files         TYPE zif_abapgit_git_definitions=>ty_files_tt.
+    DATA ls_file          LIKE LINE OF lt_files.
+    DATA lv_blob_sha      TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lv_other_sha     TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lv_tree_sha      TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lv_commit_sha    TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lv_blob_data     TYPE xstring.
+    DATA lv_other_data    TYPE xstring.
+    DATA ls_commit        TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA lt_wanted_files  TYPE string_table.
+
+    " Build two blobs
+    lv_blob_data  = zcl_abapgit_convert=>string_to_xstring_utf8( 'wanted content' ).
+    lv_blob_sha   = zcl_abapgit_hash=>sha1_blob( lv_blob_data ).
+    lv_other_data = zcl_abapgit_convert=>string_to_xstring_utf8( 'other content' ).
+    lv_other_sha  = zcl_abapgit_hash=>sha1_blob( lv_other_data ).
+
+    ls_obj-type = zif_abapgit_git_definitions=>c_type-blob.
+    ls_obj-sha1 = lv_blob_sha.
+    ls_obj-data = lv_blob_data.
+    APPEND ls_obj TO lt_objects.
+    ls_obj-sha1 = lv_other_sha.
+    ls_obj-data = lv_other_data.
+    APPEND ls_obj TO lt_objects.
+
+    " Build tree with two files
+    ls_node-chmod = zif_abapgit_git_definitions=>c_chmod-file.
+    ls_node-name  = 'zcl_wanted.clas.abap'.
+    ls_node-sha1  = lv_blob_sha.
+    APPEND ls_node TO lt_nodes.
+    ls_node-name  = 'zcl_other.clas.abap'.
+    ls_node-sha1  = lv_other_sha.
+    APPEND ls_node TO lt_nodes.
+
+    build_tree_object(
+      EXPORTING it_nodes   = lt_nodes
+      IMPORTING ev_sha1    = lv_tree_sha
+      CHANGING  ct_objects = lt_objects ).
+
+    " Build commit
+    ls_commit-tree      = lv_tree_sha.
+    ls_commit-author    = 'Test User <test@example.com> 0 +0000'.
+    ls_commit-committer = 'Test User <test@example.com> 0 +0000'.
+    ls_commit-body      = 'test commit'.
+
+    ls_obj-data = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
+    ls_obj-type = zif_abapgit_git_definitions=>c_type-commit.
+    ls_obj-sha1 = zcl_abapgit_hash=>sha1_commit( ls_obj-data ).
+    APPEND ls_obj TO lt_objects.
+    lv_commit_sha = ls_obj-sha1.
+
+    " Filter to wanted file only
+    APPEND 'zcl_wanted.' TO lt_wanted_files.
+
+    lt_files = zcl_abapgit_git_porcelain=>pull(
+      iv_commit       = lv_commit_sha
+      it_objects      = lt_objects
+      it_wanted_files = lt_wanted_files ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_files )
+      exp = 1
+      msg = 'Only one matching file expected' ).
+
+    READ TABLE lt_files INTO ls_file INDEX 1.
+    cl_abap_unit_assert=>assert_char_cp(
+      act = ls_file-filename
+      exp = 'zcl_wanted*'
+      msg = 'Returned file must be the wanted one' ).
+    cl_abap_unit_assert=>assert_not_initial(
+      act = ls_file-data
+      msg = 'Blob data must be populated' ).
     cl_abap_unit_assert=>assert_equals(
       act = ls_file-data
       exp = lv_blob_data

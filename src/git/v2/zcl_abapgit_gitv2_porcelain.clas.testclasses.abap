@@ -222,7 +222,6 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
 
     zcl_abapgit_gitv2_porcelain=>walk_tree_level(
       EXPORTING
-        iv_url          = ''
         it_objects      = lt_objects
         iv_tree_sha1    = lv_tree_sha
         iv_base         = '/'
@@ -277,7 +276,6 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
 
     zcl_abapgit_gitv2_porcelain=>walk_tree_level(
       EXPORTING
-        iv_url          = ''
         it_objects      = lt_objects
         iv_tree_sha1    = lv_root_sha
         iv_base         = '/'
@@ -342,7 +340,6 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
 
     zcl_abapgit_gitv2_porcelain=>walk_tree_level(
       EXPORTING
-        iv_url          = ''
         it_objects      = lt_objects
         iv_tree_sha1    = lv_root_sha
         iv_base         = '/'
@@ -394,7 +391,6 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
 
     zcl_abapgit_gitv2_porcelain=>walk_tree_from_objects(
       EXPORTING
-        iv_url          = ''
         it_objects      = lt_objects
         iv_base         = '/'
         it_wanted_paths = lt_wanted

@@ -542,17 +542,23 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     " Phase 3: read blob content from it_objects - already downloaded by upload_pack
     LOOP AT lt_expanded ASSIGNING <ls_exp>.
+      " Only handle regular files - mirrors unfiltered walk behavior
+      IF <ls_exp>-chmod <> zif_abapgit_git_definitions=>c_chmod-file.
+        CONTINUE.
+      ENDIF.
       READ TABLE it_objects INTO ls_blob
         WITH KEY type COMPONENTS
           type = zif_abapgit_git_definitions=>c_type-blob
           sha1 = <ls_exp>-sha1.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise(
+          |Blob not found for entry "{ <ls_exp>-path }{ <ls_exp>-name }"| ).
+      ENDIF.
       CLEAR ls_file.
       ls_file-path     = <ls_exp>-path.
       ls_file-filename = <ls_exp>-name.
-      IF sy-subrc = 0.
-        ls_file-data = ls_blob-data.
-        ls_file-sha1 = ls_blob-sha1.
-      ENDIF.
+      ls_file-data     = ls_blob-data.
+      ls_file-sha1     = ls_blob-sha1.
       APPEND ls_file TO rt_files.
     ENDLOOP.
 
