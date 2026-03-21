@@ -192,7 +192,8 @@ CLASS ltcl_parse IMPLEMENTATION.
 
     lv_data = zcl_abapgit_convert=>xstring_to_string_utf8_raw( lv_xstr ).
 
-    lo_list = NEW zcl_abapgit_git_branch_list( lv_data ).
+    CREATE OBJECT lo_list TYPE zcl_abapgit_git_branch_list
+      EXPORTING iv_data = lv_data.
     lv_capa = lo_list->get_capabilities( ).
 
     cl_abap_unit_assert=>assert_char_cp(
@@ -224,15 +225,17 @@ CLASS ltcl_parse IMPLEMENTATION.
       && cl_abap_char_utilities=>newline
       && '0000'.
 
-    lo_list = NEW zcl_abapgit_git_branch_list( lv_data ).
+    CREATE OBJECT lo_list TYPE zcl_abapgit_git_branch_list
+      EXPORTING iv_data = lv_data.
     lv_capa = lo_list->get_capabilities( ).
 
     cl_abap_unit_assert=>assert_not_initial(
       act = lv_capa
       msg = 'Capabilities string should not be empty' ).
 
-    cl_abap_unit_assert=>assert_true(
-      act = xsdbool( NOT ( lv_capa CS 'filter' ) )
+    cl_abap_unit_assert=>assert_equals(
+      act = xsdbool( lv_capa CS 'filter' )
+      exp = abap_false
       msg = 'Capabilities string should not contain filter' ).
 
   ENDMETHOD.

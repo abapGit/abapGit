@@ -34,11 +34,11 @@ CLASS ltcl_git_porcelain DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHO
 
     METHODS build_tree_object
       IMPORTING
-        it_nodes        TYPE zcl_abapgit_git_pack=>ty_nodes_tt
+        it_nodes       TYPE zcl_abapgit_git_pack=>ty_nodes_tt
+      EXPORTING
+        rv_sha1        TYPE zif_abapgit_git_definitions=>ty_sha1
       CHANGING
-        ct_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
-      RETURNING
-        VALUE(rv_sha1)  TYPE zif_abapgit_git_definitions=>ty_sha1
+        ct_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -216,9 +216,10 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
     ls_node-sha1  = lv_blob_sha.
     APPEND ls_node TO lt_nodes.
 
-    lv_tree_sha = build_tree_object(
-      EXPORTING it_nodes   = lt_nodes
-      CHANGING  ct_objects = lt_objects ).
+    build_tree_object(
+      EXPORTING  it_nodes   = lt_nodes
+      IMPORTING  rv_sha1    = lv_tree_sha
+      CHANGING   ct_objects = lt_objects ).
 
     " Build commit pointing to tree
     ls_commit-tree      = lv_tree_sha.
@@ -232,7 +233,7 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
     APPEND ls_obj TO lt_objects.
     lv_commit_sha = ls_obj-sha1.
 
-    " Call pull without filter → should use full walk
+    " Call pull without filter - should use full walk
     lt_files = zcl_abapgit_git_porcelain=>pull(
       iv_commit  = lv_commit_sha
       it_objects = lt_objects ).
@@ -356,14 +357,14 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
     DATA ls_exp          LIKE LINE OF lt_expanded.
     DATA lt_wanted_files TYPE string_table.  " intentionally empty
 
-    " Root dot-file — must always be kept
+    " Root dot-file - must always be kept
     ls_exp-name  = '.abapgit.xml'.
     ls_exp-path  = zif_abapgit_definitions=>c_root_dir.
     ls_exp-sha1  = '1111111111111111111111111111111111111111'.
     ls_exp-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     APPEND ls_exp TO lt_expanded.
 
-    " Normal src file — must be removed (no match)
+    " Normal src file - must be removed (no match)
     ls_exp-name  = 'zcl_myclass.clas.abap'.
     ls_exp-path  = '/src/'.
     ls_exp-sha1  = '2222222222222222222222222222222222222222'.

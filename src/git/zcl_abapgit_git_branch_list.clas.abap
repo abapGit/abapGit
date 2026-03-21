@@ -35,11 +35,11 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS parse_branch_list
       IMPORTING
-        !iv_data          TYPE string
+        !iv_data         TYPE string
       EXPORTING
-        !et_list          TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
-        !ev_head_symref   TYPE string
-        !ev_capabilities  TYPE string
+        !et_list         TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
+        !ev_head_symref  TYPE string
+        !ev_capabilities TYPE string
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS parse_head_params

@@ -130,7 +130,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         !it_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
         !it_wanted_files TYPE string_table OPTIONAL
       RETURNING
-        VALUE(rt_files) TYPE zif_abapgit_git_definitions=>ty_files_tt
+        VALUE(rt_files)  TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS walk
@@ -524,7 +524,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     ls_commit = zcl_abapgit_git_pack=>decode_commit( ls_object-data ).
 
     IF it_wanted_files IS INITIAL.
-      " No filter → full walk using objects already in pack
+      " No filter - full walk using objects already in pack
       walk( EXPORTING it_objects = it_objects
                       iv_sha1    = ls_commit-tree
                       iv_path    = '/'
@@ -532,7 +532,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    " Phase 2: build expanded tree locally — trees already in it_objects from upload_pack
+    " Phase 2: build expanded tree locally - trees already in it_objects from upload_pack
     lt_expanded = full_tree( it_objects = it_objects
                              iv_parent  = iv_commit ).
 
@@ -540,7 +540,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     filter_expanded( EXPORTING it_wanted_files = it_wanted_files
                      CHANGING  ct_expanded     = lt_expanded ).
 
-    " Phase 3: read blob content from it_objects — already downloaded by upload_pack
+    " Phase 3: read blob content from it_objects - already downloaded by upload_pack
     LOOP AT lt_expanded ASSIGNING <ls_exp>.
       READ TABLE it_objects INTO ls_blob
         WITH KEY type COMPONENTS

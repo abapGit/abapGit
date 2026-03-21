@@ -86,10 +86,10 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
 
-  " ── path_needed ────────────────────────────────────────────────────────────
+  " -- path_needed ------------------------------------------------------------
 
   METHOD path_needed_no_filter.
-    " Empty wanted list → every path is needed
+    " Empty wanted list -> every path is needed
     DATA lt_wanted TYPE string_table.
 
     cl_abap_unit_assert=>assert_true(
@@ -100,7 +100,7 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD path_needed_ancestor.
-    " iv_path = '/src/' is an ancestor of wanted '/src/pkg/'  → needed
+    " iv_path = '/src/' is an ancestor of wanted '/src/pkg/'  -> needed
     DATA lt_wanted TYPE string_table.
     APPEND '/src/pkg/' TO lt_wanted.
 
@@ -112,7 +112,7 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD path_needed_descendant.
-    " iv_path = '/src/pkg/sub/' is a descendant of wanted '/src/' → needed
+    " iv_path = '/src/pkg/sub/' is a descendant of wanted '/src/' -> needed
     DATA lt_wanted TYPE string_table.
     APPEND '/src/' TO lt_wanted.
 
@@ -124,7 +124,7 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD path_needed_exact_match.
-    " iv_path exactly equals a wanted path → needed
+    " iv_path exactly equals a wanted path -> needed
     DATA lt_wanted TYPE string_table.
     APPEND '/src/pkg/' TO lt_wanted.
 
@@ -136,7 +136,7 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD path_needed_no_match.
-    " '/other/' has no relationship to '/src/' → not needed
+    " '/other/' has no relationship to '/src/' -> not needed
     DATA lt_wanted TYPE string_table.
     APPEND '/src/' TO lt_wanted.
 
@@ -148,10 +148,10 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
 
-  " ── compute_max_depth ──────────────────────────────────────────────────────
+  " -- compute_max_depth ------------------------------------------------------
 
   METHOD depth_empty_paths.
-    " No wanted paths → depth 0 (full fetch fallback)
+    " No wanted paths -> depth 0 (full fetch fallback)
     DATA lt_paths TYPE string_table.
 
     cl_abap_unit_assert=>assert_equals(
@@ -161,7 +161,7 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD depth_single_level.
-    " '/src/' has 2 slashes → depth 2
+    " '/src/' has 2 slashes -> depth 2
     DATA lt_paths TYPE string_table.
     APPEND '/src/' TO lt_paths.
 
@@ -172,7 +172,7 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD depth_three_levels.
-    " '/src/pkg/sub/' has 4 slashes → depth 4
+    " '/src/pkg/sub/' has 4 slashes -> depth 4
     DATA lt_paths TYPE string_table.
     APPEND '/src/pkg/sub/' TO lt_paths.
 
@@ -195,10 +195,10 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
 
-  " ── walk_tree_level ────────────────────────────────────────────────────────
+  " -- walk_tree_level --------------------------------------------------------
 
   METHOD walk_flat_tree.
-    " A single-level tree with two files, no filter → both files returned
+    " A single-level tree with two files, no filter -> both files returned
     DATA lt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA lt_nodes    TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
     DATA ls_node     LIKE LINE OF lt_nodes.
@@ -236,7 +236,7 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD walk_with_path_filter.
-    " Only /src/ is wanted → /other/ subtree should be skipped
+    " Only /src/ is wanted -> /other/ subtree should be skipped
     DATA lt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA lt_nodes    TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
     DATA ls_node     LIKE LINE OF lt_nodes.
@@ -293,7 +293,7 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD walk_nested_tree.
-    " Two-level tree: /src/pkg/ with one file → verify path and name
+    " Two-level tree: /src/pkg/ with one file -> verify path and name
     DATA lt_objects   TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA lt_nodes     TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
     DATA ls_node      LIKE LINE OF lt_nodes.
@@ -356,10 +356,10 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
 
-  " ── walk_tree_from_objects ──────────────────────────────────────────────────
+  " -- walk_tree_from_objects --------------------------------------------------
 
   METHOD walk_from_objects_basic.
-    " Full object set (commit + tree + blob) → file is returned
+    " Full object set (commit + tree + blob) -> file is returned
     DATA lt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA lt_nodes    TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
     DATA ls_node     LIKE LINE OF lt_nodes.
@@ -400,7 +400,7 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD walk_from_objects_no_commit.
-    " Missing commit in object list → exception raised
+    " Missing commit in object list -> exception raised
     DATA lt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA lt_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
     DATA lt_wanted   TYPE string_table.

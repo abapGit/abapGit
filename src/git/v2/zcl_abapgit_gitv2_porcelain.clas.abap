@@ -321,7 +321,7 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
 
     " Fetch only the trees needed to reach the wanted paths.
     " Uses filter tree:<depth> so the server sends only commit + trees at
-    " depth <= max_depth — a tiny response even for large repos.
+    " depth <= max_depth - a tiny response even for large repos.
     " Then walks the cached objects locally to produce the file listing.
 
     DATA lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
@@ -337,7 +337,7 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
       iv_commit     = iv_sha1
       iv_max_depth  = lv_max_depth ).
 
-    " Walk tree locally — all needed objects are already in lt_objects
+    " Walk tree locally - all needed objects are already in lt_objects
     walk_tree_from_objects(
       EXPORTING
         iv_url          = iv_url
@@ -403,7 +403,7 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
 
     DATA lv_wanted TYPE string.
 
-    " No filter → all paths are needed
+    " No filter - all paths are needed
     IF it_wanted_paths IS INITIAL.
       rv_needed = abap_true.
       RETURN.
@@ -413,9 +413,9 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     " (a) it is an ancestor of a wanted path  (iv_path is prefix of wanted)
     " (b) it is the wanted path itself or a descendant (wanted is prefix of iv_path)
     " Examples with iv_path = '/src/' and wanted = '/src/pkg/sub/':
-    "   (a) '/src/' CP '/src/*'  → true  (iv_path is ancestor of wanted)
+    "   (a) '/src/' CP '/src/*'  - true  (iv_path is ancestor of wanted)
     " Examples with iv_path = '/src/pkg/sub/' and wanted = '/src/':
-    "   (b) '/src/pkg/sub/' CP '/src/*' → true  (wanted is ancestor of iv_path)
+    "   (b) '/src/pkg/sub/' CP '/src/*' - true  (wanted is ancestor of iv_path)
     LOOP AT it_wanted_paths INTO lv_wanted.
       IF lv_wanted CP iv_path && '*'   " iv_path is prefix of wanted
           OR iv_path CP lv_wanted && '*'.  " wanted is prefix of iv_path
@@ -475,6 +475,7 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     DATA lv_xstring   TYPE xstring.
     DATA lt_arguments TYPE string_table.
     DATA lv_filter    TYPE string.
+    DATA lx_exc       TYPE REF TO zcx_abapgit_exception.
 
     APPEND |want { iv_commit }| TO lt_arguments.
     APPEND 'deepen 1'           TO lt_arguments.
@@ -488,13 +489,16 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     APPEND 'no-progress' TO lt_arguments.
     APPEND 'done'        TO lt_arguments.
 
-    lv_xstring = send_command( iv_url = iv_url iv_service = c_service-upload
-                               iv_command = |fetch| it_arguments = lt_arguments ).
+    lv_xstring = send_command(
+                   iv_url        = iv_url
+                   iv_service    = c_service-upload
+                   iv_command    = |fetch|
+                   it_arguments  = lt_arguments ).
 
     TRY.
         rt_objects = decode_pack( lv_xstring ).
-      CATCH zcx_abapgit_exception INTO DATA(lx_exc).
-        " filter tree:<N> is not universally supported — fall back to filter blob:none
+      CATCH zcx_abapgit_exception INTO lx_exc.
+        " filter tree:<N> is not universally supported - fall back to filter blob:none
         IF iv_max_depth > 0.
           CLEAR lt_arguments.
           APPEND |want { iv_commit }| TO lt_arguments.
@@ -502,8 +506,11 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
           APPEND 'filter blob:none'   TO lt_arguments.
           APPEND 'no-progress'        TO lt_arguments.
           APPEND 'done'               TO lt_arguments.
-          lv_xstring = send_command( iv_url = iv_url iv_service = c_service-upload
-                                     iv_command = |fetch| it_arguments = lt_arguments ).
+          lv_xstring = send_command(
+                         iv_url       = iv_url
+                         iv_service   = c_service-upload
+                         iv_command   = |fetch|
+                         it_arguments = lt_arguments ).
           rt_objects = decode_pack( lv_xstring ).
         ELSE.
           RAISE EXCEPTION lx_exc.
@@ -557,6 +564,7 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     DATA lt_nodes    TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
     DATA ls_exp      LIKE LINE OF ct_expanded.
     DATA lv_sub_path TYPE string.
+    DATA lt_fetched  TYPE zif_abapgit_definitions=>ty_objects_tt.
 
     FIELD-SYMBOLS: <ls_node> LIKE LINE OF lt_nodes.
 
@@ -565,8 +573,7 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
         type = zif_abapgit_git_definitions=>c_type-tree
         sha1 = iv_tree_sha1.
     IF sy-subrc <> 0.
-      " Tree not in cache — fall back to fetching it
-      DATA lt_fetched TYPE zif_abapgit_definitions=>ty_objects_tt.
+      " Tree not in cache - fall back to fetching it
       lt_fetched = fetch_trees_at_depth(
         iv_url       = iv_url
         iv_commit    = iv_tree_sha1
