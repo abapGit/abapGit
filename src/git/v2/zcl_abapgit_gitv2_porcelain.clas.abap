@@ -475,10 +475,12 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     DATA lv_xstring   TYPE xstring.
     DATA lt_arguments TYPE string_table.
     DATA lv_filter    TYPE string.
+    DATA lv_argument  TYPE string.
     DATA lx_exc       TYPE REF TO zcx_abapgit_exception.
 
-    APPEND |want { iv_commit }| TO lt_arguments.
-    APPEND 'deepen 1'           TO lt_arguments.
+    lv_argument = |want { iv_commit }|.
+    APPEND lv_argument   TO lt_arguments.
+    APPEND 'deepen 1'    TO lt_arguments.
 
     IF iv_max_depth = 0.
       lv_filter = 'filter blob:none'.
@@ -501,11 +503,12 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
         " filter tree:<N> is not universally supported - fall back to filter blob:none
         IF iv_max_depth > 0.
           CLEAR lt_arguments.
-          APPEND |want { iv_commit }| TO lt_arguments.
-          APPEND 'deepen 1'           TO lt_arguments.
-          APPEND 'filter blob:none'   TO lt_arguments.
-          APPEND 'no-progress'        TO lt_arguments.
-          APPEND 'done'               TO lt_arguments.
+          lv_argument = |want { iv_commit }|.
+          APPEND lv_argument         TO lt_arguments.
+          APPEND 'deepen 1'          TO lt_arguments.
+          APPEND 'filter blob:none'  TO lt_arguments.
+          APPEND 'no-progress'       TO lt_arguments.
+          APPEND 'done'              TO lt_arguments.
           lv_xstring = send_command(
                          iv_url       = iv_url
                          iv_service   = c_service-upload
@@ -565,6 +568,7 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     DATA ls_exp      LIKE LINE OF ct_expanded.
     DATA lv_sub_path TYPE string.
     DATA lt_fetched  TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA lv_needed   TYPE abap_bool.
 
     FIELD-SYMBOLS: <ls_node> LIKE LINE OF lt_nodes.
 
@@ -593,7 +597,10 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
       CASE <ls_node>-chmod.
         WHEN zif_abapgit_git_definitions=>c_chmod-dir.
           lv_sub_path = iv_base && <ls_node>-name && '/'.
-          IF path_needed( iv_path = lv_sub_path it_wanted_paths = it_wanted_paths ).
+          lv_needed = path_needed(
+            iv_path         = lv_sub_path
+            it_wanted_paths = it_wanted_paths ).
+          IF lv_needed = abap_true.
             walk_tree_level(
               EXPORTING
                 iv_url          = iv_url
