@@ -8,21 +8,21 @@ CLASS ltcl_gitv2_porcelain DEFINITION
 
     METHODS build_tree_object
       IMPORTING
-        it_nodes       TYPE zcl_abapgit_git_pack=>ty_nodes_tt
+        it_nodes   TYPE zcl_abapgit_git_pack=>ty_nodes_tt
+      EXPORTING
+        ev_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1
       CHANGING
-        ct_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
-      RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
+        ct_objects TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception.
 
     METHODS build_commit_object
       IMPORTING
-        iv_tree_sha1   TYPE zif_abapgit_git_definitions=>ty_sha1
+        iv_tree_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1
+      EXPORTING
+        ev_sha1      TYPE zif_abapgit_git_definitions=>ty_sha1
       CHANGING
-        ct_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
-      RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
+        ct_objects   TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -66,7 +66,7 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
     ls_obj-type = zif_abapgit_git_definitions=>c_type-tree.
     ls_obj-sha1 = zcl_abapgit_hash=>sha1_tree( lv_data ).
     APPEND ls_obj TO ct_objects.
-    rv_sha1 = ls_obj-sha1.
+    ev_sha1 = ls_obj-sha1.
   ENDMETHOD.
 
   METHOD build_commit_object.
@@ -82,7 +82,7 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
     ls_obj-type = zif_abapgit_git_definitions=>c_type-commit.
     ls_obj-sha1 = zcl_abapgit_hash=>sha1_commit( ls_obj-data ).
     APPEND ls_obj TO ct_objects.
-    rv_sha1 = ls_obj-sha1.
+    ev_sha1 = ls_obj-sha1.
   ENDMETHOD.
 
 
@@ -215,8 +215,9 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
     ls_node-sha1 = '2222222222222222222222222222222222222222'.
     APPEND ls_node TO lt_nodes.
 
-    lv_tree_sha = build_tree_object(
+    build_tree_object(
       EXPORTING it_nodes   = lt_nodes
+      IMPORTING ev_sha1    = lv_tree_sha
       CHANGING  ct_objects = lt_objects ).
 
     zcl_abapgit_gitv2_porcelain=>walk_tree_level(
@@ -237,14 +238,15 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
 
   METHOD walk_with_path_filter.
     " Only /src/ is wanted -> /other/ subtree should be skipped
-    DATA lt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt.
-    DATA lt_nodes    TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
-    DATA ls_node     LIKE LINE OF lt_nodes.
-    DATA lt_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
-    DATA lv_root_sha TYPE zif_abapgit_git_definitions=>ty_sha1.
-    DATA lv_src_sha  TYPE zif_abapgit_git_definitions=>ty_sha1.
-    DATA lt_wanted   TYPE string_table.
+    DATA lt_objects   TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA lt_nodes     TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA ls_node      LIKE LINE OF lt_nodes.
+    DATA lt_expanded  TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+    DATA lv_root_sha  TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lv_src_sha   TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lt_wanted    TYPE string_table.
     DATA lt_src_nodes TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA ls_exp       LIKE LINE OF lt_expanded.
 
     APPEND '/src/' TO lt_wanted.
 
@@ -254,8 +256,9 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
     ls_node-name  = 'cl_foo.abap'.
     ls_node-sha1  = '1111111111111111111111111111111111111111'.
     APPEND ls_node TO lt_src_nodes.
-    lv_src_sha = build_tree_object(
+    build_tree_object(
       EXPORTING it_nodes   = lt_src_nodes
+      IMPORTING ev_sha1    = lv_src_sha
       CHANGING  ct_objects = lt_objects ).
 
     " Build root tree: /src/ (dir) and /other/ (dir, pruned)
@@ -267,8 +270,9 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
     ls_node-name  = 'other'.
     ls_node-sha1  = '9999999999999999999999999999999999999999'.
     APPEND ls_node TO lt_nodes.
-    lv_root_sha = build_tree_object(
+    build_tree_object(
       EXPORTING it_nodes   = lt_nodes
+      IMPORTING ev_sha1    = lv_root_sha
       CHANGING  ct_objects = lt_objects ).
 
     zcl_abapgit_gitv2_porcelain=>walk_tree_level(
@@ -286,8 +290,9 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
       exp = 1
       msg = 'Only file under /src/ must be returned' ).
 
+    READ TABLE lt_expanded INTO ls_exp INDEX 1.
     cl_abap_unit_assert=>assert_equals(
-      act = lt_expanded[ 1 ]-path
+      act = ls_exp-path
       exp = '/src/'
       msg = 'Returned file must be in /src/' ).
   ENDMETHOD.
@@ -303,14 +308,16 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
     DATA lv_pkg_sha   TYPE zif_abapgit_git_definitions=>ty_sha1.
     DATA lt_wanted    TYPE string_table.
     DATA lt_sub_nodes TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+    DATA ls_exp       LIKE LINE OF lt_expanded.
 
     " /src/pkg/cl_bar.abap
     ls_node-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     ls_node-name  = 'cl_bar.abap'.
     ls_node-sha1  = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'.
     APPEND ls_node TO lt_sub_nodes.
-    lv_pkg_sha = build_tree_object(
+    build_tree_object(
       EXPORTING it_nodes   = lt_sub_nodes
+      IMPORTING ev_sha1    = lv_pkg_sha
       CHANGING  ct_objects = lt_objects ).
 
     CLEAR lt_sub_nodes.
@@ -318,8 +325,9 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
     ls_node-name  = 'pkg'.
     ls_node-sha1  = lv_pkg_sha.
     APPEND ls_node TO lt_sub_nodes.
-    lv_src_sha = build_tree_object(
+    build_tree_object(
       EXPORTING it_nodes   = lt_sub_nodes
+      IMPORTING ev_sha1    = lv_src_sha
       CHANGING  ct_objects = lt_objects ).
 
     CLEAR lt_nodes.
@@ -327,8 +335,9 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
     ls_node-name  = 'src'.
     ls_node-sha1  = lv_src_sha.
     APPEND ls_node TO lt_nodes.
-    lv_root_sha = build_tree_object(
+    build_tree_object(
       EXPORTING it_nodes   = lt_nodes
+      IMPORTING ev_sha1    = lv_root_sha
       CHANGING  ct_objects = lt_objects ).
 
     zcl_abapgit_gitv2_porcelain=>walk_tree_level(
@@ -345,12 +354,13 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
       act = lines( lt_expanded )
       exp = 1
       msg = 'Exactly one file from nested tree' ).
+    READ TABLE lt_expanded INTO ls_exp INDEX 1.
     cl_abap_unit_assert=>assert_equals(
-      act = lt_expanded[ 1 ]-path
+      act = ls_exp-path
       exp = '/src/pkg/'
       msg = 'File path must reflect nesting' ).
     cl_abap_unit_assert=>assert_equals(
-      act = lt_expanded[ 1 ]-name
+      act = ls_exp-name
       exp = 'cl_bar.abap'
       msg = 'Filename must match tree node' ).
   ENDMETHOD.
@@ -366,14 +376,16 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
     DATA lt_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
     DATA lv_tree_sha TYPE zif_abapgit_git_definitions=>ty_sha1.
     DATA lt_wanted   TYPE string_table.
+    DATA ls_exp      LIKE LINE OF lt_expanded.
 
     ls_node-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     ls_node-name  = 'readme.txt'.
     ls_node-sha1  = 'cccccccccccccccccccccccccccccccccccccccc'.
     APPEND ls_node TO lt_nodes.
 
-    lv_tree_sha = build_tree_object(
+    build_tree_object(
       EXPORTING it_nodes   = lt_nodes
+      IMPORTING ev_sha1    = lv_tree_sha
       CHANGING  ct_objects = lt_objects ).
 
     build_commit_object(
@@ -393,8 +405,9 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
       act = lines( lt_expanded )
       exp = 1
       msg = 'One file expected from commit+tree' ).
+    READ TABLE lt_expanded INTO ls_exp INDEX 1.
     cl_abap_unit_assert=>assert_equals(
-      act = lt_expanded[ 1 ]-name
+      act = ls_exp-name
       exp = 'readme.txt'
       msg = 'Filename must match tree node' ).
   ENDMETHOD.
@@ -404,7 +417,7 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
     DATA lt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA lt_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
     DATA lt_wanted   TYPE string_table.
-    DATA lx          TYPE REF TO zcx_abapgit_exception.
+    DATA lx_error    TYPE REF TO zcx_abapgit_exception.
 
     TRY.
         zcl_abapgit_gitv2_porcelain=>walk_tree_from_objects(
@@ -416,9 +429,9 @@ CLASS ltcl_gitv2_porcelain IMPLEMENTATION.
           CHANGING
             ct_expanded     = lt_expanded ).
         cl_abap_unit_assert=>fail( 'Exception expected for missing commit' ).
-      CATCH zcx_abapgit_exception INTO lx.
+      CATCH zcx_abapgit_exception INTO lx_error.
         cl_abap_unit_assert=>assert_char_cp(
-          act = lx->get_text( )
+          act = lx_error->get_text( )
           exp = '*Commit*'
           msg = 'Exception message must mention Commit' ).
     ENDTRY.

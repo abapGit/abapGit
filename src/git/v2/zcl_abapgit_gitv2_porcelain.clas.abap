@@ -513,7 +513,7 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
                          it_arguments = lt_arguments ).
           rt_objects = decode_pack( lv_xstring ).
         ELSE.
-          RAISE EXCEPTION lx_exc.
+          zcx_abapgit_exception=>raise_with_text( lx_exc ).
         ENDIF.
     ENDTRY.
 

@@ -34,11 +34,11 @@ CLASS ltcl_git_porcelain DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHO
 
     METHODS build_tree_object
       IMPORTING
-        it_nodes       TYPE zcl_abapgit_git_pack=>ty_nodes_tt
+        it_nodes   TYPE zcl_abapgit_git_pack=>ty_nodes_tt
       EXPORTING
-        rv_sha1        TYPE zif_abapgit_git_definitions=>ty_sha1
+        ev_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1
       CHANGING
-        ct_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
+        ct_objects TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -79,7 +79,7 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
     ls_obj-sha1 = zcl_abapgit_hash=>sha1_tree( lv_data ).
 
     APPEND ls_obj TO ct_objects.
-    rv_sha1 = ls_obj-sha1.
+    ev_sha1 = ls_obj-sha1.
 
   ENDMETHOD.
 
@@ -217,9 +217,9 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
     APPEND ls_node TO lt_nodes.
 
     build_tree_object(
-      EXPORTING  it_nodes   = lt_nodes
-      IMPORTING  rv_sha1    = lv_tree_sha
-      CHANGING   ct_objects = lt_objects ).
+      EXPORTING it_nodes   = lt_nodes
+      IMPORTING ev_sha1    = lv_tree_sha
+      CHANGING  ct_objects = lt_objects ).
 
     " Build commit pointing to tree
     ls_commit-tree      = lv_tree_sha.

@@ -206,6 +206,7 @@ CLASS ltcl_parse IMPLEMENTATION.
   METHOD get_capabilities_no_filter.
     " A minimal info/refs response without filter in capabilities.
     " get_capabilities() should return a string that does NOT contain 'filter'.
+    DATA lv_has_filter TYPE abap_bool.
     DATA lv_data TYPE string.
     DATA lv_capa TYPE string.
     DATA lo_list TYPE REF TO zif_abapgit_git_branch_list.
@@ -233,8 +234,11 @@ CLASS ltcl_parse IMPLEMENTATION.
       act = lv_capa
       msg = 'Capabilities string should not be empty' ).
 
+    IF lv_capa CS 'filter'.
+      lv_has_filter = abap_true.
+    ENDIF.
     cl_abap_unit_assert=>assert_equals(
-      act = xsdbool( lv_capa CS 'filter' )
+      act = lv_has_filter
       exp = abap_false
       msg = 'Capabilities string should not contain filter' ).
 
