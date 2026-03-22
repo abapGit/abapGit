@@ -166,7 +166,7 @@ table.repo_tab {
 .repo_tab tr.object_row{
   border-top-color: var(--theme-table-cell-border-color);
 }
-.repo_tab .inactive      { color: orange; }
+.repo_tab .inactive      { color: orange; user-select: none; }
 .repo_tab tr.unsupported { color: var(--theme-greyscale-lighter); }
 .repo_tab tr.modified    { background-color: #fbf7e9; }
 .repo_tab td.current_dir { color: var(--theme-primary-font-color-reduced); }
