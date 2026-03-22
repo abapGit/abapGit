@@ -28,9 +28,10 @@
     "@abaplint/database-sqlite": "^2.11.78",
     "@abaplint/runtime": "^2.13.0",
     "@abaplint/transpiler-cli": "^2.13.0",
+    "@eslint/js": "^10.0.1",
     "abapmerge": "^0.16.7",
     "c8": "^11.0.0",
-    "eslint": "^9.39.4",
+    "eslint": "^10.0.0",
     "express": "^4.22.1",
     "globals": "^16.5.0"
   }
