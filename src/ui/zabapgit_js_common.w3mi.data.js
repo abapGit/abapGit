@@ -1963,7 +1963,7 @@ Patch.prototype.getAllCheckboxesForId = function(sId, sIdPrefix, sNewIdPrefix) {
 };
 
 Patch.prototype.getToggledCheckbox = function(oEvent) {
-  var elCheckbox = null;
+  var elCheckbox;
 
   // We have either an input element or any element with input child
   // in the latter case we have to toggle the checkbox manually
@@ -2370,7 +2370,7 @@ function enumerateUiActions() {
     });
 
   items = items.map(function(item) {
-    var action = "";
+    var action;
     var anchor = item[0];
     if (anchor.href.includes("#")) {
       action = function() {
