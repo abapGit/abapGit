@@ -632,8 +632,6 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     READ TABLE lt_tcodes INDEX 1 INTO es_transaction.
     ASSERT sy-subrc = 0.
-    READ TABLE lt_gui_attr INDEX 1 INTO es_gui_attr.
-    ASSERT sy-subrc = 0.
 
   ENDMETHOD.
 
@@ -969,8 +967,10 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     io_xml->add( iv_name = 'TSTC'
                  ig_data = ls_tcode ).
-    io_xml->add( iv_name = 'TSTCC'
-                 ig_data = ls_gui_attr ).
+    IF ls_gui_attr IS NOT INITIAL.
+      io_xml->add( iv_name = 'TSTCC'
+                   ig_data = ls_gui_attr ).
+    ENDIF.
     io_xml->add( iv_name = 'TSTCT'
                  ig_data = ls_tstct ).
     IF ls_tstcp IS NOT INITIAL.
