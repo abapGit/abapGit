@@ -37,6 +37,16 @@ INTERFACE zif_abapgit_gitv2_porcelain
     RAISING
       zcx_abapgit_exception .
 
+  METHODS list_trees_for_paths
+    IMPORTING
+      !iv_url            TYPE string
+      !iv_sha1           TYPE zif_abapgit_git_definitions=>ty_sha1
+      !it_wanted_paths   TYPE string_table OPTIONAL
+    RETURNING
+      VALUE(rt_expanded) TYPE zif_abapgit_git_definitions=>ty_expanded_tt
+    RAISING
+      zcx_abapgit_exception .
+
   METHODS fetch_blob
     IMPORTING
       !iv_url        TYPE string
