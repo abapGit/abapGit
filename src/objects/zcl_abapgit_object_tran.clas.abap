@@ -632,6 +632,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     READ TABLE lt_tcodes INDEX 1 INTO es_transaction.
     ASSERT sy-subrc = 0.
+    READ TABLE lt_gui_attr INDEX 1 INTO es_gui_attr.
 
   ENDMETHOD.
 
