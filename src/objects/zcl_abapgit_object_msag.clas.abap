@@ -140,12 +140,12 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
       EXPORTING
         iv_lang_field_name = 'SPRSL'
       CHANGING
-        ct_tab = lt_t100_texts ).
+        ct_tab             = lt_t100_texts ).
     mo_i18n_params->trim_saplang_keyed_table(
       EXPORTING
         iv_lang_field_name = 'SPRSL'
       CHANGING
-        ct_tab = lt_t100t ).
+        ct_tab             = lt_t100t ).
 
     MODIFY t100t FROM TABLE lt_t100t.                     "#EC CI_SUBRC
 
@@ -203,7 +203,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         FOR ALL ENTRIES IN lt_doku_object_names
         WHERE id = c_longtext_id_msag
         AND object = lt_doku_object_names-table_line
-        AND masterlang = abap_true
+        AND langu = mv_language
         ORDER BY PRIMARY KEY.
     ELSE.
       lt_language_filter = mo_i18n_params->build_language_filter( ).
@@ -212,7 +212,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         FOR ALL ENTRIES IN lt_doku_object_names
         WHERE id = c_longtext_id_msag
         AND object = lt_doku_object_names-table_line
-        AND langu IN lt_language_filter
+        AND ( langu IN lt_language_filter OR langu = mv_language )
         ORDER BY PRIMARY KEY.
     ENDIF.
 
@@ -357,9 +357,9 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
 
     io_xml->read( EXPORTING iv_name = 'T100A'
-                  CHANGING cg_data = ls_t100a ).
+                  CHANGING  cg_data = ls_t100a ).
     io_xml->read( EXPORTING iv_name = 'T100'
-                  CHANGING cg_data = lt_t100 ).
+                  CHANGING  cg_data = lt_t100 ).
 
     corr_insert( iv_package ).
 
