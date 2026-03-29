@@ -78,6 +78,18 @@ CLASS ltcl_lxe_texts IMPLEMENTATION.
 
     TRY.
         lt_act = zcl_abapgit_lxe_texts=>convert_lang_string_to_table(
+                   iv_langs              = 'D, E, S'
+                   iv_skip_main_language = 'E' ).
+
+        cl_abap_unit_assert=>assert_equals(
+          act = lt_act
+          exp = lt_exp ).
+      CATCH zcx_abapgit_exception.
+        cl_abap_unit_assert=>fail( ).
+    ENDTRY.
+
+    TRY.
+        lt_act = zcl_abapgit_lxe_texts=>convert_lang_string_to_table(
                    iv_langs              = '*'
                    iv_skip_main_language = 'E' ).
 

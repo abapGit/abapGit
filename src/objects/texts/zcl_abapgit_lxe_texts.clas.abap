@@ -227,11 +227,14 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    " Convert string of 2-letter ISO languages into table of sy-langu codes
+    " Convert string of languages into table of of 2-letter ISO languages
     SPLIT iv_langs AT ',' INTO TABLE lt_langs_str.
 
     LOOP AT lt_langs_str ASSIGNING <lv_str>.
       lv_laiso = condense( to_upper( <lv_str> ) ).
+      IF strlen( lv_laiso ) = 1.
+        lv_laiso = langu_to_laiso_safe( lv_laiso(1) ).
+      ENDIF.
       APPEND lv_laiso TO rt_languages.
     ENDLOOP.
 
@@ -255,7 +258,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
       <lv_lang> LIKE LINE OF it_languages,
       <lv_str>  TYPE string.
 
-    " Convert table of sy-langu codes into string of 2-letter ISO languages
+    " Convert table of 2-letter ISO languages codes into string
     LOOP AT it_languages ASSIGNING <lv_lang>.
       " Keep * as indicator for 'all installed languages'
       IF <lv_lang> = '*'.
