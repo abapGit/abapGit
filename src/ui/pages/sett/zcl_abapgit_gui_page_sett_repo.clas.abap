@@ -390,7 +390,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     lt_unsupported_langs = zcl_abapgit_lxe_texts=>detect_unsupported_languages( lt_i18n_langs ).
 
     IF lines( lt_unsupported_langs ) > 0.
-      lv_unsupported_langs = concat_lines_of( table = lt_unsupported_langs 
+      lv_unsupported_langs = concat_lines_of( table = lt_unsupported_langs
                                               sep = ', ' ).
       zcx_abapgit_exception=>raise( |Language(s) { lv_unsupported_langs } not supported| ).
     ENDIF.
