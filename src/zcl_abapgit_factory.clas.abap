@@ -96,7 +96,7 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
 
   METHOD get_function_module.
 
-    IF gi_function_module IS INITIAL.
+    IF gi_function_module IS NOT BOUND.
       CREATE OBJECT gi_function_module TYPE zcl_abapgit_function_module.
     ENDIF.
 
@@ -176,7 +176,7 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
 
   METHOD get_tadir.
 
-    IF gi_tadir IS INITIAL.
+    IF gi_tadir IS NOT BOUND.
       CREATE OBJECT gi_tadir TYPE zcl_abapgit_tadir.
     ENDIF.
 
