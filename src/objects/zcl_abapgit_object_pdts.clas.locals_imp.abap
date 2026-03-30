@@ -164,6 +164,11 @@ CLASS lcl_task_definition IMPLEMENTATION.
           lv_element         TYPE swfdname.
 
     li_container = mo_taskdef->container.
+
+    IF li_container IS NOT BOUND.
+      RETURN.
+    ENDIF.
+
     lt_user_elements = li_container->all_elements_list( ).
     lt_system_elements = li_container->all_elements_list( list_system = abap_true ).
 
@@ -197,6 +202,10 @@ CLASS lcl_task_definition IMPLEMENTATION.
 
     DATA lt_exception_list TYPE swf_cx_tab.
     DATA lx_exception TYPE REF TO cx_swf_ifs_exception.
+
+    IF iv_xml_string IS INITIAL OR mo_taskdef->container IS NOT BOUND.
+      RETURN.
+    ENDIF.
 
     mo_taskdef->container->import_from_xml(
             EXPORTING xml_stream     = iv_xml_string
