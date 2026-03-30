@@ -164,6 +164,11 @@ CLASS lcl_task_definition IMPLEMENTATION.
           lv_element         TYPE swfdname.
 
     li_container = mo_taskdef->container.
+
+    IF li_container IS NOT BOUND.
+      RETURN.
+    ENDIF.
+
     lt_user_elements = li_container->all_elements_list( ).
     lt_system_elements = li_container->all_elements_list( list_system = abap_true ).
 

@@ -97,6 +97,11 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
     "Todo: get_user_container strips out system elements, but to_xml adds them back in (hardcoded internally)
     "      Dirty hack further down to remove them from XML until we get this to work properly
     li_container = ii_task->get_user_container( ).
+
+    IF li_container IS NOT BOUND.
+      RETURN.
+    ENDIF.
+
     li_container->to_xml(
       EXPORTING
         include_null_values        = abap_true
