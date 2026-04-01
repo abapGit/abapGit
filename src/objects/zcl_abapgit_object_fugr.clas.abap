@@ -290,6 +290,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
               corrnum                 = iv_transport
               rfcscope                = <ls_func>-rfcscope " not on lower releases
               rfcvers                 = <ls_func>-rfcvers " not on lower releases
+              suppress_corr_check     = abap_false
             IMPORTING
               function_include        = lv_include
               corrnum_e               = lv_transport
@@ -325,6 +326,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
               namespace               = lv_namespace
               remote_basxml_supported = <ls_func>-remote_basxml
               corrnum                 = iv_transport
+              suppress_corr_check     = abap_false
             IMPORTING
               function_include        = lv_include
               corrnum_e               = lv_transport
