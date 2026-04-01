@@ -362,6 +362,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         lt_tasks = zcl_abapgit_factory=>get_cts_api( )->read_request_and_tasks( iv_transport ).
         READ TABLE lt_tasks WITH KEY trkorr = lv_transport TRANSPORTING NO FIELDS.
         IF sy-subrc <> 0.
+          " this happens when a FUNC is recorded in a different transport than
+          " what the current user selected
           ii_log->add_warning( iv_msg  = |FUGR, transport changed to { lv_transport }|
                                is_item = ms_item ).
         ENDIF.
