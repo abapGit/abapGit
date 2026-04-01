@@ -222,6 +222,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
           lv_msg       TYPE string,
           lx_error     TYPE REF TO zcx_abapgit_exception.
 
+    DATA lt_tasks TYPE zif_abapgit_cts_api=>ty_request_and_tasks_tt.
     DATA lv_transport TYPE trkorr.
 
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.
@@ -358,13 +359,12 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       ENDIF.
 
       IF iv_transport IS NOT INITIAL.
-*        DATA lt_tasks TYPE zif_abapgit_cts_api=>ty_request_and_tasks_tt.
-*        lt_tasks = read_request_and_tasks( iv_transport ).
-*        READ TABLE lt_tasks WITH KEY trkorr = lv_transport TRANSPORTING NO FIELDS.
-*        IF sy-subrc <> 0.
-*          ii_log->add_warning( iv_msg  = |FUGR, transport changed to { lv_transport }|
-*                               is_item = ms_item ).
-*        ENDIF.
+        lt_tasks = zcl_abapgit_factory=>get_cts_api( )->read_request_and_tasks( iv_transport ).
+        READ TABLE lt_tasks WITH KEY trkorr = lv_transport TRANSPORTING NO FIELDS.
+        IF sy-subrc <> 0.
+          ii_log->add_warning( iv_msg  = |FUGR, transport changed to { lv_transport }|
+                               is_item = ms_item ).
+        ENDIF.
       ENDIF.
 
       zcl_abapgit_factory=>get_sap_report( )->insert_report(
@@ -556,10 +556,6 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     CASE sy-subrc.
       WHEN 0.
         " Everything is ok
-        BREAK-POINT.
-        IF iv_transport <> lv_transport.
-          BREAK-POINT.
-        ENDIF.
       WHEN 1 OR 3.
         " If the function group exists we need to manually update the short text
         update_func_group_short_text( iv_group      = lv_group
