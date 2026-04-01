@@ -163,7 +163,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
 
   METHOD check_rfc_parameters.
@@ -356,8 +356,15 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
                            is_item = ms_item ).
         CONTINUE.  "with next function module
       ENDIF.
-      IF iv_transport <> lv_transport.
-        BREAK-POINT.
+
+      IF iv_transport IS NOT INITIAL.
+*        DATA lt_tasks TYPE zif_abapgit_cts_api=>ty_request_and_tasks_tt.
+*        lt_tasks = read_request_and_tasks( iv_transport ).
+*        READ TABLE lt_tasks WITH KEY trkorr = lv_transport TRANSPORTING NO FIELDS.
+*        IF sy-subrc <> 0.
+*          ii_log->add_warning( iv_msg  = |FUGR, transport changed to { lv_transport }|
+*                               is_item = ms_item ).
+*        ENDIF.
       ENDIF.
 
       zcl_abapgit_factory=>get_sap_report( )->insert_report(
@@ -549,6 +556,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     CASE sy-subrc.
       WHEN 0.
         " Everything is ok
+        BREAK-POINT.
         IF iv_transport <> lv_transport.
           BREAK-POINT.
         ENDIF.
