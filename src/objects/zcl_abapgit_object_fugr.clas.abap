@@ -222,6 +222,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           lv_msg       TYPE string,
           lx_error     TYPE REF TO zcx_abapgit_exception.
 
+    DATA lv_transport TYPE trkorr.
+
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.
 
     LOOP AT it_functions ASSIGNING <ls_func>.
@@ -290,6 +292,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
               rfcvers                 = <ls_func>-rfcvers " not on lower releases
             IMPORTING
               function_include        = lv_include
+              corrnum_e               = lv_transport
             TABLES
               import_parameter        = <ls_func>-import
               export_parameter        = <ls_func>-export
@@ -324,6 +327,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
               corrnum                 = iv_transport
             IMPORTING
               function_include        = lv_include
+              corrnum_e               = lv_transport
             TABLES
               import_parameter        = <ls_func>-import
               export_parameter        = <ls_func>-export
@@ -349,6 +353,9 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         ii_log->add_error( iv_msg  = |Function module { <ls_func>-funcname }: { lv_msg }|
                            is_item = ms_item ).
         CONTINUE.  "with next function module
+      ENDIF.
+      IF iv_transport <> lv_transport.
+        BREAK-POINT.
       ENDIF.
 
       zcl_abapgit_factory=>get_sap_report( )->insert_report(
@@ -481,6 +488,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           lv_stext     TYPE tftit-stext,
           lv_group     TYPE rs38l-area.
 
+    DATA lv_transport TYPE trkorr.
+
     lv_complete = ms_item-obj_name.
 
     CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
@@ -519,6 +528,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         unicode_checks          = iv_version
         corrnum                 = iv_transport
         suppress_corr_check     = abap_false
+      IMPORTING
+        corrnum                 = lv_transport
       EXCEPTIONS
         name_already_exists     = 1
         name_not_correct        = 2
@@ -536,6 +547,9 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     CASE sy-subrc.
       WHEN 0.
         " Everything is ok
+        IF iv_transport <> lv_transport.
+          BREAK-POINT.
+        ENDIF.
       WHEN 1 OR 3.
         " If the function group exists we need to manually update the short text
         update_func_group_short_text( iv_group      = lv_group

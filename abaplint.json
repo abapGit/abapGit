@@ -101,7 +101,7 @@
     },
     "ambiguous_statement": true,
     "avoid_use": {
-      "break": true,
+      "break": false,
       "defaultKey": false,
       "define": true,
       "describeLines": true,
