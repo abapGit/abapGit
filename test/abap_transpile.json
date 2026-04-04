@@ -25,6 +25,8 @@
     "zcl_abapgit_object_devc",
     "zcl_abapgit_object_filter_obj",
     "zcl_abapgit_object_intf",
+    "ZCL_ABAPGIT_OBJECTS_ACTIVATION",
+    "zcl_abapgit_object_doma",
     "zcl_abapgit_object_zag",
     "zcl_abapgit_objects_bridge",
     "zcl_abapgit_objects_files",
@@ -165,7 +167,10 @@
       {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_check_objects_locked", "method": "throw_excp_if_object_is_locked", "note": "not currently supported in open-abap"},
       {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_check_objects_locked", "method": "no_excp_if_obj_is_not_locked", "note": "not currently supported in open-abap"},
 
-      {"object": "ZCL_ABAPGIT_ABAP_LANGUAGE_VERS", "class": "ltcl_abap_language_version", "method": "is_import_allowed", "note": "CL_ABAP_LANGUAGE_VERSION/_CFG"}
+      {"object": "ZCL_ABAPGIT_ABAP_LANGUAGE_VERS", "class": "ltcl_abap_language_version", "method": "is_import_allowed", "note": "CL_ABAP_LANGUAGE_VERSION/_CFG"},
+
+      {"object": "ZCL_ABAPGIT_OBJECTS_ACTIVATION", "class": "ltcl_tests", "method": "get_ddic_type", "note": "function module DD_E071_TO_DD"},
+      {"object": "ZCL_ABAPGIT_OBJECTS_ACTIVATION", "class": "ltcl_tests", "method": "is_active", "note": "function module DDIF_STATE_GET"}
     ]
   }
 }
