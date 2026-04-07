@@ -222,6 +222,9 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           lv_msg       TYPE string,
           lx_error     TYPE REF TO zcx_abapgit_exception.
 
+    DATA lt_tasks TYPE zif_abapgit_cts_api=>ty_request_and_tasks_tt.
+    DATA lv_transport TYPE trkorr.
+
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.
 
     LOOP AT it_functions ASSIGNING <ls_func>.
@@ -288,8 +291,10 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
               corrnum                 = iv_transport
               rfcscope                = <ls_func>-rfcscope " not on lower releases
               rfcvers                 = <ls_func>-rfcvers " not on lower releases
+              suppress_corr_check     = abap_false
             IMPORTING
               function_include        = lv_include
+              corrnum_e               = lv_transport
             TABLES
               import_parameter        = <ls_func>-import
               export_parameter        = <ls_func>-export
@@ -322,8 +327,10 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
               namespace               = lv_namespace
               remote_basxml_supported = <ls_func>-remote_basxml
               corrnum                 = iv_transport
+              suppress_corr_check     = abap_false
             IMPORTING
               function_include        = lv_include
+              corrnum_e               = lv_transport
             TABLES
               import_parameter        = <ls_func>-import
               export_parameter        = <ls_func>-export
@@ -349,6 +356,17 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         ii_log->add_error( iv_msg  = |Function module { <ls_func>-funcname }: { lv_msg }|
                            is_item = ms_item ).
         CONTINUE.  "with next function module
+      ENDIF.
+
+      IF iv_transport IS NOT INITIAL.
+        lt_tasks = zcl_abapgit_factory=>get_cts_api( )->read_request_and_tasks( iv_transport ).
+        READ TABLE lt_tasks WITH KEY trkorr = lv_transport TRANSPORTING NO FIELDS.
+        IF sy-subrc <> 0.
+          " this happens when a FUNC is recorded in a different transport than
+          " what the current user selected
+          ii_log->add_warning( iv_msg  = |FUGR, transport changed to { lv_transport }|
+                               is_item = ms_item ).
+        ENDIF.
       ENDIF.
 
       zcl_abapgit_factory=>get_sap_report( )->insert_report(
@@ -481,6 +499,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           lv_stext     TYPE tftit-stext,
           lv_group     TYPE rs38l-area.
 
+    DATA lv_transport TYPE trkorr.
+
     lv_complete = ms_item-obj_name.
 
     CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
@@ -519,6 +539,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         unicode_checks          = iv_version
         corrnum                 = iv_transport
         suppress_corr_check     = abap_false
+      IMPORTING
+        corrnum                 = lv_transport
       EXCEPTIONS
         name_already_exists     = 1
         name_not_correct        = 2
