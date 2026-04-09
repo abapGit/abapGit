@@ -541,10 +541,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       WHEN c_action-consolidate.
         rs_handled = call_consolidate( ).
       WHEN c_action-troubleshoot.
-        IF ms_information IS INITIAL.
-          ms_information = zcl_abapgit_flow_logic=>get( ).
-        ENDIF.
-        rs_handled-page  = zcl_abapgit_gui_page_flowtsht=>create( ms_information ).
+        rs_handled-page  = zcl_abapgit_gui_page_flowtsht=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
         rs_handled = zcl_abapgit_flow_page_utils=>call_diff( ii_event ).
