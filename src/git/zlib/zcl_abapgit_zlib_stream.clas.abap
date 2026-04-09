@@ -100,7 +100,7 @@ CLASS zcl_abapgit_zlib_stream IMPLEMENTATION.
     WHILE strlen( rv_bits ) < iv_length.
       IF mv_bits IS INITIAL.
         lv_index = mv_compressed+mv_offset(1) + 1.
-" take precalculated bits for the byte value
+        " take precalculated bits for the byte value
         READ TABLE gt_byte_bits INTO mv_bits INDEX lv_index.
         mv_offset = mv_offset + 1.
       ENDIF.
