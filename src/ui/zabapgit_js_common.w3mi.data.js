@@ -1137,8 +1137,8 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
 
   var td = e.target;
 
-  while (td !== undefined && td.tagName !== "TD" && td.tagName !== "TBODY") td = td.parentElement;
-  if (td === undefined) return;
+  while (td !== null && td !== undefined && td.tagName !== "TD" && td.tagName !== "TBODY") td = td.parentElement;
+  if (td === null || td === undefined) return;
   var table = td.parentElement.parentElement;
 
   var patchColumnCount = 0;
@@ -1198,8 +1198,8 @@ DiffColumnSelection.prototype.copyEventListener = function(e) {
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
   var td = e.target;
 
-  while (td !== undefined && td.tagName !== "TD" && td.tagName !== "TBODY") td = td.parentElement;
-  if (td !== undefined) {
+  while (td !== null && td !== undefined && td.tagName !== "TD" && td.tagName !== "TBODY") td = td.parentElement;
+  if (td !== null && td !== undefined) {
     // Use window.clipboardData instead of e.clipboardData
     // (https://stackoverflow.com/questions/23470958/ie-10-copy-paste-issue)
     var clipboardData = (e.clipboardData === undefined ? window.clipboardData : e.clipboardData);
