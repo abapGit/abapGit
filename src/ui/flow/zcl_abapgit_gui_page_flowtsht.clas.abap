@@ -51,14 +51,18 @@ CLASS zcl_abapgit_gui_page_flowtsht IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
+    ri_html->add( '<div class="repo-overview">' ).
+
     ri_html->add( |<h1>Flow Troubleshooting</h1>| ).
     ri_html->add( |<h2>Why is my transport not shown?</h2>| ).
     ri_html->add( |<ul>| ).
-    ri_html->add( |<li>* Transport must contain repository objects</li>| ).
-    ri_html->add( |<li>* These objects must be in a package that is part of a repository</li>| ).
-    ri_html->add( |<li>* The repository must be flow enabled</li>| ).
-    ri_html->add( |<li>* The user(you) must have the repository as a favorite</li>| ).
+    ri_html->add( |<li>Transport must contain repository objects</li>| ).
+    ri_html->add( |<li>These objects must be in a package that is part of a repository</li>| ).
+    ri_html->add( |<li>The repository must be flow enabled</li>| ).
+    ri_html->add( |<li>The user(you) must have the repository as a favorite</li>| ).
     ri_html->add( |</ul>| ).
+
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
