@@ -193,6 +193,8 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
     IF li_element IS NOT BOUND OR li_element->get_value( ) IS INITIAL.
       zcx_abapgit_exception=>raise( |SRVD: XML must contain DESCRIPTION and be filled| ).
     ENDIF.
+
+* note: these cannot be done after reading the XML, as it will trigger conversion exits and fail while reading
     li_element = io_xml->get_raw( )->find_from_name_ns( 'LANGUAGE' ).
     IF li_element IS NOT BOUND OR strlen( li_element->get_value( ) ) <> 2.
       zcx_abapgit_exception=>raise( |SRVD: XML must contain LANGUAGE and be 2 characters| ).
