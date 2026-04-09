@@ -80,7 +80,7 @@ CLASS zcl_abapgit_zlib IMPLEMENTATION.
 
   METHOD decode.
 
-    DATA: lv_bit   TYPE c LENGTH 1,
+    DATA: lv_bit   TYPE i,
           lv_count TYPE i,
           lv_code  TYPE i,
           lv_index TYPE i,
@@ -90,7 +90,7 @@ CLASS zcl_abapgit_zlib IMPLEMENTATION.
     DO zcl_abapgit_zlib_huffman=>c_maxbits TIMES.
       lv_count = io_huffman->get_count( sy-index ).
 
-      lv_bit = go_stream->take_bits( 1 ).
+      lv_bit = go_stream->take_bit( ).
       lv_code = lv_bit + lv_code * 2.
 
       IF lv_code - lv_count < lv_first.

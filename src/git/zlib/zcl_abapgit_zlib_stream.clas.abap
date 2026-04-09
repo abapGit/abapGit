@@ -13,6 +13,9 @@ CLASS zcl_abapgit_zlib_stream DEFINITION
         !iv_length     TYPE i
       RETURNING
         VALUE(rv_bits) TYPE string .
+    METHODS take_bit
+      RETURNING
+        VALUE(rv_bit) TYPE i .
     METHODS take_int
       IMPORTING
         !iv_length    TYPE i
@@ -92,13 +95,11 @@ CLASS zcl_abapgit_zlib_stream IMPLEMENTATION.
 
     DATA:
       lv_left  TYPE i,
-      lv_index TYPE i,
-      lv_x     TYPE x LENGTH 1.
+      lv_index TYPE i.
 
     WHILE strlen( rv_bits ) < iv_length.
       IF mv_bits IS INITIAL.
-        lv_x = mv_compressed+mv_offset(1).
-        lv_index = lv_x + 1.
+        lv_index = mv_compressed+mv_offset(1) + 1.
 " take precalculated bits for the byte value
         READ TABLE gt_byte_bits INTO mv_bits INDEX lv_index.
         mv_offset = mv_offset + 1.
@@ -114,6 +115,24 @@ CLASS zcl_abapgit_zlib_stream IMPLEMENTATION.
       ENDIF.
 
     ENDWHILE.
+
+  ENDMETHOD.
+
+
+  METHOD take_bit.
+
+    DATA: lv_index TYPE i,
+          lv_len TYPE i.
+
+    IF mv_bits IS INITIAL.
+      lv_index = mv_compressed+mv_offset(1) + 1.
+      READ TABLE gt_byte_bits INTO mv_bits INDEX lv_index.
+      mv_offset = mv_offset + 1.
+    ENDIF.
+
+    lv_len = strlen( mv_bits ) - 1.
+    rv_bit = mv_bits+lv_len(1).
+    mv_bits = mv_bits(lv_len).
 
   ENDMETHOD.
 
