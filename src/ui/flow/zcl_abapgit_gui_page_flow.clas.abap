@@ -35,6 +35,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         rollback_pr         TYPE string VALUE 'rollback_pr',
         update_all_branches TYPE string VALUE 'update_all_branches',
         sort_order          TYPE string VALUE 'sort_order',
+        troubleshoot        TYPE string VALUE 'troubleshoot',
       END OF c_action .
     CONSTANTS:
       BEGIN OF c_sort_order,
@@ -188,6 +189,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ro_advanced_dropdown->add(
       iv_txt = 'Update all branches'
       iv_act = c_action-update_all_branches ).
+
+    ro_advanced_dropdown->add(
+      iv_txt = 'Troubleshooting'
+      iv_act = c_action-troubleshoot ).
 
   ENDMETHOD.
 
@@ -535,6 +540,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-consolidate.
         rs_handled = call_consolidate( ).
+      WHEN c_action-troubleshoot.
+        rs_handled-page  = zcl_abapgit_gui_page_flowtsht=>create( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
         rs_handled = zcl_abapgit_flow_page_utils=>call_diff( ii_event ).
       WHEN c_action-stage_and_commit.
