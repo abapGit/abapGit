@@ -156,7 +156,8 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     )->text(
       iv_name        = c_id-i18n_langs
       iv_label       = 'Serialize Translations for Additional Languages'
-      iv_hint        = 'Comma-separate 2-letter ISO language codes e.g. "DE,ES,..." - should not include main language'
+      iv_hint        = 'Comma-separate 2-letter ISO language codes e.g. "DE,ES,..."'
+                    && ' or "*" as wildcard for all installed languages - should not include main language'
       iv_placeholder = 'e.g. "DE,ES,..."'
     )->checkbox(
       iv_name        = c_id-use_lxe
