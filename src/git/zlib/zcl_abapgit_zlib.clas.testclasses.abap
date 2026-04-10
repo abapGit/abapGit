@@ -9,9 +9,12 @@ CLASS ltcl_zlib DEFINITION FOR TESTING
       dynamic_simple FOR TESTING RAISING cx_dynamic_check zcx_abapgit_exception,
       dynamic_another FOR TESTING RAISING cx_dynamic_check zcx_abapgit_exception,
       dynamic FOR TESTING RAISING cx_dynamic_check zcx_abapgit_exception,
-      not_compressed FOR TESTING RAISING cx_dynamic_check.
+      not_compressed FOR TESTING RAISING cx_dynamic_check,
+      initial_input FOR TESTING RAISING cx_dynamic_check,
+      not_compressed_single FOR TESTING RAISING cx_dynamic_check,
+      compressed_len_check FOR TESTING RAISING cx_dynamic_check.
 
-ENDCLASS.
+ENDCLASS.                    "ltcl_zlib DEFINITION
 
 
 CLASS ltcl_zlib IMPLEMENTATION.
@@ -220,6 +223,60 @@ CLASS ltcl_zlib IMPLEMENTATION.
     cl_abap_unit_assert=>assert_not_initial( ls_data-raw ).
     cl_abap_unit_assert=>assert_equals( act = ls_data-raw
                                         exp = lv_decoded ).
+
+  ENDMETHOD.
+
+  METHOD initial_input.
+
+    DATA: ls_data TYPE zcl_abapgit_zlib=>ty_decompress.
+
+    ls_data = zcl_abapgit_zlib=>decompress( '' ).
+
+    cl_abap_unit_assert=>assert_initial( ls_data-raw ).
+    cl_abap_unit_assert=>assert_initial( ls_data-compressed_len ).
+
+  ENDMETHOD.
+
+  METHOD not_compressed_single.
+
+* stored block (BTYPE=00) containing single byte 'A' (0x41)
+* header: BFINAL=1, BTYPE=00 -> 0x01
+* LEN=1 -> 0x0100, NLEN=~1=0xFFFE -> 0xFEFF, data: 0x41
+
+    DATA: ls_data TYPE zcl_abapgit_zlib=>ty_decompress.
+
+    CONSTANTS:
+      lc_raw        TYPE xstring VALUE '41',
+      lc_compressed TYPE xstring VALUE '010100FEFF41'.
+
+    ls_data = zcl_abapgit_zlib=>decompress( lc_compressed ).
+
+    cl_abap_unit_assert=>assert_not_initial( ls_data-raw ).
+    cl_abap_unit_assert=>assert_equals( act = ls_data-raw
+                                        exp = lc_raw ).
+
+  ENDMETHOD.
+
+  METHOD compressed_len_check.
+
+* verify compressed_len is populated after decompression
+* using the not_compressed test data (17 bytes) with 4 trailing bytes appended
+* compressed_len must be less than the total input length
+
+    DATA: ls_data       TYPE zcl_abapgit_zlib=>ty_decompress,
+          lv_compressed TYPE xstring.
+
+    CONSTANTS:
+      lc_raw TYPE xstring VALUE '4142434445464748494A4B4C'.
+
+    lv_compressed = '010C00F3FF4142434445464748494A4B4C' && 'DEADBEEF'.
+
+    ls_data = zcl_abapgit_zlib=>decompress( lv_compressed ).
+
+    cl_abap_unit_assert=>assert_equals( act = ls_data-raw
+                                        exp = lc_raw ).
+    cl_abap_unit_assert=>assert_not_initial( ls_data-compressed_len ).
+    cl_abap_unit_assert=>assert_true( xsdbool( ls_data-compressed_len < xstrlen( lv_compressed ) ) ).
 
   ENDMETHOD.
 
