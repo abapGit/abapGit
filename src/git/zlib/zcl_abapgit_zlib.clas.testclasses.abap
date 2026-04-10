@@ -228,9 +228,10 @@ CLASS ltcl_zlib IMPLEMENTATION.
 
   METHOD initial_input.
 
-    DATA: ls_data TYPE zcl_abapgit_zlib=>ty_decompress.
+    DATA ls_data TYPE zcl_abapgit_zlib=>ty_decompress.
+    DATA lv_xstr TYPE xstring.
 
-    ls_data = zcl_abapgit_zlib=>decompress( '' ).
+    ls_data = zcl_abapgit_zlib=>decompress( lv_xstr ).
 
     cl_abap_unit_assert=>assert_initial( ls_data-raw ).
     cl_abap_unit_assert=>assert_initial( ls_data-compressed_len ).
