@@ -791,7 +791,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
   METHOD zif_abapgit_object~map_filename_to_object.
 
     IF iv_item_part_of_filename <> zcl_abapgit_filename_logic=>c_package_file-obj_name.
-      zcx_abapgit_exception=>raise( |Unexpected filename for package { cs_item-obj_name }| ).
+      zcx_abapgit_exception=>raise( |Unexpected filename part for package: { iv_item_part_of_filename }| ).
     ENDIF.
 
     " Try to get a unique package name for DEVC by using the path
