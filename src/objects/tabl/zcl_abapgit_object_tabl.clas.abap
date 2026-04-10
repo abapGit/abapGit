@@ -81,7 +81,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -788,7 +788,11 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       EXCEPTIONS
         not_found = 1
         OTHERS    = 2.
-    IF sy-subrc <> 0.
+    IF sy-subrc = 0 AND ls_x030l-tabtype = 'E'.
+      " then its a data element
+      rv_bool = abap_false.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
       " Check for new, inactive, or modified versions that might not be in nametab
       SELECT SINGLE tabname FROM dd02l INTO lv_tabname
         WHERE tabname = lv_tabname.                     "#EC CI_NOORDER
