@@ -12,7 +12,9 @@ CLASS ltcl_zlib DEFINITION FOR TESTING
       not_compressed FOR TESTING RAISING cx_dynamic_check,
       initial_input FOR TESTING RAISING cx_dynamic_check,
       not_compressed_single FOR TESTING RAISING cx_dynamic_check,
-      compressed_len_check FOR TESTING RAISING cx_dynamic_check.
+      compressed_len_check FOR TESTING RAISING cx_dynamic_check,
+      multi_block_stored FOR TESTING RAISING cx_dynamic_check,
+      empty_stored_then_data FOR TESTING RAISING cx_dynamic_check.
 
 ENDCLASS.                    "ltcl_zlib DEFINITION
 
@@ -278,6 +280,46 @@ CLASS ltcl_zlib IMPLEMENTATION.
                                         exp = lc_raw ).
     cl_abap_unit_assert=>assert_not_initial( ls_data-compressed_len ).
     cl_abap_unit_assert=>assert_true( xsdbool( ls_data-compressed_len < xstrlen( lv_compressed ) ) ).
+
+  ENDMETHOD.
+
+  METHOD multi_block_stored.
+
+* two concatenated stored blocks:
+* block 1: BFINAL=0, BTYPE=00, LEN=3, NLEN=~3, data 'ABC'
+* block 2: BFINAL=1, BTYPE=00, LEN=3, NLEN=~3, data 'DEF'
+* expected output: 'ABCDEF'
+
+    DATA: ls_data TYPE zcl_abapgit_zlib=>ty_decompress.
+
+    CONSTANTS:
+      lc_raw        TYPE xstring VALUE '414243444546',
+      lc_compressed TYPE xstring VALUE '000300FCFF414243010300FCFF444546'.
+
+    ls_data = zcl_abapgit_zlib=>decompress( lc_compressed ).
+
+    cl_abap_unit_assert=>assert_not_initial( ls_data-raw ).
+    cl_abap_unit_assert=>assert_equals( act = ls_data-raw
+                                        exp = lc_raw ).
+
+  ENDMETHOD.
+
+  METHOD empty_stored_then_data.
+
+* non-final empty stored block (LEN=0) followed by a final stored block with 'ABC'
+* verifies that a zero-length stored block is handled and the outer block loop continues
+
+    DATA: ls_data TYPE zcl_abapgit_zlib=>ty_decompress.
+
+    CONSTANTS:
+      lc_raw        TYPE xstring VALUE '414243',
+      lc_compressed TYPE xstring VALUE '000000FFFF010300FCFF414243'.
+
+    ls_data = zcl_abapgit_zlib=>decompress( lc_compressed ).
+
+    cl_abap_unit_assert=>assert_not_initial( ls_data-raw ).
+    cl_abap_unit_assert=>assert_equals( act = ls_data-raw
+                                        exp = lc_raw ).
 
   ENDMETHOD.
 
