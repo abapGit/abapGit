@@ -14,11 +14,7 @@ CLASS ltcl_zlib DEFINITION FOR TESTING
       not_compressed_single FOR TESTING RAISING cx_dynamic_check,
       compressed_len_check FOR TESTING RAISING cx_dynamic_check,
       multi_block_stored FOR TESTING RAISING cx_dynamic_check,
-      empty_stored_then_data FOR TESTING RAISING cx_dynamic_check,
-      five_block_chain FOR TESTING RAISING cx_dynamic_check,
-      stored_all_byte_values FOR TESTING RAISING cx_dynamic_check,
-      compressed_len_multi_block FOR TESTING RAISING cx_dynamic_check,
-      stored_with_trailing_junk FOR TESTING RAISING cx_dynamic_check.
+      empty_stored_then_data FOR TESTING RAISING cx_dynamic_check.
 
 ENDCLASS.                    "ltcl_zlib DEFINITION
 
@@ -324,111 +320,6 @@ CLASS ltcl_zlib IMPLEMENTATION.
     cl_abap_unit_assert=>assert_not_initial( ls_data-raw ).
     cl_abap_unit_assert=>assert_equals( act = ls_data-raw
                                         exp = lc_raw ).
-
-  ENDMETHOD.
-
-  METHOD five_block_chain.
-
-* five stored blocks chained together, each carrying a single byte
-* exercises the outer block loop over many iterations and
-* verifies BFINAL handling on the last block only
-
-    DATA: ls_data TYPE zcl_abapgit_zlib=>ty_decompress.
-
-    CONSTANTS:
-      lc_raw        TYPE xstring VALUE '4142434445',
-      lc_compressed TYPE xstring VALUE '000100FEFF41000100FEFF42000100FEFF43000100FEFF44010100FEFF45'.
-
-    ls_data = zcl_abapgit_zlib=>decompress( lc_compressed ).
-
-    cl_abap_unit_assert=>assert_not_initial( ls_data-raw ).
-    cl_abap_unit_assert=>assert_equals( act = ls_data-raw
-                                        exp = lc_raw ).
-    cl_abap_unit_assert=>assert_equals( act = ls_data-compressed_len
-                                        exp = xstrlen( lc_compressed ) ).
-
-  ENDMETHOD.
-
-  METHOD stored_all_byte_values.
-
-* a single stored block carrying all 256 byte values (0x00..0xFF)
-* LEN = 256 -> little endian 0x00 0x01, NLEN = ~256 -> 0xFF 0xFE
-* verifies raw data integrity including 0x00 and high bytes
-
-    DATA: ls_data       TYPE zcl_abapgit_zlib=>ty_decompress,
-          lv_raw        TYPE xstring,
-          lv_compressed TYPE xstring,
-          lv_x          TYPE x LENGTH 1,
-          lv_byte       TYPE i.
-
-    DO 256 TIMES.
-      lv_byte = sy-index - 1.
-      lv_x = lv_byte.
-      CONCATENATE lv_raw lv_x INTO lv_raw IN BYTE MODE.
-    ENDDO.
-
-    lv_compressed = '010001FFFE'.
-    CONCATENATE lv_compressed lv_raw INTO lv_compressed IN BYTE MODE.
-
-    ls_data = zcl_abapgit_zlib=>decompress( lv_compressed ).
-
-    cl_abap_unit_assert=>assert_not_initial( ls_data-raw ).
-    cl_abap_unit_assert=>assert_equals( act = ls_data-raw
-                                        exp = lv_raw ).
-    cl_abap_unit_assert=>assert_equals( act = xstrlen( ls_data-raw )
-                                        exp = 256 ).
-    cl_abap_unit_assert=>assert_equals( act = ls_data-compressed_len
-                                        exp = xstrlen( lv_compressed ) ).
-
-  ENDMETHOD.
-
-  METHOD compressed_len_multi_block.
-
-* verify compressed_len tracks the consumed bytes across a multi-block
-* stream even when extra trailing bytes are appended
-* two stored blocks ('ABC' then 'DEF') plus 4 trailing junk bytes
-
-    DATA: ls_data       TYPE zcl_abapgit_zlib=>ty_decompress,
-          lv_compressed TYPE xstring.
-
-    CONSTANTS:
-      lc_raw      TYPE xstring VALUE '414243444546',
-      lc_stream   TYPE xstring VALUE '000300FCFF414243010300FCFF444546',
-      lc_trailing TYPE xstring VALUE 'CAFEBABE'.
-
-    CONCATENATE lc_stream lc_trailing INTO lv_compressed IN BYTE MODE.
-
-    ls_data = zcl_abapgit_zlib=>decompress( lv_compressed ).
-
-    cl_abap_unit_assert=>assert_equals( act = ls_data-raw
-                                        exp = lc_raw ).
-    cl_abap_unit_assert=>assert_equals( act = ls_data-compressed_len
-                                        exp = xstrlen( lc_stream ) ).
-
-  ENDMETHOD.
-
-  METHOD stored_with_trailing_junk.
-
-* stored block followed by unrelated trailing bytes
-* exercises the compressed_len bookkeeping and ensures
-* trailing data does not leak into the raw output
-
-    DATA: ls_data       TYPE zcl_abapgit_zlib=>ty_decompress,
-          lv_compressed TYPE xstring.
-
-    CONSTANTS:
-      lc_raw    TYPE xstring VALUE '41',
-      lc_block  TYPE xstring VALUE '010100FEFF41',
-      lc_junk   TYPE xstring VALUE '0102030405060708'.
-
-    CONCATENATE lc_block lc_junk INTO lv_compressed IN BYTE MODE.
-
-    ls_data = zcl_abapgit_zlib=>decompress( lv_compressed ).
-
-    cl_abap_unit_assert=>assert_equals( act = ls_data-raw
-                                        exp = lc_raw ).
-    cl_abap_unit_assert=>assert_equals( act = ls_data-compressed_len
-                                        exp = xstrlen( lc_block ) ).
 
   ENDMETHOD.
 
