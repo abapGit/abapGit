@@ -170,6 +170,8 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
     ri_html->add( |<tr><td>LCL_TIME:       </td><td>{ zcl_abapgit_git_time=>get_unix( ) }</td></tr>| ).
     ri_html->add( |<tr><td>SY time:        </td><td>{ sy-datum } { sy-uzeit } { sy-tzone }</td></tr>| ).
     ri_html->add( |<tr><td>SY release:     </td><td>{ ls_release-release } SP { ls_release-sp }</td></tr>| ).
+    ri_html->add( |<tr><td>Charsize:       </td><td>{ cl_abap_char_utilities=>charsize }</td></tr>| ).
+    ri_html->add( |<tr><td>Endian:         </td><td>{ cl_abap_char_utilities=>endian }</td></tr>| ).
     ri_html->add( |</table>| ).
     ri_html->add( |<br>| ).
 
