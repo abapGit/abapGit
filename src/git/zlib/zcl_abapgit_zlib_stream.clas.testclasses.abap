@@ -8,6 +8,7 @@ CLASS ltcl_test DEFINITION FOR TESTING
     METHODS test_byte_00 FOR TESTING RAISING cx_static_check.
     METHODS test_byte_ff FOR TESTING RAISING cx_static_check.
     METHODS test_empty FOR TESTING RAISING cx_static_check.
+    METHODS test_take_bit_vs_take_bits FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -125,6 +126,29 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lo_stream->take_bytes( 1 )
       exp = 'FF' ).
+
+  ENDMETHOD.
+
+  METHOD test_take_bit_vs_take_bits.
+
+    DATA lo_stream1 TYPE REF TO zcl_abapgit_zlib_stream.
+    DATA lo_stream2 TYPE REF TO zcl_abapgit_zlib_stream.
+    DATA lv_bit     TYPE i.
+    DATA lv_bits    TYPE string.
+
+    " A5 = 10100101, mix of 0s and 1s across a full byte
+    CREATE OBJECT lo_stream1 EXPORTING iv_data = 'A5'.
+    CREATE OBJECT lo_stream2 EXPORTING iv_data = 'A5'.
+
+    DO 8 TIMES.
+      lv_bit  = lo_stream1->take_bit( ).
+      lv_bits = lo_stream2->take_bits( 1 ).
+
+      cl_abap_unit_assert=>assert_equals(
+        act = lv_bit
+        exp = lv_bits
+        msg = |Mismatch at bit { sy-index }| ).
+    ENDDO.
 
   ENDMETHOD.
 

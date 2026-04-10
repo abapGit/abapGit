@@ -4,6 +4,7 @@ CLASS zcl_abapgit_zlib_stream DEFINITION
 
   PUBLIC SECTION.
 
+    CLASS-METHODS class_constructor .
     METHODS constructor
       IMPORTING
         !iv_data TYPE xstring .
@@ -12,6 +13,9 @@ CLASS zcl_abapgit_zlib_stream DEFINITION
         !iv_length     TYPE i
       RETURNING
         VALUE(rv_bits) TYPE string .
+    METHODS take_bit
+      RETURNING
+        VALUE(rv_bit) TYPE i .
     METHODS take_int
       IMPORTING
         !iv_length    TYPE i
@@ -34,6 +38,7 @@ CLASS zcl_abapgit_zlib_stream DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    CLASS-DATA gt_byte_bits TYPE STANDARD TABLE OF string WITH DEFAULT KEY .
     DATA mv_bits TYPE string .
     DATA mv_compressed TYPE xstring .
     DATA mv_offset TYPE i.
@@ -42,6 +47,28 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_zlib_stream IMPLEMENTATION.
+
+
+  METHOD class_constructor.
+
+    DATA:
+      lv_x    TYPE x LENGTH 1,
+      lv_bits TYPE string,
+      lv_c    TYPE c,
+      lv_int  TYPE i.
+
+    DO 256 TIMES.
+      lv_int = sy-index - 1.
+      lv_x = lv_int.
+      CLEAR lv_bits.
+      DO 8 TIMES.
+        GET BIT sy-index OF lv_x INTO lv_c.
+        CONCATENATE lv_bits lv_c INTO lv_bits.
+      ENDDO.
+      APPEND lv_bits TO gt_byte_bits.
+    ENDDO.
+
+  ENDMETHOD.
 
 
   METHOD clear_bits.
@@ -68,20 +95,13 @@ CLASS zcl_abapgit_zlib_stream IMPLEMENTATION.
 
     DATA:
       lv_left  TYPE i,
-      lv_index TYPE i,
-      lv_c     TYPE c,
-      lv_x     TYPE x LENGTH 1.
+      lv_index TYPE i.
 
     WHILE strlen( rv_bits ) < iv_length.
       IF mv_bits IS INITIAL.
-        lv_x = mv_compressed+mv_offset(1).
-
-        " inlining hex_to_bits for better performance
-        DO 8 TIMES.
-          GET BIT sy-index OF lv_x INTO lv_c.
-          CONCATENATE mv_bits lv_c INTO mv_bits.
-        ENDDO.
-
+        lv_index = mv_compressed+mv_offset(1) + 1.
+        " take precalculated bits for the byte value
+        READ TABLE gt_byte_bits INTO mv_bits INDEX lv_index.
         mv_offset = mv_offset + 1.
       ENDIF.
       lv_left = iv_length - strlen( rv_bits ).
@@ -95,6 +115,24 @@ CLASS zcl_abapgit_zlib_stream IMPLEMENTATION.
       ENDIF.
 
     ENDWHILE.
+
+  ENDMETHOD.
+
+
+  METHOD take_bit.
+
+    DATA: lv_index TYPE i,
+          lv_len TYPE i.
+
+    IF mv_bits IS INITIAL.
+      lv_index = mv_compressed+mv_offset(1) + 1.
+      READ TABLE gt_byte_bits INTO mv_bits INDEX lv_index.
+      mv_offset = mv_offset + 1.
+    ENDIF.
+
+    lv_len = strlen( mv_bits ) - 1.
+    rv_bit = mv_bits+lv_len(1).
+    mv_bits = mv_bits(lv_len).
 
   ENDMETHOD.
 
