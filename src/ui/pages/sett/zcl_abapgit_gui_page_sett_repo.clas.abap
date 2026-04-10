@@ -389,7 +389,8 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_langs              = mo_form_data->get( c_id-i18n_langs )
       iv_skip_main_language = lo_dot->get_main_language( ) ).
 
-    IF NOT line_exists( lt_i18n_langs[ table_line = '*' ] ).
+    READ TABLE lt_i18n_langs WITH KEY table_line = '*' TRANSPORTING NO FIELDS.
+    IF sy-subrc <> 0.
       lt_unsupported_langs = zcl_abapgit_lxe_texts=>detect_unsupported_languages( lt_i18n_langs ).
 
       IF lines( lt_unsupported_langs ) > 0.
