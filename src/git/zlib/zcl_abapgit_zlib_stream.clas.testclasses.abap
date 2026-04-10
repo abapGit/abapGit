@@ -56,12 +56,12 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD test_empty.
 
     DATA lo_stream TYPE REF TO zcl_abapgit_zlib_stream.
+    DATA lv_xstr TYPE xstring.
 
     CREATE OBJECT lo_stream
       EXPORTING
-        iv_data = ''.
+        iv_data = lv_xstr.
 
-* hmm, yea, this is seems to be the behavior
     cl_abap_unit_assert=>assert_equals(
       act = lo_stream->remaining( )
       exp = 1 ).
