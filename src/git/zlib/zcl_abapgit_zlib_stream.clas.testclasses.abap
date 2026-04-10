@@ -182,6 +182,14 @@ CLASS ltcl_test IMPLEMENTATION.
     CREATE OBJECT lo_stream2 EXPORTING iv_data = 'A53C'.
 
     DO 16 TIMES.
+      cl_abap_unit_assert=>assert_equals(
+        act = lo_stream1->remaining( )
+        exp = lo_stream2->remaining( ) ).
+
+      cl_abap_unit_assert=>assert_equals(
+        act = lo_stream1->mv_bits
+        exp = lo_stream2->mv_bits ).
+
       lv_bit  = lo_stream1->take_bit( ).
       lv_bits = lo_stream2->take_bits( 1 ).
 
