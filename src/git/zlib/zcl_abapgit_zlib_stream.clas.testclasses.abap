@@ -12,6 +12,7 @@ CLASS ltcl_test DEFINITION FOR TESTING
     METHODS test_empty FOR TESTING RAISING cx_static_check.
     METHODS test_take_bit_vs_take_bits FOR TESTING RAISING cx_static_check.
     METHODS test_take_bit_cross_byte FOR TESTING RAISING cx_static_check.
+    METHODS test_take_bit_last_clears FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -206,6 +207,41 @@ CLASS ltcl_test IMPLEMENTATION.
         act = lo_stream1->mv_bits
         exp = lo_stream2->mv_bits ).
     ENDDO.
+
+  ENDMETHOD.
+
+  METHOD test_take_bit_last_clears.
+
+* Regression: take_bit must leave mv_bits initial after consuming
+* the last bit of a byte. Without an explicit CLEAR, the expression
+* mv_bits = mv_bits(0) can produce a non-initial value in native
+* ABAP, preventing the next byte from being loaded.
+
+    DATA lo_stream TYPE REF TO zcl_abapgit_zlib_stream.
+
+    CREATE OBJECT lo_stream EXPORTING iv_data = 'A53C'.
+
+    " Consume all 8 bits of the first byte
+    DO 8 TIMES.
+      lo_stream->take_bit( ).
+    ENDDO.
+
+    " After 8 bits, mv_bits must be initial so the next call loads byte 2
+    cl_abap_unit_assert=>assert_initial(
+      act = lo_stream->mv_bits
+      msg = |mv_bits must be initial after consuming all 8 bits| ).
+
+    " Verify the 9th bit comes from byte 2 (0x3C = 00111100)
+    " Bits are read right-to-left, so first bit of 0x3C is 0
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_stream->take_bit( )
+      exp = 0
+      msg = |9th bit must come from second byte| ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_stream->mv_bits
+      exp = '0011110'
+      msg = |mv_bits must contain remaining 7 bits of second byte| ).
 
   ENDMETHOD.
 
