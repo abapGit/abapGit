@@ -387,12 +387,15 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     lt_i18n_langs = zcl_abapgit_lxe_texts=>convert_lang_string_to_table(
       iv_langs              = mo_form_data->get( c_id-i18n_langs )
       iv_skip_main_language = lo_dot->get_main_language( ) ).
-    lt_unsupported_langs = zcl_abapgit_lxe_texts=>detect_unsupported_languages( lt_i18n_langs ).
 
-    IF lines( lt_unsupported_langs ) > 0.
-      lv_unsupported_langs = concat_lines_of( table = lt_unsupported_langs
-                                              sep   = ', ' ).
-      zcx_abapgit_exception=>raise( |Language(s) { lv_unsupported_langs } not supported| ).
+    IF NOT line_exists( lt_i18n_langs[ table_line = '*' ] ).
+      lt_unsupported_langs = zcl_abapgit_lxe_texts=>detect_unsupported_languages( lt_i18n_langs ).
+
+      IF lines( lt_unsupported_langs ) > 0.
+        lv_unsupported_langs = concat_lines_of( table = lt_unsupported_langs
+                                                sep   = ', ' ).
+        zcx_abapgit_exception=>raise( |Language(s) { lv_unsupported_langs } not supported| ).
+      ENDIF.
     ENDIF.
 
     lo_dot->set_i18n_languages( lt_i18n_langs ).
