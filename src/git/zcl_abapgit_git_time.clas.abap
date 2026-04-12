@@ -32,7 +32,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_time IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_TIME IMPLEMENTATION.
 
 
   METHOD get_one_year_ago.
@@ -65,7 +65,7 @@ CLASS zcl_abapgit_git_time IMPLEMENTATION.
 
     rv_time = lv_seconds.
     CONDENSE rv_time.
-    rv_time+11 = '+000000'.
+    rv_time+11 = '+0000'.
 
   ENDMETHOD.
 
