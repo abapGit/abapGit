@@ -32,7 +32,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_TIME IMPLEMENTATION.
+CLASS zcl_abapgit_git_time IMPLEMENTATION.
 
 
   METHOD get_one_year_ago.
