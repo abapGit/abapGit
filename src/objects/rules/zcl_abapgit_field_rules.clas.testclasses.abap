@@ -223,7 +223,7 @@ CLASS ltcl_field_rules IMPLEMENTATION.
     INSERT ls_act INTO TABLE lt_act.
     ls_act-key  = 2.
     ls_act-user = 'XYZ'.
-    ls_act-date = ''.
+    ls_act-date = '00000000'.
     ls_act-time = '123456'.
     INSERT ls_act INTO TABLE lt_act.
 
