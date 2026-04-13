@@ -249,7 +249,8 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_rollname TYPE dd04l-rollname.
+    DATA lv_rollname TYPE dd04l-rollname.
+    DATA ls_x030l    TYPE x030l.
 
     lv_rollname = ms_item-obj_name.
 
@@ -257,10 +258,16 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     CALL FUNCTION 'DD_GET_NAMETAB_HEADER'
       EXPORTING
         tabname   = lv_rollname
+      IMPORTING
+        x030l_wa  = ls_x030l
       EXCEPTIONS
         not_found = 1
         OTHERS    = 2.
-    IF sy-subrc <> 0.
+    IF sy-subrc = 0 AND ls_x030l-tabtype <> 'E'.
+      " then its not a data element
+      rv_bool = abap_false.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
       " Check for inactive or modified versions
       SELECT SINGLE rollname FROM dd04l INTO lv_rollname
         WHERE rollname = lv_rollname.
