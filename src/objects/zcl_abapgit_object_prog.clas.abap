@@ -222,7 +222,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                   CHANGING cg_data  = ls_progdir ).
 
     IF ls_progdir-name IS INITIAL.
-      zcx_abapgit_exception=>raise( |PROGDIR-NAME must not be empty| ).
+      zcx_abapgit_exception=>raise( |PROGDIR-NAME must be filled| ).
     ENDIF.
 
     set_abap_language_version( CHANGING cv_abap_language_version = ls_progdir-uccheck ).
