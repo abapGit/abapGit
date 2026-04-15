@@ -621,6 +621,9 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
                                   iv_obj_name  = iv_obj_name ).
 
     ELSE.
+      IF iv_obj_name IS INITIAL.
+        zcx_abapgit_exception=>raise( |RS_CORR_INSERT: Object name must not be empty| ).
+      ENDIF.
 
       CALL FUNCTION 'RS_CORR_INSERT'
         EXPORTING
