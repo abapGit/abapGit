@@ -137,11 +137,14 @@ INTERFACE zif_abapgit_cts_api
     RAISING
       zcx_abapgit_exception .
 
+  TYPES ty_skip_limu_types_tt TYPE RANGE OF e071-object.
+
   METHODS list_r3tr_by_request
     IMPORTING
-      !iv_request    TYPE trkorr
+      !iv_request         TYPE trkorr
+      !it_skip_limu_types TYPE ty_skip_limu_types_tt OPTIONAL
     RETURNING
-      VALUE(rt_list) TYPE ty_transport_obj_tt
+      VALUE(rt_list)      TYPE ty_transport_obj_tt
     RAISING
       zcx_abapgit_exception .
 
