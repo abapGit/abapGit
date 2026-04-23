@@ -549,7 +549,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         rs_handled-page  = zcl_abapgit_gui_page_flowtsht=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN c_action-unsupported_objects.
-        rs_handled-page  = zcl_abapgit_gui_page_flowtsht=>create( ).
+        rs_handled-page  = zcl_abapgit_gui_page_flowuns=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
         rs_handled = zcl_abapgit_flow_page_utils=>call_diff( ii_event ).
