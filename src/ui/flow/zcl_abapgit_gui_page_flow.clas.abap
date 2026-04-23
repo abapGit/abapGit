@@ -34,6 +34,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         show_details        TYPE string VALUE 'show_details',
         rollback_pr         TYPE string VALUE 'rollback_pr',
         update_all_branches TYPE string VALUE 'update_all_branches',
+        unsupported_objects TYPE string VALUE 'unsupported_objects',
         sort_order          TYPE string VALUE 'sort_order',
         troubleshoot        TYPE string VALUE 'troubleshoot',
       END OF c_action .
@@ -189,6 +190,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ro_advanced_dropdown->add(
       iv_txt = 'Update all branches'
       iv_act = c_action-update_all_branches ).
+
+    ro_advanced_dropdown->add(
+      iv_txt = 'Unsupported object types'
+      iv_act = c_action-unsupported_objects ).
 
     ro_advanced_dropdown->add(
       iv_txt = 'Troubleshooting'
@@ -541,6 +546,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       WHEN c_action-consolidate.
         rs_handled = call_consolidate( ).
       WHEN c_action-troubleshoot.
+        rs_handled-page  = zcl_abapgit_gui_page_flowtsht=>create( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+      WHEN c_action-unsupported_objects.
         rs_handled-page  = zcl_abapgit_gui_page_flowtsht=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
