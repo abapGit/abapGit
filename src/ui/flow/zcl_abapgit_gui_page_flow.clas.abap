@@ -443,6 +443,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     DATA lv_user  TYPE syuname.
     DATA lt_users TYPE zif_abapgit_flow_logic=>ty_users_tt.
+    DATA lv_txt   TYPE string.
 
     CREATE OBJECT ro_toolbar.
 
@@ -458,8 +459,12 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       iv_act = c_action-username_filter ).
 
     LOOP AT lt_users INTO lv_user.
+      lv_txt = |{ lv_user }|.
+      IF lv_user = sy-uname.
+        lv_txt = |{ lv_txt } <b>(you)</b>|.
+      ENDIF.
       ro_toolbar->add(
-        iv_txt = |{ lv_user }|
+        iv_txt = lv_txt
         iv_chk = boolc( ms_user_settings-username_filter = lv_user )
         iv_act = |{ c_action-username_filter }?user={ lv_user }| ).
     ENDLOOP.
