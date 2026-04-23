@@ -24,7 +24,15 @@ CLASS zcl_abapgit_password_dialog IMPLEMENTATION.
 
   METHOD popup.
 
-    DATA: lx_error TYPE REF TO cx_sy_dyn_call_illegal_form.
+    DATA lx_error TYPE REF TO cx_sy_dyn_call_illegal_form.
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
+
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->change_password_popup_username(
+      EXPORTING
+        iv_repo_url = iv_repo_url
+      CHANGING
+        cv_user     = cv_user ).
 
     IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true.
 
