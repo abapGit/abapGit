@@ -552,13 +552,15 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 
   METHOD find_open_transports.
 
-    DATA lt_trkorr   TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
-    DATA lv_trkorr   LIKE LINE OF lt_trkorr.
-    DATA ls_result   LIKE LINE OF rt_transports.
-    DATA lt_objects  TYPE zif_abapgit_cts_api=>ty_transport_obj_tt.
-    DATA lv_obj_name TYPE tadir-obj_name.
-    DATA lt_date     TYPE zif_abapgit_cts_api=>ty_date_range.
-    DATA ls_date     LIKE LINE OF lt_date.
+    DATA lt_trkorr    TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
+    DATA lv_trkorr    LIKE LINE OF lt_trkorr.
+    DATA ls_result    LIKE LINE OF rt_transports.
+    DATA lt_objects   TYPE zif_abapgit_cts_api=>ty_transport_obj_tt.
+    DATA lv_obj_name  TYPE tadir-obj_name.
+    DATA lt_date      TYPE zif_abapgit_cts_api=>ty_date_range.
+    DATA ls_date      LIKE LINE OF lt_date.
+    DATA lt_limu_skip TYPE zif_abapgit_cts_api=>ty_skip_limu_types_tt.
+    DATA ls_limu_skip LIKE LINE OF lt_limu_skip.
     FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
 
 * only look for transports that are created/changed in the last two years
@@ -574,11 +576,20 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       ls_result-title  = zcl_abapgit_factory=>get_cts_api( )->read_description( lv_trkorr ).
       ls_result-changed_at = get_latest_task_timestamp( lv_trkorr ).
 
-      lt_objects = zcl_abapgit_factory=>get_cts_api( )->list_r3tr_by_request( lv_trkorr ).
-      " SOTT = Concept (Online Text Repository) - Short Texts for packages are not serialized anyhow
+* LIMU skipped here:
+" SOTT = Concept (Online Text Repository) - Short Texts for packages are not serialized anyhow
+      CLEAR ls_limu_skip.
+      ls_limu_skip-sign = 'I'.
+      ls_limu_skip-option = 'EQ'.
+      ls_limu_skip-low = 'SOTT'.
+      INSERT ls_limu_skip INTO TABLE lt_limu_skip.
+      lt_objects = zcl_abapgit_factory=>get_cts_api( )->list_r3tr_by_request(
+        iv_request         = lv_trkorr
+        it_skip_limu_types = lt_limu_skip ).
+
+* R3TR can be skipped here
       LOOP AT lt_objects ASSIGNING <ls_object>
           WHERE object <> 'CINS'
-          AND object <> 'SOTT'
           AND object <> 'NOTE'.
         ls_result-object   = <ls_object>-object.
         ls_result-obj_name = <ls_object>-obj_name.

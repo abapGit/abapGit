@@ -34,6 +34,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         show_details        TYPE string VALUE 'show_details',
         rollback_pr         TYPE string VALUE 'rollback_pr',
         update_all_branches TYPE string VALUE 'update_all_branches',
+        unsupported_objects TYPE string VALUE 'unsupported_objects',
         sort_order          TYPE string VALUE 'sort_order',
         troubleshoot        TYPE string VALUE 'troubleshoot',
       END OF c_action .
@@ -189,6 +190,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ro_advanced_dropdown->add(
       iv_txt = 'Update all branches'
       iv_act = c_action-update_all_branches ).
+
+    ro_advanced_dropdown->add(
+      iv_txt = 'Unsupported object types'
+      iv_act = c_action-unsupported_objects ).
 
     ro_advanced_dropdown->add(
       iv_txt = 'Troubleshooting'
@@ -438,6 +443,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     DATA lv_user  TYPE syuname.
     DATA lt_users TYPE zif_abapgit_flow_logic=>ty_users_tt.
+    DATA lv_txt   TYPE string.
 
     CREATE OBJECT ro_toolbar.
 
@@ -453,8 +459,12 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       iv_act = c_action-username_filter ).
 
     LOOP AT lt_users INTO lv_user.
+      lv_txt = |{ lv_user }|.
+      IF lv_user = sy-uname.
+        lv_txt = |{ lv_txt } <b>(you)</b>|.
+      ENDIF.
       ro_toolbar->add(
-        iv_txt = |{ lv_user }|
+        iv_txt = lv_txt
         iv_chk = boolc( ms_user_settings-username_filter = lv_user )
         iv_act = |{ c_action-username_filter }?user={ lv_user }| ).
     ENDLOOP.
@@ -542,6 +552,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         rs_handled = call_consolidate( ).
       WHEN c_action-troubleshoot.
         rs_handled-page  = zcl_abapgit_gui_page_flowtsht=>create( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+      WHEN c_action-unsupported_objects.
+        rs_handled-page  = zcl_abapgit_gui_page_flowuns=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
         rs_handled = zcl_abapgit_flow_page_utils=>call_diff( ii_event ).

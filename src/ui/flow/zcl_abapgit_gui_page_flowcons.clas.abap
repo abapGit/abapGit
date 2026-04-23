@@ -288,8 +288,7 @@ CLASS zcl_abapgit_gui_page_flowcons IMPLEMENTATION.
     ENDLOOP.
 
     IF lines( ms_consolidate-missing_remote ) = 0
-        AND lines( ms_consolidate-only_remote ) = 0
-        AND lines( ms_consolidate-errors ) = 0.
+        AND lines( ms_consolidate-only_remote ) = 0.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_success( 'Everything consolidated' ) ).
     ENDIF.
 
