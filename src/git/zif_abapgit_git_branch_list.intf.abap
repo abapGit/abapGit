@@ -25,5 +25,8 @@ INTERFACE zif_abapgit_git_branch_list PUBLIC.
       VALUE(rt_tags) TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
     RAISING
       zcx_abapgit_exception .
+  METHODS get_capabilities
+    RETURNING
+      VALUE(rv_capabilities) TYPE string .
 
 ENDINTERFACE.
