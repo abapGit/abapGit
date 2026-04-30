@@ -6,7 +6,7 @@ CLASS zcl_abapgit_object_smtg DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 
   PROTECTED SECTION.
-    METHODS:get_additional_extensions REDEFINITION.
+    METHODS: get_additional_extensions REDEFINITION.
   PRIVATE SECTION.
     DATA mv_template_id TYPE c LENGTH 30.
     DATA mo_structdescr TYPE REF TO cl_abap_structdescr.
