@@ -4,9 +4,9 @@ CLASS zcl_abapgit_object_smtg DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS zif_abapgit_object~changed_by REDEFINITION.
     METHODS zif_abapgit_object~deserialize REDEFINITION.
 
-
   PROTECTED SECTION.
-    METHODS: get_additional_extensions REDEFINITION.
+    METHODS:get_additional_extensions REDEFINITION.
+
   PRIVATE SECTION.
     DATA mv_template_id TYPE c LENGTH 30.
     DATA mo_structdescr TYPE REF TO cl_abap_structdescr.
@@ -34,8 +34,8 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
           ls_template_header    TYPE REF TO data.
 
 
-    FIELD-SYMBOLS: <fs_template_header>     TYPE any,
-                   <fs_template_changed_by> TYPE any.
+    FIELD-SYMBOLS: <lg_template_header>     TYPE any,
+                   <lg_template_changed_by> TYPE any.
 
     lv_email_template_id = ms_item-obj_name.
     TRY.
@@ -56,14 +56,16 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
         ENDIF.
 
         CREATE DATA ls_template_header TYPE ('IF_SMTG_EMAIL_TEMPLATE=>TY_GS_TMPL_HDR').
-        ASSIGN ls_template_header->* TO <fs_template_header>.
-        CALL METHOD lo_email_template_api->('IF_SMTG_EMAIL_TEMPLATE~GET_TMPL_HDR') RECEIVING rs_tmpl_hdr = <fs_template_header>.
-        ASSIGN COMPONENT 'LST_CH_USER_ACCT' OF STRUCTURE <fs_template_header> TO <fs_template_changed_by>.
+        ASSIGN ls_template_header->* TO <lg_template_header>.
+        CALL METHOD lo_email_template_api->('IF_SMTG_EMAIL_TEMPLATE~GET_TMPL_HDR')
+          RECEIVING
+            rs_tmpl_hdr = <lg_template_header>.
+        ASSIGN COMPONENT 'LST_CH_USER_ACCT' OF STRUCTURE <lg_template_header> TO <lg_template_changed_by>.
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
-    rv_user = <fs_template_changed_by>.
+    rv_user = <lg_template_changed_by>.
 
   ENDMETHOD.
 
@@ -72,18 +74,16 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
     DATA lo_file_name_pattern TYPE REF TO object.
     DATA lo_aff_file_name_mapper   TYPE REF TO object.
     DATA lx_error TYPE REF TO cx_root.
+    DATA lr_pattern_param TYPE REF TO data.
+    FIELD-SYMBOLS <lg_pattern_param> TYPE any.
 
-    CHECK mv_xml_modus_on = abap_false.
+    IF mv_xml_modus_on = abap_true.
+      RETURN.
+    ENDIF.
 
     TRY.
-        DATA:
-          lr_pattern_param TYPE REF TO data,
-          lt_params        TYPE abap_parmbind_tab,
-          ls_param         TYPE abap_parmbind.
-        FIELD-SYMBOLS <pattern_param> TYPE any.
-
         CREATE DATA lr_pattern_param TYPE REF TO ('CL_AFF_FILE_NAME_PATTERN').
-        ASSIGN lr_pattern_param->* TO <pattern_param>.
+        ASSIGN lr_pattern_param->* TO <lg_pattern_param>.
 
         CALL METHOD ('CL_AFF_FILE_NAME_PATTERN')=>('FOR_OBJ_NAME')
           RECEIVING
@@ -93,9 +93,9 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
           EXPORTING
             fragment = 'html'.
 
-        <pattern_param> ?= lo_file_name_pattern.
+        <lg_pattern_param> ?= lo_file_name_pattern.
         CREATE OBJECT lo_aff_file_name_mapper TYPE ('CL_AFF_FILE_NAME_MAPPER')
-          EXPORTING pattern = <pattern_param>.
+          EXPORTING pattern = <lg_pattern_param>.
         ls_additional_extension-file_name_mapper = lo_aff_file_name_mapper.
         ls_additional_extension-extension        = 'html'.
         APPEND ls_additional_extension TO rv_additional_extensions.
@@ -109,13 +109,13 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
         CALL METHOD lo_file_name_pattern->('APPEND')
           EXPORTING
             fragment = 'txt'.
-        <pattern_param> ?= lo_file_name_pattern.
+        <lg_pattern_param> ?= lo_file_name_pattern.
         CREATE OBJECT lo_aff_file_name_mapper TYPE ('CL_AFF_FILE_NAME_MAPPER')
-          EXPORTING pattern = <pattern_param>.
+          EXPORTING pattern = <lg_pattern_param>.
         ls_additional_extension-file_name_mapper = lo_aff_file_name_mapper.
         ls_additional_extension-extension        = 'txt'.
         APPEND ls_additional_extension TO rv_additional_extensions.
-      CATCH cx_root INTO lx_error.
+      CATCH cx_root INTO lx_error    ##NO_HANDLER.
     ENDTRY.
   ENDMETHOD.
 
