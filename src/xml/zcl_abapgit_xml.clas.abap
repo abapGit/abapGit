@@ -97,6 +97,9 @@ CLASS zcl_abapgit_xml IMPLEMENTATION.
 
     li_element = mi_xml_doc->find_from_name_ns( depth = 0
                                                 name = c_abapgit_tag ).
+    IF li_element IS NOT BOUND.
+      zcx_abapgit_exception=>raise( |{ c_abapgit_tag } element not found, check the XML structure| ).
+    ENDIF.
     li_version = li_element->if_ixml_node~get_attributes(
       )->get_named_item_ns( c_attr_version ).
     IF li_version->get_value( ) <> zif_abapgit_version=>c_xml_version.

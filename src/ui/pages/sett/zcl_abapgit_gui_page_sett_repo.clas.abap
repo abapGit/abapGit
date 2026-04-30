@@ -156,7 +156,9 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     )->text(
       iv_name        = c_id-i18n_langs
       iv_label       = 'Serialize Translations for Additional Languages'
-      iv_hint        = 'Comma-separate 2-letter ISO language codes e.g. "DE,ES,..." - should not include main language'
+      iv_hint        = 'Comma-separate 2-letter ISO language codes e.g. "DE,ES,..."'
+                    && ' or "*" as wildcard for all installed languages - should not include main language'
+      iv_placeholder = 'e.g. "DE,ES,..."'
     )->checkbox(
       iv_name        = c_id-use_lxe
       iv_label       = 'Use LXE Approach for Translations'
@@ -364,12 +366,15 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
   METHOD save_settings.
 
     DATA:
-      lo_dot          TYPE REF TO zcl_abapgit_dot_abapgit,
-      lv_ignore       TYPE string,
-      lt_ignore       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-      lt_wo_transl    TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-      ls_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement,
-      lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+      lo_dot               TYPE REF TO zcl_abapgit_dot_abapgit,
+      lv_ignore            TYPE string,
+      lt_ignore            TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+      lt_wo_transl         TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+      ls_requirements      TYPE zif_abapgit_dot_abapgit=>ty_requirement,
+      lt_requirements      TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
+      lt_i18n_langs        TYPE zif_abapgit_definitions=>ty_languages,
+      lt_unsupported_langs TYPE zif_abapgit_definitions=>ty_languages,
+      lv_unsupported_langs TYPE string.
 
     lo_dot = mi_repo->get_dot_abapgit( ).
 
@@ -380,10 +385,22 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     lo_dot->set_original_system( mo_form_data->get( c_id-original_system ) ).
     lo_dot->set_abap_language_version( mo_form_data->get( c_id-abap_langu_vers ) ).
 
-    lo_dot->set_i18n_languages(
-      zcl_abapgit_lxe_texts=>convert_lang_string_to_table(
-        iv_langs              = mo_form_data->get( c_id-i18n_langs )
-        iv_skip_main_language = lo_dot->get_main_language( ) ) ).
+    lt_i18n_langs = zcl_abapgit_lxe_texts=>convert_lang_string_to_table(
+      iv_langs              = mo_form_data->get( c_id-i18n_langs )
+      iv_skip_main_language = lo_dot->get_main_language( ) ).
+
+    READ TABLE lt_i18n_langs WITH KEY table_line = '*' TRANSPORTING NO FIELDS.
+    IF sy-subrc <> 0.
+      lt_unsupported_langs = zcl_abapgit_lxe_texts=>detect_unsupported_languages( lt_i18n_langs ).
+
+      IF lines( lt_unsupported_langs ) > 0.
+        lv_unsupported_langs = concat_lines_of( table = lt_unsupported_langs
+                                                sep   = ', ' ).
+        zcx_abapgit_exception=>raise( |Language(s) { lv_unsupported_langs } not supported| ).
+      ENDIF.
+    ENDIF.
+
+    lo_dot->set_i18n_languages( lt_i18n_langs ).
     lo_dot->use_lxe( boolc( mo_form_data->get( c_id-use_lxe ) = abap_true ) ).
 
     lt_wo_transl = zcl_abapgit_i18n_params=>normalize_obj_patterns(

@@ -621,6 +621,9 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
                                   iv_obj_name  = iv_obj_name ).
 
     ELSE.
+      IF iv_obj_name IS INITIAL.
+        zcx_abapgit_exception=>raise( |RS_CORR_INSERT: Object name must not be empty| ).
+      ENDIF.
 
       CALL FUNCTION 'RS_CORR_INSERT'
         EXPORTING
@@ -728,6 +731,9 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
           ls_list-obj_name = ls_contents-obj_name.
           INSERT ls_list INTO TABLE rt_list.
         WHEN 'LIMU'.
+          IF ls_contents-object IN it_skip_limu_types.
+            CONTINUE.
+          ENDIF.
           TRY.
               zif_abapgit_cts_api~get_r3tr_obj_for_limu_obj(
                 EXPORTING

@@ -44,6 +44,12 @@ INTERFACE zif_abapgit_exit PUBLIC.
       cv_name     TYPE csequence
       cv_email    TYPE csequence.
 
+  METHODS change_password_popup_username
+    IMPORTING
+      iv_repo_url TYPE csequence
+    CHANGING
+      cv_user     TYPE string.
+
   METHODS change_local_host
     CHANGING
       !ct_hosts TYPE zif_abapgit_definitions=>ty_string_tt.

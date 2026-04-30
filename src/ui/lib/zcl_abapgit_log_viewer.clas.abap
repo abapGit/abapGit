@@ -516,6 +516,9 @@ CLASS zcl_abapgit_log_viewer IMPLEMENTATION.
       ri_html->add( |<span class="{ lv_class }">| ).
       ri_html->add_icon( lv_icon ).
       ri_html->add( lr_message->text ).
+      IF lr_message->id IS NOT INITIAL AND lr_message->number IS NOT INITIAL.
+        ri_html->add( | ({ lr_message->id } { lr_message->number })| ).
+      ENDIF.
       ri_html->add( '</span>' ).
     ENDLOOP.
 
