@@ -5,7 +5,7 @@ CLASS zcl_abapgit_object_smtg DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS zif_abapgit_object~deserialize REDEFINITION.
 
   PROTECTED SECTION.
-    METHODS:get_additional_extensions REDEFINITION.
+    METHODS: get_additional_extensions REDEFINITION.
 
   PRIVATE SECTION.
     DATA mv_template_id TYPE c LENGTH 30.
