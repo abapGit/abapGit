@@ -26,6 +26,18 @@ CLASS zcl_abapgit_flow_git DEFINITION PUBLIC.
 
   PRIVATE SECTION.
 
+    TYPES ty_main_reachable TYPE HASHED TABLE OF zif_abapgit_git_definitions=>ty_sha1 WITH UNIQUE KEY table_line.
+
+    CLASS-METHODS build_main_reachable
+      IMPORTING
+        it_branches       TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
+        it_objects        TYPE zif_abapgit_definitions=>ty_objects_tt
+      EXPORTING
+        ev_main_sha1      TYPE zif_abapgit_git_definitions=>ty_sha1
+        et_main_reachable TYPE ty_main_reachable
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS map_files_to_objects
       IMPORTING
         it_files                  TYPE zif_abapgit_flow_logic=>ty_path_name_tt
@@ -143,32 +155,25 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD find_up_to_date.
+  METHOD build_main_reachable.
 
-    DATA ls_main    LIKE LINE OF it_branches.
     DATA lv_current TYPE zif_abapgit_git_definitions=>ty_sha1.
     DATA lo_visit   TYPE REF TO lcl_sha1_stack.
+    DATA ls_main    LIKE LINE OF it_branches.
     DATA ls_commit  TYPE zcl_abapgit_git_pack=>ty_commit.
 
-    DATA lt_main_reachable TYPE HASHED TABLE OF zif_abapgit_git_definitions=>ty_sha1 WITH UNIQUE KEY table_line.
-
-    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
     FIELD-SYMBOLS <ls_commit> LIKE LINE OF it_objects.
 
 
-    IF lines( it_branches ) = 1.
-      " only main branch
-      RETURN.
-    ENDIF.
-
     READ TABLE it_branches INTO ls_main WITH KEY display_name = zif_abapgit_flow_logic=>c_main.
     ASSERT sy-subrc = 0.
+    ev_main_sha1 = ls_main-sha1.
 
     CREATE OBJECT lo_visit.
-    lo_visit->clear( )->push( ls_main-sha1 ).
+    lo_visit->clear( )->push( ev_main_sha1 ).
     WHILE lo_visit->size( ) > 0.
       lv_current = lo_visit->pop( ).
-      INSERT lv_current INTO TABLE lt_main_reachable.
+      INSERT lv_current INTO TABLE et_main_reachable.
       IF sy-subrc <> 0.
         " already visited
         CONTINUE.
@@ -183,6 +188,36 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       ENDIF.
     ENDWHILE.
 
+  ENDMETHOD.
+
+  METHOD find_up_to_date.
+
+    DATA lv_current TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lv_main    TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lo_visit   TYPE REF TO lcl_sha1_stack.
+    DATA ls_commit  TYPE zcl_abapgit_git_pack=>ty_commit.
+
+    DATA lt_main_reachable TYPE ty_main_reachable.
+
+    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
+    FIELD-SYMBOLS <ls_commit> LIKE LINE OF it_objects.
+
+
+    IF lines( it_branches ) = 1.
+      " only main branch
+      RETURN.
+    ENDIF.
+
+    build_main_reachable(
+      EXPORTING
+        it_branches       = it_branches
+        it_objects        = it_objects
+      IMPORTING
+        ev_main_sha1      = lv_main
+        et_main_reachable = lt_main_reachable ).
+
+    CREATE OBJECT lo_visit.
+
     LOOP AT ct_features ASSIGNING <ls_branch>.
       <ls_branch>-branch-up_to_date = abap_undefined.
       lo_visit->clear( )->push( <ls_branch>-branch-sha1 ).
@@ -190,7 +225,7 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       " find up_to_date
       WHILE lo_visit->size( ) > 0.
         lv_current = lo_visit->pop( ).
-        IF lv_current = ls_main-sha1.
+        IF lv_current = lv_main.
           <ls_branch>-branch-up_to_date = abap_true.
           EXIT.
         ENDIF.
