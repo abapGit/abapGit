@@ -22,7 +22,7 @@ ENDCLASS.
 
 ************************************************************************
 
-CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL CRITICAL FINAL.
+CLASS ltcl_test DEFINITION FOR TESTING DURATION MEDIUM RISK LEVEL CRITICAL FINAL.
 
   PUBLIC SECTION.
     INTERFACES if_ftd_invocation_answer.
