@@ -1367,6 +1367,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF it_items.
 
+    IF io_dot IS INITIAL.
+      RETURN.
+    ENDIF.
+
     lv_srcsystem = io_dot->get_original_system( ).
 
     IF lv_srcsystem IS INITIAL.
@@ -1384,7 +1388,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     ii_log->add_info( |>> Setting original system| ).
 
-    LOOP AT it_items ASSIGNING <ls_item>.
+    LOOP AT it_items ASSIGNING <ls_item> WHERE obj_type <> 'NSPC'.
       " Local packages are not stored in TADIR
       IF <ls_item>-obj_type = 'DEVC' AND <ls_item>-obj_name(1) = '$'.
         CONTINUE.
