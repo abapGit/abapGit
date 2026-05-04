@@ -57,6 +57,12 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !ii_repo TYPE REF TO zif_abapgit_repo
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS check_self_update
+      IMPORTING
+        !ii_repo   TYPE REF TO zif_abapgit_repo
+        !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
+      RAISING
+        zcx_abapgit_exception.
     CLASS-METHODS real_deserialize
       IMPORTING
         !ii_repo   TYPE REF TO zif_abapgit_repo
@@ -262,6 +268,51 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD check_self_update.
+
+    CONSTANTS lc_abapgit_prog TYPE progname VALUE `ZABAPGIT`.
+
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
+    DATA lv_will_dump TYPE abap_bool.
+
+    FIELD-SYMBOLS <ls_overwrite> LIKE LINE OF is_checks-overwrite.
+
+    IF ii_repo->is_offline( ) = abap_true.
+      RETURN.
+    ENDIF.
+
+    li_repo_online ?= ii_repo.
+
+    " If abapGit is used to update itself, then check for updates to classes and interfaces that
+    " are known to cause dumps.
+    IF zcl_abapgit_url=>is_abapgit_repo( li_repo_online->get_url( ) ) = abap_true AND sy-cprog = lc_abapgit_prog.
+      LOOP AT is_checks-overwrite ASSIGNING <ls_overwrite> WHERE decision = zif_abapgit_definitions=>c_yes.
+        CASE <ls_overwrite>-obj_type.
+          WHEN 'CLAS'.
+            IF <ls_overwrite>-obj_name = 'ZCL_ABAPGIT_OBJECT_CLAS'
+              OR <ls_overwrite>-obj_name = 'ZCL_ABAPGIT_OBJECT_INTF'
+              OR <ls_overwrite>-obj_name = 'ZCL_ABAPGIT_OBJECTS'
+              OR <ls_overwrite>-obj_name = 'ZCL_ABAPGIT_OBJECTS_SUPER'
+              OR <ls_overwrite>-obj_name = 'ZCX_ABAPGIT_EXCEPTION'.
+              lv_will_dump = abap_true.
+              EXIT.
+            ENDIF.
+          WHEN 'INTF'.
+            IF <ls_overwrite>-obj_name = 'ZIF_ABAPGIT_DEFINITIONS'.
+              lv_will_dump = abap_true.
+              EXIT.
+            ENDIF.
+        ENDCASE.
+      ENDLOOP.
+
+      IF lv_will_dump = abap_true.
+        zcx_abapgit_exception=>raise( 'Selected objects will cause a dump during self-update. Use standalone version.' ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD delete_unnecessary_objects.
 
     DATA:
@@ -324,6 +375,10 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       CATCH zcx_abapgit_cancel.
         RETURN.
     ENDTRY.
+
+    check_self_update(
+      ii_repo   = ii_repo
+      is_checks = ls_checks ).
 
     real_deserialize(
       ii_repo   = ii_repo
@@ -476,69 +531,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD popup_delete_tabl_data.
-
-    DATA: lt_columns  TYPE zif_abapgit_popups=>ty_alv_column_tt,
-          lt_selected LIKE ct_delete_tabl,
-          li_popups   TYPE REF TO zif_abapgit_popups.
-    DATA lt_preselected_rows TYPE zif_abapgit_popups=>ty_rows.
-
-    FIELD-SYMBOLS: <ls_overwrite>    LIKE LINE OF it_overwrite,
-                   <ls_delete_tabl>  LIKE LINE OF ct_delete_tabl,
-                   <ls_column>       TYPE zif_abapgit_popups=>ty_alv_column.
-
-    LOOP AT it_overwrite ASSIGNING <ls_overwrite> WHERE decision <> zif_abapgit_definitions=>c_yes.
-      DELETE ct_delete_tabl WHERE obj_type = <ls_overwrite>-obj_type AND obj_name = <ls_overwrite>-obj_name.
-    ENDLOOP.
-
-    IF lines( ct_delete_tabl ) = 0.
-      RETURN.
-    ENDIF.
-
-    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
-    <ls_column>-name = 'OBJ_TYPE'.
-    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
-    <ls_column>-name = 'OBJ_NAME'.
-    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
-    <ls_column>-name = 'ICON'.
-    <ls_column>-text = 'Action'.
-    <ls_column>-show_icon = abap_true.
-    <ls_column>-length = 5.
-    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
-    <ls_column>-name = 'TEXT'.
-    <ls_column>-text = 'Description'.
-
-    LOOP AT ct_delete_tabl ASSIGNING <ls_delete_tabl> WHERE decision = zif_abapgit_definitions=>c_yes.
-      INSERT sy-tabix INTO TABLE lt_preselected_rows.
-    ENDLOOP.
-
-    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
-    li_popups->popup_to_select_from_list(
-      EXPORTING
-        it_list               = ct_delete_tabl
-        iv_header_text        = |The following tables contain DATA which will be LOST when they are deleted!| &&
-                                | Select the tables which should be deleted, anyway.|
-        iv_select_column_text = 'Delete?'
-        it_columns_to_display = lt_columns
-        it_preselected_rows   = lt_preselected_rows
-      IMPORTING
-        et_list               = lt_selected ).
-
-    LOOP AT ct_delete_tabl ASSIGNING <ls_delete_tabl>.
-      READ TABLE lt_selected WITH TABLE KEY object_type_and_name
-                             COMPONENTS obj_type = <ls_delete_tabl>-obj_type
-                                        obj_name = <ls_delete_tabl>-obj_name
-                             TRANSPORTING NO FIELDS.
-      IF sy-subrc = 0.
-        <ls_delete_tabl>-decision = zif_abapgit_definitions=>c_yes.
-      ELSE.
-        <ls_delete_tabl>-decision = zif_abapgit_definitions=>c_no.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD popup_decisions.
 
     DATA:
@@ -609,6 +601,69 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         obj_name = <ls_overwrite>-obj_name.
       ASSERT sy-subrc = 0.
       <ls_overwrite>-decision = <ls_decision>-decision.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD popup_delete_tabl_data.
+
+    DATA: lt_columns  TYPE zif_abapgit_popups=>ty_alv_column_tt,
+          lt_selected LIKE ct_delete_tabl,
+          li_popups   TYPE REF TO zif_abapgit_popups.
+    DATA lt_preselected_rows TYPE zif_abapgit_popups=>ty_rows.
+
+    FIELD-SYMBOLS: <ls_overwrite>   LIKE LINE OF it_overwrite,
+                   <ls_delete_tabl> LIKE LINE OF ct_delete_tabl,
+                   <ls_column>      TYPE zif_abapgit_popups=>ty_alv_column.
+
+    LOOP AT it_overwrite ASSIGNING <ls_overwrite> WHERE decision <> zif_abapgit_definitions=>c_yes.
+      DELETE ct_delete_tabl WHERE obj_type = <ls_overwrite>-obj_type AND obj_name = <ls_overwrite>-obj_name.
+    ENDLOOP.
+
+    IF lines( ct_delete_tabl ) = 0.
+      RETURN.
+    ENDIF.
+
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'OBJ_TYPE'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'OBJ_NAME'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'ICON'.
+    <ls_column>-text = 'Action'.
+    <ls_column>-show_icon = abap_true.
+    <ls_column>-length = 5.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'TEXT'.
+    <ls_column>-text = 'Description'.
+
+    LOOP AT ct_delete_tabl ASSIGNING <ls_delete_tabl> WHERE decision = zif_abapgit_definitions=>c_yes.
+      INSERT sy-tabix INTO TABLE lt_preselected_rows.
+    ENDLOOP.
+
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->popup_to_select_from_list(
+      EXPORTING
+        it_list               = ct_delete_tabl
+        iv_header_text        = |The following tables contain DATA which will be LOST when they are deleted!| &&
+                                | Select the tables which should be deleted, anyway.|
+        iv_select_column_text = 'Delete?'
+        it_columns_to_display = lt_columns
+        it_preselected_rows   = lt_preselected_rows
+      IMPORTING
+        et_list               = lt_selected ).
+
+    LOOP AT ct_delete_tabl ASSIGNING <ls_delete_tabl>.
+      READ TABLE lt_selected WITH TABLE KEY object_type_and_name
+                             COMPONENTS obj_type = <ls_delete_tabl>-obj_type
+                                        obj_name = <ls_delete_tabl>-obj_name
+                             TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        <ls_delete_tabl>-decision = zif_abapgit_definitions=>c_yes.
+      ELSE.
+        <ls_delete_tabl>-decision = zif_abapgit_definitions=>c_no.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
