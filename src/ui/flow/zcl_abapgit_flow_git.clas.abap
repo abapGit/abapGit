@@ -169,6 +169,10 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
     WHILE lo_visit->size( ) > 0.
       lv_current = lo_visit->pop( ).
       INSERT lv_current INTO TABLE lt_main_reachable.
+      IF sy-subrc <> 0.
+        " already visited
+        CONTINUE.
+      ENDIF.
       READ TABLE it_objects ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
       IF sy-subrc = 0.
         ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
