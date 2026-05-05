@@ -173,13 +173,26 @@ CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
             p_version     = 'A'
           CHANGING
             p_object_data = li_object_data ).
+        rv_bool = abap_true.
 
       CATCH cx_root.
-        rv_bool = abap_false.
-        RETURN.
-    ENDTRY.
+        IF li_srfc_persist IS NOT BOUND.
+          rv_bool = abap_false.
+          RETURN.
+        ENDIF.
+        TRY.
+            li_srfc_persist->get(
+              EXPORTING
+                p_object_key  = |{ ms_item-obj_name }|
+                p_version     = 'I'
+              CHANGING
+                p_object_data = li_object_data ).
+            rv_bool = abap_true.
 
-    rv_bool = abap_true.
+          CATCH cx_root.
+            rv_bool = abap_false.
+        ENDTRY.
+    ENDTRY.
 
   ENDMETHOD.
 
