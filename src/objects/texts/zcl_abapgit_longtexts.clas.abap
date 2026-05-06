@@ -290,7 +290,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
     DATA ls_tdline       LIKE LINE OF ls_longtext-lines.
     DATA ls_line         LIKE LINE OF ls_docu-lines.
     DATA lo_json_handler TYPE REF TO zcl_abapgit_json_handler.
-    DATA lv_json         TYPE string.
+    DATA lv_xstr         TYPE xstring.
     DATA lx_exception    TYPE REF TO cx_root.
 
 
@@ -319,13 +319,13 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
     CREATE OBJECT lo_json_handler.
 
     TRY.
-        lv_json = lo_json_handler->serialize( ls_docu ).
+        lv_xstr = lo_json_handler->serialize( ls_docu ).
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
 
     io_files->add_string(
-      iv_string = lv_json
+      iv_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstr )
       iv_extra  = 'docu'
       iv_ext    = 'json' ).
 
