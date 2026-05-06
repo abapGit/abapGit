@@ -19,7 +19,7 @@
 
 Git client for ABAP
 
-Works with: [GitHub](https://github.com/),
+Works wvvvdith: [GitHub](https://github.com/),
 [GitLab](https://gitlab.com/),
 [Assembla](https://www.assembla.com/git/),
 [Bitbucket](https://bitbucket.org/),
