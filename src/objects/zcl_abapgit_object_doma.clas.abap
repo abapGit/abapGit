@@ -454,6 +454,8 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     ENDIF.
 
     IF mv_aff_enabled = abap_true.
+      deserialize_longtexts_aff( c_longtext_id_doma ).
+
       " Note: Translation handling for AFF format not yet implemented
       " Translation files would be handled similar to INTF deserialization
     ELSE.

@@ -78,6 +78,11 @@ CLASS zcl_abapgit_objects_super DEFINITION
         !iv_longtext_name TYPE string DEFAULT 'LONGTEXTS'
       RAISING
         zcx_abapgit_exception .
+    METHODS deserialize_longtexts_aff
+      IMPORTING
+        !iv_longtext_id TYPE dokil-id OPTIONAL
+      RAISING
+        zcx_abapgit_exception .
     METHODS delete_longtexts
       IMPORTING
         !iv_longtext_id TYPE dokil-id
@@ -263,6 +268,17 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
       iv_object_name   = ms_item-obj_name
       iv_longtext_id   = iv_longtext_id
       iv_main_language = mv_language ).
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_longtexts_aff.
+
+    zcl_abapgit_factory=>get_longtexts( )->deserialize_aff(
+      iv_object_name   = ms_item-obj_name
+      iv_longtext_id   = iv_longtext_id
+      iv_main_language = mv_language
+      io_files         = mo_files ).
 
   ENDMETHOD.
 
