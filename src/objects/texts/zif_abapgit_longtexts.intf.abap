@@ -31,6 +31,17 @@ INTERFACE zif_abapgit_longtexts
       VALUE(rt_longtexts) TYPE ty_longtexts
     RAISING
       zcx_abapgit_exception .
+  METHODS serialize_aff
+    IMPORTING
+      !iv_longtext_name   TYPE string DEFAULT 'LONGTEXTS'
+      !iv_object_name     TYPE clike
+      !iv_longtext_id     TYPE dokil-id
+      !it_dokil           TYPE zif_abapgit_definitions=>ty_dokil_tt OPTIONAL
+      !io_files           TYPE REF TO zcl_abapgit_objects_files
+    RETURNING
+      VALUE(rt_longtexts) TYPE ty_longtexts
+    RAISING
+      zcx_abapgit_exception .
   METHODS deserialize
     IMPORTING
       !iv_longtext_name TYPE string DEFAULT 'LONGTEXTS'

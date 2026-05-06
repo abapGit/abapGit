@@ -608,6 +608,8 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
         iv_ext  = 'json'
         iv_data = lv_json ).
 
+      serialize_longtexts_aff( iv_longtext_id = c_longtext_id_doma ).
+
       " Note: Translation handling for AFF format not yet implemented
       " Translation files would be handled similar to INTF serialization
     ELSE.

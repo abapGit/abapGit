@@ -65,6 +65,12 @@ CLASS zcl_abapgit_objects_super DEFINITION
         !iv_longtext_name TYPE string DEFAULT 'LONGTEXTS'
       RAISING
         zcx_abapgit_exception .
+    METHODS serialize_longtexts_aff
+      IMPORTING
+        !iv_longtext_id TYPE dokil-id OPTIONAL
+        !it_dokil       TYPE zif_abapgit_definitions=>ty_dokil_tt OPTIONAL
+      RAISING
+        zcx_abapgit_exception .
     METHODS deserialize_longtexts
       IMPORTING
         !ii_xml           TYPE REF TO zif_abapgit_xml_input
@@ -341,6 +347,15 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
     rv_active = zcl_abapgit_objects_activation=>is_active( ms_item ).
 
+  ENDMETHOD.
+
+  METHOD serialize_longtexts_aff.
+    zcl_abapgit_factory=>get_longtexts( )->serialize_aff(
+      iv_object_name   = ms_item-obj_name
+*      iv_longtext_name = iv_longtext_name
+      iv_longtext_id   = iv_longtext_id
+      it_dokil         = it_dokil
+      io_files         = mo_files ).
   ENDMETHOD.
 
 

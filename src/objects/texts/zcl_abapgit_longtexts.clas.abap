@@ -282,4 +282,52 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
                  ig_data = rt_longtexts ).
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_longtexts~serialize_aff.
+
+    DATA ls_longtext     LIKE LINE OF rt_longtexts.
+    DATA ls_docu         TYPE zif_abapgit_aff_docu_v1=>ty_main.
+    DATA ls_tdline       LIKE LINE OF ls_longtext-lines.
+    DATA ls_line         LIKE LINE OF ls_docu-lines.
+    DATA lo_json_handler TYPE REF TO zcl_abapgit_json_handler.
+    DATA lv_json         TYPE string.
+    DATA lx_exception    TYPE REF TO cx_root.
+
+
+    rt_longtexts = read( iv_object_name    = iv_object_name
+                         iv_longtext_id    = iv_longtext_id
+                         it_dokil          = it_dokil
+                         iv_main_lang_only = abap_true ).
+
+    IF rt_longtexts IS SUPPLIED.
+      RETURN.
+    ENDIF.
+
+    READ TABLE rt_longtexts INDEX 1 INTO ls_longtext.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    ls_docu-format_version = '1'.
+    LOOP AT ls_longtext-lines INTO ls_tdline.
+      CLEAR ls_line.
+      ls_line-format = ls_tdline-tdformat.
+      ls_line-line   = ls_tdline-tdline.
+      INSERT ls_line INTO TABLE ls_docu-lines.
+    ENDLOOP.
+
+    CREATE OBJECT lo_json_handler.
+
+    TRY.
+        lv_json = lo_json_handler->serialize( ls_docu ).
+      CATCH cx_root INTO lx_exception.
+        zcx_abapgit_exception=>raise_with_text( lx_exception ).
+    ENDTRY.
+
+    io_files->add_string(
+      iv_string = lv_json
+      iv_extra  = 'docu'
+      iv_ext    = 'json' ).
+
+  ENDMETHOD.
 ENDCLASS.
