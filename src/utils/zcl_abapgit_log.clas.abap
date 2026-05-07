@@ -123,10 +123,36 @@ CLASS zcl_abapgit_log IMPLEMENTATION.
 
   METHOD zif_abapgit_log~add_exception.
 
-    DATA lx_exc TYPE REF TO cx_root.
-    DATA lv_msg TYPE string.
+    DATA lx_exc   TYPE REF TO cx_root.
+    DATA lx_git   TYPE REF TO zcx_abapgit_exception.
+    DATA lt_inner TYPE zif_abapgit_log=>ty_log_outs.
+    DATA lv_msg   TYPE string.
+    DATA ls_inner_item TYPE zif_abapgit_definitions=>ty_item.
+
+    FIELD-SYMBOLS <ls_msg> LIKE LINE OF lt_inner.
+
     lx_exc = ix_exc.
     DO.
+      TRY.
+          lx_git ?= lx_exc.
+          IF lx_git->mi_log IS BOUND.
+            lt_inner = lx_git->mi_log->get_messages( ).
+            LOOP AT lt_inner ASSIGNING <ls_msg>.
+              CLEAR ls_inner_item.
+              ls_inner_item-obj_type = <ls_msg>-obj_type.
+              ls_inner_item-obj_name = <ls_msg>-obj_name.
+              zif_abapgit_log~add(
+                iv_msg    = <ls_msg>-text
+                iv_type   = <ls_msg>-type
+                iv_class  = <ls_msg>-id
+                iv_number = <ls_msg>-number
+                is_item   = ls_inner_item
+                ix_exc    = lx_exc ).
+            ENDLOOP.
+          ENDIF.
+        CATCH cx_sy_move_cast_error ##NO_HANDLER.
+      ENDTRY.
+
       lv_msg = lx_exc->get_text( ).
       zif_abapgit_log~add( iv_msg  = lv_msg
                            iv_type = 'E'

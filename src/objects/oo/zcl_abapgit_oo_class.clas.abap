@@ -978,26 +978,52 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~syntax_check.
     DATA:
       ls_clskey      TYPE seoclskey,
-      lv_syntaxerror TYPE abap_bool.
+      lv_syntaxerror TYPE abap_bool,
+      lo_checklist   TYPE REF TO cl_wb_checklist,
+      lt_errors      TYPE swbme_error_tab,
+      lo_local_log   TYPE REF TO zif_abapgit_log,
+      ls_item        TYPE zif_abapgit_definitions=>ty_item.
+
+    FIELD-SYMBOLS:
+      <ls_err>  TYPE swbme_error_entry,
+      <lv_line> TYPE string.
 
     ls_clskey-clsname = to_upper( iv_object_name ).
+
+    CREATE OBJECT lo_checklist.
 
     CALL FUNCTION 'SEO_CLASS_CHECK_CLASSPOOL'
       EXPORTING
         clskey                       = ls_clskey
+        wb_checklist                 = lo_checklist
         suppress_error_popup         = abap_true
       IMPORTING
         syntaxerror                  = lv_syntaxerror
       EXCEPTIONS
         _internal_class_not_existing = 1
-        error_message                = 2 " suppress S-message
+        error_message                = 2
         OTHERS                       = 3.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     IF lv_syntaxerror = abap_true.
-      zcx_abapgit_exception=>raise( |Class { ls_clskey-clsname } has syntax errors | ).
+      CREATE OBJECT lo_local_log TYPE zcl_abapgit_log.
+      ls_item-obj_type = 'CLAS'.
+      ls_item-obj_name = ls_clskey-clsname.
+
+      lo_checklist->get_error_messages( IMPORTING p_error_tab = lt_errors ).
+      LOOP AT lt_errors ASSIGNING <ls_err> WHERE mtype = 'E'.
+        LOOP AT <ls_err>-mtext ASSIGNING <lv_line>.
+          lo_local_log->add_error(
+            iv_msg  = <lv_line>
+            is_item = ls_item ).
+        ENDLOOP.
+      ENDLOOP.
+
+      zcx_abapgit_exception=>raise(
+        iv_text = |Class { ls_clskey-clsname } has syntax errors|
+        ii_log  = lo_local_log ).
     ENDIF.
   ENDMETHOD.
 ENDCLASS.
