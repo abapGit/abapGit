@@ -30,6 +30,13 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS update_pull_request_title
+      IMPORTING
+        iv_pull_number TYPE i
+        iv_title       TYPE clike
+      RAISING
+        zcx_abapgit_exception.
+
     METHODS update_pull_request_branch
       IMPORTING
         iv_pull_number       TYPE i
@@ -201,6 +208,37 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
 
     IF li_response->is_ok( ) = abap_false.
       zcx_abapgit_exception=>raise( |Error creating pull request: { li_response->error( ) }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD update_pull_request_title.
+* https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#update-a-pull-request
+
+    DATA lv_url      TYPE string.
+    DATA li_json     TYPE REF TO zif_abapgit_ajson.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+    DATA lx_ajson    TYPE REF TO zcx_abapgit_ajson_error.
+
+    lv_url = mv_repo_url && '/pulls/' && iv_pull_number.
+
+    TRY.
+        li_json = zcl_abapgit_ajson=>create_empty( ).
+        li_json->set_string(
+          iv_path = '/title'
+          iv_val  = iv_title ).
+
+        li_response = mi_http_agent->request(
+          iv_url     = lv_url
+          iv_method  = zif_abapgit_http_agent=>c_methods-patch
+          iv_payload = li_json->stringify( ) ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+    ENDTRY.
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error updating pull request title: { li_response->error( ) }| ).
     ENDIF.
 
   ENDMETHOD.
