@@ -328,6 +328,19 @@ CLASS zcl_abapgit_object_sktd IMPLEMENTATION.
         rv_bool = abap_false.
     ENDTRY.
 
+    IF rv_bool = abap_false.
+      TRY.
+          mi_persistence->get(
+            p_object_key           = mv_object_key
+            p_version              = 'I'
+            p_existence_check_only = abap_true ).
+          rv_bool = abap_true.
+
+        CATCH cx_swb_exception.
+          rv_bool = abap_false.
+      ENDTRY.
+    ENDIF.
+
   ENDMETHOD.
 
 

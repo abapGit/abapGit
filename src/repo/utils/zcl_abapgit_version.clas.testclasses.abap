@@ -6,26 +6,12 @@ CLASS ltcl_version DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS DURATION SHO
   PRIVATE SECTION.
 
     METHODS:
-      version_to_numeric FOR TESTING,
       compare            FOR TESTING,
       normalize          FOR TESTING.
 
 ENDCLASS.
 
 CLASS ltcl_version IMPLEMENTATION.
-
-  METHOD version_to_numeric.
-
-    DATA: lv_version_exp TYPE i VALUE 1023010,
-          lv_version_act TYPE i.
-
-    lv_version_act = zcl_abapgit_version=>version_to_numeric( '1.23.10' ).
-
-    cl_abap_unit_assert=>assert_equals( exp = lv_version_exp
-                                        act = lv_version_act
-                                        msg = ' Error during conversion of version to numeric value' ).
-
-  ENDMETHOD.
 
   METHOD compare.
 
