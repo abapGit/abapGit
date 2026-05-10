@@ -516,7 +516,7 @@ function StageHelper(params) {
     remove : "R",
     ignore : "I",
     reset  : "?",
-    isInvalid: function(status) { return "ARI?".indexOf(status) === -1; }
+    isInvalid: function(status) { return "ARI?".indexOf(status) === -1 }
   };
 
   this.TEMPLATES = {
@@ -1164,7 +1164,7 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
         // document.getSelection().removeAllRanges() may trigger error
         // so use this code which is equivalent but does not fail
         // (https://stackoverflow.com/questions/22914075/javascript-error-800a025e-using-range-selector)
-        var range = document.body.createTextRange();
+        range = document.body.createTextRange();
         range.collapse();
         range.select();
       } else {
