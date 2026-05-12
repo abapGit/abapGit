@@ -593,7 +593,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     ENDIF.
 
     " FM RS_FUNCTION_POOL_CONTENTS is not reliable if Function Group is inconsistent, so cross-check results (#7147)
-    " Don't check active flag, or the includes become wrong (#1234)
+    " Don't check active flag, or the includes become wrong (#7702)
     SELECT * FROM enlfdir
       INTO TABLE lt_enlfdir
       WHERE area = ms_item-obj_name
