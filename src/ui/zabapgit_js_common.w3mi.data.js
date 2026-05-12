@@ -553,7 +553,7 @@ StageHelper.prototype.injectFilterMe = function() {
 };
 
 StageHelper.prototype.onFilterMe = function() {
-  this.dom.objectSearch.value = this.user;
+  this.dom.objectSearch.value = this.dom.objectSearch.value === this.user ? "" : this.user;
   this.onFilter({ type: "keypress", which: 13, target: this.dom.objectSearch });
 };
 
