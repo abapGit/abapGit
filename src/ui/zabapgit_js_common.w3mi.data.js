@@ -516,7 +516,7 @@ function StageHelper(params) {
     remove : "R",
     ignore : "I",
     reset  : "?",
-    isValid: function(status) { return "ARI?".indexOf(status) === -1 }
+    isInvalid: function(status) { return "ARI?".indexOf(status) === -1 }
   };
 
   this.TEMPLATES = {
@@ -724,7 +724,7 @@ StageHelper.prototype.applyFilterToRow = function(row, filter) {
 StageHelper.prototype.getStatusImpact = function(status) {
   if (typeof status !== "string"
     || status.length !== 1
-    || this.STATUS.isValid(status)) {
+    || this.STATUS.isInvalid(status)) {
     alert("Unknown status");
   } else {
     return (status !== this.STATUS.reset) ? 1: 0;
@@ -866,9 +866,10 @@ function CheckListWrapper(id, cbAction, cbActionOnlyMyChanges) {
   this.id.onclick            = this.onClick.bind(this);
 }
 
-CheckListWrapper.prototype.onClick = function(e) { // eslint-disable-line no-unused-vars
+CheckListWrapper.prototype.onClick = function(e) {
   // Get nodes
-  var target = event.target || event.srcElement;
+  e          = e || window.event;
+  var target = e.target || e.srcElement;
   if (!target) return;
   if (target.tagName !== "A") { target = target.parentNode } // icon clicked
   if (target.tagName !== "A") return;
@@ -883,7 +884,7 @@ CheckListWrapper.prototype.onClick = function(e) { // eslint-disable-line no-unu
   var option   = nodeA.innerText;
   var oldState = nodeLi.getAttribute("data-check");
   if (oldState === null) return; // no data-check attribute - non-checkbox
-  var newState = oldState === "X" ? false : true;
+  var newState = oldState !== "X";
 
   if (newState) {
     nodeIcon.classList.remove("grey");
@@ -976,20 +977,12 @@ DiffHelper.prototype.onFilterOnlyMyChanges = function(username, state) {
     .map(function(item) {
       var nodeIcon = item.children[0].children[0];
 
-      if (state === true) {
-        if (item.innerText === username) { // current user
-          item.style.display = "";
-          item.setAttribute("data-check", "X");
-
-          if (nodeIcon) {
-            nodeIcon.classList.remove("grey");
-            nodeIcon.classList.add("blue");
-          }
-        } else { // other users
-          item.style.display = "none";
-          item.setAttribute("data-check", "");
-        }
+      if (state === true && item.innerText !== username) {
+        // hide other users
+        item.style.display = "none";
+        item.setAttribute("data-check", "");
       } else {
+        // show current user (filter on) or all users (filter off)
         item.style.display = "";
         item.setAttribute("data-check", "X");
 
@@ -1005,13 +998,11 @@ DiffHelper.prototype.applyOnlyMyChangesFilter = function(username, state) {
   var jumpListItems = Array.prototype.slice.call(document.querySelectorAll("[id*=li_jump]"));
 
   this.iterateDiffList(function(div) {
-    if (state === true) { // switching on "Only my changes" filter
-      if (div.getAttribute("data-changed-by") === username) {
-        div.style.display = state ? "" : "none";
-      } else {
-        div.style.display = state ? "none" : "";
-      }
-    } else { // disabling
+    if (state === true && div.getAttribute("data-changed-by") !== username) {
+      // switching on "Only my changes" filter -> hide other users
+      div.style.display = "none";
+    } else {
+      // current user when filter on, or all rows when filter off
       div.style.display = "";
     }
 
@@ -1155,7 +1146,7 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
         // document.getSelection().removeAllRanges() may trigger error
         // so use this code which is equivalent but does not fail
         // (https://stackoverflow.com/questions/22914075/javascript-error-800a025e-using-range-selector)
-        range = document.body.createTextRange();
+        var range = document.body.createTextRange();
         range.collapse();
         range.select();
       } else {
@@ -1173,7 +1164,7 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
         // document.getSelection().removeAllRanges() may trigger error
         // so use this code which is equivalent but does not fail
         // (https://stackoverflow.com/questions/22914075/javascript-error-800a025e-using-range-selector)
-        var range = document.body.createTextRange();
+        range = document.body.createTextRange();
         range.collapse();
         range.select();
       } else {
@@ -1268,7 +1259,7 @@ KeyNavigation.prototype.onkeydown = function(event) {
 
   // navigate with arrows through list items and support pressing links with enter and space
   var isHandled = false;
-  if (event.key === "Enter" || event.key === "") {
+  if (event.key === "Enter" || event.key === " ") {
     isHandled = this.onEnterOrSpace();
   } else if (/Down$/.test(event.key)) {
     isHandled = this.onArrowDown();
@@ -1415,7 +1406,7 @@ LinkHints.prototype.deployHintContainers = function() {
   // </span>
   for (var i = 0, N = hintTargets.length; i < N; i++) {
     // skip hidden fields
-    if (hintTargets[i].type === "HIDDEN") {
+    if (hintTargets[i].type === "hidden") {
       continue;
     }
 
