@@ -498,7 +498,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       insert_program(
         is_progdir = is_progdir
         it_source  = it_source
-        iv_title   = lv_title 
+        iv_title   = lv_title
         iv_package = iv_package ).
     ENDIF.
 
