@@ -54,6 +54,7 @@ INTERFACE zif_abapgit_cts_api
   CONSTANTS:
     BEGIN OF c_transport_status,
       modifiable TYPE c LENGTH 1 VALUE 'D',
+      released   TYPE c LENGTH 1 VALUE 'R',
     END OF c_transport_status .
 
   METHODS confirm_transport_messages

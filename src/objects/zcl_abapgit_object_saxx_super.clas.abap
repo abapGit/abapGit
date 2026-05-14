@@ -249,13 +249,19 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
         mi_persistence->get( p_object_key           = mv_object_key
                              p_version              = 'A'
                              p_existence_check_only = abap_true ).
+        rv_bool = abap_true.
 
       CATCH cx_swb_exception.
-        rv_bool = abap_false.
-        RETURN.
-    ENDTRY.
+        TRY.
+            mi_persistence->get( p_object_key           = mv_object_key
+                                 p_version              = 'I'
+                                 p_existence_check_only = abap_true ).
+            rv_bool = abap_true.
 
-    rv_bool = abap_true.
+          CATCH cx_swb_exception.
+            rv_bool = abap_false.
+        ENDTRY.
+    ENDTRY.
 
   ENDMETHOD.
 
