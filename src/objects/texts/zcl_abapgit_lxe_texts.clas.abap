@@ -214,7 +214,6 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         iv_s_lang            TYPE sy-langu
         iv_t_lang            TYPE sy-langu
         iv_package           TYPE devclass
-        iv_read_only         TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(rt_text_pairs) TYPE ty_lxe_translation-text_pairs
       RAISING
@@ -222,7 +221,6 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
 
     METHODS write_devc_text_pair
       IMPORTING
-        iv_s_lang  TYPE sy-langu
         iv_t_lang  TYPE sy-langu
         iv_package TYPE devclass
         it_pcx_s1  TYPE ty_lxe_translation-text_pairs
@@ -390,7 +388,6 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
           " Special handling for for local packages which are not supported by LXE
           IF mv_local_package = abap_true.
             write_devc_text_pair(
-              iv_s_lang  = mo_i18n_params->ms_params-main_language
               iv_t_lang  = laiso_to_langu_safe( lv_lang )
               iv_package = |{ <lv_lxe_object>-objname }|
               it_pcx_s1  = lt_text_pairs_tmp ).
