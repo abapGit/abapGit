@@ -332,7 +332,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
     FIELD-SYMBOLS <lv_lxe_object> LIKE LINE OF lt_obj_list.
 
-    " Special handling for for local packages which are not supported by LXE
+    " Special handling for local packages which are not supported by LXE
     IF mv_local_package = abap_true.
       lt_obj_list = get_devc_object_list( iv_object_name ).
     ELSE.
