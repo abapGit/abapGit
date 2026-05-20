@@ -462,12 +462,6 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         ENDCASE.
       ENDIF.
 
-      <ls_changes>-changed_by = zcl_abapgit_objects=>changed_by( ls_item ).
-
-      IF <ls_changes>-changed_by = zcl_abapgit_objects_super=>c_user_unknown.
-        CLEAR <ls_changes>-changed_by.
-      ENDIF.
-
     ENDLOOP.
 
     " Remove duplicate actions
@@ -496,6 +490,19 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     " If there are multiple changes in an object, keep highest priority action
     SORT lt_changes BY obj_type obj_name action DESCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_changes COMPARING obj_type obj_name.
+
+    " add changed by user, ignore unknown user
+    LOOP AT lt_changes ASSIGNING <ls_changes>.
+
+      MOVE-CORRESPONDING <ls_changes> TO ls_item.
+
+      <ls_changes>-changed_by = zcl_abapgit_objects=>changed_by( ls_item ).
+
+      IF <ls_changes>-changed_by = zcl_abapgit_objects_super=>c_user_unknown.
+        CLEAR <ls_changes>-changed_by.
+      ENDIF.
+
+    ENDLOOP.
 
     rt_overwrite = lt_changes.
 
