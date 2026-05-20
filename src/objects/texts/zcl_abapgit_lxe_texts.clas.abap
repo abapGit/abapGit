@@ -477,6 +477,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
   METHOD get_lxe_object_list.
 
     DATA lv_object_name TYPE trobj_name.
+    DATA lt_e071k TYPE STANDARD TABLE OF e071k WITH DEFAULT KEY ##NEEDED.
 
     lv_object_name = iv_object_name.
 
@@ -486,6 +487,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
         object          = iv_object_type
         obj_name        = lv_object_name
       TABLES
+        in_e071k        = lt_e071k " not optional in 702
         ex_colob        = rt_obj_list
       EXCEPTIONS
         unknown_object  = 1
