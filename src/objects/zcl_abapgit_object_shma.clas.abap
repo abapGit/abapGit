@@ -152,7 +152,7 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
             silent_mode         = abap_true.
 
       CATCH cx_root.
-        zcx_abapgit_exception=>raise( |Error serializing SHMA { ms_item-obj_name }| ).
+        zcx_abapgit_exception=>raise( |Error deserializing SHMA { ms_item-obj_name }| ).
     ENDTRY.
 
   ENDMETHOD.

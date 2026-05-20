@@ -73,6 +73,8 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
     register( 'UIAD' ).
     register( 'UIPG' ).
     register( 'UIST' ).
+    register( 'DTSC' ).
+    register( 'DTIX' ).
   ENDMETHOD.
 
 
@@ -103,4 +105,3 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 ENDCLASS.
-
