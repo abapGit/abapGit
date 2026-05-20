@@ -161,7 +161,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
         IF ls_previous = ls_item.
           <ls_repo_item>-changed_by = lv_changed_by.
         ELSEIF zcl_abapgit_objects=>exists( ls_item ) = abap_true.
-          <ls_repo_item>-changed_by = <ls_status>-changed_by.
+          <ls_repo_item>-changed_by = zcl_abapgit_objects=>changed_by( ls_item ).
           ls_previous = ls_item.
           lv_changed_by = <ls_repo_item>-changed_by.
         ENDIF.
