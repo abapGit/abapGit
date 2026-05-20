@@ -21,7 +21,6 @@ INTERFACE zif_abapgit_definitions
       srcsystem             TYPE tadir-srcsystem,
       origlang              TYPE tadir-masterlang,
       inactive              TYPE abap_bool,
-      changed_by            TYPE syuname,
       abap_language_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version,
     END OF ty_item .
   TYPES:
@@ -44,11 +43,12 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_overwrite.
       INCLUDE TYPE ty_item.
   TYPES:
-      state    TYPE c LENGTH 2,
-      action   TYPE i,
-      icon     TYPE icon_d,
-      text     TYPE string,
-      decision TYPE ty_yes_no,
+      changed_by TYPE syuname,
+      state      TYPE c LENGTH 2,
+      action     TYPE i,
+      icon       TYPE icon_d,
+      text       TYPE string,
+      decision   TYPE ty_yes_no,
     END OF ty_overwrite .
   TYPES:
     ty_overwrite_tt TYPE STANDARD TABLE OF ty_overwrite WITH DEFAULT KEY
@@ -134,19 +134,18 @@ INTERFACE zif_abapgit_definitions
     ty_tadir_tt TYPE STANDARD TABLE OF ty_tadir WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_result,
-      obj_type   TYPE tadir-object,
-      obj_name   TYPE tadir-obj_name,
-      inactive   TYPE abap_bool,
-      path       TYPE string,
-      filename   TYPE string,
-      package    TYPE devclass,
-      match      TYPE abap_bool,
-      lstate     TYPE zif_abapgit_git_definitions=>ty_item_state,
-      rstate     TYPE zif_abapgit_git_definitions=>ty_item_state,
-      packmove   TYPE abap_bool,
-      srcsystem  TYPE tadir-srcsystem,
-      origlang   TYPE tadir-masterlang,
-      changed_by TYPE syuname,
+      obj_type  TYPE tadir-object,
+      obj_name  TYPE tadir-obj_name,
+      inactive  TYPE abap_bool,
+      path      TYPE string,
+      filename  TYPE string,
+      package   TYPE devclass,
+      match     TYPE abap_bool,
+      lstate    TYPE zif_abapgit_git_definitions=>ty_item_state,
+      rstate    TYPE zif_abapgit_git_definitions=>ty_item_state,
+      packmove  TYPE abap_bool,
+      srcsystem TYPE tadir-srcsystem,
+      origlang  TYPE tadir-masterlang,
     END OF ty_result .
   TYPES:
     ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY

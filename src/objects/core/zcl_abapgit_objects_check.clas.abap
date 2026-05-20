@@ -462,6 +462,12 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         ENDCASE.
       ENDIF.
 
+      <ls_changes>-changed_by = zcl_abapgit_objects=>changed_by( ls_item ).
+
+      IF <ls_changes>-changed_by = zcl_abapgit_objects_super=>c_user_unknown.
+        CLEAR <ls_changes>-changed_by.
+      ENDIF.
+
     ENDLOOP.
 
     " Remove duplicate actions
