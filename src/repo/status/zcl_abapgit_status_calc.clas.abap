@@ -422,6 +422,7 @@ CLASS zcl_abapgit_status_calc IMPLEMENTATION.
           ENDIF.
         ENDIF.
       ENDIF.
+      <ls_result>-changed_by = <ls_local>-item-changed_by.
     ENDLOOP.
 
   ENDMETHOD.
