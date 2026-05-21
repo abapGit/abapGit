@@ -164,7 +164,6 @@ CLASS zcl_abapgit_objects_program DEFINITION
         !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
         !it_source  TYPE abaptxt255_tab
         !iv_title   TYPE repti
-        !iv_state   TYPE progdir-state DEFAULT c_state-inactive
       RAISING
         zcx_abapgit_exception .
     METHODS is_exit_include
@@ -494,15 +493,13 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       update_program(
         is_progdir = is_progdir
         it_source  = it_source
-        iv_title   = lv_title
-        iv_state   = '' ).
+        iv_title   = lv_title ).
     ELSE.
       insert_program(
         is_progdir = is_progdir
         it_source  = it_source
         iv_title   = lv_title
-        iv_package = iv_package
-        iv_state   = '' ).
+        iv_package = iv_package ).
     ENDIF.
 
   ENDMETHOD.
@@ -1131,17 +1128,17 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     zcl_abapgit_language=>set_current_language( mv_language ).
 
-    CALL FUNCTION 'RPY_PROGRAM_UPDATE'
+    CALL FUNCTION 'RPY_INCLUDE_UPDATE'
       EXPORTING
-        program_name     = is_progdir-name
+        include_name     = is_progdir-name
         title_string     = iv_title
-        save_inactive    = iv_state
+        save_inactive    = c_state-inactive
       TABLES
         source_extended  = it_source
       EXCEPTIONS
-        cancelled        = 1
-        permission_error = 2
-        not_found        = 3
+        not_found        = 1
+        cancelled        = 2
+        permission_error = 3
         OTHERS           = 4.
 
     IF sy-subrc <> 0.
