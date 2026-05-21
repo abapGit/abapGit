@@ -691,6 +691,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name = 'DEVCLASS'.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'CHANGED_BY'.
+    <ls_column>-text = 'Changed By'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name = 'STATE'.
     <ls_column>-text = 'State'.
     <ls_column>-length = 3.
