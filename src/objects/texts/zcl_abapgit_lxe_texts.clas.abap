@@ -363,7 +363,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
       LOOP AT lt_obj_list ASSIGNING <lv_lxe_object>.
 
-        " Special handling for for local packages which are not supported by LXE
+        " Special handling for local packages which are not supported by LXE
         IF mv_local_package = abap_true.
           lt_text_pairs_tmp = read_devc_text_pair(
             iv_s_lang  = mo_i18n_params->ms_params-main_language
@@ -385,7 +385,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
             ct_text_pairs = lt_text_pairs_tmp ).
 
         IF lv_changed = abap_true AND lines( lt_text_pairs_tmp ) > 0.
-          " Special handling for for local packages which are not supported by LXE
+          " Special handling for local packages which are not supported by LXE
           IF mv_local_package = abap_true.
             write_devc_text_pair(
               iv_t_lang  = laiso_to_langu_safe( lv_lang )
@@ -743,7 +743,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
       <lv_language>   LIKE LINE OF mo_i18n_params->ms_params-translation_languages,
       <lv_lxe_object> LIKE LINE OF lt_obj_list.
 
-    " Special handling for for local packages which are not supported by LXE
+    " Special handling for local packages which are not supported by LXE
     IF mv_local_package = abap_true.
       lt_obj_list = get_devc_object_list( iv_object_name ).
     ELSE.
@@ -772,7 +772,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
           CONTINUE. " if source = target -> skip
         ENDIF.
 
-        " Special handling for for local packages which are not supported by LXE
+        " Special handling for local packages which are not supported by LXE
         IF mv_local_package = abap_true.
           ls_lxe_text_item-text_pairs = read_devc_text_pair(
             iv_s_lang  = mo_i18n_params->ms_params-main_language
