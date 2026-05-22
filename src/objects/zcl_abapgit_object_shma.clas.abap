@@ -131,6 +131,7 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
 
     DATA: lv_area_name       TYPE shm_area_name,
           ls_area_attributes TYPE shma_attributes.
+    DATA lx_root TYPE REF TO cx_root.
 
     lv_area_name = ms_item-obj_name.
 
@@ -151,8 +152,10 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
             no_class_generation = abap_false
             silent_mode         = abap_true.
 
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( |Error deserializing SHMA { ms_item-obj_name }| ).
+      CATCH cx_root INTO lx_root.
+        zcx_abapgit_exception=>raise(
+          iv_text     = |Error deserializing SHMA { ms_item-obj_name }|
+          ix_previous = lx_root ).
     ENDTRY.
 
   ENDMETHOD.
