@@ -123,11 +123,14 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
     " name without a stable language suffix, leading to an
     " ITAB_DUPLICATE_KEY dump on the second affected header. See #7714.
     IF lv_tdspras IS INITIAL.
-      zcx_abapgit_exception=>raise( |Inconsistent SAPscript header data | &&
-        |for FORM { mv_form_name }: tdspras '{ is_header-tdspras }' | &&
-        |is empty or not maintained in T002. | &&
-        |Please clean up STXH entries (transaction SE71, then Goto -> | &&
-        |Languages -> Overview) before serializing.| ).
+        zcx_abapgit_exception=>raise(
+        iv_text     = |Inconsistent SAPscript header data for FORM { mv_form_name }|
+        iv_longtext = |The text header language 'tdspras' is empty or | &&
+                      |not maintained in T002, so ISO conversion | &&
+                      |returned blank and no stable file name suffix | &&
+                      |can be built. Please clean up the affected | &&
+                      |STXH entries (transaction SE71, then Goto -> | &&
+                      |Languages -> Overview) before serializing.| ).
     ENDIF.
 
     rv_result = c_objectname_tdlines && '_' && lv_tdspras.
