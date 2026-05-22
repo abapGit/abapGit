@@ -47,7 +47,9 @@ CLASS zcl_abapgit_object_form DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING
         is_header        TYPE ty_s_form_header
       RETURNING
-        VALUE(rv_result) TYPE string.
+        VALUE(rv_result) TYPE string
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS build_extra_from_header_old
       IMPORTING
@@ -114,6 +116,19 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
     DATA lv_tdspras TYPE laiso.
 
     lv_tdspras = zcl_abapgit_convert=>conversion_exit_isola_output( is_header-tdspras ).
+
+    " Refuse to serialize inconsistent text-header data. An empty tdspras
+    " or a tdspras that ISO conversion cannot map (typically because the
+    " language is not maintained in T002) would otherwise produce a file
+    " name without a stable language suffix, leading to an
+    " ITAB_DUPLICATE_KEY dump on the second affected header. See #7714.
+    IF lv_tdspras IS INITIAL.
+      zcx_abapgit_exception=>raise( |Inconsistent SAPscript header data | &&
+        |for FORM { mv_form_name }: tdspras '{ is_header-tdspras }' | &&
+        |is empty or not maintained in T002. | &&
+        |Please clean up STXH entries (transaction SE71, then Goto -> | &&
+        |Languages -> Overview) before serializing.| ).
+    ENDIF.
 
     rv_result = c_objectname_tdlines && '_' && lv_tdspras.
 
