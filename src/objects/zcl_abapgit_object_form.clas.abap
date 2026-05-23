@@ -123,7 +123,7 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
     " name without a stable language suffix, leading to an
     " ITAB_DUPLICATE_KEY dump on the second affected header. See #7714.
     IF lv_tdspras IS INITIAL.
-        zcx_abapgit_exception=>raise(
+      zcx_abapgit_exception=>raise(
         iv_text     = |Inconsistent SAPscript header data for FORM { mv_form_name }|
         iv_longtext = |The text header language 'tdspras' is empty or | &&
                       |not maintained in T002, so ISO conversion | &&
