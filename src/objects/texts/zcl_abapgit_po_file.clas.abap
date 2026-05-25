@@ -87,7 +87,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
+CLASS zcl_abapgit_po_file IMPLEMENTATION.
 
 
   METHOD build_po_body.
@@ -248,6 +248,7 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
     FIELD-SYMBOLS <ls_in> LIKE LINE OF it_text_pairs.
     FIELD-SYMBOLS <ls_out> LIKE LINE OF mt_pairs.
     DATA ls_comment LIKE LINE OF <ls_out>-comments.
+    DATA lv_objname TYPE lxeobjname.
 
     LOOP AT it_text_pairs ASSIGNING <ls_in>.
       CHECK <ls_in>-s_text IS NOT INITIAL.
@@ -264,8 +265,13 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
       ENDIF.
 
       IF mv_suppress_comments = abap_false.
+        IF iv_objtype = 'DEVC'.
+          lv_objname = 'PACKAGE'.
+        ELSE.
+          lv_objname = iv_objname.
+        ENDIF.
         ls_comment-kind = c_comment-reference.
-        ls_comment-text = condense( |{ iv_objtype }/{ iv_objname }/{ <ls_in>-textkey }| )
+        ls_comment-text = condense( |{ iv_objtype }/{ lv_objname }/{ <ls_in>-textkey }| )
           && |, maxlen={ <ls_in>-unitmlt }|.
         APPEND ls_comment TO <ls_out>-comments.
         ASSERT sy-subrc = 0.
