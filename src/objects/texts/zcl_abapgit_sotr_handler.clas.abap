@@ -305,9 +305,11 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
       SELECT SINGLE obj_name FROM tadir INTO lv_obj_name
         WHERE pgmid = 'R3TR' AND object = 'SOTR' AND obj_name = iv_package.
       IF sy-subrc = 0.
+        " Ignore errors since objects might be locked in unreleased transport (TR022)
         zcl_abapgit_factory=>get_tadir( )->delete_single(
           iv_object   = 'SOTR'
-          iv_obj_name = lv_obj_name ).
+          iv_obj_name = lv_obj_name
+          iv_no_throw = abap_true ).
 
         IF zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ) = abap_true.
 
