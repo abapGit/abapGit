@@ -681,7 +681,8 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
     CLEAR ls_icfservice-icf_cclnt.
     CLEAR ls_icfservice-icf_mclnt.
     " If the original name is different (lower vs upper case), it needs to be serialized
-    IF ls_icfservice-icfaltnme = ls_icfservice-icfaltnme_orig.
+    IF ls_icfservice-icfaltnme = ls_icfservice-icfaltnme_orig AND
+       ls_icfservice-orig_name = ls_icfservice-icfaltnme_orig.
       CLEAR ls_icfservice-icfaltnme_orig.
     ENDIF.
     CLEAR ls_icfservice-icfbitmap.

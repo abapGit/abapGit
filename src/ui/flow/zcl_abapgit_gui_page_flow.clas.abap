@@ -815,6 +815,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA lo_timer    TYPE REF TO zcl_abapgit_timer.
     DATA lv_message  LIKE LINE OF ms_information-errors.
     DATA lv_filter   TYPE string.
+    DATA lv_language TYPE laiso.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -871,9 +872,13 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     IF ms_user_settings-username_filter IS NOT INITIAL.
       lv_filter = |, user filter: { ms_user_settings-username_filter }|.
     ENDIF.
+
+    lv_language = zcl_abapgit_convert=>conversion_exit_isola_output( sy-langu ).
+
     ri_html->add( |<small>{ lines( ms_information-features ) } features| &&
       | in { lo_timer->end( ) }{ lv_filter }| &&
       |, SAP user: { sy-uname }| &&
+      |, Logon language: { lv_language }| &&
       |, GitHub user: { ms_information-github_username }| &&
       |</small>| ).
 
