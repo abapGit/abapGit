@@ -300,6 +300,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         iv_txt = 'Transport to Branch'
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_transport_to_branch }?key={ mv_key }|
         iv_opt = get_crossout( zif_abapgit_auth=>c_authorization-transport_to_branch ) ).
+
+      ro_advanced_dropdown->add(
+        iv_txt = 'Pull PRD Version to Branch'
+        iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_to_branch }?key={ mv_key }|
+        iv_opt = get_crossout( zif_abapgit_auth=>c_authorization-transport_to_branch ) ).
     ENDIF.
 
     IF mv_are_changes_recorded_in_tr = abap_true.

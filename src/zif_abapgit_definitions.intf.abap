@@ -324,6 +324,7 @@ INTERFACE zif_abapgit_definitions
       repo_syntax_check             TYPE string VALUE 'repo_syntax_check',
       repo_toggle_fav               TYPE string VALUE 'repo_toggle_fav',
       repo_transport_to_branch      TYPE string VALUE 'repo_transport_to_branch',
+      repo_remote_to_branch         TYPE string VALUE 'repo_remote_to_branch',
       rfc_compare                   TYPE string VALUE 'rfc_compare',
       show_callstack                TYPE string VALUE 'show_callstack',
       show_hotkeys                  TYPE string VALUE 'show_hotkeys',

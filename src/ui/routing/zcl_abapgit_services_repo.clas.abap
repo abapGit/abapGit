@@ -52,6 +52,11 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !iv_repository_key TYPE zif_abapgit_persistence=>ty_value
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS remote_to_branch
+      IMPORTING
+        !iv_repository_key TYPE zif_abapgit_persistence=>ty_value
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS gui_deserialize
       IMPORTING
         !ii_repo TYPE REF TO zif_abapgit_repo
@@ -971,6 +976,58 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       ii_repo_online         = li_repo_online
       is_transport_to_branch = ls_transport_to_branch
       it_transport_objects   = lt_transport_objects ).
+
+  ENDMETHOD.
+
+  METHOD remote_to_branch.
+
+    DATA:
+      li_repo_online     TYPE REF TO zif_abapgit_repo_online,
+      li_popups          TYPE REF TO zif_abapgit_popups,
+      lo_remote_2_branch TYPE REF TO zcl_abapgit_remote_2_branch,
+      lv_destination     TYPE rfcdest,
+      lv_target_system   TYPE tmscsys-sysnam,
+      lv_branch_name     TYPE string,
+      lv_cancel          TYPE abap_bool,
+      lv_source_branch   TYPE string.
+
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-transport_to_branch ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Not authorized' ).
+    ENDIF.
+
+    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+
+    " Select the remote (e.g. production) system via standard RFC destination.
+    " Used to build the PRD-vs-DEV divergence manifest.
+    lv_destination = li_popups->popup_search_help( 'RFCDES-RFCDEST' ).
+    IF lv_destination IS INITIAL.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    " Optionally select the TMS target system (SID) used to pull the actual
+    " PRD source of source-code objects into the branch. Leaving it empty
+    " produces the divergence manifest only.
+    lv_target_system = li_popups->popup_search_help( 'TMSCSYS-SYSNAM' ).
+
+    " Name the new snapshot branch
+    lv_source_branch = li_repo_online->get_selected_branch( ).
+    li_popups->create_branch_popup(
+      EXPORTING
+        iv_source_branch_name = lv_source_branch
+      IMPORTING
+        ev_name               = lv_branch_name
+        ev_cancel             = lv_cancel ).
+    IF lv_cancel = abap_true.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    CREATE OBJECT lo_remote_2_branch.
+    lo_remote_2_branch->create(
+      ii_repo_online   = li_repo_online
+      iv_destination   = lv_destination
+      iv_target_system = lv_target_system
+      iv_branch_name   = lv_branch_name ).
 
   ENDMETHOD.
 ENDCLASS.

@@ -732,6 +732,9 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-repo_transport_to_branch.        " Transport to branch
         zcl_abapgit_services_repo=>transport_to_branch( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-repo_remote_to_branch.            " Remote (PRD) snapshot to branch
+        zcl_abapgit_services_repo=>remote_to_branch( lv_key ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_settings.                   " Repo settings
         rs_handled-page  = zcl_abapgit_gui_page_sett_repo=>create( li_repo ).
         rs_handled-state = get_state_settings( ii_event ).
