@@ -985,6 +985,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       li_repo_online     TYPE REF TO zif_abapgit_repo_online,
       li_popups          TYPE REF TO zif_abapgit_popups,
       lo_remote_2_branch TYPE REF TO zcl_abapgit_remote_2_branch,
+      ls_result          TYPE zcl_abapgit_remote_2_branch=>ty_result,
+      lv_msg             TYPE string,
       lv_destination     TYPE rfcdest,
       lv_target_system   TYPE tmscsys-sysnam,
       lv_branch_name     TYPE string,
@@ -998,16 +1000,18 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
 
-    " Select the remote (e.g. production) system via standard RFC destination.
-    " Used to build the PRD-vs-DEV divergence manifest.
+    " Select the reference system (any system reachable via a standard RFC
+    " destination - e.g. PRD, QAS or another box) used to build the
+    " divergence manifest comparing that system against DEV.
     lv_destination = li_popups->popup_search_help( 'RFCDES-RFCDEST' ).
     IF lv_destination IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
     " Optionally select the TMS target system (SID) used to pull the actual
-    " PRD source of source-code objects into the branch. Leaving it empty
-    " produces the divergence manifest only.
+    " source of source-code objects into the branch. This can be PRD or any
+    " other system known to TMS. Leaving it empty produces the divergence
+    " manifest only.
     lv_target_system = li_popups->popup_search_help( 'TMSCSYS-SYSNAM' ).
 
     " Name the new snapshot branch
@@ -1023,11 +1027,21 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ENDIF.
 
     CREATE OBJECT lo_remote_2_branch.
-    lo_remote_2_branch->create(
+    ls_result = lo_remote_2_branch->create(
       ii_repo_online   = li_repo_online
       iv_destination   = lv_destination
       iv_target_system = lv_target_system
       iv_branch_name   = lv_branch_name ).
+
+    " The repository is now switched to the new branch. Tell the user
+    " exactly where the changes are so the new branch is easy to find.
+    lv_msg = |Switched to new branch '{ ls_result-branch_name }'. | &&
+      |{ ls_result-ahead_count } object(s) diverged from { lv_destination }|.
+    IF lv_target_system IS NOT INITIAL.
+      lv_msg = lv_msg && |, { ls_result-pulled_count } source(s) pulled from { lv_target_system }|.
+    ENDIF.
+    lv_msg = lv_msg && |. See PRD_DIVERGENCE.md and the Stage/Diff view for the changes.|.
+    MESSAGE lv_msg TYPE 'S'.
 
   ENDMETHOD.
 ENDCLASS.

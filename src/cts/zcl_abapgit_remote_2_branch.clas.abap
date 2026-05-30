@@ -64,12 +64,22 @@ CLASS zcl_abapgit_remote_2_branch DEFINITION
 
   PUBLIC SECTION.
 
+    TYPES:
+      BEGIN OF ty_result,
+        branch_name  TYPE string,
+        total_count  TYPE i,
+        ahead_count  TYPE i,
+        pulled_count TYPE i,
+      END OF ty_result .
+
     METHODS create
       IMPORTING
         !ii_repo_online   TYPE REF TO zif_abapgit_repo_online
         !iv_destination   TYPE rfcdest
         !iv_target_system TYPE tmscsys-sysnam OPTIONAL
         !iv_branch_name   TYPE string
+      RETURNING
+        VALUE(rs_result)  TYPE ty_result
       RAISING
         zcx_abapgit_exception .
 
@@ -188,6 +198,7 @@ CLASS zcl_abapgit_remote_2_branch IMPLEMENTATION.
       lo_stage         TYPE REF TO zcl_abapgit_stage,
       ls_stage_objects TYPE zif_abapgit_definitions=>ty_stage_files,
       lt_manifest      TYPE ty_manifest_tt,
+      ls_line          TYPE ty_manifest_line,
       lv_content       TYPE string.
 
     lv_branch_name = zcl_abapgit_git_branch_utils=>complete_heads_branch_name(
@@ -238,6 +249,19 @@ CLASS zcl_abapgit_remote_2_branch IMPLEMENTATION.
     ii_repo_online->push(
       is_comment = ls_comment
       io_stage   = lo_stage ).
+
+    " Report what happened so the caller can tell the user where the
+    " changes went (which branch) and how much diverged / was pulled.
+    rs_result-branch_name = zcl_abapgit_git_branch_utils=>get_display_name( lv_branch_name ).
+    rs_result-total_count = lines( lt_manifest ).
+    LOOP AT lt_manifest INTO ls_line.
+      IF ls_line-content_pulled IS NOT INITIAL.
+        rs_result-pulled_count = rs_result-pulled_count + 1.
+      ENDIF.
+      IF ls_line-status CS 'AHEAD'.
+        rs_result-ahead_count = rs_result-ahead_count + 1.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -482,9 +506,9 @@ CLASS zcl_abapgit_remote_2_branch IMPLEMENTATION.
     rs_comment-committer-name  = sy-uname.
     rs_comment-committer-email = |{ rs_comment-committer-name }@localhost|.
     IF iv_target_system IS INITIAL.
-      rs_comment-comment = |PRD snapshot to branch (remote { iv_destination })|.
+      rs_comment-comment = |Remote snapshot to branch (reference { iv_destination })|.
     ELSE.
-      rs_comment-comment = |PRD snapshot to branch (remote { iv_destination }, content { iv_target_system })|.
+      rs_comment-comment = |Remote snapshot to branch (reference { iv_destination }, content { iv_target_system })|.
     ENDIF.
 
   ENDMETHOD.
