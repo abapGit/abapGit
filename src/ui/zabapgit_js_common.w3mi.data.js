@@ -817,8 +817,9 @@ StageHelper.prototype.collectData = function() {
 StageHelper.prototype.markVisiblesAsAdded = function() {
   this.iterateStageTab(false, function(row) {
     // TODO refactor, unify updateRow logic
-    if (row.style.display === "" && row.className === "local") { // visible
-      this.updateRow(row, this.STATUS.add);
+    if (row.style.display === "") { // visible
+      // Local rows are added, remote rows ("to remove or non-code") are removed
+      this.updateRow(row, row.className === "local" ? this.STATUS.add : this.STATUS.remove);
     } else {
       this.updateRow(row, this.STATUS.reset);
     }
