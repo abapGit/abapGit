@@ -142,7 +142,9 @@ CLASS zcl_abapgit_remote_2_branch DEFINITION
         !io_stage         TYPE REF TO zcl_abapgit_stage
         !is_stage_objects TYPE zif_abapgit_definitions=>ty_stage_files
       CHANGING
-        !ct_manifest      TYPE ty_manifest_tt .
+        !ct_manifest      TYPE ty_manifest_tt
+      RAISING
+        zcx_abapgit_exception .
 
     METHODS read_remote_source
       IMPORTING
@@ -161,7 +163,9 @@ CLASS zcl_abapgit_remote_2_branch DEFINITION
         !iv_obj_name      TYPE tadir-obj_name
         !it_source        TYPE string_table
       RETURNING
-        VALUE(rv_done)    TYPE abap_bool .
+        VALUE(rv_done)    TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
 
     METHODS render_manifest
       IMPORTING
@@ -173,8 +177,10 @@ CLASS zcl_abapgit_remote_2_branch DEFINITION
 
     METHODS add_manifest_to_stage
       IMPORTING
-        !io_stage    TYPE REF TO zcl_abapgit_stage
-        !iv_content  TYPE string .
+        !io_stage   TYPE REF TO zcl_abapgit_stage
+        !iv_content TYPE string
+      RAISING
+        zcx_abapgit_exception .
 
     METHODS generate_commit_message
       IMPORTING
@@ -300,6 +306,7 @@ CLASS zcl_abapgit_remote_2_branch IMPLEMENTATION.
   METHOD build_manifest.
 
     DATA:
+      li_repo     TYPE REF TO zif_abapgit_repo,
       lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt,
       ls_tadir    TYPE zif_abapgit_definitions=>ty_tadir,
       lv_objtype  TYPE vrsd-objtype,
@@ -309,7 +316,8 @@ CLASS zcl_abapgit_remote_2_branch IMPLEMENTATION.
       ls_prd      TYPE vrsd,
       ls_line     TYPE ty_manifest_line.
 
-    lt_tadir = ii_repo_online->get_tadir_objects( ).
+    li_repo ?= ii_repo_online.
+    lt_tadir = li_repo->get_tadir_objects( ).
 
     LOOP AT lt_tadir INTO ls_tadir.
       CLEAR ls_line.
@@ -416,16 +424,26 @@ CLASS zcl_abapgit_remote_2_branch IMPLEMENTATION.
     " everything else is intentionally left blank and reported as
     " "not version-compared".
     CASE iv_object.
-      WHEN 'PROG'. rv_objtype = 'REPS'.
-      WHEN 'INTF'. rv_objtype = 'INTF'.
-      WHEN 'TABL'. rv_objtype = 'TABD'.
-      WHEN 'DTEL'. rv_objtype = 'DTED'.
-      WHEN 'DOMA'. rv_objtype = 'DOMD'.
-      WHEN 'VIEW'. rv_objtype = 'VIED'.
-      WHEN 'TTYP'. rv_objtype = 'TTYD'.
-      WHEN 'ENQU'. rv_objtype = 'ENQD'.
-      WHEN 'SHLP'. rv_objtype = 'SHLD'.
-      WHEN OTHERS. CLEAR rv_objtype.
+      WHEN 'PROG'.
+        rv_objtype = 'REPS'.
+      WHEN 'INTF'.
+        rv_objtype = 'INTF'.
+      WHEN 'TABL'.
+        rv_objtype = 'TABD'.
+      WHEN 'DTEL'.
+        rv_objtype = 'DTED'.
+      WHEN 'DOMA'.
+        rv_objtype = 'DOMD'.
+      WHEN 'VIEW'.
+        rv_objtype = 'VIED'.
+      WHEN 'TTYP'.
+        rv_objtype = 'TTYD'.
+      WHEN 'ENQU'.
+        rv_objtype = 'ENQD'.
+      WHEN 'SHLP'.
+        rv_objtype = 'SHLD'.
+      WHEN OTHERS.
+        CLEAR rv_objtype.
     ENDCASE.
 
   ENDMETHOD.
@@ -474,8 +492,12 @@ CLASS zcl_abapgit_remote_2_branch IMPLEMENTATION.
     rv_content = rv_content && |(no PRD-side abapGit/Z-code required). All other objects keep their DEV |.
     rv_content = rv_content && |serialization.\n\n|.
     rv_content = rv_content && |## Objects\n\n|.
-    rv_content = rv_content && |\| Type \| Name \| DEV ver \| DEV transport \| PRD ver \| PRD transport \| Status \| PRD content \|\n|.
-    rv_content = rv_content && |\|------\|------\|---------\|---------------\|---------\|---------------\|--------\|-------------\|\n|.
+    rv_content = rv_content &&
+      |\| Type \| Name \| DEV ver \| DEV transport \| PRD ver \| PRD transport \| | &&
+      |Status \| PRD content \|\n|.
+    rv_content = rv_content &&
+      |\|------\|------\|---------\|---------------\|---------\|---------------\| | &&
+      |--------\|-------------\|\n|.
 
     LOOP AT it_manifest INTO ls_line.
       rv_content = rv_content &&
@@ -517,6 +539,7 @@ CLASS zcl_abapgit_remote_2_branch IMPLEMENTATION.
   METHOD pull_prd_source.
 
     DATA:
+      li_repo    TYPE REF TO zif_abapgit_repo,
       lt_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt,
       ls_tadir   TYPE zif_abapgit_definitions=>ty_tadir,
       lv_objtype TYPE vrsd-objtype,
@@ -526,7 +549,8 @@ CLASS zcl_abapgit_remote_2_branch IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_line> TYPE ty_manifest_line.
 
-    lt_tadir = ii_repo_online->get_tadir_objects( ).
+    li_repo ?= ii_repo_online.
+    lt_tadir = li_repo->get_tadir_objects( ).
 
     LOOP AT lt_tadir INTO ls_tadir.
       " Only source-code objects with a single, unambiguous abapGit source
