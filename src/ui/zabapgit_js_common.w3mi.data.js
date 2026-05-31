@@ -98,10 +98,11 @@ if (window.NodeList && !NodeList.prototype.forEach) {
 
 // Output text to the debug div
 function debugOutput(text, dstID) {
-  var stdout  = document.getElementById(dstID || "debug-output");
-  var wrapped = "<p>" + text + "</p>";
+  var stdout    = document.getElementById(dstID || "debug-output");
+  var paragraph = document.createElement("p");
 
-  stdout.innerHTML = stdout.innerHTML + wrapped;
+  paragraph.textContent = text;
+  stdout.appendChild(paragraph);
 }
 
 // Use a supplied form, a pre-created form or create a hidden form
