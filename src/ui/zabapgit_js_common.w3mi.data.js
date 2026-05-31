@@ -557,8 +557,6 @@ StageHelper.prototype.onFilterMe = function() {
 
 // Hook global click listener on table, load/unload actions
 StageHelper.prototype.setHooks = function() {
-  // Use addEventListener for window-level events so we don't clobber handlers
-  // registered by other components (direct window.on* assignment is last-wins)
   window.addEventListener("keypress", this.onCtrlEnter.bind(this));
   this.dom.stageTab.onclick          = this.onTableClick.bind(this);
   this.dom.commitSelectedBtn.onclick = this.submit.bind(this);
