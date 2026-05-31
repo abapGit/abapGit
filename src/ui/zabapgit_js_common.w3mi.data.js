@@ -2473,8 +2473,8 @@ function restoreScrollPosition() {
 function memorizeScrollPosition(fn) {
   return function() {
     saveScrollPosition();
-    return fn.call(this, fn.args);
-  }.bind(this);
+    return fn.apply(this, arguments);
+  };
 }
 
 /**********************************************************
