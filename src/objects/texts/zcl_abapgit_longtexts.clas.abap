@@ -121,7 +121,8 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
           line    = ls_longtext-lines.
 
       IF iv_clear_fields = abap_true.
-        CLEAR: ls_longtext-head-tdfuser,
+        CLEAR: ls_longtext-dokil-dokstate,
+               ls_longtext-head-tdfuser,
                ls_longtext-head-tdfreles,
                ls_longtext-head-tdfdate,
                ls_longtext-head-tdftime,
