@@ -723,6 +723,10 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       IMPORTING
         et_list               = lt_selected ).
 
+    IF lines( lt_selected ) = 0.
+      zcx_abapgit_exception=>raise( |Nothing selected. No need to continue.| ).
+    ENDIF.
+
     LOOP AT ct_overwrite ASSIGNING <ls_overwrite>.
       READ TABLE lt_selected WITH TABLE KEY object_type_and_name
                              COMPONENTS obj_type = <ls_overwrite>-obj_type
