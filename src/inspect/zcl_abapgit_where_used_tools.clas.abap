@@ -311,7 +311,7 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
             no_selections       = 4
             no_function_include = 5
             OTHERS              = 6.
-        IF sy-subrc EQ 0.
+        IF sy-subrc = 0.
           LOOP AT lt_functab ASSIGNING <ls_functab>.
             APPEND VALUE zif_abapgit_definitions=>ty_tadir(
               BASE <is_tadir>
