@@ -294,17 +294,17 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
 
     DATA:
       lt_functab TYPE suni_functab,
-      l_group    TYPE rs38l_area,
+      lv_group    TYPE rs38l_area,
       ls_tadir   TYPE zif_abapgit_definitions=>ty_tadir.
 
     LOOP AT it_tadir ASSIGNING <is_tadir>.
       IF <is_tadir>-object = 'FUGR'.
-        l_group = <is_tadir>-obj_name.
+        lv_group = <is_tadir>-obj_name.
         CALL FUNCTION 'FUNCTION_INCLUDE_INFO'
           IMPORTING
             functab             = lt_functab
           CHANGING
-            group               = l_group
+            group               = lv_group
           EXCEPTIONS
             function_not_exists = 1
             include_not_exists  = 2
@@ -371,23 +371,23 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
   METHOD get_func_incl_package.
 
     DATA:
-      l_namespace     TYPE namespace,
-      l_group         TYPE rs38l_area,
-      l_function      TYPE rs38l_fnam,
-      l_include       TYPE progname,
-      l_program       TYPE progname,
-      l_complete_area TYPE rs38l_area.
+      lv_namespace     TYPE namespace,
+      lv_group         TYPE rs38l_area,
+      lv_function      TYPE rs38l_fnam,
+      lv_include       TYPE progname,
+      lv_program       TYPE progname,
+      lv_complete_area TYPE rs38l_area.
 
-    l_include = iv_prog_name.
+    lv_include = iv_prog_name.
     CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
       EXPORTING
         suppress_select              = abap_false
       IMPORTING
-        namespace                    = l_namespace
-        group                        = l_group
-        funcname                     = l_function
+        namespace                    = lv_namespace
+        group                        = lv_group
+        funcname                     = lv_function
       CHANGING
-        include                      = l_include
+        include                      = lv_include
       EXCEPTIONS
         include_not_exists           = 1
         group_not_exists             = 2
@@ -402,13 +402,13 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
         area_length_error            = 11
         OTHERS                       = 12.
     IF sy-subrc = 0.
-      l_complete_area = |{ l_namespace }{ l_group }|.
+      lv_complete_area = |{ lv_namespace }{ lv_group }|.
       CALL FUNCTION 'FUNCTION_INCLUDE_CONCATENATE'
         CHANGING
-          program                  = l_program
-          group                    = l_group
-          namespace                = l_namespace
-          complete_area            = l_complete_area
+          program                  = lv_program
+          group                    = lv_group
+          namespace                = lv_namespace
+          complete_area            = lv_complete_area
         EXCEPTIONS
           not_enough_input         = 1
           no_function_pool         = 2
@@ -417,7 +417,7 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
       IF sy-subrc = 0.
         rv_package = get_obj_package(
          iv_obj_type = 'FUGR'
-         iv_obj_name = |{ l_complete_area }| ).
+         iv_obj_name = |{ lv_complete_area }| ).
       ELSE.
         CLEAR rv_package.
       ENDIF.
