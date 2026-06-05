@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_where_used_tools DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -47,21 +47,21 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
         package  TYPE devclass,
         obj_type TYPE tadir-object,
         obj_name TYPE tadir-obj_name,
-      END OF ty_obj_signature .
+      END OF ty_obj_signature.
     TYPES:
-      ty_where_used_tt TYPE STANDARD TABLE OF rsfindlst WITH DEFAULT KEY .
+      ty_where_used_tt TYPE STANDARD TABLE OF rsfindlst WITH DEFAULT KEY.
     TYPES:
-      ty_seu_obj TYPE STANDARD TABLE OF seu_obj WITH DEFAULT KEY .
+      ty_seu_obj TYPE STANDARD TABLE OF seu_obj WITH DEFAULT KEY.
     TYPES:
       BEGIN OF ty_dev_object,
         type  TYPE seu_stype,
         tadir TYPE trobjtype,
-      END OF ty_dev_object .
+      END OF ty_dev_object.
 
     DATA:
-      mt_object_packages TYPE HASHED TABLE OF ty_obj_signature WITH UNIQUE KEY obj_type obj_name .
+      mt_object_packages TYPE HASHED TABLE OF ty_obj_signature WITH UNIQUE KEY obj_type obj_name.
     DATA:
-      mt_dev_obj_cache TYPE HASHED TABLE OF ty_dev_object WITH UNIQUE KEY type .
+      mt_dev_obj_cache TYPE HASHED TABLE OF ty_dev_object WITH UNIQUE KEY type.
 
     METHODS get_where_used
       IMPORTING
@@ -72,29 +72,29 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
       RETURNING
         VALUE(rt_findings) TYPE ty_where_used_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS get_obj_package
       IMPORTING
         iv_obj_type       TYPE tadir-object
         iv_obj_name       TYPE tadir-obj_name
       RETURNING
-        VALUE(rv_package) TYPE tadir-devclass .
+        VALUE(rv_package) TYPE tadir-devclass.
     METHODS get_func_package
       IMPORTING
         iv_func_name      TYPE tadir-obj_name
       RETURNING
-        VALUE(rv_package) TYPE tadir-devclass .
+        VALUE(rv_package) TYPE tadir-devclass.
     METHODS get_func_incl_package
       IMPORTING
         iv_prog_name      TYPE tadir-obj_name
       RETURNING
-        VALUE(rv_package) TYPE tadir-devclass .
+        VALUE(rv_package) TYPE tadir-devclass.
     METHODS build_package_scope
       IMPORTING
         it_tadir                TYPE STANDARD TABLE
         ir_package_scope        TYPE ty_devc_range
       RETURNING
-        VALUE(rt_package_scope) TYPE ty_devc_range .
+        VALUE(rt_package_scope) TYPE ty_devc_range.
     METHODS collect_where_used
       IMPORTING
         it_tadir         TYPE STANDARD TABLE
@@ -102,7 +102,7 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
       RETURNING
         VALUE(rt_objs)   TYPE ty_dependency_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS convert_list
       IMPORTING
         iv_package     TYPE ty_dependency-dep_package
@@ -201,7 +201,7 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
     FIELD-SYMBOLS <ls_dep> LIKE LINE OF rt_objs.
     FIELD-SYMBOLS <ls_use> LIKE LINE OF it_where_used.
 
-    LOOP AT it_where_used ASSIGNING <ls_use> .
+    LOOP AT it_where_used ASSIGNING <ls_use>.
 
       APPEND INITIAL LINE TO rt_objs ASSIGNING <ls_dep>.
       <ls_dep>-dep_package  = iv_package.
@@ -259,7 +259,7 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
 
     ENDLOOP.
 
-    " some includes are ENHO ...
+    " some includes are ENHO...
     " include detection TRDIR, D010INC ???
     " how to find connection with ENHO ?
     " Useful: https://github.com/abaplint/abaplint-sci-client/blob/main/src/deps/zcl_abaplint_deps_find.clas.abap
@@ -350,7 +350,7 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
         ls_root-pkg  = <ls_obj>-package.
         ls_root-root = <ls_obj>-package. " Self by default
 
-        DO 10 TIMES. " Actually should be safe to run infinitely ...
+        DO 10 TIMES. " Actually should be safe to run infinitely...
           lv_pkg_tmp = zcl_abapgit_factory=>get_sap_package( <ls_obj>-package )->read_parent( ).
           IF lv_pkg_tmp IS INITIAL.
             EXIT.
