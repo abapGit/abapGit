@@ -289,7 +289,7 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
   METHOD expand_fugr_tadir_to_func.
 
     FIELD-SYMBOLS:
-      <is_tadir>   TYPE zif_abapgit_definitions=>ty_tadir,
+      <ls_tadir>   TYPE zif_abapgit_definitions=>ty_tadir,
       <ls_functab> TYPE suni_funcstruc.
 
     DATA:
@@ -297,9 +297,9 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
       lv_group    TYPE rs38l_area,
       ls_tadir   TYPE zif_abapgit_definitions=>ty_tadir.
 
-    LOOP AT it_tadir ASSIGNING <is_tadir>.
-      IF <is_tadir>-object = 'FUGR'.
-        lv_group = <is_tadir>-obj_name.
+    LOOP AT it_tadir ASSIGNING <ls_tadir>.
+      IF <ls_tadir>-object = 'FUGR'.
+        lv_group = <ls_tadir>-obj_name.
         CALL FUNCTION 'FUNCTION_INCLUDE_INFO'
           IMPORTING
             functab             = lt_functab
@@ -314,7 +314,7 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
             OTHERS              = 6.
         IF sy-subrc = 0.
           LOOP AT lt_functab ASSIGNING <ls_functab>.
-            MOVE-CORRESPONDING <is_tadir> TO ls_tadir.
+            MOVE-CORRESPONDING <ls_tadir> TO ls_tadir.
             ls_tadir-pgmid = 'LIMU'.
             ls_tadir-object = 'FUNC'.
             ls_tadir-obj_name = <ls_functab>-funcname.
@@ -322,10 +322,10 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
           ENDLOOP.
         ELSE.
           zcx_abapgit_exception=>raise(
-           |FUNCTION_INCLUDE_INFO({ sy-subrc }) for { <is_tadir>-object } { <is_tadir>-obj_name }| ).
+           |FUNCTION_INCLUDE_INFO({ sy-subrc }) for { <ls_tadir>-object } { <ls_tadir>-obj_name }| ).
         ENDIF.
       ELSE.
-        APPEND <is_tadir> TO rt_tadir.
+        APPEND <ls_tadir> TO rt_tadir.
       ENDIF.
     ENDLOOP.
 
