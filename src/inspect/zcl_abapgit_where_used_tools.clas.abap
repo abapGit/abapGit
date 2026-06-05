@@ -65,75 +65,72 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
 
     METHODS get_where_used
       IMPORTING
-        !iv_obj_type       TYPE euobj-id
-        !iv_obj_name       TYPE tadir-obj_name
-        !it_scope          TYPE ty_seu_obj OPTIONAL
-        !ir_package_scope  TYPE ty_devc_range OPTIONAL
+        iv_obj_type        TYPE euobj-id
+        iv_obj_name        TYPE tadir-obj_name
+        it_scope           TYPE ty_seu_obj OPTIONAL
+        ir_package_scope   TYPE ty_devc_range OPTIONAL
       RETURNING
         VALUE(rt_findings) TYPE ty_where_used_tt
       RAISING
         zcx_abapgit_exception .
     METHODS get_obj_package
       IMPORTING
-        !iv_obj_type      TYPE tadir-object
-        !iv_obj_name      TYPE tadir-obj_name
+        iv_obj_type       TYPE tadir-object
+        iv_obj_name       TYPE tadir-obj_name
       RETURNING
         VALUE(rv_package) TYPE tadir-devclass .
     METHODS get_func_package
       IMPORTING
-        !iv_func_name     TYPE tadir-obj_name
+        iv_func_name      TYPE tadir-obj_name
       RETURNING
         VALUE(rv_package) TYPE tadir-devclass .
     METHODS get_func_incl_package
       IMPORTING
-        !iv_prog_name     TYPE tadir-obj_name
+        iv_prog_name      TYPE tadir-obj_name
       RETURNING
         VALUE(rv_package) TYPE tadir-devclass .
     METHODS build_package_scope
       IMPORTING
-        !it_tadir               TYPE STANDARD TABLE
-        !ir_package_scope       TYPE ty_devc_range
+        it_tadir                TYPE STANDARD TABLE
+        ir_package_scope        TYPE ty_devc_range
       RETURNING
         VALUE(rt_package_scope) TYPE ty_devc_range .
     METHODS collect_where_used
       IMPORTING
-        !it_tadir         TYPE STANDARD TABLE
-        !ir_package_scope TYPE ty_devc_range
+        it_tadir         TYPE STANDARD TABLE
+        ir_package_scope TYPE ty_devc_range
       RETURNING
-        VALUE(rt_objs)    TYPE ty_dependency_tt
+        VALUE(rt_objs)   TYPE ty_dependency_tt
       RAISING
         zcx_abapgit_exception .
     METHODS convert_list
       IMPORTING
-        !iv_package    TYPE ty_dependency-dep_package
-        !iv_obj_type   TYPE ty_dependency-dep_obj_type
-        !iv_obj_name   TYPE ty_dependency-dep_obj_name
-        !it_where_used TYPE ty_where_used_tt
+        iv_package     TYPE ty_dependency-dep_package
+        iv_obj_type    TYPE ty_dependency-dep_obj_type
+        iv_obj_name    TYPE ty_dependency-dep_obj_name
+        it_where_used  TYPE ty_where_used_tt
       RETURNING
         VALUE(rt_objs) TYPE ty_dependency_tt.
     METHODS decode_obj_type
       IMPORTING
-        !iv_type       TYPE rsfindlst-object_cls
+        iv_type        TYPE rsfindlst-object_cls
       RETURNING
         VALUE(rv_type) TYPE ty_dev_object-tadir.
     METHODS find_root_packages
       CHANGING
-        !ct_objs TYPE ty_dependency_tt
+        ct_objs TYPE ty_dependency_tt
       RAISING
         zcx_abapgit_exception.
     METHODS expand_fugr_tadir_to_func
       IMPORTING
-        !it_tadir       TYPE zif_abapgit_definitions=>ty_tadir_tt
+        it_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt
       RETURNING
         VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception.
 ENDCLASS.
 
-
-
 CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
-
 
   METHOD build_package_scope.
 
