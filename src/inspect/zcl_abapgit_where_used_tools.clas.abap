@@ -401,7 +401,7 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
         namespace_too_long           = 10
         area_length_error            = 11
         OTHERS                       = 12.
-    IF sy-subrc EQ 0.
+    IF sy-subrc = 0.
       l_complete_area = |{ l_namespace }{ l_group }|.
       CALL FUNCTION 'FUNCTION_INCLUDE_CONCATENATE'
         CHANGING
