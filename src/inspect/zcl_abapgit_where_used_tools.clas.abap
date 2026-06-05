@@ -47,91 +47,92 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
         package  TYPE devclass,
         obj_type TYPE tadir-object,
         obj_name TYPE tadir-obj_name,
-      END OF ty_obj_signature.
-
-    TYPES ty_where_used_tt TYPE STANDARD TABLE OF rsfindlst WITH DEFAULT KEY.
-    TYPES ty_seu_obj TYPE STANDARD TABLE OF seu_obj WITH DEFAULT KEY.
+      END OF ty_obj_signature .
+    TYPES:
+      ty_where_used_tt TYPE STANDARD TABLE OF rsfindlst WITH DEFAULT KEY .
+    TYPES:
+      ty_seu_obj TYPE STANDARD TABLE OF seu_obj WITH DEFAULT KEY .
     TYPES:
       BEGIN OF ty_dev_object,
         type  TYPE seu_stype,
         tadir TYPE trobjtype,
-      END OF ty_dev_object.
+      END OF ty_dev_object .
 
-    DATA mt_object_packages TYPE HASHED TABLE OF ty_obj_signature WITH UNIQUE KEY obj_type obj_name.
-    DATA mt_dev_obj_cache TYPE HASHED TABLE OF ty_dev_object WITH UNIQUE KEY type.
+    DATA:
+      mt_object_packages TYPE HASHED TABLE OF ty_obj_signature WITH UNIQUE KEY obj_type obj_name .
+    DATA:
+      mt_dev_obj_cache TYPE HASHED TABLE OF ty_dev_object WITH UNIQUE KEY type .
 
     METHODS get_where_used
       IMPORTING
-        iv_obj_type        TYPE euobj-id
-        iv_obj_name        TYPE tadir-obj_name
-        it_scope           TYPE ty_seu_obj OPTIONAL
-        ir_package_scope   TYPE ty_devc_range OPTIONAL
+        !iv_obj_type       TYPE euobj-id
+        !iv_obj_name       TYPE tadir-obj_name
+        !it_scope          TYPE ty_seu_obj OPTIONAL
+        !ir_package_scope  TYPE ty_devc_range OPTIONAL
       RETURNING
         VALUE(rt_findings) TYPE ty_where_used_tt
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS get_obj_package
       IMPORTING
-        iv_obj_type       TYPE tadir-object
-        iv_obj_name       TYPE tadir-obj_name
+        !iv_obj_type      TYPE tadir-object
+        !iv_obj_name      TYPE tadir-obj_name
       RETURNING
-        VALUE(rv_package) TYPE tadir-devclass.
-
+        VALUE(rv_package) TYPE tadir-devclass .
     METHODS get_func_package
       IMPORTING
-        iv_func_name      TYPE tadir-obj_name
+        !iv_func_name     TYPE tadir-obj_name
       RETURNING
-        VALUE(rv_package) TYPE tadir-devclass.
-
-    METHODS get_incl_package
+        VALUE(rv_package) TYPE tadir-devclass .
+    METHODS get_func_incl_package
       IMPORTING
-        iv_prog_name      TYPE tadir-obj_name
+        !iv_prog_name     TYPE tadir-obj_name
       RETURNING
-        VALUE(rv_package) TYPE tadir-devclass.
-
+        VALUE(rv_package) TYPE tadir-devclass .
     METHODS build_package_scope
       IMPORTING
-        it_tadir                TYPE STANDARD TABLE
-        ir_package_scope        TYPE ty_devc_range
+        !it_tadir               TYPE STANDARD TABLE
+        !ir_package_scope       TYPE ty_devc_range
       RETURNING
-        VALUE(rt_package_scope) TYPE ty_devc_range.
-
+        VALUE(rt_package_scope) TYPE ty_devc_range .
     METHODS collect_where_used
       IMPORTING
-        it_tadir         TYPE STANDARD TABLE
-        ir_package_scope TYPE ty_devc_range
+        !it_tadir         TYPE STANDARD TABLE
+        !ir_package_scope TYPE ty_devc_range
       RETURNING
-        VALUE(rt_objs)   TYPE ty_dependency_tt
+        VALUE(rt_objs)    TYPE ty_dependency_tt
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS convert_list
       IMPORTING
-        iv_package     TYPE ty_dependency-dep_package
-        iv_obj_type    TYPE ty_dependency-dep_obj_type
-        iv_obj_name    TYPE ty_dependency-dep_obj_name
-        it_where_used  TYPE ty_where_used_tt
+        !iv_package    TYPE ty_dependency-dep_package
+        !iv_obj_type   TYPE ty_dependency-dep_obj_type
+        !iv_obj_name   TYPE ty_dependency-dep_obj_name
+        !it_where_used TYPE ty_where_used_tt
       RETURNING
         VALUE(rt_objs) TYPE ty_dependency_tt.
-
     METHODS decode_obj_type
       IMPORTING
-        iv_type        TYPE rsfindlst-object_cls
+        !iv_type       TYPE rsfindlst-object_cls
       RETURNING
         VALUE(rv_type) TYPE ty_dev_object-tadir.
-
     METHODS find_root_packages
       CHANGING
-        ct_objs TYPE ty_dependency_tt
+        !ct_objs TYPE ty_dependency_tt
       RAISING
         zcx_abapgit_exception.
-
+    METHODS expand_fugr_tadir_to_func
+      IMPORTING
+        !it_tadir       TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RETURNING
+        VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
+CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
 
 
   METHOD build_package_scope.
@@ -153,15 +154,19 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
 
   METHOD collect_where_used.
 
-    DATA li_progress TYPE REF TO zif_abapgit_progress.
-    DATA lt_where_used TYPE ty_where_used_tt.
-    DATA lt_objs_portion LIKE rt_objs.
+    DATA:
+      li_progress     TYPE REF TO zif_abapgit_progress,
+      lt_where_used   TYPE ty_where_used_tt,
+      lt_objs_portion LIKE rt_objs,
+      lt_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     FIELD-SYMBOLS <ls_tadir> TYPE zif_abapgit_definitions=>ty_tadir.
 
-    li_progress = zcl_abapgit_progress=>get_instance( lines( it_tadir ) ).
+    lt_tadir = me->expand_fugr_tadir_to_func( it_tadir ).
 
-    LOOP AT it_tadir ASSIGNING <ls_tadir>.
+    li_progress = zcl_abapgit_progress=>get_instance( lines( lt_tadir ) ).
+
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       CHECK <ls_tadir>-object <> 'DEVC'.
 
       li_progress->show(
@@ -183,6 +188,10 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
 
     ENDLOOP.
 
+    "SAP FUBA RS_EU_CROSSREF ignores Package scope of TABL and TTYP
+    "uses in Function Interfaces
+    DELETE rt_objs WHERE package NOT IN ir_package_scope.
+
     li_progress->off( ).
 
   ENDMETHOD.
@@ -195,7 +204,7 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
     FIELD-SYMBOLS <ls_dep> LIKE LINE OF rt_objs.
     FIELD-SYMBOLS <ls_use> LIKE LINE OF it_where_used.
 
-    LOOP AT it_where_used ASSIGNING <ls_use>.
+    LOOP AT it_where_used ASSIGNING <ls_use> .
 
       APPEND INITIAL LINE TO rt_objs ASSIGNING <ls_dep>.
       <ls_dep>-dep_package  = iv_package.
@@ -235,7 +244,8 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
       IF <ls_dep>-package IS INITIAL.
         IF <ls_dep>-obj_type = 'PROG'. " Maybe it is an include
 
-          <ls_dep>-package = get_incl_package( <ls_dep>-obj_name ).
+          <ls_dep>-package = get_func_incl_package( <ls_dep>-obj_name ).
+
           IF <ls_dep>-package IS INITIAL.
             SELECT SINGLE subc INTO <ls_dep>-obj_prog_type FROM trdir WHERE name = <ls_dep>-obj_name.
             IF <ls_dep>-obj_prog_type IS NOT INITIAL AND <ls_dep>-obj_prog_type <> '1'. " Exec. prog
@@ -279,6 +289,52 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD expand_fugr_tadir_to_func.
+
+    FIELD-SYMBOLS:
+      <is_tadir>   TYPE zif_abapgit_definitions=>ty_tadir,
+      <ls_functab> TYPE suni_funcstruc.
+
+    DATA:
+      lt_functab TYPE suni_functab,
+      l_group    TYPE rs38l_area.
+
+    LOOP AT it_tadir ASSIGNING <is_tadir>.
+      IF <is_tadir>-object = 'FUGR'.
+        l_group = <is_tadir>-obj_name.
+        CALL FUNCTION 'FUNCTION_INCLUDE_INFO'
+          IMPORTING
+            functab             = lt_functab
+          CHANGING
+            group               = l_group
+          EXCEPTIONS
+            function_not_exists = 1
+            include_not_exists  = 2
+            group_not_exists    = 3
+            no_selections       = 4
+            no_function_include = 5
+            OTHERS              = 6.
+        IF sy-subrc EQ 0.
+          LOOP AT lt_functab ASSIGNING <ls_functab>.
+            APPEND VALUE zif_abapgit_definitions=>ty_tadir(
+              BASE <is_tadir>
+              pgmid = 'LIMU'
+              object = 'FUNC'
+              obj_name = <ls_functab>-funcname )
+            TO rt_tadir.
+          ENDLOOP.
+        ELSE.
+          zcx_abapgit_exception=>raise(
+           |FUNCTION_INCLUDE_INFO({ sy-subrc }) for { <is_tadir>-object } { <is_tadir>-obj_name }| ).
+        ENDIF.
+      ELSE.
+        APPEND <is_tadir> TO rt_tadir.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD find_root_packages.
 
     DATA:
@@ -315,6 +371,64 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_func_incl_package.
+
+    DATA:
+      l_namespace     TYPE namespace,
+      l_group         TYPE rs38l_area,
+      l_function      TYPE rs38l_fnam,
+      l_include       TYPE progname,
+      l_program       TYPE progname,
+      l_complete_area TYPE rs38l_area.
+
+    l_include = iv_prog_name.
+    CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
+      EXPORTING
+        suppress_select              = abap_false
+      IMPORTING
+        namespace                    = l_namespace
+        group                        = l_group
+        funcname                     = l_function
+      CHANGING
+        include                      = l_include
+      EXCEPTIONS
+        include_not_exists           = 1
+        group_not_exists             = 2
+        no_selections                = 3
+        no_function_include          = 4
+        no_function_pool             = 5
+        delimiter_wrong_position     = 6
+        no_customer_function_group   = 7
+        no_customer_function_include = 8
+        reserved_name_customer       = 9
+        namespace_too_long           = 10
+        area_length_error            = 11
+        OTHERS                       = 12.
+    IF sy-subrc EQ 0.
+      l_complete_area = |{ l_namespace }{ l_group }|.
+      CALL FUNCTION 'FUNCTION_INCLUDE_CONCATENATE'
+        CHANGING
+          program                  = l_program
+          group                    = l_group
+          namespace                = l_namespace
+          complete_area            = l_complete_area
+        EXCEPTIONS
+          not_enough_input         = 1
+          no_function_pool         = 2
+          delimiter_wrong_position = 3
+          OTHERS                   = 4.
+      IF sy-subrc = 0.
+        rv_package = get_obj_package(
+         iv_obj_type = 'FUGR'
+         iv_obj_name = |{ l_complete_area }| ).
+      ELSE.
+        CLEAR rv_package.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD get_func_package.
 
     " See also: FUNCTION_INCLUDE_INFO, TFDIR, find main program -> get its pkg
@@ -335,50 +449,6 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
     ENDIF.
 
     rv_package = ls_obj_sig-package.
-
-  ENDMETHOD.
-
-
-  METHOD get_incl_package.
-
-    DATA lv_program TYPE progname.
-    DATA lv_area    TYPE rs38l_area.
-
-    lv_program = iv_prog_name.
-
-    CALL FUNCTION 'FUNCTION_INCLUDE_CONCATENATE'
-      CHANGING
-        program                  = lv_program
-        complete_area            = lv_area
-      EXCEPTIONS
-        not_enough_input         = 1
-        no_function_pool         = 2
-        delimiter_wrong_position = 3
-        OTHERS                   = 4 ##FM_SUBRC_OK.
-
-    IF lv_area IS INITIAL.
-      SELECT SINGLE master FROM d010inc INTO lv_program
-        WHERE include = iv_prog_name.
-
-      CALL FUNCTION 'FUNCTION_INCLUDE_CONCATENATE'
-        CHANGING
-          program                  = lv_program
-          complete_area            = lv_area
-        EXCEPTIONS
-          not_enough_input         = 1
-          no_function_pool         = 2
-          delimiter_wrong_position = 3
-          OTHERS                   = 4 ##FM_SUBRC_OK.
-    ENDIF.
-
-    IF lv_area IS NOT INITIAL.
-      rv_package = get_obj_package(
-        iv_obj_type = 'FUGR'
-        iv_obj_name = |{ lv_area }| ).
-      RETURN.
-    ENDIF.
-
-    " TODO more ...
 
   ENDMETHOD.
 
