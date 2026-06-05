@@ -314,7 +314,7 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
             OTHERS              = 6.
         IF sy-subrc = 0.
           LOOP AT lt_functab ASSIGNING <ls_functab>.
-            MOVE-CORRESPONDING <is_tadir> to ls_tadir.
+            MOVE-CORRESPONDING <is_tadir> TO ls_tadir.
             ls_tadir-pgmid = 'LIMU'.
             ls_tadir-object = 'FUNC'.
             ls_tadir-obj_name = <ls_functab>-funcname.
