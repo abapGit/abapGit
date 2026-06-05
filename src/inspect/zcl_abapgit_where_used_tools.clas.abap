@@ -294,7 +294,8 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
 
     DATA:
       lt_functab TYPE suni_functab,
-      l_group    TYPE rs38l_area.
+      l_group    TYPE rs38l_area,
+      ls_tadir   TYPE zif_abapgit_definitions=>ty_tadir.
 
     LOOP AT it_tadir ASSIGNING <is_tadir>.
       IF <is_tadir>-object = 'FUGR'.
@@ -313,12 +314,11 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
             OTHERS              = 6.
         IF sy-subrc = 0.
           LOOP AT lt_functab ASSIGNING <ls_functab>.
-            APPEND VALUE zif_abapgit_definitions=>ty_tadir(
-              BASE <is_tadir>
-              pgmid = 'LIMU'
-              object = 'FUNC'
-              obj_name = <ls_functab>-funcname )
-            TO rt_tadir.
+            MOVE-CORRESPONDING <is_tadir> to ls_tadir.
+            ls_tadir-pgmid = 'LIMU'.
+            ls_tadir-object = 'FUNC'.
+            ls_tadir-obj_name = <ls_functab>-funcname.
+            append ls_tadir TO rt_tadir.
           ENDLOOP.
         ELSE.
           zcx_abapgit_exception=>raise(
