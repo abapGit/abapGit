@@ -318,7 +318,7 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
             ls_tadir-pgmid = 'LIMU'.
             ls_tadir-object = 'FUNC'.
             ls_tadir-obj_name = <ls_functab>-funcname.
-            append ls_tadir TO rt_tadir.
+            APPEND ls_tadir TO rt_tadir.
           ENDLOOP.
         ELSE.
           zcx_abapgit_exception=>raise(
