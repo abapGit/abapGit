@@ -159,7 +159,7 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_tadir> TYPE zif_abapgit_definitions=>ty_tadir.
 
-    lt_tadir = me->expand_fugr_tadir_to_func( it_tadir ).
+    lt_tadir = expand_fugr_tadir_to_func( it_tadir ).
 
     li_progress = zcl_abapgit_progress=>get_instance( lines( lt_tadir ) ).
 
