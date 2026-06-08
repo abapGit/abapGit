@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_object_dtsc DEFINITION
+CLASS zcl_abapgit_object_dtix DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_object_common_aff
   FINAL
@@ -14,24 +14,24 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DTSC IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DTIX IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
 
-    DATA: lo_dtsc_handler TYPE REF TO object,
+    DATA: lo_dtix_handler TYPE REF TO object,
           lv_object_key   TYPE seu_objkey,
           lx_error        TYPE REF TO cx_root.
 
     TRY.
         lv_object_key = ms_item-obj_name.
-        CALL METHOD ('CL_DTSC_AFF_OBJECT_HANDLER')=>('GET_DDIC_HANDLER')
+        CALL METHOD ('CL_DD_DTIX_AFF_OBJECT_HANDLER')=>('GET_DDIC_HANDLER')
           EXPORTING
             object_key = lv_object_key
           RECEIVING
-            handler    = lo_dtsc_handler.
+            handler    = lo_dtix_handler.
 
-        CALL METHOD lo_dtsc_handler->('IF_DD_DT_HANDLER~GET_CHANGED_BY')
+        CALL METHOD lo_dtix_handler->('IF_DD_DT_HANDLER~GET_CHANGED_BY')
           RECEIVING
             rv_changed_by = rv_user.
 

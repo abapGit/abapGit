@@ -292,6 +292,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
             IF <ls_overwrite>-obj_name = 'ZCL_ABAPGIT_OBJECT_CLAS'
               OR <ls_overwrite>-obj_name = 'ZCL_ABAPGIT_OBJECT_INTF'
               OR <ls_overwrite>-obj_name = 'ZCL_ABAPGIT_OBJECTS'
+              OR <ls_overwrite>-obj_name CP 'ZCL_ABAPGIT_OO_*'
               OR <ls_overwrite>-obj_name = 'ZCL_ABAPGIT_OBJECTS_SUPER'
               OR <ls_overwrite>-obj_name = 'ZCX_ABAPGIT_EXCEPTION'.
               lv_will_dump = abap_true.
@@ -691,6 +692,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name = 'DEVCLASS'.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'CHANGED_BY'.
+    <ls_column>-text = 'Changed By'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name = 'STATE'.
     <ls_column>-text = 'State'.
     <ls_column>-length = 3.
@@ -718,6 +722,10 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         it_preselected_rows   = lt_preselected_rows
       IMPORTING
         et_list               = lt_selected ).
+
+    IF lines( lt_selected ) = 0.
+      zcx_abapgit_exception=>raise( |Nothing selected. No need to continue.| ).
+    ENDIF.
 
     LOOP AT ct_overwrite ASSIGNING <ls_overwrite>.
       READ TABLE lt_selected WITH TABLE KEY object_type_and_name

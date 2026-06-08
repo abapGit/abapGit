@@ -368,7 +368,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         change_of_class_not_allowed    = 23
         no_change_from_sap_to_tmp      = 24
         OTHERS                         = 25.
-    IF sy-subrc > 1.
+    IF sy-subrc > 1 AND iv_no_throw = abap_false.
       " No error if entry does not exist
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.

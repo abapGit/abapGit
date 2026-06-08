@@ -690,6 +690,8 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
+      <ls_branch>-pr-title_raw = ls_pull-title.
+
       " remove markdown formatting,
       REPLACE ALL OCCURRENCES OF '`' IN ls_pull-title WITH ''.
 

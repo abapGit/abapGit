@@ -19,8 +19,6 @@
 /* exported setKeyBindings */
 /* exported preparePatch */
 /* exported registerStagePatch */
-/* exported toggleRepoListDetail */
-/* exported onTagTypeChange */
 /* exported getIndocStyleSheet */
 /* exported addMarginBottom */
 /* exported enumerateJumpAllFiles */
@@ -100,10 +98,11 @@ if (window.NodeList && !NodeList.prototype.forEach) {
 
 // Output text to the debug div
 function debugOutput(text, dstID) {
-  var stdout  = document.getElementById(dstID || "debug-output");
-  var wrapped = "<p>" + text + "</p>";
+  var stdout    = document.getElementById(dstID || "debug-output");
+  var paragraph = document.createElement("p");
 
-  stdout.innerHTML = stdout.innerHTML + wrapped;
+  paragraph.textContent = text;
+  stdout.appendChild(paragraph);
 }
 
 // Use a supplied form, a pre-created form or create a hidden form
@@ -516,7 +515,7 @@ function StageHelper(params) {
     remove : "R",
     ignore : "I",
     reset  : "?",
-    isValid: function(status) { return "ARI?".indexOf(status) === -1 }
+    isInvalid: function(status) { return "ARI?".indexOf(status) === -1 }
   };
 
   this.TEMPLATES = {
@@ -553,21 +552,21 @@ StageHelper.prototype.injectFilterMe = function() {
 };
 
 StageHelper.prototype.onFilterMe = function() {
-  this.dom.objectSearch.value = this.user;
+  this.dom.objectSearch.value = this.dom.objectSearch.value === this.user ? "" : this.user;
   this.onFilter({ type: "keypress", which: 13, target: this.dom.objectSearch });
 };
 
 // Hook global click listener on table, load/unload actions
 StageHelper.prototype.setHooks = function() {
-  window.onkeypress                  = this.onCtrlEnter.bind(this);
+  window.addEventListener("keypress", this.onCtrlEnter.bind(this));
   this.dom.stageTab.onclick          = this.onTableClick.bind(this);
   this.dom.commitSelectedBtn.onclick = this.submit.bind(this);
   this.dom.commitFilteredBtn.onclick = this.submitVisible.bind(this);
   this.dom.patchBtn.onclick          = this.submitPatch.bind(this);
   this.dom.objectSearch.oninput      = this.onFilter.bind(this);
   this.dom.objectSearch.onkeypress   = this.onFilter.bind(this);
-  window.onbeforeunload              = this.onPageUnload.bind(this);
-  window.onload                      = this.onPageLoad.bind(this);
+  window.addEventListener("beforeunload", this.onPageUnload.bind(this));
+  window.addEventListener("load", this.onPageLoad.bind(this));
 
   var self = this;
   document.addEventListener("keypress", function(event) {
@@ -724,8 +723,9 @@ StageHelper.prototype.applyFilterToRow = function(row, filter) {
 StageHelper.prototype.getStatusImpact = function(status) {
   if (typeof status !== "string"
     || status.length !== 1
-    || this.STATUS.isValid(status)) {
+    || this.STATUS.isInvalid(status)) {
     alert("Unknown status");
+    return 0; // avoid NaN propagating into the counters
   } else {
     return (status !== this.STATUS.reset) ? 1: 0;
   }
@@ -817,8 +817,9 @@ StageHelper.prototype.collectData = function() {
 StageHelper.prototype.markVisiblesAsAdded = function() {
   this.iterateStageTab(false, function(row) {
     // TODO refactor, unify updateRow logic
-    if (row.style.display === "" && row.className === "local") { // visible
-      this.updateRow(row, this.STATUS.add);
+    if (row.style.display === "") { // visible
+      // Local rows are added, remote rows ("to remove or non-code") are removed
+      this.updateRow(row, row.className === "local" ? this.STATUS.add : this.STATUS.remove);
     } else {
       this.updateRow(row, this.STATUS.reset);
     }
@@ -866,9 +867,10 @@ function CheckListWrapper(id, cbAction, cbActionOnlyMyChanges) {
   this.id.onclick            = this.onClick.bind(this);
 }
 
-CheckListWrapper.prototype.onClick = function(e) { // eslint-disable-line no-unused-vars
+CheckListWrapper.prototype.onClick = function(e) {
   // Get nodes
-  var target = event.target || event.srcElement;
+  e          = e || window.event;
+  var target = e.target || e.srcElement;
   if (!target) return;
   if (target.tagName !== "A") { target = target.parentNode } // icon clicked
   if (target.tagName !== "A") return;
@@ -883,7 +885,7 @@ CheckListWrapper.prototype.onClick = function(e) { // eslint-disable-line no-unu
   var option   = nodeA.innerText;
   var oldState = nodeLi.getAttribute("data-check");
   if (oldState === null) return; // no data-check attribute - non-checkbox
-  var newState = oldState === "X" ? false : true;
+  var newState = oldState !== "X";
 
   if (newState) {
     nodeIcon.classList.remove("grey");
@@ -976,20 +978,12 @@ DiffHelper.prototype.onFilterOnlyMyChanges = function(username, state) {
     .map(function(item) {
       var nodeIcon = item.children[0].children[0];
 
-      if (state === true) {
-        if (item.innerText === username) { // current user
-          item.style.display = "";
-          item.setAttribute("data-check", "X");
-
-          if (nodeIcon) {
-            nodeIcon.classList.remove("grey");
-            nodeIcon.classList.add("blue");
-          }
-        } else { // other users
-          item.style.display = "none";
-          item.setAttribute("data-check", "");
-        }
+      if (state === true && item.innerText !== username) {
+        // hide other users
+        item.style.display = "none";
+        item.setAttribute("data-check", "");
       } else {
+        // show current user (filter on) or all users (filter off)
         item.style.display = "";
         item.setAttribute("data-check", "X");
 
@@ -1005,13 +999,11 @@ DiffHelper.prototype.applyOnlyMyChangesFilter = function(username, state) {
   var jumpListItems = Array.prototype.slice.call(document.querySelectorAll("[id*=li_jump]"));
 
   this.iterateDiffList(function(div) {
-    if (state === true) { // switching on "Only my changes" filter
-      if (div.getAttribute("data-changed-by") === username) {
-        div.style.display = state ? "" : "none";
-      } else {
-        div.style.display = state ? "none" : "";
-      }
-    } else { // disabling
+    if (state === true && div.getAttribute("data-changed-by") !== username) {
+      // switching on "Only my changes" filter -> hide other users
+      div.style.display = "none";
+    } else {
+      // current user when filter on, or all rows when filter off
       div.style.display = "";
     }
 
@@ -1132,6 +1124,7 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
   var splitCodeLeftColumnIdx     = 2;
   var splitLineNumRightColumnIdx = 3;
   var splitCodeRightColumnIdx    = 5;
+  var range;
 
   if (e.button !== 0) return; // function is only valid for left button, not right button
 
@@ -1173,7 +1166,7 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
         // document.getSelection().removeAllRanges() may trigger error
         // so use this code which is equivalent but does not fail
         // (https://stackoverflow.com/questions/22914075/javascript-error-800a025e-using-range-selector)
-        var range = document.body.createTextRange();
+        range = document.body.createTextRange();
         range.collapse();
         range.select();
       } else {
@@ -1224,20 +1217,20 @@ DiffColumnSelection.prototype.getSelectedText = function() {
     var realThis = this;
     var copySide = "";
     [].forEach.call(nodes, function(tr, i) {
-      var cellIdx = (i == 0 ? 0 : realThis.selectedColumnIdx);
+      var cellIdx = (i === 0 ? 0 : realThis.selectedColumnIdx);
       if (tr.cells.length > cellIdx) {
         var tdSelected = tr.cells[cellIdx];
         // decide which side to copy based on first line of selection
-        if (i == 0) {
+        if (i === 0) {
           copySide = (tdSelected.classList.contains("new") ? "new" : "old" );
         }
         // copy is interesting only for one side of code, do not copy lines which exist on other side
-        if (i == 0 || copySide == "new" && !tdSelected.classList.contains("old") || copySide == "old" && !tdSelected.classList.contains("new")) {
+        if (i === 0 || copySide === "new" && !tdSelected.classList.contains("old") || copySide === "old" && !tdSelected.classList.contains("new")) {
           text += newline + tdSelected.textContent;
           // special processing for TD tag which sometimes contains newline
           // (expl: /src/ui/zabapgit_js_common.w3mi.data.js) so do not add newline again in that case.
           var lastChar = tdSelected.textContent[tdSelected.textContent.length - 1];
-          if (lastChar == "\n") newline = "";
+          if (lastChar === "\n") newline = "";
           else newline = "\n";
         }
       }
@@ -1268,7 +1261,7 @@ KeyNavigation.prototype.onkeydown = function(event) {
 
   // navigate with arrows through list items and support pressing links with enter and space
   var isHandled = false;
-  if (event.key === "Enter" || event.key === "") {
+  if (event.key === "Enter" || event.key === " ") {
     isHandled = this.onEnterOrSpace();
   } else if (/Down$/.test(event.key)) {
     isHandled = this.onArrowDown();
@@ -1415,7 +1408,7 @@ LinkHints.prototype.deployHintContainers = function() {
   // </span>
   for (var i = 0, N = hintTargets.length; i < N; i++) {
     // skip hidden fields
-    if (hintTargets[i].type === "HIDDEN") {
+    if (hintTargets[i].type === "hidden") {
       continue;
     }
 
@@ -2481,8 +2474,8 @@ function restoreScrollPosition() {
 function memorizeScrollPosition(fn) {
   return function() {
     saveScrollPosition();
-    return fn.call(this, fn.args);
-  }.bind(this);
+    return fn.apply(this, arguments);
+  };
 }
 
 /**********************************************************
@@ -2542,7 +2535,7 @@ function displayBrowserControlFooter() {
 // Prevents keyboard navigation to elements outside the modal popup
 // eslint-disable-next-line no-unused-vars
 function trapFocus() {
-  const modal = document.getElementById("modal");
+  var modal = document.getElementById("modal");
   if (!modal) return;
 
   var focusableSelectors = "button, [href], input, select, textarea, [tabindex]";

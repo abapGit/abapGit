@@ -175,9 +175,9 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
                 ls_usobhash-object   = 'TRAN'.
                 ls_usobhash-obj_name = <lv_display_name>.
               WHEN 'RF'.
+                " No object name for function groups since hash is for function module
                 ls_usobhash-pgmid    = 'R3TR'.
                 ls_usobhash-object   = 'FUGR'.
-                ls_usobhash-obj_name = <lv_display_name>.
               WHEN 'HT'.
                 IF <lv_display_name> CP 'R3TR*'.
                   SPLIT <lv_display_name> AT space INTO ls_usobhash-pgmid ls_usobhash-object ls_usobhash-obj_name.
@@ -198,6 +198,7 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
             CALL METHOD lo_su22->('IF_SU22_ADT_OBJECT~CREATE')
               EXPORTING
                 iv_new_key = ls_usobhash
+                iv_task    = iv_transport
               RECEIVING
                 rs_key     = ls_key.
           ENDIF.
