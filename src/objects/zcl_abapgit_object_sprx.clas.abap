@@ -18,15 +18,42 @@ CLASS zcl_abapgit_object_sprx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     CONSTANTS:
       BEGIN OF c_proxy,
-        data   TYPE string VALUE 'PROXY_DATA' ##NO_TEXT,
-        header TYPE string VALUE 'PROXY_HEADER' ##NO_TEXT,
+        data        TYPE string VALUE 'PROXY_DATA' ##NO_TEXT,
+        header      TYPE string VALUE 'PROXY_HEADER' ##NO_TEXT,
+        webi_policy TYPE string VALUE 'WEBI_POLICY' ##NO_TEXT,
       END OF c_proxy .
+    " Web service "External View" properties (Pattern / Security Level /
+    " operation Pattern) live in the auto-generated service definition (WEBI),
+    " not in SPROXHDR/SPROXDAT. The WEBI is invisible to abapGit (auto_generated),
+    " so we piggy-back its policy here on the SPRX. See docs/abapgit-webi-pattern-security-diagnosis.md
+    TYPES:
+      BEGIN OF ty_webi_policy,
+        vepname       TYPE vepname,
+        pwsheader     TYPE STANDARD TABLE OF wsheader WITH DEFAULT KEY,
+        pwssoapprop   TYPE STANDARD TABLE OF wssoapprop WITH DEFAULT KEY,
+        pvepvisoapext TYPE STANDARD TABLE OF vepvisoapext WITH DEFAULT KEY,
+      END OF ty_webi_policy .
     DATA mv_object TYPE sproxhdr-object .
     DATA mv_obj_name TYPE sproxhdr-obj_name .
 
     METHODS load_db
       RETURNING
         VALUE(rs_data) TYPE sprx_db_data .
+    " Returns the auto-generated service definition (WEBI) bound to this proxy,
+    " or empty when there is none / it is not auto-generated (handled by ZCL_..._WEBI).
+    METHODS get_webi_name
+      RETURNING
+        VALUE(rv_vepname) TYPE vepname .
+    METHODS serialize_webi_policy
+      IMPORTING
+        !ii_xml TYPE REF TO zif_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_webi_policy
+      IMPORTING
+        !ii_xml TYPE REF TO zif_abapgit_xml_input
+      RAISING
+        zcx_abapgit_exception .
     METHODS get_object_and_name
       EXPORTING
         !ev_object   TYPE sproxhdr-object
@@ -306,6 +333,10 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
 
     check_sprx_tadir( ).
 
+    " the steps above recreate the auto-generated service definition with default
+    " policy; re-apply the versioned Pattern / Security Level / operation policy
+    deserialize_webi_policy( io_xml ).
+
   ENDMETHOD.
 
 
@@ -430,6 +461,155 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
     io_xml->add(
       iv_name = c_proxy-data
       ig_data = ls_sprx_db_data-sproxdat ).
+
+    serialize_webi_policy( io_xml ).
+
+  ENDMETHOD.
+
+
+  METHOD get_webi_name.
+
+    DATA lv_generated TYPE vependpoint-auto_generated.
+
+    " The proxy (e.g. INTF, gen_appl WEBSERVICES) owns a service definition (WEBI).
+    " The link is in VEPCROSSREF (sub_type/sub_name point back to the proxy).
+    SELECT SINGLE vepname FROM vepcrossref INTO rv_vepname
+      WHERE sub_type = mv_object AND sub_name = mv_obj_name.
+    IF sy-subrc <> 0.
+      CLEAR rv_vepname.
+      RETURN.
+    ENDIF.
+
+    " Only auto-generated service definitions are handled here. Non-generated
+    " ones are visible to abapGit and versioned by ZCL_ABAPGIT_OBJECT_WEBI.
+    SELECT SINGLE auto_generated FROM vependpoint INTO lv_generated
+      WHERE vepname = rv_vepname AND version = 'A'.
+    IF sy-subrc <> 0 OR lv_generated <> abap_true.
+      CLEAR rv_vepname.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD serialize_webi_policy.
+
+    DATA: lv_vepname TYPE vepname,
+          ls_policy  TYPE ty_webi_policy.
+
+    " tables required by the WEBI_GET_OBJECT signature but not persisted here
+    DATA: lt_modilog       TYPE STANDARD TABLE OF smodilog WITH DEFAULT KEY,
+          lt_vepheader     TYPE STANDARD TABLE OF vepheader WITH DEFAULT KEY,
+          lt_vepfunction   TYPE STANDARD TABLE OF vepfunction WITH DEFAULT KEY,
+          lt_vepfault      TYPE STANDARD TABLE OF vepfault WITH DEFAULT KEY,
+          lt_vepparameter  TYPE STANDARD TABLE OF vepparameter WITH DEFAULT KEY,
+          lt_veptype       TYPE STANDARD TABLE OF veptype WITH DEFAULT KEY,
+          lt_vepelemtype   TYPE STANDARD TABLE OF vepelemtype WITH DEFAULT KEY,
+          lt_veptabletype  TYPE STANDARD TABLE OF veptabletype WITH DEFAULT KEY,
+          lt_vepstrutype   TYPE STANDARD TABLE OF vepstrutype WITH DEFAULT KEY,
+          lt_veptypesoap   TYPE STANDARD TABLE OF veptypesoapext WITH DEFAULT KEY,
+          lt_vepeletypsoap TYPE STANDARD TABLE OF vepeletypsoap WITH DEFAULT KEY,
+          lt_veptabtypsoap TYPE STANDARD TABLE OF veptabtypsoap WITH DEFAULT KEY,
+          lt_vepfuncsoap   TYPE STANDARD TABLE OF vepfuncsoapext WITH DEFAULT KEY,
+          lt_vepfieldref   TYPE STANDARD TABLE OF vepfieldref WITH DEFAULT KEY,
+          lt_vependpoint   TYPE STANDARD TABLE OF vependpoint WITH DEFAULT KEY,
+          lt_vepparasoap   TYPE STANDARD TABLE OF vepparasoapext WITH DEFAULT KEY.
+
+    FIELD-SYMBOLS <ls_wsheader> TYPE wsheader.
+
+    lv_vepname = get_webi_name( ).
+    IF lv_vepname IS INITIAL.
+      RETURN. " not a web service proxy, or service definition not auto-generated
+    ENDIF.
+
+    CALL FUNCTION 'WEBI_GET_OBJECT'
+      EXPORTING
+        webiname          = lv_vepname
+      TABLES
+        psmodilog         = lt_modilog
+        pvepheader        = lt_vepheader
+        pvepfunction      = lt_vepfunction
+        pvepfault         = lt_vepfault
+        pvepparameter     = lt_vepparameter
+        pveptype          = lt_veptype
+        pvepelemtype      = lt_vepelemtype
+        pveptabletype     = lt_veptabletype
+        pvepstrutype      = lt_vepstrutype
+        pveptypesoapext   = lt_veptypesoap
+        pvepeletypsoap    = lt_vepeletypsoap
+        pveptabtypsoap    = lt_veptabtypsoap
+        pvepfuncsoapext   = lt_vepfuncsoap
+        pvepfieldref      = lt_vepfieldref
+        pvependpoint      = lt_vependpoint
+        pvepvisoapext     = ls_policy-pvepvisoapext
+        pvepparasoapext   = lt_vepparasoap
+        pwsheader         = ls_policy-pwsheader
+        pwssoapprop       = ls_policy-pwssoapprop
+      EXCEPTIONS
+        version_not_found = 1
+        webi_not_exist    = 2
+        OTHERS            = 3.
+    IF sy-subrc <> 0.
+      RETURN. " no active service definition -> nothing to carry
+    ENDIF.
+
+    IF ls_policy-pwssoapprop IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    ls_policy-vepname = lv_vepname.
+
+    " strip volatile fields so the serialized file stays stable across systems
+    LOOP AT ls_policy-pwsheader ASSIGNING <ls_wsheader>.
+      CLEAR: <ls_wsheader>-author,
+             <ls_wsheader>-createdon,
+             <ls_wsheader>-changedby,
+             <ls_wsheader>-changedon,
+             <ls_wsheader>-ctime,
+             <ls_wsheader>-utime.
+    ENDLOOP.
+
+    SORT ls_policy-pwssoapprop BY wsname version feature soapapp funcref propnum.
+    SORT ls_policy-pwsheader BY wsname version.
+    SORT ls_policy-pvepvisoapext BY vepname version.
+
+    ii_xml->add(
+      iv_name = c_proxy-webi_policy
+      ig_data = ls_policy ).
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_webi_policy.
+
+    DATA ls_policy TYPE ty_webi_policy.
+
+    ii_xml->read(
+      EXPORTING
+        iv_name = c_proxy-webi_policy
+      CHANGING
+        cg_data = ls_policy ).
+
+    " absent node (older repo) or proxy without custom policy -> nothing to do
+    IF ls_policy-pwssoapprop IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    " At this point SPRX deserialize already recreated the auto-generated service
+    " definition WITH DEFAULT policy. We overwrite that policy with the versioned
+    " one. The WSSOAPPROP feature rows share the same primary key as the defaults,
+    " so MODIFY upserts them in place (Pattern/Security/operation = the 3 profiles).
+    "
+    " NOTE: trace-faithful persistence (see docs section 7). Prefer the official
+    "       CL_WS_MD_* "apply profile" API here once its signature is confirmed.
+    MODIFY wsheader FROM TABLE ls_policy-pwsheader.
+    MODIFY wssoapprop FROM TABLE ls_policy-pwssoapprop.
+    MODIFY vepvisoapext FROM TABLE ls_policy-pvepvisoapext.
+
+    " invalidate the regenerable WSDL cache so it is rebuilt from the new policy
+    " (SAP itself deletes SPROXWSDL on save - see trace section 7)
+    DELETE FROM sproxwsdl WHERE object = mv_object AND obj_name = mv_obj_name.
+
+    COMMIT WORK.
 
   ENDMETHOD.
 ENDCLASS.
