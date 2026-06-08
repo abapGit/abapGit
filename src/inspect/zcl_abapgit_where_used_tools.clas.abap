@@ -132,7 +132,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
+CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
 
 
   METHOD build_package_scope.
@@ -174,8 +174,8 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
         iv_text    = |{ <ls_tadir>-object } { <ls_tadir>-obj_name }| ).
 
       lt_where_used = get_where_used(
-        iv_obj_type = |{ <ls_tadir>-object }|
-        iv_obj_name = <ls_tadir>-obj_name
+        iv_obj_type      = |{ <ls_tadir>-object }|
+        iv_obj_name      = <ls_tadir>-obj_name
         ir_package_scope = ir_package_scope ).
 
       lt_objs_portion = convert_list(
@@ -297,7 +297,7 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
 
     DATA:
       lt_functab TYPE suni_functab,
-      lv_group    TYPE rs38l_area,
+      lv_group   TYPE rs38l_area,
       ls_tadir   TYPE zif_abapgit_definitions=>ty_tadir.
 
     LOOP AT it_tadir ASSIGNING <ls_tadir>.
@@ -420,8 +420,8 @@ CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
       IF sy-subrc = 0 AND
         lv_complete_area IS NOT INITIAL.
         rv_package = get_obj_package(
-         iv_obj_type = 'FUGR'
-         iv_obj_name = |{ lv_complete_area }| ).
+          iv_obj_type = 'FUGR'
+          iv_obj_name = |{ lv_complete_area }| ).
         "if not FUGR, maybe its FUGX?
         IF rv_package IS INITIAL.
           rv_package = get_obj_package(
