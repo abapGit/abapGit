@@ -493,8 +493,9 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
 
   METHOD serialize_webi_policy.
 
-    DATA: lv_vepname TYPE vepname,
-          ls_policy  TYPE ty_webi_policy.
+    DATA: lv_vepname  TYPE vepname,
+          lv_webiname TYPE trdir-name, " WEBI_GET_OBJECT WEBINAME is typed LIKE TRDIR-NAME (CHAR40)
+          ls_policy   TYPE ty_webi_policy.
 
     " tables required by the WEBI_GET_OBJECT signature but not persisted here
     DATA: lt_modilog       TYPE STANDARD TABLE OF smodilog WITH DEFAULT KEY,
@@ -512,7 +513,9 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
           lt_vepfuncsoap   TYPE STANDARD TABLE OF vepfuncsoapext WITH DEFAULT KEY,
           lt_vepfieldref   TYPE STANDARD TABLE OF vepfieldref WITH DEFAULT KEY,
           lt_vependpoint   TYPE STANDARD TABLE OF vependpoint WITH DEFAULT KEY,
-          lt_vepparasoap   TYPE STANDARD TABLE OF vepparasoapext WITH DEFAULT KEY.
+          lt_vepparasoap   TYPE STANDARD TABLE OF vepparasoapext WITH DEFAULT KEY,
+          lt_erclass_sap   TYPE STANDARD TABLE OF str_erclass_sap WITH DEFAULT KEY,
+          lt_erclass_nonsap TYPE STANDARD TABLE OF str_erclass_nonsap WITH DEFAULT KEY.
 
     FIELD-SYMBOLS <ls_wsheader> TYPE wsheader.
 
@@ -520,12 +523,15 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
     IF lv_vepname IS INITIAL.
       RETURN. " not a web service proxy, or service definition not auto-generated
     ENDIF.
+    lv_webiname = lv_vepname.
 
     CALL FUNCTION 'WEBI_GET_OBJECT'
       EXPORTING
-        webiname          = lv_vepname
+        webiname          = lv_webiname
       TABLES
         psmodilog         = lt_modilog
+        perclass_sap      = lt_erclass_sap
+        perclass_nonsap   = lt_erclass_nonsap
         pvepheader        = lt_vepheader
         pvepfunction      = lt_vepfunction
         pvepfault         = lt_vepfault
