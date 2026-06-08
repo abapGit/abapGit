@@ -101,7 +101,9 @@ function debugOutput(text, dstID) {
   var stdout    = document.getElementById(dstID || "debug-output");
   var paragraph = document.createElement("p");
 
-  paragraph.textContent = text;
+  // text is trusted, server-generated debug markup (e.g. the Debug Info table),
+  // so render it as HTML rather than escaping it
+  paragraph.innerHTML = text;
   stdout.appendChild(paragraph);
 }
 
