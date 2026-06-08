@@ -130,7 +130,10 @@ CLASS zcl_abapgit_where_used_tools DEFINITION
         zcx_abapgit_exception.
 ENDCLASS.
 
-CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_WHERE_USED_TOOLS IMPLEMENTATION.
+
 
   METHOD build_package_scope.
 
@@ -414,10 +417,17 @@ CLASS zcl_abapgit_where_used_tools IMPLEMENTATION.
           no_function_pool         = 2
           delimiter_wrong_position = 3
           OTHERS                   = 4.
-      IF sy-subrc = 0.
+      IF sy-subrc = 0 AND
+        lv_complete_area IS NOT INITIAL.
         rv_package = get_obj_package(
          iv_obj_type = 'FUGR'
          iv_obj_name = |{ lv_complete_area }| ).
+        "if not FUGR, maybe its FUGX?
+        IF rv_package IS INITIAL.
+          rv_package = get_obj_package(
+            iv_obj_type = 'FUGX'
+            iv_obj_name = |{ lv_complete_area }| ).
+        ENDIF.
       ELSE.
         CLEAR rv_package.
       ENDIF.
