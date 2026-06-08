@@ -26,12 +26,13 @@ CLASS zcl_abapgit_object_sprx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     " operation Pattern) live in the auto-generated service definition (WEBI),
     " not in SPROXHDR/SPROXDAT. The WEBI is invisible to abapGit (auto_generated),
     " so we piggy-back its policy here on the SPRX. See docs/abapgit-webi-pattern-security-diagnosis.md
+    " The policy is stored as the design-time "profiles" of the service
+    " definition (Pattern / Security Level / operation Pattern), not as raw
+    " WSSOAPPROP rows - this is the semantic representation SAP itself uses.
     TYPES:
       BEGIN OF ty_webi_policy,
-        vepname       TYPE vepname,
-        pwsheader     TYPE STANDARD TABLE OF wsheader WITH DEFAULT KEY,
-        pwssoapprop   TYPE STANDARD TABLE OF wssoapprop WITH DEFAULT KEY,
-        pvepvisoapext TYPE STANDARD TABLE OF vepvisoapext WITH DEFAULT KEY,
+        vepname  TYPE vepname,
+        profiles TYPE STANDARD TABLE OF srvdef_profiles WITH DEFAULT KEY,
       END OF ty_webi_policy .
     DATA mv_object TYPE sproxhdr-object .
     DATA mv_obj_name TYPE sproxhdr-obj_name .
@@ -52,6 +53,7 @@ CLASS zcl_abapgit_object_sprx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS deserialize_webi_policy
       IMPORTING
         !ii_xml TYPE REF TO zif_abapgit_xml_input
+        !ii_log TYPE REF TO zif_abapgit_log
       RAISING
         zcx_abapgit_exception .
     METHODS get_object_and_name
@@ -335,7 +337,9 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
 
     " the steps above recreate the auto-generated service definition with default
     " policy; re-apply the versioned Pattern / Security Level / operation policy
-    deserialize_webi_policy( io_xml ).
+    deserialize_webi_policy(
+      ii_xml = io_xml
+      ii_log = ii_log ).
 
   ENDMETHOD.
 
@@ -493,90 +497,38 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
 
   METHOD serialize_webi_policy.
 
-    DATA: lv_vepname  TYPE vepname,
-          lv_webiname TYPE trdir-name, " WEBI_GET_OBJECT WEBINAME is typed LIKE TRDIR-NAME (CHAR40)
-          ls_policy   TYPE ty_webi_policy.
-
-    " tables required by the WEBI_GET_OBJECT signature but not persisted here
-    DATA: lt_modilog       TYPE STANDARD TABLE OF smodilog WITH DEFAULT KEY,
-          lt_vepheader     TYPE STANDARD TABLE OF vepheader WITH DEFAULT KEY,
-          lt_vepfunction   TYPE STANDARD TABLE OF vepfunction WITH DEFAULT KEY,
-          lt_vepfault      TYPE STANDARD TABLE OF vepfault WITH DEFAULT KEY,
-          lt_vepparameter  TYPE STANDARD TABLE OF vepparameter WITH DEFAULT KEY,
-          lt_veptype       TYPE STANDARD TABLE OF veptype WITH DEFAULT KEY,
-          lt_vepelemtype   TYPE STANDARD TABLE OF vepelemtype WITH DEFAULT KEY,
-          lt_veptabletype  TYPE STANDARD TABLE OF veptabletype WITH DEFAULT KEY,
-          lt_vepstrutype   TYPE STANDARD TABLE OF vepstrutype WITH DEFAULT KEY,
-          lt_veptypesoap   TYPE STANDARD TABLE OF veptypesoapext WITH DEFAULT KEY,
-          lt_vepeletypsoap TYPE STANDARD TABLE OF vepeletypsoap WITH DEFAULT KEY,
-          lt_veptabtypsoap TYPE STANDARD TABLE OF veptabtypsoap WITH DEFAULT KEY,
-          lt_vepfuncsoap   TYPE STANDARD TABLE OF vepfuncsoapext WITH DEFAULT KEY,
-          lt_vepfieldref   TYPE STANDARD TABLE OF vepfieldref WITH DEFAULT KEY,
-          lt_vependpoint   TYPE STANDARD TABLE OF vependpoint WITH DEFAULT KEY,
-          lt_vepparasoap   TYPE STANDARD TABLE OF vepparasoapext WITH DEFAULT KEY,
-          lt_erclass_sap   TYPE STANDARD TABLE OF str_erclass_sap WITH DEFAULT KEY,
-          lt_erclass_nonsap TYPE STANDARD TABLE OF str_erclass_nonsap WITH DEFAULT KEY.
-
-    FIELD-SYMBOLS <ls_wsheader> TYPE wsheader.
+    DATA: lv_vepname TYPE vepname,
+          ls_policy  TYPE ty_webi_policy,
+          lv_no_if   TYPE boolean,
+          lv_no_op   TYPE boolean,
+          lv_no_sec  TYPE boolean.
 
     lv_vepname = get_webi_name( ).
     IF lv_vepname IS INITIAL.
       RETURN. " not a web service proxy, or service definition not auto-generated
     ENDIF.
-    lv_webiname = lv_vepname.
 
-    CALL FUNCTION 'WEBI_GET_OBJECT'
-      EXPORTING
-        webiname          = lv_webiname
-      TABLES
-        psmodilog         = lt_modilog
-        perclass_sap      = lt_erclass_sap
-        perclass_nonsap   = lt_erclass_nonsap
-        pvepheader        = lt_vepheader
-        pvepfunction      = lt_vepfunction
-        pvepfault         = lt_vepfault
-        pvepparameter     = lt_vepparameter
-        pveptype          = lt_veptype
-        pvepelemtype      = lt_vepelemtype
-        pveptabletype     = lt_veptabletype
-        pvepstrutype      = lt_vepstrutype
-        pveptypesoapext   = lt_veptypesoap
-        pvepeletypsoap    = lt_vepeletypsoap
-        pveptabtypsoap    = lt_veptabtypsoap
-        pvepfuncsoapext   = lt_vepfuncsoap
-        pvepfieldref      = lt_vepfieldref
-        pvependpoint      = lt_vependpoint
-        pvepvisoapext     = ls_policy-pvepvisoapext
-        pvepparasoapext   = lt_vepparasoap
-        pwsheader         = ls_policy-pwsheader
-        pwssoapprop       = ls_policy-pwssoapprop
-      EXCEPTIONS
-        version_not_found = 1
-        webi_not_exist    = 2
-        OTHERS            = 3.
-    IF sy-subrc <> 0.
-      RETURN. " no active service definition -> nothing to carry
-    ENDIF.
+    " Read the design-time profiles (Pattern / Security Level / operation Pattern)
+    " of the service definition via the official helper - read-only, no DML.
+    TRY.
+        cl_ws_helper=>get_profiles_for_srv_def(
+          EXPORTING
+            service_definition_name_int = lv_vepname
+          IMPORTING
+            profile_tab                 = ls_policy-profiles
+            no_intf_profiles_exist      = lv_no_if
+            no_operation_profiles_exist = lv_no_op
+            no_security_profiles_exist  = lv_no_sec ).
+      CATCH cx_ws_md_obj_not_exists.
+        RETURN.
+    ENDTRY.
 
-    IF ls_policy-pwssoapprop IS INITIAL.
+    IF ls_policy-profiles IS INITIAL.
       RETURN.
     ENDIF.
 
     ls_policy-vepname = lv_vepname.
-
-    " strip volatile fields so the serialized file stays stable across systems
-    LOOP AT ls_policy-pwsheader ASSIGNING <ls_wsheader>.
-      CLEAR: <ls_wsheader>-author,
-             <ls_wsheader>-createdon,
-             <ls_wsheader>-changedby,
-             <ls_wsheader>-changedon,
-             <ls_wsheader>-ctime,
-             <ls_wsheader>-utime.
-    ENDLOOP.
-
-    SORT ls_policy-pwssoapprop BY wsname version feature soapapp funcref propnum.
-    SORT ls_policy-pwsheader BY wsname version.
-    SORT ls_policy-pvepvisoapext BY vepname version.
+    SORT ls_policy-profiles BY profile_type operation_name profile_name profile_uri.
 
     ii_xml->add(
       iv_name = c_proxy-webi_policy
@@ -587,7 +539,10 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
 
   METHOD deserialize_webi_policy.
 
-    DATA ls_policy TYPE ty_webi_policy.
+    DATA: ls_policy TYPE ty_webi_policy,
+          lo_proxy  TYPE REF TO cl_proxy,
+          ls_pd     TYPE if_proxy_for_vif=>t_proxy_data,
+          lx_error  TYPE REF TO cx_root.
 
     ii_xml->read(
       EXPORTING
@@ -596,26 +551,51 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
         cg_data = ls_policy ).
 
     " absent node (older repo) or proxy without custom policy -> nothing to do
-    IF ls_policy-pwssoapprop IS INITIAL.
+    IF ls_policy-profiles IS INITIAL.
       RETURN.
     ENDIF.
 
-    " At this point SPRX deserialize already recreated the auto-generated service
-    " definition WITH DEFAULT policy. We overwrite that policy with the versioned
-    " one. The WSSOAPPROP feature rows share the same primary key as the defaults,
-    " so MODIFY upserts them in place (Pattern/Security/operation = the 3 profiles).
-    "
-    " NOTE: trace-faithful persistence (see docs section 7). Prefer the official
-    "       CL_WS_MD_* "apply profile" API here once its signature is confirmed.
-    MODIFY wsheader FROM TABLE ls_policy-pwsheader.
-    MODIFY wssoapprop FROM TABLE ls_policy-pwssoapprop.
-    MODIFY vepvisoapext FROM TABLE ls_policy-pvepvisoapext.
+    " The proxy deserialize above recreated the auto-generated service definition
+    " with DEFAULT policy. Re-generate it from the proxy applying the versioned
+    " profiles. Fully API-based (CL_WS_MD_FACTORY) - it handles lock, A/I version,
+    " activation and WSDL cache, so no direct table writes are needed.
+    " Guarded: any failure leaves the default policy in place (as before this
+    " enhancement) and never aborts the import.
+    TRY.
+        lo_proxy = cl_proxy_fact=>load_by_abap_name(
+          object   = mv_object
+          obj_name = mv_obj_name ).
+        ls_pd = lo_proxy->get_proxy_data( ).
 
-    " invalidate the regenerable WSDL cache so it is rebuilt from the new policy
-    " (SAP itself deletes SPROXWSDL on save - see trace section 7)
-    DELETE FROM sproxwsdl WHERE object = mv_object AND obj_name = mv_obj_name.
+        " drop the default-policy definition the proxy just recreated, then
+        " regenerate it with our profiles (delete+generate avoids OBJ_ALREADY_EXISTS)
+        TRY.
+            cl_ws_md_factory=>delete_web_service( ex_int_name = ls_policy-vepname ).
+          CATCH cx_ws_md_obj_not_exists ##NO_HANDLER.
+        ENDTRY.
 
-    COMMIT WORK.
+        cl_ws_md_factory=>generate_web_service(
+          vi_name                = ls_policy-vepname
+          vi_short_text          = ls_pd-text
+          vi_endpoint_type       = cl_ws_md_factory=>endpoint_type_xirp
+          vi_endpoint            = lo_proxy->get_proxy_abap_name( )
+          vi_default_mapping     = ' '
+          definition_start_point = 'O'
+          auto_generated         = 'X'
+          wsd_deploy             = ' '
+          siesrname              = ls_pd-esrname-name
+          sisave                 = 'X'
+          sesrnamespace          = ls_pd-esrname-namespace
+          siactivate             = 'X'
+          i_soap_appl_name       = ls_pd-soap_appl
+          itall_profiles         = ls_policy-profiles
+          i_is_srvv              = lo_proxy->is_service_variant( )
+          ir_proxy               = lo_proxy ).
+      CATCH cx_root INTO lx_error.
+        ii_log->add_error(
+          iv_msg  = |SPRX { ms_item-obj_name }: WEBI policy not re-applied: { lx_error->get_text( ) }|
+          is_item = ms_item ).
+    ENDTRY.
 
   ENDMETHOD.
 ENDCLASS.
