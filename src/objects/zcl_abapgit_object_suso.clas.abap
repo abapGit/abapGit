@@ -285,7 +285,7 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
 
     set_abap_language_version( CHANGING cv_abap_language_version = lv_abap_language_version ).
 
-    SELECT SINGLE tabname FROM dd02l INTO lv_tabname WHERE tabname = c_abap_language_table.
+    SELECT SINGLE tabname FROM dd02l INTO lv_tabname WHERE tabname = c_abap_language_table. "#EC CI_NOORDER
     IF sy-subrc = 0.
       lr_structdescr ?= cl_abap_typedescr=>describe_by_name( p_name = c_abap_language_table ).
       CREATE DATA lr_tobj_attr TYPE HANDLE lr_structdescr.
@@ -443,7 +443,7 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
     io_xml->add( ig_data = lt_tobjvor
                  iv_name = 'TOBJVOR' ).
 
-    SELECT SINGLE tabname FROM dd02l INTO lv_tabname WHERE tabname = c_abap_language_table.
+    SELECT SINGLE tabname FROM dd02l INTO lv_tabname WHERE tabname = c_abap_language_table. "#EC CI_NOORDER
     IF sy-subrc = 0.
       SELECT SINGLE ('ABAP_LANGUAGE_VERSION') FROM (c_abap_language_table) INTO lv_abap_language_version
         WHERE objct = ms_item-obj_name.
