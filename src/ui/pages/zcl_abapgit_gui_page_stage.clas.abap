@@ -393,7 +393,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     DATA ls_event TYPE zcl_abapgit_gui_chunk_lib=>ty_event_signature.
 
     ls_event-method = 'post'.
-    ls_event-name   = 'stage_commit'.
+    ls_event-name   = c_action-stage_commit.
     ri_html = zcl_abapgit_gui_chunk_lib=>render_event_as_form( ls_event ).
     ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
 
@@ -610,7 +610,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ri_html->add( 'var gStageParams = {' ).
     ri_html->add( |  seed:            "{ mv_seed }",| ). " Unique page id
     ri_html->add( |  user:            "{ to_lower( sy-uname ) }",| ).
-    ri_html->add( '  formAction:      "stage_commit",' ).
+    ri_html->add( '  formAction:      "{ c_action-stage_commit }",' ).
     ri_html->add( |  patchAction:     "{ zif_abapgit_definitions=>c_action-go_patch }",| ).
     ri_html->add( '  focusFilterKey:  "f",' ).
 
