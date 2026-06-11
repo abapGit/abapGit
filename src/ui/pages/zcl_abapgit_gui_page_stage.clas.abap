@@ -610,7 +610,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ri_html->add( 'var gStageParams = {' ).
     ri_html->add( |  seed:            "{ mv_seed }",| ). " Unique page id
     ri_html->add( |  user:            "{ to_lower( sy-uname ) }",| ).
-    ri_html->add( '  formAction:      "{ c_action-stage_commit }",' ).
+    ri_html->add( |  formAction:      "{ c_action-stage_commit }",| ).
     ri_html->add( |  patchAction:     "{ zif_abapgit_definitions=>c_action-go_patch }",| ).
     ri_html->add( '  focusFilterKey:  "f",' ).
 
