@@ -804,6 +804,13 @@ StageHelper.prototype.updateMenu = function() {
   this.dom.commitAllBtn.style.display      = display === "default" ? "" : "none";
   this.dom.commitSelectedBtn.style.display = display === "selected" ? "" : "none";
   this.dom.commitFilteredBtn.style.display = display === "filtered" ? "" : "none";
+
+  var patchLabels = {
+    "default" : "Patch",
+    "selected": "Patch <b>Selected</b> (" + this.selectedCount + ")",
+    "filtered": "Patch <b>Filtered</b> (" + this.filteredCount + ")"
+  };
+  this.dom.patchBtn.innerHTML = patchLabels[display];
 };
 
 // Submit stage state to the server
@@ -817,6 +824,9 @@ StageHelper.prototype.submitVisible = function() {
 };
 
 StageHelper.prototype.submitPatch = function() {
+  if (this.calculateActiveCommitCommand() === "filtered") {
+    this.markVisiblesAsAdded();
+  }
   submitSapeventForm(this.collectData(), this.patchAction);
 };
 
