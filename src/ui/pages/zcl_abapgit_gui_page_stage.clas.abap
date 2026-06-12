@@ -760,6 +760,11 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ls_hotkey_action-hotkey = |f|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
+    ls_hotkey_action-description = |Filter changed by me|.
+    ls_hotkey_action-action      = 'onFilterMe'. " JS function in StageHelper
+    ls_hotkey_action-hotkey      = |m|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
   ENDMETHOD.
 
 
