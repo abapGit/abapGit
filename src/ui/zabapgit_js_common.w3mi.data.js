@@ -547,8 +547,10 @@ StageHelper.prototype.injectFilterMe = function() {
 
   var a = document.createElement("A");
   a.appendChild(document.createTextNode("me"));
-  a.onclick = this.onFilterMe.bind(this);
-  a.href    = "#";
+  a.onclick   = this.onFilterMe.bind(this);
+  a.href      = "#";
+  a.title     = "Filter changed by ";
+  a.className = "command"; // expose to command palette (enumerateUiActions)
   changedByHead.appendChild(a);
   changedByHead.appendChild(document.createTextNode(")"));
 };
