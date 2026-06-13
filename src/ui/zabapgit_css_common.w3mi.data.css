@@ -773,6 +773,16 @@ div.tutorial h2 { font-size: 14pt;}
 }
 .nav-container ul ul li.separator:first-child { border-top: none; }
 
+/* Top-level toolbar separator - vertical divider between item groups */
+.nav-container > ul > li.separator {
+  width: 0;
+  height: 18px;
+  padding: 0;
+  margin: 6px 0.6em;
+  border-left: 1px solid;
+  opacity: 0.25;
+}
+
 /* NEWS ANNOUNCEMENT */
 
 div.info-panel {
