@@ -1409,7 +1409,7 @@ function LinkHints(linkHintHotKey) {
   this.linkHintHotKey    = linkHintHotKey;
   this.areHintsDisplayed = false;
   this.pendingPath       = ""; // already typed code prefix
-  this.hintsMap          = this.deployHintContainers();
+  this.hintsMap          = null; // deployed on each activation, the DOM changes after load
   this.activatedDropdown = null;
   this.yankModeActive    = false;
 }
@@ -1489,6 +1489,15 @@ LinkHints.prototype.deployHintContainers = function() {
   return hintsMap;
 };
 
+LinkHints.prototype.removeHintContainers = function() {
+  if (!this.hintsMap) return;
+  for (var i = this.hintsMap.first; i <= this.hintsMap.last; i++) {
+    var container = this.hintsMap[i].container;
+    if (container.parentNode) container.parentNode.removeChild(container);
+  }
+  this.hintsMap = null;
+};
+
 LinkHints.prototype.getHandler = function() {
   return this.handleKey.bind(this);
 };
@@ -1509,6 +1518,12 @@ LinkHints.prototype.handleKey = function(event) {
     if (this.areHintsDisplayed) this.yankModeActive = false;
 
     this.pendingPath = "";
+    if (!this.areHintsDisplayed) {
+      // redeploy on each activation to catch links created or rewritten
+      // after page load (e.g. stage table commands, filtered file names)
+      this.removeHintContainers();
+      this.hintsMap = this.deployHintContainers();
+    }
     this.displayHints(!this.areHintsDisplayed);
 
   } else if (this.areHintsDisplayed) {
