@@ -547,8 +547,10 @@ StageHelper.prototype.injectFilterMe = function() {
 
   var a = document.createElement("A");
   a.appendChild(document.createTextNode("me"));
-  a.onclick = this.onFilterMe.bind(this);
-  a.href    = "#";
+  a.onclick   = this.onFilterMe.bind(this);
+  a.href      = "#";
+  a.title     = "Filter changed by ";
+  a.className = "command"; // expose to command palette (enumerateUiActions)
   changedByHead.appendChild(a);
   changedByHead.appendChild(document.createTextNode(")"));
 };
@@ -607,7 +609,7 @@ StageHelper.prototype.onPageLoad = function() {
   var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageSeed));
 
   this.iterateStageTab(true, function(row) {
-    var status = data && data[row.cells[this.colIndex["name"]].innerText];
+    var status = data && data[this.getPlainText(row.cells[this.colIndex["name"]])];
     this.updateRow(row, status || this.STATUS.reset);
   });
 
@@ -680,6 +682,19 @@ StageHelper.prototype.applyFilterValue = function(sFilterValue) {
   this.updateMenu();
 };
 
+// Get plain text of a cell, ignoring injected link-hint spans.
+// innerText is not reliable for this: while the stage table is hidden
+// (iterateStageTab change mode), it includes display:none descendants,
+// so the link-hint codes would leak into the file names
+StageHelper.prototype.getPlainText = function(elem) {
+  var clone = elem.cloneNode(true);
+  var hints = clone.querySelectorAll("span.link-hint");
+  for (var i = hints.length - 1; i >= 0; i--) {
+    hints[i].parentNode.removeChild(hints[i]);
+  }
+  return clone.textContent;
+};
+
 // Apply filter to a single stage line - hide or show
 StageHelper.prototype.applyFilterToRow = function(row, filter) {
   // Collect data cells
@@ -693,7 +708,7 @@ StageHelper.prototype.applyFilterToRow = function(row, filter) {
     if (elemA) elem = elemA;
     return {
       elem     : elem,
-      plainText: elem.innerText.replace(/ /g, "\u00a0"), // without tags, with encoded spaces
+      plainText: this.getPlainText(elem).replace(/ /g, "\u00a0"), // without tags, with encoded spaces
       curHtml  : elem.innerHTML
     };
   }, this);
@@ -821,7 +836,7 @@ StageHelper.prototype.submitPatch = function() {
 StageHelper.prototype.collectData = function() {
   var data = {};
   this.iterateStageTab(false, function(row) {
-    data[row.cells[this.colIndex["name"]].innerText] = row.cells[this.colIndex["status"]].innerText;
+    data[this.getPlainText(row.cells[this.colIndex["name"]])] = row.cells[this.colIndex["status"]].innerText;
   });
   return data;
 };
