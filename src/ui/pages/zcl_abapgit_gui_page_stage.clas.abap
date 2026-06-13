@@ -788,11 +788,11 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         iv_txt = ``
         iv_typ = zif_abapgit_html=>c_action_type-separator
       )->add(
-        iv_txt = 'Refresh'
-        iv_act = |{ c_action-stage_refresh }|
-      )->add(
         iv_txt = |Diff|
         iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mi_repo->get_key( ) }|
+      )->add(
+        iv_txt = 'Refresh'
+        iv_act = |{ c_action-stage_refresh }|
       )->add(
         iv_txt = |Back|
         iv_act = zif_abapgit_definitions=>c_action-go_back ).
