@@ -165,8 +165,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     LOOP AT lt_repo_items ASSIGNING <ls_item> WHERE inactive = abap_true.
       zcl_abapgit_objects_activation=>add(
-        iv_type = <ls_item>-obj_type
-        iv_name = <ls_item>-obj_name ).
+        iv_type       = <ls_item>-obj_type
+        iv_name       = <ls_item>-obj_name
+        iv_force_clif = abap_true ).
       lv_count = lv_count + 1.
     ENDLOOP.
 
