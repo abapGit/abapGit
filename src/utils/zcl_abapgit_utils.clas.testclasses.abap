@@ -17,6 +17,7 @@ CLASS ltcl_is_binary DEFINITION FINAL FOR TESTING
       cds_with_umlaut_is_text FOR TESTING RAISING cx_static_check,
       image_is_binary FOR TESTING RAISING cx_static_check,
       text_is_not_binary FOR TESTING RAISING cx_static_check,
+      text_is_not_binary_tail FOR TESTING RAISING cx_static_check,
 
       given_file
         IMPORTING
@@ -28,6 +29,8 @@ CLASS ltcl_is_binary DEFINITION FINAL FOR TESTING
       given_cds_view_with_umlaut
         RAISING zcx_abapgit_exception,
       given_text
+        RAISING zcx_abapgit_exception,
+      given_text_incomplete_tail
         RAISING zcx_abapgit_exception,
 
       when_is_binary_determined
@@ -56,7 +59,6 @@ CLASS ltcl_is_binary IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD cds_with_umlaut_is_text.
 
     given_cds_view_with_umlaut( ).
@@ -64,7 +66,6 @@ CLASS ltcl_is_binary IMPLEMENTATION.
     then_is_not_binary( ).
 
   ENDMETHOD.
-
 
   METHOD image_is_binary.
 
@@ -82,9 +83,23 @@ CLASS ltcl_is_binary IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD text_is_not_binary_tail.
+
+    given_text_incomplete_tail( ).
+    when_is_binary_determined( ).
+    then_is_not_binary( ).
+
+  ENDMETHOD.
+
   METHOD given_text.
 
     mv_given_file = zcl_abapgit_convert=>string_to_xstring_utf8( 'Test' && cl_abap_char_utilities=>cr_lf ).
+
+  ENDMETHOD.
+
+  METHOD given_text_incomplete_tail.
+
+    mv_given_file = zcl_abapgit_convert=>string_to_xstring_utf8( 'Test' && cl_abap_char_utilities=>cr_lf ) && 'E2'.
 
   ENDMETHOD.
 
@@ -93,7 +108,6 @@ CLASS ltcl_is_binary IMPLEMENTATION.
     mv_given_file = zcl_abapgit_convert=>string_to_xstring_utf8( iv_file ).
 
   ENDMETHOD.
-
 
   METHOD given_image.
 
@@ -136,7 +150,6 @@ CLASS ltcl_is_binary IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD given_cds_metadata.
 
     given_file( `{`
@@ -157,7 +170,6 @@ CLASS ltcl_is_binary IMPLEMENTATION.
       && gv_nl && `}` ).
 
   ENDMETHOD.
-
 
   METHOD given_cds_view_with_umlaut.
 
@@ -188,7 +200,6 @@ CLASS ltcl_is_binary IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD then_is_not_binary.
 
     cl_abap_unit_assert=>assert_equals(
@@ -197,7 +208,6 @@ CLASS ltcl_is_binary IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD then_is_binary.
 
     cl_abap_unit_assert=>assert_equals(
@@ -205,5 +215,4 @@ CLASS ltcl_is_binary IMPLEMENTATION.
       exp = abap_true ).
 
   ENDMETHOD.
-
 ENDCLASS.
