@@ -159,6 +159,7 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
 
 
     ASSERT lines( it_sha1 ) > 0.
+    ASSERT iv_days > 0.
 
     lv_argument = |deepen-since { zcl_abapgit_git_time=>get_unix_days_ago( iv_days ) }|.
     APPEND lv_argument TO lt_arguments.
