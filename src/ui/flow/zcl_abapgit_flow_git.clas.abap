@@ -26,8 +26,6 @@ CLASS zcl_abapgit_flow_git DEFINITION PUBLIC.
 
   PRIVATE SECTION.
 
-    CONSTANTS c_commit_days TYPE i VALUE 730.
-
     TYPES ty_main_reachable TYPE HASHED TABLE OF zif_abapgit_git_definitions=>ty_sha1 WITH UNIQUE KEY table_line.
 
     CLASS-METHODS build_main_reachable
@@ -93,7 +91,7 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
 
     lt_commits = zcl_abapgit_git_factory=>get_v2_porcelain( )->commits_last_days(
       iv_url  = iv_url
-      iv_days = c_commit_days
+      iv_days = zif_abapgit_flow_logic=>c_commit_days
       it_sha1 = lt_sha1 ).
     LOOP AT lt_commits ASSIGNING <ls_commit>.
       INSERT <ls_commit> INTO TABLE lt_objects.

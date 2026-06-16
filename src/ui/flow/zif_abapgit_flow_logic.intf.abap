@@ -62,6 +62,8 @@ INTERFACE zif_abapgit_flow_logic
          END OF ty_information.
 
   CONSTANTS c_main TYPE string VALUE 'main'.
+  CONSTANTS c_commit_days TYPE i VALUE 730.
+  CONSTANTS c_open_transport_days TYPE i VALUE 730.
 
 **************************************
 
