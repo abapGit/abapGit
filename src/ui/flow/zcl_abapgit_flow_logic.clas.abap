@@ -46,6 +46,8 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    CONSTANTS c_open_transport_days TYPE i VALUE 730.
+
     TYPES: BEGIN OF ty_transport,
              trkorr     TYPE trkorr,
              title      TYPE string,
@@ -566,7 +568,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 * only look for transports that are created/changed in the last two years
     ls_date-sign = 'I'.
     ls_date-option = 'GE'.
-    ls_date-low = sy-datum - 730.
+    ls_date-low = sy-datum - c_open_transport_days.
     INSERT ls_date INTO TABLE lt_date.
 
     lt_trkorr = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( lt_date ).
