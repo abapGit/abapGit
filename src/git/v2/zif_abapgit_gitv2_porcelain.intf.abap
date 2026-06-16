@@ -28,9 +28,10 @@ INTERFACE zif_abapgit_gitv2_porcelain
     RAISING
       zcx_abapgit_exception .
 
-  METHODS commits_last_year
+  METHODS commits_last_days
     IMPORTING
       !iv_url           TYPE string
+      !iv_days          TYPE i
       !it_sha1          TYPE zif_abapgit_git_definitions=>ty_sha1_tt
     RETURNING
       VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt

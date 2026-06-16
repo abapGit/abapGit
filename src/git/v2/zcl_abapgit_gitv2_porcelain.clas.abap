@@ -150,7 +150,7 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gitv2_porcelain~commits_last_year.
+  METHOD zif_abapgit_gitv2_porcelain~commits_last_days.
 * including trees
     DATA lv_xstring   TYPE xstring.
     DATA lt_arguments TYPE string_table.
@@ -160,7 +160,7 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
 
     ASSERT lines( it_sha1 ) > 0.
 
-    lv_argument = |deepen-since { zcl_abapgit_git_time=>get_one_year_ago( ) }|.
+    lv_argument = |deepen-since { zcl_abapgit_git_time=>get_unix_days_ago( iv_days ) }|.
     APPEND lv_argument TO lt_arguments.
     LOOP AT it_sha1 INTO lv_sha1.
       lv_argument = |want { lv_sha1 }|.
