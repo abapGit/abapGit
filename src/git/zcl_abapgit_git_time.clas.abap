@@ -49,6 +49,10 @@ CLASS zcl_abapgit_git_time IMPLEMENTATION.
       tstmp1 = lv_time
       tstmp2 = lc_epoch ).
 
+    IF iv_days <= 0 OR iv_days > 24855.
+      zcx_abapgit_exception=>raise( |Invalid iv_days: { iv_days }| ).
+    ENDIF.
+
     rv_time = rv_time - iv_days * lc_seconds_per_day.
   ENDMETHOD.
 
