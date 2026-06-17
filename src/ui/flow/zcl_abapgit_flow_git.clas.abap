@@ -89,8 +89,9 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
       iv_url  = iv_url
       it_sha1 = lt_sha1 ).
 
-    lt_commits = zcl_abapgit_git_factory=>get_v2_porcelain( )->commits_last_year(
+    lt_commits = zcl_abapgit_git_factory=>get_v2_porcelain( )->commits_last_days(
       iv_url  = iv_url
+      iv_days = zif_abapgit_flow_logic=>c_commit_days
       it_sha1 = lt_sha1 ).
     LOOP AT lt_commits ASSIGNING <ls_commit>.
       INSERT <ls_commit> INTO TABLE lt_objects.

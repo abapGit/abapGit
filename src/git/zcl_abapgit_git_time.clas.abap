@@ -14,7 +14,9 @@ CLASS zcl_abapgit_git_time DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    CLASS-METHODS get_one_year_ago
+    CLASS-METHODS get_unix_days_ago
+      IMPORTING
+        !iv_days       TYPE i
       RETURNING
         VALUE(rv_time) TYPE i
       RAISING
@@ -35,8 +37,9 @@ ENDCLASS.
 CLASS zcl_abapgit_git_time IMPLEMENTATION.
 
 
-  METHOD get_one_year_ago.
+  METHOD get_unix_days_ago.
 * https://www.epochconverter.com
+    CONSTANTS lc_seconds_per_day TYPE i VALUE 86400.
     CONSTANTS lc_epoch TYPE timestamp VALUE '19700101000000'.
     DATA lv_time TYPE timestamp.
 
@@ -46,7 +49,11 @@ CLASS zcl_abapgit_git_time IMPLEMENTATION.
       tstmp1 = lv_time
       tstmp2 = lc_epoch ).
 
-    rv_time = rv_time - 31536000.
+    IF iv_days <= 0 OR iv_days > 24855.
+      zcx_abapgit_exception=>raise( |Invalid iv_days: { iv_days }| ).
+    ENDIF.
+
+    rv_time = rv_time - iv_days * lc_seconds_per_day.
   ENDMETHOD.
 
 

@@ -249,6 +249,7 @@ CLASS lcl_find_changes_new IMPLEMENTATION.
     FIELD-SYMBOLS <ls_commit> LIKE LINE OF mt_objects.
 
 
+* if this crashes, is it an old branch with the first commit older than zif_abapgit_flow_logic=>c_commit_days ?
     ASSERT iv_first_commit IS NOT INITIAL.
     ASSERT iv_branch IS NOT INITIAL.
 
