@@ -486,6 +486,7 @@ function StageHelper(params) {
   this.pageSeed        = params.seed;
   this.formAction      = params.formAction;
   this.patchAction     = params.patchAction;
+  this.stageAllAction  = params.stageAllAction;
   this.user            = params.user;
   this.ids             = params.ids;
   this.selectedCount   = 0;
@@ -495,16 +496,16 @@ function StageHelper(params) {
 
   // DOM nodes
   this.dom = {
-    stageTab         : document.getElementById(params.ids.stageTab),
-    commitAllBtn     : document.getElementById(params.ids.commitAllBtn),
-    commitSelectedBtn: document.getElementById(params.ids.commitSelectedBtn),
-    commitFilteredBtn: document.getElementById(params.ids.commitFilteredBtn),
-    patchBtn         : document.getElementById(params.ids.patchBtn),
-    objectSearch     : document.getElementById(params.ids.objectSearch),
-    selectedCounter  : null,
-    filteredCounter  : null,
+    stageTab    : document.getElementById(params.ids.stageTab),
+    commitBtn   : document.getElementById(params.ids.commitBtn),
+    patchBtn    : document.getElementById(params.ids.patchBtn),
+    objectSearch: document.getElementById(params.ids.objectSearch),
   };
-  this.findCounters();
+
+  // Server-rendered "Add All and Commit (n)" / "Patch All (n)" labels
+  // (commit label is empty if nothing to commit by default)
+  this.commitAllLabel = this.dom.commitBtn.innerHTML;
+  this.patchAllLabel  = this.dom.patchBtn.innerHTML;
 
   // Table columns (autodetection)
   this.colIndex      = this.detectColumns();
@@ -530,11 +531,6 @@ function StageHelper(params) {
   if (this.user) this.injectFilterMe();
   Hotkeys.addHotkeyToHelpSheet("^Enter", "Commit");
 }
-
-StageHelper.prototype.findCounters = function() {
-  this.dom.selectedCounter = this.dom.commitSelectedBtn.querySelector("span.counter");
-  this.dom.filteredCounter = this.dom.commitFilteredBtn.querySelector("span.counter");
-};
 
 StageHelper.prototype.injectFilterMe = function() {
   var tabFirstHead = this.dom.stageTab.tHead.rows[0];
@@ -563,12 +559,11 @@ StageHelper.prototype.onFilterMe = function() {
 // Hook global click listener on table, load/unload actions
 StageHelper.prototype.setHooks = function() {
   window.addEventListener("keypress", this.onCtrlEnter.bind(this));
-  this.dom.stageTab.onclick          = this.onTableClick.bind(this);
-  this.dom.commitSelectedBtn.onclick = this.submit.bind(this);
-  this.dom.commitFilteredBtn.onclick = this.submitVisible.bind(this);
-  this.dom.patchBtn.onclick          = this.submitPatch.bind(this);
-  this.dom.objectSearch.oninput      = this.onFilter.bind(this);
-  this.dom.objectSearch.onkeypress   = this.onFilter.bind(this);
+  this.dom.stageTab.onclick        = this.onTableClick.bind(this);
+  this.dom.commitBtn.onclick       = this.submitCommit.bind(this);
+  this.dom.patchBtn.onclick        = this.submitPatch.bind(this);
+  this.dom.objectSearch.oninput    = this.onFilter.bind(this);
+  this.dom.objectSearch.onkeypress = this.onFilter.bind(this);
   window.addEventListener("beforeunload", this.onPageUnload.bind(this));
   window.addEventListener("load", this.onPageLoad.bind(this));
 
@@ -656,12 +651,7 @@ StageHelper.prototype.onTableClick = function(event) {
 
 StageHelper.prototype.onCtrlEnter = function(e) {
   if (e.ctrlKey && (e.which === 10 || e.key === "Enter")) {
-    var clickMap = {
-      "default" : this.dom.commitAllBtn,
-      "selected": this.dom.commitSelectedBtn,
-      "filtered": this.dom.commitFilteredBtn
-    };
-    clickMap[this.calculateActiveCommitCommand()].click();
+    this.submitCommit();
   }
 };
 
@@ -796,19 +786,19 @@ StageHelper.prototype.calculateActiveCommitCommand = function() {
   return active;
 };
 
-// Update menu items visibility
+// Update commit/patch toolbar button labels according to the active command
 StageHelper.prototype.updateMenu = function() {
   var display = this.calculateActiveCommitCommand();
 
-  if (display === "selected") this.dom.selectedCounter.innerText = this.selectedCount.toString();
-  if (display === "filtered") this.dom.filteredCounter.innerText = this.filteredCount.toString();
-
-  this.dom.commitAllBtn.style.display      = display === "default" ? "" : "none";
-  this.dom.commitSelectedBtn.style.display = display === "selected" ? "" : "none";
-  this.dom.commitFilteredBtn.style.display = display === "filtered" ? "" : "none";
+  var commitLabels = {
+    "default" : this.commitAllLabel,
+    "selected": "Commit <b>Selected</b> (" + this.selectedCount + ")",
+    "filtered": "Add <b>Filtered</b> and Commit (" + this.filteredCount + ")"
+  };
+  this.dom.commitBtn.innerHTML = commitLabels[display];
 
   var patchLabels = {
-    "default" : "Patch",
+    "default" : this.patchAllLabel,
     "selected": "Patch <b>Selected</b> (" + this.selectedCount + ")",
     "filtered": "Patch <b>Filtered</b> (" + this.filteredCount + ")"
   };
@@ -823,6 +813,15 @@ StageHelper.prototype.submit = function() {
 StageHelper.prototype.submitVisible = function() {
   this.markVisiblesAsAdded();
   submitSapeventForm(this.collectData(), this.formAction);
+};
+
+// Submit the active commit command (commit button in the page toolbar)
+StageHelper.prototype.submitCommit = function() {
+  switch (this.calculateActiveCommitCommand()) {
+  case "selected": this.submit(); break;
+  case "filtered": this.submitVisible(); break;
+  default: submitSapeventForm({}, this.stageAllAction);
+  }
 };
 
 StageHelper.prototype.submitPatch = function() {
@@ -2319,6 +2318,9 @@ CommandPalette.prototype.toggleDisplay = function(forceState) {
 
   this.elements.palette.style.display = tobeDisplayed ? "" : "none";
   if (tobeDisplayed) {
+    this.commands.forEach(function(cmd) {
+      if (cmd.getTitle) cmd.title = cmd.getTitle();
+    });
     this.elements.input.value = "";
     this.elements.input.focus();
     this.applyFilter();
@@ -2415,9 +2417,15 @@ function enumerateUiActions() {
       action = anchor.href.replace("sapevent:", "");
     }
     var prefix = item[1];
+    // title is re-read on each palette open, some labels change dynamically
+    // (e.g. commit/patch buttons on the stage page)
+    var getTitle = function() {
+      return (prefix ? prefix + ": " : "") + anchor.innerText.trim();
+    };
     return {
-      action: action,
-      title : (prefix ? prefix + ": " : "") + anchor.innerText.trim()
+      action  : action,
+      getTitle: getTitle,
+      title   : getTitle()
     };
   });
 
