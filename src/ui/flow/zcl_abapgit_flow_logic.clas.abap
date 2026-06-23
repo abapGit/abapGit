@@ -409,9 +409,6 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     DATA ls_result   LIKE LINE OF lt_features.
     DATA lt_all_transports TYPE ty_transports_tt.
     DATA lv_filename TYPE string.
-    DATA lv_missing_count TYPE i.
-    DATA lt_missing_remote LIKE cs_information-missing_remote.
-    DATA ls_missing_remote LIKE LINE OF cs_information-missing_remote.
     DATA lv_warning TYPE string.
 
 
