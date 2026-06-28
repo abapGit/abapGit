@@ -53,6 +53,7 @@ INTERFACE zif_abapgit_tadir
       !iv_pgmid    TYPE csequence DEFAULT 'R3TR'
       !iv_object   TYPE csequence
       !iv_obj_name TYPE csequence
+      !iv_no_throw TYPE abap_bool DEFAULT abap_false
     RAISING
       zcx_abapgit_exception.
 

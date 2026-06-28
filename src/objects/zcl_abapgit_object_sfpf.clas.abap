@@ -18,6 +18,25 @@ CLASS zcl_abapgit_object_sfpf DEFINITION
 
     CONSTANTS c_layout_file_ext TYPE string VALUE 'xdp'.
 
+    TYPES:
+      BEGIN OF ty_xml_field,
+        name  TYPE string,
+        value TYPE string,
+      END OF ty_xml_field,
+      ty_xml_fields TYPE STANDARD TABLE OF ty_xml_field WITH DEFAULT KEY,
+      BEGIN OF ty_context,
+        name     TYPE string,
+        state    TYPE string,
+        language TYPE string,
+        id       TYPE string,
+        fields   TYPE ty_xml_fields,
+      END OF ty_context,
+      ty_contexts TYPE STANDARD TABLE OF ty_context WITH DEFAULT KEY.
+
+    CLASS-METHODS sort_contexts
+      IMPORTING
+        !ii_document TYPE REF TO if_ixml_document .
+
     METHODS:
       check_ads_connection
         RAISING
@@ -168,6 +187,88 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
       CATCH cx_fp_api.
         zcx_abapgit_exception=>raise( 'SFPF error, load' ).
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD sort_contexts.
+
+    DATA: li_node            TYPE REF TO if_ixml_node,
+          li_item            TYPE REF TO if_ixml_node,
+          li_field           TYPE REF TO if_ixml_node,
+          li_item_list       TYPE REF TO if_ixml_node_list,
+          li_iterator        TYPE REF TO if_ixml_node_iterator,
+          li_items           TYPE REF TO if_ixml_node_iterator,
+          lv_index           TYPE i,
+          ls_context         TYPE ty_context,
+          ls_field           TYPE ty_xml_field,
+          lt_contexts        TYPE ty_contexts,
+          li_node_collection TYPE REF TO if_ixml_node_collection.
+
+    FIELD-SYMBOLS: <ls_field> TYPE ty_xml_field,
+                   <lv_value> TYPE any.
+
+    li_node_collection = ii_document->get_elements_by_tag_name_ns( 'FPCONTEXTT' ).
+    IF li_node_collection IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    li_iterator = li_node_collection->create_iterator( ).
+    li_node = li_iterator->get_next( ).
+    WHILE li_node IS NOT INITIAL.
+
+      CLEAR lt_contexts.
+      li_item_list = li_node->get_children( ).
+      li_items = li_item_list->create_iterator( ).
+      DO.
+        li_item = li_items->get_next( ).
+        IF li_item IS INITIAL.
+          EXIT.
+        ENDIF.
+
+        CLEAR ls_context.
+        li_field = li_item->get_first_child( ).
+        WHILE li_field IS NOT INITIAL.
+          ls_field-name = li_field->get_name( ).
+          ls_field-value = li_field->get_value( ).
+          INSERT ls_field INTO TABLE ls_context-fields.
+
+          ASSIGN COMPONENT ls_field-name OF STRUCTURE ls_context TO <lv_value>.
+          IF sy-subrc = 0.
+            <lv_value> = ls_field-value.
+          ENDIF.
+
+          li_field = li_field->get_next( ).
+        ENDWHILE.
+        INSERT ls_context INTO TABLE lt_contexts.
+      ENDDO.
+
+      SORT lt_contexts BY name state language id.
+
+      lv_index = 1.
+      li_items = li_item_list->create_iterator( ).
+      DO.
+        li_item = li_items->get_next( ).
+        IF li_item IS INITIAL.
+          EXIT.
+        ENDIF.
+
+        READ TABLE lt_contexts INTO ls_context INDEX lv_index.
+        li_field = li_item->get_first_child( ).
+        WHILE li_field IS NOT INITIAL.
+          READ TABLE ls_context-fields ASSIGNING <ls_field>
+            WITH KEY name = li_field->get_name( ).
+          IF sy-subrc = 0.
+            li_field->set_value( |{ <ls_field>-value }| ).
+          ENDIF.
+          li_field = li_field->get_next( ).
+        ENDWHILE.
+
+        lv_index = lv_index + 1.
+      ENDDO.
+
+      li_node = li_iterator->get_next( ).
+    ENDWHILE.
 
   ENDMETHOD.
 
@@ -396,6 +497,7 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
     ENDIF.
 
     fix_oref( li_document ).
+    sort_contexts( li_document ).
     io_xml->set_raw( li_document->get_root_element( ) ).
 
   ENDMETHOD.

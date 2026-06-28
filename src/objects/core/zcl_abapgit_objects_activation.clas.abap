@@ -6,9 +6,10 @@ CLASS zcl_abapgit_objects_activation DEFINITION
 
     CLASS-METHODS add
       IMPORTING
-        !iv_type   TYPE trobjtype
-        !iv_name   TYPE clike
-        !iv_delete TYPE abap_bool DEFAULT abap_false
+        !iv_type       TYPE trobjtype
+        !iv_name       TYPE clike
+        !iv_delete     TYPE abap_bool DEFAULT abap_false
+        !iv_force_clif TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS add_item
@@ -53,7 +54,7 @@ CLASS zcl_abapgit_objects_activation DEFINITION
       c_sqsc       TYPE c LENGTH 4  VALUE 'SQSC',
       c_stob       TYPE c LENGTH 4  VALUE 'STOB',
       c_ntab       TYPE c LENGTH 14 VALUE 'NTTT NTTB NTDT',
-      c_cds        TYPE c LENGTH 29 VALUE 'DDLS DRUL DTDC DTSC DTEB DESD',
+      c_cds        TYPE c LENGTH 35 VALUE 'DDLS DRUL DTDC DTSC DTEB DESD DTIX',
       c_switches   TYPE c LENGTH 24 VALUE 'SF01 SF02 SFSW SFBS SFBF',
       c_para       TYPE c LENGTH 4  VALUE 'PARA', " can be referenced by DTEL
       c_enhd       TYPE c LENGTH 4  VALUE 'ENHD',
@@ -356,7 +357,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_object>  TYPE dwinactiv,
                    <ls_classes> LIKE LINE OF gt_classes.
 
-    IF iv_type = 'CLAS' OR iv_type = 'INTF'.
+    IF ( iv_type = 'CLAS' OR iv_type = 'INTF' ) AND iv_force_clif = abap_false.
       APPEND INITIAL LINE TO gt_classes ASSIGNING <ls_classes>.
       <ls_classes>-object  = iv_type.
       <ls_classes>-clsname = iv_name.

@@ -1,4 +1,4 @@
-CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL CRITICAL FINAL.
+CLASS ltcl_test DEFINITION FOR TESTING DURATION MEDIUM RISK LEVEL CRITICAL FINAL.
 
   PRIVATE SECTION.
     INTERFACES if_ftd_invocation_answer.
@@ -6,7 +6,7 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL CRITICAL FINAL.
     METHODS teardown.
     METHODS list_branches FOR TESTING RAISING cx_static_check.
     METHODS list_no_blobs FOR TESTING RAISING cx_static_check.
-    METHODS commits_last_year FOR TESTING RAISING cx_static_check.
+    METHODS commits_last_days FOR TESTING RAISING cx_static_check.
 
     DATA mi_env TYPE REF TO if_function_test_environment.
 ENDCLASS.
@@ -63,16 +63,17 @@ CLASS ltcl_test IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD commits_last_year.
+  METHOD commits_last_days.
 
     DATA lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA lt_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
 
-* todo, given the sha1, this test might fail after a year?
+* todo, given the sha1, this test might fail when it falls outside the window?
     INSERT '8c5e684170725a564c38b55ccd285c273b135e3a' INTO TABLE lt_sha1.
 
-    lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->commits_last_year(
+    lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->commits_last_days(
       iv_url  = 'https://github.com/abapGit/abapGit.git'
+      iv_days = 730
       it_sha1 = lt_sha1 ).
 
 * just check it doesn't throw an exception

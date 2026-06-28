@@ -23,6 +23,7 @@ CLASS zcl_abapgit_longtexts DEFINITION
   PRIVATE SECTION.
 
     CONSTANTS c_docu_state_active TYPE dokstate VALUE 'A' ##NO_TEXT.
+    CONSTANTS c_docu_type_general TYPE dokil-typ VALUE 'E' ##NO_TEXT.
 
     METHODS escape_name
       IMPORTING
@@ -121,7 +122,8 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
           line    = ls_longtext-lines.
 
       IF iv_clear_fields = abap_true.
-        CLEAR: ls_longtext-head-tdfuser,
+        CLEAR: ls_longtext-dokil-dokstate,
+               ls_longtext-head-tdfuser,
                ls_longtext-head-tdfreles,
                ls_longtext-head-tdfdate,
                ls_longtext-head-tdftime,
@@ -196,6 +198,135 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_longtexts~deserialize_aff.
+
+    DATA ls_docu         TYPE zif_abapgit_aff_docu_v1=>ty_main.
+    DATA ls_docu_info    TYPE dokil.
+    DATA ls_head         TYPE thead.
+    DATA lt_lines        TYPE tline_tab.
+    DATA lt_dokil        TYPE zif_abapgit_definitions=>ty_dokil_tt.
+    DATA lv_object       TYPE dokil-object.
+    DATA lv_docu_object  TYPE doku_obj.
+    DATA lv_json_string  TYPE string.
+    DATA lv_version      TYPE dokvers.
+    DATA lo_json_handler TYPE REF TO zcl_abapgit_json_handler.
+    DATA lx_exception    TYPE REF TO cx_root.
+
+    FIELD-SYMBOLS <ls_docu_line> TYPE zif_abapgit_aff_docu_v1=>ty_line.
+    FIELD-SYMBOLS <ls_line>      TYPE tline.
+    FIELD-SYMBOLS <ls_dokil>     TYPE dokil.
+
+    lv_object = escape_name(
+      iv_longtext_id = iv_longtext_id
+      iv_object_name = iv_object_name ).
+
+    IF io_files->contains_file( iv_extra = 'docu'
+                                iv_ext   = 'json' ) = abap_true.
+
+      lv_json_string = io_files->read_string(
+        iv_extra = 'docu'
+        iv_ext   = 'json' ).
+
+      CREATE OBJECT lo_json_handler.
+
+      TRY.
+          lo_json_handler->deserialize(
+            EXPORTING
+              iv_content = lv_json_string
+            IMPORTING
+              ev_data    = ls_docu ).
+        CATCH cx_root INTO lx_exception.
+          zcx_abapgit_exception=>raise_with_text( lx_exception ).
+      ENDTRY.
+
+      LOOP AT ls_docu-lines ASSIGNING <ls_docu_line>.
+        APPEND INITIAL LINE TO lt_lines ASSIGNING <ls_line>.
+        <ls_line>-tdformat = <ls_docu_line>-format.
+        <ls_line>-tdline   = <ls_docu_line>-line.
+      ENDLOOP.
+
+      lv_docu_object = iv_object_name.
+
+      CALL FUNCTION 'DOCU_INIT'
+        EXPORTING
+          id     = iv_longtext_id
+          langu  = iv_main_language
+          object = lv_docu_object
+          typ    = c_docu_type_general
+        IMPORTING
+          xdokil = ls_docu_info.
+
+      lv_version = ls_docu_info-version.
+
+      ls_head-tdobject = 'DOKU'.
+      ls_head-tdname   = iv_object_name.
+      ls_head-tdid     = iv_longtext_id.
+      ls_head-tdspras  = iv_main_language.
+
+      CALL FUNCTION 'DOCU_UPDATE'
+        EXPORTING
+          head    = ls_head
+          state   = c_docu_state_active
+          typ     = c_docu_type_general
+          version = lv_version
+        TABLES
+          line    = lt_lines.
+
+    ENDIF.
+
+    SELECT * FROM dokil
+      INTO TABLE lt_dokil
+      WHERE id = iv_longtext_id
+      AND object LIKE lv_object ESCAPE '#'
+      AND masterlang = abap_true
+      ORDER BY PRIMARY KEY.
+
+    LOOP AT lt_dokil ASSIGNING <ls_dokil>
+        WHERE langu <> iv_main_language
+        OR object <> iv_object_name
+        OR typ <> c_docu_type_general.
+
+      CALL FUNCTION 'DOCU_DEL'
+        EXPORTING
+          id       = <ls_dokil>-id
+          langu    = <ls_dokil>-langu
+          object   = <ls_dokil>-object
+          typ      = <ls_dokil>-typ
+        EXCEPTIONS
+          ret_code = 1
+          OTHERS   = 2.
+
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+    ENDLOOP.
+
+    IF ls_docu-lines IS INITIAL.
+      READ TABLE lt_dokil TRANSPORTING NO FIELDS WITH KEY
+        langu  = iv_main_language
+        object = iv_object_name
+        typ    = c_docu_type_general.
+      IF sy-subrc = 0.
+        CALL FUNCTION 'DOCU_DEL'
+          EXPORTING
+            id       = iv_longtext_id
+            langu    = iv_main_language
+            object   = iv_object_name
+            typ      = c_docu_type_general
+          EXCEPTIONS
+            ret_code = 1
+            OTHERS   = 2.
+
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise_t100( ).
+        ENDIF.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_longtexts~deserialize.
 
     DATA: lt_longtexts    TYPE zif_abapgit_longtexts=>ty_longtexts,
@@ -218,7 +349,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
     LOOP AT lt_longtexts ASSIGNING <ls_longtext>.
 
-      lv_no_main_lang = boolc( iv_main_language <> <ls_longtext>-dokil-langu ).
+      lv_no_main_lang = boolc( <ls_longtext>-dokil-masterlang IS INITIAL ).
 
       CALL FUNCTION 'DOCU_UPDATE'
         EXPORTING
@@ -280,6 +411,54 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
     ii_xml->add( iv_name = iv_longtext_name
                  ig_data = rt_longtexts ).
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_longtexts~serialize_aff.
+
+    DATA ls_longtext     LIKE LINE OF rt_longtexts.
+    DATA ls_docu         TYPE zif_abapgit_aff_docu_v1=>ty_main.
+    DATA ls_tdline       LIKE LINE OF ls_longtext-lines.
+    DATA ls_line         LIKE LINE OF ls_docu-lines.
+    DATA lo_json_handler TYPE REF TO zcl_abapgit_json_handler.
+    DATA lv_xstr         TYPE xstring.
+    DATA lx_exception    TYPE REF TO cx_root.
+
+
+    rt_longtexts = read( iv_object_name    = iv_object_name
+                         iv_longtext_id    = iv_longtext_id
+                         it_dokil          = it_dokil
+                         iv_main_lang_only = abap_true ).
+
+    IF rt_longtexts IS SUPPLIED.
+      RETURN.
+    ENDIF.
+
+    READ TABLE rt_longtexts INDEX 1 INTO ls_longtext.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    ls_docu-format_version = '1'.
+    LOOP AT ls_longtext-lines INTO ls_tdline.
+      CLEAR ls_line.
+      ls_line-format = ls_tdline-tdformat.
+      ls_line-line   = ls_tdline-tdline.
+      INSERT ls_line INTO TABLE ls_docu-lines.
+    ENDLOOP.
+
+    CREATE OBJECT lo_json_handler.
+
+    TRY.
+        lv_xstr = lo_json_handler->serialize( ls_docu ).
+      CATCH cx_root INTO lx_exception.
+        zcx_abapgit_exception=>raise_with_text( lx_exception ).
+    ENDTRY.
+
+    io_files->add_string(
+      iv_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstr )
+      iv_extra  = 'docu'
+      iv_ext    = 'json' ).
 
   ENDMETHOD.
 ENDCLASS.

@@ -59,6 +59,8 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
     register( 'DSFI' ).
     register( 'DRAS' ).
     register( 'DSFD' ).
+    register( iv_obj_type     = 'DOMA'
+              iv_experimental = abap_true ).
     register( 'EVTB' ).
     register( 'EEEC' ).
     register( 'GSMP' ).
@@ -73,6 +75,8 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
     register( 'UIAD' ).
     register( 'UIPG' ).
     register( 'UIST' ).
+    register( 'DTSC' ).
+    register( 'DTIX' ).
   ENDMETHOD.
 
 
@@ -103,4 +107,3 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 ENDCLASS.
-

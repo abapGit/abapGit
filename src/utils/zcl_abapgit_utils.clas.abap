@@ -55,11 +55,11 @@ CLASS zcl_abapgit_utils IMPLEMENTATION.
       lc_binary_threshold TYPE i VALUE 10,
       lc_bytes_to_check   TYPE i VALUE 1000.
 
-    DATA: lv_string_data           TYPE string,
-          lv_non_printable_chars   TYPE i,
-          lv_percentage            TYPE i,
-          lv_data                  TYPE xstring,
-          lv_xlen                  TYPE i.
+    DATA: lv_string_data         TYPE string,
+          lv_non_printable_chars TYPE i,
+          lv_percentage          TYPE i,
+          lv_data                TYPE xstring,
+          lv_xlen                TYPE i.
 
     lv_xlen = xstrlen( iv_data ).
     IF lv_xlen = 0.
@@ -67,10 +67,12 @@ CLASS zcl_abapgit_utils IMPLEMENTATION.
     ENDIF.
 
     lv_xlen = nmin(
-                val1 = lv_xlen
-                val2 = lc_bytes_to_check ).
+      val1 = lv_xlen
+      val2 = lc_bytes_to_check ).
 
     lv_data = iv_data(lv_xlen).
+
+    lv_data = lcl_utf8_utils=>strip_incomplete_utf8_tail( lv_data ).
 
     TRY.
         lv_string_data = zcl_abapgit_convert=>xstring_to_string_utf8( lv_data ).
@@ -84,7 +86,7 @@ CLASS zcl_abapgit_utils IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline IN lv_string_data WITH space.
 
     FIND ALL OCCURRENCES OF REGEX '[^[:print:]]' IN lv_string_data MATCH COUNT lv_non_printable_chars  ##REGEX_POSIX.
-    lv_percentage = lv_non_printable_chars  * 100 / strlen( lv_string_data ).
+    lv_percentage = lv_non_printable_chars * 100 / strlen( lv_string_data ).
     rv_is_binary = boolc( lv_percentage > lc_binary_threshold ).
 
   ENDMETHOD.

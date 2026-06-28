@@ -32,11 +32,12 @@ INTERFACE zif_abapgit_flow_logic
            END OF repo,
            branch          TYPE ty_branch,
            BEGIN OF pr,
-             title  TYPE string,
-             url    TYPE string,
-             number TYPE i,
-             draft  TYPE abap_bool,
-             author TYPE string,
+             title     TYPE string,
+             title_raw TYPE string,
+             url       TYPE string,
+             number    TYPE i,
+             draft     TYPE abap_bool,
+             author    TYPE string,
            END OF pr,
            BEGIN OF transport,
              trkorr     TYPE trkorr,
@@ -61,6 +62,8 @@ INTERFACE zif_abapgit_flow_logic
          END OF ty_information.
 
   CONSTANTS c_main TYPE string VALUE 'main'.
+  CONSTANTS c_commit_days TYPE i VALUE 730.
+  CONSTANTS c_open_transport_days TYPE i VALUE 730.
 
 **************************************
 

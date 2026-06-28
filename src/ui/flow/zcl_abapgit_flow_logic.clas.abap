@@ -566,7 +566,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
 * only look for transports that are created/changed in the last two years
     ls_date-sign = 'I'.
     ls_date-option = 'GE'.
-    ls_date-low = sy-datum - 730.
+    ls_date-low = sy-datum - zif_abapgit_flow_logic=>c_open_transport_days.
     INSERT ls_date INTO TABLE lt_date.
 
     lt_trkorr = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( lt_date ).
@@ -689,6 +689,8 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
         DELETE ct_features INDEX lv_index.
         CONTINUE.
       ENDIF.
+
+      <ls_branch>-pr-title_raw = ls_pull-title.
 
       " remove markdown formatting,
       REPLACE ALL OCCURRENCES OF '`' IN ls_pull-title WITH ''.

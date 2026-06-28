@@ -129,6 +129,7 @@ CLASS zcl_abapgit_objects_program DEFINITION
       BEGIN OF c_state,
         active   TYPE r3state VALUE 'A',
         inactive TYPE r3state VALUE 'I',
+        off      TYPE r3state VALUE '',
       END OF c_state.
 
     CONSTANTS c_native_dynpro TYPE c LENGTH 2 VALUE 'IN'.
@@ -358,7 +359,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
       " todo: kept for compatibility, remove after grace period #3680
       ls_dynpro-flow_logic = uncondense_flow(
-        it_flow = ls_dynpro-flow_logic
+        it_flow   = ls_dynpro-flow_logic
         it_spaces = ls_dynpro-spaces ).
 
       IF ls_dynpro-flow_logic IS INITIAL.
@@ -495,14 +496,13 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         is_progdir = is_progdir
         it_source  = it_source
         iv_title   = lv_title
-        iv_state   = '' ).
+        iv_state   = c_state-off ).
     ELSE.
       insert_program(
         is_progdir = is_progdir
         it_source  = it_source
         iv_title   = lv_title
-        iv_package = iv_package
-        iv_state   = '' ).
+        iv_package = iv_package ).
     ENDIF.
 
   ENDMETHOD.
@@ -1131,17 +1131,17 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     zcl_abapgit_language=>set_current_language( mv_language ).
 
-    CALL FUNCTION 'RPY_PROGRAM_UPDATE'
+    CALL FUNCTION 'RPY_INCLUDE_UPDATE'
       EXPORTING
-        program_name     = is_progdir-name
+        include_name     = is_progdir-name
         title_string     = iv_title
         save_inactive    = iv_state
       TABLES
         source_extended  = it_source
       EXCEPTIONS
-        cancelled        = 1
-        permission_error = 2
-        not_found        = 3
+        not_found        = 1
+        cancelled        = 2
+        permission_error = 3
         OTHERS           = 4.
 
     IF sy-subrc <> 0.

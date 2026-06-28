@@ -79,6 +79,7 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
     DATA mi_xml_out     TYPE REF TO zif_abapgit_xml_output.
     DATA mi_xml_in      TYPE REF TO zif_abapgit_xml_input.
     DATA mo_files       TYPE REF TO zcl_abapgit_objects_files.
+    DATA mv_local_package TYPE abap_bool.
 
     METHODS serialize_xml
       IMPORTING
@@ -133,14 +134,14 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         ct_text_pairs_tmp TYPE ty_lxe_translation-text_pairs.
     METHODS read_lxe_object_text_pair
       IMPORTING
-        iv_s_lang                TYPE lxeisolang
-        iv_t_lang                TYPE lxeisolang
-        iv_custmnr               TYPE lxecustmnr
-        iv_objtype               TYPE trobjtype
-        iv_objname               TYPE lxeobjname
-        iv_read_only             TYPE abap_bool DEFAULT abap_true
+        iv_s_lang            TYPE lxeisolang
+        iv_t_lang            TYPE lxeisolang
+        iv_custmnr           TYPE lxecustmnr
+        iv_objtype           TYPE trobjtype
+        iv_objname           TYPE lxeobjname
+        iv_read_only         TYPE abap_bool DEFAULT abap_true
       RETURNING
-        VALUE(rt_text_pairs_tmp) TYPE ty_lxe_translation-text_pairs
+        VALUE(rt_text_pairs) TYPE ty_lxe_translation-text_pairs
       RAISING
         zcx_abapgit_exception.
     METHODS write_lxe_object_text_pair
@@ -169,6 +170,15 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         VALUE(rv_laiso) TYPE laiso
       RAISING
         zcx_abapgit_exception.
+
+    CLASS-METHODS laiso_to_langu_safe
+      IMPORTING
+        iv_laiso        TYPE laiso
+      RETURNING
+        VALUE(rv_langu) TYPE sy-langu
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS iso4_to_iso2
       IMPORTING
         iv_lxe_lang     TYPE lxeisolang
@@ -184,6 +194,39 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
       EXPORTING
         et_intersection TYPE zif_abapgit_definitions=>ty_languages
         et_missfits     TYPE zif_abapgit_definitions=>ty_languages.
+
+    CLASS-METHODS is_local_package
+      IMPORTING
+        iv_package       TYPE tadir-obj_name
+      RETURNING
+        VALUE(rv_result) TYPE abap_bool.
+
+    METHODS get_devc_object_list
+      IMPORTING
+        iv_object_name     TYPE sobj_name
+      RETURNING
+        VALUE(rt_obj_list) TYPE lxe_tt_colob
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS read_devc_text_pair
+      IMPORTING
+        iv_s_lang            TYPE sy-langu
+        iv_t_lang            TYPE sy-langu
+        iv_package           TYPE devclass
+      RETURNING
+        VALUE(rt_text_pairs) TYPE ty_lxe_translation-text_pairs
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS write_devc_text_pair
+      IMPORTING
+        iv_t_lang  TYPE sy-langu
+        iv_package TYPE devclass
+        it_pcx_s1  TYPE ty_lxe_translation-text_pairs
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -289,9 +332,14 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
     FIELD-SYMBOLS <lv_lxe_object> LIKE LINE OF lt_obj_list.
 
-    lt_obj_list = get_lxe_object_list(
-      iv_object_name = iv_object_name
-      iv_object_type = iv_object_type ).
+    " Special handling for local packages which are not supported by LXE
+    IF mv_local_package = abap_true.
+      lt_obj_list = get_devc_object_list( iv_object_name ).
+    ELSE.
+      lt_obj_list = get_lxe_object_list(
+        iv_object_name = iv_object_name
+        iv_object_type = iv_object_type ).
+    ENDIF.
 
     IF lt_obj_list IS INITIAL.
       RETURN.
@@ -315,13 +363,21 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
       LOOP AT lt_obj_list ASSIGNING <lv_lxe_object>.
 
-        lt_text_pairs_tmp = read_lxe_object_text_pair(
-          iv_s_lang    = lv_main_lang
-          iv_t_lang    = lv_target_lang
-          iv_custmnr   = <lv_lxe_object>-custmnr
-          iv_objtype   = <lv_lxe_object>-objtype
-          iv_objname   = <lv_lxe_object>-objname
-          iv_read_only = abap_false ).
+        " Special handling for local packages which are not supported by LXE
+        IF mv_local_package = abap_true.
+          lt_text_pairs_tmp = read_devc_text_pair(
+            iv_s_lang  = mo_i18n_params->ms_params-main_language
+            iv_t_lang  = laiso_to_langu_safe( lv_lang )
+            iv_package = |{ <lv_lxe_object>-objname }| ).
+        ELSE.
+          lt_text_pairs_tmp = read_lxe_object_text_pair(
+            iv_s_lang    = lv_main_lang
+            iv_t_lang    = lv_target_lang
+            iv_custmnr   = <lv_lxe_object>-custmnr
+            iv_objtype   = <lv_lxe_object>-objtype
+            iv_objname   = <lv_lxe_object>-objname
+            iv_read_only = abap_false ).
+        ENDIF.
 
         li_po->translate(
           CHANGING
@@ -329,14 +385,22 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
             ct_text_pairs = lt_text_pairs_tmp ).
 
         IF lv_changed = abap_true AND lines( lt_text_pairs_tmp ) > 0.
-          " If lt_text_pairs_tmp is empty it raises error, while this is a practical case
-          write_lxe_object_text_pair(
-            iv_s_lang  = lv_main_lang
-            iv_t_lang  = lv_target_lang
-            iv_custmnr = <lv_lxe_object>-custmnr
-            iv_objtype = <lv_lxe_object>-objtype
-            iv_objname = <lv_lxe_object>-objname
-            it_pcx_s1  = lt_text_pairs_tmp ).
+          " Special handling for local packages which are not supported by LXE
+          IF mv_local_package = abap_true.
+            write_devc_text_pair(
+              iv_t_lang  = laiso_to_langu_safe( lv_lang )
+              iv_package = |{ <lv_lxe_object>-objname }|
+              it_pcx_s1  = lt_text_pairs_tmp ).
+          ELSE.
+            " If lt_text_pairs_tmp is empty it raises error, while this is a practical case
+            write_lxe_object_text_pair(
+              iv_s_lang  = lv_main_lang
+              iv_t_lang  = lv_target_lang
+              iv_custmnr = <lv_lxe_object>-custmnr
+              iv_objtype = <lv_lxe_object>-objtype
+              iv_objname = <lv_lxe_object>-objname
+              it_pcx_s1  = lt_text_pairs_tmp ).
+          ENDIF.
 
           rv_changed = abap_true.
         ENDIF.
@@ -355,9 +419,12 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
       lt_text_pairs_tmp LIKE ls_lxe_item-text_pairs.
 
     mi_xml_in->read(
-      EXPORTING iv_name = iv_lxe_text_name
-      CHANGING  cg_data = lt_lxe_texts ).
+      EXPORTING
+        iv_name = iv_lxe_text_name
+      CHANGING
+        cg_data = lt_lxe_texts ).
 
+    " TODO: If this is ever used, add handling of local packages (see deserialize_po)
     LOOP AT lt_lxe_texts INTO ls_lxe_item.
       " Call Read first for buffer prefill
 
@@ -390,7 +457,26 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
         it_languages = it_languages
         it_installed = get_installed_languages( )
       IMPORTING
-        et_missfits = rt_unsupported_languages ).
+        et_missfits  = rt_unsupported_languages ).
+
+  ENDMETHOD.
+
+
+  METHOD get_devc_object_list.
+
+    DATA ls_colob LIKE LINE OF rt_obj_list.
+
+    ls_colob-objlist   = '00000'.
+    ls_colob-custmnr   = c_custmnr.
+    ls_colob-objtype   = 'DEVC'.
+    ls_colob-objname   = iv_object_name.
+    ls_colob-orig_lang = get_lang_iso4( langu_to_laiso_safe( mo_i18n_params->ms_params-main_language ) ).
+    ls_colob-colltyp   = 'R'.
+    ls_colob-collnam   = iv_object_name.
+    ls_colob-domatyp   = 'R'.
+    ls_colob-domanam   = 'ZZ'.
+
+    INSERT ls_colob INTO TABLE rt_obj_list.
 
   ENDMETHOD.
 
@@ -477,6 +563,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
   METHOD get_lxe_object_list.
 
     DATA lv_object_name TYPE trobj_name.
+    DATA lt_e071k TYPE STANDARD TABLE OF e071k WITH DEFAULT KEY ##NEEDED.
 
     lv_object_name = iv_object_name.
 
@@ -486,6 +573,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
         object          = iv_object_type
         obj_name        = lv_object_name
       TABLES
+        in_e071k        = lt_e071k " not optional in 702
         ex_colob        = rt_obj_list
       EXCEPTIONS
         unknown_object  = 1
@@ -514,8 +602,8 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
       ELSE.
         check_langs_versus_installed(
           EXPORTING
-            it_languages = it_i18n_languages
-            it_installed = get_installed_languages( )
+            it_languages    = it_i18n_languages
+            it_installed    = get_installed_languages( )
           IMPORTING
             et_intersection = rt_languages ).
       ENDIF.
@@ -533,6 +621,36 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_local_package.
+
+    DATA li_cts_api TYPE REF TO zif_abapgit_cts_api.
+
+    TRY.
+        li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
+        rv_result = boolc( li_cts_api->is_chrec_possible_for_package( |{ iv_package }| ) = abap_false ).
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD laiso_to_langu_safe.
+
+    zcl_abapgit_convert=>language_sap2_to_sap1(
+      EXPORTING
+        im_lang_sap2  = iv_laiso
+      RECEIVING
+        re_lang_sap1  = rv_langu
+      EXCEPTIONS
+        no_assignment = 1
+        OTHERS        = 2 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Could not convert lang [{ iv_laiso }] to ISO| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD langu_to_laiso_safe.
 
     zcl_abapgit_convert=>language_sap1_to_sap2(
@@ -546,6 +664,24 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Could not convert lang [{ iv_langu }] to ISO| ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD read_devc_text_pair.
+
+    DATA ls_text_pair TYPE LINE OF ty_lxe_translation-text_pairs.
+
+    ls_text_pair-textkey = 'CTEXT'.
+    ls_text_pair-unitmlt = 60.
+
+    SELECT SINGLE ctext FROM tdevct INTO ls_text_pair-s_text
+      WHERE devclass = iv_package AND spras = iv_s_lang ##SUBRC_OK.
+
+    SELECT SINGLE ctext FROM tdevct INTO ls_text_pair-t_text
+      WHERE devclass = iv_package AND spras = iv_t_lang ##SUBRC_OK.
+
+    INSERT ls_text_pair INTO TABLE rt_text_pairs.
 
   ENDMETHOD.
 
@@ -567,7 +703,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
           IMPORTING
             err_msg   = lv_error  " doesn't exist in NW <= 750
           TABLES
-            lt_pcx_s1 = rt_text_pairs_tmp.
+            lt_pcx_s1 = rt_text_pairs.
         IF lv_error IS NOT INITIAL.
           zcx_abapgit_exception=>raise( lv_error ).
         ENDIF.
@@ -583,7 +719,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
             objname   = iv_objname
             read_only = iv_read_only
           TABLES
-            lt_pcx_s1 = rt_text_pairs_tmp.
+            lt_pcx_s1 = rt_text_pairs.
 
     ENDTRY.
 
@@ -591,7 +727,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
       EXPORTING
         iv_objtype        = iv_objtype
       CHANGING
-        ct_text_pairs_tmp = rt_text_pairs_tmp ).
+        ct_text_pairs_tmp = rt_text_pairs ).
 
   ENDMETHOD.
 
@@ -607,9 +743,14 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
       <lv_language>   LIKE LINE OF mo_i18n_params->ms_params-translation_languages,
       <lv_lxe_object> LIKE LINE OF lt_obj_list.
 
-    lt_obj_list = get_lxe_object_list(
-      iv_object_name = iv_object_name
-      iv_object_type = iv_object_type ).
+    " Special handling for local packages which are not supported by LXE
+    IF mv_local_package = abap_true.
+      lt_obj_list = get_devc_object_list( iv_object_name ).
+    ELSE.
+      lt_obj_list = get_lxe_object_list(
+        iv_object_name = iv_object_name
+        iv_object_type = iv_object_type ).
+    ENDIF.
 
     IF lt_obj_list IS INITIAL.
       RETURN.
@@ -631,12 +772,20 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
           CONTINUE. " if source = target -> skip
         ENDIF.
 
-        ls_lxe_text_item-text_pairs = read_lxe_object_text_pair(
-          iv_s_lang    = ls_lxe_text_item-source_lang
-          iv_t_lang    = ls_lxe_text_item-target_lang
-          iv_custmnr   = ls_lxe_text_item-custmnr
-          iv_objtype   = ls_lxe_text_item-objtype
-          iv_objname   = ls_lxe_text_item-objname ).
+        " Special handling for local packages which are not supported by LXE
+        IF mv_local_package = abap_true.
+          ls_lxe_text_item-text_pairs = read_devc_text_pair(
+            iv_s_lang  = mo_i18n_params->ms_params-main_language
+            iv_t_lang  = laiso_to_langu_safe( <lv_language> )
+            iv_package = |{ ls_lxe_text_item-objname }| ).
+        ELSE.
+          ls_lxe_text_item-text_pairs = read_lxe_object_text_pair(
+            iv_s_lang  = ls_lxe_text_item-source_lang
+            iv_t_lang  = ls_lxe_text_item-target_lang
+            iv_custmnr = ls_lxe_text_item-custmnr
+            iv_objtype = ls_lxe_text_item-objtype
+            iv_objname = ls_lxe_text_item-objname ).
+        ENDIF.
 
         IF ls_lxe_text_item-text_pairs IS NOT INITIAL.
           APPEND ls_lxe_text_item TO rt_text_items.
@@ -665,8 +814,8 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
     FIELD-SYMBOLS <ls_translation> LIKE LINE OF lt_lxe_texts.
 
     lt_lxe_texts = read_text_items(
-      iv_object_name   = iv_object_name
-      iv_object_type   = iv_object_type ).
+      iv_object_name = iv_object_name
+      iv_object_type = iv_object_type ).
 
     LOOP AT mo_i18n_params->ms_params-translation_languages INTO lv_lang.
       lv_lang = to_lower( lv_lang ).
@@ -693,14 +842,35 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
     DATA lt_lxe_texts TYPE ty_lxe_translations.
 
     lt_lxe_texts = read_text_items(
-      iv_object_name   = iv_object_name
-      iv_object_type   = iv_object_type ).
+      iv_object_name = iv_object_name
+      iv_object_type = iv_object_type ).
 
     IF lines( lt_lxe_texts ) > 0.
       mi_xml_out->add(
         iv_name = iv_lxe_text_name
         ig_data = lt_lxe_texts ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD write_devc_text_pair.
+
+    DATA ls_tdevct TYPE tdevct.
+
+    FIELD-SYMBOLS <ls_text_pair> LIKE LINE OF it_pcx_s1.
+
+    LOOP AT it_pcx_s1 ASSIGNING <ls_text_pair>.
+      CLEAR ls_tdevct.
+      ls_tdevct-devclass = iv_package.
+      ls_tdevct-spras    = iv_t_lang.
+      ls_tdevct-ctext    = <ls_text_pair>-t_text.
+
+      MODIFY tdevct FROM ls_tdevct.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Error updating package description' ).
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -759,6 +929,8 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
     mi_xml_in      = ii_xml.
     mo_files       = io_files.
 
+    mv_local_package = boolc( iv_object_type = 'DEVC' AND is_local_package( iv_object_name ) = abap_true ).
+
     " MAYBE TODO: see comment in serialize
 
     IF 1 = 1.
@@ -787,6 +959,8 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
     mo_i18n_params = io_i18n_params.
     mi_xml_out     = ii_xml.
     mo_files       = io_files.
+
+    mv_local_package = boolc( iv_object_type = 'DEVC' AND is_local_package( iv_object_name ) = abap_true ).
 
     " MAYBE TODO
     " if other formats are needed, including the old in-XML approach
