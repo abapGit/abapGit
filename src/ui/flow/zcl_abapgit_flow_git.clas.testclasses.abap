@@ -283,7 +283,7 @@ CLASS lcl_mock_gitv2 IMPLEMENTATION.
     rt_objects = mo_test_data->get_all_objects( ).
   ENDMETHOD.
 
-  METHOD zif_abapgit_gitv2_porcelain~commits_last_year.
+  METHOD zif_abapgit_gitv2_porcelain~commits_last_days.
     rt_objects = mo_test_data->get_commits( ).
   ENDMETHOD.
 

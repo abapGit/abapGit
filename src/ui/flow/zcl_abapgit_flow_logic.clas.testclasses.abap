@@ -316,7 +316,7 @@ CLASS lcl_gitv2 IMPLEMENTATION.
   METHOD zif_abapgit_gitv2_porcelain~list_no_blobs_multi.
     rt_objects = mo_data->list_no_blobs_multi( ).
   ENDMETHOD.
-  METHOD zif_abapgit_gitv2_porcelain~commits_last_year.
+  METHOD zif_abapgit_gitv2_porcelain~commits_last_days.
     RETURN.
   ENDMETHOD.
   METHOD zif_abapgit_gitv2_porcelain~fetch_blob.
