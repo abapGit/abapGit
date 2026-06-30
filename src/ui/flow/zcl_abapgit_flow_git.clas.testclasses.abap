@@ -296,6 +296,11 @@ CLASS lcl_mock_gitv2 IMPLEMENTATION.
     " Not used in find_up_to_date
     ASSERT 1 = 2.
   ENDMETHOD.
+
+  METHOD zif_abapgit_gitv2_porcelain~list_trees_for_paths.
+    " Not used in find_up_to_date
+    ASSERT 1 = 2.
+  ENDMETHOD.
 ENDCLASS.
 
 ***************************************************************************
