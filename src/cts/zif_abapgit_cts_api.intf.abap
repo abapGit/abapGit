@@ -13,6 +13,13 @@ INTERFACE zif_abapgit_cts_api
   TYPES:
     ty_trkorr_tt TYPE STANDARD TABLE OF trkorr WITH DEFAULT KEY .
   TYPES:
+    BEGIN OF ty_transport_creation_date,
+      trkorr     TYPE trkorr,
+      created_on TYPE d,
+    END OF ty_transport_creation_date .
+  TYPES:
+    ty_transport_creation_dates_tt TYPE SORTED TABLE OF ty_transport_creation_date WITH UNIQUE KEY trkorr .
+  TYPES:
     BEGIN OF ty_transport_key,
       object  TYPE e071k-object,
       objname TYPE e071k-objname,
@@ -162,6 +169,12 @@ INTERFACE zif_abapgit_cts_api
       !iv_trkorr            TYPE trkorr
     RETURNING
       VALUE(rv_description) TYPE string .
+
+  METHODS read_creation_dates
+    IMPORTING
+      !it_trkorr           TYPE ty_trkorr_tt
+    RETURNING
+      VALUE(rt_created_on) TYPE ty_transport_creation_dates_tt .
 
   METHODS read_user
     IMPORTING

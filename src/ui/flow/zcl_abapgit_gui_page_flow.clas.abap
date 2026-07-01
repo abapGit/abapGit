@@ -728,6 +728,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     IF is_feature-transport IS NOT INITIAL.
       ri_html->add( |Transport: <tt>{ is_feature-transport-trkorr }</tt> - { is_feature-transport-title }<br>| ).
+      IF ms_user_settings-show_details = abap_true AND is_feature-transport-created_on IS NOT INITIAL.
+        ri_html->add( |Transport created: { is_feature-transport-created_on DATE = USER }<br>| ).
+      ENDIF.
     ELSE.
       ri_html->add( |No corresponding transport found<br>| ).
     ENDIF.
