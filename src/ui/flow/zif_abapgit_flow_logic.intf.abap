@@ -43,6 +43,7 @@ INTERFACE zif_abapgit_flow_logic
              trkorr     TYPE trkorr,
              title      TYPE string,
              users      TYPE ty_users_tt,
+             created_on TYPE d,
              changed_at TYPE timestamp,
            END OF transport,
            full_match      TYPE abap_bool,
