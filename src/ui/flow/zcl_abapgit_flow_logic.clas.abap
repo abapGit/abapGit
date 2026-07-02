@@ -52,6 +52,7 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
              object     TYPE tadir-object,
              obj_name   TYPE tadir-obj_name,
              devclass   TYPE tadir-devclass,
+             created_on TYPE d,
              changed_at TYPE timestamp,
            END OF ty_transport.
 
@@ -561,6 +562,8 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     DATA ls_date      LIKE LINE OF lt_date.
     DATA lt_limu_skip TYPE zif_abapgit_cts_api=>ty_skip_limu_types_tt.
     DATA ls_limu_skip LIKE LINE OF lt_limu_skip.
+    DATA lt_created_on TYPE zif_abapgit_cts_api=>ty_transport_creation_dates_tt.
+    DATA ls_created_on LIKE LINE OF lt_created_on.
     FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
 
 * only look for transports that are created/changed in the last two years
@@ -570,10 +573,17 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     INSERT ls_date INTO TABLE lt_date.
 
     lt_trkorr = zcl_abapgit_factory=>get_cts_api( )->list_open_requests( lt_date ).
+    lt_created_on = zcl_abapgit_factory=>get_cts_api( )->read_creation_dates( lt_trkorr ).
 
     LOOP AT lt_trkorr INTO lv_trkorr.
       ls_result-trkorr = lv_trkorr.
       ls_result-title  = zcl_abapgit_factory=>get_cts_api( )->read_description( lv_trkorr ).
+      READ TABLE lt_created_on INTO ls_created_on WITH TABLE KEY trkorr = lv_trkorr.
+      IF sy-subrc = 0.
+        ls_result-created_on = ls_created_on-created_on.
+      ELSE.
+        CLEAR ls_result-created_on.
+      ENDIF.
       ls_result-changed_at = get_latest_task_timestamp( lv_trkorr ).
 
 * LIMU skipped here:
@@ -1021,6 +1031,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
         IF sy-subrc = 0.
           <ls_feature>-transport-trkorr = <ls_transport>-trkorr.
           <ls_feature>-transport-title = <ls_transport>-title.
+          <ls_feature>-transport-created_on = <ls_transport>-created_on.
           <ls_feature>-transport-changed_at = <ls_transport>-changed_at.
 
           add_objects_and_files_from_tr(
@@ -1063,6 +1074,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       ls_result-repo = build_repo_data( ii_repo ).
       ls_result-transport-trkorr = <ls_transport>-trkorr.
       ls_result-transport-title = <ls_transport>-title.
+      ls_result-transport-created_on = <ls_transport>-created_on.
       ls_result-transport-changed_at = <ls_transport>-changed_at.
 
       add_objects_and_files_from_tr(

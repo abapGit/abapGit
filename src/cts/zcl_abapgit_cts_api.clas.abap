@@ -810,6 +810,40 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_cts_api~read_creation_dates.
+
+    TYPES: BEGIN OF ty_e070create,
+             trkorr   TYPE trkorr,
+             cre_date TYPE d,
+           END OF ty_e070create.
+
+    DATA lt_trkorr     LIKE it_trkorr.
+    DATA lt_e070create TYPE STANDARD TABLE OF ty_e070create WITH DEFAULT KEY.
+    DATA ls_e070create LIKE LINE OF lt_e070create.
+    DATA ls_created_on LIKE LINE OF rt_created_on.
+
+    lt_trkorr = it_trkorr.
+    SORT lt_trkorr.
+    DELETE ADJACENT DUPLICATES FROM lt_trkorr.
+    IF lt_trkorr IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    SELECT trkorr cre_date FROM e070create
+      INTO TABLE lt_e070create
+      FOR ALL ENTRIES IN lt_trkorr
+      WHERE trkorr = lt_trkorr-table_line.
+
+    LOOP AT lt_e070create INTO ls_e070create WHERE cre_date IS NOT INITIAL.
+      CLEAR ls_created_on.
+      ls_created_on-trkorr = ls_e070create-trkorr.
+      ls_created_on-created_on = ls_e070create-cre_date.
+      INSERT ls_created_on INTO TABLE rt_created_on.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_cts_api~read_request_and_tasks.
 
     DATA lt_request_headers TYPE trwbo_request_headers.
