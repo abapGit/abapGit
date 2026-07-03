@@ -3,6 +3,7 @@ CLASS zcl_abapgit_object_smtg DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     METHODS zif_abapgit_object~changed_by REDEFINITION.
     METHODS zif_abapgit_object~deserialize REDEFINITION.
+    METHODS zif_abapgit_object~get_deserialize_steps REDEFINITION.
 
   PROTECTED SECTION.
     METHODS: get_additional_extensions REDEFINITION.
@@ -286,6 +287,12 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
     ls_component-type ?= lo_typedescr.
     INSERT ls_component INTO TABLE ct_components.
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
   ENDMETHOD.
 
 ENDCLASS.
