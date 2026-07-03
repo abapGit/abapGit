@@ -411,6 +411,8 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     DATA lt_all_transports TYPE ty_transports_tt.
     DATA lv_filename TYPE string.
     DATA lv_warning TYPE string.
+    DATA lv_count   TYPE i.
+    DATA ls_missing_remote LIKE LINE OF cs_information-missing_remote.
 
 
     FIELD-SYMBOLS <ls_tadir> LIKE LINE OF lt_tadir.
@@ -493,7 +495,13 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
         lines( cs_information-missing_remote ) } total|.
       INSERT lv_warning INTO TABLE cs_information-warnings.
 
-      DELETE cs_information-missing_remote FROM c_max_missing_files.
+      lv_count = 0.
+      LOOP AT cs_information-missing_remote INTO ls_missing_remote.
+        lv_count = lv_count + 1.
+        IF lv_count > c_max_missing_files.
+          DELETE TABLE cs_information-missing_remote FROM ls_missing_remote.
+        ENDIF.
+      ENDLOOP.
     ENDIF.
 
 * todo: double check, there might have been changes while consolidation is running
