@@ -81,6 +81,24 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_exit~adjust_commit_message.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->adjust_commit_message(
+            EXPORTING
+              ii_repo_online = ii_repo_online
+              io_stage       = io_stage
+            CHANGING
+              cv_comment     = cv_comment
+              cv_body        = cv_body ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_exit~adjust_display_commit_url.
 
     IF gi_exit IS NOT INITIAL.
@@ -359,6 +377,18 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
               iv_transport_type    = iv_transport_type
             CHANGING
               cv_transport_request = cv_transport_request ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~enable_adjust_commit_message.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          rv_enabled = gi_exit->enable_adjust_commit_message( ii_repo_online ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
