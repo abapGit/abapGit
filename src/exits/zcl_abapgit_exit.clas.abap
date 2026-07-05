@@ -388,7 +388,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
 
     IF gi_exit IS NOT INITIAL.
       TRY.
-          rv_enabled = gi_exit->enable_adjust_commit_message( ii_repo_online ).
+          rv_button_text = gi_exit->enable_adjust_commit_message( ii_repo_online ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.

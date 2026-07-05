@@ -301,6 +301,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
   METHOD get_form_schema.
 
     DATA lv_commitmsg_comment_length TYPE i.
+    DATA lv_button_text TYPE string.
     CONSTANTS lc_commitmsg_comment_min_len TYPE i VALUE 1.
     CONSTANTS lc_commitmsg_comment_max_len TYPE i VALUE 255.
 
@@ -354,9 +355,10 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
       iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
       iv_action      = c_event-commit ).
 
-    IF zcl_abapgit_exit=>get_instance( )->enable_adjust_commit_message( mi_repo_online ) = abap_true.
+    lv_button_text = zcl_abapgit_exit=>get_instance( )->enable_adjust_commit_message( mi_repo_online ).
+    IF lv_button_text IS NOT INITIAL.
       ro_form->command(
-        iv_label  = 'Adjust Message'
+        iv_label  = lv_button_text
         iv_action = c_event-adjust_message ).
     ENDIF.
 

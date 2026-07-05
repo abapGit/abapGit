@@ -145,9 +145,9 @@ INTERFACE zif_abapgit_exit PUBLIC.
 
   METHODS enable_adjust_commit_message
     IMPORTING
-      !ii_repo_online   TYPE REF TO zif_abapgit_repo_online
+      !ii_repo_online       TYPE REF TO zif_abapgit_repo_online
     RETURNING
-      VALUE(rv_enabled) TYPE abap_bool.
+      VALUE(rv_button_text) TYPE string.
 
   METHODS enhance_any_toolbar
     IMPORTING
