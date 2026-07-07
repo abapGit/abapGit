@@ -124,7 +124,6 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_timestampl",        "note": " https://github.com/abaplint/transpiler/issues/1528 "},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_value_timestampl", "note": " https://github.com/abaplint/transpiler/issues/1528 "},
 
-      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "int4",                "note": "SCAN-ABAP-SOURCE, wrong value"},
       {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "decfloat34",          "note": "SCAN-ABAP-SOURCE, wrong value"},
       {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "ampersand",           "note": "SCAN-ABAP-SOURCE, wrong value"},
 
