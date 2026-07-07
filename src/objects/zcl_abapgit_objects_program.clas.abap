@@ -59,8 +59,8 @@ CLASS zcl_abapgit_objects_program DEFINITION
     TYPES:
       BEGIN OF ty_vari,
         variant    TYPE variant,
-        flag1      TYPE sychar01,
-        flag2      TYPE sychar01,
+        flag1      TYPE c LENGTH 1,
+        flag2      TYPE c LENGTH 1,
         transport  TYPE vari_trans,
         environmnt TYPE varid_env,
         protected  TYPE rsscr_cflg,
@@ -512,9 +512,11 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD deserialize_varis.
     DATA: lt_vari_text TYPE STANDARD TABLE OF varit WITH DEFAULT KEY,
+          ls_vari_text LIKE LINE OF lt_vari_text,
           ls_varid     TYPE varid.
 
-    FIELD-SYMBOLS: <ls_vari> TYPE ty_vari.
+    FIELD-SYMBOLS: <ls_vari>    TYPE ty_vari,
+                   <ls_vartext> TYPE rsvartxt.
 
     " TODO: support deletion
 
@@ -524,12 +526,19 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       CLEAR: lt_vari_text,
              ls_varid.
 
-      " TODO: check requirement of report and mandt fields
-      " Are the texts really required or are they just the selection texts?
-      MOVE-CORRESPONDING <ls_vari>-vartext TO lt_vari_text.
+      " TODO: Are the texts really required or are they just the selection texts?
+      LOOP AT <ls_vari>-vartext ASSIGNING <ls_vartext>.
+        CLEAR ls_vari_text.
+        ls_vari_text-mandt   = '000'.
+        ls_vari_text-langu   = <ls_vartext>-langu.
+        ls_vari_text-report  = iv_program_name.
+        ls_vari_text-variant = <ls_vartext>-variant.
+        ls_vari_text-vtext   = <ls_vartext>-vtext.
+        INSERT ls_vari_text INTO TABLE lt_vari_text.
+      ENDLOOP.
 
       MOVE-CORRESPONDING <ls_vari> TO ls_varid.
-      ls_varid-mandt = '000'.
+      ls_varid-mandt  = '000'.
       ls_varid-report = iv_program_name.
 
       CALL FUNCTION 'RS_CREATE_VARIANT'
