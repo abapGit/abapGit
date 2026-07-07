@@ -58,11 +58,21 @@ CLASS zcl_abapgit_objects_program DEFINITION
 
     TYPES:
       BEGIN OF ty_vari,
-        varid   TYPE varid,
-        vartext TYPE STANDARD TABLE OF rsvartxt WITH DEFAULT KEY,
-        dynnr   TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
-        values  TYPE rsparams_tt,
-        texts   TYPE STANDARD TABLE OF rsvseltext WITH DEFAULT KEY,
+        variant    TYPE variant,
+        flag1      TYPE sychar01,
+        flag2      TYPE sychar01,
+        transport  TYPE vari_trans,
+        environmnt TYPE varid_env,
+        protected  TYPE rsscr_cflg,
+        secu       TYPE secu,
+        version    TYPE varid_vers,
+        mlangu     TYPE langu,
+        xflag1     TYPE varid_xflg,
+        xflag2     TYPE varid_xflg,
+        vartext    TYPE STANDARD TABLE OF rsvartxt WITH DEFAULT KEY,
+        dynnr      TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
+        values     TYPE rsparams_tt,
+        texts      TYPE STANDARD TABLE OF rsvseltext WITH DEFAULT KEY,
       END OF ty_vari.
     TYPES:
       ty_vari_tt TYPE STANDARD TABLE OF ty_vari WITH DEFAULT KEY.
@@ -500,15 +510,65 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD deserialize_varis.
+    DATA: lt_vari_text TYPE STANDARD TABLE OF varit WITH DEFAULT KEY,
+          ls_varid     TYPE varid.
+
     FIELD-SYMBOLS: <ls_vari> TYPE ty_vari.
 
+    " TODO: support deletion
+
+    " TODO: support additional options (hide fields, etc.)
+
     LOOP AT it_varis ASSIGNING <ls_vari>.
+      CLEAR: lt_vari_text,
+             ls_varid.
 
+      " TODO: check requirement of report and mandt fields
+      " Are the texts really required or are they just the selection texts?
+      MOVE-CORRESPONDING <ls_vari>-vartext TO lt_vari_text.
+
+      MOVE-CORRESPONDING <ls_vari> TO ls_varid.
+      ls_varid-mandt = '000'.
+      ls_varid-report = iv_program_name.
+
+      CALL FUNCTION 'RS_CREATE_VARIANT'
+        EXPORTING
+          curr_report    = iv_program_name
+          curr_variant   = <ls_vari>-variant
+          vari_desc      = ls_varid
+        TABLES
+          vari_contents  = <ls_vari>-values
+          vari_text      = lt_vari_text
+          vscreens       = <ls_vari>-dynnr
+*          vari_contents_l =
+        EXCEPTIONS
+          variant_exists = 1
+          OTHERS         = 2.
+      IF sy-subrc = 1.
+        CALL FUNCTION 'RS_CHANGE_CREATED_VARIANT'
+          EXPORTING
+            curr_report   = iv_program_name
+            curr_variant  = <ls_vari>-variant
+            vari_desc     = ls_varid
+          TABLES
+            vari_contents = <ls_vari>-values
+*            vari_contents_l =
+            vari_text     = lt_vari_text
+*            vari_sel_desc =
+*            objects       =
+*            free_selections_value =
+*            free_selections_obj =
+*            varivdats     =
+          EXCEPTIONS
+            OTHERS        = 1.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise_t100( ).
+        ENDIF.
+      ELSEIF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
     ENDLOOP.
-
-    " TODO
   ENDMETHOD.
 
 
@@ -980,7 +1040,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
   METHOD serialize_varis.
     DATA: ls_catalogue   TYPE rsvcat,
           ls_vari        TYPE ty_vari,
-          lt_variscreens TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY.
+          lt_variscreens TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
+          ls_varid       TYPE varid.
 
     FIELD-SYMBOLS: <ls_catalogue> TYPE cat_var.
 
@@ -1001,7 +1062,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     LOOP AT ls_catalogue-cat ASSIGNING <ls_catalogue>.
       CLEAR: ls_vari,
-             lt_variscreens.
+             lt_variscreens,
+             ls_varid.
 
       CALL FUNCTION 'RS_GET_SCREENS_4_1_VARIANT'
         EXPORTING
@@ -1024,7 +1086,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           sel_text         = abap_true
           sorted           = abap_true
         IMPORTING
-          techn_data       = ls_vari-varid
+          techn_data       = ls_varid
         TABLES
           variant_values   = ls_vari-values
           variant_text     = ls_vari-texts
@@ -1034,6 +1096,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
+
+      MOVE-CORRESPONDING ls_varid TO ls_vari.
 
       INSERT ls_vari INTO TABLE rt_varis.
     ENDLOOP.

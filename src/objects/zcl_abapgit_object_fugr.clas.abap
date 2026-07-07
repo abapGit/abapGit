@@ -1297,7 +1297,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           lv_abap_version TYPE trdir-uccheck,
           lt_functions    TYPE ty_function_tt,
           lt_dynpros      TYPE ty_dynpro_tt,
-          ls_cua          TYPE ty_cua.
+          ls_cua          TYPE ty_cua,
+          lt_varis        TYPE ty_vari_tt.
 
     lv_abap_version = get_abap_version( io_xml ).
 
@@ -1339,6 +1340,12 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     deserialize_cua( iv_program_name = lv_program_name
                      is_cua          = ls_cua ).
+
+    io_xml->read( EXPORTING iv_name = 'VARIS'
+                  CHANGING  cg_data = lt_varis ).
+
+    deserialize_varis( iv_program_name = lv_program_name
+                       it_varis        = lt_varis ).
 
     deserialize_function_docs(
       iv_prog_name = lv_program_name
