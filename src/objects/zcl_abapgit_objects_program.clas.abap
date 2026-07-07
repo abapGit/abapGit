@@ -56,6 +56,17 @@ CLASS zcl_abapgit_objects_program DEFINITION
     TYPES:
       ty_dynpro_tt TYPE STANDARD TABLE OF ty_dynpro WITH DEFAULT KEY .
 
+    TYPES:
+      BEGIN OF ty_vari,
+        varid   TYPE varid,
+        vartext TYPE STANDARD TABLE OF rsvartxt WITH DEFAULT KEY,
+        dynnr   TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
+        values  TYPE rsparams_tt,
+        texts   TYPE STANDARD TABLE OF rsvseltext WITH DEFAULT KEY,
+      END OF ty_vari.
+    TYPES:
+      ty_vari_tt TYPE STANDARD TABLE OF ty_vari WITH DEFAULT KEY.
+
     METHODS strip_generation_comments
       CHANGING
         ct_source TYPE STANDARD TABLE. " tab of string or charX
@@ -71,6 +82,13 @@ CLASS zcl_abapgit_objects_program DEFINITION
         !iv_program_name TYPE syrepid
       RETURNING
         VALUE(rs_cua)    TYPE ty_cua
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_varis
+      IMPORTING
+        !iv_program_name TYPE syrepid
+      RETURNING
+        VALUE(rt_varis)  TYPE ty_vari_tt
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_dynpros
@@ -90,6 +108,12 @@ CLASS zcl_abapgit_objects_program DEFINITION
       IMPORTING
         !iv_program_name TYPE syrepid
         !is_cua          TYPE ty_cua
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_varis
+      IMPORTING
+        !iv_program_name TYPE syrepid
+        !it_varis        TYPE ty_vari_tt
       RAISING
         zcx_abapgit_exception .
     METHODS is_any_dynpro_locked
@@ -474,6 +498,17 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     ENDLOOP.
 
+  ENDMETHOD.
+
+
+  METHOD deserialize_varis.
+    FIELD-SYMBOLS: <ls_vari> TYPE ty_vari.
+
+    LOOP AT it_varis ASSIGNING <ls_vari>.
+
+    ENDLOOP.
+
+    " TODO
   ENDMETHOD.
 
 
@@ -942,6 +977,68 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD serialize_varis.
+    DATA: ls_catalogue   TYPE rsvcat,
+          ls_vari        TYPE ty_vari,
+          lt_variscreens TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY.
+
+    FIELD-SYMBOLS: <ls_catalogue> TYPE cat_var.
+
+    " TODO: find a way to read texts without SELECT on table VARIT
+    CALL FUNCTION 'RS_ALL_VARIANTS_4_1_REPORT'
+      EXPORTING
+        program = iv_program_name
+      IMPORTING
+        cat     = ls_catalogue
+      EXCEPTIONS
+        OTHERS  = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    " Only include system variants
+    DELETE ls_catalogue-cat WHERE variant NP 'CUS&*' AND variant NP 'SAP&*'.
+
+    LOOP AT ls_catalogue-cat ASSIGNING <ls_catalogue>.
+      CLEAR: ls_vari,
+             lt_variscreens.
+
+      CALL FUNCTION 'RS_GET_SCREENS_4_1_VARIANT'
+        EXPORTING
+          program     = iv_program_name
+          variant     = <ls_catalogue>-variant
+        TABLES
+          dynnr       = ls_vari-dynnr
+          variscreens = lt_variscreens " TODO: Required? Check when implementing deserialization
+        EXCEPTIONS
+          no_screens  = 1
+          OTHERS      = 2.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+      CALL FUNCTION 'RS_VARIANT_VALUES_TECH_DATA'
+        EXPORTING
+          report           = iv_program_name
+          variant          = <ls_catalogue>-variant
+          sel_text         = abap_true
+          sorted           = abap_true
+        IMPORTING
+          techn_data       = ls_vari-varid
+        TABLES
+          variant_values   = ls_vari-values
+          variant_text     = ls_vari-texts
+        EXCEPTIONS
+          variant_obsolete = 1
+          OTHERS           = 2.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+      INSERT ls_vari INTO TABLE rt_varis.
+    ENDLOOP.
+  ENDMETHOD.
+
 
   METHOD serialize_program.
 
@@ -949,6 +1046,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           lv_program_name TYPE syrepid,
           lt_dynpros      TYPE ty_dynpro_tt,
           ls_cua          TYPE ty_cua,
+          lt_varis        TYPE ty_vari_tt,
           li_report       TYPE REF TO zif_abapgit_sap_report,
           lt_source       TYPE TABLE OF abaptxt255,
           lt_tpool        TYPE textpool_table,
@@ -1026,6 +1124,12 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       IF NOT ls_cua IS INITIAL.
         li_xml->add( iv_name = 'CUA'
                      ig_data = ls_cua ).
+      ENDIF.
+
+      lt_varis = serialize_varis( lv_program_name ).
+      IF lt_varis IS NOT INITIAL.
+        li_xml->add( iv_name = 'VARIS'
+                     ig_data = lt_varis ).
       ENDIF.
     ENDIF.
 

@@ -1476,7 +1476,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           ls_progdir      TYPE zif_abapgit_sap_report=>ty_progdir,
           lv_program_name TYPE syrepid,
           lt_dynpros      TYPE ty_dynpro_tt,
-          ls_cua          TYPE ty_cua.
+          ls_cua          TYPE ty_cua,
+          lt_varis        TYPE ty_vari_tt.
 
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
@@ -1509,6 +1510,12 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       ls_cua = serialize_cua( lv_program_name ).
       io_xml->add( iv_name = 'CUA'
                    ig_data = ls_cua ).
+
+      lt_varis = serialize_varis( lv_program_name ).
+      IF lt_varis IS NOT INITIAL.
+        io_xml->add( iv_name = 'VARID'
+                     ig_data = lt_varis ).
+      ENDIF.
     ENDIF.
 
     serialize_function_docs( iv_prog_name = lv_program_name
