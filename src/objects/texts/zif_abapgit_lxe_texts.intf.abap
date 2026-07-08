@@ -7,8 +7,8 @@ INTERFACE zif_abapgit_lxe_texts
            s_text   TYPE c LENGTH 255,
            t_text   TYPE c LENGTH 255,
            unitmlt  TYPE i,
-           uppcase  TYPE c LENGTH 4,
-           texttype TYPE c LENGTH 1,
+           uppcase  TYPE c LENGTH 1,
+           texttype TYPE c LENGTH 4,
          END OF ty_text_pair.
 
   TYPES ty_text_pairs TYPE STANDARD TABLE OF ty_text_pair WITH DEFAULT KEY.

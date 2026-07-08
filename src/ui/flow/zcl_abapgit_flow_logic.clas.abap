@@ -46,6 +46,8 @@ CLASS zcl_abapgit_flow_logic DEFINITION PUBLIC.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    CONSTANTS c_max_missing_files TYPE i VALUE 1000.
+
     TYPES: BEGIN OF ty_transport,
              trkorr     TYPE trkorr,
              title      TYPE string,
@@ -408,6 +410,9 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     DATA ls_result   LIKE LINE OF lt_features.
     DATA lt_all_transports TYPE ty_transports_tt.
     DATA lv_filename TYPE string.
+    DATA lv_warning TYPE string.
+    DATA lv_count   TYPE i.
+    DATA ls_missing_remote LIKE LINE OF cs_information-missing_remote.
 
 
     FIELD-SYMBOLS <ls_tadir> LIKE LINE OF lt_tadir.
@@ -469,9 +474,6 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
           CHANGING
             ct_main_expanded  = lt_main_expanded
             ct_missing_remote = cs_information-missing_remote ).
-        IF lines( cs_information-missing_remote ) > 1000.
-          INSERT `Only first 1000 missing files shown` INTO TABLE cs_information-warnings.
-        ENDIF.
       ENDIF.
     ENDLOOP.
 
@@ -486,6 +488,20 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
         CHANGING
           ct_main_expanded  = lt_main_expanded
           ct_missing_remote = cs_information-missing_remote ).
+    ENDIF.
+
+    IF lines( cs_information-missing_remote ) > c_max_missing_files.
+      lv_warning = |Only first { c_max_missing_files } missing files shown, {
+        lines( cs_information-missing_remote ) } total|.
+      INSERT lv_warning INTO TABLE cs_information-warnings.
+
+      lv_count = 0.
+      LOOP AT cs_information-missing_remote INTO ls_missing_remote.
+        lv_count = lv_count + 1.
+        IF lv_count > c_max_missing_files.
+          DELETE TABLE cs_information-missing_remote FROM ls_missing_remote.
+        ENDIF.
+      ENDLOOP.
     ENDIF.
 
 * todo: double check, there might have been changes while consolidation is running
