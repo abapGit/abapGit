@@ -118,6 +118,13 @@ CLASS zcl_abapgit_gui DEFINITION
         !iv_state          TYPE i
       RETURNING
         VALUE(rv_new_page) TYPE abap_bool.
+    METHODS request_credentials
+      IMPORTING
+        !iv_url           TYPE string
+      RETURNING
+        VALUE(rv_success) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -277,6 +284,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
     DATA:
       lx_exception TYPE REF TO zcx_abapgit_exception,
+      lx_auth      TYPE REF TO zcx_abapgit_auth_required,
       li_handler   TYPE REF TO zif_abapgit_gui_event_handler,
       li_event     TYPE REF TO zif_abapgit_gui_event,
       ls_handled   TYPE zif_abapgit_gui_event_handler=>ty_handling_result.
@@ -333,6 +341,21 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
       CATCH zcx_abapgit_cancel ##NO_HANDLER.
         " Do nothing = c_event_state-no_more_act
+      CATCH zcx_abapgit_auth_required INTO lx_auth.
+        " Credentials are needed for a repository. Prompt the user (UI layer),
+        " cache them in the login manager, and retry the original action.
+        TRY.
+            IF request_credentials( lx_auth->mv_url ) = abap_true.
+              handle_action(
+                iv_action   = iv_action
+                iv_getdata  = iv_getdata
+                it_postdata = it_postdata ).
+            ENDIF.
+          CATCH zcx_abapgit_exception INTO lx_exception.
+            handle_error(
+              iv_state     = ls_handled-state
+              ix_exception = lx_exception ).
+        ENDTRY.
       CATCH zcx_abapgit_exception INTO lx_exception.
         handle_error(
           iv_state     = ls_handled-state
@@ -448,6 +471,45 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
     lv_url = cache_html( lv_html ).
     mi_html_viewer->show_url( lv_url ).
+
+  ENDMETHOD.
+
+
+  METHOD request_credentials.
+
+    DATA lv_default_user TYPE string.
+    DATA lv_user         TYPE string.
+    DATA lv_pass         TYPE string.
+
+    lv_default_user = zcl_abapgit_persist_factory=>get_user( )->get_repo_login( iv_url ).
+    lv_user         = lv_default_user.
+
+    " The password popup itself is unchanged, it is only invoked from the UI layer now
+    zcl_abapgit_password_dialog=>popup(
+      EXPORTING
+        iv_repo_url = iv_url
+      CHANGING
+        cv_user     = lv_user
+        cv_pass     = lv_pass ).
+
+    IF lv_user IS INITIAL.
+      " User cancelled the dialog
+      RETURN.
+    ENDIF.
+
+    IF lv_user <> lv_default_user.
+      zcl_abapgit_persist_factory=>get_user( )->set_repo_login(
+        iv_url   = iv_url
+        iv_login = lv_user ).
+    ENDIF.
+
+    " Cache the credentials so create_by_url picks them up on the retry
+    zcl_abapgit_login_manager=>set_basic(
+      iv_uri      = iv_url
+      iv_username = lv_user
+      iv_password = lv_pass ).
+
+    rv_success = abap_true.
 
   ENDMETHOD.
 

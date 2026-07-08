@@ -50,6 +50,18 @@ CLASS zcl_abapgit_login_manager DEFINITION
         VALUE(rv_username) TYPE string
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS get_password
+      IMPORTING
+        !iv_uri            TYPE string
+      RETURNING
+        VALUE(rv_password) TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS remove
+      IMPORTING
+        !iv_uri TYPE string
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -124,6 +136,33 @@ CLASS zcl_abapgit_login_manager IMPLEMENTATION.
       lv_decoded = cl_http_utility=>decode_base64( lv_auth ).
       SPLIT lv_decoded AT ':' INTO rv_username lv_decoded.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_password.
+
+    DATA lv_auth     TYPE string.
+    DATA lv_username TYPE string.
+
+    lv_auth = get( iv_uri ).
+    IF lv_auth IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    IF lv_auth CP 'Basic *'.
+      lv_auth = lv_auth+6.
+      lv_auth = cl_http_utility=>decode_base64( lv_auth ).
+      " Keep everything after the first colon, passwords/tokens may contain colons
+      SPLIT lv_auth AT ':' INTO lv_username rv_password.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD remove.
+
+    DELETE gt_auth WHERE uri = zcl_abapgit_url=>host( iv_uri ).
 
   ENDMETHOD.
 
