@@ -106,13 +106,35 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
           li_repo_online        TYPE REF TO zif_abapgit_repo_online,
           lv_msg                TYPE string,
           li_popups             TYPE REF TO zif_abapgit_popups,
+          ls_source_branch      TYPE zif_abapgit_git_definitions=>ty_git_branch,
+          lv_default_branch     TYPE string,
           lv_source_branch_name TYPE string.
 
 
     li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    lv_source_branch_name = li_repo_online->get_selected_branch( ).
+
+    " Default source branch: repo default branch setting, otherwise the selected branch
+    lv_default_branch = li_repo_online->zif_abapgit_repo~get_local_settings( )-default_branch.
+    IF lv_default_branch IS INITIAL.
+      lv_source_branch_name = li_repo_online->get_selected_branch( ).
+    ELSE.
+      lv_source_branch_name = zcl_abapgit_git_branch_utils=>complete_heads_branch_name( lv_default_branch ).
+    ENDIF.
 
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+
+    " Let the user choose the source branch to create the new branch from
+    ls_source_branch = li_popups->branch_list_popup(
+      iv_url                 = li_repo_online->get_url( )
+      iv_default_branch      = lv_source_branch_name
+      iv_title               = 'Create Branch From'
+      iv_text                = 'Select the source branch for the new branch'
+      iv_show_switch_message = abap_false ).
+    IF ls_source_branch-name IS INITIAL.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+    lv_source_branch_name = ls_source_branch-name.
+
     li_popups->create_branch_popup(
       EXPORTING
         iv_source_branch_name = lv_source_branch_name
@@ -124,10 +146,12 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    li_repo_online->create_branch( lv_name ).
+    li_repo_online->create_branch(
+      iv_name = lv_name
+      iv_from = ls_source_branch-sha1 ).
 
-    lv_msg = |Branch switched from { zcl_abapgit_git_branch_utils=>get_display_name( lv_source_branch_name )
-      } to new branch { zcl_abapgit_git_branch_utils=>get_display_name( lv_name ) }|.
+    lv_msg = |Branch created from { zcl_abapgit_git_branch_utils=>get_display_name( lv_source_branch_name )
+      } as new branch { zcl_abapgit_git_branch_utils=>get_display_name( lv_name ) }|.
     MESSAGE lv_msg TYPE 'S'.
 
   ENDMETHOD.

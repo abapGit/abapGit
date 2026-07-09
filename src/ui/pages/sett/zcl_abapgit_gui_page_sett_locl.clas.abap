@@ -44,6 +44,7 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
         block_commit                 TYPE string VALUE 'block_commit',
         flow                         TYPE string VALUE 'flow',
         exclude_remote_paths         TYPE string VALUE 'exclude_remote_paths',
+        default_branch               TYPE string VALUE 'default_branch',
       END OF c_id .
     CONSTANTS:
       BEGIN OF c_event,
@@ -52,6 +53,7 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
         choose_customizing_request TYPE string VALUE 'choose_customizing_request',
         choose_labels              TYPE string VALUE 'choose-labels',
         choose_check_variant       TYPE string VALUE 'choose_check_variant',
+        choose_default_branch      TYPE string VALUE 'choose_default_branch',
       END OF c_event .
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
@@ -91,6 +93,9 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS choose_customizing_request
+      RAISING
+        zcx_abapgit_exception .
+    METHODS choose_default_branch
       RAISING
         zcx_abapgit_exception .
     METHODS is_customizing_included
@@ -153,6 +158,38 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
         iv_key = c_id-customizing_request
         iv_val = lv_customizing_request ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD choose_default_branch.
+
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
+    DATA ls_branch      TYPE zif_abapgit_git_definitions=>ty_git_branch.
+    DATA lv_default     TYPE string.
+
+    IF mi_repo->is_offline( ) = abap_true.
+      RETURN.
+    ENDIF.
+
+    li_repo_online ?= mi_repo.
+
+    lv_default = mo_form_data->get( c_id-default_branch ).
+    IF lv_default IS NOT INITIAL.
+      lv_default = zcl_abapgit_git_branch_utils=>complete_heads_branch_name( lv_default ).
+    ENDIF.
+
+    ls_branch = zcl_abapgit_ui_factory=>get_popups( )->branch_list_popup(
+      iv_url            = li_repo_online->get_url( )
+      iv_default_branch = lv_default ).
+
+    IF ls_branch-name IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    mo_form_data->set(
+      iv_key = c_id-default_branch
+      iv_val = ls_branch-display_name ).
 
   ENDMETHOD.
 
@@ -237,6 +274,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
       iv_name        = c_id-display_name
       iv_label       = 'Display Name'
       iv_hint        = 'Name to show instead of original repo name (optional)' ).
+
+    IF mi_repo->is_offline( ) = abap_false.
+      ro_form->text(
+        iv_name        = c_id-default_branch
+        iv_side_action = c_event-choose_default_branch
+        iv_readonly    = abap_true
+        iv_label       = 'Default Source Branch for New Branches'
+        iv_hint        = 'New branches are created from this branch by default (this system only).' &&
+                         ' Leave empty to use the currently checked-out branch.' ).
+    ENDIF.
 
     IF li_package->are_changes_recorded_in_tr_req( ) = abap_true.
       ro_form->text(
@@ -365,6 +412,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
       iv_key = c_id-display_name
       iv_val = ms_settings-display_name ).
 
+    IF mi_repo->is_offline( ) = abap_false.
+      ro_form_data->set(
+        iv_key = c_id-default_branch
+        iv_val = ms_settings-default_branch ).
+    ENDIF.
+
     IF li_package->are_changes_recorded_in_tr_req( ) = abap_true.
       ro_form_data->set(
         iv_key = c_id-transport_request
@@ -418,6 +471,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
   METHOD save_settings.
 
     ms_settings-display_name                 = mo_form_data->get( c_id-display_name ).
+    ms_settings-default_branch               = mo_form_data->get( c_id-default_branch ).
     ms_settings-transport_request            = mo_form_data->get( c_id-transport_request ).
     ms_settings-customizing_request          = mo_form_data->get( c_id-customizing_request ).
     ms_settings-labels                       = zcl_abapgit_repo_labels=>normalize( mo_form_data->get( c_id-labels ) ).
@@ -524,6 +578,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
       WHEN c_event-choose_customizing_request.
 
         choose_customizing_request( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN c_event-choose_default_branch.
+
+        choose_default_branch( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_event-choose_labels.

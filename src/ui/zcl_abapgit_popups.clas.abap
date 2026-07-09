@@ -262,8 +262,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
-        titel      = 'Select Branch'
-        textline1  = 'Select a branch'
+        titel      = iv_title
+        textline1  = iv_text
         start_col  = ms_position-start_column
         start_row  = ms_position-start_row
         cursorline = lv_default
@@ -297,9 +297,11 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       ENDIF.
       ASSERT <ls_branch> IS ASSIGNED.
       rs_branch = lo_branches->find_by_name( <ls_branch>-name ).
-      lv_text = |Branch switched from { zcl_abapgit_git_branch_utils=>get_display_name( iv_default_branch ) } to {
-        zcl_abapgit_git_branch_utils=>get_display_name( rs_branch-name ) } |.
-      MESSAGE lv_text TYPE 'S'.
+      IF iv_show_switch_message = abap_true.
+        lv_text = |Branch switched from { zcl_abapgit_git_branch_utils=>get_display_name( iv_default_branch ) } to {
+          zcl_abapgit_git_branch_utils=>get_display_name( rs_branch-name ) } |.
+        MESSAGE lv_text TYPE 'S'.
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
