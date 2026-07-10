@@ -249,16 +249,14 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
     SORT lt_nspc_texts BY spras ASCENDING.
     SORT lt_cvers_refs.
 
-    IF lines( lt_i18n_langs ) > 0.
-      ii_xml->add( iv_name = 'I18N_LANGS'
-                   ig_data = lt_i18n_langs ).
+    ii_xml->add( iv_name = 'I18N_LANGS'
+                 ig_data = lt_i18n_langs ).
 
-      ii_xml->add( iv_name = 'NSPC_TEXTS'
-                   ig_data = lt_nspc_texts ).
+    ii_xml->add( iv_name = 'NSPC_TEXTS'
+                 ig_data = lt_nspc_texts ).
 
-      ii_xml->add( iv_name = 'CVERS_REFS'
-                   ig_data = lt_cvers_refs ).
-    ENDIF.
+    ii_xml->add( iv_name = 'CVERS_REFS'
+                 ig_data = lt_cvers_refs ).
 
   ENDMETHOD.
 

@@ -425,10 +425,8 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
     ENDLOOP.
 
     " You are reminded that descriptions in other languages do not have to be in existence, although they may.
-    IF lines( lt_udmo_entities ) > 0.
-      io_xml->add( iv_name = 'UDMO_ENTITIES'
-                   ig_data = lt_udmo_entities ).
-    ENDIF.
+    io_xml->add( iv_name = 'UDMO_ENTITIES'
+                 ig_data = lt_udmo_entities ).
 
   ENDMETHOD.
 
@@ -499,11 +497,8 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
     ENDLOOP.
 
     " You are reminded that long texts do not have to be in existence
-    IF lines( lt_udmo_long_texts ) > 0.
-      io_xml->add( iv_name = 'UDMO_LONG_TEXTS'
-                   ig_data = lt_udmo_long_texts ).
-    ENDIF.
-
+    io_xml->add( iv_name = 'UDMO_LONG_TEXTS'
+                 ig_data = lt_udmo_long_texts ).
 
   ENDMETHOD.
 
@@ -553,11 +548,8 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
       ORDER BY sprache ASCENDING.                       "#EC CI_NOFIRST
 
     " You are reminded that descriptions in other languages do not have to be in existence.
-    IF lines( lt_udmo_texts ) > 0.
-      io_xml->add( iv_name = 'UDMO_TEXTS'
-                   ig_data = lt_udmo_texts ).
-    ENDIF.
-
+    io_xml->add( iv_name = 'UDMO_TEXTS'
+                 ig_data = lt_udmo_texts ).
 
   ENDMETHOD.
 
