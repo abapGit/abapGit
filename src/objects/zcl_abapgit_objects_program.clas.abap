@@ -58,21 +58,20 @@ CLASS zcl_abapgit_objects_program DEFINITION
 
     TYPES:
       BEGIN OF ty_vari,
-        variant    TYPE variant,
-        flag1      TYPE c LENGTH 1,
-        flag2      TYPE c LENGTH 1,
-        transport  TYPE vari_trans,
-        environmnt TYPE varid_env,
-        protected  TYPE rsscr_cflg,
-        secu       TYPE secu,
-        version    TYPE varid_vers,
-        mlangu     TYPE langu,
-        xflag1     TYPE varid_xflg,
-        xflag2     TYPE varid_xflg,
-        vartext    TYPE STANDARD TABLE OF rsvartxt WITH DEFAULT KEY,
-        dynnr      TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
-        values     TYPE rsparams_tt,
-        texts      TYPE STANDARD TABLE OF rsvseltext WITH DEFAULT KEY,
+        variant     TYPE variant,
+        flag1       TYPE c LENGTH 1,
+        flag2       TYPE c LENGTH 1,
+        transport   TYPE vari_trans,
+        environmnt  TYPE varid_env,
+        protected   TYPE rsscr_cflg,
+        secu        TYPE secu,
+        version     TYPE varid_vers,
+        mlangu      TYPE langu,
+        xflag1      TYPE varid_xflg,
+        xflag2      TYPE varid_xflg,
+        variscreens TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
+        objects     TYPE STANDARD TABLE OF vanz WITH DEFAULT KEY,
+        values      TYPE STANDARD TABLE OF rsparamsl_255 WITH DEFAULT KEY,
       END OF ty_vari.
     TYPES:
       ty_vari_tt TYPE STANDARD TABLE OF ty_vari WITH DEFAULT KEY.
@@ -511,70 +510,96 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD deserialize_varis.
-    DATA: lt_vari_text TYPE STANDARD TABLE OF varit WITH DEFAULT KEY,
-          ls_vari_text LIKE LINE OF lt_vari_text,
+    CONSTANTS: lc_sysvariant_clnt TYPE mandt VALUE '000'.
+
+    DATA: ls_catalog   TYPE rsvcat,
+          lt_vari_text TYPE STANDARD TABLE OF varit WITH DEFAULT KEY,
           ls_varid     TYPE varid.
 
-    FIELD-SYMBOLS: <ls_vari>    TYPE ty_vari,
-                   <ls_vartext> TYPE rsvartxt.
+    FIELD-SYMBOLS: <ls_vari>          TYPE ty_vari,
+                   <ls_catalog_entry> TYPE cat_var.
 
-    " TODO: support deletion
+    " TODO: recreate variant if screen assignment has changed
+    "       (or find a way to change screen assignments without recreating the variant)
 
-    " TODO: support additional options (hide fields, etc.)
+    " TODO: support variant short text in selected languages
+
+    " TODO: check dynamic selections
+
+    CALL FUNCTION 'RS_ALL_VARIANTS_4_1_REPORT'
+      EXPORTING
+        program = iv_program_name
+      IMPORTING
+        cat     = ls_catalog
+      EXCEPTIONS
+        OTHERS  = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    DELETE ls_catalog-cat WHERE variant NP 'SAP&*' AND variant NP 'CUS&*'.
 
     LOOP AT it_varis ASSIGNING <ls_vari>.
       CLEAR: lt_vari_text,
              ls_varid.
 
-      " TODO: Are the texts really required or are they just the selection texts?
-      LOOP AT <ls_vari>-vartext ASSIGNING <ls_vartext>.
-        CLEAR ls_vari_text.
-        ls_vari_text-mandt   = '000'.
-        ls_vari_text-langu   = <ls_vartext>-langu.
-        ls_vari_text-report  = iv_program_name.
-        ls_vari_text-variant = <ls_vartext>-variant.
-        ls_vari_text-vtext   = <ls_vartext>-vtext.
-        INSERT ls_vari_text INTO TABLE lt_vari_text.
-      ENDLOOP.
+      DELETE ls_catalog-cat WHERE variant = <ls_vari>-variant.
 
       MOVE-CORRESPONDING <ls_vari> TO ls_varid.
-      ls_varid-mandt  = '000'.
+      ls_varid-mandt  = lc_sysvariant_clnt.
       ls_varid-report = iv_program_name.
 
-      CALL FUNCTION 'RS_CREATE_VARIANT'
-        EXPORTING
-          curr_report    = iv_program_name
-          curr_variant   = <ls_vari>-variant
-          vari_desc      = ls_varid
-        TABLES
-          vari_contents  = <ls_vari>-values
-          vari_text      = lt_vari_text
-          vscreens       = <ls_vari>-dynnr
-*          vari_contents_l =
-        EXCEPTIONS
-          variant_exists = 1
-          OTHERS         = 2.
-      IF sy-subrc = 1.
-        CALL FUNCTION 'RS_CHANGE_CREATED_VARIANT'
+      READ TABLE ls_catalog-cat TRANSPORTING NO FIELDS
+           WITH KEY variant = <ls_vari>-variant.
+      IF sy-subrc <> 0.
+        CALL FUNCTION 'RS_CREATE_VARIANT_255'
           EXPORTING
-            curr_report   = iv_program_name
-            curr_variant  = <ls_vari>-variant
-            vari_desc     = ls_varid
+            curr_report    = iv_program_name
+            curr_variant   = <ls_vari>-variant
+            vari_desc      = ls_varid
           TABLES
-            vari_contents = <ls_vari>-values
-*            vari_contents_l =
-            vari_text     = lt_vari_text
-*            vari_sel_desc =
-*            objects       =
-*            free_selections_value =
-*            free_selections_obj =
-*            varivdats     =
+            vari_contents  = <ls_vari>-values
+            vari_text      = lt_vari_text
+            vscreens       = <ls_vari>-variscreens
           EXCEPTIONS
-            OTHERS        = 1.
+            variant_exists = 0
+            OTHERS         = 1.
         IF sy-subrc <> 0.
           zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
-      ELSEIF sy-subrc <> 0.
+      ENDIF.
+
+      CALL FUNCTION 'RS_CHANGE_CREATED_VARIANT_255'
+        EXPORTING
+          curr_report   = iv_program_name
+          curr_variant  = <ls_vari>-variant
+          vari_desc     = ls_varid
+        TABLES
+          vari_contents = <ls_vari>-values
+          vari_text     = lt_vari_text
+          objects       = <ls_vari>-objects
+*          free_selections_value =
+*          free_selections_obj =
+        EXCEPTIONS
+          OTHERS        = 1.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+    ENDLOOP.
+
+    " remaining variants have been deleted on remote
+    " => delete
+    LOOP AT ls_catalog-cat ASSIGNING <ls_catalog_entry>.
+      CALL FUNCTION 'RS_VARIANT_DELETE'
+        EXPORTING
+          report                = iv_program_name
+          variant               = <ls_catalog_entry>-variant
+          flag_confirmscreen    = abap_true " true = No confirm screen
+          suppress_message      = abap_true
+          suppress_input_dialog = abap_true
+        EXCEPTIONS
+          OTHERS                = 1.
+      IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDLOOP.
@@ -1047,19 +1072,19 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD serialize_varis.
-    DATA: ls_catalogue   TYPE rsvcat,
-          ls_vari        TYPE ty_vari,
-          lt_variscreens TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
-          ls_varid       TYPE varid.
+    DATA: ls_catalog TYPE rsvcat,
+          ls_vari    TYPE ty_vari,
+          lt_dynnr   TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY ##NEEDED,
+          ls_varid   TYPE varid.
 
-    FIELD-SYMBOLS: <ls_catalogue> TYPE cat_var.
+    FIELD-SYMBOLS: <ls_catalog> TYPE cat_var,
+                   <ls_object>  TYPE vanz.
 
-    " TODO: find a way to read texts without SELECT on table VARIT
     CALL FUNCTION 'RS_ALL_VARIANTS_4_1_REPORT'
       EXPORTING
         program = iv_program_name
       IMPORTING
-        cat     = ls_catalogue
+        cat     = ls_catalog
       EXCEPTIONS
         OTHERS  = 1.
     IF sy-subrc <> 0.
@@ -1067,46 +1092,103 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     ENDIF.
 
     " Only include system variants
-    DELETE ls_catalogue-cat WHERE variant NP 'CUS&*' AND variant NP 'SAP&*'.
+    DELETE ls_catalog-cat WHERE variant NP 'CUS&*' AND variant NP 'SAP&*'.
 
-    LOOP AT ls_catalogue-cat ASSIGNING <ls_catalogue>.
+    LOOP AT ls_catalog-cat ASSIGNING <ls_catalog>.
       CLEAR: ls_vari,
-             lt_variscreens,
+             lt_dynnr,
              ls_varid.
+
+      CALL FUNCTION 'RS_VARIANT_VALUES_TECH_DAT_255'
+        EXPORTING
+          report         = iv_program_name
+          variant        = <ls_catalog>-variant
+          sorted         = abap_true
+          execute_direct = abap_true
+        IMPORTING
+          techn_data     = ls_varid
+        TABLES
+          variant_values = ls_vari-values " is ignored
+        EXCEPTIONS
+          OTHERS         = 1.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+      " Use variant values from CONTENTS call
+      " both calls have this parameter as non-optional
+      CLEAR ls_vari.
+
+      MOVE-CORRESPONDING ls_varid TO ls_vari.
 
       CALL FUNCTION 'RS_GET_SCREENS_4_1_VARIANT'
         EXPORTING
           program     = iv_program_name
-          variant     = <ls_catalogue>-variant
+          variant     = <ls_catalog>-variant
         TABLES
-          dynnr       = ls_vari-dynnr
-          variscreens = lt_variscreens " TODO: Required? Check when implementing deserialization
+          dynnr       = lt_dynnr
+          variscreens = ls_vari-variscreens
         EXCEPTIONS
-          no_screens  = 1
-          OTHERS      = 2.
+          OTHERS      = 1.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
-      CALL FUNCTION 'RS_VARIANT_VALUES_TECH_DATA'
+      CALL FUNCTION 'RS_VARIANT_CONTENTS_255'
         EXPORTING
-          report           = iv_program_name
-          variant          = <ls_catalogue>-variant
-          sel_text         = abap_true
-          sorted           = abap_true
-        IMPORTING
-          techn_data       = ls_varid
+          report         = iv_program_name
+          variant        = <ls_catalog>-variant
+          no_import      = abap_true
+          execute_direct = abap_true
         TABLES
-          variant_values   = ls_vari-values
-          variant_text     = ls_vari-texts
+          valutab        = ls_vari-values
+          objects        = ls_vari-objects
+*          free_selections_desc =
+*          free_selections_value =
+*          free_selections_obj =
         EXCEPTIONS
-          variant_obsolete = 1
-          OTHERS           = 2.
+          OTHERS         = 1.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
+
+      " provides all DB data, but unknown if available in NW 7.02
+*      DATA(ls_varkey) = VALUE cl_svar_selscreen_variant_srv=>varkey( report  = iv_program_name
+*                                                                     variant = <ls_catalog>-variant ).
+*      " TODO: variable is assigned but never used (ABAP cleaner)
+*      DATA(lt_varidesc) = VALUE cl_svar_selscreen_variant_srv=>vari_content_desc( ).
+*      " TODO: variable is assigned but never used (ABAP cleaner)
+*      DATA(lt_varivdat) = VALUE cl_svar_selscreen_variant_srv=>variant_variables( ).
+*      cl_svar_selscreen_variant_srv=>get_variant_content_descr( EXPORTING
+*                                                                  varkey   = ls_varkey
+*                                                                  mandt    = '000'
+*                                                                IMPORTING
+**                                                                  adjusted =
+**                                                                  dyns_fields_selected =
+**                                                                  dyns_variables =
+*                                                                  varidesc = lt_varidesc
+*                                                                  varivdat = lt_varivdat
+**                                                                  dyns_fields =
+**                                                                  dyns_sel_texpr =
+**                                                                  dynamic_selections =
+**                                                                  dynamic_sels_date_variables =
+*                                                                EXCEPTIONS
+*                                                                  OTHERS   = 4 ).
+*      IF sy-subrc <> 0.
+*        zcx_abapgit_exception=>raise_t100( ).
+*      ENDIF.
+
+      " Clear texts - they will be provided in TEXTPOOL section
+      LOOP AT ls_vari-objects ASSIGNING <ls_object>.
+        CLEAR <ls_object>-text.
+      ENDLOOP.
 
       MOVE-CORRESPONDING ls_varid TO ls_vari.
+
+      " reproducible order
+      SORT ls_vari-variscreens.
+      SORT ls_vari-objects.
+      SORT ls_vari-values.
 
       INSERT ls_vari INTO TABLE rt_varis.
     ENDLOOP.
