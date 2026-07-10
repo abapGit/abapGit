@@ -284,13 +284,11 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
     SORT lt_i18n_langs ASCENDING.
     SORT lt_dd25_texts BY ddlanguage ASCENDING.
 
-    IF lines( lt_i18n_langs ) > 0.
-      ii_xml->add( iv_name = 'I18N_LANGS'
-                   ig_data = lt_i18n_langs ).
+    ii_xml->add( iv_name = 'I18N_LANGS'
+                 ig_data = lt_i18n_langs ).
 
-      ii_xml->add( iv_name = 'DD25_TEXTS'
-                   ig_data = lt_dd25_texts ).
-    ENDIF.
+    ii_xml->add( iv_name = 'DD25_TEXTS'
+                 ig_data = lt_dd25_texts ).
 
   ENDMETHOD.
 
