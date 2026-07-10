@@ -248,6 +248,9 @@ CLASS lcl_cts IMPLEMENTATION.
   METHOD zif_abapgit_cts_api~read_description.
     RETURN. " todo, implement method
   ENDMETHOD.
+  METHOD zif_abapgit_cts_api~read_creation_dates.
+    RETURN. " todo, implement method
+  ENDMETHOD.
   METHOD zif_abapgit_cts_api~read_user.
     RETURN. " todo, implement method
   ENDMETHOD.

@@ -698,7 +698,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
       IF ms_user_settings-show_details = abap_true.
         ri_html->add( |<br>| ).
-        ri_html->add( |First commit: { is_feature-branch-first_commit(7) }| ).
+        ri_html->add( |First commit: <tt>{ is_feature-branch-first_commit(7) }</tt>| ).
         ri_html->add( |<br>| ).
         IF is_feature-branch-latest_merge_commit IS INITIAL.
           ri_html->add( |Latest merge: No merges| ).
@@ -728,6 +728,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     IF is_feature-transport IS NOT INITIAL.
       ri_html->add( |Transport: <tt>{ is_feature-transport-trkorr }</tt> - { is_feature-transport-title }<br>| ).
+      IF ms_user_settings-show_details = abap_true AND is_feature-transport-created_on IS NOT INITIAL.
+        ri_html->add( |Transport created: { is_feature-transport-created_on DATE = USER }<br>| ).
+      ENDIF.
     ELSE.
       ri_html->add( |No corresponding transport found<br>| ).
     ENDIF.

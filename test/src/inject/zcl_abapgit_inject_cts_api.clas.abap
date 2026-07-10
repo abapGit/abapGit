@@ -41,6 +41,9 @@ CLASS zcl_abapgit_inject_cts_api IMPLEMENTATION.
   METHOD zif_abapgit_cts_api~read_description.
     RETURN. " todo, implement method
   ENDMETHOD.
+  METHOD zif_abapgit_cts_api~read_creation_dates.
+    RETURN. " todo, implement method
+  ENDMETHOD.
   METHOD zif_abapgit_cts_api~read_user.
     RETURN. " todo, implement method
   ENDMETHOD.
