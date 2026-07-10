@@ -65,7 +65,6 @@ CLASS zcl_abapgit_objects_program DEFINITION
         environmnt  TYPE varid_env,
         protected   TYPE rsscr_cflg,
         secu        TYPE secu,
-        version     TYPE varid_vers,
         mlangu      TYPE langu,
         xflag1      TYPE varid_xflg,
         xflag2      TYPE varid_xflg,
@@ -1138,7 +1137,6 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         EXPORTING
           report         = iv_program_name
           variant        = <ls_catalog>-variant
-          no_import      = abap_true
           execute_direct = abap_true
         TABLES
           valutab        = ls_vari-values
@@ -1151,32 +1149,6 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
-
-      " provides all DB data, but unknown if available in NW 7.02
-*      DATA(ls_varkey) = VALUE cl_svar_selscreen_variant_srv=>varkey( report  = iv_program_name
-*                                                                     variant = <ls_catalog>-variant ).
-*      " TODO: variable is assigned but never used (ABAP cleaner)
-*      DATA(lt_varidesc) = VALUE cl_svar_selscreen_variant_srv=>vari_content_desc( ).
-*      " TODO: variable is assigned but never used (ABAP cleaner)
-*      DATA(lt_varivdat) = VALUE cl_svar_selscreen_variant_srv=>variant_variables( ).
-*      cl_svar_selscreen_variant_srv=>get_variant_content_descr( EXPORTING
-*                                                                  varkey   = ls_varkey
-*                                                                  mandt    = '000'
-*                                                                IMPORTING
-**                                                                  adjusted =
-**                                                                  dyns_fields_selected =
-**                                                                  dyns_variables =
-*                                                                  varidesc = lt_varidesc
-*                                                                  varivdat = lt_varivdat
-**                                                                  dyns_fields =
-**                                                                  dyns_sel_texpr =
-**                                                                  dynamic_selections =
-**                                                                  dynamic_sels_date_variables =
-*                                                                EXCEPTIONS
-*                                                                  OTHERS   = 4 ).
-*      IF sy-subrc <> 0.
-*        zcx_abapgit_exception=>raise_t100( ).
-*      ENDIF.
 
       " Clear texts - they will be provided in TEXTPOOL section
       LOOP AT ls_vari-objects ASSIGNING <ls_object>.
