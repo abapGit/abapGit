@@ -16,22 +16,26 @@ CLASS zcl_abapgit_services_git DEFINITION
         zcx_abapgit_exception.
     CLASS-METHODS switch_branch
       IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+        !iv_key    TYPE zif_abapgit_persistence=>ty_repo-key
+        !is_branch TYPE zif_abapgit_git_definitions=>ty_git_branch
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS delete_branch
       IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+        !iv_key    TYPE zif_abapgit_persistence=>ty_repo-key
+        !is_branch TYPE zif_abapgit_git_definitions=>ty_git_branch
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS delete_tag
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+        !is_tag TYPE zif_abapgit_git_definitions=>ty_git_tag
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS switch_tag
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+        !is_tag TYPE zif_abapgit_git_definitions=>ty_git_tag
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS commit
@@ -136,26 +140,16 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
   METHOD delete_branch.
 
     DATA: li_repo_online TYPE REF TO zif_abapgit_repo_online,
-          ls_branch      TYPE zif_abapgit_git_definitions=>ty_git_branch,
-          lv_msg         TYPE string,
-          li_popups      TYPE REF TO zif_abapgit_popups.
+          lv_msg         TYPE string.
 
 
     li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
-    ls_branch = li_popups->branch_list_popup( iv_url         = li_repo_online->get_url( )
-                                              iv_hide_branch = li_repo_online->get_selected_branch( )
-                                              iv_hide_head   = abap_true ).
-    IF ls_branch IS INITIAL.
-      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-    ENDIF.
-
     zcl_abapgit_git_porcelain=>delete_branch(
       iv_url    = li_repo_online->get_url( )
-      is_branch = ls_branch ).
+      is_branch = is_branch ).
 
-    lv_msg = |Branch { ls_branch-display_name } deleted|.
+    lv_msg = |Branch { is_branch-display_name } deleted|.
     MESSAGE lv_msg TYPE 'S'.
 
   ENDMETHOD.
@@ -164,21 +158,15 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
   METHOD delete_tag.
 
     DATA: li_repo_online TYPE REF TO zif_abapgit_repo_online,
-          ls_tag         TYPE zif_abapgit_git_definitions=>ty_git_tag,
           lv_text        TYPE string.
 
     li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    ls_tag = zcl_abapgit_ui_factory=>get_popups( )->tag_list_popup( li_repo_online->get_url( ) ).
-    IF ls_tag IS INITIAL.
-      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-    ENDIF.
-
     zcl_abapgit_git_porcelain=>delete_tag(
       iv_url = li_repo_online->get_url( )
-      is_tag = ls_tag ).
+      is_tag = is_tag ).
 
-    lv_text = |Tag { ls_tag-display_name } deleted|.
+    lv_text = |Tag { is_tag-display_name } deleted|.
 
     MESSAGE lv_text TYPE 'S'.
 
@@ -200,21 +188,12 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
   METHOD switch_branch.
 
-    DATA: li_repo_online TYPE REF TO zif_abapgit_repo_online,
-          ls_branch      TYPE zif_abapgit_git_definitions=>ty_git_branch.
+    DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
 
 
     li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    ls_branch = zcl_abapgit_ui_factory=>get_popups( )->branch_list_popup(
-      iv_url             = li_repo_online->get_url( )
-      iv_default_branch  = li_repo_online->get_selected_branch( )
-      iv_show_new_option = abap_true ).
-    IF ls_branch IS INITIAL.
-      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-    ENDIF.
-
-    IF ls_branch-name = zif_abapgit_popups=>c_new_branch_label.
+    IF is_branch-name = zif_abapgit_popups=>c_new_branch_label.
       create_branch( iv_key ).
       RETURN.
     ENDIF.
@@ -223,7 +202,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
     li_repo_online->select_commit( '' ).
     li_repo_online->switch_origin( '' ).
 
-    li_repo_online->select_branch( ls_branch-name ).
+    li_repo_online->select_branch( is_branch-name ).
     COMMIT WORK AND WAIT.
 
   ENDMETHOD.
@@ -232,25 +211,19 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
   METHOD switch_tag.
 
     DATA: li_repo_online TYPE REF TO zif_abapgit_repo_online,
-          ls_tag         TYPE zif_abapgit_git_definitions=>ty_git_tag,
           lv_text        TYPE string.
 
     li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-
-    ls_tag = zcl_abapgit_ui_factory=>get_popups( )->tag_list_popup( li_repo_online->get_url( ) ).
-    IF ls_tag IS INITIAL.
-      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-    ENDIF.
 
     " Reset commit and pull request
     li_repo_online->select_commit( '' ).
     li_repo_online->switch_origin( '' ).
 
-    li_repo_online->select_branch( zcl_abapgit_git_tag=>remove_peel( ls_tag-name ) ).
+    li_repo_online->select_branch( zcl_abapgit_git_tag=>remove_peel( is_tag-name ) ).
 
     COMMIT WORK AND WAIT.
 
-    lv_text = |Tag switched to { ls_tag-display_name } |.
+    lv_text = |Tag switched to { is_tag-display_name } |.
 
     MESSAGE lv_text TYPE 'S'.
 

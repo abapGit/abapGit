@@ -484,25 +484,20 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-git_branch_create.             " GIT Create new branch
         zcl_abapgit_services_git=>create_branch( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-git_branch_delete.             " GIT Delete remote branch
-        zcl_abapgit_services_git=>delete_branch( lv_key ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-git_branch_switch.             " GIT Switch branch
-        zcl_abapgit_services_git=>switch_branch( lv_key ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-git_branch_delete             " GIT Delete remote branch
+        OR zif_abapgit_definitions=>c_action-git_branch_switch             " GIT Switch branch
+        OR zif_abapgit_definitions=>c_action-git_tag_delete                " GIT Tag delete
+        OR zif_abapgit_definitions=>c_action-git_tag_switch.               " GIT Switch tag
+        rs_handled-page  = zcl_abapgit_gui_page_ref_sel=>create(
+          iv_key    = lv_key
+          iv_action = ii_event->mv_action ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-git_branch_merge.              " GIT Merge branch
         rs_handled-page  = zcl_abapgit_gui_page_merge_sel=>create( li_repo ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-git_tag_create.                " GIT Tag create
         rs_handled-page  = zcl_abapgit_gui_page_tags=>create( li_repo ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-git_tag_delete.                " GIT Tag delete
-        zcl_abapgit_services_git=>delete_tag( lv_key ).
-        zcl_abapgit_services_repo=>refresh( lv_key ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-git_tag_switch.                " GIT Switch Tag
-        zcl_abapgit_services_git=>switch_tag( lv_key ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.

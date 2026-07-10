@@ -61,6 +61,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     DATA mv_filter_value TYPE string .
     DATA mv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result.
     DATA mi_obj_filter TYPE REF TO zif_abapgit_object_filter.
+    DATA mo_popup_picklist TYPE REF TO zcl_abapgit_gui_picklist.
 
     METHODS find_changed_by
       IMPORTING
@@ -127,6 +128,14 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS init_files
+      RAISING
+        zcx_abapgit_exception .
+    METHODS switch_branch
+      IMPORTING
+        !iv_is_return TYPE abap_bool DEFAULT abap_false
+      RAISING
+        zcx_abapgit_exception .
+    METHODS handle_picklist_state
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -333,6 +342,25 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
       iv_key        = lv_key
       it_files      = lt_files
       iv_sci_result = mv_sci_result ).
+
+  ENDMETHOD.
+
+
+  METHOD handle_picklist_state.
+
+    IF mo_popup_picklist IS BOUND AND
+      ( mo_popup_picklist->is_fulfilled( ) = abap_true OR mo_popup_picklist->is_in_page( ) = abap_false ).
+      " Picklist is either fulfilled OR
+      " it was on its own page and user went back from it via F3/ESC and the picklist had no "graceful back" handler
+      CASE mo_popup_picklist->id( ).
+        WHEN zif_abapgit_definitions=>c_action-git_branch_switch.
+          switch_branch( abap_true ).
+        WHEN OTHERS.
+          zcx_abapgit_exception=>raise( |Unexpected picklist id { mo_popup_picklist->id( ) }| ).
+      ENDCASE.
+
+      CLEAR mo_popup_picklist.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -663,6 +691,37 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD switch_branch.
+
+    DATA ls_branch TYPE zif_abapgit_git_definitions=>ty_git_branch.
+
+    IF iv_is_return = abap_false.
+
+      mo_popup_picklist = zcl_abapgit_popup_branch_list=>create(
+        iv_url             = mi_repo_online->get_url( )
+        iv_default_branch  = zcl_abapgit_git_branch_utils=>get_display_name(
+                               mi_repo_online->get_selected_branch( ) )
+        iv_show_new_option = abap_true
+        )->create_picklist(
+        )->set_id( zif_abapgit_definitions=>c_action-git_branch_switch
+        )->set_in_page( ).
+
+    ELSEIF mo_popup_picklist->was_cancelled( ) = abap_false.
+
+      mo_popup_picklist->get_result_item( CHANGING cs_selected = ls_branch ).
+      IF ls_branch IS NOT INITIAL.
+        zcl_abapgit_services_git=>switch_branch(
+          iv_key    = mi_repo->get_key( )
+          is_branch = ls_branch ).
+        mi_repo->refresh( abap_true ).
+        init_files( ).
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: lo_stage  TYPE REF TO zcl_abapgit_stage.
@@ -706,11 +765,23 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         init_files( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-git_branch_switch.
-        zcl_abapgit_services_git=>switch_branch( |{ ii_event->query( )->get( 'KEY' ) }| ).
-        mi_repo->refresh( abap_true ).
-        init_files( ).
+        switch_branch( ). " Uniformly handle state below
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
+
+    IF mo_popup_picklist IS BOUND. " Uniform popup state handling
+      " This should happen only for a new popup because
+      " on the first re-render main component event handling is blocked
+      " and not called again until the popup destruction
+      IF mo_popup_picklist->is_in_page( ) = abap_true.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      ELSE.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+        rs_handled-page  = zcl_abapgit_gui_page_hoc=>create(
+          ii_child_component = mo_popup_picklist
+          iv_show_as_modal   = abap_true ).
+      ENDIF.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -803,7 +874,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    register_handlers( ).
+    handle_picklist_state( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -827,6 +898,13 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
       iv_collection = zcl_abapgit_gui_component=>c_html_parts-hidden_forms
       ii_part       = render_deferred_hidden_events( ) ).
     register_deferred_script( render_scripts( ) ).
+
+    IF mo_popup_picklist IS NOT BOUND OR mo_popup_picklist->is_in_page( ) = abap_false.
+      register_handlers( ).
+    ELSEIF mo_popup_picklist->is_in_page( ) = abap_true.
+      " Block usual page events if the popup is an in-page popup
+      ri_html->add( zcl_abapgit_gui_in_page_modal=>create( mo_popup_picklist ) ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
