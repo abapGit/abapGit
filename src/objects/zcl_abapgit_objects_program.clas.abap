@@ -1248,16 +1248,12 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
                    ig_data = lt_dynpros ).
 
       ls_cua = serialize_cua( lv_program_name ).
-      IF NOT ls_cua IS INITIAL.
-        li_xml->add( iv_name = 'CUA'
-                     ig_data = ls_cua ).
-      ENDIF.
+      li_xml->add( iv_name = 'CUA'
+                   ig_data = ls_cua ).
 
       lt_varis = serialize_varis( lv_program_name ).
-      IF lt_varis IS NOT INITIAL.
-        li_xml->add( iv_name = 'VARIS'
-                     ig_data = lt_varis ).
-      ENDIF.
+      li_xml->add( iv_name = 'VARIS'
+                   ig_data = lt_varis ).
     ENDIF.
 
     READ TABLE lt_tpool WITH KEY id = 'R' INTO ls_tpool.

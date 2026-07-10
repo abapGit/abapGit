@@ -83,20 +83,6 @@ ENDCLASS.
 CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
 
-  METHOD constructor.
-
-
-    super->constructor(
-      is_item        = is_item
-      iv_language    = iv_language
-      io_files       = io_files
-      io_i18n_params = io_i18n_params ).
-
-    mv_aff_enabled = zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( 'DOMA' ).
-
-  ENDMETHOD.
-
-
   METHOD adjust_exit.
 
     DATA lv_function TYPE funcname.
@@ -126,6 +112,20 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
         rv_done = abap_false.
       ENDIF.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD constructor.
+
+
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
+
+    mv_aff_enabled = zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( 'DOMA' ).
 
   ENDMETHOD.
 
@@ -324,16 +324,14 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     SORT lt_dd01_texts BY ddlanguage ASCENDING.
     SORT lt_dd07_texts BY valpos ASCENDING ddlanguage ASCENDING.
 
-    IF lines( lt_i18n_langs ) > 0.
-      ii_xml->add( iv_name = 'I18N_LANGS'
-                   ig_data = lt_i18n_langs ).
+    ii_xml->add( iv_name = 'I18N_LANGS'
+                 ig_data = lt_i18n_langs ).
 
-      ii_xml->add( iv_name = 'DD01_TEXTS'
-                   ig_data = lt_dd01_texts ).
+    ii_xml->add( iv_name = 'DD01_TEXTS'
+                 ig_data = lt_dd01_texts ).
 
-      ii_xml->add( iv_name = 'DD07_TEXTS'
-                   ig_data = lt_dd07_texts ).
-    ENDIF.
+    ii_xml->add( iv_name = 'DD07_TEXTS'
+                 ig_data = lt_dd07_texts ).
 
   ENDMETHOD.
 
