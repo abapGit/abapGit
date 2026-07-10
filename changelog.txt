@@ -8,7 +8,7 @@ Legend
 + : added
 - : removed
 
-2026-06-14 v1.134.0
+2026-07-10 v1.134.0
 -------------------
 
 + AIFC: Add ABAP Language Version support (#7586)
@@ -18,6 +18,7 @@ Legend
 + New user exit: change username in password popup (#7674)
 + DTSC: Dictionary Static Cache (#7679)
 + DTIX: Dictionary Entity Index (#7707)
++ New user exit: adjusting/generating commit description + body (#7757)
 * DTEL: issue error if description is empty (#7585)
 * Fix pulling table without data (#7589)
 * WDYN: Clear GENVERSION (#7590)
@@ -84,6 +85,9 @@ Legend
 * Fix "Activate Objects" for classes and interfaces (#7744)
 * Link hints: redeploy on activation instead of once (#7745)
 * Fix binary file detection (#7747)
+* DOMA: fix type mapping (#7754)
+* Bugfix type LXE_PCX_S1 (#7767)
+* Refactor addonline branch picker to HTML picklist popup (#7764) 
 
 2026-02-17 v1.133.0
 -------------------
