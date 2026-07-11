@@ -571,7 +571,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         LOOP AT lt_local_variscreens ASSIGNING <ls_local_variscreen>.
           READ TABLE <ls_vari>-variscreens ASSIGNING <ls_remote_variscreen>
                INDEX sy-tabix.
-          IF     <ls_local_variscreen>-dynnr <> <ls_remote_variscreen>-dynnr
+          IF <ls_local_variscreen>-dynnr <> <ls_remote_variscreen>-dynnr
              AND <ls_local_variscreen>-kind  <> <ls_remote_variscreen>-kind.
             lv_recreate = abap_true.
             EXIT.
