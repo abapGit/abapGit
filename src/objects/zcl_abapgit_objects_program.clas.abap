@@ -511,15 +511,17 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
   METHOD deserialize_varis.
     CONSTANTS: lc_sysvariant_clnt TYPE mandt VALUE '000'.
 
-    DATA: ls_catalog   TYPE rsvcat,
-          lt_vari_text TYPE STANDARD TABLE OF varit WITH DEFAULT KEY,
-          ls_varid     TYPE varid.
+    DATA: ls_catalog           TYPE rsvcat,
+          lt_vari_text         TYPE STANDARD TABLE OF varit WITH DEFAULT KEY,
+          ls_varid             TYPE varid,
+          lt_dynnr             TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
+          lt_local_variscreens TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
+          lv_recreate          TYPE abap_bool VALUE abap_false.
 
-    FIELD-SYMBOLS: <ls_vari>          TYPE ty_vari,
-                   <ls_catalog_entry> TYPE cat_var.
-
-    " TODO: recreate variant if screen assignment has changed
-    "       (or find a way to change screen assignments without recreating the variant)
+    FIELD-SYMBOLS: <ls_vari>              LIKE LINE OF it_varis,
+                   <ls_catalog_entry>     LIKE LINE OF ls_catalog-cat,
+                   <ls_local_variscreen>  LIKE LINE OF lt_local_variscreens,
+                   <ls_remote_variscreen> LIKE LINE OF lt_local_variscreens.
 
     " TODO: support variant short text in selected languages
 
@@ -543,6 +545,54 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
              ls_varid.
 
       DELETE ls_catalog-cat WHERE variant = <ls_vari>-variant.
+
+      CALL FUNCTION 'RS_GET_SCREENS_4_1_VARIANT'
+        EXPORTING
+          program     = iv_program_name
+          variant     = <ls_vari>-variant
+        TABLES
+          dynnr       = lt_dynnr
+          variscreens = lt_local_variscreens
+        EXCEPTIONS
+          OTHERS      = 1.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+      SORT <ls_vari>-variscreens.
+      SORT lt_local_variscreens.
+
+      " assumption: no duplicates returned by SAP
+
+      " recreate variant if screen assignments do not match
+      IF lines( <ls_vari>-variscreens ) <> lines( lt_local_variscreens ).
+        lv_recreate = abap_true.
+      ELSE.
+        LOOP AT lt_local_variscreens ASSIGNING <ls_local_variscreen>.
+          READ TABLE <ls_vari>-variscreens ASSIGNING <ls_remote_variscreen>
+               INDEX sy-tabix.
+          IF     <ls_local_variscreen>-dynnr <> <ls_remote_variscreen>-dynnr
+             AND <ls_local_variscreen>-kind  <> <ls_remote_variscreen>-kind.
+            lv_recreate = abap_true.
+            EXIT.
+          ENDIF.
+        ENDLOOP.
+      ENDIF.
+
+      IF lv_recreate = abap_true.
+        CALL FUNCTION 'RS_VARIANT_DELETE'
+          EXPORTING
+            report                = iv_program_name
+            variant               = <ls_vari>-variant
+            flag_confirmscreen    = abap_true " true = No confirm screen
+            suppress_message      = abap_true
+            suppress_input_dialog = abap_true
+          EXCEPTIONS
+            OTHERS                = 1.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise_t100( ).
+        ENDIF.
+      ENDIF.
 
       MOVE-CORRESPONDING <ls_vari> TO ls_varid.
       ls_varid-mandt  = lc_sysvariant_clnt.
@@ -1076,8 +1126,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           lt_dynnr   TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY ##NEEDED,
           ls_varid   TYPE varid.
 
-    FIELD-SYMBOLS: <ls_catalog> TYPE cat_var,
-                   <ls_object>  TYPE vanz.
+    FIELD-SYMBOLS: <ls_catalog> LIKE LINE OF ls_catalog-cat,
+                   <ls_object>  LIKE LINE OF ls_vari-objects.
 
     CALL FUNCTION 'RS_ALL_VARIANTS_4_1_REPORT'
       EXPORTING
