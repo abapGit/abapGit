@@ -509,6 +509,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD deserialize_varis.
+
     CONSTANTS: lc_sysvariant_clnt TYPE mandt VALUE '000'.
 
     DATA: ls_catalog           TYPE rsvcat,
@@ -652,6 +653,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDLOOP.
+
   ENDMETHOD.
 
 
@@ -1121,6 +1123,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD serialize_varis.
+
     DATA: ls_catalog TYPE rsvcat,
           ls_vari    TYPE ty_vari,
           lt_dynnr   TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY ##NEEDED,
@@ -1214,6 +1217,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
       INSERT ls_vari INTO TABLE rt_varis.
     ENDLOOP.
+
   ENDMETHOD.
 
 
