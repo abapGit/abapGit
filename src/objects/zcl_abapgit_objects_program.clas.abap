@@ -57,6 +57,11 @@ CLASS zcl_abapgit_objects_program DEFINITION
       ty_dynpro_tt TYPE STANDARD TABLE OF ty_dynpro WITH DEFAULT KEY .
 
     TYPES:
+      BEGIN OF ty_vari_text,
+        langu TYPE langu,
+        vtext TYPE rvart_vtxt,
+      END OF ty_vari_text.
+    TYPES:
       BEGIN OF ty_vari,
         variant     TYPE variant,
         flag1       TYPE c LENGTH 1,
@@ -71,6 +76,7 @@ CLASS zcl_abapgit_objects_program DEFINITION
         variscreens TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
         objects     TYPE STANDARD TABLE OF vanz WITH DEFAULT KEY,
         values      TYPE STANDARD TABLE OF rsparamsl_255 WITH DEFAULT KEY,
+        texts       TYPE STANDARD TABLE OF ty_vari_text WITH DEFAULT KEY,
       END OF ty_vari.
     TYPES:
       ty_vari_tt TYPE STANDARD TABLE OF ty_vari WITH DEFAULT KEY.
@@ -513,6 +519,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     CONSTANTS: lc_sysvariant_clnt TYPE mandt VALUE '000'.
 
     DATA: ls_catalog           TYPE rsvcat,
+          ls_vari_text_create  TYPE varit,
           lt_vari_text         TYPE STANDARD TABLE OF varit WITH DEFAULT KEY,
           ls_varid             TYPE varid,
           lt_dynnr             TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
@@ -521,10 +528,9 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_vari>              LIKE LINE OF it_varis,
                    <ls_catalog_entry>     LIKE LINE OF ls_catalog-cat,
+                   <ls_vari_text_remote>  TYPE ty_vari_text,
                    <ls_local_variscreen>  LIKE LINE OF lt_local_variscreens,
                    <ls_remote_variscreen> LIKE LINE OF lt_local_variscreens.
-
-    " TODO: support variant short text in selected languages
 
     " TODO: check dynamic selections
 
@@ -572,7 +578,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         LOOP AT lt_local_variscreens ASSIGNING <ls_local_variscreen>.
           READ TABLE <ls_vari>-variscreens ASSIGNING <ls_remote_variscreen>
                INDEX sy-tabix.
-          IF <ls_local_variscreen>-dynnr <> <ls_remote_variscreen>-dynnr
+          IF     <ls_local_variscreen>-dynnr <> <ls_remote_variscreen>-dynnr
              AND <ls_local_variscreen>-kind  <> <ls_remote_variscreen>-kind.
             lv_recreate = abap_true.
             EXIT.
@@ -598,6 +604,16 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       MOVE-CORRESPONDING <ls_vari> TO ls_varid.
       ls_varid-mandt  = lc_sysvariant_clnt.
       ls_varid-report = iv_program_name.
+
+      " Assemble text table
+      LOOP AT <ls_vari>-texts ASSIGNING <ls_vari_text_remote>.
+        ls_vari_text_create-mandt   = lc_sysvariant_clnt.
+        ls_vari_text_create-report  = iv_program_name.
+        ls_vari_text_create-variant = <ls_vari>-variant.
+        ls_vari_text_create-langu   = <ls_vari_text_remote>-langu.
+        ls_vari_text_create-vtext   = <ls_vari_text_remote>-vtext.
+        INSERT ls_vari_text_create INTO TABLE lt_vari_text.
+      ENDLOOP.
 
       READ TABLE ls_catalog-cat TRANSPORTING NO FIELDS
            WITH KEY variant = <ls_vari>-variant.
@@ -1127,7 +1143,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     DATA: ls_catalog TYPE rsvcat,
           ls_vari    TYPE ty_vari,
           lt_dynnr   TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY ##NEEDED,
-          ls_varid   TYPE varid.
+          ls_varid   TYPE varid,
+          ls_text    TYPE ty_vari_text.
 
     FIELD-SYMBOLS: <ls_catalog> LIKE LINE OF ls_catalog-cat,
                    <ls_object>  LIKE LINE OF ls_vari-objects.
@@ -1149,7 +1166,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     LOOP AT ls_catalog-cat ASSIGNING <ls_catalog>.
       CLEAR: ls_vari,
              lt_dynnr,
-             ls_varid.
+             ls_varid,
+             ls_text.
 
       CALL FUNCTION 'RS_VARIANT_VALUES_TECH_DAT_255'
         EXPORTING
@@ -1172,6 +1190,24 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       CLEAR ls_vari.
 
       MOVE-CORRESPONDING ls_varid TO ls_vari.
+
+      " TODO: serialize multiple languages?
+      "       see: Repository settings
+      "            > "Serialize Translations for Additional Languages"
+      ls_text-langu = mv_language.
+      CALL FUNCTION 'RS_VARIANT_TEXT'
+        EXPORTING
+          curr_report = iv_program_name
+          langu       = mv_language
+          variant     = <ls_catalog>-variant
+        IMPORTING
+          v_text      = ls_text-vtext
+        EXCEPTIONS
+          OTHERS      = 1.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+      INSERT ls_text INTO TABLE ls_vari-texts.
 
       CALL FUNCTION 'RS_GET_SCREENS_4_1_VARIANT'
         EXPORTING
