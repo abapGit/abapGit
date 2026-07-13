@@ -1250,6 +1250,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       SORT ls_vari-variscreens.
       SORT ls_vari-objects.
       SORT ls_vari-values.
+      SORT ls_vari-texts.
 
       INSERT ls_vari INTO TABLE rt_varis.
     ENDLOOP.
