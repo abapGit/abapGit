@@ -1517,10 +1517,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
                    ig_data = ls_cua ).
 
       lt_varis = serialize_varis( lv_program_name ).
-      IF lt_varis IS NOT INITIAL.
-        io_xml->add( iv_name = 'VARIS'
-                     ig_data = lt_varis ).
-      ENDIF.
+      io_xml->add( iv_name = 'VARIS'
+                   ig_data = lt_varis ).
     ENDIF.
 
     serialize_function_docs( iv_prog_name = lv_program_name
