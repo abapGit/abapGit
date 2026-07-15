@@ -41,14 +41,12 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
         author_name     TYPE string VALUE 'author_name',
         author_email    TYPE string VALUE 'author_email',
         new_branch_name TYPE string VALUE 'new_branch_name',
-        source_branch   TYPE string VALUE 'source_branch',
       END OF c_id.
 
     CONSTANTS:
       BEGIN OF c_event,
-        commit               TYPE string VALUE 'commit',
-        adjust_message       TYPE string VALUE 'adjust_message',
-        choose_source_branch TYPE string VALUE 'choose_source_branch',
+        commit         TYPE string VALUE 'commit',
+        adjust_message TYPE string VALUE 'adjust_message',
       END OF c_event.
 
     DATA mo_form TYPE REF TO zcl_abapgit_html_form.
@@ -108,9 +106,6 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
         !it_stage      TYPE zif_abapgit_definitions=>ty_stage_tt
       RETURNING
         VALUE(rv_text) TYPE string.
-    METHODS choose_source_branch
-      RAISING
-        zcx_abapgit_exception.
     METHODS branch_name_to_internal
       IMPORTING
         iv_branch_name            TYPE string
@@ -126,34 +121,6 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
   METHOD branch_name_to_internal.
     rv_new_branch_name = zcl_abapgit_git_branch_utils=>complete_heads_branch_name(
       zcl_abapgit_git_branch_utils=>normalize_branch_name( iv_branch_name ) ).
-  ENDMETHOD.
-
-
-  METHOD choose_source_branch.
-
-    DATA ls_branch  TYPE zif_abapgit_git_definitions=>ty_git_branch.
-    DATA lv_default TYPE string.
-
-    lv_default = mo_form_data->get( c_id-source_branch ).
-    IF lv_default IS NOT INITIAL.
-      lv_default = zcl_abapgit_git_branch_utils=>complete_heads_branch_name( lv_default ).
-    ENDIF.
-
-    ls_branch = zcl_abapgit_ui_factory=>get_popups( )->branch_list_popup(
-      iv_url                 = mi_repo_online->get_url( )
-      iv_default_branch      = lv_default
-      iv_title               = 'Create Branch From'
-      iv_text                = 'Select the source branch for the new branch'
-      iv_show_switch_message = abap_false ).
-
-    IF ls_branch-name IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    mo_form_data->set(
-      iv_key = c_id-source_branch
-      iv_val = ls_branch-display_name ).
-
   ENDMETHOD.
 
 
@@ -301,8 +268,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
   METHOD get_defaults.
 
-    DATA li_exit          TYPE REF TO zif_abapgit_exit.
-    DATA lv_source_branch TYPE string.
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
 
     ms_commit-committer_name  = get_committer_name( ).
     ms_commit-committer_email = get_committer_email( ).
@@ -328,15 +294,6 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     mo_form_data->set(
       iv_key = c_id-comment
       iv_val = ms_commit-comment ).
-
-    " Default source branch for a new branch: repo default branch, otherwise current branch
-    lv_source_branch = mi_repo_online->zif_abapgit_repo~get_local_settings( )-default_branch.
-    IF lv_source_branch IS INITIAL.
-      lv_source_branch = zcl_abapgit_git_branch_utils=>get_display_name( mi_repo_online->get_selected_branch( ) ).
-    ENDIF.
-    mo_form_data->set(
-      iv_key = c_id-source_branch
-      iv_val = lv_source_branch ).
 
   ENDMETHOD.
 
@@ -391,14 +348,6 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
       iv_label       = 'New Branch Name'
       iv_placeholder = 'Optionally, enter a new branch name for this commit'
       iv_condense    = abap_true ).
-
-    ro_form->text(
-      iv_name        = c_id-source_branch
-      iv_side_action = c_event-choose_source_branch
-      iv_readonly    = abap_true
-      iv_label       = 'Create New Branch From'
-      iv_hint        = 'Source branch for the new branch entered above.' &&
-                       ' Defaults to the repository default source branch, otherwise the current branch.' ).
 
 
     ro_form->command(
@@ -540,8 +489,6 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
     DATA lv_new_branch_name   TYPE string.
-    DATA lv_source_branch     TYPE string.
-    DATA lv_from              TYPE zif_abapgit_git_definitions=>ty_sha1.
     DATA lv_comment           TYPE string.
     DATA lv_body              TYPE string.
     DATA li_exit              TYPE REF TO zif_abapgit_exit.
@@ -570,11 +517,6 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
           iv_val = lv_body ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN c_event-choose_source_branch.
-        choose_source_branch( ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-
       WHEN c_event-commit.
         " Validate form entries before committing
         mo_validation_log = validate_form( mo_form_data ).
@@ -595,21 +537,8 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
           " create new branch and commit to it if branch name is not empty
           IF lv_new_branch_name IS NOT INITIAL.
             lv_new_branch_name = branch_name_to_internal( lv_new_branch_name ).
-
-            " determine source branch to create the new branch from
-            lv_source_branch = mo_form_data->get( c_id-source_branch ).
-            IF lv_source_branch IS INITIAL.
-              lv_source_branch = zcl_abapgit_git_branch_utils=>get_display_name(
-                mi_repo_online->get_selected_branch( ) ).
-            ENDIF.
-            lv_from = zcl_abapgit_git_factory=>get_git_transport(
-                                            )->branches( mi_repo_online->get_url( )
-                                            )->find_by_name( branch_name_to_internal( lv_source_branch ) )-sha1.
-
-            " creates a new branch from the source branch and automatically switches to it
-            mi_repo_online->create_branch(
-              iv_name = lv_new_branch_name
-              iv_from = lv_from ).
+            " creates a new branch and automatically switches to it
+            mi_repo_online->create_branch( lv_new_branch_name ).
           ENDIF.
 
           zcl_abapgit_services_git=>commit(

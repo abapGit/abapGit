@@ -484,6 +484,9 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-git_branch_create.             " GIT Create new branch
         zcl_abapgit_services_git=>create_branch( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-git_branch_create_from.        " GIT Create new branch from source branch
+        zcl_abapgit_services_git=>create_branch_from( lv_key ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-git_branch_delete.             " GIT Delete remote branch
         zcl_abapgit_services_git=>delete_branch( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.

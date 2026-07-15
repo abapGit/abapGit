@@ -23,6 +23,7 @@ INTERFACE zif_abapgit_popups
     END OF ty_popup_position.
 
   CONSTANTS c_new_branch_label TYPE string VALUE '+ create new ...' ##NO_TEXT.
+  CONSTANTS c_new_branch_from_label TYPE string VALUE '+ create new from ...' ##NO_TEXT.
 
   METHODS popup_search_help
     IMPORTING

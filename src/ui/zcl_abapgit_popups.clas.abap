@@ -254,6 +254,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     IF iv_show_new_option = abap_true.
       APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
       <ls_sel>-varoption = zif_abapgit_popups=>c_new_branch_label.
+      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
+      <ls_sel>-varoption = zif_abapgit_popups=>c_new_branch_from_label.
     ENDIF.
 
     ms_position = center(
@@ -286,6 +288,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     IF iv_show_new_option = abap_true AND <ls_sel>-varoption = zif_abapgit_popups=>c_new_branch_label.
       rs_branch-name = zif_abapgit_popups=>c_new_branch_label.
+    ELSEIF iv_show_new_option = abap_true AND <ls_sel>-varoption = zif_abapgit_popups=>c_new_branch_from_label.
+      rs_branch-name = zif_abapgit_popups=>c_new_branch_from_label.
     ELSE.
       REPLACE FIRST OCCURRENCE OF lv_head_suffix IN <ls_sel>-varoption WITH ''.
       READ TABLE lt_branches WITH KEY display_name = <ls_sel>-varoption ASSIGNING <ls_branch>.
