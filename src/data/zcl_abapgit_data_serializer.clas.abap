@@ -5,13 +5,13 @@ CLASS zcl_abapgit_data_serializer DEFINITION
 
   PUBLIC SECTION.
 
+    CONSTANTS c_max_records TYPE i VALUE 20000 ##NO_TEXT.
+
     INTERFACES zif_abapgit_data_serializer .
 
   PROTECTED SECTION.
 
   PRIVATE SECTION.
-
-    CONSTANTS c_max_records TYPE i VALUE 20000 ##NO_TEXT.
 
     METHODS convert_itab_to_json
       IMPORTING
@@ -97,6 +97,12 @@ CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
     IF lv_records > c_max_records.
       zcx_abapgit_exception=>raise( |Too many records selected from table { iv_name
         } (selected { lv_records }, max { c_max_records })| ).
+    ENDIF.
+
+    " In case of multiple selects, sort all data
+    IF lines( it_where ) > 1.
+      SORT <lg_tab>.
+      DELETE ADJACENT DUPLICATES FROM <lg_tab>.
     ENDIF.
 
   ENDMETHOD.
