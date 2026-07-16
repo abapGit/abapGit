@@ -701,15 +701,26 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     " remaining variants have been deleted on remote
     " => delete
     LOOP AT ls_catalog-cat ASSIGNING <ls_catalog_entry>.
-      CALL FUNCTION 'RS_VARIANT_DELETE'
-        EXPORTING
-          report                = iv_program_name
-          variant               = <ls_catalog_entry>-variant
-          flag_confirmscreen    = abap_true " true = No confirm screen
-          suppress_message      = abap_true
-          suppress_input_dialog = abap_true
-        EXCEPTIONS
-          OTHERS                = 1.
+      TRY.
+          CALL FUNCTION 'RS_VARIANT_DELETE'
+            EXPORTING
+              report                = iv_program_name
+              variant               = <ls_vari>-variant
+              flag_confirmscreen    = abap_true " true = No confirm screen
+            " suppress parameters do not exist in older releases
+              suppress_message      = abap_true
+              suppress_input_dialog = abap_true
+            EXCEPTIONS
+              OTHERS                = 1 ##FM_SUBRC_OK.
+        CATCH cx_sy_dyn_call_param_not_found.
+          CALL FUNCTION 'RS_VARIANT_DELETE'
+            EXPORTING
+              report             = iv_program_name
+              variant            = <ls_vari>-variant
+              flag_confirmscreen = abap_true " true = No confirm screen
+            EXCEPTIONS
+              OTHERS             = 1 ##FM_SUBRC_OK.
+      ENDTRY.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
