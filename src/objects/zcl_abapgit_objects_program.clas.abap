@@ -1267,18 +1267,32 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
-      CALL FUNCTION 'RS_VARIANT_CONTENTS_255'
-        EXPORTING
-          report                = iv_program_name
-          variant               = <ls_catalog>-variant
-          execute_direct        = abap_true
-        TABLES
-          valutab               = ls_vari-values
-          objects               = ls_vari-objects
-          free_selections_value = ls_vari-freesel_values
-          free_selections_obj   = ls_vari-freesel_objects
-        EXCEPTIONS
-          OTHERS                = 1.
+      TRY.
+          CALL FUNCTION 'RS_VARIANT_CONTENTS_255'
+            EXPORTING
+              report                = iv_program_name
+              variant               = <ls_catalog>-variant
+              execute_direct        = abap_true
+            TABLES
+              valutab               = ls_vari-values
+              objects               = ls_vari-objects
+            " free selections (obj) not available on older versions
+              free_selections_value = ls_vari-freesel_values
+              free_selections_obj   = ls_vari-freesel_objects
+            EXCEPTIONS
+              OTHERS                = 1 ##FM_SUBRC_OK.
+        CATCH cx_sy_dyn_call_param_not_found.
+          CALL FUNCTION 'RS_VARIANT_CONTENTS_255'
+            EXPORTING
+              report         = iv_program_name
+              variant        = <ls_catalog>-variant
+              execute_direct = abap_true
+            TABLES
+              valutab        = ls_vari-values
+              objects        = ls_vari-objects
+            EXCEPTIONS
+              OTHERS         = 1 ##FM_SUBRC_OK.
+      ENDTRY.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
