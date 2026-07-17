@@ -63,22 +63,20 @@ CLASS zcl_abapgit_objects_program DEFINITION
       END OF ty_vari_text.
     TYPES:
       BEGIN OF ty_vari,
-        variant         TYPE variant,
-        flag1           TYPE c LENGTH 1,
-        flag2           TYPE c LENGTH 1,
-        transport       TYPE vari_trans,
-        environmnt      TYPE varid_env,
-        protected       TYPE rsscr_cflg,
-        secu            TYPE secu,
-        mlangu          TYPE langu,
-        xflag1          TYPE varid_xflg,
-        xflag2          TYPE varid_xflg,
-        variscreens     TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
-        objects         TYPE STANDARD TABLE OF vanz WITH DEFAULT KEY,
-        values          TYPE STANDARD TABLE OF rsparamsl_255 WITH DEFAULT KEY,
-        texts           TYPE STANDARD TABLE OF ty_vari_text WITH DEFAULT KEY,
-        freesel_values  TYPE STANDARD TABLE OF rsseldyn WITH DEFAULT KEY,
-        freesel_objects TYPE STANDARD TABLE OF rsvaridyn WITH DEFAULT KEY,
+        variant     TYPE variant,
+        flag1       TYPE c LENGTH 1,
+        flag2       TYPE c LENGTH 1,
+        transport   TYPE vari_trans,
+        environmnt  TYPE varid_env,
+        protected   TYPE rsscr_cflg,
+        secu        TYPE secu,
+        mlangu      TYPE langu,
+        xflag1      TYPE varid_xflg,
+        xflag2      TYPE varid_xflg,
+        variscreens TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
+        objects     TYPE STANDARD TABLE OF vanz WITH DEFAULT KEY,
+        values      TYPE STANDARD TABLE OF rsparamsl_255 WITH DEFAULT KEY,
+        texts       TYPE STANDARD TABLE OF ty_vari_text WITH DEFAULT KEY,
       END OF ty_vari.
     TYPES:
       ty_vari_tt TYPE STANDARD TABLE OF ty_vari WITH DEFAULT KEY.
@@ -645,69 +643,34 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           ENDLOOP.
 
           IF lv_exists_locally <> abap_true.
-            TRY.
-                CALL FUNCTION 'RS_CREATE_VARIANT_255'
-                  EXPORTING
-                    curr_report           = iv_program_name
-                    curr_variant          = <ls_vari>-variant
-                    vari_desc             = ls_varid
-                  TABLES
-                    vari_contents         = <ls_vari>-values
-                    vari_text             = lt_vari_text
-                    vscreens              = <ls_vari>-variscreens
-                  " freesel options do not exist in create in lower releases
-                    free_selections_value = <ls_vari>-freesel_values
-                    free_selections_obj   = <ls_vari>-freesel_objects
-                  EXCEPTIONS
-                    variant_exists        = 0
-                    OTHERS                = 1 ##FM_SUBRC_OK.
-              CATCH cx_sy_dyn_call_param_not_found.
-                CALL FUNCTION 'RS_CREATE_VARIANT_255'
-                  EXPORTING
-                    curr_report    = iv_program_name
-                    curr_variant   = <ls_vari>-variant
-                    vari_desc      = ls_varid
-                  TABLES
-                    vari_contents  = <ls_vari>-values
-                    vari_text      = lt_vari_text
-                    vscreens       = <ls_vari>-variscreens
-                  EXCEPTIONS
-                    variant_exists = 0
-                    OTHERS         = 1 ##FM_SUBRC_OK.
-            ENDTRY.
+            CALL FUNCTION 'RS_CREATE_VARIANT_255'
+              EXPORTING
+                curr_report    = iv_program_name
+                curr_variant   = <ls_vari>-variant
+                vari_desc      = ls_varid
+              TABLES
+                vari_contents  = <ls_vari>-values
+                vari_text      = lt_vari_text
+                vscreens       = <ls_vari>-variscreens
+              EXCEPTIONS
+                variant_exists = 0
+                OTHERS         = 1.
             IF sy-subrc <> 0.
               zcx_abapgit_exception=>raise_t100( ).
             ENDIF.
           ENDIF.
 
-          TRY.
-              CALL FUNCTION 'RS_CHANGE_CREATED_VARIANT_255'
-                EXPORTING
-                  curr_report           = iv_program_name
-                  curr_variant          = <ls_vari>-variant
-                  vari_desc             = ls_varid
-                TABLES
-                  vari_contents         = <ls_vari>-values
-                  vari_text             = lt_vari_text
-                  objects               = <ls_vari>-objects
-                " freesel options do not exist in create in lower releases
-                  free_selections_value = <ls_vari>-freesel_values
-                  free_selections_obj   = <ls_vari>-freesel_objects
-                EXCEPTIONS
-                  OTHERS                = 1 ##FM_SUBRC_OK.
-            CATCH cx_sy_dyn_call_param_not_found.
-              CALL FUNCTION 'RS_CHANGE_CREATED_VARIANT_255'
-                EXPORTING
-                  curr_report   = iv_program_name
-                  curr_variant  = <ls_vari>-variant
-                  vari_desc     = ls_varid
-                TABLES
-                  vari_contents = <ls_vari>-values
-                  vari_text     = lt_vari_text
-                  objects       = <ls_vari>-objects
-                EXCEPTIONS
-                  OTHERS        = 1 ##FM_SUBRC_OK.
-          ENDTRY.
+          CALL FUNCTION 'RS_CHANGE_CREATED_VARIANT_255'
+            EXPORTING
+              curr_report   = iv_program_name
+              curr_variant  = <ls_vari>-variant
+              vari_desc     = ls_varid
+            TABLES
+              vari_contents = <ls_vari>-values
+              vari_text     = lt_vari_text
+              objects       = <ls_vari>-objects
+            EXCEPTIONS
+              OTHERS        = 1.
           IF sy-subrc <> 0.
             zcx_abapgit_exception=>raise_t100( ).
           ENDIF.
@@ -1311,32 +1274,16 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
-      TRY.
-          CALL FUNCTION 'RS_VARIANT_CONTENTS_255'
-            EXPORTING
-              report                = iv_program_name
-              variant               = <ls_catalog>-variant
-              execute_direct        = abap_true
-            TABLES
-              valutab               = ls_vari-values
-              objects               = ls_vari-objects
-            " free selections (obj) not available on older versions
-              free_selections_value = ls_vari-freesel_values
-              free_selections_obj   = ls_vari-freesel_objects
-            EXCEPTIONS
-              OTHERS                = 1 ##FM_SUBRC_OK.
-        CATCH cx_sy_dyn_call_param_not_found.
-          CALL FUNCTION 'RS_VARIANT_CONTENTS_255'
-            EXPORTING
-              report         = iv_program_name
-              variant        = <ls_catalog>-variant
-              execute_direct = abap_true
-            TABLES
-              valutab        = ls_vari-values
-              objects        = ls_vari-objects
-            EXCEPTIONS
-              OTHERS         = 1 ##FM_SUBRC_OK.
-      ENDTRY.
+      CALL FUNCTION 'RS_VARIANT_CONTENTS_255'
+        EXPORTING
+          report         = iv_program_name
+          variant        = <ls_catalog>-variant
+          execute_direct = abap_true
+        TABLES
+          valutab        = ls_vari-values
+          objects        = ls_vari-objects
+        EXCEPTIONS
+          OTHERS         = 1.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
@@ -1601,9 +1548,10 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    UPDATE varid
+    UPDATE varid CLIENT SPECIFIED
       SET protected = iv_protect
-      WHERE report  = iv_repid
+      WHERE mandt   = c_sysvari_clnt
+        AND report  = iv_repid
         AND variant = iv_vari
         AND flag1   = space
         AND flag2   = space.
