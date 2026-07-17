@@ -99,12 +99,6 @@ CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
         } (selected { lv_records }, max { c_max_records })| ).
     ENDIF.
 
-    " In case of multiple selects, sort all data
-    IF lines( it_where ) > 1.
-      SORT <lg_tab>.
-      DELETE ADJACENT DUPLICATES FROM <lg_tab>.
-    ENDIF.
-
   ENDMETHOD.
 
 

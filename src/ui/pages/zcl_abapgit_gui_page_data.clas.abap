@@ -6,6 +6,10 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
 
   PUBLIC SECTION.
 
+    " This page is different from other dialogs since it contains multiple forms.
+    " Existing data config is based on mi_config (and multiple lo_form_data).
+    " A new entry is based on mo_form_data. WHen a particular form is submitted,
+    " the on event handler will automatically get the corresponding data.
     INTERFACES:
       zif_abapgit_gui_event_handler,
       zif_abapgit_gui_menu_provider,
@@ -40,6 +44,7 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
         where        TYPE string VALUE 'where',
         skip_initial TYPE string VALUE 'skip_initial',
       END OF c_id.
+
     DATA mi_config TYPE REF TO zif_abapgit_data_config.
 
   PRIVATE SECTION.
@@ -66,6 +71,11 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
     METHODS add_via_transport
       RAISING
         zcx_abapgit_exception .
+    METHODS build_table_name
+      IMPORTING
+        !iv_input         TYPE csequence
+      RETURNING
+        VALUE(rv_tabname) TYPE string.
     METHODS build_where
       IMPORTING
         !iv_where       TYPE string
@@ -155,7 +165,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
       CLEAR ls_config.
       ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
-      ls_config-name = to_upper( ls_key-objname ).
+      ls_config-name = build_table_name( ls_key-objname ).
       lv_where = concatenated_key_to_where(
         iv_table  = ls_key-objname
         iv_tabkey = ls_key-tabkey ).
@@ -163,6 +173,11 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
       mi_config->add_config( ls_config ).
     ENDLOOP.
 
+  ENDMETHOD.
+
+
+  METHOD build_table_name.
+    rv_tabname = to_upper( condense( iv_input ) ).
   ENDMETHOD.
 
 
@@ -273,7 +288,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     DATA ls_config TYPE zif_abapgit_data_config=>ty_config.
 
     ls_config-type         = zif_abapgit_data_config=>c_data_type-tabu.
-    ls_config-name         = to_upper( io_form_data->get( c_id-table ) ).
+    ls_config-name         = build_table_name( io_form_data->get( c_id-table ) ).
     ls_config-skip_initial = io_form_data->get( c_id-skip_initial ).
     ls_config-where        = build_where( io_form_data->get( c_id-where ) ).
 
@@ -287,7 +302,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     DATA ls_config TYPE zif_abapgit_data_config=>ty_config.
 
     ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
-    ls_config-name = to_upper( io_form_data->get( c_id-table ) ).
+    ls_config-name = build_table_name( io_form_data->get( c_id-table ) ).
 
     mi_config->remove_config( ls_config ).
 
@@ -299,7 +314,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     DATA ls_config TYPE zif_abapgit_data_config=>ty_config.
 
     ls_config-type         = zif_abapgit_data_config=>c_data_type-tabu.
-    ls_config-name         = to_upper( io_form_data->get( c_id-table ) ).
+    ls_config-name         = build_table_name( io_form_data->get( c_id-table ) ).
     ls_config-skip_initial = io_form_data->get( c_id-skip_initial ).
     ls_config-where        = build_where( io_form_data->get( c_id-where ) ).
 
@@ -339,13 +354,19 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     DATA lo_form_data TYPE REF TO zcl_abapgit_string_map.
     DATA lt_configs TYPE zif_abapgit_data_config=>ty_config_tt.
     DATA ls_config LIKE LINE OF lt_configs.
+    data lv_form_id TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     lt_configs = mi_config->get_configs( ).
 
     LOOP AT lt_configs INTO ls_config.
-      lo_form = zcl_abapgit_html_form=>create( iv_form_id = ls_config-name ).
+      lv_form_id = replace(
+        val  = ls_config-name
+        sub  = '/'
+        with = '_'
+        occ  = 0 ).
+      lo_form = zcl_abapgit_html_form=>create( iv_form_id = lv_form_id ).
       CREATE OBJECT lo_form_data.
 
       lo_form_data->set(
@@ -411,7 +432,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
     mo_validation_log = zcl_abapgit_html_form_utils=>create( mo_form )->validate( io_form_data ).
 
-    mv_validation_tab = to_upper( condense( io_form_data->get( c_id-table ) ) ).
+    mv_validation_tab = build_table_name( io_form_data->get( c_id-table ) ).
 
     validate_table_name(
       EXPORTING
@@ -444,7 +465,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     IF lv_exists = abap_false.
       co_validation_log->set(
         iv_key = c_id-table
-        iv_val = |Table { iv_table_name } does not exists| ).
+        iv_val = |Table { iv_table_name } does not exist| ).
     ENDIF.
 
   ENDMETHOD.
@@ -459,10 +480,14 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
       lx_error TYPE REF TO cx_root.
 
     TRY.
-        LOOP AT it_where INTO lv_where.
-          SELECT COUNT(*) FROM (iv_table_name) INTO lv_count WHERE (lv_where).
-          lv_total = lv_total + lv_count.
-        ENDLOOP.
+        IF it_where IS INITIAL.
+          SELECT COUNT(*) FROM (iv_table_name) INTO lv_total.
+        ELSE.
+          LOOP AT it_where INTO lv_where.
+            SELECT COUNT(*) FROM (iv_table_name) INTO lv_count WHERE (lv_where).
+            lv_total = lv_total + lv_count.
+          ENDLOOP.
+        ENDIF.
       CATCH cx_root INTO lx_error.
         co_validation_log->set(
           iv_key = c_id-where
@@ -483,20 +508,32 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
     DATA lo_form_data TYPE REF TO zcl_abapgit_string_map.
 
-    lo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
-
     CASE ii_event->mv_action.
       WHEN c_event-add.
-        validate_form( lo_form_data ).
-        event_add( lo_form_data ).
+        " For new entries, we add the config only if validation passes
+        mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
+        validate_form( mo_form_data ).
 
         IF mo_validation_log->is_empty( ) = abap_true.
+          event_add( mo_form_data ).
           config_save( ).
+
+          " Clear form for new entry
+          mo_form_data->delete( c_id-table ).
+          mo_form_data->delete( c_id-skip_initial ).
+          mo_form_data->delete( c_id-where ).
+        ELSE.
+          CLEAR mv_validation_tab.
         ENDIF.
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_event-update.
+        " For existing entries, we update the config in memory. If
+        " validation does not pass (for the where clause), the user
+        " can correct it.
+        lo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
         validate_form( lo_form_data ).
+
         event_update( lo_form_data ).
 
         IF mo_validation_log->is_empty( ) = abap_true.
@@ -505,6 +542,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_event-remove.
+        lo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
         event_remove( lo_form_data ).
         config_save( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
