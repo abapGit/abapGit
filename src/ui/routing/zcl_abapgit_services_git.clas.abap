@@ -14,6 +14,11 @@ CLASS zcl_abapgit_services_git DEFINITION
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception.
+    CLASS-METHODS create_branch_from
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING
+        zcx_abapgit_exception.
     CLASS-METHODS switch_branch
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -44,6 +49,14 @@ CLASS zcl_abapgit_services_git DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    CLASS-METHODS create_branch_common
+      IMPORTING
+        !iv_key                TYPE zif_abapgit_persistence=>ty_repo-key
+        !iv_source_branch_name TYPE string
+        !iv_source_commit      TYPE zif_abapgit_git_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -133,6 +146,69 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD create_branch_from.
+
+    DATA: li_repo_online   TYPE REF TO zif_abapgit_repo_online,
+          li_popups        TYPE REF TO zif_abapgit_popups,
+          ls_source_branch TYPE zif_abapgit_git_definitions=>ty_git_branch.
+
+
+    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+
+    " Choose the source branch that the new branch will be created from
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    ls_source_branch = li_popups->branch_list_popup(
+      iv_url                 = li_repo_online->get_url( )
+      iv_default_branch      = li_repo_online->get_selected_branch( )
+      iv_title               = 'Create Branch From'
+      iv_text                = 'Select the source branch for the new branch'
+      iv_show_switch_message = abap_false ).
+    IF ls_source_branch-name IS INITIAL.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    create_branch_common(
+      iv_key                = iv_key
+      iv_source_branch_name = ls_source_branch-name
+      iv_source_commit      = ls_source_branch-sha1 ).
+
+  ENDMETHOD.
+
+
+  METHOD create_branch_common.
+
+    DATA: lv_name        TYPE string,
+          lv_cancel      TYPE abap_bool,
+          li_repo_online TYPE REF TO zif_abapgit_repo_online,
+          lv_msg         TYPE string,
+          li_popups      TYPE REF TO zif_abapgit_popups.
+
+
+    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->create_branch_popup(
+      EXPORTING
+        iv_source_branch_name = iv_source_branch_name
+      IMPORTING
+        ev_name               = lv_name
+        ev_cancel             = lv_cancel ).
+
+    IF lv_cancel = abap_true.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    li_repo_online->create_branch(
+      iv_name = lv_name
+      iv_from = iv_source_commit ).
+
+    lv_msg = |Branch created from { zcl_abapgit_git_branch_utils=>get_display_name( iv_source_branch_name )
+      } as new branch { zcl_abapgit_git_branch_utils=>get_display_name( lv_name ) }|.
+    MESSAGE lv_msg TYPE 'S'.
+
+  ENDMETHOD.
+
+
   METHOD delete_branch.
 
     DATA: li_repo_online TYPE REF TO zif_abapgit_repo_online,
@@ -216,6 +292,11 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
     IF ls_branch-name = zif_abapgit_popups=>c_new_branch_label.
       create_branch( iv_key ).
+      RETURN.
+    ENDIF.
+
+    IF ls_branch-name = zif_abapgit_popups=>c_new_branch_from_label.
+      create_branch_from( iv_key ).
       RETURN.
     ENDIF.
 
