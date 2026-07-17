@@ -354,7 +354,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     DATA lo_form_data TYPE REF TO zcl_abapgit_string_map.
     DATA lt_configs TYPE zif_abapgit_data_config=>ty_config_tt.
     DATA ls_config LIKE LINE OF lt_configs.
-    data lv_form_id TYPE string.
+    DATA lv_form_id TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
