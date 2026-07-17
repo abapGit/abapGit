@@ -57,10 +57,18 @@ CLASS zcl_abapgit_objects_program DEFINITION
       ty_dynpro_tt TYPE STANDARD TABLE OF ty_dynpro WITH DEFAULT KEY .
 
     TYPES:
+      ty_varikey_tt        TYPE STANDARD TABLE OF rsvarkey WITH DEFAULT KEY,
+      ty_vari_dynnr_tt     TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
+      ty_vari_value_tt     TYPE STANDARD TABLE OF rsparamsl_255 WITH DEFAULT KEY,
+      ty_vari_text_crea_tt TYPE STANDARD TABLE OF varit WITH DEFAULT KEY,
+      ty_vari_object_tt    TYPE STANDARD TABLE OF vanz WITH DEFAULT KEY.
+    TYPES:
       BEGIN OF ty_vari_text,
         langu TYPE langu,
         vtext TYPE rvart_vtxt,
       END OF ty_vari_text.
+    TYPES:
+      ty_vari_text_tt TYPE STANDARD TABLE OF ty_vari_text WITH DEFAULT KEY.
     TYPES:
       BEGIN OF ty_vari,
         variant     TYPE variant,
@@ -73,9 +81,9 @@ CLASS zcl_abapgit_objects_program DEFINITION
         mlangu      TYPE langu,
         xflag1      TYPE varid_xflg,
         xflag2      TYPE varid_xflg,
-        variscreens TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
+        variscreens TYPE ty_vari_dynnr_tt,
         objects     TYPE STANDARD TABLE OF vanz WITH DEFAULT KEY,
-        values      TYPE STANDARD TABLE OF rsparamsl_255 WITH DEFAULT KEY,
+        values      TYPE ty_vari_value_tt,
         texts       TYPE STANDARD TABLE OF ty_vari_text WITH DEFAULT KEY,
       END OF ty_vari.
     TYPES:
@@ -172,7 +180,9 @@ CLASS zcl_abapgit_objects_program DEFINITION
 
     CONSTANTS c_native_dynpro TYPE c LENGTH 2 VALUE 'IN'.
 
-    CONSTANTS c_sysvari_clnt TYPE mandt VALUE '000'.
+    CONSTANTS c_sysvari_clnt        TYPE mandt      VALUE '000'.
+    CONSTANTS c_sysvari_pattern_sap TYPE c LENGTH 5 VALUE 'SAP&*'.
+    CONSTANTS c_sysvari_pattern_cus TYPE c LENGTH 5 VALUE 'CUS&*'.
 
     METHODS:
       uncondense_flow
@@ -221,10 +231,48 @@ CLASS zcl_abapgit_objects_program DEFINITION
         !iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception.
-    METHODS set_variant_protection
+    METHODS get_varis_for_report
       IMPORTING
-        iv_repid                TYPE repid
-        iv_vari                 TYPE variant
+        iv_repid        TYPE repid
+      RETURNING
+        VALUE(rt_varis) TYPE ty_varikey_tt
+      RAISING
+        zcx_abapgit_exception.
+    METHODS get_vari_screens
+      IMPORTING
+        is_vari                TYPE rsvarkey
+      RETURNING
+        VALUE(rt_vari_screens) TYPE ty_vari_dynnr_tt
+      RAISING
+        zcx_abapgit_exception.
+    METHODS get_vari_data
+      IMPORTING
+        is_vari    TYPE rsvarkey
+      EXPORTING
+        es_varid   TYPE varid
+        et_values  TYPE ty_vari_value_tt
+        et_objects TYPE ty_vari_object_tt
+        et_texts   TYPE ty_vari_text_tt
+      RAISING
+        zcx_abapgit_exception.
+    METHODS change_vari
+      IMPORTING
+        is_varid   TYPE varid
+        iv_create  TYPE abap_bool
+        it_screens TYPE ty_vari_dynnr_tt
+        it_values  TYPE ty_vari_value_tt
+        it_objects TYPE ty_vari_object_tt
+        it_texts   TYPE ty_vari_text_crea_tt
+      RAISING
+        zcx_abapgit_exception.
+    METHODS delete_vari
+      IMPORTING
+        is_vari TYPE rsvarkey
+      RAISING
+        zcx_abapgit_exception.
+    METHODS set_vari_protection
+      IMPORTING
+        is_vari                 TYPE rsvarkey
         iv_protect              TYPE abap_bool
       RETURNING
         VALUE(rv_was_protected) TYPE abap_bool.
@@ -525,34 +573,24 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD deserialize_varis.
 
-    DATA: ls_catalog           TYPE rsvcat,
-          ls_vari_text_create  TYPE varit,
+    DATA: lt_local_varis       TYPE ty_varikey_tt,
+          ls_varikey           LIKE LINE OF lt_local_varis,
           lt_vari_text         TYPE STANDARD TABLE OF varit WITH DEFAULT KEY,
+          ls_vari_text_create  LIKE LINE OF lt_vari_text,
           ls_varid             TYPE varid,
-          lt_dynnr             TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
           lt_local_variscreens TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
           lv_recreate          TYPE abap_bool,
           lv_was_protected     TYPE abap_bool,
           lv_exists_locally    TYPE abap_bool.
 
     FIELD-SYMBOLS: <ls_vari>              LIKE LINE OF it_varis,
-                   <ls_catalog_entry>     LIKE LINE OF ls_catalog-cat,
                    <ls_vari_text_remote>  TYPE ty_vari_text,
                    <ls_local_variscreen>  LIKE LINE OF lt_local_variscreens,
-                   <ls_remote_variscreen> LIKE LINE OF lt_local_variscreens.
+                   <ls_remote_variscreen> TYPE rsdynnr.
 
-    CALL FUNCTION 'RS_ALL_VARIANTS_4_1_REPORT'
-      EXPORTING
-        program = iv_program_name
-      IMPORTING
-        cat     = ls_catalog
-      EXCEPTIONS
-        OTHERS  = 1.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    lt_local_varis = get_varis_for_report( iv_program_name ).
 
-    DELETE ls_catalog-cat WHERE variant NP 'SAP&*' AND variant NP 'CUS&*'.
+    ls_varikey-report = iv_program_name.
 
     LOOP AT it_varis ASSIGNING <ls_vari>.
       CLEAR: lt_vari_text,
@@ -561,31 +599,16 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
              lv_was_protected,
              lv_exists_locally.
 
-      DELETE ls_catalog-cat WHERE variant = <ls_vari>-variant.
+      ls_varikey-variant = <ls_vari>-variant.
+
+      DELETE lt_local_varis WHERE variant = <ls_vari>-variant.
       lv_exists_locally = boolc( sy-subrc = 0 ).
 
-      lv_was_protected = set_variant_protection( iv_repid   = iv_program_name
-                                                 iv_vari    = <ls_vari>-variant
-                                                 iv_protect = abap_false ).
+      lv_was_protected = set_vari_protection( is_vari    = ls_varikey
+                                              iv_protect = abap_false ).
 
       TRY.
-
-          CALL FUNCTION 'RS_GET_SCREENS_4_1_VARIANT'
-            EXPORTING
-              program     = iv_program_name
-              variant     = <ls_vari>-variant
-            TABLES
-              dynnr       = lt_dynnr
-              variscreens = lt_local_variscreens
-            EXCEPTIONS
-              OTHERS      = 1.
-          IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise_t100( ).
-          ENDIF.
-
-          SORT lt_local_variscreens.
-
-          " assumption: no duplicates returned by SAP
+          lt_local_variscreens = get_vari_screens( ls_varikey ).
 
           " recreate variant if screen assignments do not match
           IF lines( <ls_vari>-variscreens ) <> lines( lt_local_variscreens ).
@@ -603,29 +626,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           ENDIF.
 
           IF lv_recreate = abap_true.
-            TRY.
-                CALL FUNCTION 'RS_VARIANT_DELETE'
-                  EXPORTING
-                    report                = iv_program_name
-                    variant               = <ls_vari>-variant
-                    flag_confirmscreen    = abap_true " true = No confirm screen
-                  " suppress parameters do not exist in older releases
-                    suppress_message      = abap_true
-                    suppress_input_dialog = abap_true
-                  EXCEPTIONS
-                    OTHERS                = 1 ##FM_SUBRC_OK.
-              CATCH cx_sy_dyn_call_param_not_found.
-                CALL FUNCTION 'RS_VARIANT_DELETE'
-                  EXPORTING
-                    report             = iv_program_name
-                    variant            = <ls_vari>-variant
-                    flag_confirmscreen = abap_true " true = No confirm screen
-                  EXCEPTIONS
-                    OTHERS             = 1 ##FM_SUBRC_OK.
-            ENDTRY.
-            IF sy-subrc <> 0.
-              zcx_abapgit_exception=>raise_t100( ).
-            ENDIF.
+            delete_vari( ls_varikey ).
           ENDIF.
 
           MOVE-CORRESPONDING <ls_vari> TO ls_varid.
@@ -642,83 +643,32 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
             INSERT ls_vari_text_create INTO TABLE lt_vari_text.
           ENDLOOP.
 
-          IF lv_exists_locally <> abap_true.
-            CALL FUNCTION 'RS_CREATE_VARIANT_255'
-              EXPORTING
-                curr_report    = iv_program_name
-                curr_variant   = <ls_vari>-variant
-                vari_desc      = ls_varid
-              TABLES
-                vari_contents  = <ls_vari>-values
-                vari_text      = lt_vari_text
-                vscreens       = <ls_vari>-variscreens
-              EXCEPTIONS
-                variant_exists = 0
-                OTHERS         = 1.
-            IF sy-subrc <> 0.
-              zcx_abapgit_exception=>raise_t100( ).
-            ENDIF.
-          ENDIF.
-
-          CALL FUNCTION 'RS_CHANGE_CREATED_VARIANT_255'
-            EXPORTING
-              curr_report   = iv_program_name
-              curr_variant  = <ls_vari>-variant
-              vari_desc     = ls_varid
-            TABLES
-              vari_contents = <ls_vari>-values
-              vari_text     = lt_vari_text
-              objects       = <ls_vari>-objects
-            EXCEPTIONS
-              OTHERS        = 1.
-          IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise_t100( ).
-          ENDIF.
+          change_vari( is_varid   = ls_varid
+                       iv_create  = boolc( lv_exists_locally <> abap_true )
+                       it_values  = <ls_vari>-values
+                       it_texts   = lt_vari_text
+                       it_screens = <ls_vari>-variscreens
+                       it_objects = <ls_vari>-objects ).
 
         CLEANUP.
-          set_variant_protection( iv_repid   = iv_program_name
-                                  iv_vari    = <ls_vari>-variant
-                                  iv_protect = lv_was_protected ).
+          set_vari_protection( is_vari    = ls_varikey
+                               iv_protect = lv_was_protected ).
       ENDTRY.
     ENDLOOP.
 
     " remaining variants have been deleted on remote
     " => delete
-    LOOP AT ls_catalog-cat ASSIGNING <ls_catalog_entry>.
+    LOOP AT lt_local_varis INTO ls_varikey.
       CLEAR lv_was_protected.
 
-      lv_was_protected = set_variant_protection( iv_repid   = iv_program_name
-                                                 iv_vari    = <ls_vari>-variant
-                                                 iv_protect = abap_false ).
+      lv_was_protected = set_vari_protection( is_vari    = ls_varikey
+                                              iv_protect = abap_false ).
 
       TRY.
-          TRY.
-              CALL FUNCTION 'RS_VARIANT_DELETE'
-                EXPORTING
-                  report                = iv_program_name
-                  variant               = <ls_catalog_entry>-variant
-                  flag_confirmscreen    = abap_true " true = No confirm screen
-                " suppress parameters do not exist in older releases
-                  suppress_message      = abap_true
-                  suppress_input_dialog = abap_true
-                EXCEPTIONS
-                  OTHERS                = 1 ##FM_SUBRC_OK.
-            CATCH cx_sy_dyn_call_param_not_found.
-              CALL FUNCTION 'RS_VARIANT_DELETE'
-                EXPORTING
-                  report             = iv_program_name
-                  variant            = <ls_catalog_entry>-variant
-                  flag_confirmscreen = abap_true " true = No confirm screen
-                EXCEPTIONS
-                  OTHERS             = 1 ##FM_SUBRC_OK.
-          ENDTRY.
-          IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise_t100( ).
-          ENDIF.
+          delete_vari( ls_varikey ).
         CLEANUP.
-          set_variant_protection( iv_repid   = iv_program_name
-                                  iv_vari    = <ls_vari>-variant
-                                  iv_protect = lv_was_protected ).
+          set_vari_protection( is_vari    = ls_varikey
+                               iv_protect = lv_was_protected ).
       ENDTRY.
     ENDLOOP.
 
@@ -1192,114 +1142,35 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD serialize_varis.
 
-    DATA: ls_catalog TYPE rsvcat,
-          ls_vari    TYPE ty_vari,
-          lt_dynnr   TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY ##NEEDED,
-          ls_varid   TYPE varid,
-          ls_text    TYPE ty_vari_text.
+    DATA: ls_vari  TYPE ty_vari,
+          ls_varid TYPE varid,
+          lt_varis TYPE ty_varikey_tt.
 
-    FIELD-SYMBOLS: <ls_catalog> LIKE LINE OF ls_catalog-cat,
+    FIELD-SYMBOLS: <ls_varikey> LIKE LINE OF lt_varis,
                    <ls_object>  LIKE LINE OF ls_vari-objects.
 
-    CALL FUNCTION 'RS_ALL_VARIANTS_4_1_REPORT'
-      EXPORTING
-        program = iv_program_name
-      IMPORTING
-        cat     = ls_catalog
-      EXCEPTIONS
-        OTHERS  = 1.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    lt_varis = get_varis_for_report( iv_program_name ).
 
-    " Only include system variants
-    DELETE ls_catalog-cat WHERE variant NP 'CUS&*' AND variant NP 'SAP&*'.
-
-    LOOP AT ls_catalog-cat ASSIGNING <ls_catalog>.
+    LOOP AT lt_varis ASSIGNING <ls_varikey>.
       CLEAR: ls_vari,
-             lt_dynnr,
-             ls_varid,
-             ls_text.
+             ls_varid.
 
-      CALL FUNCTION 'RS_VARIANT_VALUES_TECH_DAT_255'
-        EXPORTING
-          report         = iv_program_name
-          variant        = <ls_catalog>-variant
-          sorted         = abap_true
-          execute_direct = abap_true
-        IMPORTING
-          techn_data     = ls_varid
-        TABLES
-          variant_values = ls_vari-values " is ignored
-        EXCEPTIONS
-          OTHERS         = 1.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
-
-      " Use variant values from CONTENTS call
-      " both calls have this parameter as non-optional
-      CLEAR ls_vari.
+      get_vari_data( EXPORTING
+                       is_vari    = <ls_varikey>
+                     IMPORTING
+                       es_varid   = ls_varid
+                       et_values  = ls_vari-values
+                       et_objects = ls_vari-objects
+                       et_texts   = ls_vari-texts ).
 
       MOVE-CORRESPONDING ls_varid TO ls_vari.
-
-      " TODO: serialize multiple languages?
-      "       see: Repository settings
-      "            > "Serialize Translations for Additional Languages"
-      ls_text-langu = mv_language.
-      CALL FUNCTION 'RS_VARIANT_TEXT'
-        EXPORTING
-          curr_report = iv_program_name
-          langu       = mv_language
-          variant     = <ls_catalog>-variant
-        IMPORTING
-          v_text      = ls_text-vtext
-        EXCEPTIONS
-          OTHERS      = 1.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
-      INSERT ls_text INTO TABLE ls_vari-texts.
-
-      CALL FUNCTION 'RS_GET_SCREENS_4_1_VARIANT'
-        EXPORTING
-          program     = iv_program_name
-          variant     = <ls_catalog>-variant
-        TABLES
-          dynnr       = lt_dynnr
-          variscreens = ls_vari-variscreens
-        EXCEPTIONS
-          OTHERS      = 1.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
-
-      CALL FUNCTION 'RS_VARIANT_CONTENTS_255'
-        EXPORTING
-          report         = iv_program_name
-          variant        = <ls_catalog>-variant
-          execute_direct = abap_true
-        TABLES
-          valutab        = ls_vari-values
-          objects        = ls_vari-objects
-        EXCEPTIONS
-          OTHERS         = 1.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
 
       " Clear texts - they will be provided in TEXTPOOL section
       LOOP AT ls_vari-objects ASSIGNING <ls_object>.
         CLEAR <ls_object>-text.
       ENDLOOP.
 
-      MOVE-CORRESPONDING ls_varid TO ls_vari.
-
-      " reproducible order
-      SORT ls_vari-variscreens.
-      SORT ls_vari-objects.
-      SORT ls_vari-values.
-      SORT ls_vari-texts.
+      ls_vari-variscreens = get_vari_screens( <ls_varikey> ).
 
       INSERT ls_vari INTO TABLE rt_varis.
     ENDLOOP.
@@ -1532,14 +1403,200 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD set_variant_protection.
+  METHOD get_varis_for_report.
+
+    DATA: ls_catalog TYPE rsvcat,
+          ls_vari    LIKE LINE OF rt_varis.
+
+    FIELD-SYMBOLS <ls_cat> TYPE cat_var.
+
+    CALL FUNCTION 'RS_ALL_VARIANTS_4_1_REPORT'
+      EXPORTING
+        program = iv_repid
+      IMPORTING
+        cat     = ls_catalog
+      EXCEPTIONS
+        OTHERS  = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    ls_vari-report = iv_repid.
+    LOOP AT ls_catalog-cat ASSIGNING <ls_cat>
+         WHERE variant CP c_sysvari_pattern_sap
+         OR variant CP c_sysvari_pattern_cus.
+      ls_vari-variant = <ls_cat>-variant.
+      INSERT ls_vari INTO TABLE rt_varis.
+    ENDLOOP.
+
+    SORT rt_varis.
+
+  ENDMETHOD.
+
+  METHOD get_vari_screens.
+
+    DATA lt_dynnr LIKE rt_vari_screens ##NEEDED.
+
+    CALL FUNCTION 'RS_GET_SCREENS_4_1_VARIANT'
+      EXPORTING
+        program     = is_vari-report
+        variant     = is_vari-variant
+      TABLES
+        dynnr       = lt_dynnr
+        variscreens = rt_vari_screens
+      EXCEPTIONS
+        OTHERS      = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    SORT rt_vari_screens.
+
+  ENDMETHOD.
+
+  METHOD get_vari_data.
+
+    DATA: ls_text LIKE LINE OF et_texts.
+
+    CLEAR: es_varid,
+           et_values,
+           et_objects,
+           et_texts.
+
+    CALL FUNCTION 'RS_VARIANT_VALUES_TECH_DAT_255'
+      EXPORTING
+        report         = is_vari-report
+        variant        = is_vari-variant
+        sorted         = abap_true
+        execute_direct = abap_true
+      IMPORTING
+        techn_data     = es_varid
+      TABLES
+        variant_values = et_values " is ignored
+      EXCEPTIONS
+        OTHERS         = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    " Use variant values from CONTENTS call
+    " both calls have this parameter as non-optional
+    CLEAR et_values.
+
+    " TODO: serialize multiple languages?
+    "       see: Repository settings
+    "            > "Serialize Translations for Additional Languages"
+    ls_text-langu = mv_language.
+    CALL FUNCTION 'RS_VARIANT_TEXT'
+      EXPORTING
+        curr_report = is_vari-report
+        langu       = mv_language
+        variant     = is_vari-variant
+      IMPORTING
+        v_text      = ls_text-vtext
+      EXCEPTIONS
+        OTHERS      = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+    INSERT ls_text INTO TABLE et_texts.
+
+    CALL FUNCTION 'RS_VARIANT_CONTENTS_255'
+      EXPORTING
+        report         = is_vari-report
+        variant        = is_vari-variant
+        execute_direct = abap_true
+      TABLES
+        valutab        = et_values
+        objects        = et_objects
+      EXCEPTIONS
+        OTHERS         = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    " reproducible order
+    SORT et_values.
+    SORT et_objects.
+    SORT et_texts.
+
+  ENDMETHOD.
+
+  METHOD change_vari.
+
+    " screens will only be applied if iv_create is true
+
+    IF iv_create = abap_true.
+      CALL FUNCTION 'RS_CREATE_VARIANT_255'
+        EXPORTING
+          curr_report    = is_varid-report
+          curr_variant   = is_varid-variant
+          vari_desc      = is_varid
+        TABLES
+          vari_contents  = it_values
+          vari_text      = it_texts
+          vscreens       = it_screens
+        EXCEPTIONS
+          variant_exists = 0
+          OTHERS         = 1.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+    ENDIF.
+
+    CALL FUNCTION 'RS_CHANGE_CREATED_VARIANT_255'
+      EXPORTING
+        curr_report   = is_varid-report
+        curr_variant  = is_varid-variant
+        vari_desc     = is_varid
+      TABLES
+        vari_contents = it_values
+        vari_text     = it_texts
+        objects       = it_objects
+      EXCEPTIONS
+        OTHERS        = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD delete_vari.
+
+    TRY.
+        CALL FUNCTION 'RS_VARIANT_DELETE'
+          EXPORTING
+            report                = is_vari-report
+            variant               = is_vari-variant
+            flag_confirmscreen    = abap_true " true = No confirm screen
+          " suppress parameters do not exist in older releases
+            suppress_message      = abap_true
+            suppress_input_dialog = abap_true
+          EXCEPTIONS
+            OTHERS                = 1 ##FM_SUBRC_OK.
+      CATCH cx_sy_dyn_call_param_not_found.
+        CALL FUNCTION 'RS_VARIANT_DELETE'
+          EXPORTING
+            report             = is_vari-report
+            variant            = is_vari-variant
+            flag_confirmscreen = abap_true " true = No confirm screen
+          EXCEPTIONS
+            OTHERS             = 1 ##FM_SUBRC_OK.
+    ENDTRY.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD set_vari_protection.
 
     SELECT SINGLE FOR UPDATE protected
       FROM varid CLIENT SPECIFIED
       INTO rv_was_protected
       WHERE mandt   = c_sysvari_clnt
-        AND report  = iv_repid
-        AND variant = iv_vari
+        AND report  = is_vari-report
+        AND variant = is_vari-variant
         AND flag1   = space
         AND flag2   = space.
 
@@ -1551,8 +1608,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     UPDATE varid CLIENT SPECIFIED
       SET protected = iv_protect
       WHERE mandt   = c_sysvari_clnt
-        AND report  = iv_repid
-        AND variant = iv_vari
+        AND report  = is_vari-report
+        AND variant = is_vari-variant
         AND flag1   = space
         AND flag2   = space.
 
