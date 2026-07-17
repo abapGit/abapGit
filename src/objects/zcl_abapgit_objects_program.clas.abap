@@ -174,6 +174,8 @@ CLASS zcl_abapgit_objects_program DEFINITION
 
     CONSTANTS c_native_dynpro TYPE c LENGTH 2 VALUE 'IN'.
 
+    CONSTANTS c_sysvari_clnt TYPE mandt VALUE '000'.
+
     METHODS:
       uncondense_flow
         IMPORTING it_flow        TYPE swydyflow
@@ -221,6 +223,13 @@ CLASS zcl_abapgit_objects_program DEFINITION
         !iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception.
+    METHODS set_variant_protection
+      IMPORTING
+        iv_repid                TYPE repid
+        iv_vari                 TYPE variant
+        iv_protect              TYPE abap_bool
+      RETURNING
+        VALUE(rv_was_protected) TYPE abap_bool.
 ENDCLASS.
 
 
@@ -518,23 +527,21 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD deserialize_varis.
 
-    CONSTANTS: lc_sysvariant_clnt TYPE mandt VALUE '000'.
-
     DATA: ls_catalog           TYPE rsvcat,
           ls_vari_text_create  TYPE varit,
           lt_vari_text         TYPE STANDARD TABLE OF varit WITH DEFAULT KEY,
           ls_varid             TYPE varid,
           lt_dynnr             TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
           lt_local_variscreens TYPE STANDARD TABLE OF rsdynnr WITH DEFAULT KEY,
-          lv_recreate          TYPE abap_bool VALUE abap_false.
+          lv_recreate          TYPE abap_bool,
+          lv_was_protected     TYPE abap_bool,
+          lv_exists_locally    TYPE abap_bool.
 
     FIELD-SYMBOLS: <ls_vari>              LIKE LINE OF it_varis,
                    <ls_catalog_entry>     LIKE LINE OF ls_catalog-cat,
                    <ls_vari_text_remote>  TYPE ty_vari_text,
                    <ls_local_variscreen>  LIKE LINE OF lt_local_variscreens,
                    <ls_remote_variscreen> LIKE LINE OF lt_local_variscreens.
-
-    " TODO: check dynamic selections
 
     CALL FUNCTION 'RS_ALL_VARIANTS_4_1_REPORT'
       EXPORTING
@@ -551,179 +558,205 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     LOOP AT it_varis ASSIGNING <ls_vari>.
       CLEAR: lt_vari_text,
-             ls_varid.
+             ls_varid,
+             lv_recreate,
+             lv_was_protected,
+             lv_exists_locally.
 
       DELETE ls_catalog-cat WHERE variant = <ls_vari>-variant.
+      lv_exists_locally = boolc( sy-subrc = 0 ).
 
-      CALL FUNCTION 'RS_GET_SCREENS_4_1_VARIANT'
-        EXPORTING
-          program     = iv_program_name
-          variant     = <ls_vari>-variant
-        TABLES
-          dynnr       = lt_dynnr
-          variscreens = lt_local_variscreens
-        EXCEPTIONS
-          OTHERS      = 1.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
-
-      SORT lt_local_variscreens.
-
-      " assumption: no duplicates returned by SAP
-
-      " recreate variant if screen assignments do not match
-      IF lines( <ls_vari>-variscreens ) <> lines( lt_local_variscreens ).
-        lv_recreate = abap_true.
-      ELSE.
-        LOOP AT lt_local_variscreens ASSIGNING <ls_local_variscreen>.
-          READ TABLE <ls_vari>-variscreens ASSIGNING <ls_remote_variscreen>
-               INDEX sy-tabix.
-          IF <ls_local_variscreen>-dynnr <> <ls_remote_variscreen>-dynnr
-             AND <ls_local_variscreen>-kind <> <ls_remote_variscreen>-kind.
-            lv_recreate = abap_true.
-            EXIT.
-          ENDIF.
-        ENDLOOP.
-      ENDIF.
-
-      IF lv_recreate = abap_true.
-        TRY.
-            CALL FUNCTION 'RS_VARIANT_DELETE'
-              EXPORTING
-                report                = iv_program_name
-                variant               = <ls_vari>-variant
-                flag_confirmscreen    = abap_true " true = No confirm screen
-              " suppress parameters do not exist in older releases
-                suppress_message      = abap_true
-                suppress_input_dialog = abap_true
-              EXCEPTIONS
-                OTHERS                = 1 ##FM_SUBRC_OK.
-          CATCH cx_sy_dyn_call_param_not_found.
-            CALL FUNCTION 'RS_VARIANT_DELETE'
-              EXPORTING
-                report             = iv_program_name
-                variant            = <ls_vari>-variant
-                flag_confirmscreen = abap_true " true = No confirm screen
-              EXCEPTIONS
-                OTHERS             = 1 ##FM_SUBRC_OK.
-        ENDTRY.
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise_t100( ).
-        ENDIF.
-      ENDIF.
-
-      MOVE-CORRESPONDING <ls_vari> TO ls_varid.
-      ls_varid-mandt  = lc_sysvariant_clnt.
-      ls_varid-report = iv_program_name.
-
-      " Assemble text table
-      LOOP AT <ls_vari>-texts ASSIGNING <ls_vari_text_remote>.
-        ls_vari_text_create-mandt   = lc_sysvariant_clnt.
-        ls_vari_text_create-report  = iv_program_name.
-        ls_vari_text_create-variant = <ls_vari>-variant.
-        ls_vari_text_create-langu   = <ls_vari_text_remote>-langu.
-        ls_vari_text_create-vtext   = <ls_vari_text_remote>-vtext.
-        INSERT ls_vari_text_create INTO TABLE lt_vari_text.
-      ENDLOOP.
-
-      READ TABLE ls_catalog-cat TRANSPORTING NO FIELDS
-           WITH KEY variant = <ls_vari>-variant.
-      IF sy-subrc <> 0.
-        TRY.
-            CALL FUNCTION 'RS_CREATE_VARIANT_255'
-              EXPORTING
-                curr_report           = iv_program_name
-                curr_variant          = <ls_vari>-variant
-                vari_desc             = ls_varid
-              TABLES
-                vari_contents         = <ls_vari>-values
-                vari_text             = lt_vari_text
-                vscreens              = <ls_vari>-variscreens
-              " freesel options do not exist in create in lower releases
-                free_selections_value = <ls_vari>-freesel_values
-                free_selections_obj   = <ls_vari>-freesel_objects
-              EXCEPTIONS
-                variant_exists        = 0
-                OTHERS                = 1 ##FM_SUBRC_OK.
-          CATCH cx_sy_dyn_call_param_not_found.
-            CALL FUNCTION 'RS_CREATE_VARIANT_255'
-              EXPORTING
-                curr_report    = iv_program_name
-                curr_variant   = <ls_vari>-variant
-                vari_desc      = ls_varid
-              TABLES
-                vari_contents  = <ls_vari>-values
-                vari_text      = lt_vari_text
-                vscreens       = <ls_vari>-variscreens
-              EXCEPTIONS
-                variant_exists = 0
-                OTHERS         = 1 ##FM_SUBRC_OK.
-        ENDTRY.
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise_t100( ).
-        ENDIF.
-      ENDIF.
+      lv_was_protected = set_variant_protection( iv_repid   = iv_program_name
+                                                 iv_vari    = <ls_vari>-variant
+                                                 iv_protect = abap_false ).
 
       TRY.
-          CALL FUNCTION 'RS_CHANGE_CREATED_VARIANT_255'
+
+          CALL FUNCTION 'RS_GET_SCREENS_4_1_VARIANT'
             EXPORTING
-              curr_report           = iv_program_name
-              curr_variant          = <ls_vari>-variant
-              vari_desc             = ls_varid
+              program     = iv_program_name
+              variant     = <ls_vari>-variant
             TABLES
-              vari_contents         = <ls_vari>-values
-              vari_text             = lt_vari_text
-              objects               = <ls_vari>-objects
-            " freesel options do not exist in create in lower releases
-              free_selections_value = <ls_vari>-freesel_values
-              free_selections_obj   = <ls_vari>-freesel_objects
+              dynnr       = lt_dynnr
+              variscreens = lt_local_variscreens
             EXCEPTIONS
-              OTHERS                = 1 ##FM_SUBRC_OK.
-        CATCH cx_sy_dyn_call_param_not_found.
-          CALL FUNCTION 'RS_CHANGE_CREATED_VARIANT_255'
-            EXPORTING
-              curr_report   = iv_program_name
-              curr_variant  = <ls_vari>-variant
-              vari_desc     = ls_varid
-            TABLES
-              vari_contents = <ls_vari>-values
-              vari_text     = lt_vari_text
-              objects       = <ls_vari>-objects
-            EXCEPTIONS
-              OTHERS        = 1 ##FM_SUBRC_OK.
+              OTHERS      = 1.
+          IF sy-subrc <> 0.
+            zcx_abapgit_exception=>raise_t100( ).
+          ENDIF.
+
+          SORT lt_local_variscreens.
+
+          " assumption: no duplicates returned by SAP
+
+          " recreate variant if screen assignments do not match
+          IF lines( <ls_vari>-variscreens ) <> lines( lt_local_variscreens ).
+            lv_recreate = abap_true.
+          ELSE.
+            LOOP AT lt_local_variscreens ASSIGNING <ls_local_variscreen>.
+              READ TABLE <ls_vari>-variscreens ASSIGNING <ls_remote_variscreen>
+                   INDEX sy-tabix.
+              IF <ls_local_variscreen>-dynnr <> <ls_remote_variscreen>-dynnr
+                 AND <ls_local_variscreen>-kind <> <ls_remote_variscreen>-kind.
+                lv_recreate = abap_true.
+                EXIT.
+              ENDIF.
+            ENDLOOP.
+          ENDIF.
+
+          IF lv_recreate = abap_true.
+            TRY.
+                CALL FUNCTION 'RS_VARIANT_DELETE'
+                  EXPORTING
+                    report                = iv_program_name
+                    variant               = <ls_vari>-variant
+                    flag_confirmscreen    = abap_true " true = No confirm screen
+                  " suppress parameters do not exist in older releases
+                    suppress_message      = abap_true
+                    suppress_input_dialog = abap_true
+                  EXCEPTIONS
+                    OTHERS                = 1 ##FM_SUBRC_OK.
+              CATCH cx_sy_dyn_call_param_not_found.
+                CALL FUNCTION 'RS_VARIANT_DELETE'
+                  EXPORTING
+                    report             = iv_program_name
+                    variant            = <ls_vari>-variant
+                    flag_confirmscreen = abap_true " true = No confirm screen
+                  EXCEPTIONS
+                    OTHERS             = 1 ##FM_SUBRC_OK.
+            ENDTRY.
+            IF sy-subrc <> 0.
+              zcx_abapgit_exception=>raise_t100( ).
+            ENDIF.
+          ENDIF.
+
+          MOVE-CORRESPONDING <ls_vari> TO ls_varid.
+          ls_varid-mandt  = c_sysvari_clnt.
+          ls_varid-report = iv_program_name.
+
+          " Assemble text table
+          LOOP AT <ls_vari>-texts ASSIGNING <ls_vari_text_remote>.
+            ls_vari_text_create-mandt   = c_sysvari_clnt.
+            ls_vari_text_create-report  = iv_program_name.
+            ls_vari_text_create-variant = <ls_vari>-variant.
+            ls_vari_text_create-langu   = <ls_vari_text_remote>-langu.
+            ls_vari_text_create-vtext   = <ls_vari_text_remote>-vtext.
+            INSERT ls_vari_text_create INTO TABLE lt_vari_text.
+          ENDLOOP.
+
+          IF lv_exists_locally <> abap_true.
+            TRY.
+                CALL FUNCTION 'RS_CREATE_VARIANT_255'
+                  EXPORTING
+                    curr_report           = iv_program_name
+                    curr_variant          = <ls_vari>-variant
+                    vari_desc             = ls_varid
+                  TABLES
+                    vari_contents         = <ls_vari>-values
+                    vari_text             = lt_vari_text
+                    vscreens              = <ls_vari>-variscreens
+                  " freesel options do not exist in create in lower releases
+                    free_selections_value = <ls_vari>-freesel_values
+                    free_selections_obj   = <ls_vari>-freesel_objects
+                  EXCEPTIONS
+                    variant_exists        = 0
+                    OTHERS                = 1 ##FM_SUBRC_OK.
+              CATCH cx_sy_dyn_call_param_not_found.
+                CALL FUNCTION 'RS_CREATE_VARIANT_255'
+                  EXPORTING
+                    curr_report    = iv_program_name
+                    curr_variant   = <ls_vari>-variant
+                    vari_desc      = ls_varid
+                  TABLES
+                    vari_contents  = <ls_vari>-values
+                    vari_text      = lt_vari_text
+                    vscreens       = <ls_vari>-variscreens
+                  EXCEPTIONS
+                    variant_exists = 0
+                    OTHERS         = 1 ##FM_SUBRC_OK.
+            ENDTRY.
+            IF sy-subrc <> 0.
+              zcx_abapgit_exception=>raise_t100( ).
+            ENDIF.
+          ENDIF.
+
+          TRY.
+              CALL FUNCTION 'RS_CHANGE_CREATED_VARIANT_255'
+                EXPORTING
+                  curr_report           = iv_program_name
+                  curr_variant          = <ls_vari>-variant
+                  vari_desc             = ls_varid
+                TABLES
+                  vari_contents         = <ls_vari>-values
+                  vari_text             = lt_vari_text
+                  objects               = <ls_vari>-objects
+                " freesel options do not exist in create in lower releases
+                  free_selections_value = <ls_vari>-freesel_values
+                  free_selections_obj   = <ls_vari>-freesel_objects
+                EXCEPTIONS
+                  OTHERS                = 1 ##FM_SUBRC_OK.
+            CATCH cx_sy_dyn_call_param_not_found.
+              CALL FUNCTION 'RS_CHANGE_CREATED_VARIANT_255'
+                EXPORTING
+                  curr_report   = iv_program_name
+                  curr_variant  = <ls_vari>-variant
+                  vari_desc     = ls_varid
+                TABLES
+                  vari_contents = <ls_vari>-values
+                  vari_text     = lt_vari_text
+                  objects       = <ls_vari>-objects
+                EXCEPTIONS
+                  OTHERS        = 1 ##FM_SUBRC_OK.
+          ENDTRY.
+          IF sy-subrc <> 0.
+            zcx_abapgit_exception=>raise_t100( ).
+          ENDIF.
+
+        CLEANUP.
+          set_variant_protection( iv_repid   = iv_program_name
+                                  iv_vari    = <ls_vari>-variant
+                                  iv_protect = lv_was_protected ).
       ENDTRY.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
     ENDLOOP.
 
     " remaining variants have been deleted on remote
     " => delete
     LOOP AT ls_catalog-cat ASSIGNING <ls_catalog_entry>.
+      CLEAR lv_was_protected.
+
+      lv_was_protected = set_variant_protection( iv_repid   = iv_program_name
+                                                 iv_vari    = <ls_vari>-variant
+                                                 iv_protect = abap_false ).
+
       TRY.
-          CALL FUNCTION 'RS_VARIANT_DELETE'
-            EXPORTING
-              report                = iv_program_name
-              variant               = <ls_vari>-variant
-              flag_confirmscreen    = abap_true " true = No confirm screen
-            " suppress parameters do not exist in older releases
-              suppress_message      = abap_true
-              suppress_input_dialog = abap_true
-            EXCEPTIONS
-              OTHERS                = 1 ##FM_SUBRC_OK.
-        CATCH cx_sy_dyn_call_param_not_found.
-          CALL FUNCTION 'RS_VARIANT_DELETE'
-            EXPORTING
-              report             = iv_program_name
-              variant            = <ls_vari>-variant
-              flag_confirmscreen = abap_true " true = No confirm screen
-            EXCEPTIONS
-              OTHERS             = 1 ##FM_SUBRC_OK.
+          TRY.
+              CALL FUNCTION 'RS_VARIANT_DELETE'
+                EXPORTING
+                  report                = iv_program_name
+                  variant               = <ls_catalog_entry>-variant
+                  flag_confirmscreen    = abap_true " true = No confirm screen
+                " suppress parameters do not exist in older releases
+                  suppress_message      = abap_true
+                  suppress_input_dialog = abap_true
+                EXCEPTIONS
+                  OTHERS                = 1 ##FM_SUBRC_OK.
+            CATCH cx_sy_dyn_call_param_not_found.
+              CALL FUNCTION 'RS_VARIANT_DELETE'
+                EXPORTING
+                  report             = iv_program_name
+                  variant            = <ls_catalog_entry>-variant
+                  flag_confirmscreen = abap_true " true = No confirm screen
+                EXCEPTIONS
+                  OTHERS             = 1 ##FM_SUBRC_OK.
+          ENDTRY.
+          IF sy-subrc <> 0.
+            zcx_abapgit_exception=>raise_t100( ).
+          ENDIF.
+        CLEANUP.
+          set_variant_protection( iv_repid   = iv_program_name
+                                  iv_vari    = <ls_vari>-variant
+                                  iv_protect = lv_was_protected ).
       ENDTRY.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
@@ -1549,6 +1582,31 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     ENDIF.
 
     zcl_abapgit_language=>restore_login_language( ).
+
+  ENDMETHOD.
+
+  METHOD set_variant_protection.
+
+    SELECT SINGLE FOR UPDATE protected
+      FROM varid CLIENT SPECIFIED
+      INTO rv_was_protected
+      WHERE mandt   = c_sysvari_clnt
+        AND report  = iv_repid
+        AND variant = iv_vari
+        AND flag1   = space
+        AND flag2   = space.
+
+    IF sy-subrc <> 0
+      OR rv_was_protected = iv_protect.
+      RETURN.
+    ENDIF.
+
+    UPDATE varid
+      SET protected = iv_protect
+      WHERE report  = iv_repid
+        AND variant = iv_vari
+        AND flag1   = space
+        AND flag2   = space.
 
   ENDMETHOD.
 ENDCLASS.
