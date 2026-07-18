@@ -650,6 +650,9 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
                        it_screens = <ls_vari>-variscreens
                        it_objects = <ls_vari>-objects ).
 
+          set_vari_protection( is_vari    = ls_varikey
+                               iv_protect = ls_varid-protected ).
+
         CLEANUP.
           set_vari_protection( is_vari    = ls_varikey
                                iv_protect = lv_was_protected ).
