@@ -1459,7 +1459,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD get_vari_data.
 
-    DATA: ls_text LIKE LINE OF et_texts.
+    DATA: lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter,
+          ls_language_filter LIKE LINE OF lt_language_filter.
 
     CLEAR: es_varid,
            et_values,
@@ -1486,23 +1487,23 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     " both calls have this parameter as non-optional
     CLEAR et_values.
 
-    " TODO: serialize multiple languages?
-    "       see: Repository settings
-    "            > "Serialize Translations for Additional Languages"
-    ls_text-langu = mv_language.
-    CALL FUNCTION 'RS_VARIANT_TEXT'
-      EXPORTING
-        curr_report = is_vari-report
-        langu       = mv_language
-        variant     = is_vari-variant
-      IMPORTING
-        v_text      = ls_text-vtext
-      EXCEPTIONS
-        OTHERS      = 1.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
+    IF mo_i18n_params->ms_params-main_language_only <> abap_true.
+      lt_language_filter = mo_i18n_params->build_language_filter( ).
     ENDIF.
-    INSERT ls_text INTO TABLE et_texts.
+    ls_language_filter-sign   = 'I'.
+    ls_language_filter-option = 'EQ'.
+    ls_language_filter-low    = mv_language.
+    CLEAR ls_language_filter-high.
+    INSERT ls_language_filter INTO TABLE lt_language_filter.
+
+    " SELECT because RS_VARIANT_TEXT and related FMs cannot list available languages
+    SELECT langu vtext FROM varit CLIENT SPECIFIED
+      INTO CORRESPONDING FIELDS OF TABLE et_texts
+      WHERE mandt = c_sysvari_clnt
+        AND report = is_vari-report
+        AND variant = is_vari-variant
+        AND langu IN lt_language_filter
+      ORDER BY langu.
 
     CALL FUNCTION 'RS_VARIANT_CONTENTS_255'
       EXPORTING
