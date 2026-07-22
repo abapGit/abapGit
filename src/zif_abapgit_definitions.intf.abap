@@ -333,6 +333,7 @@ INTERFACE zif_abapgit_definitions
       url                           TYPE string VALUE 'url',
       where_used                    TYPE string VALUE 'where_used',
       zip_export                    TYPE string VALUE 'zip_export',
+      zip_export_selected           TYPE string VALUE 'zip_export_selected',
       zip_export_transport          TYPE string VALUE 'zip_export_transport',
       zip_import                    TYPE string VALUE 'zip_import',
       zip_object                    TYPE string VALUE 'zip_object',

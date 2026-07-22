@@ -1012,6 +1012,16 @@ table.commit tr .title {
   padding: 6px 6px; /* maybe use height ? */
 }
 .repo-overview .ro-detail { display: none; }
+.repo-overview .ro-select {
+  text-align: center;
+  cursor: default;
+}
+.repo-overview .ro-select input[type="checkbox"],
+.repo-overview th #repo-select-all {
+  cursor: pointer;
+  margin: 0;
+  vertical-align: middle;
+}
 .repo-overview .ro-go a {
   padding: 0px 0.15em;
 }
