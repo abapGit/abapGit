@@ -397,6 +397,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     render_command_palettes( ri_html ).
     ri_html->add( |toggleBrowserControlWarning();| ).
     ri_html->add( |displayBrowserControlFooter();| ).
+    ri_html->add( |redirectBrowserBackToSapEvent();| ).
 
   ENDMETHOD.
 

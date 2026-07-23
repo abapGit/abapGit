@@ -28,6 +28,7 @@
 /* exported restoreScrollPosition */
 /* exported toggleBrowserControlWarning */
 /* exported displayBrowserControlFooter */
+/* exported redirectBrowserBackToSapEvent */
 
 /**********************************************************
  * Polyfills
@@ -107,6 +108,12 @@ function debugOutput(text, dstID) {
   stdout.appendChild(paragraph);
 }
 
+// Set to true right before we navigate via a sapevent (form submit or a
+// programmatic Back-element click), so the browser-back trap
+// (redirectBrowserBackToSapEvent) can tell a self-initiated navigation from a
+// genuine user Back press. See that function for details.
+var gSapeventNavPending = false;
+
 // Use a supplied form, a pre-created form or create a hidden form
 // and submit with sapevent
 function submitSapeventForm(params, action, method, form) {
@@ -158,6 +165,9 @@ function submitSapeventForm(params, action, method, form) {
     document.body.appendChild(form);
   }
 
+  // Mark that the popstate the browser control may emit while handling this
+  // sapevent navigation is self-initiated, not a user Back press
+  gSapeventNavPending = true;
   form.submit();
 }
 
@@ -2576,6 +2586,80 @@ function toggleBrowserControlWarning() {
 function displayBrowserControlFooter() {
   var out = document.getElementById("browser-control-footer");
   out.innerHTML = " - " + ( navigator.userAgent.includes("Edg") ? "Edge" : "IE"  );
+}
+
+// Redirect browser "Back" navigation to the SAPGUI back sapevent (action "go_back").
+//
+// Browser/back-button navigation is not directly cancelable, so we use the
+// History API sentinel trick: push a dummy history entry, then on each popstate
+// (Back press) re-push it (so we never actually leave the page) and fire the
+// SAPGUI back sapevent instead. The old IE-based control lacks reliable
+// pushState support, so it becomes a no-op there.
+//
+// popstate does not only fire on user Back presses: the browser control emits
+// it while handling a sapevent navigation too (it cancels/re-renders the
+// navigation, which traverses our injected sentinel entry). Those self-initiated
+// navigations set gSapeventNavPending (in submitSapeventForm, and in
+// triggerSapEventBack before the Back-element click), so we can skip them and
+// only trigger go_back for a genuine Back press.
+function redirectBrowserBackToSapEvent(backAction) {
+  backAction = backAction || "go_back";
+  if (!window.history || !window.history.pushState) return;
+
+  // Arm the trap: this sentinel entry absorbs the first Back press
+  window.history.pushState({ abapGitBackTrap: true }, "");
+
+  window.addEventListener("popstate", function() {
+    // Re-arm so subsequent Back presses are also captured
+    window.history.pushState({ abapGitBackTrap: true }, "");
+
+    // Ignore popstate caused by our own sapevent navigation (consume the flag)
+    if (gSapeventNavPending) {
+      gSapeventNavPending = false;
+      return;
+    }
+
+    triggerSapEventBack(backAction);
+  });
+}
+
+// Find the back element the backend rendered for the given sapevent action.
+//
+// We cannot rebuild the navigation ourselves: on WebGUI, ITS rewrites the
+// sapevent href (e.g. "sapevent:go_back" -> "#sapevent25") and drives the
+// submit through its own machinery with session context we do not have.
+// ITS preserves the original href in the "hrefsav" property though
+// (see comment in RepoOverViewHelper.updateActionLinks), so we match on
+// that on WebGUI and on href/formaction on the desktop browser control.
+function findSapEventElement(action) {
+  return [].slice
+    .call(document.querySelectorAll("a[href], input[formaction]"))
+    .filter(function(el) {
+      var sTarget = el.hrefsav || el.href || el.formAction || "";
+      return sTarget.indexOf(action) !== -1
+        && sTarget.toLowerCase().indexOf("sapevent") !== -1;
+    })[0];
+}
+
+function triggerSapEventBack(backAction) {
+  gSapeventNavPending = true; // self-initiated; ignore the popstate this causes
+
+  // If the page renders a Back element, click it so the control's own handler
+  // runs - as if the user clicked Back in the UI (works on WebGUI and desktop).
+  var elBack = findSapEventElement(backAction);
+  if (elBack) {
+    elBack.click();
+    return;
+  }
+
+  // No Back element on this page (e.g. repo list) -> submit go_back directly,
+  // so browser Back mirrors F3 everywhere (e.g. leaving a top-level page).
+  // NOTE: this bare-form submit only works in the desktop browser control.
+  // On WebGUI it does not route (the ITS session context is missing), so on
+  // pages that render no Back element there, browser Back has no effect.
+  // Pages that do render a Back element use the click path above and work
+  // in both controls.
+  submitSapeventForm({}, backAction);
 }
 
 /**********************************************************
