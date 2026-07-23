@@ -78,7 +78,6 @@ CLASS zcl_abapgit_objects_program DEFINITION
         environmnt  TYPE varid_env,
         protected   TYPE rsscr_cflg,
         secu        TYPE secu,
-        mlangu      TYPE langu,
         xflag1      TYPE varid_xflg,
         xflag2      TYPE varid_xflg,
         variscreens TYPE ty_vari_dynnr_tt,
@@ -1472,7 +1471,6 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         report         = is_vari-report
         variant        = is_vari-variant
         sorted         = abap_true
-        execute_direct = abap_true
       IMPORTING
         techn_data     = es_varid
       TABLES
