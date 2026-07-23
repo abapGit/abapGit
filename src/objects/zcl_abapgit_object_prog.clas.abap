@@ -201,6 +201,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
           ls_progdir      TYPE zif_abapgit_sap_report=>ty_progdir,
           lt_tpool        TYPE textpool_table,
           lt_dynpros      TYPE ty_dynpro_tt,
+          lt_varis        TYPE ty_vari_tt,
           lt_tpool_ext    TYPE zif_abapgit_lang_definitions=>ty_tpool_tt,
           ls_cua          TYPE ty_cua,
           lt_source       TYPE abaptxt255_tab.
@@ -247,6 +248,11 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                     CHANGING cg_data  = ls_cua ).
       deserialize_cua( iv_program_name = lv_program_name
                        is_cua = ls_cua ).
+
+      io_xml->read( EXPORTING iv_name = 'VARIS'
+                    CHANGING  cg_data = lt_varis ).
+      deserialize_varis( iv_program_name = lv_program_name
+                         it_varis        = lt_varis ).
 
       " Texts deserializing (English)
       deserialize_textpool( iv_program = lv_program_name
