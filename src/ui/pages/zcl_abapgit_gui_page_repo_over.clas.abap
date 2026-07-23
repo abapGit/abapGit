@@ -171,6 +171,12 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
     METHODS save_settings
       RAISING
         zcx_abapgit_exception.
+
+    METHODS zip_export_selected
+      IMPORTING
+        !iv_keys TYPE string
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -261,6 +267,13 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     CREATE OBJECT lo_tab_scheme.
 
     lo_tab_scheme->add_column(
+      iv_tech_name      = 'CHECKBOX'
+      iv_display_name   = '<input type="checkbox" id="repo-select-all" ' &&
+                          'title="Select all offline repositories" ' &&
+                          'onchange="gHelper.toggleSelectAll(this)">'
+      iv_css_class      = 'wmin'
+      iv_allow_order_by = abap_false
+    )->add_column(
       iv_tech_name      = 'FAVORITE'
       iv_css_class      = 'wmin'
       iv_allow_order_by = abap_false
@@ -491,8 +504,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     lo_toolbar->add(
       iv_txt      = |Export|
-      iv_act      = |{ zif_abapgit_definitions=>c_action-zip_export }{ lv_dummy_key_param }|
-      iv_class    = |{ lc_action_class } { lc_offline_class }|
+      iv_typ      = zif_abapgit_html=>c_action_type-onclick
+      iv_act      = |gHelper.exportSelectedRepos()|
+      iv_class    = |{ lc_action_class } { lc_offline_class } action_export|
       iv_li_class = |{ lc_action_class }| ).
 
     zcl_abapgit_html_toolbar_lib=>render_repo_settings_dropdown(
@@ -737,6 +751,17 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     ii_html->add( |<tr{ lv_fav_tr_class } data-key="{ is_repo-key }" data-offline="{ is_repo-offline }">| ).
 
+    " Checkbox for multi-selection (offline repositories only, used for mass export)
+    IF is_repo-offline = abap_true.
+      ii_html->td(
+        iv_class   = 'ro-select wmin'
+        iv_content = |<input type="checkbox" class="repo-checkbox" id="repo_checkbox_{ is_repo-key }">| ).
+    ELSE.
+      ii_html->td(
+        iv_class   = 'ro-select wmin'
+        iv_content = '' ).
+    ENDIF.
+
     " Favorite
     lv_favorite_icon = ii_html->icon(
       iv_name  = 'star/grey' " blue is added in css, based on TR style
@@ -857,6 +882,77 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zip_export_selected.
+
+    DATA:
+      lt_keys       TYPE string_table,
+      lv_key        TYPE zif_abapgit_persistence=>ty_value,
+      li_fe_serv    TYPE REF TO zif_abapgit_frontend_services,
+      li_repo       TYPE REF TO zif_abapgit_repo,
+      lv_folder     TYPE string,
+      lv_sub_folder TYPE string,
+      lv_sep        TYPE c LENGTH 1,
+      lv_timestamp  TYPE string,
+      lv_rc         TYPE i,
+      lv_name       TYPE string,
+      lv_filename   TYPE string,
+      lv_xstr       TYPE xstring.
+
+    SPLIT iv_keys AT ',' INTO TABLE lt_keys.
+    DELETE lt_keys WHERE table_line IS INITIAL.
+    IF lt_keys IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    li_fe_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
+
+    " Ask once for the destination folder
+    li_fe_serv->directory_browse(
+      EXPORTING
+        iv_window_title    = 'Choose the destination folder for the ZIP files'
+      CHANGING
+        cv_selected_folder = lv_folder ).
+    IF lv_folder IS INITIAL.
+      RETURN. " Cancelled by user
+    ENDIF.
+
+    TRY.
+        li_fe_serv->get_file_separator( CHANGING cv_file_separator = lv_sep ).
+      CATCH zcx_abapgit_exception.
+        lv_sep = '\'. " Default MS Windows separator
+    ENDTRY.
+
+    " Create a timestamped sub-folder to keep the exports together
+    lv_timestamp  = |{ sy-datlo }_{ sy-timlo }|.
+    lv_sub_folder = |{ lv_folder }{ lv_sep }{ lv_timestamp }|.
+    IF li_fe_serv->directory_exist( lv_sub_folder ) = abap_false.
+      li_fe_serv->directory_create(
+        EXPORTING
+          iv_directory = lv_sub_folder
+        CHANGING
+          cv_rc        = lv_rc ).
+    ENDIF.
+
+    " One re-importable ZIP per selected repository
+    LOOP AT lt_keys INTO lv_key.
+      li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+      lv_xstr = zcl_abapgit_zip=>encode_files( li_repo->get_files_local( ) ).
+
+      lv_name = li_repo->get_package( ).
+      TRANSLATE lv_name USING '/#'.
+      lv_filename = |{ lv_sub_folder }{ lv_sep }{ lv_name }_{ lv_timestamp }.zip|.
+
+      zcl_abapgit_zip=>save_binstring_to_localfile(
+        iv_filename  = lv_filename
+        iv_binstring = lv_xstr ).
+    ENDLOOP.
+
+    " Open the folder for the user
+    li_fe_serv->execute( iv_document = lv_sub_folder ).
+
+  ENDMETHOD.
+
+
   METHOD set_filter.
 
     FIELD-SYMBOLS <lv_postdata> LIKE LINE OF it_postdata.
@@ -952,6 +1048,11 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       WHEN c_action-refresh_list.
 
         zcl_abapgit_repo_srv=>get_instance( )->init( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN zif_abapgit_definitions=>c_action-zip_export_selected.
+
+        zip_export_selected( ii_event->form_data( )->get( 'keys' ) ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
     ENDCASE.

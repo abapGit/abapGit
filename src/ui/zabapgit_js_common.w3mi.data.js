@@ -279,6 +279,8 @@ function RepoOverViewHelper(opts) {
   var icon = document.getElementById("icon-filter-detail");
   this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   this.registerRowSelection();
+  this.registerCheckboxes();
+  this.registerActionGuard();
   this.registerKeyboardShortcuts();
 }
 
@@ -425,9 +427,12 @@ RepoOverViewHelper.prototype.getVisibleRows = function() {
 
 RepoOverViewHelper.prototype.registerRowSelection = function() {
   var self = this;
-  document.querySelectorAll(".repo-overview tr td:not(.ro-go)").forEach(function(repoListRowCell) {
+  // Clicking a row body is a single selection: clear the multi-select checkboxes first
+  document.querySelectorAll(".repo-overview tr td:not(.ro-go):not(.ro-select)").forEach(function(repoListRowCell) {
     repoListRowCell.addEventListener("click", function() {
+      self.deselectAllCheckboxes();
       self.selectRowByRepoKey(this.parentElement.dataset.key);
+      self.updateActionState();
     });
   });
 
@@ -438,6 +443,108 @@ RepoOverViewHelper.prototype.registerRowSelection = function() {
       self.openSelectedRepo();
     });
   });
+};
+
+// ---- Multi-selection (checkboxes) for mass offline export ----
+
+RepoOverViewHelper.prototype.getRepoCheckboxes = function() {
+  return [].slice.call(document.querySelectorAll(".repo-overview .repo-checkbox"));
+};
+
+RepoOverViewHelper.prototype.getCheckedRepoKeys = function() {
+  return this.getRepoCheckboxes()
+    .filter(function(box) { return box.checked })
+    .map(function(box) { return box.id.replace("repo_checkbox_", "") });
+};
+
+RepoOverViewHelper.prototype.deselectAllCheckboxes = function() {
+  this.getRepoCheckboxes().forEach(function(box) { box.checked = false });
+  this.updateMasterCheckbox();
+};
+
+RepoOverViewHelper.prototype.registerCheckboxes = function() {
+  var self = this;
+
+  self.getRepoCheckboxes().forEach(function(box) {
+    box.addEventListener("change", function() { self.onRepoCheckboxChange() });
+    // Do not let a click on the checkbox bubble up to the row-selection handler
+    box.addEventListener("click", function(event) { event.stopPropagation() });
+  });
+
+  var master = document.getElementById("repo-select-all");
+  if (master) {
+    master.addEventListener("click", function(event) { event.stopPropagation() });
+  }
+};
+
+RepoOverViewHelper.prototype.onRepoCheckboxChange = function() {
+  var checkedKeys = this.getCheckedRepoKeys();
+  this.updateMasterCheckbox();
+  // Exactly one selected: mirror it to the single-repo selection so single actions target it
+  if (checkedKeys.length === 1) {
+    this.selectRowByRepoKey(checkedKeys[0]);
+  }
+  this.updateActionState();
+};
+
+RepoOverViewHelper.prototype.toggleSelectAll = function(master) {
+  // Only affects visible (filtered) rows
+  var visibleKeys = {};
+  Array.prototype.slice.call(this.getVisibleRows()).forEach(function(row) {
+    visibleKeys[row.dataset.key] = true;
+  });
+  this.getRepoCheckboxes().forEach(function(box) {
+    var key = box.id.replace("repo_checkbox_", "");
+    if (visibleKeys[key]) box.checked = master.checked;
+  });
+  this.onRepoCheckboxChange();
+};
+
+RepoOverViewHelper.prototype.updateMasterCheckbox = function() {
+  var master = document.getElementById("repo-select-all");
+  if (!master) return;
+  var boxes   = this.getRepoCheckboxes();
+  var checked = boxes.filter(function(box) { return box.checked }).length;
+  master.checked       = boxes.length > 0 && checked === boxes.length;
+  master.indeterminate = checked > 0 && checked < boxes.length;
+};
+
+RepoOverViewHelper.prototype.updateActionState = function() {
+  // When one or more repos are checked, make sure the Export button is available
+  // even if no single row is highlighted
+  var exportLink = document.querySelector("a.action_export");
+  if (!exportLink) return;
+  if (this.getCheckedRepoKeys().length > 0) {
+    exportLink.parentElement.classList.add("enabled");
+  }
+};
+
+RepoOverViewHelper.prototype.registerActionGuard = function() {
+  var self = this;
+  // Single-repo toolbar actions must not run when more than one repo is selected
+  document.querySelectorAll("a.action_link:not(.action_export)").forEach(function(link) {
+    // Skip drop-down toggles (they carry a submenu, not a single-repo action)
+    if (link.nextElementSibling && link.nextElementSibling.tagName === "UL") return;
+    link.addEventListener("click", function(event) {
+      if (self.getCheckedRepoKeys().length > 1) {
+        event.preventDefault();
+        event.stopPropagation();
+        alert("This action can only be used with a single repository. Please deselect the others.");
+      }
+    });
+  });
+};
+
+RepoOverViewHelper.prototype.exportSelectedRepos = function() {
+  var keys = this.getCheckedRepoKeys();
+  if (keys.length === 0 && this.selectedRepoKey) {
+    keys = [ this.selectedRepoKey ];
+  }
+  if (keys.length === 0) {
+    alert("Select at least one offline repository to export.");
+    return;
+  }
+  submitSapeventForm({ keys: keys.join(",") }, "zip_export_selected", "post");
 };
 
 RepoOverViewHelper.prototype.toggleRepoListDetail = function(forceDisplay) {
