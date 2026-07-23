@@ -277,7 +277,8 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ENDTRY.
 
     IF lv_gui_release >= '7700' AND lv_gui_sp >= '1' AND lv_gui_patch >= '13'
-    OR lv_gui_release >= '8000' AND lv_gui_sp >= '1' AND lv_gui_patch >= '3'.
+    OR lv_gui_release >= '8000' AND lv_gui_sp >= '1' AND lv_gui_patch >= '3'
+    OR lv_gui_release >= '8100' AND lv_gui_sp >= '1' AND lv_gui_patch >= '0'.
       rv_result = abap_false.
     ENDIF.
 
