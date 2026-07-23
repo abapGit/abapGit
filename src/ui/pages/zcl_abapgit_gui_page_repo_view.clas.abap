@@ -1250,8 +1250,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       io_sub = zcl_abapgit_gui_menus=>help( )
     )->add(
       iv_txt = |Back|
-      iv_act = zif_abapgit_definitions=>c_action-go_back
-    ).
+      iv_act = zif_abapgit_definitions=>c_action-go_back ).
 
     zcl_abapgit_gui_menus=>experimental( ro_toolbar ).
 
