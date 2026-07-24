@@ -205,7 +205,8 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
       '<tr>' )->add(
       '<th><a href="sapevent:sort_by:col1:dsc" data-sapevent="sort_by:col1:dsc">Col 1</a>' &&
         '<span class="sort-arrow sort-active">&#x25BE;</span></th>' )->add(
-      '<th><a href="sapevent:sort_by:col2:asc" data-sapevent="sort_by:col2:asc">Col 2</a><span class="sort-arrow">&#x25BE;</span></th>' )->add(
+      '<th><a href="sapevent:sort_by:col2:asc" data-sapevent="sort_by:col2:asc">Col 2</a>' &&
+        '<span class="sort-arrow">&#x25BE;</span></th>' )->add(
       '<th>Col 3</th>' )->add(
       '</tr>' )->add(
       '</thead>' ).
@@ -273,7 +274,8 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
       '<tr>' )->add(
       '<th><a href="sapevent:sort_by:col1:dsc" data-sapevent="sort_by:col1:dsc">Col 1</a>' &&
         '<span class="sort-arrow sort-active">&#x25BE;</span></th>' )->add(
-      '<th><a href="sapevent:sort_by:col2:asc" data-sapevent="sort_by:col2:asc">Col 2</a><span class="sort-arrow">&#x25BE;</span></th>' )->add(
+      '<th><a href="sapevent:sort_by:col2:asc" data-sapevent="sort_by:col2:asc">Col 2</a>'  &&
+        '<span class="sort-arrow">&#x25BE;</span></th>' )->add(
       '<th>Col 3</th>' )->add(
       '</tr>' )->add(
       '</thead>' ).
