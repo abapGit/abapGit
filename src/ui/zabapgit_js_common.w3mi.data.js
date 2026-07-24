@@ -132,11 +132,31 @@ function submitSapeventForm(params, action, method, form) {
     }
   }
 
-  var stub_form_id = "form_" + action;
+  var isGlobalForm = false;
 
-  form = form
-    || document.getElementById(stub_form_id)
-    || document.createElement("form");
+  if (!form) {
+    // Reuse the page-global, server-rendered form. On WebGUI a sapevent only
+    // routes through a form ITS wired up while rendering the page; a form
+    // created here is not wired and the raw "sapevent:" scheme is rejected.
+    // The global form is harmless on the desktop control, where its action is
+    // overwritten below.
+    form = document.getElementById("global_sapevent_form");
+    isGlobalForm = Boolean(form);
+  }
+  if (!form) {
+    // Fallback for a page not rendered through the standard scaffold
+    form = document.createElement("form");
+  }
+
+  // The global form is shared across submits; drop fields a previous submit
+  // appended so stale values do not accumulate (matters for actions that do
+  // not navigate away, e.g. filtering or clipboard yank).
+  if (isGlobalForm) {
+    var priorFields = form.querySelectorAll("input[data-sapevent-field]");
+    for (var p = 0; p < priorFields.length; p++) {
+      priorFields[p].parentNode.removeChild(priorFields[p]);
+    }
+  }
 
   form.setAttribute("method", method || "post");
   var form_action = form.getAttribute("action");
@@ -156,12 +176,13 @@ function submitSapeventForm(params, action, method, form) {
     hiddenField.setAttribute("type", "hidden");
     hiddenField.setAttribute("name", key);
     hiddenField.setAttribute("value", params[key]);
+    if (isGlobalForm) hiddenField.setAttribute("data-sapevent-field", "");
     form.appendChild(hiddenField);
   }
 
   var formExistsInDOM = form.id && Boolean(document.querySelector("#" + form.id));
 
-  if (form.id !== stub_form_id && !formExistsInDOM) {
+  if (!formExistsInDOM) {
     document.body.appendChild(form);
   }
 
@@ -169,6 +190,20 @@ function submitSapeventForm(params, action, method, form) {
   // sapevent navigation is self-initiated, not a user Back press
   gSapeventNavPending = true;
   form.submit();
+}
+
+// Trigger a server-rendered sapevent element (anchor / submit input) the way a
+// user click would. Flag the navigation as self-initiated first, so the
+// browser-back trap ignores any popstate the browser control emits while
+// handling it (mirrors submitSapeventForm). Some callers (command palette)
+// pass anchors that are not sapevents (onclick / plain links); those must not
+// arm the flag - it would never be consumed and the next genuine Back press
+// would be swallowed.
+function clickSapEvent(element) {
+  var isSapEvent = element.getAttribute("data-sapevent")
+    || /sapevent/i.test(element.hrefsav || element.href || element.formAction || "");
+  if (isSapEvent) gSapeventNavPending = true;
+  element.click();
 }
 
 // Set focus to a control
@@ -1664,7 +1699,7 @@ function Hotkeys(oKeyMap) {
     var action = this.oKeyMap[sKey];
 
     // add a tooltip/title with the hotkey, currently only sapevents are supported
-    this.getAllSapEventsForSapEventName(action).forEach(function(elAnchor) {
+    findSapEventElements(action).forEach(function(elAnchor) {
       elAnchor.title = elAnchor.title + " [" + sKey + "]";
     });
 
@@ -1693,26 +1728,14 @@ function Hotkeys(oKeyMap) {
         return;
       }
 
-      // Or a SAP event link
-      var sUiSapEventHref = this.getSapEventHref(action);
-      if (sUiSapEventHref) {
-        submitSapeventForm({}, sUiSapEventHref, "post");
-        oEvent.preventDefault();
-        return;
-      }
-
-      // Or an SAP event input
-      var sUiSapEventInputAction = this.getSapEventInputAction(action);
-      if (sUiSapEventInputAction) {
-        submitSapeventForm({}, sUiSapEventInputAction, "post");
-        oEvent.preventDefault();
-        return;
-      }
-
-      // Or an SAP event main form
-      var elForm = this.getSapEventForm(action);
-      if (elForm) {
-        elForm.submit();
+      // Or a SAP event element (anchor / submit input) rendered on the page.
+      // Click it so the browser control routes the event: on WebGUI ITS has
+      // rewritten the href/formaction, so we must trigger the real element
+      // rather than rebuild the sapevent URL. Clicking also preserves any
+      // getdata the element carries (e.g. "...?key=<repo>").
+      var elSapEvent = findSapEventElement(action);
+      if (elSapEvent) {
+        clickSapEvent(elSapEvent);
         oEvent.preventDefault();
         return;
       }
@@ -1728,69 +1751,6 @@ Hotkeys.prototype.showHotkeys = function() {
   if (elHotkeys) {
     elHotkeys.style.display = (elHotkeys.style.display) ? "" : "none";
   }
-};
-
-Hotkeys.prototype.getAllSapEventsForSapEventName = function (sSapEvent) {
-  if (/^#+$/.test(sSapEvent)){
-    // sSapEvent contains only #. Nothing sensible can be done here
-    return [];
-  }
-
-  var includesSapEvent = function(text){
-    return (text.includes("sapevent") || text.includes("SAPEVENT"));
-  };
-
-  return [].slice
-    .call(document.querySelectorAll("a[href*="+ sSapEvent +"], input[formaction*="+ sSapEvent+"]"))
-    .filter(function (elem) {
-      return (elem.nodeName === "A" && includesSapEvent(elem.href)
-          || (elem.nodeName === "INPUT" && includesSapEvent(elem.formAction)));
-    });
-};
-
-Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
-  return this.getAllSapEventsForSapEventName(sSapEvent)
-    .filter(function(el) {
-      // only anchors
-      return (!!el.href);
-    })
-    .map(function(oSapEvent) {
-      return oSapEvent.href;
-    })
-    .filter(this.eliminateSapEventFalsePositives(sSapEvent))
-    .pop();
-};
-
-Hotkeys.prototype.getSapEventInputAction = function(sSapEvent) {
-  return this.getAllSapEventsForSapEventName(sSapEvent)
-    .filter(function(el) {
-      // input forms
-      return (el.type === "submit");
-    })
-    .map(function(oSapEvent) {
-      return oSapEvent.formAction;
-    })
-    .filter(this.eliminateSapEventFalsePositives(sSapEvent))
-    .pop();
-};
-
-Hotkeys.prototype.getSapEventForm = function(sSapEvent) {
-  return this.getAllSapEventsForSapEventName(sSapEvent)
-    .filter(function(el) {
-      // forms
-      var parentForm = el.parentNode.parentNode.parentNode;
-      return (el.type === "submit" && parentForm.nodeName === "FORM");
-    })
-    .map(function(oSapEvent) {
-      return oSapEvent.parentNode.parentNode.parentNode;
-    })
-    .pop();
-};
-
-Hotkeys.prototype.eliminateSapEventFalsePositives = function(sapEvent) {
-  return function(sapEventAttr) {
-    return sapEventAttr.match(new RegExp("\\b" + sapEvent + "\\b"));
-  };
 };
 
 Hotkeys.prototype.onkeydown = function(oEvent) {
@@ -2417,15 +2377,7 @@ function enumerateUiActions() {
     });
 
   items = items.map(function(item) {
-    var action;
     var anchor = item[0];
-    if (anchor.href.includes("#")) {
-      action = function() {
-        anchor.click();
-      };
-    } else {
-      action = anchor.href.replace("sapevent:", "");
-    }
     var prefix = item[1];
     // title is re-read on each palette open, some labels change dynamically
     // (e.g. commit/patch buttons on the stage page)
@@ -2433,7 +2385,10 @@ function enumerateUiActions() {
       return (prefix ? prefix + ": " : "") + anchor.innerText.trim();
     };
     return {
-      action  : action,
+      // Clicking the wired anchor routes on every browser control (desktop and
+      // WebGUI); no need to reconstruct the sapevent from the href, which ITS
+      // rewrites on WebGUI anyway.
+      action  : function() { clickSapEvent(anchor) },
       getTitle: getTitle,
       title   : getTitle()
     };
@@ -2476,7 +2431,7 @@ function enumerateUiActions() {
     }).forEach(function(anchor) {
       items.push({
         action: function() {
-          anchor.click();
+          clickSapEvent(anchor);
         },
         title: (function() {
           var result = anchor.title + anchor.text;
@@ -2623,22 +2578,40 @@ function redirectBrowserBackToSapEvent(backAction) {
   });
 }
 
-// Find the back element the backend rendered for the given sapevent action.
+// Find the server-rendered elements (anchors / submit inputs) the backend
+// rendered for a given sapevent action. Used to trigger the action by clicking
+// one, which routes on every browser control - on WebGUI ITS rewrites the href
+// and drives the submit through its own machinery, so we cannot rebuild the
+// navigation ourselves - and to annotate hotkey tooltips.
 //
-// We cannot rebuild the navigation ourselves: on WebGUI, ITS rewrites the
-// sapevent href (e.g. "sapevent:go_back" -> "#sapevent25") and drives the
-// submit through its own machinery with session context we do not have.
-// ITS preserves the original href in the "hrefsav" property though
-// (see comment in RepoOverViewHelper.updateActionLinks), so we match on
-// that on WebGUI and on href/formaction on the desktop browser control.
-function findSapEventElement(action) {
+// Matches the backend's data-sapevent marker first: it carries the original
+// action and survives ITS href rewriting on WebGUI. Falls back to
+// hrefsav/href/formaction on the desktop controls. Whole-word match so
+// "go_back" does not also match "go_back_something".
+function findSapEventElements(action) {
+  if (!action || /^#+$/.test(action)) return [];
+
+  // Escape regex metacharacters so actions like "jump?key=1" cannot break the
+  // pattern (\b still assumes word-shaped action names, which all current are)
+  var re = new RegExp("\\b" + action.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b");
   return [].slice
-    .call(document.querySelectorAll("a[href], input[formaction]"))
+    .call(document.querySelectorAll("a, input[type='submit']"))
     .filter(function(el) {
-      var sTarget = el.hrefsav || el.href || el.formAction || "";
-      return sTarget.indexOf(action) !== -1
-        && sTarget.toLowerCase().indexOf("sapevent") !== -1;
-    })[0];
+      var target = el.getAttribute("data-sapevent");
+      if (!target) {
+        target = el.hrefsav || el.href || el.formAction || "";
+        if (!/sapevent/i.test(target)) return false;
+      }
+      return re.test(target);
+    });
+}
+
+// First matching sapevent element (anchor preferred), or undefined. Shared by
+// the browser-back trap (triggerSapEventBack) and the hotkey handler.
+function findSapEventElement(action) {
+  var elements = findSapEventElements(action);
+  var anchors  = elements.filter(function(el) { return el.nodeName === "A" });
+  return (anchors.length ? anchors : elements)[0];
 }
 
 function triggerSapEventBack(backAction) {
@@ -2654,11 +2627,8 @@ function triggerSapEventBack(backAction) {
 
   // No Back element on this page (e.g. repo list) -> submit go_back directly,
   // so browser Back mirrors F3 everywhere (e.g. leaving a top-level page).
-  // NOTE: this bare-form submit only works in the desktop browser control.
-  // On WebGUI it does not route (the ITS session context is missing), so on
-  // pages that render no Back element there, browser Back has no effect.
-  // Pages that do render a Back element use the click path above and work
-  // in both controls.
+  // This reuses the page-global sapevent form, so it routes on WebGUI as well
+  // as on the desktop browser controls.
   submitSapeventForm({}, backAction);
 }
 
