@@ -15,6 +15,7 @@
       ],
       "preLaunchTask": "npm: build",
       "program": "${workspaceFolder}/output/index.mjs",
+      "args": ["--skip-critical"]
     }
   ]
 }
