@@ -347,13 +347,14 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
   METHOD zif_abapgit_html~a.
 
-    DATA: lv_class TYPE string,
-          lv_href  TYPE string,
-          lv_click TYPE string,
-          lv_id    TYPE string,
-          lv_act   TYPE string,
-          lv_style TYPE string,
-          lv_title TYPE string.
+    DATA: lv_class         TYPE string,
+          lv_href          TYPE string,
+          lv_click         TYPE string,
+          lv_id            TYPE string,
+          lv_act           TYPE string,
+          lv_style         TYPE string,
+          lv_title         TYPE string,
+          lv_data_sapevent TYPE string.
 
     lv_class = iv_class.
 
@@ -385,7 +386,12 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
           IF iv_query IS NOT INITIAL.
             lv_act = lv_act && `?` && iv_query.
           ENDIF.
-          lv_href  = | href="sapevent:{ lv_act }"|.
+          lv_href          = | href="sapevent:{ lv_act }"|.
+          " Stable action marker that survives ITS href rewriting on WebGUI,
+          " so JS (e.g. hotkeys) can find and click the element by its sapevent.
+          lv_data_sapevent = | data-sapevent="{ escape(
+            val    = lv_act
+            format = cl_abap_format=>e_html_attr ) }"|.
         WHEN zif_abapgit_html=>c_action_type-onclick.
           lv_href  = ' href="#"'.
           lv_click = | onclick="{ iv_act }"|.
@@ -413,7 +419,7 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
         format = cl_abap_format=>e_html_attr ) }"|.
     ENDIF.
 
-    rv_str = |<a{ lv_id }{ lv_class }{ lv_href }{ lv_click }{ lv_style }{ lv_title }>|
+    rv_str = |<a{ lv_id }{ lv_class }{ lv_href }{ lv_data_sapevent }{ lv_click }{ lv_style }{ lv_title }>|
           && |{ iv_txt }</a>|.
 
   ENDMETHOD.

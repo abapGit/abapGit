@@ -524,6 +524,15 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
       ii_html          = ri_html
       iv_part_category = c_html_parts-hidden_forms ).
 
+    " Reusable, server-rendered sapevent form. On WebGUI a sapevent only routes
+    " through a form/anchor that ITS wired up while rendering the page; a form
+    " built in JS at submit time is not wired, so the raw sapevent: scheme is
+    " rejected. submitSapeventForm reuses this form when a page provides no
+    " dedicated form_<action>, so JS-triggered sapevents work on WebGUI. On the
+    " desktop browser control its action is simply overwritten, so it is
+    " harmless there.
+    ri_html->add( |<form id="global_sapevent_form" method="post" action="sapevent:noop"></form>| ).
+
     ri_html->add( footer( lo_timer->end( ) ) ).
 
     ri_html->add( '</div>' ).
