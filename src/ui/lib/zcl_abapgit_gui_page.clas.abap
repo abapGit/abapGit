@@ -520,6 +520,9 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ri_html->add( render_hotkey_overview( ) ).
     ri_html->add( render_error_message_box( ) ).
 
+    " Extension point for pages that need their own hidden form. No page in
+    " abapGit uses it since the global sapevent form below replaced the
+    " per-action stub forms, but it stays available to subclasses.
     render_deferred_parts(
       ii_html          = ri_html
       iv_part_category = c_html_parts-hidden_forms ).
@@ -527,9 +530,9 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     " Reusable, server-rendered sapevent form. On WebGUI a sapevent only routes
     " through a form/anchor that ITS wired up while rendering the page; a form
     " built in JS at submit time is not wired, so the raw sapevent: scheme is
-    " rejected. submitSapeventForm reuses this form when a page provides no
-    " dedicated form_<action>, so JS-triggered sapevents work on WebGUI. On the
-    " desktop browser control its action is simply overwritten, so it is
+    " rejected. submitSapeventForm submits through this form whenever the caller
+    " does not supply one of its own, so JS-triggered sapevents work on WebGUI.
+    " On the desktop browser control its action is simply overwritten, so it is
     " harmless there.
     ri_html->add( |<form id="global_sapevent_form" method="post" action="sapevent:noop"></form>| ).
 

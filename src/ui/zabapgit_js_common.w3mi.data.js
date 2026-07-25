@@ -114,6 +114,29 @@ function debugOutput(text, dstID) {
 // genuine user Back press. See that function for details.
 var gSapeventNavPending = false;
 
+// Encode a sapevent action for the ITS "PARAMS=" slot. PARAMS carries the whole
+// action including its own query string, so characters that would terminate the
+// value inside the enclosing URL have to be escaped (ITS decodes the parameter
+// again before handing it to the control). "?" and "=" are deliberately left
+// alone so single-parameter actions keep producing the exact URL they did
+// before.
+function encodeItsParams(action) {
+  return action.replace(/[%&#+]/g, function(character) {
+    return "%" + character.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+
+// Append params to a sapevent action as a query string, the way a GET form
+// submit would have appended them to the action URL
+function appendParamsToAction(action, params) {
+  var pairs = [];
+  for (var key in params) {
+    pairs.push(encodeURIComponent(key) + "=" + encodeURIComponent(params[key]));
+  }
+  if (!pairs.length) return action;
+  return action + (action.indexOf("?") === -1 ? "?" : "&") + pairs.join("&");
+}
+
 // Use a supplied form, a pre-created form or create a hidden form
 // and submit with sapevent
 function submitSapeventForm(params, action, method, form) {
@@ -130,6 +153,18 @@ function submitSapeventForm(params, action, method, form) {
     } else {
       return ""; // No prefix for old IE control
     }
+  }
+
+  // A GET submit replaces the action URL's query string with the form fields.
+  // On WebGUI that would wipe the ITS routing parameters the wired-up form
+  // action carries (~control / ~event / PARAMS), so the request no longer
+  // routes as a sapevent. Carry the params in the action instead and post: the
+  // desktop controls end up navigating to exactly the sapevent URL a GET submit
+  // produced, and WebGUI keeps its routing parameters intact.
+  if (method && method.toLowerCase() === "get") {
+    action = appendParamsToAction(action, params);
+    params = null;
+    method = "post";
   }
 
   var isGlobalForm = false;
@@ -164,7 +199,7 @@ function submitSapeventForm(params, action, method, form) {
   // SAP GUI for HTML: inside an HTML control, form actions look as follows:
   // ~control=116&~event=OnSAPEvent&ALINK=1&frameName=&PARAMS=stage_commit
   if (/~control=/i.test(form_action)) {
-    form.setAttribute("action", form_action.replace(/PARAMS=.*$/, "PARAMS=" + action));
+    form.setAttribute("action", form_action.replace(/PARAMS=.*$/, "PARAMS=" + encodeItsParams(action)));
   } else if (/sapevent/i.test(action)) {
     form.setAttribute("action", action);
   } else {
@@ -201,7 +236,7 @@ function submitSapeventForm(params, action, method, form) {
 // would be swallowed.
 function clickSapEvent(element) {
   var isSapEvent = element.getAttribute("data-sapevent")
-    || /sapevent/i.test(element.hrefsav || element.href || element.formAction || "");
+    || /sapevent/i.test(element.hrefsav || element.href || element.getAttribute("formaction") || "");
   if (isSapEvent) gSapeventNavPending = true;
   element.click();
 }
@@ -423,6 +458,13 @@ RepoOverViewHelper.prototype.updateActionLinks = function(selectedRow) {
     // see /sap/public/icmandir/its/lsgui/js/htmlviewer.js
     if (link.hrefsav) {
       link.hrefsav = link.hrefsav.replace(reKey, newKey);
+    }
+
+    // keep the backend's action marker in sync with the rewritten href, so it
+    // stays a faithful description of what clicking the link will do
+    var sapevent = link.getAttribute("data-sapevent");
+    if (sapevent) {
+      link.setAttribute("data-sapevent", sapevent.replace(reKey, newKey));
     }
 
     // toggle button visibility
@@ -2599,7 +2641,11 @@ function findSapEventElements(action) {
     .filter(function(el) {
       var target = el.getAttribute("data-sapevent");
       if (!target) {
-        target = el.hrefsav || el.href || el.formAction || "";
+        // getAttribute, not the formAction property: the property falls back to
+        // the document URL when the attribute is absent, and a WebGUI document
+        // URL can carry both "OnSAPEvent" and "PARAMS=<action>" and so match
+        // every submit button on the page.
+        target = el.hrefsav || el.href || el.getAttribute("formaction") || "";
         if (!/sapevent/i.test(target)) return false;
       }
       return re.test(target);
@@ -2608,6 +2654,11 @@ function findSapEventElements(action) {
 
 // First matching sapevent element (anchor preferred), or undefined. Shared by
 // the browser-back trap (triggerSapEventBack) and the hotkey handler.
+//
+// When a page renders the same action more than once (typically a toolbar entry
+// plus an inline link) we deliberately take the first one in document order,
+// i.e. the toolbar entry. All renderings of an action point at the same target,
+// so the choice only decides which element receives the synthetic click.
 function findSapEventElement(action) {
   var elements = findSapEventElements(action);
   var anchors  = elements.filter(function(el) { return el.nodeName === "A" });
