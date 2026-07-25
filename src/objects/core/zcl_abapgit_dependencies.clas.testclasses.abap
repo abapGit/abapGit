@@ -255,8 +255,10 @@ CLASS ltcl_resolve IMPLEMENTATION.
                  iv_obj_name = 'ZTEST_SRVB' ).
 
     zcl_abapgit_dependencies=>resolve(
-      EXPORTING iv_skip_ddic = abap_true
-      CHANGING ct_tadir = mt_tadir ).
+      EXPORTING
+        iv_skip_ddic = abap_true
+      CHANGING
+        ct_tadir     = mt_tadir ).
 
     " G4BA should be deleted AFTER SRVB (SRVB deleted first, then G4BA)
     then_should_be_deleted_before( iv_object_a   = 'SRVB'
@@ -275,8 +277,10 @@ CLASS ltcl_resolve IMPLEMENTATION.
                  iv_obj_name = 'ZTEST_G4BA' ).
 
     zcl_abapgit_dependencies=>resolve(
-      EXPORTING iv_skip_ddic = abap_true
-      CHANGING ct_tadir = mt_tadir ).
+      EXPORTING
+        iv_skip_ddic = abap_true
+      CHANGING
+        ct_tadir     = mt_tadir ).
 
     " SUSH should be deleted AFTER G4BA (G4BA deleted first, then SUSH)
     then_should_be_deleted_before( iv_object_a   = 'G4BA'
@@ -309,10 +313,10 @@ CLASS ltcl_resolve IMPLEMENTATION.
                         WITH KEY object   = iv_object_b
                                  obj_name = iv_obj_name_b.
 
-    cl_abap_unit_assert=>assert_equals(
-      act = boolc( ls_tadir_a-korrnum < ls_tadir_b-korrnum )
-      exp = abap_true
-      msg = |{ iv_object_a } { iv_obj_name_a } should be deleted before { iv_object_b } { iv_obj_name_b }| ).
+    IF ls_tadir_a-korrnum >= ls_tadir_b-korrnum.
+      cl_abap_unit_assert=>fail(
+        |{ iv_object_a } { iv_obj_name_a } should be deleted before { iv_object_b } { iv_obj_name_b }| ).
+    ENDIF.
 
   ENDMETHOD.
 
