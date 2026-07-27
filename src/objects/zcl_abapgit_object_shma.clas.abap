@@ -144,12 +144,13 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
     tadir_insert( iv_package ).
 
     TRY.
+        " dont generate the classes, it will cause a GUI popup to show
         CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=LCL_SHMA_HELPER')=>('INSERT_AREA')
           EXPORTING
             area_name           = lv_area_name
             attributes          = ls_area_attributes
             force_overwrite     = abap_true
-            no_class_generation = abap_false
+            no_class_generation = abap_true
             silent_mode         = abap_true.
 
       CATCH cx_root INTO lx_root.
