@@ -155,7 +155,7 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
 
       CATCH cx_root INTO lx_root.
         zcx_abapgit_exception=>raise(
-          iv_text     = |Error deserializing SHMA { ms_item-obj_name }|
+          iv_text     = |Error deserializing SHMA { ms_item-obj_name }, { lx_root->get_text( ) }|
           ix_previous = lx_root ).
     ENDTRY.
 
