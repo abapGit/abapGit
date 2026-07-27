@@ -258,11 +258,18 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
       lv_gui_patch         TYPE zif_abapgit_frontend_services=>ty_gui_patch,
       li_frontend_services TYPE REF TO zif_abapgit_frontend_services.
 
+    rv_result = abap_true.
+
+    " only relevant with SAPGUI for Windows, always hide for javagui or WebGUI
+    IF zcl_abapgit_ui_factory=>get_frontend_services( )->is_sapgui_for_windows( ) = abap_false.
+      rv_result = abap_false.
+      RETURN.
+    ENDIF.
+
     " With SAP GUI 8.00 PL3 and 7.70 PL13 Edge browser control is basically working.
     " For lower releases we render the browser control warning
     " and toggle it via JS function toggleBrowserControlWarning.
 
-    rv_result = abap_true.
 
     TRY.
         li_frontend_services = zcl_abapgit_ui_factory=>get_frontend_services( ).
