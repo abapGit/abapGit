@@ -141,11 +141,17 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
       CHANGING
         cg_data = ls_area_attributes ).
 
+    IF ls_area_attributes-root IS INITIAL.
+      zcx_abapgit_exception=>raise( |Error deserializing SHMA { ms_item-obj_name }, root class is empty| ).
+    ELSEIF zcl_abapgit_oo_factory=>get_by_type( 'CLAS' )->exists( ls_area_attributes-root ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error deserializing SHMA { ms_item-obj_name }, root class {
+        ls_area_attributes-root } does not exist| ).
+    ENDIF.
+
     tadir_insert( iv_package ).
 
     TRY.
         " dont generate the classes, it will cause a GUI popup to show
-        " the CLAS must be deserialized before SHMA
         CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=LCL_SHMA_HELPER')=>('INSERT_AREA')
           EXPORTING
             area_name           = lv_area_name
