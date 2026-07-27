@@ -145,6 +145,7 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
 
     TRY.
         " dont generate the classes, it will cause a GUI popup to show
+        " the CLAS must be deserialized before SHMA
         CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=LCL_SHMA_HELPER')=>('INSERT_AREA')
           EXPORTING
             area_name           = lv_area_name
