@@ -122,6 +122,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     DATA: ls_release       TYPE zif_abapgit_environment=>ty_release_sp,
           lv_gui_version   TYPE string,
+          lv_gui_type      TYPE string,
           lv_devclass      TYPE devclass,
           lo_frontend_serv TYPE REF TO zif_abapgit_frontend_services.
 
@@ -131,6 +132,18 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
       CATCH zcx_abapgit_exception ##NO_HANDLER.
         " Continue rendering even if this fails
     ENDTRY.
+
+    CASE abap_true.
+      WHEN lo_frontend_serv->is_webgui( ).
+        lv_gui_type = 'Web GUI'.
+      WHEN lo_frontend_serv->is_sapgui_for_windows( ).
+        lv_gui_type = 'SAP GUI for Windows'.
+      WHEN lo_frontend_serv->is_sapgui_for_java( ).
+        lv_gui_type = 'SAP GUI for Java'.
+      WHEN OTHERS.
+        " eg. open-abap?
+        lv_gui_type = 'Unknown'.
+    ENDCASE.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -164,6 +177,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
     ri_html->add( |<table>| ).
     ri_html->add( |<tr><td>abapGit version:</td><td>{ zif_abapgit_version=>c_abap_version }</td></tr>| ).
     ri_html->add( |<tr><td>XML version:    </td><td>{ zif_abapgit_version=>c_xml_version }</td></tr>| ).
+    ri_html->add( |<tr><td>GUI type:       </td><td>{ lv_gui_type }</td></tr>| ).
     ri_html->add( |<tr><td>GUI version:    </td><td>{ lv_gui_version }</td></tr>| ).
     ri_html->add( |<tr><td>APACK version:  </td><td>{
                   zcl_abapgit_apack_migration=>c_apack_interface_version }</td></tr>| ).
