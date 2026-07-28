@@ -118,9 +118,6 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     METHODS count_default_files_to_commit
       RETURNING
         VALUE(rv_count) TYPE i .
-    METHODS render_deferred_hidden_events
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_scripts
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
@@ -366,18 +363,6 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     ri_html->add( '</tr>' ).
     ri_html->add( '</table>' ).
-
-  ENDMETHOD.
-
-
-  METHOD render_deferred_hidden_events.
-
-    DATA ls_event TYPE zcl_abapgit_gui_chunk_lib=>ty_event_signature.
-
-    ls_event-method = 'post'.
-    ls_event-name   = c_action-stage_commit.
-    ri_html = zcl_abapgit_gui_chunk_lib=>render_event_as_form( ls_event ).
-    ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
 
   ENDMETHOD.
 
@@ -823,9 +808,6 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     ri_html->add( '</div>' ).
 
-    gui_services( )->get_html_parts( )->add_part(
-      iv_collection = zcl_abapgit_gui_component=>c_html_parts-hidden_forms
-      ii_part       = render_deferred_hidden_events( ) ).
     register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
