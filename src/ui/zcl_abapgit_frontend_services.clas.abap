@@ -363,6 +363,23 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_frontend_services~get_gui_type.
+
+    CASE abap_true.
+      WHEN zif_abapgit_frontend_services~is_webgui( ).
+        rv_gui_type = 'Web GUI'.
+      WHEN zif_abapgit_frontend_services~is_sapgui_for_windows( ).
+        rv_gui_type = 'SAP GUI for Windows'.
+      WHEN zif_abapgit_frontend_services~is_sapgui_for_java( ).
+        rv_gui_type = 'SAP GUI for Java'.
+      WHEN OTHERS.
+* eg. open-abap?
+        rv_gui_type = 'Unknown'.
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_frontend_services~is_sapgui_for_java.
 
     TRY.

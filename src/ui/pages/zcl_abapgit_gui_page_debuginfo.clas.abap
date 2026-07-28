@@ -133,17 +133,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
         " Continue rendering even if this fails
     ENDTRY.
 
-    CASE abap_true.
-      WHEN lo_frontend_serv->is_webgui( ).
-        lv_gui_type = 'Web GUI'.
-      WHEN lo_frontend_serv->is_sapgui_for_windows( ).
-        lv_gui_type = 'SAP GUI for Windows'.
-      WHEN lo_frontend_serv->is_sapgui_for_java( ).
-        lv_gui_type = 'SAP GUI for Java'.
-      WHEN OTHERS.
-        " eg. open-abap?
-        lv_gui_type = 'Unknown'.
-    ENDCASE.
+    lv_gui_type = lo_frontend_serv->get_gui_type( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
