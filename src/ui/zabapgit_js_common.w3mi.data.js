@@ -132,6 +132,7 @@ function submitSapeventForm(params, action, method, form) {
     }
   }
 
+
   var stub_form_id = "form_" + action;
 
   form = form
@@ -1818,6 +1819,11 @@ Hotkeys.isHotkeyCallPossible = function() {
   return (activeElementReadOnly || (activeElementType !== "INPUT" && activeElementType !== "TEXTAREA"));
 };
 
+// ctrl-modified keys are denoted with a leading "^" (e.g. "^p"), spell it out for the help sheet
+Hotkeys.formatKeyForDisplay = function(key) {
+  return (key[0] === "^") ? "ctrl+" + key.substring(1) : key;
+};
+
 Hotkeys.addHotkeyToHelpSheet = function(key, description) {
   var hotkeysUl = document.querySelector("#hotkeys ul.hotkeys");
   if (!hotkeysUl) return;
@@ -1827,7 +1833,7 @@ Hotkeys.addHotkeyToHelpSheet = function(key, description) {
   var spanDescr = document.createElement("span");
 
   spanId.className    = "key-id";
-  spanId.innerText    = key;
+  spanId.innerText    = Hotkeys.formatKeyForDisplay(key);
   spanDescr.className = "key-descr";
   spanDescr.innerText = description;
   li.appendChild(spanId);
