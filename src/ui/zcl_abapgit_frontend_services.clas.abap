@@ -318,7 +318,7 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
         get_gui_version_failed   = 1
         cant_write_version_table = 2
         gui_no_version           = 3
-        cntl_error               = 4
+        cntl_error               = 4 " <== raised by WebGUI
         error_no_gui             = 5
         not_supported_by_gui     = 6
         OTHERS                   = 7 ).
