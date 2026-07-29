@@ -16,6 +16,12 @@ CLASS zcl_abapgit_frontend_services DEFINITION
       RETURNING
         VALUE(rv_path) TYPE string.
 
+    METHODS normalize_gui_release
+      IMPORTING
+        iv_raw_gui_release               TYPE file_table-filename
+      RETURNING
+        VALUE(rv_normalized_gui_release) TYPE zif_abapgit_frontend_services=>ty_gui_release.
+
 ENDCLASS.
 
 
@@ -321,7 +327,7 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
     ENDIF.
 
     READ TABLE lt_version_table INTO ls_version INDEX 1. " gui release
-    ev_gui_release = ls_version-filename.
+    ev_gui_release = normalize_gui_release( ls_version-filename ).
     READ TABLE lt_version_table INTO ls_version INDEX 2. " gui sp
     ev_gui_sp = ls_version-filename.
     READ TABLE lt_version_table INTO ls_version INDEX 3. " gui patch
@@ -524,6 +530,20 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
     ENDIF.
 
     gv_initial_folder = lv_path.
+
+  ENDMETHOD.
+
+
+  METHOD normalize_gui_release.
+
+    IF zif_abapgit_frontend_services~is_sapgui_for_java( ) = abap_true
+    AND strlen( iv_raw_gui_release ) = 6.
+      " e.g. 081000
+      rv_normalized_gui_release = iv_raw_gui_release+1(4).
+    ELSE.
+      " e.g. 8100
+      rv_normalized_gui_release = iv_raw_gui_release.
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
