@@ -16,6 +16,12 @@ CLASS zcl_abapgit_frontend_services DEFINITION
       RETURNING
         VALUE(rv_path) TYPE string.
 
+    METHODS normalize_gui_release
+      IMPORTING
+        iv_raw_gui_release               TYPE file_table-filename
+      RETURNING
+        VALUE(rv_normalized_gui_release) TYPE zif_abapgit_frontend_services=>ty_gui_release.
+
 ENDCLASS.
 
 
@@ -312,7 +318,7 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
         get_gui_version_failed   = 1
         cant_write_version_table = 2
         gui_no_version           = 3
-        cntl_error               = 4
+        cntl_error               = 4 " <== raised by WebGUI
         error_no_gui             = 5
         not_supported_by_gui     = 6
         OTHERS                   = 7 ).
@@ -321,7 +327,7 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
     ENDIF.
 
     READ TABLE lt_version_table INTO ls_version INDEX 1. " gui release
-    ev_gui_release = ls_version-filename.
+    ev_gui_release = normalize_gui_release( ls_version-filename ).
     READ TABLE lt_version_table INTO ls_version INDEX 2. " gui sp
     ev_gui_sp = ls_version-filename.
     READ TABLE lt_version_table INTO ls_version INDEX 3. " gui patch
@@ -359,6 +365,23 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
 * when running on open-abap
         RETURN.
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_frontend_services~get_gui_type.
+
+    CASE abap_true.
+      WHEN zif_abapgit_frontend_services~is_webgui( ).
+        rv_gui_type = 'SAP GUI for HTML'.
+      WHEN zif_abapgit_frontend_services~is_sapgui_for_windows( ).
+        rv_gui_type = 'SAP GUI for Windows'.
+      WHEN zif_abapgit_frontend_services~is_sapgui_for_java( ).
+        rv_gui_type = 'SAP GUI for Java'.
+      WHEN OTHERS.
+* eg. open-abap?
+        rv_gui_type = 'Unknown'.
+    ENDCASE.
 
   ENDMETHOD.
 
@@ -507,6 +530,20 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
     ENDIF.
 
     gv_initial_folder = lv_path.
+
+  ENDMETHOD.
+
+
+  METHOD normalize_gui_release.
+
+    IF zif_abapgit_frontend_services~is_sapgui_for_java( ) = abap_true
+    AND strlen( iv_raw_gui_release ) = 6.
+      " e.g. 081000
+      rv_normalized_gui_release = iv_raw_gui_release+1(4).
+    ELSE.
+      " e.g. 8100
+      rv_normalized_gui_release = iv_raw_gui_release.
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

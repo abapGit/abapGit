@@ -123,6 +123,10 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
     RETURNING
       VALUE(rv_is_webgui) TYPE abap_bool.
 
+  METHODS get_gui_type
+    RETURNING
+      VALUE(rv_gui_type) TYPE string.
+
   METHODS open_ie_devtools
     RAISING
       zcx_abapgit_exception.
