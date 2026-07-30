@@ -131,7 +131,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ri_html->add( '<div id="footer">' ).
     ri_html->add( '<table class="w100"><tr>' ).
 
-    ri_html->add( '<td class="w40 sponsor">' ).
+    ri_html->add( '<td class="sponsor">' ).
     ri_html->add_a( iv_act = zif_abapgit_definitions=>c_action-sponsor
                     iv_txt = ri_html->icon( iv_name = 'heart-regular/pink'
                                             iv_hint = 'Sponsor us' ) ).
@@ -150,7 +150,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ri_html->add( |<div id="footer-version" class="version">{ get_version_details( ) }</div>| ).
     ri_html->add( '</td>' ).
 
-    ri_html->add( '<td id="debug-output" class="w40"></td>' ).
+    ri_html->add( '<td id="debug-output"></td>' ).
 
     ri_html->add( '</tr></table>' ).
     ri_html->add( '</div>' ).
@@ -172,17 +172,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     lo_frontend_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
 
-    CASE abap_true.
-      WHEN lo_frontend_serv->is_webgui( ).
-        rv_version = rv_version && ` - Web`.
-      WHEN lo_frontend_serv->is_sapgui_for_windows( ).
-        rv_version = rv_version && ` - Win`.
-      WHEN lo_frontend_serv->is_sapgui_for_java( ).
-        rv_version = rv_version && ` - Java`.
-      WHEN OTHERS.
-* eg. open-abap?
-        rv_version = rv_version && ` - Unknown`.
-    ENDCASE.
+    rv_version = rv_version && | - { lo_frontend_serv->get_gui_type( ) }|.
 
     " Will be filled by JS method displayBrowserControlFooter
     rv_version = rv_version && '<span id="browser-control-footer"></span>'.
@@ -316,7 +306,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   METHOD render_command_palettes.
 
     ii_html->add( 'var gCommandPalette = new CommandPalette(enumerateUiActions, {' ).
-    ii_html->add( '  toggleKey: "F1",' ).
+    ii_html->add( '  toggleKey: ["F1", "^p"],' ).
     ii_html->add( '  hotkeyDescription: "Command Palette"' ).
     ii_html->add( '});' ).
 

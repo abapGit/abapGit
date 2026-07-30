@@ -238,6 +238,8 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
   METHOD find_branch.
 
+    CLEAR ev_branch.
+
     branch_list(
       EXPORTING
         iv_url          = iv_url
