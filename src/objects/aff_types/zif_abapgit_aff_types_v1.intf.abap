@@ -30,6 +30,8 @@ INTERFACE zif_abapgit_aff_types_v1 PUBLIC.
 
   TYPES ty_description_60 TYPE c LENGTH 60.
 
+  TYPES ty_description_70 TYPE c LENGTH 70.
+
   TYPES ty_description_80 TYPE c LENGTH 80.
 
   TYPES ty_description_100 TYPE c LENGTH 100.
@@ -68,6 +70,12 @@ INTERFACE zif_abapgit_aff_types_v1 PUBLIC.
     END OF ty_header_60_src.
 
   TYPES:
+    BEGIN OF ty_header_70_no_abap_lv,
+      description       TYPE ty_description_70,
+      original_language TYPE ty_original_language,
+    END OF ty_header_70_no_abap_lv.
+
+  TYPES:
     BEGIN OF ty_header_80,
       description           TYPE ty_description_80,
       original_language     TYPE ty_original_language,
@@ -94,11 +102,6 @@ INTERFACE zif_abapgit_aff_types_v1 PUBLIC.
       original_language     TYPE ty_original_language,
       abap_language_version TYPE ty_abap_language_version_cloud,
     END OF ty_header_100_cloud.
-
-  TYPES:
-    BEGIN OF ty_header_only_description,
-      description TYPE ty_description_60,
-    END OF ty_header_only_description.
 
   TYPES ty_option TYPE c LENGTH 2.
 
