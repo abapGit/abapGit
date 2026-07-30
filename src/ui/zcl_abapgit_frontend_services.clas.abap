@@ -373,7 +373,7 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
 
     CASE abap_true.
       WHEN zif_abapgit_frontend_services~is_webgui( ).
-        rv_gui_type = 'Web GUI'.
+        rv_gui_type = 'SAP GUI for HTML'.
       WHEN zif_abapgit_frontend_services~is_sapgui_for_windows( ).
         rv_gui_type = 'SAP GUI for Windows'.
       WHEN zif_abapgit_frontend_services~is_sapgui_for_java( ).
