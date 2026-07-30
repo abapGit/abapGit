@@ -8,8 +8,8 @@ INTERFACE zif_abapgit_aff_types_v1 PUBLIC.
 
   "! <p class="shorttext">ABAP Language Version</p>
   "! ABAP language version
-  "! $values {@link zif_aff_types_v1.data:co_abap_language_version}
-  "! $default {@link zif_aff_types_v1.data:co_abap_language_version.standard}
+  "! $values {@link zif_abapgit_aff_types_v1.data:co_abap_language_version}
+  "! $default {@link zif_abapgit_aff_types_v1.data:co_abap_language_version.standard}
   TYPES ty_abap_language_version TYPE c LENGTH 1.
 
   "! <p class="shorttext">ABAP Language Version</p>
