@@ -625,20 +625,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD zif_abapgit_repo~get_data_config.
-
-    " Get local data config
     CREATE OBJECT ri_config TYPE zcl_abapgit_data_config.
     ri_config->zif_abapgit_data_persistence~load_config( ms_data-key ).
-
-    " If nothing is defined, get remote data config and save it locally (if not empty)
-    IF ri_config->get_configs( ) IS INITIAL.
-      ri_config->from_json( mt_remote ).
-
-      IF ri_config->get_configs( ) IS NOT INITIAL.
-        ri_config->zif_abapgit_data_persistence~save_config( ms_data-key ).
-      ENDIF.
-    ENDIF.
-
   ENDMETHOD.
 
 

@@ -26,6 +26,29 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
 
+
+  METHOD after_import.
+
+    DATA: lt_cts_object_entry TYPE STANDARD TABLE OF e071 WITH DEFAULT KEY,
+          ls_cts_object_entry LIKE LINE OF lt_cts_object_entry,
+          lt_cts_key          TYPE STANDARD TABLE OF e071k WITH DEFAULT KEY.
+
+    ls_cts_object_entry-pgmid    = 'R3TR'.
+    ls_cts_object_entry-object   = ms_item-obj_type.
+    ls_cts_object_entry-obj_name = ms_item-obj_name.
+    INSERT ls_cts_object_entry INTO TABLE lt_cts_object_entry.
+
+    CALL FUNCTION 'WDR_CFG_AFTER_IMPORT'
+      EXPORTING
+        iv_tarclient  = sy-mandt
+        iv_is_upgrade = abap_false
+      TABLES
+        tt_e071       = lt_cts_object_entry
+        tt_e071k      = lt_cts_key.
+
+  ENDMETHOD.
+
+
   METHOD constructor.
 
     DATA:
@@ -260,27 +283,6 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD after_import.
-
-    DATA: lt_cts_object_entry TYPE STANDARD TABLE OF e071 WITH DEFAULT KEY,
-          ls_cts_object_entry LIKE LINE OF lt_cts_object_entry,
-          lt_cts_key          TYPE STANDARD TABLE OF e071k WITH DEFAULT KEY.
-
-    ls_cts_object_entry-pgmid    = 'R3TR'.
-    ls_cts_object_entry-object   = ms_item-obj_type.
-    ls_cts_object_entry-obj_name = ms_item-obj_name.
-    INSERT ls_cts_object_entry INTO TABLE lt_cts_object_entry.
-
-    CALL FUNCTION 'WDR_CFG_AFTER_IMPORT'
-      EXPORTING
-        iv_tarclient  = sy-mandt
-        iv_is_upgrade = abap_false
-      TABLES
-        tt_e071       = lt_cts_object_entry
-        tt_e071k      = lt_cts_key.
-
-  ENDMETHOD.
-
 
   METHOD zif_abapgit_object~exists.
 
@@ -475,20 +477,18 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
       AND config_type = ls_orig_config-config_type
       AND config_var  = ls_orig_config-config_var
       ORDER BY PRIMARY KEY.
-    IF lt_otr_texts IS NOT INITIAL.
-      io_xml->add( iv_name = 'OTR_TEXT'
-                   ig_data = lt_otr_texts ).
-    ENDIF.
+
+    io_xml->add( iv_name = 'OTR_TEXT'
+                 ig_data = lt_otr_texts ).
 
     SELECT * FROM wdy_config_datt INTO TABLE lt_cc_text
       WHERE config_id   = ls_orig_config-config_id
       AND config_type = ls_orig_config-config_type
       AND config_var  = ls_orig_config-config_var
       ORDER BY PRIMARY KEY.
-    IF lt_cc_text IS NOT INITIAL.
-      io_xml->add( iv_name = 'DESCR_LANG'
-                   ig_data = lt_cc_text ).
-    ENDIF.
+
+    io_xml->add( iv_name = 'DESCR_LANG'
+                 ig_data = lt_cc_text ).
 
   ENDMETHOD.
 ENDCLASS.

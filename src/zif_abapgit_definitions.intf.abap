@@ -270,6 +270,7 @@ INTERFACE zif_abapgit_definitions
       documentation                 TYPE string VALUE 'documentation',
       flow                          TYPE string VALUE 'flow',
       git_branch_create             TYPE string VALUE 'git_branch_create',
+      git_branch_create_from        TYPE string VALUE 'git_branch_create_from',
       git_branch_delete             TYPE string VALUE 'git_branch_delete',
       git_branch_merge              TYPE string VALUE 'git_branch_merge',
       git_branch_switch             TYPE string VALUE 'git_branch_switch',

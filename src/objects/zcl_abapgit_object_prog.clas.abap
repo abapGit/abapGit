@@ -128,10 +128,8 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
       <ls_tpool>-textpool = add_tpool( lt_tpool ).
     ENDLOOP.
 
-    IF lines( lt_tpool_i18n ) > 0.
-      ii_xml->add( iv_name = 'I18N_TPOOL'
-                   ig_data = lt_tpool_i18n ).
-    ENDIF.
+    ii_xml->add( iv_name = 'I18N_TPOOL'
+                 ig_data = lt_tpool_i18n ).
 
   ENDMETHOD.
 
