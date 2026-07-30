@@ -980,6 +980,11 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ls_hotkey_action-hotkey = |x|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
+    ls_hotkey_action-description   = |Personal Settings|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_settings_personal.
+    ls_hotkey_action-hotkey = |v|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
     ls_hotkey_action-description = |Stage|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_stage.
     ls_hotkey_action-hotkey = |s|.
@@ -1050,7 +1055,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_act = zif_abapgit_definitions=>c_action-repo_newoffline
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>settings( )
-      iv_act = zif_abapgit_definitions=>c_action-go_settings
+      io_sub = zcl_abapgit_gui_menus=>settings( space )
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>refresh( )
       iv_act = c_action-refresh_list
