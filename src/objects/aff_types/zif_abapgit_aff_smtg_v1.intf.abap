@@ -27,7 +27,7 @@ INTERFACE zif_abapgit_aff_smtg_v1
 
   TYPES:
     "! <p class="shorttext">Email Template Content</p>
-    "! Displays the HTML und plain text template content.
+    "! Displays the HTML and plain text template content.
     BEGIN OF ty_template_content,
       "! <p class="shorttext">Name</p>
       "! Name
