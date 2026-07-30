@@ -167,6 +167,11 @@ div#footer {
   padding:          0.5em 0.5em;
   border-top:       3px double;
 }
+/* narrow the side cells so the version line does not wrap */
+div#footer td.sponsor,
+div#footer td#debug-output {
+  width: 25%;
+}
 div#footer .version {
   margin-top: 0.5em;
   font-size: small;
