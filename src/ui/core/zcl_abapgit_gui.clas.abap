@@ -480,6 +480,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
     DATA lv_default_user TYPE string.
     DATA lv_user         TYPE string.
     DATA lv_pass         TYPE string.
+    DATA lv_auth         TYPE string.
 
     lv_default_user = zcl_abapgit_persist_factory=>get_user( )->get_repo_login( iv_url ).
     lv_user         = lv_default_user.
@@ -504,7 +505,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
     ENDIF.
 
     " Cache the credentials so create_by_url picks them up on the retry
-    DATA(lv_auth) = zcl_abapgit_login_manager=>set_basic(
+    lv_auth = zcl_abapgit_login_manager=>set_basic(
       iv_uri      = iv_url
       iv_username = lv_user
       iv_password = lv_pass ).
