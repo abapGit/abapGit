@@ -438,10 +438,9 @@ CLASS zcl_abapgit_object_wdca IMPLEMENTATION.
       AND config_type = ls_outline-config_type
       AND config_var  = ls_outline-config_var
       ORDER BY PRIMARY KEY.
-    IF lt_cc_text IS NOT INITIAL.
-      io_xml->add( iv_name = 'DESCR_LANG'
-                   ig_data = lt_cc_text ).
-    ENDIF.
+
+    io_xml->add( iv_name = 'DESCR_LANG'
+                 ig_data = lt_cc_text ).
 
   ENDMETHOD.
 ENDCLASS.

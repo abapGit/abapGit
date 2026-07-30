@@ -953,9 +953,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
       APPEND ls_usage_data TO lt_usage_data.
     ENDLOOP.
 
-    IF lt_usage_data IS NOT INITIAL.
-      io_xml->add( iv_name = 'PERMISSION'
-                   ig_data = lt_usage_data ).
-    ENDIF.
+    io_xml->add( iv_name = 'PERMISSION'
+                 ig_data = lt_usage_data ).
   ENDMETHOD.
 ENDCLASS.

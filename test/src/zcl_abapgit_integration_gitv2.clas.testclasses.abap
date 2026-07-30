@@ -1,7 +1,8 @@
 CLASS ltcl_test DEFINITION FOR TESTING DURATION MEDIUM RISK LEVEL CRITICAL FINAL.
+  PUBLIC SECTION.
+    INTERFACES if_ftd_invocation_answer.
 
   PRIVATE SECTION.
-    INTERFACES if_ftd_invocation_answer.
     METHODS setup.
     METHODS teardown.
     METHODS list_branches FOR TESTING RAISING cx_static_check.
