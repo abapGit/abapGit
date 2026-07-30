@@ -3,32 +3,68 @@
  **********************************************************/
 
 /**********************************************************
-  Global variables used from outside
- **********************************************************/
+ * Where used in ABAP
+ **********************************************************
 
-/* exported setInitialFocus */
-/* exported setInitialFocusWithQuerySelector */
-/* exported submitFormById */
-/* exported errorStub */
-/* exported confirmInitialized */
-/* exported perfOut */
-/* exported perfLog */
-/* exported perfClear */
-/* exported enableArrowListNavigation */
-/* exported activateLinkHints */
-/* exported setKeyBindings */
-/* exported preparePatch */
-/* exported registerStagePatch */
-/* exported getIndocStyleSheet */
-/* exported addMarginBottom */
-/* exported enumerateJumpAllFiles */
-/* exported createRepoCatalogEnumerator */
-/* exported enumerateUiActions */
-/* exported onDiffCollapse */
-/* exported restoreScrollPosition */
-/* exported toggleBrowserControlWarning */
-/* exported displayBrowserControlFooter */
-/* exported redirectBrowserBackToSapEvent */
+zcl_abapgit_gui_page->zif_abapgit_gui_renderable~render
+
+  confirmInitialized
+
+zcl_abapgit_gui_page->scripts
+
+  toggleBrowserControlWarning
+  displayBrowserControlFooter
+  redirectBrowserBackToSapEvent
+  addHotkey
+
+zcl_abapgit_gui_page->render_link_hints
+
+  activateLinkHints
+  setInitialFocusWithQuerySelector
+  enableArrowListNavigation
+
+zcl_abapgit_gui_page->render_command_palettes
+
+  new CommandPalette( enumerateUiActions )
+
+zcl_abapgit_gui_chunk_lib->render_repo_palette
+
+  new CommandPalette( createRepoCatalogEnumerator )
+
+zcl_abapgit_gui_page_db_entry->build_toolbar
+
+  submitFormById
+
+zcl_abapgit_gui_page_diff_base->render_scripts
+
+  restoreScrollPosition
+  addMarginBottom
+  new CommandPalette( enumerateJumpAllFiles )
+  new DiffHelper
+  new DiffColumnSelection
+
+zcl_abapgit_gui_page_diff_base->render_diff_head
+
+  onDiffCollapse
+
+zcl_abapgit_gui_page_repo_over->render_scripts
+
+  new RepoOverViewHelper
+
+zcl_abapgit_gui_page_stage->render_scripts
+
+  new StageHelper
+
+zcl_abapgit_gui_page_patch->render_scripts
+
+  preparePatch
+  registerStagePatch
+
+zcl_abapgit_gui_hotkey_ctl->render_scripts
+
+  setKeyBindings
+
+ **********************************************************/
 
 /**********************************************************
  * Polyfills
@@ -2385,6 +2421,10 @@ CommandPalette.prototype.exec = function(cmd) {
 CommandPalette.isVisible = function() {
   return CommandPalette.instances.reduce(function(result, instance) { return result || instance.elements.palette.style.display !== "none" }, false);
 };
+
+function addHotkey(opts) {
+  Hotkeys.addHotkeyToHelpSheet(opts.toggleKey, opts.hotkeyDescription);
+}
 
 /**********************************************************
  * Command Enumerators
