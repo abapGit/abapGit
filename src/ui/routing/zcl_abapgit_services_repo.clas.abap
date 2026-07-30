@@ -300,7 +300,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
               EXIT.
             ENDIF.
           WHEN 'INTF'.
-            IF <ls_overwrite>-obj_name = 'ZIF_ABAPGIT_DEFINITIONS'.
+            IF <ls_overwrite>-obj_name = 'ZIF_ABAPGIT_DEFINITIONS'
+              OR <ls_overwrite>-obj_name = 'ZIF_ABAPGIT_CTS_API'
+              OR <ls_overwrite>-obj_name = 'ZIF_ABAPGIT_PERSISTENCE'.
               lv_will_dump = abap_true.
               EXIT.
             ENDIF.

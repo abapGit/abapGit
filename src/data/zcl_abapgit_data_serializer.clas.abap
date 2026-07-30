@@ -5,13 +5,13 @@ CLASS zcl_abapgit_data_serializer DEFINITION
 
   PUBLIC SECTION.
 
+    CONSTANTS c_max_records TYPE i VALUE 20000 ##NO_TEXT.
+
     INTERFACES zif_abapgit_data_serializer .
 
   PROTECTED SECTION.
 
   PRIVATE SECTION.
-
-    CONSTANTS c_max_records TYPE i VALUE 20000 ##NO_TEXT.
 
     METHODS convert_itab_to_json
       IMPORTING

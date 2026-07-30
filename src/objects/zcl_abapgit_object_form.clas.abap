@@ -448,9 +448,9 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
       CLEAR ls_form_data.
 
       _read_form( EXPORTING is_text_header = <ls_text_header>
-                  IMPORTING ev_form_found = lv_form_found
-                            es_form_data  = ls_form_data
-                            et_lines      = lt_lines ).
+                  IMPORTING ev_form_found  = lv_form_found
+                            es_form_data   = ls_form_data
+                            et_lines       = lt_lines ).
 
       IF lv_form_found = abap_true.
 
@@ -465,12 +465,8 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
 
     ENDLOOP.
 
-    IF lt_form_data IS NOT INITIAL.
-
-      io_xml->add( iv_name = c_objectname_form
-                   ig_data = lt_form_data ).
-
-    ENDIF.
+    io_xml->add( iv_name = c_objectname_form
+                 ig_data = lt_form_data ).
 
   ENDMETHOD.
 

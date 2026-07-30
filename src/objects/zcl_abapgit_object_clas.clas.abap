@@ -613,10 +613,9 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       iv_id          = c_longtext_id-class
       iv_object_name = lv_object
       iv_language    = mv_language ).
-    IF lines( lt_lines ) > 0.
-      ii_xml->add( iv_name = 'LINES'
-                   ig_data = lt_lines ).
-    ENDIF.
+
+    ii_xml->add( iv_name = 'LINES'
+                 ig_data = lt_lines ).
 
     IF mo_i18n_params->ms_params-main_language_only = abap_true.
       RETURN.
@@ -638,10 +637,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     ENDLOOP.
 
-    IF lines( lt_i18n_lines ) > 0.
-      ii_xml->add( iv_name = 'I18N_LINES'
-                   ig_data = lt_i18n_lines ).
-    ENDIF.
+    ii_xml->add( iv_name = 'I18N_LINES'
+                 ig_data = lt_i18n_lines ).
 
     serialize_longtexts(
       ii_xml           = ii_xml
@@ -737,10 +734,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     ENDLOOP.
 
-    IF lines( lt_i18n_tpool ) > 0.
-      ii_xml->add( iv_name = 'I18N_TPOOL'
-                   ig_data = lt_i18n_tpool ).
-    ENDIF.
+    ii_xml->add( iv_name = 'I18N_TPOOL'
+                 ig_data = lt_i18n_tpool ).
 
   ENDMETHOD.
 
