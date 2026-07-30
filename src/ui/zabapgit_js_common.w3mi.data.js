@@ -1820,6 +1820,15 @@ Hotkeys.isHotkeyCallPossible = function() {
   return (activeElementReadOnly || (activeElementType !== "INPUT" && activeElementType !== "TEXTAREA"));
 };
 
+// ctrl-modified keys are denoted with a leading "^" (e.g. "^p"), spell it out for the help sheet
+// an array of keys means "any of them" and is displayed as "F1 / ctrl+p"
+Hotkeys.formatKeyForDisplay = function(key) {
+  if (Array.isArray(key)) {
+    return key.map(function(singleKey) { return Hotkeys.formatKeyForDisplay(singleKey) }).join(" / ");
+  }
+  return (key[0] === "^") ? "ctrl+" + key.substring(1) : key;
+};
+
 Hotkeys.addHotkeyToHelpSheet = function(key, description) {
   var hotkeysUl = document.querySelector("#hotkeys ul.hotkeys");
   if (!hotkeysUl) return;
@@ -1829,7 +1838,7 @@ Hotkeys.addHotkeyToHelpSheet = function(key, description) {
   var spanDescr = document.createElement("span");
 
   spanId.className    = "key-id";
-  spanId.innerText    = key;
+  spanId.innerText    = Hotkeys.formatKeyForDisplay(key);
   spanDescr.className = "key-descr";
   spanDescr.innerText = description;
   li.appendChild(spanId);
@@ -2144,7 +2153,9 @@ function fuzzyMatchAndMark(str, filter) {
 function CommandPalette(commandEnumerator, opts) {
   if (typeof commandEnumerator !== "function") throw Error("commandEnumerator must be a function");
   if (typeof opts !== "object") throw Error("opts must be an object");
-  if (typeof opts.toggleKey !== "string" || !opts.toggleKey) throw Error("toggleKey must be a string");
+  if (!opts.toggleKey || typeof opts.toggleKey !== "string" && !Array.isArray(opts.toggleKey)) {
+    throw Error("toggleKey must be a string or an array of strings");
+  }
   this.commands = commandEnumerator();
   if (!this.commands) return;
   // this.commands = [{
@@ -2153,14 +2164,15 @@ function CommandPalette(commandEnumerator, opts) {
   //   title:     "my command X"
   // }, ...];
 
-  if (opts.toggleKey[0] === "^") {
-    this.toggleKeyCtrl = true;
-    this.toggleKey     = opts.toggleKey.substring(1);
-    if (!this.toggleKey) throw Error("Incorrect toggleKey");
-  } else {
-    this.toggleKeyCtrl = false;
-    this.toggleKey     = opts.toggleKey;
-  }
+  // one or more keys can open the palette, e.g. ["F1", "^p"]
+  var toggleKeys  = Array.isArray(opts.toggleKey) ? opts.toggleKey : [opts.toggleKey];
+  this.toggleKeys = toggleKeys.map(function(toggleKey) {
+    if (typeof toggleKey !== "string") throw Error("Incorrect toggleKey");
+    var isCtrl = toggleKey[0] === "^";
+    var key    = isCtrl ? toggleKey.substring(1) : toggleKey;
+    if (!key) throw Error("Incorrect toggleKey");
+    return { key: key, ctrl: isCtrl };
+  });
 
   this.hotkeyDescription = opts.hotkeyDescription;
   this.elements          = {
@@ -2220,8 +2232,10 @@ CommandPalette.prototype.renderAndBindElements = function() {
 };
 
 CommandPalette.prototype.handleToggleKey = function(event) {
-  if (event.key !== this.toggleKey) return;
-  if (this.toggleKeyCtrl && !event.ctrlKey) return;
+  var isToggleKey = this.toggleKeys.some(function(toggleKey) {
+    return event.key === toggleKey.key && (!toggleKey.ctrl || event.ctrlKey);
+  });
+  if (!isToggleKey) return;
   this.toggleDisplay();
   event.preventDefault();
 };
