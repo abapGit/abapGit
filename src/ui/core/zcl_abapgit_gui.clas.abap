@@ -504,10 +504,14 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
     ENDIF.
 
     " Cache the credentials so create_by_url picks them up on the retry
-    zcl_abapgit_login_manager=>set_basic(
+    DATA(lv_auth) = zcl_abapgit_login_manager=>set_basic(
       iv_uri      = iv_url
       iv_username = lv_user
       iv_password = lv_pass ).
+
+    IF lv_auth IS INITIAL.
+      RETURN.
+    ENDIF.
 
     rv_success = abap_true.
 
