@@ -18,10 +18,10 @@ CLASS lcl_aff_type_mapping DEFINITION.
         IMPORTING
           iv_ddic_type       TYPE dd01v-datatype
         RETURNING
-          VALUE(rv_aff_type) TYPE zif_abapgit_aff_doma_v1=>ty_data_type,
+          VALUE(rv_aff_type) TYPE zif_abapgit_aff_ddic_types_v1=>ty_data_type,
       map_data_type_to_ddic
         IMPORTING
-          iv_aff_type         TYPE zif_abapgit_aff_doma_v1=>ty_data_type
+          iv_aff_type         TYPE zif_abapgit_aff_ddic_types_v1=>ty_data_type
         RETURNING
           VALUE(rv_ddic_type) TYPE dd01v-datatype.
 ENDCLASS.
@@ -177,159 +177,159 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
   METHOD map_data_type_to_aff.
     CASE iv_ddic_type.
       WHEN 'ACCP'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-accp.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-accp.
       WHEN 'CHAR'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-char.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-char.
       WHEN 'CLNT'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-clnt.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-clnt.
       WHEN 'CUKY'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-cuky.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-cuky.
       WHEN 'CURR'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-curr.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-curr.
       WHEN 'DF16_DEC'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-df16_dec.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-df16_dec.
       WHEN 'DF16_RAW'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-df16_raw.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-df16_raw.
       WHEN 'DF16_SCL'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-df16_scl.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-df16_scl.
       WHEN 'DECFLOAT16'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-decfloat16.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-decfloat16.
       WHEN 'DF34_DEC'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-df34_dec.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-df34_dec.
       WHEN 'DF34_RAW'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-df34_raw.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-df34_raw.
       WHEN 'DF34_SCL'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-df34_scl.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-df34_scl.
       WHEN 'DECFLOAT34'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-decfloat34.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-decfloat34.
       WHEN 'DATS'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-dats.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-dats.
       WHEN 'DATN'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-datn.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-datn.
       WHEN 'DEC'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-dec.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-dec.
       WHEN 'FLTP'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-fltp.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-fltp.
       WHEN 'GEOM_EWKB'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-geom_ewkb.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-geom_ewkb.
       WHEN 'INT1'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-int1.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-int1.
       WHEN 'INT2'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-int2.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-int2.
       WHEN 'INT4'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-int4.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-int4.
       WHEN 'INT8'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-int8.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-int8.
       WHEN 'LANG'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-lang.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-lang.
       WHEN 'LCHR'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-lchr.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-lchr.
       WHEN 'LRAW'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-lraw.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-lraw.
       WHEN 'NUMC'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-numc.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-numc.
       WHEN 'PREC'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-prec.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-prec.
       WHEN 'QUAN'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-quan.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-quan.
       WHEN 'RAW'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-raw.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-raw.
       WHEN 'RAWSTRING'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-rawstring.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-rawstring.
       WHEN 'SSTRING'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-sstring.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-sstring.
       WHEN 'STRING' OR 'STRG'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-string.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-string.
       WHEN 'TIMS'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-tims.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-tims.
       WHEN 'TIMN'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-timn.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-timn.
       WHEN 'UNIT'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-unit.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-unit.
       WHEN 'UTCLONG'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-utclong.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-utclong.
       WHEN 'VARC'.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-varc.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-varc.
       WHEN OTHERS.
-        rv_aff_type = zif_abapgit_aff_doma_v1=>co_data_type-char.
+        rv_aff_type = zif_abapgit_aff_ddic_types_v1=>co_data_type-char.
     ENDCASE.
   ENDMETHOD.
 
   METHOD map_data_type_to_ddic.
     CASE iv_aff_type.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-accp.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-accp.
         rv_ddic_type = 'ACCP'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-char.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-char.
         rv_ddic_type = 'CHAR'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-clnt.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-clnt.
         rv_ddic_type = 'CLNT'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-cuky.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-cuky.
         rv_ddic_type = 'CUKY'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-curr.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-curr.
         rv_ddic_type = 'CURR'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-df16_dec.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-df16_dec.
         rv_ddic_type = 'DF16'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-df16_raw.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-df16_raw.
         rv_ddic_type = 'DF16'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-df16_scl.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-df16_scl.
         rv_ddic_type = 'DF16'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-decfloat16.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-decfloat16.
         rv_ddic_type = 'DECF'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-df34_dec.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-df34_dec.
         rv_ddic_type = 'DF34'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-df34_raw.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-df34_raw.
         rv_ddic_type = 'DF34'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-df34_scl.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-df34_scl.
         rv_ddic_type = 'DF34'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-decfloat34.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-decfloat34.
         rv_ddic_type = 'DECF'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-dats.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-dats.
         rv_ddic_type = 'DATS'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-datn.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-datn.
         rv_ddic_type = 'DATN'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-dec.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-dec.
         rv_ddic_type = 'DEC'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-fltp.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-fltp.
         rv_ddic_type = 'FLTP'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-geom_ewkb.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-geom_ewkb.
         rv_ddic_type = 'GEOM'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-int1.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-int1.
         rv_ddic_type = 'INT1'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-int2.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-int2.
         rv_ddic_type = 'INT2'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-int4.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-int4.
         rv_ddic_type = 'INT4'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-int8.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-int8.
         rv_ddic_type = 'INT8'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-lang.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-lang.
         rv_ddic_type = 'LANG'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-lchr.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-lchr.
         rv_ddic_type = 'LCHR'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-lraw.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-lraw.
         rv_ddic_type = 'LRAW'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-numc.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-numc.
         rv_ddic_type = 'NUMC'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-prec.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-prec.
         rv_ddic_type = 'PREC'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-quan.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-quan.
         rv_ddic_type = 'QUAN'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-raw.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-raw.
         rv_ddic_type = 'RAW'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-rawstring.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-rawstring.
         rv_ddic_type = 'RAWS'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-sstring.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-sstring.
         rv_ddic_type = 'SSTR'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-string.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-string.
         rv_ddic_type = 'STRG'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-tims.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-tims.
         rv_ddic_type = 'TIMS'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-timn.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-timn.
         rv_ddic_type = 'TIMN'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-unit.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-unit.
         rv_ddic_type = 'UNIT'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-utclong.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-utclong.
         rv_ddic_type = 'UTCL'.
-      WHEN zif_abapgit_aff_doma_v1=>co_data_type-varc.
+      WHEN zif_abapgit_aff_ddic_types_v1=>co_data_type-varc.
         rv_ddic_type = 'VARC'.
       WHEN OTHERS.
         rv_ddic_type = 'CHAR'.
