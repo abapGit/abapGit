@@ -23,7 +23,7 @@ INTERFACE zif_abapgit_aff_smtg_v1
       "! Indicator if the template text body is generated automatically from html body
       is_plaintext_auto_generated TYPE abap_bool,
     END OF ty_general_information.
-  " Corresponding content ist stored in a separate file and implemented as action
+  " Corresponding content is stored in a separate file and implemented as action
 
   TYPES:
     "! <p class="shorttext">Email Template Content</p>
