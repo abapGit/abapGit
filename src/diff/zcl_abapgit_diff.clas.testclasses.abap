@@ -102,8 +102,8 @@ CLASS ltcl_diff IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diff.
 
 
-    CONCATENATE LINES OF mt_new INTO lv_new SEPARATED BY cl_abap_char_utilities=>newline.
-    CONCATENATE LINES OF mt_old INTO lv_old SEPARATED BY cl_abap_char_utilities=>newline.
+    CONCATENATE LINES OF mt_new INTO lv_new SEPARATED BY cl_abap_char_utilities=>newline RESPECTING BLANKS.
+    CONCATENATE LINES OF mt_old INTO lv_old SEPARATED BY cl_abap_char_utilities=>newline RESPECTING BLANKS.
 
     lv_xnew = zcl_abapgit_convert=>string_to_xstring_utf8( lv_new ).
     lv_xold = zcl_abapgit_convert=>string_to_xstring_utf8( lv_old ).
