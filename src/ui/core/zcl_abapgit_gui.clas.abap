@@ -342,14 +342,21 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
       CATCH zcx_abapgit_cancel ##NO_HANDLER.
         " Do nothing = c_event_state-no_more_act
       CATCH zcx_abapgit_auth_required INTO lx_auth.
-        " Credentials are needed for a repository. Prompt the user (UI layer),
-        " cache them in the login manager, and retry the original action.
+        " Credentials are needed for a repository. Prompt the user (UI layer)
+        " and cache them in the login manager.
         TRY.
             IF request_credentials( lx_auth->mv_url ) = abap_true.
-              handle_action(
-                iv_action   = iv_action
-                iv_getdata  = iv_getdata
-                it_postdata = it_postdata ).
+              IF ls_handled-state IS INITIAL.
+                " Authentication interrupted the event handler, retry the action
+                handle_action(
+                  iv_action   = iv_action
+                  iv_getdata  = iv_getdata
+                  it_postdata = it_postdata ).
+              ELSE.
+                " The action already changed the current page before rendering
+                " requested authentication, so only complete the rendering
+                render( ).
+              ENDIF.
             ENDIF.
           CATCH zcx_abapgit_exception INTO lx_exception.
             handle_error(
