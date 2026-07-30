@@ -260,7 +260,7 @@ CLASS zcl_abapgit_diff_diff3 IMPLEMENTATION.
           iv_ignore_comments    = iv_ignore_comments
           iv_ignore_case        = iv_ignore_case ).
       ENDIF.
-      IF iv_ignore_indentation = abap_false AND condense( lv_cmp ) IS INITIAL.
+      IF iv_ignore_indentation = abap_false AND condense( lv_cmp ) = ''.
         lv_index = sy-tabix.
         lv_cmp = lv_cmp && cl_abap_char_utilities=>form_feed && lv_index.
       ENDIF.
