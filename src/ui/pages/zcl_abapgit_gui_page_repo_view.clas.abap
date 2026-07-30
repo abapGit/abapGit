@@ -382,6 +382,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                              iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?key={ mv_key }| ).
     ro_branch_dropdown->add( iv_txt = 'Create'
                              iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_create }?key={ mv_key }| ).
+    ro_branch_dropdown->add( iv_txt = 'Create From'
+                             iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_create_from }?key={ mv_key }| ).
     ro_branch_dropdown->add( iv_txt = 'Delete'
                              iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_delete }?key={ mv_key }| ).
     ro_branch_dropdown->add( iv_txt = 'Merge'
@@ -1245,7 +1247,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       iv_act = zif_abapgit_definitions=>c_action-abapgit_home
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>help( )
-      io_sub = zcl_abapgit_gui_menus=>help( ) ).
+      io_sub = zcl_abapgit_gui_menus=>help( )
+    )->add(
+      iv_txt = |Back|
+      iv_act = zif_abapgit_definitions=>c_action-go_back ).
 
     zcl_abapgit_gui_menus=>experimental( ro_toolbar ).
 

@@ -23,6 +23,7 @@ INTERFACE zif_abapgit_popups
     END OF ty_popup_position.
 
   CONSTANTS c_new_branch_label TYPE string VALUE '+ create new ...' ##NO_TEXT.
+  CONSTANTS c_new_branch_from_label TYPE string VALUE '+ create new from ...' ##NO_TEXT.
 
   METHODS popup_search_help
     IMPORTING
@@ -46,13 +47,16 @@ INTERFACE zif_abapgit_popups
       zcx_abapgit_exception .
   METHODS branch_list_popup
     IMPORTING
-      !iv_url             TYPE string
-      !iv_default_branch  TYPE string OPTIONAL
-      !iv_show_new_option TYPE abap_bool OPTIONAL
-      !iv_hide_branch     TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
-      !iv_hide_head       TYPE abap_bool OPTIONAL
+      !iv_url                 TYPE string
+      !iv_default_branch      TYPE string OPTIONAL
+      !iv_show_new_option     TYPE abap_bool OPTIONAL
+      !iv_hide_branch         TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
+      !iv_hide_head           TYPE abap_bool OPTIONAL
+      !iv_title               TYPE csequence DEFAULT 'Select Branch'
+      !iv_text                TYPE csequence DEFAULT 'Select a branch'
+      !iv_show_switch_message TYPE abap_bool DEFAULT abap_true
     RETURNING
-      VALUE(rs_branch)    TYPE zif_abapgit_git_definitions=>ty_git_branch
+      VALUE(rs_branch)        TYPE zif_abapgit_git_definitions=>ty_git_branch
     RAISING
       zcx_abapgit_exception .
   METHODS tag_list_popup

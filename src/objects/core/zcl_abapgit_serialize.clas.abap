@@ -191,7 +191,9 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     TRY.
         lt_files = zcl_abapgit_data_factory=>get_serializer( )->serialize( ii_data_config ).
       CATCH zcx_abapgit_exception INTO lx_error.
-        ii_log->add_exception( lx_error ).
+        IF ii_log IS BOUND.
+          ii_log->add_exception( lx_error ).
+        ENDIF.
         RETURN.
     ENDTRY.
 

@@ -280,8 +280,10 @@ CLASS ltcl_zlib IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( act = ls_data-raw
                                         exp = lc_raw ).
     cl_abap_unit_assert=>assert_not_initial( ls_data-compressed_len ).
-    cl_abap_unit_assert=>assert_equals( act = boolc( ls_data-compressed_len < xstrlen( lv_compressed ) )
-                                        exp = abap_true ).
+
+    IF ls_data-compressed_len >= xstrlen( lv_compressed ).
+      cl_abap_unit_assert=>fail( ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -312,7 +314,7 @@ CLASS ltcl_zlib IMPLEMENTATION.
 * taken from SANS ISC diary 25182 zlib stream 789cf348cdc9c9d751f0c0a400745608b5
 * stripping 2-byte zlib header (789c) and 4-byte adler32 trailer (745608b5)
 
-    DATA: ls_data TYPE zcl_abapgit_zlib=>ty_decompress,
+    DATA: ls_data    TYPE zcl_abapgit_zlib=>ty_decompress,
           lv_decoded TYPE xstring.
 
     CONSTANTS lc_compressed TYPE xstring VALUE 'F348CDC9C9D751F0C0A400'.

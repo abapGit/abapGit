@@ -49,6 +49,17 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
     DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
+    DATA mo_popup_picklist TYPE REF TO zcl_abapgit_gui_picklist.
+
+    METHODS choose_branch
+      IMPORTING
+        iv_is_return TYPE abap_bool DEFAULT abap_false
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS handle_picklist_state
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS validate_form
       IMPORTING
@@ -86,6 +97,63 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
     mo_form_data->set(
       iv_key = c_id-labels
       iv_val = lv_new_labels ).
+
+  ENDMETHOD.
+
+
+  METHOD choose_branch.
+
+    DATA ls_branch          TYPE zif_abapgit_git_definitions=>ty_git_branch.
+    DATA lv_popup_cancelled TYPE abap_bool.
+
+    IF iv_is_return = abap_false.
+
+      mo_validation_log = validate_form( mo_form_data ).
+      IF mo_validation_log->has( c_id-url ) = abap_true.
+        mo_validation_log->set(
+          iv_key = c_id-branch_name
+          iv_val = 'Check URL issues' ).
+        RETURN.
+      ENDIF.
+
+      mo_popup_picklist = zcl_abapgit_popup_branch_list=>create(
+        mo_form_data->get( c_id-url )
+        )->create_picklist(
+        )->set_id( c_event-choose_branch
+        )->set_in_page( ).
+
+    ELSE.
+
+      lv_popup_cancelled = mo_popup_picklist->was_cancelled( ).
+      IF lv_popup_cancelled = abap_false.
+        mo_popup_picklist->get_result_item( CHANGING cs_selected = ls_branch ).
+        IF ls_branch IS NOT INITIAL.
+          mo_form_data->set(
+            iv_key = c_id-branch_name
+            iv_val = ls_branch-display_name ).
+        ENDIF.
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD handle_picklist_state.
+
+    IF mo_popup_picklist IS BOUND AND
+      ( mo_popup_picklist->is_fulfilled( ) = abap_true OR mo_popup_picklist->is_in_page( ) = abap_false ).
+      " Picklist is either fulfilled OR
+      " it was on its own page and user went back from it via F3/ESC and the picklist had no "graceful back" handler
+      CASE mo_popup_picklist->id( ).
+        WHEN c_event-choose_branch.
+          choose_branch( abap_true ).
+        WHEN OTHERS.
+          zcx_abapgit_exception=>raise( |Unexpected picklist id { mo_popup_picklist->id( ) }| ).
+      ENDCASE.
+
+      CLEAR mo_popup_picklist.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -304,29 +372,8 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
       WHEN c_event-choose_branch.
 
-        mo_validation_log = validate_form( mo_form_data ).
-        IF mo_validation_log->has( c_id-url ) = abap_true.
-          mo_validation_log->set(
-            iv_key = c_id-branch_name
-            iv_val = 'Check URL issues' ).
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render. " Display errors
-          RETURN.
-        ENDIF.
-        mo_form_data->set(
-          iv_key = c_id-branch_name
-          iv_val = zcl_abapgit_ui_factory=>get_popups( )->branch_list_popup( mo_form_data->get( c_id-url ) )-name ).
-
-        IF mo_form_data->get( c_id-branch_name ) IS INITIAL.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
-        ELSE.
-          mo_form_data->set(
-            iv_key = c_id-branch_name
-            iv_val = replace( " strip technical
-              val = mo_form_data->get( c_id-branch_name )
-              sub = zif_abapgit_git_definitions=>c_git_branch-heads_prefix
-              with = '' ) ).
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-        ENDIF.
+        choose_branch( ). " Uniformly handle state below
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_event-choose_labels.
 
@@ -348,12 +395,26 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
     ENDCASE.
 
+    IF mo_popup_picklist IS BOUND. " Uniform popup state handling
+      " This should happen only for a new popup because
+      " on the first re-render main component event handling is blocked
+      " and not called again until the popup destruction
+      IF mo_popup_picklist->is_in_page( ) = abap_true.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      ELSE.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+        rs_handled-page  = zcl_abapgit_gui_page_hoc=>create(
+          ii_child_component = mo_popup_picklist
+          iv_show_as_modal   = abap_true ).
+      ENDIF.
+    ENDIF.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    register_handlers( ).
+    handle_picklist_state( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -362,5 +423,13 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
       io_values         = mo_form_data
       io_validation_log = mo_validation_log ) ).
     ri_html->add( '</div>' ).
+
+    IF mo_popup_picklist IS NOT BOUND OR mo_popup_picklist->is_in_page( ) = abap_false.
+      register_handlers( ).
+    ELSEIF mo_popup_picklist->is_in_page( ) = abap_true.
+      " Block usual page events if the popup is an in-page popup
+      ri_html->add( zcl_abapgit_gui_in_page_modal=>create( mo_popup_picklist ) ).
+    ENDIF.
+
   ENDMETHOD.
 ENDCLASS.
