@@ -1,7 +1,7 @@
 INTERFACE zif_abapgit_aff_doma_v1 PUBLIC.
 
-  "! $values {@link zif_aff_doma_v1.data:co_output_style}
-  "! $default {@link zif_aff_doma_v1.data:co_output_style.normal}
+  "! $values {@link zif_abapgit_aff_doma_v1.data:co_output_style}
+  "! $default {@link zif_abapgit_aff_doma_v1.data:co_output_style.normal}
   TYPES ty_output_style TYPE n LENGTH 2.
 
   CONSTANTS:
