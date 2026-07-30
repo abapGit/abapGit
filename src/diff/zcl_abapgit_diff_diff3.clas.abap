@@ -112,6 +112,25 @@ CLASS zcl_abapgit_diff_diff3 IMPLEMENTATION.
           ls_diff-new = lv_line.
           READ TABLE lt_old INDEX lv_old_idx INTO lv_line.
           ls_diff-old = lv_line.
+
+          IF iv_ignore_comments = abap_true
+            AND normalize_line(
+              iv_line               = ls_diff-new
+              iv_ignore_indentation = iv_ignore_indentation
+              iv_ignore_comments    = iv_ignore_comments
+              iv_ignore_case        = iv_ignore_case ) IS INITIAL
+            AND normalize_line(
+              iv_line               = ls_diff-old
+              iv_ignore_indentation = iv_ignore_indentation
+              iv_ignore_comments    = iv_ignore_comments
+              iv_ignore_case        = iv_ignore_case ) IS INITIAL.
+            IF ls_diff-new IS NOT INITIAL AND ls_diff-old IS INITIAL.
+              CLEAR: ls_diff-old, ls_diff-old_num.
+            ELSEIF ls_diff-old IS NOT INITIAL AND ls_diff-new IS INITIAL.
+              CLEAR: ls_diff-new, ls_diff-new_num.
+            ENDIF.
+          ENDIF.
+
           ls_diff-result = zif_abapgit_definitions=>c_diff-unchanged.
           APPEND ls_diff TO rt_diff.
         ENDLOOP.
