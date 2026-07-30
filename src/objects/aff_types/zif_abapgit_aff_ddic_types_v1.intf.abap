@@ -4,7 +4,7 @@ INTERFACE zif_abapgit_aff_ddic_types_v1 PUBLIC.
 
   "! <p class="shorttext">Data Type</p>
   "! ABAP dictionary data type
-  "! $values {@link zif_aff_ddic_types_v1.data:co_data_type}
+  "! $values {@link zif_abapgit_aff_ddic_types_v1.data:co_data_type}
   TYPES ty_data_type TYPE c LENGTH 4.
 
   CONSTANTS:
