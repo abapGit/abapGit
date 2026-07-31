@@ -379,16 +379,6 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
 
   METHOD refresh.
-
-    DATA ls_feature LIKE LINE OF ms_information-features.
-    DATA li_repo  TYPE REF TO zif_abapgit_repo.
-
-
-    LOOP AT ms_information-features INTO ls_feature.
-      li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( ls_feature-repo-key ).
-      li_repo->refresh( ).
-    ENDLOOP.
-
     CLEAR ms_information.
 
   ENDMETHOD.
