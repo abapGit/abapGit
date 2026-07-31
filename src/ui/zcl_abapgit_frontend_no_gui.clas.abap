@@ -56,6 +56,11 @@ CLASS zcl_abapgit_frontend_no_gui IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_frontend_services~get_gui_type.
+    rv_gui_type = 'Unknown'.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_frontend_services~gui_is_available.
     rv_gui_is_available = abap_false.
   ENDMETHOD.
