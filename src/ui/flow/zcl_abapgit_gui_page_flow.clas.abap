@@ -819,6 +819,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA lv_message  LIKE LINE OF ms_information-errors.
     DATA lv_filter   TYPE string.
     DATA lv_language TYPE laiso.
+    DATA lv_timestamp TYPE timestampl.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -877,12 +878,14 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ENDIF.
 
     lv_language = zcl_abapgit_convert=>conversion_exit_isola_output( sy-langu ).
+    GET TIME STAMP FIELD lv_timestamp.
 
     ri_html->add( |<small>{ lines( ms_information-features ) } features| &&
       | in { lo_timer->end( ) }{ lv_filter }| &&
       |, SAP user: { sy-uname }| &&
       |, Logon language: { lv_language }| &&
       |, GitHub user: { ms_information-github_username }| &&
+      |, { zcl_abapgit_gui_chunk_lib=>render_timestamp( lv_timestamp ) }| &&
       |</small>| ).
 
     ri_html->add( '</div>' ).
