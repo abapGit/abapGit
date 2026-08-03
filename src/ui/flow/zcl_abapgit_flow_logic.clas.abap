@@ -756,6 +756,11 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     rs_information-enabled_repositories = lines( lt_repos ).
     rs_information-github_username = find_github_username( lt_repos ).
 
+* Repository instances may contain stale snapshots when Flow is first opened
+    LOOP AT lt_repos INTO li_repo_online.
+      li_repo_online->zif_abapgit_repo~refresh( ).
+    ENDLOOP.
+
     LOOP AT lt_repos INTO li_repo_online.
 
       lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
