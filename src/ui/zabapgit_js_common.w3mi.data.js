@@ -67,6 +67,35 @@ zcl_abapgit_gui_hotkey_ctl->render_scripts
  **********************************************************/
 
 /**********************************************************
+ * ESLint hints
+ **********************************************************/
+
+/* exported setInitialFocus */
+/* exported setInitialFocusWithQuerySelector */
+/* exported submitFormById */
+/* exported errorStub */
+/* exported confirmInitialized */
+/* exported perfOut */
+/* exported perfLog */
+/* exported perfClear */
+/* exported enableArrowListNavigation */
+/* exported activateLinkHints */
+/* exported setKeyBindings */
+/* exported preparePatch */
+/* exported registerStagePatch */
+/* exported getIndocStyleSheet */
+/* exported addMarginBottom */
+/* exported enumerateJumpAllFiles */
+/* exported createRepoCatalogEnumerator */
+/* exported enumerateUiActions */
+/* exported onDiffCollapse */
+/* exported restoreScrollPosition */
+/* exported toggleBrowserControlWarning */
+/* exported displayBrowserControlFooter */
+/* exported redirectBrowserBackToSapEvent */
+/* exported addHotkey */
+
+/**********************************************************
  * Polyfills
  **********************************************************/
 
