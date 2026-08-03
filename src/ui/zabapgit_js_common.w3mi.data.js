@@ -3,97 +3,62 @@
  **********************************************************/
 
 /**********************************************************
- * Where used in ABAP
+ * Where used in ABAP / ESLint hints
  **********************************************************
-
-zcl_abapgit_gui_page->zif_abapgit_gui_renderable~render
-
-  confirmInitialized
-
-zcl_abapgit_gui_page->scripts
-
-  toggleBrowserControlWarning
-  displayBrowserControlFooter
-  redirectBrowserBackToSapEvent
-  addHotkey
-
-zcl_abapgit_gui_page->render_link_hints
-
-  activateLinkHints
-  setInitialFocusWithQuerySelector
-  enableArrowListNavigation
-
-zcl_abapgit_gui_page->render_command_palettes
-
-  new CommandPalette( enumerateUiActions )
-
-zcl_abapgit_gui_chunk_lib->render_repo_palette
-
-  new CommandPalette( createRepoCatalogEnumerator )
-
-zcl_abapgit_gui_page_db_entry->build_toolbar
-
-  submitFormById
-
-zcl_abapgit_gui_page_diff_base->render_scripts
-
-  restoreScrollPosition
-  addMarginBottom
-  new CommandPalette( enumerateJumpAllFiles )
-  new DiffHelper
-  new DiffColumnSelection
-
-zcl_abapgit_gui_page_diff_base->render_diff_head
-
-  onDiffCollapse
-
-zcl_abapgit_gui_page_repo_over->render_scripts
-
-  new RepoOverViewHelper
-
-zcl_abapgit_gui_page_stage->render_scripts
-
-  new StageHelper
-
-zcl_abapgit_gui_page_patch->render_scripts
-
-  preparePatch
-  registerStagePatch
-
-zcl_abapgit_gui_hotkey_ctl->render_scripts
-
-  setKeyBindings
-
+ *
+ *  "--" is the ABAP caller
+ *
  **********************************************************/
 
-/**********************************************************
- * ESLint hints
- **********************************************************/
+/* exported confirmInitialized
+   -- zcl_abapgit_gui_page->zif_abapgit_gui_renderable~render */
 
-/* exported setInitialFocus */
-/* exported setInitialFocusWithQuerySelector */
-/* exported submitFormById */
-/* exported errorStub */
-/* exported confirmInitialized */
-/* exported perfOut */
-/* exported perfLog */
-/* exported perfClear */
-/* exported enableArrowListNavigation */
-/* exported activateLinkHints */
-/* exported setKeyBindings */
-/* exported preparePatch */
-/* exported registerStagePatch */
-/* exported getIndocStyleSheet */
-/* exported addMarginBottom */
-/* exported enumerateJumpAllFiles */
-/* exported createRepoCatalogEnumerator */
-/* exported enumerateUiActions */
-/* exported onDiffCollapse */
-/* exported restoreScrollPosition */
-/* exported toggleBrowserControlWarning */
-/* exported displayBrowserControlFooter */
-/* exported redirectBrowserBackToSapEvent */
-/* exported addHotkey */
+/* exported toggleBrowserControlWarning, displayBrowserControlFooter,
+            redirectBrowserBackToSapEvent, addHotkey
+   -- zcl_abapgit_gui_page->scripts */
+
+/* exported activateLinkHints, setInitialFocusWithQuerySelector,
+            enableArrowListNavigation
+   -- zcl_abapgit_gui_page->render_link_hints */
+
+/* exported enumerateUiActions
+   -- zcl_abapgit_gui_page->render_command_palettes,
+      as new CommandPalette( enumerateUiActions ) */
+
+/* exported createRepoCatalogEnumerator
+   -- zcl_abapgit_gui_chunk_lib->render_repo_palette,
+      as new CommandPalette( createRepoCatalogEnumerator ) */
+
+/* exported submitFormById
+   -- zcl_abapgit_gui_page_db_entry->build_toolbar
+   -- zcl_abapgit_gui_page_merge_res (three call sites) */
+
+/* exported restoreScrollPosition, addMarginBottom, enumerateJumpAllFiles
+   -- zcl_abapgit_gui_page_diff_base->render_scripts,
+      which also does new CommandPalette( enumerateJumpAllFiles ) */
+
+/* exported onDiffCollapse
+   -- zcl_abapgit_gui_page_diff_base->render_diff_head */
+
+/* exported preparePatch, registerStagePatch
+   -- zcl_abapgit_gui_page_patch->render_scripts */
+
+/* exported setKeyBindings
+   -- zcl_abapgit_gui_hotkey_ctl->render_scripts */
+
+/* exported perfOut, perfLog, perfClear
+    -- not called from ABAP, for frontend debugging */
+
+/* Constructors instantiated from ABAP. These need no "exported"
+   directive - the XxxHelper.prototype assignments further down already
+   count as a use - but they belong in the where-used list:
+
+     new RepoOverViewHelper   zcl_abapgit_gui_page_repo_over->render_scripts
+     new StageHelper          zcl_abapgit_gui_page_stage->render_scripts
+     new DiffHelper           zcl_abapgit_gui_page_diff_base->render_scripts
+     new DiffColumnSelection  zcl_abapgit_gui_page_diff_base->render_scripts
+     new CommandPalette       see enumerateUiActions / createRepoCatalogEnumerator /
+                              enumerateJumpAllFiles above                            */
 
 /**********************************************************
  * Polyfills
@@ -329,13 +294,6 @@ function submitFormById(id) {
   document.getElementById(id).submit();
 }
 
-// JS error stub
-function errorStub(event) {
-  var element    = event.target || event.srcElement;
-  var targetName = element.id || element.name || "???";
-  alert("JS Error, please log an issue (@" + targetName + ")");
-}
-
 // Confirm JS initialization
 function confirmInitialized() {
   var errorBanner = document.getElementById("js-error-banner");
@@ -389,16 +347,6 @@ function findStyleSheetByName(name) {
       if (classes[i].selectorText === name) return classes[i];
     }
   }
-}
-
-function getIndocStyleSheet() {
-  for (var s = 0; s < document.styleSheets.length; s++) {
-    if (!document.styleSheets[s].href) return document.styleSheets[s]; // One with empty href
-  }
-  // None found ? create one
-  var style = document.createElement("style");
-  document.head.appendChild(style);
-  return style.sheet;
 }
 
 function RepoOverViewHelper(opts) {
