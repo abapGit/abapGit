@@ -390,9 +390,14 @@ CLASS lcl_repo DEFINITION FINAL.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_repo.
     INTERFACES zif_abapgit_repo_online.
+    CLASS-DATA gv_refresh_count TYPE i.
+    METHODS constructor.
 ENDCLASS.
 
 CLASS lcl_repo IMPLEMENTATION.
+  METHOD constructor.
+    CLEAR gv_refresh_count.
+  ENDMETHOD.
   METHOD zif_abapgit_repo~get_key.
     RETURN.
   ENDMETHOD.
@@ -421,7 +426,7 @@ CLASS lcl_repo IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
   METHOD zif_abapgit_repo~refresh.
-    RETURN.
+    gv_refresh_count = gv_refresh_count + 1.
   ENDMETHOD.
   METHOD zif_abapgit_repo~get_dot_abapgit.
     DATA ls_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
@@ -619,6 +624,7 @@ CLASS ltcl_flow_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT 
     METHODS only_branch FOR TESTING RAISING cx_static_check.
     METHODS only_transport FOR TESTING RAISING cx_static_check.
     METHODS branch_and_transport FOR TESTING RAISING cx_static_check.
+    METHODS refresh_repositories FOR TESTING RAISING cx_static_check.
 
   PRIVATE SECTION.
     METHODS inject
@@ -743,6 +749,18 @@ CLASS ltcl_flow_logic IMPLEMENTATION.
 
     " todo, cl_abap_unit_assert=>assert_not_initial( ls_feature-transport-trkorr ).
     " todo, cl_abap_unit_assert=>assert_not_initial( ls_feature-branch-display_name ).
+  ENDMETHOD.
+
+  METHOD refresh_repositories.
+
+    inject( ).
+
+    zcl_abapgit_flow_logic=>get( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lcl_repo=>gv_refresh_count
+      exp = 1 ).
+
   ENDMETHOD.
 
 ENDCLASS.
