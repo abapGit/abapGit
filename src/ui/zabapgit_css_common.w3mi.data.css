@@ -806,7 +806,6 @@ div.info-panel-fixed {
 }
 
 div.info-panel div.info-hint {
-  text-transform: uppercase;
   font-size: small;
   padding: 8px 6px 0px;
   text-align: center;
@@ -954,7 +953,7 @@ ul.hotkeys span.key-id {
   border: 1px solid;
   border-radius: 3px;
   padding: 1px 7px;
-  width: 3em;
+  width: 5em;
   display: inline-block;
   text-align: center;
   margin-top: 0.2em;
