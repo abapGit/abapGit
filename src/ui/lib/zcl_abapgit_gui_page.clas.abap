@@ -82,6 +82,11 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
         !ii_html TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
+    METHODS render_back_navigation
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS render_command_palettes
       IMPORTING
         !ii_html TYPE REF TO zif_abapgit_html
@@ -265,9 +270,9 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
         li_frontend_services = zcl_abapgit_ui_factory=>get_frontend_services( ).
         li_frontend_services->get_gui_version(
           IMPORTING
-            ev_gui_release        = lv_gui_release
-            ev_gui_sp             = lv_gui_sp
-            ev_gui_patch          = lv_gui_patch ).
+            ev_gui_release = lv_gui_release
+            ev_gui_sp      = lv_gui_sp
+            ev_gui_patch   = lv_gui_patch ).
 
       CATCH zcx_abapgit_exception.
         RETURN.
@@ -282,6 +287,16 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_back_navigation.
+
+    ii_html->add( 'addHotkey({' ).
+    ii_html->add( '  toggleKey: "F3",' ).
+    ii_html->add( '  hotkeyDescription: "Go back"' ).
+    ii_html->add( '});' ).
+
+  ENDMETHOD.
+
+
   METHOD render_browser_control_warning.
 
     DATA li_documentation_link TYPE REF TO zif_abapgit_html.
@@ -289,9 +304,9 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     CREATE OBJECT li_documentation_link TYPE zcl_abapgit_html.
 
     li_documentation_link->add_a(
-        iv_txt = 'Documentation'
-        iv_typ = zif_abapgit_html=>c_action_type-url
-        iv_act = 'https://docs.abapgit.org/guide-sapgui.html#sap-gui-for-windows' ).
+      iv_txt = 'Documentation'
+      iv_typ = zif_abapgit_html=>c_action_type-url
+      iv_act = 'https://docs.abapgit.org/guide-sapgui.html#sap-gui-for-windows' ).
 
     ii_html->add( '<div id="browser-control-warning" class="browser-control-warning">' ).
     ii_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
@@ -386,15 +401,17 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
+    render_link_hints( ri_html ).
+    render_command_palettes( ri_html ).
+
     render_deferred_parts(
       ii_html          = ri_html
       iv_part_category = c_html_parts-scripts ).
 
-    render_link_hints( ri_html ).
-    render_command_palettes( ri_html ).
     ri_html->add( |toggleBrowserControlWarning();| ).
     ri_html->add( |displayBrowserControlFooter();| ).
     ri_html->add( |redirectBrowserBackToSapEvent();| ).
+    render_back_navigation( ri_html ).
 
   ENDMETHOD.
 
