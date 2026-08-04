@@ -351,6 +351,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ii_repo_online   = li_repo_online
       ii_obj_filter    = lo_filter ).
 
+* The stage page consumed the deliberately partial remote-file snapshot above.
+* Force the push to fetch the matching current commit and Git objects.
+    li_repo_online->zif_abapgit_repo~refresh( ).
+
     rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
 
     refresh( ).
