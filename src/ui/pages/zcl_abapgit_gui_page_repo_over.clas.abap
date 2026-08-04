@@ -669,6 +669,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
     ri_html->add( 'var gHelper = new RepoOverViewHelper({ focusFilterKey: "f" });' ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_palette( c_action-select ) ).
 
   ENDMETHOD.
 
@@ -1101,7 +1102,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ri_html->add( |</div>| ).
 
     register_deferred_script( render_scripts( ) ).
-    register_deferred_script( zcl_abapgit_gui_chunk_lib=>render_repo_palette( c_action-select ) ).
 
   ENDMETHOD.
 ENDCLASS.
