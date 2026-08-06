@@ -3,32 +3,62 @@
  **********************************************************/
 
 /**********************************************************
-  Global variables used from outside
+ * Where used in ABAP / ESLint hints
+ **********************************************************
+ *
+ *  "--" is the ABAP caller
+ *
  **********************************************************/
 
-/* exported setInitialFocus */
-/* exported setInitialFocusWithQuerySelector */
-/* exported submitFormById */
-/* exported errorStub */
-/* exported confirmInitialized */
-/* exported perfOut */
-/* exported perfLog */
-/* exported perfClear */
-/* exported enableArrowListNavigation */
-/* exported activateLinkHints */
-/* exported setKeyBindings */
-/* exported preparePatch */
-/* exported registerStagePatch */
-/* exported getIndocStyleSheet */
-/* exported addMarginBottom */
-/* exported enumerateJumpAllFiles */
-/* exported createRepoCatalogEnumerator */
-/* exported enumerateUiActions */
-/* exported onDiffCollapse */
-/* exported restoreScrollPosition */
-/* exported toggleBrowserControlWarning */
-/* exported displayBrowserControlFooter */
-/* exported redirectBrowserBackToSapEvent */
+/* exported confirmInitialized
+   -- zcl_abapgit_gui_page->zif_abapgit_gui_renderable~render */
+
+/* exported toggleBrowserControlWarning, displayBrowserControlFooter,
+            redirectBrowserBackToSapEvent, addHotkey
+   -- zcl_abapgit_gui_page->scripts */
+
+/* exported activateLinkHints, setInitialFocusWithQuerySelector,
+            enableArrowListNavigation
+   -- zcl_abapgit_gui_page->render_link_hints */
+
+/* exported enumerateUiActions
+   -- zcl_abapgit_gui_page->render_command_palettes,
+      as new CommandPalette( enumerateUiActions ) */
+
+/* exported createRepoCatalogEnumerator
+   -- zcl_abapgit_gui_chunk_lib->render_repo_palette,
+      as new CommandPalette( createRepoCatalogEnumerator ) */
+
+/* exported submitFormById
+   -- zcl_abapgit_gui_page_db_entry->build_toolbar
+   -- zcl_abapgit_gui_page_merge_res (three call sites) */
+
+/* exported restoreScrollPosition, addMarginBottom, enumerateJumpAllFiles
+   -- zcl_abapgit_gui_page_diff_base->render_scripts,
+      which also does new CommandPalette( enumerateJumpAllFiles ) */
+
+/* exported onDiffCollapse
+   -- zcl_abapgit_gui_page_diff_base->render_diff_head */
+
+/* exported preparePatch, registerStagePatch
+   -- zcl_abapgit_gui_page_patch->render_scripts */
+
+/* exported setKeyBindings
+   -- zcl_abapgit_gui_hotkey_ctl->render_scripts */
+
+/* exported perfOut, perfLog, perfClear
+    -- not called from ABAP, for frontend debugging */
+
+/* Constructors instantiated from ABAP. These need no "exported"
+   directive - the XxxHelper.prototype assignments further down already
+   count as a use - but they belong in the where-used list:
+
+     new RepoOverViewHelper   zcl_abapgit_gui_page_repo_over->render_scripts
+     new StageHelper          zcl_abapgit_gui_page_stage->render_scripts
+     new DiffHelper           zcl_abapgit_gui_page_diff_base->render_scripts
+     new DiffColumnSelection  zcl_abapgit_gui_page_diff_base->render_scripts
+     new CommandPalette       see enumerateUiActions / createRepoCatalogEnumerator /
+                              enumerateJumpAllFiles above                            */
 
 /**********************************************************
  * Polyfills
@@ -264,13 +294,6 @@ function submitFormById(id) {
   document.getElementById(id).submit();
 }
 
-// JS error stub
-function errorStub(event) {
-  var element    = event.target || event.srcElement;
-  var targetName = element.id || element.name || "???";
-  alert("JS Error, please log an issue (@" + targetName + ")");
-}
-
 // Confirm JS initialization
 function confirmInitialized() {
   var errorBanner = document.getElementById("js-error-banner");
@@ -324,16 +347,6 @@ function findStyleSheetByName(name) {
       if (classes[i].selectorText === name) return classes[i];
     }
   }
-}
-
-function getIndocStyleSheet() {
-  for (var s = 0; s < document.styleSheets.length; s++) {
-    if (!document.styleSheets[s].href) return document.styleSheets[s]; // One with empty href
-  }
-  // None found ? create one
-  var style = document.createElement("style");
-  document.head.appendChild(style);
-  return style.sheet;
 }
 
 function RepoOverViewHelper(opts) {
@@ -1820,6 +1833,15 @@ Hotkeys.isHotkeyCallPossible = function() {
   return (activeElementReadOnly || (activeElementType !== "INPUT" && activeElementType !== "TEXTAREA"));
 };
 
+// ctrl-modified keys are denoted with a leading "^" (e.g. "^p"), spell it out for the help sheet
+// an array of keys means "any of them" and is displayed as "F1 / ctrl+p"
+Hotkeys.formatKeyForDisplay = function(key) {
+  if (Array.isArray(key)) {
+    return key.map(function(singleKey) { return Hotkeys.formatKeyForDisplay(singleKey) }).join(" / ");
+  }
+  return (key[0] === "^") ? "ctrl+" + key.substring(1) : key;
+};
+
 Hotkeys.addHotkeyToHelpSheet = function(key, description) {
   var hotkeysUl = document.querySelector("#hotkeys ul.hotkeys");
   if (!hotkeysUl) return;
@@ -1829,7 +1851,7 @@ Hotkeys.addHotkeyToHelpSheet = function(key, description) {
   var spanDescr = document.createElement("span");
 
   spanId.className    = "key-id";
-  spanId.innerText    = key;
+  spanId.innerText    = Hotkeys.formatKeyForDisplay(key);
   spanDescr.className = "key-descr";
   spanDescr.innerText = description;
   li.appendChild(spanId);
@@ -2144,7 +2166,9 @@ function fuzzyMatchAndMark(str, filter) {
 function CommandPalette(commandEnumerator, opts) {
   if (typeof commandEnumerator !== "function") throw Error("commandEnumerator must be a function");
   if (typeof opts !== "object") throw Error("opts must be an object");
-  if (typeof opts.toggleKey !== "string" || !opts.toggleKey) throw Error("toggleKey must be a string");
+  if (!opts.toggleKey || typeof opts.toggleKey !== "string" && !Array.isArray(opts.toggleKey)) {
+    throw Error("toggleKey must be a string or an array of strings");
+  }
   this.commands = commandEnumerator();
   if (!this.commands) return;
   // this.commands = [{
@@ -2153,14 +2177,15 @@ function CommandPalette(commandEnumerator, opts) {
   //   title:     "my command X"
   // }, ...];
 
-  if (opts.toggleKey[0] === "^") {
-    this.toggleKeyCtrl = true;
-    this.toggleKey     = opts.toggleKey.substring(1);
-    if (!this.toggleKey) throw Error("Incorrect toggleKey");
-  } else {
-    this.toggleKeyCtrl = false;
-    this.toggleKey     = opts.toggleKey;
-  }
+  // one or more keys can open the palette, e.g. ["F1", "^p"]
+  var toggleKeys  = Array.isArray(opts.toggleKey) ? opts.toggleKey : [opts.toggleKey];
+  this.toggleKeys = toggleKeys.map(function(toggleKey) {
+    if (typeof toggleKey !== "string") throw Error("Incorrect toggleKey");
+    var isCtrl = toggleKey[0] === "^";
+    var key    = isCtrl ? toggleKey.substring(1) : toggleKey;
+    if (!key) throw Error("Incorrect toggleKey");
+    return { key: key, ctrl: isCtrl };
+  });
 
   this.hotkeyDescription = opts.hotkeyDescription;
   this.elements          = {
@@ -2220,8 +2245,10 @@ CommandPalette.prototype.renderAndBindElements = function() {
 };
 
 CommandPalette.prototype.handleToggleKey = function(event) {
-  if (event.key !== this.toggleKey) return;
-  if (this.toggleKeyCtrl && !event.ctrlKey) return;
+  var isToggleKey = this.toggleKeys.some(function(toggleKey) {
+    return event.key === toggleKey.key && (!toggleKey.ctrl || event.ctrlKey);
+  });
+  if (!isToggleKey) return;
   this.toggleDisplay();
   event.preventDefault();
 };
@@ -2371,6 +2398,10 @@ CommandPalette.prototype.exec = function(cmd) {
 CommandPalette.isVisible = function() {
   return CommandPalette.instances.reduce(function(result, instance) { return result || instance.elements.palette.style.display !== "none" }, false);
 };
+
+function addHotkey(opts) {
+  Hotkeys.addHotkeyToHelpSheet(opts.toggleKey, opts.hotkeyDescription);
+}
 
 /**********************************************************
  * Command Enumerators
