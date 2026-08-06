@@ -17,9 +17,9 @@ CLASS ltcl_smtg IMPLEMENTATION.
 
     DATA:
       ls_smtg     TYPE zif_abapgit_aff_smtg_v1=>ty_main,
-      lv_actual   TYPE string,
+      lv_json     TYPE string,
       lv_expected TYPE string,
-      lv_json     TYPE xstring,
+      lv_xstr     TYPE xstring,
       lo_input    TYPE REF TO zcl_abapgit_xml_input,
       lo_handler  TYPE REF TO zcl_abapgit_json_handler.
 
@@ -30,8 +30,8 @@ CLASS ltcl_smtg IMPLEMENTATION.
     ls_smtg = zcl_abapgit_object_smtg=>deserialize_xml_to_aff( lo_input ).
 
     CREATE OBJECT lo_handler.
-    lv_json = lo_handler->serialize( ls_smtg ).
-    lv_actual = cl_abap_codepage=>convert_from( lv_json ).
+    lv_xstr = lo_handler->serialize( ls_smtg ).
+    lv_json = cl_abap_codepage=>convert_from( lv_xstr ).
 
     lv_expected =
       `{` && cl_abap_char_utilities=>newline &&
@@ -58,7 +58,7 @@ CLASS ltcl_smtg IMPLEMENTATION.
       `}` && cl_abap_char_utilities=>newline.
 
     cl_abap_unit_assert=>assert_equals(
-      act = lv_actual
+      act = lv_json
       exp = lv_expected ).
 
   ENDMETHOD.
