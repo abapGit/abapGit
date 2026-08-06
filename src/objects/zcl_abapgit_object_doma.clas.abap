@@ -540,6 +540,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
           ls_extra   TYPE ty_extra,
           lv_masklen TYPE c LENGTH 4,
           lt_dd07v   TYPE TABLE OF dd07v,
+          lt_fixed_value_append_names TYPE lcl_doma_data=>ty_fixed_value_append_names,
           lv_json    TYPE xstring.
 
     FIELD-SYMBOLS <ls_dd07v> TYPE dd07v.
@@ -600,9 +601,16 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
     IF mv_aff_enabled = abap_true.
       " AFF/JSON serialization
+      SELECT domname FROM dd01l INTO TABLE lt_fixed_value_append_names
+        WHERE appendname = lv_name
+        AND as4local = 'A'
+        AND as4vers = '0000'
+        ORDER BY domname.                                  "#EC CI_SUBRC
+
       lv_json = lcl_aff_metadata_handler=>serialize(
-        is_dd01v = ls_dd01v
-        it_dd07v = lt_dd07v ).
+        is_dd01v                    = ls_dd01v
+        it_dd07v                    = lt_dd07v
+        it_fixed_value_append_names = lt_fixed_value_append_names ).
 
       mo_files->add_raw(
         iv_ext  = 'json'

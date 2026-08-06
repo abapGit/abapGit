@@ -1,8 +1,13 @@
 
 CLASS lcl_doma_data DEFINITION.
   PUBLIC SECTION.
+    TYPES ty_fixed_value_append_names TYPE STANDARD TABLE OF sobj_name WITH DEFAULT KEY.
+
     DATA ms_dd01v TYPE dd01v.
     DATA ms_dd07v TYPE dd07v_tab.
+    DATA mv_output_style TYPE zif_abapgit_aff_doma_v1=>ty_output_style.
+    DATA mv_am_pm_time_format TYPE abap_bool.
+    DATA mt_fixed_value_append_names TYPE ty_fixed_value_append_names.
 ENDCLASS.
 
 CLASS lcl_doma_data IMPLEMENTATION.
@@ -36,6 +41,9 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     FIELD-SYMBOLS <ls_dd07v> TYPE dd07v.
     DATA ls_single_value TYPE zif_abapgit_aff_doma_v1=>ty_single_value.
     DATA ls_interval_value TYPE zif_abapgit_aff_doma_v1=>ty_intervals_value.
+    DATA ls_fixed_value_append TYPE zif_abapgit_aff_doma_v1=>ty_fixed_value_append.
+
+    FIELD-SYMBOLS <lv_fixed_value_append_name> TYPE sobj_name.
 
     " Convert input data to DOMA structure
     TRY.
@@ -61,10 +69,13 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     ENDIF.
 
     " Map output characteristics
-    IF lo_doma_data->ms_dd01v-outputlen IS NOT INITIAL
+    IF lo_doma_data->mv_output_style IS NOT INITIAL
+        OR lo_doma_data->ms_dd01v-outputlen IS NOT INITIAL
         OR lo_doma_data->ms_dd01v-convexit IS NOT INITIAL
         OR lo_doma_data->ms_dd01v-lowercase IS NOT INITIAL
-        OR lo_doma_data->ms_dd01v-signflag IS NOT INITIAL.
+        OR lo_doma_data->ms_dd01v-signflag IS NOT INITIAL
+        OR lo_doma_data->mv_am_pm_time_format = abap_true.
+      ls_data_aff-output_characteristics-style = lo_doma_data->mv_output_style.
       IF lo_doma_data->ms_dd01v-outputlen IS NOT INITIAL.
         ls_data_aff-output_characteristics-length = lo_doma_data->ms_dd01v-outputlen.
       ENDIF.
@@ -77,6 +88,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
       IF lo_doma_data->ms_dd01v-signflag IS NOT INITIAL.
         ls_data_aff-output_characteristics-negative_values = abap_true.
       ENDIF.
+      ls_data_aff-output_characteristics-am_pm_time_format = lo_doma_data->mv_am_pm_time_format.
     ENDIF.
 
     LOOP AT lo_doma_data->ms_dd07v ASSIGNING <ls_dd07v>.
@@ -99,6 +111,12 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
       ls_data_aff-value_table-name = lo_doma_data->ms_dd01v-entitytab.
     ENDIF.
 
+    " Map fixed value appends
+    LOOP AT lo_doma_data->mt_fixed_value_append_names ASSIGNING <lv_fixed_value_append_name>.
+      ls_fixed_value_append-name = <lv_fixed_value_append_name>.
+      APPEND ls_fixed_value_append TO ls_data_aff-fixed_value_appends.
+    ENDLOOP.
+
     es_data = ls_data_aff.
   ENDMETHOD.
 
@@ -109,6 +127,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     DATA lv_valpos TYPE i.
     FIELD-SYMBOLS <ls_single_value> TYPE zif_abapgit_aff_doma_v1=>ty_single_value.
     FIELD-SYMBOLS <ls_interval_value> TYPE zif_abapgit_aff_doma_v1=>ty_intervals_value.
+    FIELD-SYMBOLS <ls_fixed_value_append> TYPE zif_abapgit_aff_doma_v1=>ty_fixed_value_append.
 
     ls_data_aff = iv_data.
 
@@ -125,6 +144,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     lo_doma_data->ms_dd01v-decimals = ls_data_aff-format-decimals.
 
     " Map output characteristics
+    lo_doma_data->mv_output_style = ls_data_aff-output_characteristics-style.
     IF ls_data_aff-output_characteristics-length IS NOT INITIAL.
       lo_doma_data->ms_dd01v-outputlen = ls_data_aff-output_characteristics-length.
     ENDIF.
@@ -137,6 +157,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     IF ls_data_aff-output_characteristics-negative_values = abap_true.
       lo_doma_data->ms_dd01v-signflag = abap_true.
     ENDIF.
+    lo_doma_data->mv_am_pm_time_format = ls_data_aff-output_characteristics-am_pm_time_format.
 
     " Map fixed values
     lv_valpos = 1.
@@ -170,6 +191,11 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     IF ls_data_aff-value_table-name IS NOT INITIAL.
       lo_doma_data->ms_dd01v-entitytab = ls_data_aff-value_table-name.
     ENDIF.
+
+    " Map fixed value appends
+    LOOP AT ls_data_aff-fixed_value_appends ASSIGNING <ls_fixed_value_append>.
+      APPEND <ls_fixed_value_append>-name TO lo_doma_data->mt_fixed_value_append_names.
+    ENDLOOP.
 
     es_data = lo_doma_data.
   ENDMETHOD.
@@ -344,10 +370,11 @@ CLASS lcl_aff_metadata_handler DEFINITION.
     CLASS-METHODS:
       serialize
         IMPORTING
-          is_dd01v       TYPE dd01v
-          it_dd07v       TYPE dd07v_tab
+          is_dd01v                    TYPE dd01v
+          it_dd07v                    TYPE dd07v_tab
+          it_fixed_value_append_names TYPE lcl_doma_data=>ty_fixed_value_append_names OPTIONAL
         RETURNING
-          VALUE(rv_json) TYPE xstring
+          VALUE(rv_json)              TYPE xstring
         RAISING
           zcx_abapgit_exception,
       deserialize
@@ -358,12 +385,11 @@ CLASS lcl_aff_metadata_handler DEFINITION.
           es_dd01v       TYPE dd01v
           et_dd07v       TYPE dd07v_tab
         RAISING
-          zcx_abapgit_exception.
-  PRIVATE SECTION.
-    CLASS-METHODS:
+          zcx_abapgit_exception,
       get_enum_mappings
         RETURNING
           VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_enum_mappings.
+  PRIVATE SECTION.
 ENDCLASS.
 
 CLASS lcl_aff_metadata_handler IMPLEMENTATION.
@@ -378,9 +404,22 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     DATA lt_skip_paths TYPE zcl_abapgit_json_handler=>ty_skip_paths.
     DATA ls_skip_path  TYPE zcl_abapgit_json_handler=>ty_path_value_pair.
 
+    FIELD-SYMBOLS <lv_dd01v_component> TYPE any.
+
     CREATE OBJECT lo_doma_data.
     lo_doma_data->ms_dd01v = is_dd01v.
     lo_doma_data->ms_dd07v = it_dd07v.
+    lo_doma_data->mt_fixed_value_append_names = it_fixed_value_append_names.
+
+    ASSIGN COMPONENT 'OUTPUTSTYLE' OF STRUCTURE lo_doma_data->ms_dd01v TO <lv_dd01v_component>.
+    IF sy-subrc = 0.
+      lo_doma_data->mv_output_style = <lv_dd01v_component>.
+    ENDIF.
+
+    ASSIGN COMPONENT 'AMPMFORMAT' OF STRUCTURE lo_doma_data->ms_dd01v TO <lv_dd01v_component>.
+    IF sy-subrc = 0 AND <lv_dd01v_component> IS NOT INITIAL.
+      lo_doma_data->mv_am_pm_time_format = abap_true.
+    ENDIF.
 
     CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
     lo_aff_mapper->to_aff(
@@ -395,7 +434,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     ls_skip_path-value = '0'.
     APPEND ls_skip_path TO lt_skip_paths.
     ls_skip_path-path  = '/outputCharacteristics/style'.
-    ls_skip_path-value = '00'.
+    ls_skip_path-value = 'normal'.
     APPEND ls_skip_path TO lt_skip_paths.
 
     CREATE OBJECT lo_aff_handler.
@@ -419,6 +458,8 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     DATA lt_enum_mappings TYPE zcl_abapgit_json_handler=>ty_enum_mappings.
     DATA lv_json_string TYPE string.
     DATA lx_exception TYPE REF TO cx_root.
+
+    FIELD-SYMBOLS <lv_dd01v_component> TYPE any.
 
     lt_enum_mappings = get_enum_mappings( ).
 
@@ -447,6 +488,16 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
 
     es_dd01v = lo_doma_data->ms_dd01v.
     et_dd07v = lo_doma_data->ms_dd07v.
+
+    ASSIGN COMPONENT 'OUTPUTSTYLE' OF STRUCTURE es_dd01v TO <lv_dd01v_component>.
+    IF sy-subrc = 0.
+      <lv_dd01v_component> = lo_doma_data->mv_output_style.
+    ENDIF.
+
+    ASSIGN COMPONENT 'AMPMFORMAT' OF STRUCTURE es_dd01v TO <lv_dd01v_component>.
+    IF sy-subrc = 0.
+      <lv_dd01v_component> = lo_doma_data->mv_am_pm_time_format.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -536,6 +587,40 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
 
     ls_json_abap_mapping-abap = 'UNIT'.
     ls_json_abap_mapping-json = 'UNIT'.
+    APPEND ls_json_abap_mapping TO ls_mapping-mappings.
+
+    APPEND ls_mapping TO rt_result.
+
+    " Map output style
+    ls_mapping-path = '/outputCharacteristics/style'.
+    CLEAR ls_mapping-mappings.
+
+    ls_json_abap_mapping-abap = zif_abapgit_aff_doma_v1=>co_output_style-normal.
+    ls_json_abap_mapping-json = 'normal'.
+    APPEND ls_json_abap_mapping TO ls_mapping-mappings.
+
+    ls_json_abap_mapping-abap = zif_abapgit_aff_doma_v1=>co_output_style-sign_right.
+    ls_json_abap_mapping-json = 'signRight'.
+    APPEND ls_json_abap_mapping TO ls_mapping-mappings.
+
+    ls_json_abap_mapping-abap = zif_abapgit_aff_doma_v1=>co_output_style-scale_preserving.
+    ls_json_abap_mapping-json = 'scalePreserving'.
+    APPEND ls_json_abap_mapping TO ls_mapping-mappings.
+
+    ls_json_abap_mapping-abap = zif_abapgit_aff_doma_v1=>co_output_style-scientific.
+    ls_json_abap_mapping-json = 'scientific'.
+    APPEND ls_json_abap_mapping TO ls_mapping-mappings.
+
+    ls_json_abap_mapping-abap = zif_abapgit_aff_doma_v1=>co_output_style-scientific_with_leading_zero.
+    ls_json_abap_mapping-json = 'scientificWithLeadingZero'.
+    APPEND ls_json_abap_mapping TO ls_mapping-mappings.
+
+    ls_json_abap_mapping-abap = zif_abapgit_aff_doma_v1=>co_output_style-scale_preserving_scientific.
+    ls_json_abap_mapping-json = 'scalePreservingScientific'.
+    APPEND ls_json_abap_mapping TO ls_mapping-mappings.
+
+    ls_json_abap_mapping-abap = zif_abapgit_aff_doma_v1=>co_output_style-engineering.
+    ls_json_abap_mapping-json = 'engineering'.
     APPEND ls_json_abap_mapping TO ls_mapping-mappings.
 
     APPEND ls_mapping TO rt_result.
