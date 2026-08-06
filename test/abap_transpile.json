@@ -131,14 +131,6 @@
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "default_git_user_email", "note": "skip, this changes database"},
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "default_git_stored_in_settings", "note": "skip, this changes database"},
 
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff07", "note": "todo zcl_abapgit_diff_diff3"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff08", "note": "todo zcl_abapgit_diff_diff3"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff09", "note": "todo zcl_abapgit_diff_diff3"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff11", "note": "todo zcl_abapgit_diff_diff3"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff14", "note": "todo zcl_abapgit_diff_diff3"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff15", "note": "todo zcl_abapgit_diff_diff3"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff16", "note": "todo zcl_abapgit_diff_diff3"},
-
       {"object": "ZCL_ABAPGIT_USER_RECORD", "class": "ltcl_user_record", "method": "test_invalid_user", "note": "Void type: BAPIADDR3"},
 
       {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_object_types", "method": "type_supported", "note": "not currently supported in open-abap"},
