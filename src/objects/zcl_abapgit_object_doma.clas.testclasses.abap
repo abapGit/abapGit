@@ -9,8 +9,9 @@ CLASS ltcl_aff_type_mapping DEFINITION FINAL FOR TESTING
       setup,
       assert_to_aff
         IMPORTING
-          iv_ddic TYPE dd01v-datatype
-          iv_aff  TYPE zif_abapgit_aff_ddic_types_v1=>ty_data_type,
+          iv_ddic   TYPE dd01v-datatype
+          iv_length TYPE dd01v-leng DEFAULT 0
+          iv_aff    TYPE zif_abapgit_aff_ddic_types_v1=>ty_data_type,
       assert_to_abapgit
         IMPORTING
           iv_aff  TYPE zif_abapgit_aff_ddic_types_v1=>ty_data_type
@@ -33,6 +34,15 @@ CLASS ltcl_aff_metadata DEFINITION FINAL FOR TESTING
           iv_expected TYPE string
         RAISING
           zcx_abapgit_ajson_error,
+      assert_data_type_json
+        IMPORTING
+          iv_ddic     TYPE dd01v-datatype
+          iv_length   TYPE dd01v-leng DEFAULT 0
+          iv_expected TYPE string
+        RAISING
+          zcx_abapgit_exception
+          zcx_abapgit_ajson_error,
+      data_type_enums FOR TESTING RAISING cx_static_check,
       serialize_minimal FOR TESTING RAISING cx_static_check,
       serialize_non_defaults FOR TESTING RAISING cx_static_check,
       deserialize_minimal FOR TESTING RAISING cx_static_check,
@@ -52,6 +62,7 @@ CLASS ltcl_aff_type_mapping IMPLEMENTATION.
 
     CREATE OBJECT lo_source.
     lo_source->ms_dd01v-datatype = iv_ddic.
+    lo_source->ms_dd01v-leng = iv_length.
 
     mi_cut->to_aff(
       EXPORTING
@@ -85,61 +96,53 @@ CLASS ltcl_aff_type_mapping IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD data_types_to_aff.
-    assert_to_aff( iv_ddic = 'ACCP'
-                   iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-accp ).
-    assert_to_aff( iv_ddic = 'CHAR'
-                   iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-char ).
-    assert_to_aff( iv_ddic = 'CURR'
-                   iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-curr ).
-    assert_to_aff( iv_ddic = 'DATS'
-                   iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-dats ).
-    assert_to_aff( iv_ddic = 'DEC'
-                   iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-dec ).
-    assert_to_aff( iv_ddic = 'INT8'
-                   iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-int8 ).
-    assert_to_aff( iv_ddic = 'RAW'
-                   iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-raw ).
-    assert_to_aff( iv_ddic = 'STRG'
-                   iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-string ).
-    assert_to_aff( iv_ddic = 'TIMS'
-                   iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-tims ).
-    assert_to_aff( iv_ddic = 'UNIT'
-                   iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-unit ).
-    assert_to_aff( iv_ddic = 'VARC'
-                   iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-varc ).
+    DATA ls_data_types LIKE zif_abapgit_aff_ddic_types_v1=>co_data_type.
+
+    FIELD-SYMBOLS <lv_data_type> TYPE any.
+
+    ls_data_types = zif_abapgit_aff_ddic_types_v1=>co_data_type.
+    DO.
+      ASSIGN COMPONENT sy-index OF STRUCTURE ls_data_types TO <lv_data_type>.
+      IF sy-subrc <> 0.
+        EXIT.
+      ENDIF.
+      assert_to_aff( iv_ddic = <lv_data_type>
+                     iv_aff  = <lv_data_type> ).
+    ENDDO.
+
+    assert_to_aff( iv_ddic = 'DF16'
+                   iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-decfloat16 ).
+    assert_to_aff( iv_ddic = 'DF34'
+                   iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-decfloat34 ).
+    assert_to_aff( iv_ddic  = 'DECF'
+                   iv_length = 16
+                   iv_aff   = zif_abapgit_aff_ddic_types_v1=>co_data_type-decfloat16 ).
+    assert_to_aff( iv_ddic  = 'DECF'
+                   iv_length = 34
+                   iv_aff   = zif_abapgit_aff_ddic_types_v1=>co_data_type-decfloat34 ).
+    assert_to_aff( iv_ddic = 'GEOM'
+                   iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-geom_ewkb ).
+    assert_to_aff( iv_ddic = 'RAWS'
+                   iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-rawstring ).
     assert_to_aff( iv_ddic = 'ZZZZ'
                    iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-char ).
   ENDMETHOD.
 
   METHOD data_types_to_abapgit.
-    assert_to_abapgit( iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-char
-                       iv_ddic = 'CHAR' ).
-    assert_to_abapgit( iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-df16_dec
-                       iv_ddic = 'DF16' ).
-    assert_to_abapgit( iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-df16_raw
-                       iv_ddic = 'DF16' ).
-    assert_to_abapgit( iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-df16_scl
-                       iv_ddic = 'DF16' ).
-    assert_to_abapgit( iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-decfloat16
-                       iv_ddic = 'DECF' ).
-    assert_to_abapgit( iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-df34_dec
-                       iv_ddic = 'DF34' ).
-    assert_to_abapgit( iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-df34_raw
-                       iv_ddic = 'DF34' ).
-    assert_to_abapgit( iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-df34_scl
-                       iv_ddic = 'DF34' ).
-    assert_to_abapgit( iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-decfloat34
-                       iv_ddic = 'DECF' ).
-    assert_to_abapgit( iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-geom_ewkb
-                       iv_ddic = 'GEOM' ).
-    assert_to_abapgit( iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-rawstring
-                       iv_ddic = 'RAWS' ).
-    assert_to_abapgit( iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-sstring
-                       iv_ddic = 'SSTR' ).
-    assert_to_abapgit( iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-string
-                       iv_ddic = 'STRG' ).
-    assert_to_abapgit( iv_aff  = zif_abapgit_aff_ddic_types_v1=>co_data_type-utclong
-                       iv_ddic = 'UTCL' ).
+    DATA ls_data_types LIKE zif_abapgit_aff_ddic_types_v1=>co_data_type.
+
+    FIELD-SYMBOLS <lv_data_type> TYPE any.
+
+    ls_data_types = zif_abapgit_aff_ddic_types_v1=>co_data_type.
+    DO.
+      ASSIGN COMPONENT sy-index OF STRUCTURE ls_data_types TO <lv_data_type>.
+      IF sy-subrc <> 0.
+        EXIT.
+      ENDIF.
+      assert_to_abapgit( iv_aff  = <lv_data_type>
+                         iv_ddic = <lv_data_type> ).
+    ENDDO.
+
     assert_to_abapgit( iv_aff  = 'ZZZZ'
                        iv_ddic = 'CHAR' ).
   ENDMETHOD.
@@ -217,6 +220,61 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
       act = lv_is_equal
       exp = abap_true
       msg = iv_actual ).
+  ENDMETHOD.
+
+  METHOD assert_data_type_json.
+    DATA ls_dd01v TYPE dd01v.
+    DATA ls_actual_dd01v TYPE dd01v.
+    DATA lt_dd07v TYPE dd07v_tab.
+    DATA lt_actual_dd07v TYPE dd07v_tab.
+    DATA lv_serialized TYPE xstring.
+    DATA lv_json TYPE string.
+    DATA li_json TYPE REF TO zif_abapgit_ajson.
+
+    ls_dd01v-datatype = iv_ddic.
+    ls_dd01v-leng = iv_length.
+    ls_dd01v-ddlanguage = 'E'.
+
+    lv_serialized = lcl_aff_metadata_handler=>serialize(
+      is_dd01v = ls_dd01v
+      it_dd07v = lt_dd07v ).
+    lv_json = zcl_abapgit_convert=>xstring_to_string_utf8( lv_serialized ).
+    li_json = zcl_abapgit_ajson=>parse( lv_json ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = li_json->get( '/format/dataType' )
+      exp = iv_expected
+      msg = iv_ddic ).
+
+    lcl_aff_metadata_handler=>deserialize(
+      EXPORTING
+        iv_json        = lv_serialized
+        iv_object_name = 'ZDOMAIN'
+      IMPORTING
+        es_dd01v       = ls_actual_dd01v
+        et_dd07v       = lt_actual_dd07v ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_actual_dd01v-datatype
+      exp = iv_ddic
+      msg = iv_expected ).
+  ENDMETHOD.
+
+  METHOD data_type_enums.
+    DATA lt_enum_pairs TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+    DATA lv_enum_pair TYPE string.
+    DATA lv_ddic TYPE dd01v-datatype.
+    DATA lv_json TYPE string.
+
+    SPLIT `D16D=DF16_DEC D16R=DF16_RAW D16S=DF16_SCL D16N=DECFLOAT16 ` &&
+      `D34D=DF34_DEC D34R=DF34_RAW D34S=DF34_SCL D34N=DECFLOAT34 ` &&
+      `GGM1=GEOM_EWKB RSTR=RAWSTRING SSTR=SSTRING STRG=STRING UTCL=UTCLONG`
+      AT space INTO TABLE lt_enum_pairs.
+    LOOP AT lt_enum_pairs INTO lv_enum_pair.
+      SPLIT lv_enum_pair AT '=' INTO lv_ddic lv_json.
+      assert_data_type_json( iv_ddic    = lv_ddic
+                             iv_expected = lv_json ).
+    ENDLOOP.
   ENDMETHOD.
 
   METHOD serialize_minimal.
