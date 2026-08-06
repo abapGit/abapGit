@@ -212,6 +212,7 @@ CLASS zcl_abapgit_flow_git IMPLEMENTATION.
 
 
     CREATE OBJECT lo_visit.
+    CLEAR ev_latest_merge_commit.
 
     " find first commit and latest merge commit
     lo_visit->clear( )->push( iv_branch_sha1 ).

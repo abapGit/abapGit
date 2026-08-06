@@ -167,6 +167,11 @@ div#footer {
   padding:          0.5em 0.5em;
   border-top:       3px double;
 }
+/* narrow the side cells so the version line does not wrap */
+div#footer td.sponsor,
+div#footer td#debug-output {
+  width: 25%;
+}
 div#footer .version {
   margin-top: 0.5em;
   font-size: small;
@@ -801,7 +806,6 @@ div.info-panel-fixed {
 }
 
 div.info-panel div.info-hint {
-  text-transform: uppercase;
   font-size: small;
   padding: 8px 6px 0px;
   text-align: center;
@@ -949,7 +953,7 @@ ul.hotkeys span.key-id {
   border: 1px solid;
   border-radius: 3px;
   padding: 1px 7px;
-  width: 3em;
+  width: 5em;
   display: inline-block;
   text-align: center;
   margin-top: 0.2em;

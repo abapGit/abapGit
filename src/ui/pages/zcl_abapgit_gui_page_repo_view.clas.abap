@@ -1026,8 +1026,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_palette(
-      iv_action = zif_abapgit_definitions=>c_action-go_repo ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_palette( zif_abapgit_definitions=>c_action-go_repo ) ).
 
   ENDMETHOD.
 
@@ -1159,6 +1158,16 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
         open_in_main_language( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN zif_abapgit_definitions=>c_action-go_back.
+        IF zcl_abapgit_ui_factory=>get_gui( )->back( ) = abap_true. " end of stack
+          " shutdown
+          zcl_abapgit_ui_factory=>get_gui( )->free( ).
+          SET SCREEN 0.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+        ELSE.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        ENDIF.
 
     ENDCASE.
 

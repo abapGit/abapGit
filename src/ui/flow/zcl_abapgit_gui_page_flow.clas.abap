@@ -351,6 +351,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ii_repo_online   = li_repo_online
       ii_obj_filter    = lo_filter ).
 
+* The stage page consumed the deliberately partial remote-file snapshot above.
+* Force the push to fetch the matching current commit and Git objects.
+    li_repo_online->zif_abapgit_repo~refresh( ).
+
     rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
 
     refresh( ).
@@ -379,16 +383,6 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
 
   METHOD refresh.
-
-    DATA ls_feature LIKE LINE OF ms_information-features.
-    DATA li_repo  TYPE REF TO zif_abapgit_repo.
-
-
-    LOOP AT ms_information-features INTO ls_feature.
-      li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( ls_feature-repo-key ).
-      li_repo->refresh( ).
-    ENDLOOP.
-
     CLEAR ms_information.
 
   ENDMETHOD.
@@ -819,6 +813,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA lv_message  LIKE LINE OF ms_information-errors.
     DATA lv_filter   TYPE string.
     DATA lv_language TYPE laiso.
+    DATA lv_timestamp TYPE timestampl.
 
 
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
@@ -877,12 +872,14 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ENDIF.
 
     lv_language = zcl_abapgit_convert=>conversion_exit_isola_output( sy-langu ).
+    GET TIME STAMP FIELD lv_timestamp.
 
     ri_html->add( |<small>{ lines( ms_information-features ) } features| &&
       | in { lo_timer->end( ) }{ lv_filter }| &&
       |, SAP user: { sy-uname }| &&
       |, Logon language: { lv_language }| &&
       |, GitHub user: { ms_information-github_username }| &&
+      |, { zcl_abapgit_gui_chunk_lib=>render_timestamp( lv_timestamp ) }| &&
       |</small>| ).
 
     ri_html->add( '</div>' ).
