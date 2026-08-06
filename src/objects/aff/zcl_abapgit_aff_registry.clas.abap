@@ -61,6 +61,8 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
     register( 'DSFD' ).
     register( iv_obj_type     = 'DOMA'
               iv_experimental = abap_true ).
+    register( iv_obj_type     = 'DTEL'
+              iv_experimental = abap_true ).
     register( 'EVTB' ).
     register( 'EEEC' ).
     register( 'GSMP' ).
