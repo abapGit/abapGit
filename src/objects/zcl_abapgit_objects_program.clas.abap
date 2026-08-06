@@ -780,9 +780,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           lv_was_protected    TYPE abap_bool,
           lv_exists_locally   TYPE abap_bool.
 
-    FIELD-SYMBOLS: <ls_vari>              LIKE LINE OF it_varis,
-                   <ls_vari_text_remote>  TYPE ty_vari_text,
-                   <ls_remote_variscreen> TYPE rsdynnr.
+    FIELD-SYMBOLS: <ls_vari>             LIKE LINE OF it_varis,
+                   <ls_vari_text_remote> TYPE ty_vari_text.
 
     lt_local_varis = get_varis_for_report( iv_program_name ).
 
