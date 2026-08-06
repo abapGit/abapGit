@@ -103,11 +103,69 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
 
   METHOD deserialize_xml_to_aff.
 
+    TYPES:
+      BEGIN OF ty_smtg_header,
+        id              TYPE c LENGTH 30,
+        version         TYPE c LENGTH 1,
+        cds_view        TYPE c LENGTH 30,
+        is_predelivered TYPE abap_bool,
+        smtg_version    TYPE c LENGTH 1,
+      END OF ty_smtg_header,
+      BEGIN OF ty_smtg_header_text,
+        id          TYPE c LENGTH 30,
+        version     TYPE c LENGTH 1,
+        langu       TYPE sy-langu,
+        name        TYPE c LENGTH 255,
+        description TYPE c LENGTH 255,
+      END OF ty_smtg_header_text,
+      ty_smtg_header_texts TYPE STANDARD TABLE OF ty_smtg_header_text WITH DEFAULT KEY,
+      BEGIN OF ty_smtg_content,
+        id          TYPE c LENGTH 30,
+        version     TYPE c LENGTH 1,
+        langu       TYPE sy-langu,
+        subject     TYPE c LENGTH 255,
+        body_txt    TYPE string,
+        body_html   TYPE string,
+        autogen_txt TYPE abap_bool,
+      END OF ty_smtg_content,
+      ty_smtg_contents TYPE STANDARD TABLE OF ty_smtg_content WITH DEFAULT KEY,
+      BEGIN OF ty_smtg_xml,
+        header   TYPE ty_smtg_header,
+        header_t TYPE ty_smtg_header_texts,
+        content  TYPE ty_smtg_contents,
+      END OF ty_smtg_xml.
+
+    DATA:
+      ls_smtg         TYPE ty_smtg_xml,
+      ls_header_text  TYPE ty_smtg_header_text,
+      ls_content      TYPE ty_smtg_content.
+
     io_xml->read(
       EXPORTING
         iv_name = 'SMTG'
       CHANGING
-        cg_data = rs_smtg ).
+        cg_data = ls_smtg ).
+
+    rs_smtg-format_version = '1'.
+    rs_smtg-general_information-cds_view = ls_smtg-header-cds_view.
+    rs_smtg-general_information-is_predelivered = ls_smtg-header-is_predelivered.
+
+    READ TABLE ls_smtg-header_t INTO ls_header_text INDEX 1.
+    IF sy-subrc = 0.
+      rs_smtg-header-description = ls_header_text-name.
+      rs_smtg-header-original_language = ls_header_text-langu.
+      rs_smtg-general_information-template_description = ls_header_text-description.
+    ENDIF.
+
+    READ TABLE ls_smtg-content INTO ls_content INDEX 1.
+    IF sy-subrc = 0.
+      rs_smtg-general_information-email_subject = ls_content-subject.
+      rs_smtg-general_information-is_plaintext_auto_generated = ls_content-autogen_txt.
+
+* todo: not sure about the content, see
+* https://github.com/abapGit/abapGit/pull/7682#issuecomment-5202518147
+* https://github.com/SAP/abap-file-formats/issues/797
+    ENDIF.
 
   ENDMETHOD.
 
