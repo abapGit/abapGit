@@ -346,13 +346,13 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
         " and cache them in the login manager.
         TRY.
             IF request_credentials( lx_auth->mv_url ) = abap_true.
-              assert ls_handled-state IS INITIAL.
+              " assert ls_handled-state IS INITIAL.
               " IF ls_handled-state IS INITIAL.
-                " Authentication interrupted the event handler, retry the action
-                handle_action(
-                  iv_action   = iv_action
-                  iv_getdata  = iv_getdata
-                  it_postdata = it_postdata ).
+              " Authentication interrupted the event handler, retry the action
+              handle_action(
+                iv_action   = iv_action
+                iv_getdata  = iv_getdata
+                it_postdata = it_postdata ).
               " ELSE.
               "   " The action already changed the current page before rendering
               "   " requested authentication, so only complete the rendering
