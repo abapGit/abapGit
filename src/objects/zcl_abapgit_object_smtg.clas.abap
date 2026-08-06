@@ -46,6 +46,14 @@ CLASS zcl_abapgit_object_smtg DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING
           zcx_abapgit_exception.
 
+    CLASS-METHODS deserialize_xml_to_aff
+      IMPORTING
+        io_xml         TYPE REF TO zif_abapgit_xml_input
+      RETURNING
+        VALUE(rs_smtg) TYPE zif_abapgit_aff_smtg_v1=>ty_main
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -89,6 +97,17 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     CLEAR: <lg_field>.
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_xml_to_aff.
+
+    io_xml->read(
+      EXPORTING
+        iv_name = 'SMTG'
+      CHANGING
+        cg_data = rs_smtg ).
 
   ENDMETHOD.
 
@@ -247,6 +266,7 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA:
+      ls_smtg     TYPE zif_abapgit_aff_smtg_v1=>ty_main,
       lr_template TYPE REF TO data,
       lx_error    TYPE REF TO cx_root,
       lo_template TYPE REF TO object.
@@ -264,11 +284,7 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
     ASSIGN lr_template->* TO <lg_template>.
     ASSERT sy-subrc = 0.
 
-    io_xml->read(
-      EXPORTING
-        iv_name = 'SMTG'
-      CHANGING
-        cg_data = <lg_template> ).
+    ls_smtg = deserialize_xml_to_aff( io_xml ).
 
     ASSIGN
       COMPONENT 'HEADER'
