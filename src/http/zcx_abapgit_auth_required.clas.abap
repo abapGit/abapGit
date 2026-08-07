@@ -47,19 +47,17 @@ CLASS zcx_abapgit_auth_required IMPLEMENTATION.
 
     CLEAR me->textid.
 
-    IF textid IS INITIAL.
-      if_t100_message~t100key = if_t100_message=>default_textid.
-    ELSE.
-      if_t100_message~t100key = textid.
-    ENDIF.
+    " Leave the T100 key initial when no text id is supplied, MESSAGE and friends prefer
+    " it over IF_MESSAGE~GET_TEXT and the default key would only say "An exception was
+    " raised"
+    if_t100_message~t100key = textid.
   ENDMETHOD.
 
 
   METHOD if_message~get_text.
 
-    " The exception is normally handled by the UI layer which shows the password popup.
-    " Supply a text for the flows where it ends up as a message, the inherited T100
-    " text would only say "An exception was raised"
+    " The exception is normally handled by the UI layer which shows the password popup,
+    " this is the text for the flows where it ends up as a message instead
     IF mv_url IS INITIAL.
       result = c_text.
     ELSE.
