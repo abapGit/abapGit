@@ -19,9 +19,6 @@ CLASS zcx_abapgit_auth_required DEFINITION
         !msgv4    TYPE symsgv OPTIONAL
         !longtext TYPE csequence OPTIONAL
         !iv_url   TYPE string OPTIONAL.
-
-    METHODS if_message~get_text
-        REDEFINITION.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -34,35 +31,54 @@ CLASS zcx_abapgit_auth_required IMPLEMENTATION.
 
 
   METHOD constructor ##ADT_SUPPRESS_GENERATION.
+
+    DATA ls_textid TYPE scx_t100key.
+    DATA lv_msgv1  TYPE symsgv.
+    DATA lv_msgv2  TYPE symsgv.
+    DATA lv_msgv3  TYPE symsgv.
+    DATA lv_msgv4  TYPE symsgv.
+
+    ls_textid = textid.
+    lv_msgv1  = msgv1.
+    lv_msgv2  = msgv2.
+    lv_msgv3  = msgv3.
+    lv_msgv4  = msgv4.
+
+    IF ls_textid IS INITIAL.
+      " MESSAGE takes the text from the T100 key, IF_MESSAGE~GET_TEXT is only used for
+      " exceptions without IF_T100_MESSAGE. So build a key for the text, same approach
+      " as ZCX_ABAPGIT_EXCEPTION=>RAISE
+      IF iv_url IS INITIAL.
+        cl_message_helper=>set_msg_vars_for_clike( c_text ).
+      ELSE.
+        cl_message_helper=>set_msg_vars_for_clike( |{ c_text } for { iv_url }| ).
+      ENDIF.
+      ls_textid-msgid = sy-msgid.
+      ls_textid-msgno = sy-msgno.
+      ls_textid-attr1 = 'MSGV1'.
+      ls_textid-attr2 = 'MSGV2'.
+      ls_textid-attr3 = 'MSGV3'.
+      ls_textid-attr4 = 'MSGV4'.
+      lv_msgv1 = sy-msgv1.
+      lv_msgv2 = sy-msgv2.
+      lv_msgv3 = sy-msgv3.
+      lv_msgv4 = sy-msgv4.
+    ENDIF.
+
     super->constructor(
       previous = previous
       log      = log
-      msgv1    = msgv1
-      msgv2    = msgv2
-      msgv3    = msgv3
-      msgv4    = msgv4
+      msgv1    = lv_msgv1
+      msgv2    = lv_msgv2
+      msgv3    = lv_msgv3
+      msgv4    = lv_msgv4
       longtext = longtext ).
 
     mv_url = iv_url.
 
     CLEAR me->textid.
 
-    " Leave the T100 key initial when no text id is supplied, MESSAGE and friends prefer
-    " it over IF_MESSAGE~GET_TEXT and the default key would only say "An exception was
-    " raised"
-    if_t100_message~t100key = textid.
-  ENDMETHOD.
-
-
-  METHOD if_message~get_text.
-
-    " The exception is normally handled by the UI layer which shows the password popup,
-    " this is the text for the flows where it ends up as a message instead
-    IF mv_url IS INITIAL.
-      result = c_text.
-    ELSE.
-      result = |{ c_text } for { mv_url }|.
-    ENDIF.
+    if_t100_message~t100key = ls_textid.
 
   ENDMETHOD.
 ENDCLASS.
