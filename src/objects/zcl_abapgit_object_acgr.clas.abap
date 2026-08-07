@@ -31,8 +31,8 @@ CLASS zcl_abapgit_object_acgr IMPLEMENTATION.
     SELECT SINGLE change_usr
       FROM agr_define
       INTO rv_user
-      WHERE agr_name EQ ms_item-obj_name.
-    IF sy-subrc NE 0 OR rv_user IS INITIAL.
+      WHERE agr_name = ms_item-obj_name.
+    IF sy-subrc <> 0 OR rv_user IS INITIAL.
       rv_user = c_user_unknown.
     ENDIF.
   ENDMETHOD.
@@ -70,8 +70,8 @@ CLASS zcl_abapgit_object_acgr IMPLEMENTATION.
         tech_error                    = 9
         hr_error                      = 10
         OTHERS                        = 11.
-    IF sy-subrc NE 0 OR lv_error_flag NE space.
-      LOOP AT lt_messages ASSIGNING <ls_message> WHERE severity EQ 'E'.
+    IF sy-subrc <> 0 OR lv_error_flag <> space.
+      LOOP AT lt_messages ASSIGNING <ls_message> WHERE severity = 'E'.
         MESSAGE ID <ls_message>-ag TYPE 'E' NUMBER <ls_message>-msgnr
                 WITH <ls_message>-var1 <ls_message>-var2
                      <ls_message>-var3 <ls_message>-var4
@@ -104,12 +104,12 @@ CLASS zcl_abapgit_object_acgr IMPLEMENTATION.
     SELECT DISTINCT tobj_name
       FROM objsl
       INTO TABLE lt_tables
-      WHERE objectname EQ ms_item-obj_type
-        AND objecttype EQ 'L'
-        AND tobject    EQ 'TABU'
+      WHERE objectname = ms_item-obj_type
+        AND objecttype = 'L'
+        AND tobject    = 'TABU'
       ORDER BY tobj_name.
     LOOP AT lt_tables INTO lv_table.
-      DELETE FROM (lv_table) WHERE agr_name EQ lv_role.
+      DELETE FROM (lv_table) WHERE agr_name = lv_role.
     ENDLOOP.
 
     get_generic( )->deserialize( iv_package   = iv_package
@@ -168,7 +168,7 @@ CLASS zcl_abapgit_object_acgr IMPLEMENTATION.
         agr_not_found = 1
         no_auth       = 2
         OTHERS        = 3.
-    IF sy-subrc NE 0.
+    IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Cannot open role { ms_item-obj_name } in PFCG| ).
     ENDIF.
 
@@ -215,9 +215,9 @@ CLASS zcl_abapgit_object_acgr IMPLEMENTATION.
     SELECT DISTINCT tobj_name
       FROM objsl
       INTO TABLE lt_tables
-      WHERE objectname EQ ms_item-obj_type
-        AND objecttype EQ 'L'
-        AND tobject    EQ 'TABU'
+      WHERE objectname = ms_item-obj_type
+        AND objecttype = 'L'
+        AND tobject    = 'TABU'
       ORDER BY tobj_name.
     LOOP AT lt_tables INTO lv_table.
       CREATE DATA lr_data TYPE STANDARD TABLE OF (lv_table).
@@ -225,13 +225,13 @@ CLASS zcl_abapgit_object_acgr IMPLEMENTATION.
 
       SELECT * FROM (lv_table)
         INTO TABLE <lt_data>
-        WHERE agr_name EQ lv_role
+        WHERE agr_name = lv_role
         ORDER BY PRIMARY KEY.
 
       LOOP AT <lt_data> ASSIGNING <ls_row>.
         LOOP AT lt_audit_fields INTO lv_field.
           ASSIGN COMPONENT lv_field OF STRUCTURE <ls_row> TO <lv_val>.
-          IF sy-subrc EQ 0.
+          IF sy-subrc = 0.
             CLEAR <lv_val>.
           ENDIF.
         ENDLOOP.
