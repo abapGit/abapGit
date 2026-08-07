@@ -19,8 +19,13 @@ CLASS zcx_abapgit_auth_required DEFINITION
         !msgv4    TYPE symsgv OPTIONAL
         !longtext TYPE csequence OPTIONAL
         !iv_url   TYPE string OPTIONAL.
+
+    METHODS if_message~get_text
+        REDEFINITION.
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    CONSTANTS c_text TYPE string VALUE `Authentication required`.
 ENDCLASS.
 
 
@@ -47,5 +52,19 @@ CLASS zcx_abapgit_auth_required IMPLEMENTATION.
     ELSE.
       if_t100_message~t100key = textid.
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD if_message~get_text.
+
+    " The exception is normally handled by the UI layer which shows the password popup.
+    " Supply a text for the flows where it ends up as a message, the inherited T100
+    " text would only say "An exception was raised"
+    IF mv_url IS INITIAL.
+      result = c_text.
+    ELSE.
+      result = |{ c_text } for { mv_url }|.
+    ENDIF.
+
   ENDMETHOD.
 ENDCLASS.
