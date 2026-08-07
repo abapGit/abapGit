@@ -226,9 +226,25 @@ function submitSapeventForm(params, action, method, form) {
   form.setAttribute("method", method || "post");
   var form_action = form.getAttribute("action");
 
-  // SAP GUI for HTML: inside an HTML control, form actions look as follows:
+  // SAP GUI for HTML: ITS wires the sapevent routing into the form while it
+  // renders the page. Depending on the release (and on the form) it ends up
+  // either in hidden fields, leaving a dummy action behind, or in the action:
   // ~control=116&~event=OnSAPEvent&ALINK=1&frameName=&PARAMS=stage_commit
-  if (/~control=/i.test(form_action)) {
+  // The event to raise sits in PARAMS, the rest of the routing has to be kept
+  // exactly as ITS set it up.
+  var itsParams = form.querySelectorAll("input[name='PARAMS']");
+  var isItsForm = itsParams.length > 0 || /~control=/i.test(form_action);
+  var i;
+
+  if (itsParams.length > 0) {
+    // A form can carry several of them, one per element ITS wired up (e.g. the
+    // form itself plus its hidden submit button), so set all of them - a
+    // request with conflicting PARAMS would raise whichever event ITS picks.
+    // No escaping here, unlike the action below: the browser encodes the value
+    for (i = 0; i < itsParams.length; i++) {
+      itsParams[i].value = action;
+    }
+  } else if (/~control=/i.test(form_action)) {
     form.setAttribute("action", form_action.replace(/PARAMS=.*$/, "PARAMS=" + encodeItsParams(action)));
   } else if (/sapevent/i.test(action)) {
     form.setAttribute("action", action);
@@ -245,10 +261,24 @@ function submitSapeventForm(params, action, method, form) {
     form.appendChild(hiddenField);
   }
 
-  var formExistsInDOM = form.id && Boolean(document.querySelector("#" + form.id));
+  // getElementById, not a selector: a generated form id carries a timestamp
+  // and its dot would have to be escaped in a selector
+  var formExistsInDOM = form.id && Boolean(document.getElementById(form.id));
 
   if (!formExistsInDOM) {
     document.body.appendChild(form);
+  }
+
+  if (isItsForm) {
+    // ITS replaces submit() and collects the fields of the form itself, reading
+    // the value of every entry of form.elements. A fieldset is part of that
+    // collection but has no value, so the collection dies on any dialog using
+    // field groups. Hand out an empty value for those to keep it going.
+    for (i = 0; i < form.elements.length; i++) {
+      if (form.elements[i].value === undefined) {
+        form.elements[i].value = "";
+      }
+    }
   }
 
   // Mark that the popstate the browser control may emit while handling this
