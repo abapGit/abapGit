@@ -66,8 +66,7 @@ CLASS zcl_abapgit_objects_program DEFINITION
       BEGIN OF ty_vari_text,
         langu TYPE langu,
         vtext TYPE rvart_vtxt,
-      END OF ty_vari_text.
-    TYPES:
+      END OF ty_vari_text,
       ty_vari_text_tt TYPE STANDARD TABLE OF ty_vari_text WITH DEFAULT KEY.
     TYPES:
       BEGIN OF ty_vari,
