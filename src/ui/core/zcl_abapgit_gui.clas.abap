@@ -357,6 +357,11 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
                 " requested authentication, so only complete the rendering
                 render( ).
               ENDIF.
+            ELSEIF is_new_page( ls_handled-state ) = abap_true.
+              " The user cancelled the popup. The new page is already the current one
+              " but cannot be rendered without credentials, so go back to keep the GUI
+              " in a state where the next action can be handled
+              back( ).
             ENDIF.
           CATCH zcx_abapgit_exception INTO lx_exception.
             handle_error(
@@ -375,6 +380,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
   METHOD handle_error.
 
     DATA: li_gui_error_handler TYPE REF TO zif_abapgit_gui_error_handler,
+          lx_auth              TYPE REF TO zcx_abapgit_auth_required,
           lx_exception         TYPE REF TO cx_root.
 
     IF mv_rollback_on_error = abap_true.
@@ -403,6 +409,16 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
           MESSAGE ix_exception TYPE 'S' DISPLAY LIKE 'E'.
         ENDIF.
 
+      CATCH zcx_abapgit_auth_required INTO lx_auth.
+        " Rendering the page requires credentials. Do not prompt while already handling
+        " an error, the popup was either cancelled or the credentials were rejected.
+        " Fall back to the previous page so the GUI stays usable
+        MESSAGE lx_auth TYPE 'S' DISPLAY LIKE 'E'.
+        TRY.
+            back( ).
+          CATCH zcx_abapgit_exception ##NO_HANDLER.
+            " Nothing more we can do here
+        ENDTRY.
       CATCH zcx_abapgit_exception cx_sy_move_cast_error INTO lx_exception.
         " In case of fire we just fallback to plain old message
         MESSAGE lx_exception TYPE 'S' DISPLAY LIKE 'E'.
