@@ -134,7 +134,6 @@ CLASS ltcl_xml_output IMPLEMENTATION.
     FIELD-SYMBOLS <lv_raw> TYPE x.
 
     DATA lo_output TYPE REF TO zcl_abapgit_xml_output.
-    DATA lv_xml TYPE string.
 
     "Corrupt the packed-number bytes: Nibble 'A' is not a valid BCD digit
     ASSIGN lv_amount TO <lv_raw> CASTING.
