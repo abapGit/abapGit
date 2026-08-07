@@ -179,8 +179,13 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     rv_version = rv_version && | - { lo_frontend_serv->get_gui_type( ) }|.
 
+    " Only SAP GUI for Windows embeds a browser control whose type is worth
+    " reporting. The HTML GUI runs in the browser of the user, and guessing the
+    " control from its user agent produced nonsense there (e.g. "IE" on Chrome).
     " Will be filled by JS method displayBrowserControlFooter
-    rv_version = rv_version && '<span id="browser-control-footer"></span>'.
+    IF lo_frontend_serv->is_sapgui_for_windows( ) = abap_true.
+      rv_version = rv_version && '<span id="browser-control-footer"></span>'.
+    ENDIF.
 
   ENDMETHOD.
 

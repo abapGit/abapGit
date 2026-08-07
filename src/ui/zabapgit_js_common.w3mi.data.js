@@ -2613,6 +2613,9 @@ function toggleBrowserControlWarning() {
 // Output type of HTML control in the abapGit footer
 function displayBrowserControlFooter() {
   var out = document.getElementById("browser-control-footer");
+  // Only rendered where there is a browser control to report on, i.e. not on
+  // the HTML GUI, which runs in the browser of the user
+  if (!out) return;
   out.innerHTML = " - " + ( navigator.userAgent.includes("Edg") ? "Edge" : "IE"  );
 }
 
