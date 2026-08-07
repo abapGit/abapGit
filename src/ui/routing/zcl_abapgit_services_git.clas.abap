@@ -274,7 +274,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF ls_branch-name = zif_abapgit_popups=>c_new_branch_from_label.
+    IF is_branch-name = zif_abapgit_popups=>c_new_branch_from_label.
       create_branch_from( iv_key ).
       RETURN.
     ENDIF.
