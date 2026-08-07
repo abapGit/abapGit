@@ -178,6 +178,7 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
     METHODS parse_fields_wrong_format FOR TESTING.
     METHODS parse_post_form_data FOR TESTING.
     METHODS parse_fields_webgui FOR TESTING.
+    METHODS parse_fields_webgui_namespace FOR TESTING.
     METHODS parse_fields_special_chars FOR TESTING.
 
   PRIVATE SECTION.
@@ -505,6 +506,26 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
       iv_index = 3
       iv_name  = 'FILENAME'
       iv_value = '/nsp/test_ddls_bug2.ddls.asddls' ).
+
+  ENDMETHOD.
+
+  METHOD parse_fields_webgui_namespace.
+
+    " A namespace ends up as # in the file name, which is escaped in the url
+    _given_string_is( `KEY=000000000019&PATH=%2fsrc%2f%23nsp%23tax%2f`
+                   && `&FILENAME=%23nsp%23tax_sm30.fugr.screen_0001.abap` ).
+    _when_fields_are_parsed( ).
+    _then_field_count_should_be( 3 ).
+
+    _then_fields_should_be(
+      iv_index = 2
+      iv_name  = 'PATH'
+      iv_value = '/src/#nsp#tax/' ).
+
+    _then_fields_should_be(
+      iv_index = 3
+      iv_name  = 'FILENAME'
+      iv_value = '#nsp#tax_sm30.fugr.screen_0001.abap' ).
 
   ENDMETHOD.
 
