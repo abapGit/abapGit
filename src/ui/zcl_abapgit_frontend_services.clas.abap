@@ -403,9 +403,13 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
   METHOD zif_abapgit_frontend_services~is_sapgui_for_windows.
 
     TRY.
-        CALL FUNCTION 'GUI_HAS_ACTIVEX'
-          IMPORTING
-            return = rv_result.
+        " Sole ActiveX check is not sufficient as it is also TRUE for WebGUI
+        IF zif_abapgit_frontend_services~is_webgui( ) = abap_false.
+          CALL FUNCTION 'GUI_HAS_ACTIVEX'
+            IMPORTING
+              return = rv_result.
+        ENDIF.
+
       CATCH cx_sy_dyn_call_illegal_func.
 * when running on open-abap
         RETURN.
