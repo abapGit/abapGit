@@ -137,7 +137,7 @@ CLASS ltcl_xml_output IMPLEMENTATION.
 
     "Corrupt the packed-number bytes: Nibble 'A' is not a valid BCD digit
     ASSIGN lv_amount TO <lv_raw> CASTING.
-    <lv_raw> = c_raw.
+    <lv_raw> = lc_raw.
 
     TRY.
         CREATE OBJECT lo_output.
