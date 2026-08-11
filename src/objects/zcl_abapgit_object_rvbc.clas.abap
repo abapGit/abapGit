@@ -71,7 +71,7 @@ CLASS ZCL_ABAPGIT_OBJECT_RVBC IMPLEMENTATION.
     try.
         data(rvb_conf_api) = get_rvb_conf_api( ).
 
-        call  method rvb_conf_api->('IF_REVIEW_BOOKLET_CONF_API~DELETE_BOOKLET').
+        call method rvb_conf_api->('IF_REVIEW_BOOKLET_CONF_API~DELETE_BOOKLET').
       catch cx_static_check into data(exception).
         raise exception new zcx_abapgit_exception( previous = exception ).
     endtry.
