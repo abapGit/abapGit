@@ -39,8 +39,9 @@ CLASS zcl_abapgit_xml_pretty IMPLEMENTATION.
           li_ostream        TYPE REF TO if_ixml_ostream,
           li_renderer       TYPE REF TO if_ixml_renderer.
 
-
-    ASSERT NOT iv_xml IS INITIAL.
+    IF iv_xml IS INITIAL.
+      RETURN.
+    ENDIF.
 
     li_ixml    = cl_ixml=>create( ).
     li_xml_doc = li_ixml->create_document( ).
@@ -48,9 +49,9 @@ CLASS zcl_abapgit_xml_pretty IMPLEMENTATION.
     li_stream_factory = li_ixml->create_stream_factory( ).
     li_istream        = li_stream_factory->create_istream_xstring(
       zcl_abapgit_convert=>string_to_xstring_utf8( iv_xml ) ).
-    li_parser         = li_ixml->create_parser( stream_factory = li_stream_factory
-                                                istream        = li_istream
-                                                document       = li_xml_doc ).
+    li_parser = li_ixml->create_parser( stream_factory = li_stream_factory
+                                        istream        = li_istream
+                                        document       = li_xml_doc ).
     li_parser->set_normalizing( abap_true ).
     IF li_parser->parse( ) <> 0.
       IF iv_ignore_errors = abap_true.
@@ -94,8 +95,8 @@ CLASS zcl_abapgit_xml_pretty IMPLEMENTATION.
     DO lv_num_errors TIMES.
 
       li_error = ii_parser->get_error(
-                     index        = sy-index
-                     min_severity = if_ixml_parse_error=>co_info ).
+        index        = sy-index
+        min_severity = if_ixml_parse_error=>co_info ).
 
       IF li_error IS BOUND.
         lv_reason = li_error->get_reason( ).
@@ -114,5 +115,4 @@ CLASS zcl_abapgit_xml_pretty IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
 ENDCLASS.
