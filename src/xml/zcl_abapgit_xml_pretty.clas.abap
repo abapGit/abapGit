@@ -40,7 +40,10 @@ CLASS zcl_abapgit_xml_pretty IMPLEMENTATION.
           li_renderer       TYPE REF TO if_ixml_renderer.
 
     IF iv_xml IS INITIAL.
-      RETURN.
+      IF iv_ignore_errors = abap_true.
+        RETURN.
+      ENDIF.
+      zcx_abapgit_exception=>raise( 'XML is empty' ).
     ENDIF.
 
     li_ixml    = cl_ixml=>create( ).
