@@ -84,39 +84,63 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
 
   METHOD acquire_login_details.
 
-    DATA: lv_default_user TYPE string,
-          lv_user         TYPE string,
-          lv_pass         TYPE string,
-          lo_digest       TYPE REF TO zcl_abapgit_http_digest.
+    DATA: lv_user   TYPE string,
+          lv_pass   TYPE string,
+          lo_digest TYPE REF TO zcl_abapgit_http_digest.
 
 
-    lv_default_user = zcl_abapgit_persist_factory=>get_user( )->get_repo_login( iv_url ).
-    lv_user         = lv_default_user.
+    rv_scheme = ii_client->response->get_header_field( 'www-authenticate' ).
+    FIND REGEX '^(\w+)' IN rv_scheme SUBMATCHES rv_scheme ##REGEX_POSIX.
 
+    " Credentials are gathered by the UI layer (see ZCX_ABAPGIT_AUTH_REQUIRED) and
+    " cached in the login manager. create_by_url applies a cached Basic header before
+    " sending, so for Basic auth we only reach this point when there are no credentials
+    " yet or the cached ones were rejected with a 401.
+    lv_user = zcl_abapgit_login_manager=>get_username( iv_url ).
+    lv_pass = zcl_abapgit_login_manager=>get_password( iv_url ).
+
+    " Digest (e.g. https://www.gerritcodereview.com/) needs the cleartext password on
+    " every challenge and cannot be pre-applied as a static header, so reconstruct it
+    " from the cached credentials.
+    " https://en.wikipedia.org/wiki/Digest_access_authentication
+    IF rv_scheme = c_scheme-digest AND lv_user IS NOT INITIAL.
+      CREATE OBJECT lo_digest
+        EXPORTING
+          ii_client   = ii_client
+          iv_username = lv_user
+          iv_password = lv_pass.
+      lo_digest->run( ii_client ).
+      io_client->set_digest( lo_digest ).
+      RETURN.
+    ENDIF.
+
+    " Cached Basic credentials were already sent and rejected, drop them
+    IF lv_user IS NOT INITIAL.
+      zcl_abapgit_login_manager=>remove( iv_url ).
+    ENDIF.
+
+    IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true.
+      " Prompting is done by the UI layer. Raise so it can ask the user for credentials,
+      " cache them in the login manager, and retry the operation.
+      RAISE EXCEPTION TYPE zcx_abapgit_auth_required
+        EXPORTING
+          iv_url = iv_url.
+    ENDIF.
+
+    " Headless (ADT, CI, ...): credentials come from the environment
     zcl_abapgit_password_dialog=>popup(
       EXPORTING
-        iv_repo_url     = iv_url
+        iv_repo_url = iv_url
       CHANGING
-        cv_user         = lv_user
-        cv_pass         = lv_pass ).
+        cv_user     = lv_user
+        cv_pass     = lv_pass ).
 
     IF lv_user IS INITIAL.
       zcx_abapgit_exception=>raise( 'Unauthorized access. Check your credentials' ).
     ENDIF.
 
-    IF lv_user <> lv_default_user.
-      zcl_abapgit_persist_factory=>get_user( )->set_repo_login(
-        iv_url   = iv_url
-        iv_login = lv_user ).
-    ENDIF.
-
-    rv_scheme = ii_client->response->get_header_field( 'www-authenticate' ).
-    FIND REGEX '^(\w+)' IN rv_scheme SUBMATCHES rv_scheme ##REGEX_POSIX.
-
     CASE rv_scheme.
       WHEN c_scheme-digest.
-* https://en.wikipedia.org/wiki/Digest_access_authentication
-* e.g. used by https://www.gerritcodereview.com/
         CREATE OBJECT lo_digest
           EXPORTING
             ii_client   = ii_client
