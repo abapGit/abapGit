@@ -510,13 +510,13 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
   METHOD explain_content_repo_data.
 
-    DATA table_count TYPE i.
+    DATA lv_table_count TYPE i.
 
-    table_count = count(
+    lv_table_count = count(
       val = is_data-data_str
       sub = '"name"' ).
 
-    rs_expl-extra = |{ table_count } tables|.
+    rs_expl-extra = |{ lv_table_count } tables|.
     rs_expl-value = get_repo_description( is_data-value ).
 
   ENDMETHOD.
