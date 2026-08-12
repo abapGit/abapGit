@@ -40,7 +40,7 @@ CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
   METHOD get_rvb_conf_api.
 
     DATA lr_factory TYPE REF TO object.
-    data lv_booklet_id TYPE ty_rvb.
+    DATA lv_booklet_id TYPE ty_rvb.
 
     CALL METHOD ('CL_REVIEW_BOOKLET_CONF_FACTORY')=>('GET_INSTANCE')
       RECEIVING
@@ -62,7 +62,7 @@ CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
 
     CALL METHOD lr_rvb_abap_git_api->('IF_RVB_ABAPGIT_API~CHANGED_BY')
       EXPORTING
-        review_booklet_id =  ms_item-obj_name
+        review_booklet_id = ms_item-obj_name
       RECEIVING
         rv_user           = rv_user.
 
@@ -72,15 +72,15 @@ CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
     DATA: lr_rvb_conf_api TYPE REF TO object,
-          lx_exception TYPE REF TO cx_static_check.
+          lx_exception    TYPE REF TO cx_static_check.
     TRY.
         lr_rvb_conf_api = get_rvb_conf_api( ).
 
         CALL METHOD lr_rvb_conf_api->('IF_REVIEW_BOOKLET_CONF_API~DELETE_BOOKLET').
       CATCH cx_static_check INTO lx_exception.
-        raise exception type zcx_abapgit_exception
-					exporting
-						previous = lx_exception.
+        RAISE EXCEPTION TYPE zcx_abapgit_exception
+          EXPORTING
+            previous = lx_exception.
     ENDTRY.
   ENDMETHOD.
 
@@ -88,18 +88,18 @@ CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
     DATA lr_header   TYPE REF TO data.
     DATA lr_messages TYPE REF TO data.
-    DATA: lv_serialized TYPE string,
-          lv_is_error TYPE abap_bool,
+    DATA: lv_serialized       TYPE string,
+          lv_is_error         TYPE abap_bool,
           lr_rvb_abap_git_api TYPE REF TO object,
-          lr_exception TYPE REF TO cx_static_check.
+          lr_exception        TYPE REF TO cx_static_check.
 
     CREATE DATA lr_header TYPE ('IF_RVB_ABAPGIT_API=>HEADER').
     CREATE DATA lr_messages TYPE ('IF_RVB_ABAPGIT_API=>MESSAGES_TYPE').
 
-    FIELD-SYMBOLS: <messages> TYPE STANDARD TABLE.
-    FIELD-SYMBOLS: <message> TYPE REF TO if_abap_behv_message.
+    FIELD-SYMBOLS: <lv_messages> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS: <lv_message> TYPE REF TO if_abap_behv_message.
 
-    lv_serialized = mo_files->read_string( iv_ext = 'RVBC' ).
+    lv_serialized = mo_files->read_string( 'RVBC' ).
     io_xml->read( EXPORTING
                     iv_name = 'ReviewBooklet'
                   CHANGING
@@ -112,7 +112,7 @@ CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
 
         CALL METHOD lr_rvb_abap_git_api->('IF_RVB_ABAPGIT_API~DESERIALIZE_AND_SAVE')
           EXPORTING
-            review_booklet_id = CONV ty_rvb( ms_item-obj_name )
+            review_booklet_id = ms_item-obj_name
             data              = lv_serialized
             package           = iv_package
             header            = lr_header->*
@@ -124,22 +124,22 @@ CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
         lv_is_error = abap_true.
     ENDTRY.
 
-    ASSIGN lr_messages->* TO <messages>.
+    ASSIGN lr_messages->* TO <lv_messages>.
 
-    LOOP AT <messages> ASSIGNING <message>.
-      IF <message>->m_severity = if_abap_behv_message=>severity-error.
-        ii_log->add_error( iv_msg  = <message>->if_message~get_text( )
+    LOOP AT <lv_messages> ASSIGNING <lv_message>.
+      IF <lv_message>->m_severity = if_abap_behv_message=>severity-error.
+        ii_log->add_error( iv_msg  = <lv_message>->if_message~get_text( )
                            is_item = ms_item ).
         lv_is_error = abap_true.
       ELSE.
 
-        ii_log->add_warning( iv_msg  = <message>->if_message~get_text( )
+        ii_log->add_warning( iv_msg  = <lv_message>->if_message~get_text( )
                              is_item = ms_item ).
       ENDIF.
     ENDLOOP.
 
     IF lv_is_error = abap_true.
-      return.
+      RETURN.
     ELSE.
       corr_insert( iv_package ).
       zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -165,7 +165,8 @@ CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-    APPEND INITIAL LINE TO rt_steps ASSIGNING FIELD-SYMBOL(<step>).
+    FIELD-SYMBOLS: <step> TYPE zif_abapgit_objects=>ty_deserialization_step.
+    APPEND INITIAL LINE TO rt_steps ASSIGNING <step>.
     <step> = zif_abapgit_object=>gc_step_id-ddic.
   ENDMETHOD.
 
@@ -190,13 +191,15 @@ CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
     DATA: lr_rvb_abap_git_api TYPE REF TO object,
-          lx_exception TYPE REF TO cx_static_check,
-          lv_rvb_id TYPE ty_rvb.
+          lx_exception        TYPE REF TO cx_static_check,
+          lv_rvb_id           TYPE ty_rvb.
+    DATA serialized_model TYPE REF TO data.
 
+    FIELD-SYMBOLS: <ls_header> TYPE any,
+                   <lv_data>   TYPE string.
 
     lv_rvb_id = ms_item-obj_name.
     lr_rvb_abap_git_api = get_rvb_abap_git_api( ).
-    DATA serialized_model TYPE REF TO data.
 
     TRY.
         CREATE DATA serialized_model TYPE ('if_rvb_abapgit_api=>serialized').
@@ -212,11 +215,14 @@ CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
                                       ix_previous = lx_exception ).
     ENDTRY.
 
+    ASSIGN COMPONENT 'DATA' OF STRUCTURE serialized_model->* TO <lv_data>.
+    ASSIGN COMPONENT 'HEADER' OF STRUCTURE serialized_model->* TO <ls_header>.
+
     mo_files->add_string( iv_ext    = 'RVBC'
-                                                iv_string = serialized_model->('data') ).
+                         iv_string = <lv_data> ).
 
     io_xml->add( iv_name = 'ReviewBooklet'
-                 ig_data = serialized_model->('header') ).
+                 ig_data = <ls_header> ).
   ENDMETHOD.
   METHOD zif_abapgit_object~get_deserialize_order.
 
