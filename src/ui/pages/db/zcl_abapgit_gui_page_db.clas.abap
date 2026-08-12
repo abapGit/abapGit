@@ -79,6 +79,12 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS get_repo_description
+      IMPORTING
+        !iv_key        TYPE zif_abapgit_persistence=>ty_value
+      RETURNING
+        VALUE(rv_text) TYPE string.
+
     METHODS explain_content
       IMPORTING
         !is_data       TYPE zif_abapgit_persistence=>ty_content
@@ -412,7 +418,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
       lv_class  TYPE string,
       ls_method LIKE LINE OF mt_methods.
 
-    rs_expl-value = |{ zcl_abapgit_repo_srv=>get_instance( )->get( is_data-value )->get_name( ) }|.
+    rs_expl-value = get_repo_description( is_data-value ).
 
     FIND FIRST OCCURRENCE OF REGEX '<METHOD>(.*)</METHOD>'
       IN is_data-data_str IGNORING CASE RESULTS ls_result ##REGEX_POSIX.
@@ -494,6 +500,9 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
           val    = rs_expl-value
           format = cl_abap_format=>e_html_attr ).
       ENDIF.
+    ELSE.
+      rs_expl-value = get_repo_description( is_data-value ).
+      rs_expl-extra = |0 lines|.
     ENDIF.
 
   ENDMETHOD.
@@ -501,8 +510,25 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
   METHOD explain_content_repo_data.
 
-    rs_expl-extra = 'Data Config'.
-    rs_expl-value = is_data-value.
+    DATA lv_table_count TYPE i.
+
+    lv_table_count = count(
+      val = is_data-data_str
+      sub = '"name"' ).
+
+    rs_expl-extra = |{ lv_table_count } tables|.
+    rs_expl-value = get_repo_description( is_data-value ).
+
+  ENDMETHOD.
+
+
+  METHOD get_repo_description.
+
+    TRY.
+        rv_text = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->get_name( ).
+      CATCH zcx_abapgit_exception.
+        rv_text = 'n/a'.
+    ENDTRY.
 
   ENDMETHOD.
 
