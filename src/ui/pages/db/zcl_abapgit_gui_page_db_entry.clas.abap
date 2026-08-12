@@ -192,15 +192,21 @@ CLASS zcl_abapgit_gui_page_db_entry IMPLEMENTATION.
 
     DATA lv_formatted TYPE string.
 
-    lv_formatted = escape(
-      val    = zcl_abapgit_xml_pretty=>print( iv_raw_db_value )
-      format = cl_abap_format=>e_html_attr ).
+    IF iv_raw_db_value CS '<?xml'.
+      lv_formatted = escape(
+        val    = zcl_abapgit_xml_pretty=>print( iv_raw_db_value )
+        format = cl_abap_format=>e_html_attr ).
+    ELSE.
+      lv_formatted = escape(
+        val    = iv_raw_db_value
+        format = cl_abap_format=>e_html_attr ).
+    ENDIF.
 
     " Form
     ii_html->add( |<form id="{ c_edit_form_id }" method="post" action="sapevent:{ c_action-update }">| ).
     ii_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
     ii_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
-    ii_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_formatted }</textarea>| ).
+    ii_html->add( |<textarea rows="34" cols="100" name="xmldata">{ lv_formatted }</textarea>| ).
     ii_html->add( '</form>' ).
 
   ENDMETHOD.
