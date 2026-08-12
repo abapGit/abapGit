@@ -1,150 +1,160 @@
-class ZCL_ABAPGIT_OBJECT_RVBC definition
-  public
-  inheriting from ZCL_ABAPGIT_OBJECTS_SUPER
-  final
-  create public .
+CLASS zcl_abapgit_object_rvbc DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_ABAPGIT_OBJECT .
+    INTERFACES zif_abapgit_object .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    types l_rvb type c length 30.
+    TYPES ty_rvb TYPE c LENGTH 30.
 
-    methods get_rvb_abap_git_api
-     RETURNING VALUE(result) type REF to object.
-    methods get_rvb_conf_api
-     RETURNING VALUE(result) type REF to object.
+    METHODS get_rvb_abap_git_api
+      RETURNING VALUE(result) TYPE REF TO object.
+    METHODS get_rvb_conf_api
+      RETURNING VALUE(r_result) TYPE REF TO object.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_RVBC IMPLEMENTATION.
+CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
 
 
-  method get_rvb_abap_git_api.
-    data factory type ref to object.
+  METHOD get_rvb_abap_git_api.
+    DATA l_factory TYPE REF TO object.
 
 
-    call method ('CL_REVIEW_BOOKLET_CONF_FACTORY')=>('GET_INSTANCE')
-      receiving
-        result = factory.
+    CALL METHOD ('CL_REVIEW_BOOKLET_CONF_FACTORY')=>('GET_INSTANCE')
+      RECEIVING
+        result = l_factory.
 
-    call method factory->('IF_REVIEW_BOOKLET_CONF_FACTORY~GET_ABAP_GIT_API')
-      receiving
+    CALL METHOD l_factory->('IF_REVIEW_BOOKLET_CONF_FACTORY~GET_ABAP_GIT_API')
+      RECEIVING
         result = result.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  METHOD GET_RVB_CONF_API.
+  METHOD get_rvb_conf_api.
 
-    data factory type ref to object.
+    DATA l_factory TYPE REF TO object.
+    data l_booklet_id TYPE ty_rvb.
 
-    call method ('CL_REVIEW_BOOKLET_CONF_FACTORY')=>('GET_INSTANCE')
-      receiving
-        result = factory.
+    CALL METHOD ('CL_REVIEW_BOOKLET_CONF_FACTORY')=>('GET_INSTANCE')
+      RECEIVING
+        result = l_factory.
 
-    final(booklet_id) = conv l_rvb( ms_item-obj_name ).
+    l_booklet_id = CONV ty_rvb( ms_item-obj_name ).
 
-    call method factory->('IF_REVIEW_BOOKLET_CONF_FACTORY~GET_REVIEW_BOOKLET_CONF_API')
-      exporting iv_review_booklet_id = booklet_id
-      receiving
-        result = result.
+    CALL METHOD l_factory->('IF_REVIEW_BOOKLET_CONF_FACTORY~GET_REVIEW_BOOKLET_CONF_API')
+      EXPORTING
+        iv_review_booklet_id = l_booklet_id
+      RECEIVING
+        result               = r_result.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
-    data(rvb_abap_git_api) = get_rvb_abap_git_api( ).
+    DATA: r_rvb_abap_git_api TYPE REF TO object.
+    r_rvb_abap_git_api = get_rvb_abap_git_api( ).
 
-    CALL  METHOD rvb_abap_git_api->('IF_RVB_ABAPGIT_API~CHANGED_BY')
+    CALL METHOD r_rvb_abap_git_api->('IF_RVB_ABAPGIT_API~CHANGED_BY')
       EXPORTING
-        review_booklet_id = conv  l_rvb( ms_item-obj_name )
+        review_booklet_id = CONV ty_rvb( ms_item-obj_name )
       RECEIVING
-        rv_user            = rv_user.
+        rv_user           = rv_user.
 
 
   ENDMETHOD.
 
 
-  method zif_abapgit_object~delete.
-    try.
-        data(rvb_conf_api) = get_rvb_conf_api( ).
+  METHOD zif_abapgit_object~delete.
+    DATA: r_rvb_conf_api TYPE REF TO object,
+          cx_exception TYPE REF TO cx_static_check.
+    TRY.
+        r_rvb_conf_api = get_rvb_conf_api( ).
 
-        call method rvb_conf_api->('IF_REVIEW_BOOKLET_CONF_API~DELETE_BOOKLET').
-      catch cx_static_check into data(exception).
-        raise exception new zcx_abapgit_exception( previous = exception ).
-    endtry.
-  endmethod.
+        CALL METHOD r_rvb_conf_api->('IF_REVIEW_BOOKLET_CONF_API~DELETE_BOOKLET').
+      CATCH cx_static_check INTO cx_exception.
+        RAISE EXCEPTION NEW zcx_abapgit_exception( previous = cx_exception ).
+    ENDTRY.
+  ENDMETHOD.
 
 
-  method zif_abapgit_object~deserialize.
-    data header   type ref to data.
-    data messages type ref to data.
+  METHOD zif_abapgit_object~deserialize.
+    DATA r_header   TYPE REF TO data.
+    DATA r_messages TYPE REF TO data.
+    DATA: l_serialized TYPE string,
+          l_is_error TYPE abap_bool,
+          r_rvb_abap_git_api TYPE REF TO object,
+          r_exception TYPE REF TO cx_static_check.
 
-    CREATE DATA header TYPE ('IF_RVB_ABAPGIT_API=>HEADER').
-    CREATE DATA messages TYPE ('IF_RVB_ABAPGIT_API=>MESSAGES_TYPE').
+    CREATE DATA r_header TYPE ('IF_RVB_ABAPGIT_API=>HEADER').
+    CREATE DATA r_messages TYPE ('IF_RVB_ABAPGIT_API=>MESSAGES_TYPE').
 
     FIELD-SYMBOLS: <messages> TYPE STANDARD TABLE.
-    FIELD-SYMBOLS: <message> TYPE ref to if_abap_behv_message.
+    FIELD-SYMBOLS: <message> TYPE REF TO if_abap_behv_message.
 
-    data(serialized) = me->mo_files->read_string(
+    l_serialized = me->mo_files->read_string(
 *                                                                    iv_extra =
                                                                     iv_ext = 'RVBC' ).
-    io_xml->read( exporting
+    io_xml->read( EXPORTING
                     iv_name = 'ReviewBooklet'
-                  changing
-                    cg_data = header->* ).
+                  CHANGING
+                    cg_data = r_header->* ).
 
-    data(is_error) = abap_false.
-    try.
+    l_is_error = abap_false.
+    TRY.
 
-        data(rvb_abap_git_api) = get_rvb_abap_git_api( ).
+        r_rvb_abap_git_api = get_rvb_abap_git_api( ).
 
-        call  method rvb_abap_git_api->('IF_RVB_ABAPGIT_API~DESERIALIZE_AND_SAVE')
-          exporting
-            review_booklet_id = conv l_rvb( ms_item-obj_name )
-            data              = serialized
+        CALL METHOD r_rvb_abap_git_api->('IF_RVB_ABAPGIT_API~DESERIALIZE_AND_SAVE')
+          EXPORTING
+            review_booklet_id = CONV ty_rvb( ms_item-obj_name )
+            data              = l_serialized
             package           = iv_package
-            header            = header->*
-          changing
-            messages          = messages->*.
+            header            = r_header->*
+          CHANGING
+            messages          = r_messages->*.
 
-      catch cx_static_check into data(exception).
-        ii_log->add_exception( exception ).
-        is_error = abap_true.
-    endtry.
+      CATCH cx_static_check INTO r_exception.
+        ii_log->add_exception( r_exception ).
+        l_is_error = abap_true.
+    ENDTRY.
 
-    ASSIGN messages->* TO <messages>.
+    ASSIGN r_messages->* TO <messages>.
 
-    loop at <messages> ASSIGNING <message>.
-      if <message>->m_severity = if_abap_behv_message=>severity-error.
+    LOOP AT <messages> ASSIGNING <message>.
+      IF <message>->m_severity = if_abap_behv_message=>severity-error.
         ii_log->add_error( iv_msg  = <message>->if_message~get_text( )
                            is_item = ms_item ).
-        is_error = abap_true.
-      else.
+        l_is_error = abap_true.
+      ELSE.
 
         ii_log->add_warning( iv_msg  = <message>->if_message~get_text( )
                              is_item = ms_item ).
-      endif.
-    endloop.
+      ENDIF.
+    ENDLOOP.
 
-    if is_error = abap_true.
-      rollback entities.
-    else.
+    IF l_is_error = abap_true.
+      ROLLBACK ENTITIES.
+    ELSE.
       corr_insert( iv_package ).
       zcl_abapgit_objects_activation=>add_item( ms_item ).
-    endif.
-  endmethod.
+    ENDIF.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
+    DATA: r_rvb_abap_git_api TYPE REF TO object.
 
-     data(rvb_abap_git_api) = get_rvb_abap_git_api( ).
+    r_rvb_abap_git_api = get_rvb_abap_git_api( ).
 
-    CALL  METHOD rvb_abap_git_api->('IF_RVB_ABAPGIT_API~EXISTS_REVIEW_BOOKLET')
+    CALL METHOD r_rvb_abap_git_api->('IF_RVB_ABAPGIT_API~EXISTS_REVIEW_BOOKLET')
       EXPORTING
-        review_booklet_id = conv  l_rvb( ms_item-obj_name )
+        review_booklet_id = CONV ty_rvb( ms_item-obj_name )
       RECEIVING
         result            = rv_bool.
   ENDMETHOD.
@@ -155,7 +165,7 @@ CLASS ZCL_ABAPGIT_OBJECT_RVBC IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-    rt_steps = value #( ( zif_abapgit_object=>gc_step_id-ddic ) ).
+    rt_steps = VALUE #( ( zif_abapgit_object=>gc_step_id-ddic ) ).
   ENDMETHOD.
 
 
@@ -177,42 +187,45 @@ CLASS ZCL_ABAPGIT_OBJECT_RVBC IMPLEMENTATION.
   ENDMETHOD.
 
 
-  method zif_abapgit_object~serialize.
-    final(rvb_id) = conv l_rvb( ms_item-obj_name ).
+  METHOD zif_abapgit_object~serialize.
+    DATA: r_rvb_abap_git_api TYPE REF TO object,
+          cx_exception TYPE REF TO cx_static_check,
+          l_rvb_id TYPE zcl_abapgit_object_rvbc=>ty_rvb.
 
 
-    data(rvb_abap_git_api) = get_rvb_abap_git_api( ).
-    data serialized_model type ref to data.
+    l_rvb_id = CONV ty_rvb( ms_item-obj_name ).
+    r_rvb_abap_git_api = get_rvb_abap_git_api( ).
+    DATA serialized_model TYPE REF TO data.
 
-    try.
-        create data serialized_model type ('if_rvb_abapgit_api=>serialized').
+    TRY.
+        CREATE DATA serialized_model TYPE ('if_rvb_abapgit_api=>serialized').
 
-        call  method rvb_abap_git_api->('IF_RVB_ABAPGIT_API~SERIALIZE')
-          exporting
-            review_booklet_id = rvb_id
-          receiving
+        CALL METHOD r_rvb_abap_git_api->('IF_RVB_ABAPGIT_API~SERIALIZE')
+          EXPORTING
+            review_booklet_id = l_rvb_id
+          RECEIVING
             result            = serialized_model->*.
 
-      catch cx_static_check into data(exception).
-        zcx_abapgit_exception=>raise( iv_text     = exception->get_text( )
-                                      ix_previous = exception ).
-    endtry.
+      CATCH cx_static_check INTO cx_exception.
+        zcx_abapgit_exception=>raise( iv_text     = cx_exception->get_text( )
+                                      ix_previous = cx_exception ).
+    ENDTRY.
 
     me->mo_files->add_string( iv_ext    = 'RVBC'
                                                 iv_string = serialized_model->('data') ).
 
     io_xml->add( iv_name = 'ReviewBooklet'
                  ig_data = serialized_model->('header') ).
-  endmethod.
-  METHOD ZIF_ABAPGIT_OBJECT~GET_DESERIALIZE_ORDER.
+  ENDMETHOD.
+  METHOD zif_abapgit_object~get_deserialize_order.
 
   ENDMETHOD.
 
-  METHOD ZIF_ABAPGIT_OBJECT~MAP_FILENAME_TO_OBJECT.
+  METHOD zif_abapgit_object~map_filename_to_object.
 
   ENDMETHOD.
 
-  METHOD ZIF_ABAPGIT_OBJECT~MAP_OBJECT_TO_FILENAME.
+  METHOD zif_abapgit_object~map_object_to_filename.
 
   ENDMETHOD.
 

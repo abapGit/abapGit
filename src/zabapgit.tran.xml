@@ -19,6 +19,21 @@
     <TCODE>ZABAPGIT</TCODE>
     <TTEXT>abapGit</TTEXT>
    </TSTCT>
+   <HEAD>
+    <NAME>ZABAPGIT</NAME>
+    <TYPE>TR</TYPE>
+    <DISPLAY_NAME>ZABAPGIT</DISPLAY_NAME>
+    <STEXT>Report Transaction</STEXT>
+    <CTYPE>R</CTYPE>
+   </HEAD>
+   <USOBX>
+    <USOBX>
+     <NAME>ZABAPGIT</NAME>
+     <TYPE>TR</TYPE>
+     <OBJECT>S_TCODE</OBJECT>
+     <OKFLAG>X</OKFLAG>
+    </USOBX>
+   </USOBX>
   </asx:values>
  </asx:abap>
 </abapGit>
