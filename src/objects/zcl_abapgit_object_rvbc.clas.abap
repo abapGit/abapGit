@@ -58,11 +58,14 @@ CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
     DATA: lr_rvb_abap_git_api TYPE REF TO object.
+    DATA lv_booklet_id TYPE ty_rvb.
     lr_rvb_abap_git_api = get_rvb_abap_git_api( ).
+
+    lv_booklet_id = ms_item-obj_name.
 
     CALL METHOD lr_rvb_abap_git_api->('IF_RVB_ABAPGIT_API~CHANGED_BY')
       EXPORTING
-        review_booklet_id = ms_item-obj_name
+        review_booklet_id = lv_booklet_id
       RECEIVING
         rv_user           = rv_user.
 
@@ -76,7 +79,9 @@ CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
     TRY.
         lr_rvb_conf_api = get_rvb_conf_api( ).
 
-        CALL METHOD lr_rvb_conf_api->('IF_REVIEW_BOOKLET_CONF_API~DELETE_BOOKLET').
+        CALL METHOD lr_rvb_conf_api->('IF_REVIEW_BOOKLET_CONF_API~DELETE_BOOKLET')
+          EXPORTING
+            iv_transport_request = iv_transport.
       CATCH cx_static_check INTO lx_exception.
         RAISE EXCEPTION TYPE zcx_abapgit_exception
           EXPORTING
@@ -92,6 +97,7 @@ CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
           lv_is_error         TYPE abap_bool,
           lr_rvb_abap_git_api TYPE REF TO object,
           lr_exception        TYPE REF TO cx_static_check.
+    DATA lv_booklet_id TYPE ty_rvb.
     FIELD-SYMBOLS: <lv_message> TYPE REF TO if_abap_behv_message.
     FIELD-SYMBOLS: <ls_header> TYPE any.
     FIELD-SYMBOLS: <lt_messages> TYPE STANDARD TABLE.
@@ -103,6 +109,7 @@ CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
     ASSIGN lr_header->* TO <ls_header>.
     ASSIGN lr_messages->* TO <lt_messages>.
 
+    lv_booklet_id = ms_item-obj_name.
 
     lv_serialized = mo_files->read_string( 'RVBC' ).
     io_xml->read( EXPORTING
@@ -117,7 +124,7 @@ CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
 
         CALL METHOD lr_rvb_abap_git_api->('IF_RVB_ABAPGIT_API~DESERIALIZE_AND_SAVE')
           EXPORTING
-            review_booklet_id = ms_item-obj_name
+            review_booklet_id = lv_booklet_id
             data              = lv_serialized
             package           = iv_package
             header            = <ls_header>
@@ -153,12 +160,14 @@ CLASS zcl_abapgit_object_rvbc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
     DATA: lr_rvb_abap_git_api TYPE REF TO object.
+    DATA lv_booklet_id TYPE ty_rvb.
 
     lr_rvb_abap_git_api = get_rvb_abap_git_api( ).
+    lv_booklet_id = ms_item-obj_name.
 
     CALL METHOD lr_rvb_abap_git_api->('IF_RVB_ABAPGIT_API~EXISTS_REVIEW_BOOKLET')
       EXPORTING
-        review_booklet_id = ms_item-obj_name
+        review_booklet_id = lv_booklet_id
       RECEIVING
         result            = rv_bool.
   ENDMETHOD.
