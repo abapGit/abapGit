@@ -57,6 +57,10 @@ CLASS zcl_abapgit_gui DEFINITION
     METHODS set_focus
       RAISING
         zcx_abapgit_exception .
+    METHODS get_browser
+      EXPORTING
+        ev_browser_string TYPE string
+        ev_browser_engine TYPE string.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -260,6 +264,14 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_browser.
+    mi_html_viewer->get_browser(
+      IMPORTING
+        ev_browser_string = ev_browser_string
+        ev_browser_engine = ev_browser_engine ).
+  ENDMETHOD.
+
+
   METHOD go_home.
 
     DATA ls_stack LIKE LINE OF mt_stack.
@@ -323,11 +335,11 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
             call_page( ls_handled-page ).
           WHEN c_event_state-new_page_w_bookmark.
             call_page(
-              ii_page = ls_handled-page
+              ii_page          = ls_handled-page
               iv_with_bookmark = abap_true ).
           WHEN c_event_state-new_page_replacing.
             call_page(
-              ii_page = ls_handled-page
+              ii_page      = ls_handled-page
               iv_replacing = abap_true ).
           WHEN c_event_state-go_back.
             back( ).
@@ -592,11 +604,11 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
     IF iv_text IS SUPPLIED. " String input
       zcl_abapgit_convert=>string_to_tab(
-         EXPORTING
-           iv_str  = iv_text
-         IMPORTING
-           ev_size = lv_size
-           et_tab  = lt_html ).
+        EXPORTING
+          iv_str  = iv_text
+        IMPORTING
+          ev_size = lv_size
+          et_tab  = lt_html ).
 
       mi_html_viewer->load_data(
         EXPORTING
@@ -685,10 +697,10 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
     " Maybe forbid registering cacheable existing assets, maybe this is the right place (see also asset_man comments)
 
     mi_asset_man->register_asset(
-      iv_url = iv_url
-      iv_type = iv_type
+      iv_url       = iv_url
+      iv_type      = iv_type
       iv_mime_name = iv_mime_name
-      iv_inline = iv_inline
+      iv_inline    = iv_inline
       " This registering will happen after initialization so all cacheable already cached
       iv_cacheable = abap_false ).
 

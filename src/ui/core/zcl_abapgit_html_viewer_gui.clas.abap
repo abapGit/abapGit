@@ -16,7 +16,7 @@ CLASS zcl_abapgit_html_viewer_gui DEFINITION
     DATA mo_html_viewer TYPE REF TO cl_gui_html_viewer .
 
     METHODS on_event
-        FOR EVENT sapevent OF cl_gui_html_viewer
+      FOR EVENT sapevent OF cl_gui_html_viewer
       IMPORTING
         !action
         !frame
@@ -86,6 +86,46 @@ CLASS zcl_abapgit_html_viewer_gui IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_html_viewer~get_browser.
+
+    TRY.
+        CALL METHOD mo_html_viewer->('GET_BROWSER_STRING')
+          IMPORTING
+            browser_string = ev_browser_string.
+      CATCH cx_root.
+        ev_browser_string = 'n/a'.
+    ENDTRY.
+
+    cl_gui_cfw=>flush( ).
+
+    " Requires SAP Note 3490909
+    TRY.
+        CALL METHOD mo_html_viewer->('GET_BROWSER_ENGINE')
+          IMPORTING
+            browser_engine = ev_browser_engine.
+
+      CATCH cx_root.
+        ev_browser_engine = 'n/a'.
+    ENDTRY.
+
+    cl_gui_cfw=>flush( ).
+
+    "WAIT UP TO 1 SECONDS.
+
+    CASE ev_browser_engine.
+      WHEN 'Trident'.
+        ev_browser_engine = ev_browser_engine && ` (Internet Explorer)`.
+      WHEN 'Blink'.
+        ev_browser_engine = ev_browser_engine && ` (Chromium)`.
+      WHEN 'WebKit'.
+        ev_browser_engine = ev_browser_engine && ` (Safari)`.
+      WHEN 'Gecko'.
+        ev_browser_engine = ev_browser_engine && ` (Firefox)`.
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_html_viewer~get_url.
 
     DATA lv_url TYPE c LENGTH 250.
@@ -105,20 +145,20 @@ CLASS zcl_abapgit_html_viewer_gui IMPLEMENTATION.
     lv_url = iv_url.
     mo_html_viewer->load_data(
       EXPORTING
-        url                    = lv_url
-        type                   = iv_type
-        subtype                = iv_subtype
-        size                   = iv_size
+        url                  = lv_url
+        type                 = iv_type
+        subtype              = iv_subtype
+        size                 = iv_size
       IMPORTING
-        assigned_url           = lv_assigned
+        assigned_url         = lv_assigned
       CHANGING
-        data_table             = ct_data_table
+        data_table           = ct_data_table
       EXCEPTIONS
-        dp_invalid_parameter   = 1
-        dp_error_general       = 2
-        cntl_error             = 3
-        " html_syntax_notcorrect = 4  " not in lower releases
-        OTHERS                 = 5 ).
+        dp_invalid_parameter = 1
+        dp_error_general     = 2
+        cntl_error           = 3
+      " html_syntax_notcorrect = 4  " not in lower releases
+        OTHERS               = 5 ).
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Error loading data for HTML viewer' ).
     ENDIF.

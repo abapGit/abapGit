@@ -125,6 +125,8 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
           lv_gui_type      TYPE string,
           lv_devclass      TYPE devclass,
           lo_frontend_serv TYPE REF TO zif_abapgit_frontend_services.
+    DATA lv_browser_string TYPE string.
+    DATA lv_browser_engine TYPE string.
 
     lo_frontend_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
     TRY.
@@ -162,20 +164,31 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     ls_release = zcl_abapgit_factory=>get_environment( )->get_basis_release( ).
 
+    zcl_abapgit_ui_factory=>get_gui( )->get_browser(
+      IMPORTING
+        ev_browser_string = lv_browser_string
+        ev_browser_engine = lv_browser_engine ).
+
     ri_html->add( '<h2>Environment</h2>' ).
 
     ri_html->add( |<table>| ).
-    ri_html->add( |<tr><td>abapGit version:</td><td>{ zif_abapgit_version=>c_abap_version }</td></tr>| ).
-    ri_html->add( |<tr><td>XML version:    </td><td>{ zif_abapgit_version=>c_xml_version }</td></tr>| ).
-    ri_html->add( |<tr><td>GUI type:       </td><td>{ lv_gui_type }</td></tr>| ).
-    ri_html->add( |<tr><td>GUI version:    </td><td>{ lv_gui_version }</td></tr>| ).
-    ri_html->add( |<tr><td>APACK version:  </td><td>{
+    ri_html->add( |<tr><td>abapGit version:       </td><td>{ zif_abapgit_version=>c_abap_version }</td></tr>| ).
+    ri_html->add( |<tr><td>abapGit XML version:   </td><td>{ zif_abapgit_version=>c_xml_version }</td></tr>| ).
+    ri_html->add( |<tr><td>abapGit APACK version: </td><td>{
                   zcl_abapgit_apack_migration=>c_apack_interface_version }</td></tr>| ).
-    ri_html->add( |<tr><td>LCL_TIME:       </td><td>{ zcl_abapgit_git_time=>get_unix( ) }</td></tr>| ).
-    ri_html->add( |<tr><td>SY time:        </td><td>{ sy-datum } { sy-uzeit } { sy-tzone }</td></tr>| ).
-    ri_html->add( |<tr><td>SY release:     </td><td>{ ls_release-release } SP { ls_release-sp }</td></tr>| ).
-    ri_html->add( |<tr><td>Charsize:       </td><td>{ cl_abap_char_utilities=>charsize }</td></tr>| ).
-    ri_html->add( |<tr><td>Endian:         </td><td>{ cl_abap_char_utilities=>endian }</td></tr>| ).
+    ri_html->add( |<tr><td>&nbsp;</td></tr>| ).
+    ri_html->add( |<tr><td>SAP GUI type:          </td><td>{ lv_gui_type }</td></tr>| ).
+    ri_html->add( |<tr><td>SAP GUI version:       </td><td>{ lv_gui_version }</td></tr>| ).
+    ri_html->add( |<tr><td>Browser String:        </td><td>{ lv_browser_string }</td></tr>| ).
+    ri_html->add( |<tr><td>Browser Engine:        </td><td>{ lv_browser_engine }</td></tr>| ).
+    ri_html->add( |<tr><td>&nbsp;</td></tr>| ).
+    ri_html->add( |<tr><td>Git Unix time:         </td><td>{ zcl_abapgit_git_time=>get_unix( ) }</td></tr>| ).
+    ri_html->add( |<tr><td>System time:           </td><td>{ sy-datum } { sy-uzeit } { sy-tzone }</td></tr>| ).
+    ri_html->add( |<tr><td>System release:        </td><td>{ ls_release-release } SP { ls_release-sp }</td></tr>| ).
+    ri_html->add( |<tr><td>Unicode:               </td><td>{
+                  boolc( cl_abap_char_utilities=>charsize <> 1 ) }</td></tr>| ).
+    ri_html->add( |<tr><td>Charsize:              </td><td>{ cl_abap_char_utilities=>charsize }</td></tr>| ).
+    ri_html->add( |<tr><td>Endian:                </td><td>{ cl_abap_char_utilities=>endian }</td></tr>| ).
     ri_html->add( |</table>| ).
     ri_html->add( |<br>| ).
 

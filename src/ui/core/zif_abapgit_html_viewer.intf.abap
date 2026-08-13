@@ -56,4 +56,8 @@ INTERFACE zif_abapgit_html_viewer
     IMPORTING
       !iv_visible TYPE abap_bool .
   METHODS set_focus RAISING zcx_abapgit_exception.
+  METHODS get_browser
+    EXPORTING
+      ev_browser_string TYPE string
+      ev_browser_engine TYPE string.
 ENDINTERFACE.
