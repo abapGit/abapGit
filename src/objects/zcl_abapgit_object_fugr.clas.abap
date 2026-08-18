@@ -1295,7 +1295,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           lv_abap_version TYPE trdir-uccheck,
           lt_functions    TYPE ty_function_tt,
           lt_dynpros      TYPE ty_dynpro_tt,
-          ls_cua          TYPE ty_cua.
+          ls_cua          TYPE ty_cua,
+          lt_varis        TYPE ty_vari_tt.
 
     lv_abap_version = get_abap_version( io_xml ).
 
@@ -1337,6 +1338,12 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     deserialize_cua( iv_program_name = lv_program_name
                      is_cua          = ls_cua ).
+
+    io_xml->read( EXPORTING iv_name = 'VARIS'
+                  CHANGING  cg_data = lt_varis ).
+
+    deserialize_varis( iv_program_name = lv_program_name
+                       it_varis        = lt_varis ).
 
     deserialize_function_docs(
       iv_prog_name = lv_program_name
@@ -1474,7 +1481,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           ls_progdir      TYPE zif_abapgit_sap_report=>ty_progdir,
           lv_program_name TYPE syrepid,
           lt_dynpros      TYPE ty_dynpro_tt,
-          ls_cua          TYPE ty_cua.
+          ls_cua          TYPE ty_cua,
+          lt_varis        TYPE ty_vari_tt.
 
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
@@ -1507,6 +1515,10 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       ls_cua = serialize_cua( lv_program_name ).
       io_xml->add( iv_name = 'CUA'
                    ig_data = ls_cua ).
+
+      lt_varis = serialize_varis( lv_program_name ).
+      io_xml->add( iv_name = 'VARIS'
+                   ig_data = lt_varis ).
     ENDIF.
 
     serialize_function_docs( iv_prog_name = lv_program_name
