@@ -28,6 +28,7 @@
     "ZCL_ABAPGIT_OBJECTS_ACTIVATION",
     "zcl_abapgit_object_doma",
     "zcl_abapgit_object_sfpf",
+    "zcl_abapgit_object_smtg",
     "zcl_abapgit_object_zag",
     "zcl_abapgit_objects_bridge",
     "zcl_abapgit_objects_files",
