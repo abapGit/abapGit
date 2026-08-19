@@ -62,7 +62,7 @@ CLASS zcl_abapgit_object_zag1 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
     DELETE FROM zag1 WHERE name = ms_item-obj_name.
-    DELETE FROM tadir WHERE pgmid = 'R3TR' AND object = c_type AND name = ms_item-obj_name.
+    DELETE FROM tadir WHERE pgmid = 'R3TR' AND object = c_type AND obj_name = ms_item-obj_name.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
