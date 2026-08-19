@@ -8,6 +8,7 @@ CLASS zcl_abapgit_file_deserialize DEFINITION
       IMPORTING
         !ii_repo          TYPE REF TO zif_abapgit_repo
         !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
+        !ii_obj_filter    TYPE REF TO zif_abapgit_object_filter OPTIONAL
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
@@ -139,7 +140,9 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
     DATA lt_results TYPE zif_abapgit_definitions=>ty_results_tt.
 
     lt_results = filter_files_to_deserialize(
-      it_results = zcl_abapgit_repo_status=>calculate( ii_repo )
+      it_results = zcl_abapgit_repo_status=>calculate(
+                     ii_repo       = ii_repo
+                     ii_obj_filter = ii_obj_filter )
       ii_log     = ii_log ).
 
     rt_results = prioritize_deser(
