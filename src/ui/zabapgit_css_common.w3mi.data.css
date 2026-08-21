@@ -262,11 +262,10 @@ span.package-box i.icon {
   overflow: hidden;
 }
 
-/* STATE BLOCK COMMON*/
+/* STATE BLOCK COMMON */
 
 span.state-block {
   margin-left: 1em;
-  font-family: Consolas, "Lucida Console", Courier, monospace;
   font-size: x-small;
   vertical-align: 13%;
   display: inline-block;
@@ -280,7 +279,7 @@ span.state-block span {
   border-style: solid;
 }
 
-/* REPOSITORY TABLE*/
+/* REPOSITORY TABLE */
 
 div.repo_container {
   position: relative;
@@ -498,7 +497,6 @@ div.diff_head span.state-block span {
 /* DIFF TABLE */
 
 table.diff_tab {
-  font-family: Consolas, Courier, monospace;
   font-size: 10pt;
   width: 100%;
 }
@@ -615,19 +613,18 @@ th.diff_others *::selection {
   cursor: text;
 }
 
-/* DEBUG INFO STYLES */
+/* DEBUG INFO */
 
 div.debug_container {
   padding: 0.5em;
   font-size: 10pt;
-  font-family: Consolas, Courier, monospace;
 }
 
 div.debug_container p {
   margin: 0px;
 }
 
-/* *** */
+/* ACTION LINKS */
 
 li.action_link.enabled{
   visibility: visible;
@@ -644,7 +641,7 @@ li.action_link:not(enabled){
 /* TUTORIAL */
 
 div.tutorial {
-  margin-top:       3px;
+  margin-top: 3px;
   padding: 0.5em 1em 0.5em 1em;
 }
 
@@ -975,13 +972,15 @@ div.corner-hint {
   z-index: 99;
 }
 
-/* Commit popup */
+/* COMMIT POPUP */
+
 table.commit tr .title {
   font-weight: bold;
   vertical-align: top;
 }
 
-/* Repo overview */
+/* REPO OVERVIEW */
+
 .repo-overview {
   padding: 0.5em 0.7em;
 }
@@ -1474,7 +1473,6 @@ table.unit_tests {
   width: 100%;
   box-sizing: border-box;
   padding: 10px;
-  font-family: Arial,Helvetica,sans-serif;
 }
 .dialog .radio-container input[type="radio"] {
   visibility: hidden;
@@ -1686,3 +1684,71 @@ div.wu table td[data-gid="where"],
 div.wu table th[data-gid="where"] {
   background-color: hsl(0, 0%, 97%);
 }
+
+/* DATABASE UTILITY */
+
+.db-list {
+  padding: 0.5em;
+  overflow-x: auto;
+}
+.db-list table { table-layout: fixed; }
+.db-list table pre {
+  display: inline-block;
+  overflow: hidden;
+  word-wrap:break-word;
+  white-space: pre-wrap;
+  margin: 0px;
+  width: 30em;
+}
+.db-list table th {
+  text-align: left;
+  padding: 0.5em;
+}
+.db-list table thead tr { border-bottom: 1px solid; }
+.db-list table td {
+  padding: 4px 0.5em;
+  vertical-align: middle;
+  word-break: break-all;
+}
+.db-list table td.data { font-style: italic; }
+
+/* DATABASE ENTRIES */
+
+.db-entry {
+  padding: 0.5em;
+}
+.db-entry pre {
+  display: block;
+  font-size: 10pt;
+  overflow: hidden;
+  word-wrap:break-word;
+  white-space: pre-wrap;
+  border: 1px  solid;
+  border-radius: 3px;
+  padding: 0.5em;
+  margin: 0.5em 0em;
+  width: 98%;
+}
+.db-entry textarea {
+  margin: 0.5em 0em;
+  width: 98%;
+}
+.db-entry .toolbar {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+.db-entry dl.entry-tag div {
+  display: inline-block;
+  border: 1px solid;
+  border-radius: 3px;
+  margin-right: 0.5em;
+}
+.db-entry dl.entry-tag div:last-child {
+  margin-right: 0px;
+}
+.db-entry dt, .db-entry dd {
+  display: inline-block;
+  margin-left: 0px;
+  padding: 2px 5px;
+}
+.db-entry dt::after { content: ":" }

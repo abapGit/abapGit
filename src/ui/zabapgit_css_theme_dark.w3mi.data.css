@@ -10,6 +10,7 @@
   --theme-primary-font: "72", Arial, Helvetica, sans-serif;
   --theme-primary-font-color: #cccccc;
   --theme-primary-font-color-reduced: #EEEEEE;
+  --theme-fixed-font: "Consolas", "SF Mono", "Menlo", "Courier New", monospace;
   --theme-font-size: 11pt;
   --theme-link-color: #d9ffff;
   --theme-link-color-hover: #f6f6f6;
