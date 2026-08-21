@@ -23,12 +23,24 @@ CLASS zcl_abapgit_object_sldd IMPLEMENTATION.
     DATA lo_field_rules TYPE REF TO zif_abapgit_field_rules.
 
     lo_field_rules = zcl_abapgit_field_rules=>create( ).
-    lo_field_rules->add( iv_table = 'SLDW_HEADER'   iv_field = 'MODIFIER' iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user ).
-    lo_field_rules->add( iv_table = 'SLDW_HEADER'   iv_field = 'MODDATE'  iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date ).
-    lo_field_rules->add( iv_table = 'SLDW_HEADER'   iv_field = 'MODTIME'  iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time ).
-    lo_field_rules->add( iv_table = 'SLDW_ELEMENTS' iv_field = 'MODIFIER' iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user ).
-    lo_field_rules->add( iv_table = 'SLDW_ELEMENTS' iv_field = 'MODDATE'  iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date ).
-    lo_field_rules->add( iv_table = 'SLDW_ELEMENTS' iv_field = 'MODTIME'  iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time ).
+    lo_field_rules->add( iv_table     = 'SLDW_HEADER'
+                         iv_field     = 'MODIFIER'
+                         iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user ).
+    lo_field_rules->add( iv_table     = 'SLDW_HEADER'
+                         iv_field     = 'MODDATE'
+                         iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date ).
+    lo_field_rules->add( iv_table     = 'SLDW_HEADER'
+                         iv_field     = 'MODTIME'
+                         iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time ).
+    lo_field_rules->add( iv_table     = 'SLDW_ELEMENTS'
+                         iv_field     = 'MODIFIER'
+                         iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user ).
+    lo_field_rules->add( iv_table     = 'SLDW_ELEMENTS'
+                         iv_field     = 'MODDATE'
+                         iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date ).
+    lo_field_rules->add( iv_table     = 'SLDW_ELEMENTS'
+                         iv_field     = 'MODTIME'
+                         iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time ).
 
     CREATE OBJECT ro_generic
       EXPORTING
