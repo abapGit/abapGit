@@ -85,12 +85,12 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
 
     DATA lv_compare TYPE abap_bool.
 
+    " Check if ABAP language version matches repository setting
     lv_compare = compare_language_versions(
       iv_abap_language_version_1 = iv_abap_language_version
       iv_abap_language_version_2 = is_item-abap_language_version ).
 
-    " Check if ABAP language version matches repository setting
-    IF is_item-abap_language_version IS NOT INITIAL AND lv_compare = abap_false.
+    IF lv_compare = abap_false.
       zcx_abapgit_exception=>raise(
         |Object { is_item-obj_type } { is_item-obj_name } has { get_description( iv_abap_language_version ) }| &&
         | but repository is set to { get_description( is_item-abap_language_version ) }| ).
