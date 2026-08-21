@@ -20,10 +20,21 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_sldd IMPLEMENTATION.
   METHOD get_generic.
+    DATA lo_field_rules TYPE REF TO zif_abapgit_field_rules.
+
+    lo_field_rules = zcl_abapgit_field_rules=>create( ).
+    lo_field_rules->add( iv_table = 'SLDW_HEADER'   iv_field = 'MODIFIER' iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user ).
+    lo_field_rules->add( iv_table = 'SLDW_HEADER'   iv_field = 'MODDATE'  iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date ).
+    lo_field_rules->add( iv_table = 'SLDW_HEADER'   iv_field = 'MODTIME'  iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time ).
+    lo_field_rules->add( iv_table = 'SLDW_ELEMENTS' iv_field = 'MODIFIER' iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user ).
+    lo_field_rules->add( iv_table = 'SLDW_ELEMENTS' iv_field = 'MODDATE'  iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date ).
+    lo_field_rules->add( iv_table = 'SLDW_ELEMENTS' iv_field = 'MODTIME'  iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time ).
+
     CREATE OBJECT ro_generic
       EXPORTING
-        is_item     = ms_item
-        iv_language = mv_language.
+        is_item        = ms_item
+        iv_language    = mv_language
+        io_field_rules = lo_field_rules.
   ENDMETHOD.
 
 
@@ -96,55 +107,6 @@ CLASS zcl_abapgit_object_sldd IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~serialize.
-    DATA: lv_table TYPE objsl-tobj_name,
-          lr_data  TYPE REF TO data.
-    DATA: lt_tables TYPE STANDARD TABLE OF objsl-tobj_name.
-
-    FIELD-SYMBOLS: <lt_data>  TYPE STANDARD TABLE,
-                   <ls_data>  TYPE any,
-                   <lv_field> TYPE any.
-
-    SELECT DISTINCT tobj_name
-      FROM objsl
-      INTO TABLE lt_tables
-      WHERE objectname = ms_item-obj_type
-        AND objecttype = 'L'
-        AND tobject    = 'TABU'
-      ORDER BY tobj_name.
-    LOOP AT lt_tables INTO lv_table.
-      CREATE DATA lr_data TYPE STANDARD TABLE OF (lv_table).
-      ASSIGN lr_data->* TO <lt_data>.
-      IF lv_table = 'SLDW_HEADERT'.
-        SELECT * FROM (lv_table)
-          INTO TABLE <lt_data>
-          WHERE spras = mv_language
-            AND name  = ms_item-obj_name
-          ORDER BY PRIMARY KEY.
-      ELSE.
-        SELECT * FROM (lv_table)
-          INTO TABLE <lt_data>
-          WHERE name = ms_item-obj_name
-          ORDER BY PRIMARY KEY.
-      ENDIF.
-
-      LOOP AT <lt_data> ASSIGNING <ls_data>.
-        ASSIGN COMPONENT 'MODIFIER' OF STRUCTURE <ls_data> TO <lv_field>.
-        IF sy-subrc = 0.
-          CLEAR <lv_field>.
-        ENDIF.
-        ASSIGN COMPONENT 'MODDATE' OF STRUCTURE <ls_data> TO <lv_field>.
-        IF sy-subrc = 0.
-          CLEAR <lv_field>.
-        ENDIF.
-        ASSIGN COMPONENT 'MODTIME' OF STRUCTURE <ls_data> TO <lv_field>.
-        IF sy-subrc = 0.
-          CLEAR <lv_field>.
-        ENDIF.
-      ENDLOOP.
-
-      io_xml->add( iv_name = lv_table
-                   ig_data = <lt_data> ).
-
-    ENDLOOP.
+    get_generic( )->serialize( io_xml ).
   ENDMETHOD.
 ENDCLASS.
