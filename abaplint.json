@@ -375,6 +375,7 @@
       ],
       "checkForms": true,
       "errorWhenEmpty": false,
+      "checkFunctionModules": true,
       "ignoreTestClasses": false,
       "statements": 110
     },
@@ -411,7 +412,8 @@
         "/json/",
         "zcl_abapgit_repo.clas.abap",
         "zcl_abapgit_repo_online.clas.abap"
-      ]
+      ],
+      "ignorePrivate": false
     },
     "no_chained_assignment": true,
     "no_external_form_calls": false,
