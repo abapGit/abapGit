@@ -6,7 +6,7 @@ CLASS zcl_abapgit_git_time DEFINITION
   PUBLIC SECTION.
 
     TYPES:
-      ty_unixtime TYPE c LENGTH 16 .
+      ty_unixtime TYPE zif_abapgit_git_definitions=>ty_unixtime .
 
     CLASS-METHODS get_unix
       RETURNING
@@ -22,6 +22,15 @@ CLASS zcl_abapgit_git_time DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+    CLASS-METHODS get_unix_from_local
+      IMPORTING
+        !iv_date       TYPE d
+        !iv_time       TYPE t
+      RETURNING
+        VALUE(rv_time) TYPE ty_unixtime
+      RAISING
+        zcx_abapgit_exception .
+
     CLASS-METHODS get_utc
       IMPORTING
         !iv_unix TYPE ty_unixtime
@@ -30,11 +39,41 @@ CLASS zcl_abapgit_git_time DEFINITION
         !ev_time TYPE sy-uzeit .
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    CLASS-METHODS get_system_timezone
+      RETURNING
+        VALUE(rv_timezone) TYPE timezone .
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_git_time IMPLEMENTATION.
+
+
+  METHOD get_system_timezone.
+* the time zone of the application server, ie the time zone of SY-DATUM and SY-UZEIT
+* and of most date and time fields on the database, like E070-AS4DATE and E070-AS4TIME
+* note SY-ZONLO is the personal time zone of the user, it can be empty,
+* eg in background jobs, so it cannot be used here
+
+    DATA lv_fm TYPE string.
+
+    lv_fm = 'GET_SYSTEM_TIMEZONE'.
+
+    TRY.
+        CALL METHOD ('CL_ABAP_TSTMP')=>get_system_timezone
+          RECEIVING
+            system_timezone = rv_timezone.
+      CATCH cx_sy_dyn_call_illegal_method.
+        CALL FUNCTION lv_fm
+          IMPORTING
+            timezone            = rv_timezone
+          EXCEPTIONS
+            customizing_missing = 1
+            OTHERS              = 2 ##FM_SUBRC_OK.
+    ENDTRY.
+
+  ENDMETHOD.
 
 
   METHOD get_unix_days_ago.
@@ -73,6 +112,43 @@ CLASS zcl_abapgit_git_time IMPLEMENTATION.
     rv_time = lv_seconds.
     CONDENSE rv_time.
     rv_time+11 = '+0000'.
+
+  ENDMETHOD.
+
+
+  METHOD get_unix_from_local.
+* returns seconds since Unix epoch, including timezone indicator
+* the input is expected to be in the time zone of the application server,
+* like SY-DATUM and SY-UZEIT, it is converted to UTC, so the timezone
+* indicator is always '+0000', the same layout as GET_UNIX returns
+
+    CONSTANTS lc_epoch TYPE timestamp VALUE '19700101000000'.
+
+    DATA lv_seconds   TYPE i.
+    DATA lv_timestamp TYPE timestamp.
+    DATA lv_timezone  TYPE timezone.
+
+    IF iv_date IS INITIAL.
+      zcx_abapgit_exception=>raise( 'Cannot determine unix time, date is initial' ).
+    ENDIF.
+
+    lv_timezone = get_system_timezone( ).
+
+    CONVERT DATE iv_date TIME iv_time
+      INTO TIME STAMP lv_timestamp TIME ZONE lv_timezone.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Unknown time zone "{ lv_timezone }"| ).
+    ENDIF.
+
+    IF lv_timestamp < lc_epoch.
+      zcx_abapgit_exception=>raise( |Date { iv_date } is before the unix epoch| ).
+    ENDIF.
+
+    lv_seconds = cl_abap_tstmp=>subtract(
+      tstmp1 = lv_timestamp
+      tstmp2 = lc_epoch ).
+
+    rv_time = |{ lv_seconds } +0000|.
 
   ENDMETHOD.
 
