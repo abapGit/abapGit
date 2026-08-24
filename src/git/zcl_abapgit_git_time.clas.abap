@@ -39,41 +39,11 @@ CLASS zcl_abapgit_git_time DEFINITION
         !ev_time TYPE sy-uzeit .
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    CLASS-METHODS get_system_timezone
-      RETURNING
-        VALUE(rv_timezone) TYPE timezone .
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_git_time IMPLEMENTATION.
-
-
-  METHOD get_system_timezone.
-* the time zone of the application server, ie the time zone of SY-DATUM and SY-UZEIT
-* and of most date and time fields on the database, like E070-AS4DATE and E070-AS4TIME
-* note SY-ZONLO is the personal time zone of the user, it can be empty,
-* eg in background jobs, so it cannot be used here
-
-    DATA lv_fm TYPE string.
-
-    lv_fm = 'GET_SYSTEM_TIMEZONE'.
-
-    TRY.
-        CALL METHOD ('CL_ABAP_TSTMP')=>get_system_timezone
-          RECEIVING
-            system_timezone = rv_timezone.
-      CATCH cx_sy_dyn_call_illegal_method.
-        CALL FUNCTION lv_fm
-          IMPORTING
-            timezone            = rv_timezone
-          EXCEPTIONS
-            customizing_missing = 1
-            OTHERS              = 2 ##FM_SUBRC_OK.
-    ENDTRY.
-
-  ENDMETHOD.
 
 
   METHOD get_unix_days_ago.
@@ -119,8 +89,11 @@ CLASS zcl_abapgit_git_time IMPLEMENTATION.
   METHOD get_unix_from_local.
 * returns seconds since Unix epoch, including timezone indicator
 * the input is expected to be in the time zone of the application server,
-* like SY-DATUM and SY-UZEIT, it is converted to UTC, so the timezone
-* indicator is always '+0000', the same layout as GET_UNIX returns
+* like SY-DATUM and SY-UZEIT and like most date and time fields on the
+* database, eg E070-AS4DATE and E070-AS4TIME, it is converted to UTC, so
+* the timezone indicator is always '+0000', same layout as GET_UNIX returns
+* note SY-ZONLO is the personal time zone of the user, it can be empty,
+* eg in background jobs, so it cannot be used here
 
     CONSTANTS lc_epoch TYPE timestamp VALUE '19700101000000'.
 
@@ -132,7 +105,7 @@ CLASS zcl_abapgit_git_time IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Cannot determine unix time, date is initial' ).
     ENDIF.
 
-    lv_timezone = get_system_timezone( ).
+    lv_timezone = cl_abap_tstmp=>get_system_timezone( ).
 
     CONVERT DATE iv_date TIME iv_time
       INTO TIME STAMP lv_timestamp TIME ZONE lv_timezone.
