@@ -105,7 +105,7 @@ CLASS zcl_abapgit_git_time IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Cannot determine unix time, date is initial' ).
     ENDIF.
 
-    lv_timezone = cl_abap_tstmp=>get_system_timezone( ).
+    lv_timezone = zcl_abapgit_time_date=>get_system_timezone( ).
 
     CONVERT DATE iv_date TIME iv_time
       INTO TIME STAMP lv_timestamp TIME ZONE lv_timezone.

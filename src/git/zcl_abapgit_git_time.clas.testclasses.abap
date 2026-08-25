@@ -63,7 +63,7 @@ CLASS ltcl_time_test IMPLEMENTATION.
     CONVERT DATE lv_date TIME lv_time
       INTO TIME STAMP lv_act TIME ZONE lc_utc.
 
-    lv_timezone = cl_abap_tstmp=>get_system_timezone( ).
+    lv_timezone = zcl_abapgit_time_date=>get_system_timezone( ).
 
     CONVERT DATE lc_date TIME lc_time
       INTO TIME STAMP lv_exp TIME ZONE lv_timezone.
