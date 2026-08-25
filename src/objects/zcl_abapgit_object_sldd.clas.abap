@@ -71,7 +71,7 @@ CLASS zcl_abapgit_object_sldd IMPLEMENTATION.
       WHERE name = ms_item-obj_name
       ORDER BY moddate DESCENDING modtime DESCENDING.
     ENDSELECT.
-    IF  ls_element_change-changed_by IS NOT INITIAL
+    IF ls_element_change-changed_by IS NOT INITIAL
     AND ls_element_change            >= ls_header_change.
       rv_user = ls_element_change-changed_by.
     ELSEIF ls_header_change-changed_by IS NOT INITIAL.
