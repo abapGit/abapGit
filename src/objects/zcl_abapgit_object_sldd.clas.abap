@@ -51,7 +51,34 @@ CLASS zcl_abapgit_object_sldd IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " not stored by SAP
+    TYPES: BEGIN OF ty_last_change,
+             changed_on TYPE d,
+             changed_at TYPE t,
+             changed_by TYPE syuname,
+           END OF ty_last_change.
+    DATA: ls_header_change  TYPE ty_last_change,
+          ls_element_change TYPE ty_last_change.
+
+    SELECT SINGLE moddate modtime modifier
+      FROM ('SLDW_HEADER')
+      INTO ls_header_change
+      WHERE name = ms_item-obj_name.
+
+    SELECT moddate modtime modifier
+      UP TO 1 ROWS
+      FROM ('SLDW_ELEMENTS')
+      INTO ls_element_change
+      WHERE name = ms_item-obj_name
+      ORDER BY moddate DESCENDING modtime DESCENDING.
+    ENDSELECT.
+    IF  ls_element_change-changed_by IS NOT INITIAL
+    AND ls_element_change            >= ls_header_change.
+      rv_user = ls_element_change-changed_by.
+    ELSEIF ls_header_change-changed_by IS NOT INITIAL.
+      rv_user = ls_header_change-changed_by.
+    ELSE.
+      rv_user = c_user_unknown.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -105,6 +132,29 @@ CLASS zcl_abapgit_object_sldd IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
+    DATA: lr_key      TYPE REF TO data,
+          lv_funcname TYPE rs38l_fnam VALUE 'SLDW_MAINTAIN'.
+    FIELD-SYMBOLS: <lt_key>  TYPE STANDARD TABLE,
+                   <ls_key>  TYPE any,
+                   <lv_name> TYPE any.
+
+    TRY.
+        CREATE DATA lr_key TYPE STANDARD TABLE OF ('SLDW_S_KEY').
+        ASSIGN lr_key->* TO <lt_key>.
+        APPEND INITIAL LINE TO <lt_key> ASSIGNING <ls_key>.
+        ASSIGN COMPONENT 'NAME' OF STRUCTURE <ls_key> TO <lv_name>.
+        <lv_name> = ms_item-obj_name.
+
+        CALL FUNCTION lv_funcname
+          EXPORTING
+            id_area     = 'SLDD'
+            id_chg_mode = space
+            it_key      = <lt_key>.
+
+        rv_exit = abap_true.
+      CATCH cx_sy_create_data_error cx_sy_dyn_call_error.
+        " SLDW framework not available on this release - nothing to jump to
+    ENDTRY.
   ENDMETHOD.
 
 
