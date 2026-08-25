@@ -501,7 +501,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_metadata.
-    RETURN.
+    rs_metadata = get_metadata( ).
   ENDMETHOD.
 
 

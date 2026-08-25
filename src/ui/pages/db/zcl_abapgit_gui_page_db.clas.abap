@@ -17,10 +17,6 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS constructor
-      RAISING
-        zcx_abapgit_exception.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -36,7 +32,6 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
         cancel                   TYPE string VALUE 'cancel',
       END OF c_action.
 
-    CONSTANTS c_css_url TYPE string VALUE 'css/page_db.css'.
     CONSTANTS c_toc_filename TYPE string VALUE '#_Table_of_Content_#.txt'.
 
     TYPES:
@@ -46,10 +41,6 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
       END OF ty_explanation.
 
     DATA mt_methods TYPE zcl_abapgit_background=>ty_methods.
-
-    METHODS register_stylesheet
-      RAISING
-        zcx_abapgit_exception.
 
     METHODS render_stats
       IMPORTING
@@ -78,6 +69,12 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
     CLASS-METHODS do_restore_db
       RAISING
         zcx_abapgit_exception.
+
+    METHODS get_repo_description
+      IMPORTING
+        !iv_key        TYPE zif_abapgit_persistence=>ty_value
+      RETURNING
+        VALUE(rv_text) TYPE string.
 
     METHODS explain_content
       IMPORTING
@@ -121,12 +118,6 @@ ENDCLASS.
 CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
 
-  METHOD constructor.
-    super->constructor( ).
-    register_stylesheet( ).
-  ENDMETHOD.
-
-
   METHOD create.
 
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_db.
@@ -135,7 +126,6 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title         = 'Database Utility'
-      iv_extra_css_url      = c_css_url
       ii_page_menu_provider = lo_component
       ii_child_component    = lo_component ).
 
@@ -412,7 +402,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
       lv_class  TYPE string,
       ls_method LIKE LINE OF mt_methods.
 
-    rs_expl-value = |{ zcl_abapgit_repo_srv=>get_instance( )->get( is_data-value )->get_name( ) }|.
+    rs_expl-value = get_repo_description( is_data-value ).
 
     FIND FIRST OCCURRENCE OF REGEX '<METHOD>(.*)</METHOD>'
       IN is_data-data_str IGNORING CASE RESULTS ls_result ##REGEX_POSIX.
@@ -494,6 +484,9 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
           val    = rs_expl-value
           format = cl_abap_format=>e_html_attr ).
       ENDIF.
+    ELSE.
+      rs_expl-value = get_repo_description( is_data-value ).
+      rs_expl-extra = |0 lines|.
     ENDIF.
 
   ENDMETHOD.
@@ -501,24 +494,25 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
   METHOD explain_content_repo_data.
 
-    rs_expl-extra = 'Data Config'.
-    rs_expl-value = is_data-value.
+    DATA lv_table_count TYPE i.
+
+    lv_table_count = count(
+      val = is_data-data_str
+      sub = '"name"' ).
+
+    rs_expl-extra = |{ lv_table_count } tables|.
+    rs_expl-value = get_repo_description( is_data-value ).
 
   ENDMETHOD.
 
 
-  METHOD register_stylesheet.
+  METHOD get_repo_description.
 
-    DATA lo_buf TYPE REF TO zcl_abapgit_string_buffer.
-
-    CREATE OBJECT lo_buf.
-
-    " @@abapmerge include zabapgit_css_page_db.w3mi.data.css > lo_buf->add( '$$' ).
-    gui_services( )->register_page_asset(
-      iv_url       = c_css_url
-      iv_type      = 'text/css'
-      iv_mime_name = 'ZABAPGIT_CSS_PAGE_DB'
-      iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
+    TRY.
+        rv_text = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->get_name( ).
+      CATCH zcx_abapgit_exception.
+        rv_text = 'n/a'.
+    ENDTRY.
 
   ENDMETHOD.
 
