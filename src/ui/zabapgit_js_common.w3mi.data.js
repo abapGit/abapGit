@@ -319,8 +319,17 @@ function setInitialFocusWithQuerySelector(sSelector, bFocusParent) {
   }
 }
 
-// Submit an existing form
+// Submit an existing, server-rendered sapevent form (its action carries the
+// event, so nothing has to be rewritten here).
+//
+// Flag the navigation as self-initiated first, so the browser-back trap ignores
+// the popstate the browser control emits while handling it (mirrors
+// submitSapeventForm / clickSapEvent). Without the flag the trap reads that
+// popstate as a user Back press and fires go_back, which supersedes the submit:
+// the page returns without saving on the Edge control, while the IE control -
+// where the trap never arms - is unaffected.
 function submitFormById(id) {
+  gSapeventNavPending = true;
   document.getElementById(id).submit();
 }
 
