@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_SLDD</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - SLDD - Whitelist for Generic Services</DESCRIPT>
+    <DESCRIPT>abapGit - SLDD - Generic Application Access Rules</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
