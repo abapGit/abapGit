@@ -2808,3 +2808,290 @@ function trapFocus() {
     }
   };
 }
+
+/**********************************************************
+ * Source Viewer
+ **********************************************************/
+
+function SourceViewer() {
+  this.sources = [
+    { title: "HTML source (1)", getContent: this.getHtmlSource },
+    { title: "css/common.css (2)", url: "css/common.css" },
+    { title: "css/bundle.css (3)", url: "css/bundle.css" },
+    { title: "css/ag-icons.css (4)", url: "css/ag-icons.css" },
+    { title: "js/common.js (5)", url: "js/common.js" }
+  ];
+  this.overlay = null;
+  this.source = null;
+  this.lineNumbers = null;
+  this.activeSource = null;
+}
+
+SourceViewer.prototype.getHtmlSource = function() {
+  var doctype = document.doctype ? "<!DOCTYPE " + document.doctype.name + ">\n" : "";
+  return doctype + document.documentElement.outerHTML;
+};
+
+SourceViewer.prototype.getStylesheetSource = function(url) {
+  var styleSheets = document.styleSheets;
+  var index;
+  var ruleIndex;
+  var rules;
+  var source = "";
+
+  for (index = 0; index < styleSheets.length; index++) {
+    if (!styleSheets[index].href || styleSheets[index].href.indexOf(url) === -1) continue;
+
+    try {
+      rules = styleSheets[index].cssRules || styleSheets[index].rules;
+    } catch (error) {
+      this.reportError("Could not access " + url + " from the document stylesheets.");
+      return "";
+    }
+
+    for (ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
+      source += rules[ruleIndex].cssText + "\n";
+    }
+    return source;
+  }
+
+  this.reportError("Could not find " + url + " in the document stylesheets.");
+  return "";
+};
+
+SourceViewer.prototype.log = function(message) {
+  if (window.console && window.console.log) {
+    window.console.log("abapGit source viewer: " + message);
+  }
+};
+
+SourceViewer.prototype.reportError = function(message) {
+  this.log(message);
+  window.alert("abapGit source viewer error:\n" + message);
+};
+
+SourceViewer.prototype.isInternetExplorer = function() {
+  return !!document.documentMode;
+};
+
+SourceViewer.prototype.updateLineNumbers = function(content) {
+  var lineCount = content ? content.split(/\r\n|\r|\n/).length : 1;
+  var lineNumbers = [];
+  var index;
+
+  for (index = 1; index <= lineCount; index++) {
+    lineNumbers.push(index);
+  }
+  this.lineNumbers.textContent = lineNumbers.join("\n");
+  this.lineNumbers.scrollTop = 0;
+};
+
+SourceViewer.prototype.getAssetSource = function(url, success) {
+  var request = new XMLHttpRequest();
+  var sourceViewer = this;
+  var isHandled = false;
+
+  request.onreadystatechange = function() {
+    if (request.readyState !== 4) return;
+
+    isHandled = true;
+    if ((request.status >= 200 && request.status < 300) ||
+        (request.status === 0 && request.responseText)) {
+      sourceViewer.log("loaded " + url + " (" + request.responseText.length + " bytes)");
+      success(request.responseText);
+    } else {
+      sourceViewer.reportError("Could not load " + url + " (HTTP status " + request.status + ").");
+    }
+  };
+
+  request.onerror = function() {
+    if (!isHandled) {
+      isHandled = true;
+      sourceViewer.reportError("Network error while loading " + url + ".");
+    }
+  };
+
+  try {
+    sourceViewer.log("loading " + url + " with XMLHttpRequest");
+    request.open("GET", url, true);
+    request.send();
+  } catch (error) {
+    sourceViewer.reportError("Could not request " + url + ": " + error.message);
+  }
+};
+
+SourceViewer.prototype.show = function() {
+  var overlay = document.createElement("div");
+  var heading = document.createElement("div");
+  var close = document.createElement("button");
+  var tabs = document.createElement("div");
+  var sourceContainer = document.createElement("div");
+  var lineNumbers = document.createElement("pre");
+  var source = document.createElement("textarea");
+  var sourceViewer = this;
+
+  overlay.className = "source-viewer";
+  overlay.tabIndex = -1;
+  heading.className = "source-viewer-heading";
+  heading.appendChild(document.createTextNode("Source Viewer (" +
+    (this.isInternetExplorer() ? "X" : "Esc or X") + " to close)"));
+  close.type = "button";
+  close.innerHTML = "&times;";
+  close.className = "source-viewer-close";
+  close.title = "Close (X)";
+  tabs.className = "source-viewer-tabs";
+  sourceContainer.className = "source-viewer-content";
+  lineNumbers.setAttribute("aria-hidden", "true");
+  lineNumbers.className = "source-viewer-line-numbers";
+  source.wrap = "off";
+  source.className = "source-viewer-source";
+
+  overlay.appendChild(heading);
+  heading.appendChild(close);
+  overlay.appendChild(tabs);
+  sourceContainer.appendChild(lineNumbers);
+  sourceContainer.appendChild(source);
+  overlay.appendChild(sourceContainer);
+  document.body.appendChild(overlay);
+  this.overlay = overlay;
+  this.source = source;
+  this.lineNumbers = lineNumbers;
+
+  source.onscroll = function() {
+    lineNumbers.scrollTop = source.scrollTop;
+  };
+
+  this.sources.forEach(function(sourceDefinition) {
+    var tab = document.createElement("button");
+    tab.type = "button";
+    tab.appendChild(document.createTextNode(sourceDefinition.title));
+    tab.className = "source-viewer-tab";
+    tab.onclick = function() {
+      sourceViewer.selectSource(sourceDefinition);
+    };
+    sourceDefinition.tab = tab;
+    tabs.appendChild(tab);
+  });
+
+  function stopEvent(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+    event.returnValue = false;
+    event.cancelBubble = true;
+  }
+
+  function removeKeyboardHandler() {
+    document.removeEventListener("keydown", handleViewerKey, true);
+    document.removeEventListener("keypress", handleViewerKey, true);
+    document.removeEventListener("keyup", handleViewerKey, true);
+  }
+
+  function closeViewer(event) {
+    if (event) stopEvent(event);
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    sourceViewer.overlay = null;
+    sourceViewer.source = null;
+    sourceViewer.lineNumbers = null;
+    sourceViewer.activeSource = null;
+  }
+
+  function isCloseKey(event) {
+    return event.key === "x" || event.key === "X" || event.keyCode === 88 ||
+      (!sourceViewer.isInternetExplorer() && (event.key === "Escape" || event.keyCode === 27));
+  }
+
+  function getTabIndex(event) {
+    if (event.key >= "1" && event.key <= "5") return Number(event.key) - 1;
+    if (event.keyCode >= 49 && event.keyCode <= 53) return event.keyCode - 49;
+    return -1;
+  }
+
+  function handleViewerKey(event) {
+    var tabIndex;
+
+    if (event.ctrlKey || event.altKey || event.shiftKey || event.metaKey) return;
+
+    if (isCloseKey(event)) {
+      stopEvent(event);
+      if (event.type === "keydown") closeViewer();
+      if (event.type === "keyup") removeKeyboardHandler();
+      return;
+    }
+
+    tabIndex = getTabIndex(event);
+    if (tabIndex < 0 || tabIndex >= sourceViewer.sources.length) return;
+
+    stopEvent(event);
+    if (event.type === "keydown") sourceViewer.selectSource(sourceViewer.sources[tabIndex]);
+  }
+
+  close.onclick = function(event) {
+    closeViewer(event);
+    removeKeyboardHandler();
+  };
+  document.addEventListener("keydown", handleViewerKey, true);
+  document.addEventListener("keypress", handleViewerKey, true);
+  document.addEventListener("keyup", handleViewerKey, true);
+
+  this.selectSource(this.sources[0]);
+  return overlay;
+};
+
+SourceViewer.prototype.selectSource = function(sourceDefinition) {
+  var sourceViewer = this;
+
+  this.activeSource = sourceDefinition;
+  this.sources.forEach(function(item) {
+    item.tab.className = "source-viewer-tab" +
+      (item === sourceDefinition ? " source-viewer-tab-active" : "");
+  });
+  this.source.value = "Loading...";
+  this.updateLineNumbers(this.source.value);
+
+  function display(content) {
+    if (sourceViewer.activeSource !== sourceDefinition || !sourceViewer.source) return;
+    sourceViewer.source.value = content;
+    sourceViewer.updateLineNumbers(content);
+    sourceViewer.source.focus();
+    sourceViewer.source.setSelectionRange(0, 0);
+    sourceViewer.source.scrollTop = 0;
+    sourceViewer.source.scrollLeft = 0;
+  }
+
+  if (sourceDefinition.content !== undefined) {
+    display(sourceDefinition.content);
+  } else if (sourceDefinition.getContent) {
+    sourceDefinition.content = sourceDefinition.getContent(sourceDefinition.url);
+    display(sourceDefinition.content);
+  } else if (this.isInternetExplorer() && sourceDefinition.url.indexOf("css/") === 0) {
+    sourceDefinition.content = this.getStylesheetSource(sourceDefinition.url);
+    display(sourceDefinition.content);
+  } else if (this.isInternetExplorer()) {
+    display("Internet Explorer cannot display cached JavaScript source.\n" +
+      "Use the Edge WebView2 browser control for this source view.");
+  } else {
+    this.getAssetSource(sourceDefinition.url, function(content) {
+      sourceDefinition.content = content;
+      display(content);
+    });
+  }
+};
+
+SourceViewer.prototype.handleKeydown = function(event) {
+  if (!event.ctrlKey || !event.shiftKey || event.altKey ||
+      (event.key !== "?" && event.keyCode !== 191)) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+  if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+  this.log("shortcut Ctrl+Shift+? requested source viewer");
+  if (!this.overlay) this.show();
+};
+
+function registerSourceViewerShortcuts() {
+  var sourceViewer = new SourceViewer();
+  document.addEventListener("keydown", sourceViewer.handleKeydown.bind(sourceViewer));
+}
+
+registerSourceViewerShortcuts();

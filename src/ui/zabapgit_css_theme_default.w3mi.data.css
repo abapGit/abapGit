@@ -596,3 +596,9 @@ table.settings_tab input:focus {
 .db-entry dt {
   background-color: hsl(206, 20%, 75%);
 }
+
+/* SOURCE VIEWER */
+
+.source-viewer-line-numbers, .source-viewer-source {
+  font-family: var(--theme-fixed-font);
+}
