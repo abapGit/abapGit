@@ -1752,3 +1752,77 @@ div.wu table th[data-gid="where"] {
   padding: 2px 5px;
 }
 .db-entry dt::after { content: ":" }
+
+/* SOURCE VIEWER */
+
+.source-viewer {
+  position: fixed;
+  z-index: 2147483647;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  box-sizing: border-box;
+}
+
+.source-viewer-heading {
+  height: 30px;
+  color: #fff;
+  font: 16px sans-serif;
+}
+
+.source-viewer-close {
+  float: right;
+  font-size: 24px;
+  line-height: 20px;
+}
+
+.source-viewer-tabs {
+  height: 30px;
+  white-space: nowrap;
+}
+
+.source-viewer-tab {
+  margin-right: 4px;
+  padding: 4px 8px;
+  border: 0;
+  background: #ccc;
+  color: #000;
+  font: 12px sans-serif;
+  cursor: pointer;
+}
+
+.source-viewer-tab-active {
+  background: #fff;
+}
+
+.source-viewer-content {
+  display: flex;
+  height: calc(100% - 60px);
+}
+
+.source-viewer-line-numbers {
+  display: block;
+  margin: 0;
+  padding: 2px 8px 2px 4px;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: #eee;
+  color: #666;
+  text-align: right;
+  font-size: 12px;
+}
+
+.source-viewer-source {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 2px;
+  box-sizing: border-box;
+  resize: none;
+  font-size: 12px;
+  white-space: pre;
+}
