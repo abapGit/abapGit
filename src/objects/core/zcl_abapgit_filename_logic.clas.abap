@@ -73,9 +73,6 @@ CLASS zcl_abapgit_filename_logic DEFINITION
       RETURNING
         VALUE(rv_filename) TYPE string.
 
-  PROTECTED SECTION.
-  PRIVATE SECTION.
-
     CLASS-METHODS name_escape
       IMPORTING
         !iv_name       TYPE csequence
@@ -87,6 +84,9 @@ CLASS zcl_abapgit_filename_logic DEFINITION
         !iv_name       TYPE csequence
       RETURNING
         VALUE(rv_name) TYPE string.
+
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 
     CLASS-METHODS map_filename_to_object
       IMPORTING

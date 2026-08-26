@@ -651,7 +651,10 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
 
   METHOD zif_abapgit_object~map_object_to_filename.
 
+    " name might contain special characters like '.' which have been escaped
+    cv_item_part_of_filename = zcl_abapgit_filename_logic=>name_unescape( cv_item_part_of_filename ).
     cv_item_part_of_filename = |{ cv_item_part_of_filename(15) }{ get_hash_from_object( is_item-obj_name ) }|.
+    cv_item_part_of_filename = zcl_abapgit_filename_logic=>name_escape( cv_item_part_of_filename ).
 
   ENDMETHOD.
 
