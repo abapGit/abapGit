@@ -253,21 +253,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   METHOD class_constructor.
 
-    DATA lv_fm TYPE string.
-    lv_fm = 'GET_SYSTEM_TIMEZONE'.
-
-    TRY.
-        CALL METHOD ('CL_ABAP_TSTMP')=>get_system_timezone
-          RECEIVING
-            system_timezone = gv_time_zone.
-      CATCH cx_sy_dyn_call_illegal_method.
-        CALL FUNCTION lv_fm
-          IMPORTING
-            timezone            = gv_time_zone
-          EXCEPTIONS
-            customizing_missing = 1
-            OTHERS              = 2 ##FM_SUBRC_OK.
-    ENDTRY.
+    gv_time_zone = zcl_abapgit_time_date=>get_system_timezone( ).
 
   ENDMETHOD.
 
