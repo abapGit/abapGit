@@ -139,7 +139,7 @@ if (window.NodeList && !NodeList.prototype.forEach) {
 // establish for itself is probed here instead of being asked for.
 var gEnv = {
   isWebGui          : false, // SAP GUI for HTML
-  isSapGuiForWindows: false
+  isSapGuiForWindows: false  // neither of the two: SAP GUI for Java
 };
 
 // Every fact seeded here has to be declared in gEnv above. An unknown key
