@@ -92,7 +92,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
         !ii_html TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
-    METHODS render_environment
+    CLASS-METHODS render_environment
       IMPORTING
         !ii_html TYPE REF TO zif_abapgit_html
       RAISING
@@ -118,7 +118,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
     METHODS is_edge_control_warning_needed
       RETURNING
         VALUE(rv_result) TYPE abap_bool.
-    METHODS js_bool
+    CLASS-METHODS js_bool
       IMPORTING
         !iv_value    TYPE abap_bool
       RETURNING

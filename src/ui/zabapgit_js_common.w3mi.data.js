@@ -142,8 +142,17 @@ var gEnv = {
   isSapGuiForWindows: false
 };
 
+// Every fact seeded here has to be declared in gEnv above. An unknown key
+// would otherwise be added silently while the one it was meant to set keeps
+// its default - putting back, unnoticed, the guesswork this replaces.
 function setEnvironment(env) {
-  for (var key in env) gEnv[key] = env[key];
+  for (var key in env) {
+    if (Object.prototype.hasOwnProperty.call(gEnv, key)) {
+      gEnv[key] = env[key];
+    } else if (window.console && window.console.log) {
+      window.console.log("abapGit: unknown environment key '" + key + "'");
+    }
+  }
 }
 
 // The prefix a sapevent URL needs for the browser control in use. Probed from
