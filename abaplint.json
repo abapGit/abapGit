@@ -425,9 +425,10 @@
       "exclude": [
         "/test/.*",
         "zcl_abapgit_object_doma.clas.*",
-        "zcl_abapgit_string_map.clas.abap",
-        "zcl_abapgit_.*testclasses.abap"
+        "zcl_abapgit_string_map.clas.abap"
       ],
+      "allowReadOnly": true,
+      "ignoreTestClasses": true
     },
     "no_yoda_conditions": false,
     "nrob_consistency": true,
