@@ -423,7 +423,9 @@
     "no_inline_in_optional_branches": true,
     "no_public_attributes": {
       "exclude": [
+        "/test/.*",
         "zcl_abapgit_object_doma.clas.*",
+        "zcl_abapgit_string_map.clas.abap",
         "zcl_abapgit_.*testclasses.abap"
       ],
     },
