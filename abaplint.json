@@ -423,7 +423,8 @@
     "no_inline_in_optional_branches": true,
     "no_public_attributes": {
       "exclude": [
-        "zcl_abapgit_object_doma.clas.locals_imp.abap"
+        "zcl_abapgit_object_doma.clas.*",
+        "zcl_abapgit_.*testclasses.abap"
       ],
     },
     "no_yoda_conditions": false,
