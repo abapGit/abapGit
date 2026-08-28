@@ -33,12 +33,13 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
   PRIVATE SECTION.
 
     TYPES:
+      ty_char1 TYPE c LENGTH 1,
       BEGIN OF ty_file_diff,
         path       TYPE string,
         filename   TYPE string,
-        lstate     TYPE char1,
-        rstate     TYPE char1,
-        fstate     TYPE char1, " FILE state - Abstraction for shorter ifs
+        lstate     TYPE ty_char1,
+        rstate     TYPE ty_char1,
+        fstate     TYPE ty_char1, " FILE state - Abstraction for shorter ifs
         o_diff     TYPE REF TO zif_abapgit_diff,
         changed_by TYPE syuname,
         type       TYPE string,

@@ -37,8 +37,9 @@ CLASS zcl_abapgit_objects_generic DEFINITION
   PROTECTED SECTION.
 
     TYPES:
+      ty_numc3 TYPE n LENGTH 3,
       BEGIN OF ty_s_objkey,
-        num   TYPE n LENGTH 3,
+        num   TYPE ty_numc3,
         value TYPE c LENGTH 128,
       END OF ty_s_objkey .
     TYPES:
@@ -72,7 +73,7 @@ CLASS zcl_abapgit_objects_generic DEFINITION
       CHANGING
         !ct_objkey        TYPE ty_t_objkey
         !cs_objkey        TYPE ty_s_objkey
-        !cv_non_value_pos TYPE numc3 .
+        !cv_non_value_pos TYPE ty_numc3.
     METHODS get_key_fields
       IMPORTING
         !iv_table      TYPE objsl-tobj_name
@@ -103,7 +104,7 @@ CLASS zcl_abapgit_objects_generic DEFINITION
       CHANGING
         !ct_objkey        TYPE ty_t_objkey
         !cs_objkey        TYPE ty_s_objkey
-        !cv_non_value_pos TYPE numc3 .
+        !cv_non_value_pos TYPE ty_numc3.
     METHODS validate
       IMPORTING
         !io_xml TYPE REF TO zif_abapgit_xml_input
@@ -491,7 +492,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
           lv_objkey_length   TYPE i,
           lt_objkey          TYPE ty_t_objkey,
           ls_objkey          LIKE LINE OF lt_objkey,
-          lv_non_value_pos   TYPE numc3,
+          lv_non_value_pos   TYPE ty_numc3,
           lt_key_fields      TYPE ddfields.
 
     DATA: lv_is_asterix      TYPE abap_bool,
