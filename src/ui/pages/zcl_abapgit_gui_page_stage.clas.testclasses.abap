@@ -100,6 +100,9 @@ CLASS lcl_mock_event IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_gui_event~current_page_name.
+
+  ENDMETHOD.
 
   METHOD set_file.
 
