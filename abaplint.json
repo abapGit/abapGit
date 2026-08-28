@@ -421,7 +421,11 @@
     "no_chained_assignment": true,
     "no_external_form_calls": false,
     "no_inline_in_optional_branches": true,
-    "no_public_attributes": false,
+    "no_public_attributes": {
+      "exclude": [
+        "zcl_abapgit_object_doma.clas.locals_imp.abap"
+      ],
+    },
     "no_yoda_conditions": false,
     "nrob_consistency": true,
     "object_naming": {
