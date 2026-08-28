@@ -345,7 +345,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
     DATA ls_docu LIKE LINE OF it_docu.
     DATA lv_objname TYPE lxeobjname.
-    DATA lv_change_flag TYPE char1.
+    DATA lv_change_flag TYPE c LENGTH 1.
     DATA lv_error_status  TYPE lxestatprc.
 
     LOOP AT it_docu INTO ls_docu.
