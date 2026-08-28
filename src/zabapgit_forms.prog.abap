@@ -31,7 +31,7 @@ CLASS lcl_startup IMPLEMENTATION.
       lc_hide_sapgui_hint TYPE string VALUE '2'.
 
     DATA:
-      lv_answer           TYPE char1,
+      lv_answer           TYPE c LENGTH 1,
       ls_settings         TYPE zif_abapgit_persist_user=>ty_s_user_settings,
       li_user_persistence TYPE REF TO zif_abapgit_persist_user.
 

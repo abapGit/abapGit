@@ -1,5 +1,6 @@
 INTERFACE zif_abapgit_gui_diff_extra PUBLIC.
 * only diff rendering, not page related stuff
+  TYPES ty_char1 TYPE c LENGTH 1.
 
   METHODS insert_nav
     RETURNING
@@ -24,7 +25,7 @@ INTERFACE zif_abapgit_gui_diff_extra PUBLIC.
       !iv_filename  TYPE string
       !is_diff_line TYPE zif_abapgit_definitions=>ty_diff
       !iv_index     TYPE sy-tabix
-      !iv_fstate    TYPE char1
+      !iv_fstate    TYPE ty_char1
       !iv_new       TYPE string
       !iv_old       TYPE string
     RAISING
