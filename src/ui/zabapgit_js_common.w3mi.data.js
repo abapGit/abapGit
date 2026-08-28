@@ -13,6 +13,9 @@
 /* exported confirmInitialized
    -- zcl_abapgit_gui_page->zif_abapgit_gui_renderable~render */
 
+/* exported setEnvironment
+   -- zcl_abapgit_gui_page->render_environment */
+
 /* exported toggleBrowserControlWarning, displayBrowserControlFooter,
             redirectBrowserBackToSapEvent, addHotkey
    -- zcl_abapgit_gui_page->scripts */
@@ -124,6 +127,65 @@ if (window.NodeList && !NodeList.prototype.forEach) {
 }
 
 /**********************************************************
+ * Environment
+ **********************************************************/
+
+// What kind of GUI is abapGit displayed in? None of this changes while a page
+// is up, so every fact is established once and read from here afterwards.
+//
+// The backend seeds what it knows from SAP's own APIs: render_environment is
+// the first thing zcl_abapgit_gui_page->scripts writes, so these values are in
+// place before any other script on the page runs. Everything a browser can
+// establish for itself is probed here instead of being asked for.
+var gEnv = {
+  isWebGui          : false, // SAP GUI for HTML
+  isSapGuiForWindows: false  // neither of the two: SAP GUI for Java
+};
+
+// Every fact seeded here has to be declared in gEnv above. An unknown key
+// would otherwise be added silently while the one it was meant to set keeps
+// its default - putting back, unnoticed, the guesswork this replaces.
+function setEnvironment(env) {
+  for (var key in env) {
+    if (Object.prototype.hasOwnProperty.call(gEnv, key)) {
+      gEnv[key] = env[key];
+    } else if (window.console && window.console.log) {
+      window.console.log("abapGit: unknown environment key '" + key + "'");
+    }
+  }
+}
+
+// The prefix a sapevent URL needs for the browser control in use. Probed from
+// the links the backend rendered, because the user agent does not distinguish
+// the control versions - and kept, because the control cannot change under a
+// page that is already displayed.
+var gSapeventPrefix; // undefined until first probed
+
+function getSapeventPrefix() {
+  if (gSapeventPrefix === undefined) {
+    // Depending on the used browser control and its version, different URL schemes
+    // are used which we distinguish here
+    if (document.querySelector('a[href*="file:///SAPEVENT:"]')) {
+      // Prefix for old (SAPGUI <= 8.00 PL3) chromium based browser control
+      gSapeventPrefix = "file:///";
+    } else if (document.querySelector('a[href^="sap-cust"]')) {
+      // Prefix for new (SAPGUI >= 8.00 PL3 Hotfix 1) chromium based browser control
+      gSapeventPrefix = "sap-cust://sap-place-holder/";
+    } else {
+      gSapeventPrefix = ""; // No prefix for old IE control
+    }
+  }
+  return gSapeventPrefix;
+}
+
+// Is the embedded browser control the Edge (Chromium) one rather than the old
+// IE one? Only meaningful inside SAP GUI for Windows - the HTML GUI runs in the
+// browser of the user, whose user agent describes no browser control at all.
+function isEdgeControl() {
+  return navigator.userAgent.includes("Edg");
+}
+
+/**********************************************************
  * Common functions
  **********************************************************/
 
@@ -170,20 +232,6 @@ function appendParamsToAction(action, params) {
 // Use a supplied form, a pre-created form or create a hidden form
 // and submit with sapevent
 function submitSapeventForm(params, action, method, form) {
-
-  function getSapeventPrefix() {
-    // Depending on the used browser control and its version, different URL schemes
-    // are used which we distinguish here
-    if (document.querySelector('a[href*="file:///SAPEVENT:"]')) {
-      // Prefix for old (SAPGUI <= 8.00 PL3) chromium based browser control
-      return "file:///";
-    } else if (document.querySelector('a[href^="sap-cust"]')) {
-      // Prefix for new (SAPGUI >= 8.00 PL3 Hotfix 1) chromium based browser control
-      return "sap-cust://sap-place-holder/";
-    } else {
-      return ""; // No prefix for old IE control
-    }
-  }
 
   // A GET submit replaces the action URL's query string with the form fields.
   // On WebGUI that would wipe the ITS routing parameters the wired-up form
@@ -232,9 +280,17 @@ function submitSapeventForm(params, action, method, form) {
   // ~control=116&~event=OnSAPEvent&ALINK=1&frameName=&PARAMS=stage_commit
   // The event to raise sits in PARAMS, the rest of the routing has to be kept
   // exactly as ITS set it up.
-  var itsParams = form.querySelectorAll("input[name='PARAMS']");
-  var isItsForm = itsParams.length > 0 || /~control=/i.test(form_action);
+  //
+  // Nothing wires up a form anywhere else, so outside the HTML GUI there is
+  // nothing to look for.
+  var itsParams = [];
+  var isItsForm = false;
   var i;
+
+  if (gEnv.isWebGui) {
+    itsParams = form.querySelectorAll("input[name='PARAMS']");
+    isItsForm = itsParams.length > 0 || /~control=/i.test(form_action);
+  }
 
   if (itsParams.length > 0) {
     // A form can carry several of them, one per element ITS wired up (e.g. the
@@ -244,7 +300,8 @@ function submitSapeventForm(params, action, method, form) {
     for (i = 0; i < itsParams.length; i++) {
       itsParams[i].value = action;
     }
-  } else if (/~control=/i.test(form_action)) {
+  } else if (isItsForm) {
+    // The other ITS variant: no PARAMS fields, the routing sits in the action
     form.setAttribute("action", form_action.replace(/PARAMS=.*$/, "PARAMS=" + encodeItsParams(action)));
   } else if (/sapevent/i.test(action)) {
     form.setAttribute("action", action);
@@ -2641,7 +2698,11 @@ function toggleSticky() {
 // Toggle display of warning message when using Edge (based on Chromium) browser control
 // Todo: Remove once https://github.com/abapGit/abapGit/issues/4841 is fixed
 function toggleBrowserControlWarning() {
-  if (!navigator.userAgent.includes("Edg")){
+  // The warning is about the Edge control, so hide it wherever that is not what
+  // we run in: on the old IE control, and on a GUI that embeds no browser
+  // control at all, whose user agent describes the browser of the user and can
+  // report "Edg" for reasons the warning has nothing to do with.
+  if (!isEdgeControl() || !gEnv.isSapGuiForWindows) {
     var elBrowserControlWarning = document.getElementById("browser-control-warning");
     if (elBrowserControlWarning) {
       elBrowserControlWarning.style.display = "none";
@@ -2651,11 +2712,12 @@ function toggleBrowserControlWarning() {
 
 // Output type of HTML control in the abapGit footer
 function displayBrowserControlFooter() {
+  // Only report a control where there is one. The HTML GUI runs in the browser
+  // of the user, whose user agent describes no browser control at all - reading
+  // it there once reported "IE" for a user on Chrome.
   var out = document.getElementById("browser-control-footer");
-  // Only rendered where there is a browser control to report on, i.e. not on
-  // the HTML GUI, which runs in the browser of the user
-  if (!out) return;
-  out.innerHTML = " - " + ( navigator.userAgent.includes("Edg") ? "Edge" : "IE"  );
+  if (!out || !gEnv.isSapGuiForWindows) return;
+  out.innerHTML = " - " + (isEdgeControl() ? "Edge" : "IE");
 }
 
 // Redirect browser "Back" navigation to the SAPGUI back sapevent (action "go_back").
