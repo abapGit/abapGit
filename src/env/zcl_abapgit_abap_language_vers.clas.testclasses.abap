@@ -122,6 +122,8 @@ CLASS ltcl_abap_language_version DEFINITION FOR TESTING RISK LEVEL HARMLESS
       repo_setting FOR TESTING,
       object_type FOR TESTING,
       is_import_allowed FOR TESTING,
+      get_repo_abap_language_version FOR TESTING,
+      get_package_abap_language_vers FOR TESTING,
       check_abap_language_vers_same FOR TESTING RAISING zcx_abapgit_exception,
       check_abap_language_vers_diff FOR TESTING.
 
@@ -411,6 +413,87 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
+  METHOD get_repo_abap_language_version.
+
+    DATA lv_version TYPE string.
+
+    LOOP AT mt_versions INTO lv_version.
+
+      init( lv_version ).
+
+      CASE lv_version.
+        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
+
+          cl_abap_unit_assert=>assert_equals(
+            act = mo_cut->get_repo_abap_language_version( )
+            exp = zcl_abapgit_abap_language_vers=>c_any_abap_language_version ).
+
+        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-ignore.
+
+          cl_abap_unit_assert=>assert_equals(
+            act = mo_cut->get_repo_abap_language_version( )
+            exp = zcl_abapgit_abap_language_vers=>c_no_abap_language_version ).
+
+        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-standard.
+
+          cl_abap_unit_assert=>assert_equals(
+            act = mo_cut->get_repo_abap_language_version( )
+            exp = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard ).
+
+        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-key_user.
+
+          cl_abap_unit_assert=>assert_equals(
+            act = mo_cut->get_repo_abap_language_version( )
+            exp = zif_abapgit_aff_types_v1=>co_abap_language_version-key_user ).
+
+        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development.
+
+          cl_abap_unit_assert=>assert_equals(
+            act = mo_cut->get_repo_abap_language_version( )
+            exp = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development ).
+
+      ENDCASE.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD get_package_abap_language_vers.
+
+    DATA lv_version TYPE string.
+
+    LOOP AT mt_versions INTO lv_version.
+
+      init( lv_version ).
+
+      CASE lv_version.
+        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-undefined
+          OR zif_abapgit_dot_abapgit=>c_abap_language_version-ignore
+          OR zif_abapgit_dot_abapgit=>c_abap_language_version-standard.
+
+          cl_abap_unit_assert=>assert_equals(
+            act = mo_cut->get_package_abap_language_vers( )
+            exp = zif_abapgit_aff_types_v1=>co_abap_language_version-standard ).
+
+        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-key_user.
+
+          cl_abap_unit_assert=>assert_equals(
+            act = mo_cut->get_package_abap_language_vers( )
+            exp = zif_abapgit_aff_types_v1=>co_abap_language_version-key_user ).
+
+        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development.
+
+          cl_abap_unit_assert=>assert_equals(
+            act = mo_cut->get_package_abap_language_vers( )
+            exp = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development ).
+
+      ENDCASE.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 
   METHOD check_abap_language_vers_same.
 
