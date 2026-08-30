@@ -358,7 +358,10 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
       WHEN c_event-create_repo.
 
-        rs_handled-page  = zcl_abapgit_gui_page_cr_repo=>create( mo_form_data->get( c_id-url ) ).
+        rs_handled-page  = zcl_abapgit_gui_page_cr_repo=>create(
+          iv_url          = mo_form_data->get( c_id-url )
+          io_caller_form  = mo_form_data
+          iv_caller_field = c_id-url ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_event-choose_package.
