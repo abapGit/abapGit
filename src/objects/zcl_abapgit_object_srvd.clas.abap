@@ -598,6 +598,11 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
 
         clear_fields( CHANGING cs_metadata = <lv_metadata> ).
 
+        ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <lv_metadata> TO <lv_abap_language_version>.
+        IF sy-subrc = 0.
+          clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+        ENDIF.
+
         ASSIGN COMPONENT 'ABAP_LANGU_VERSION' OF STRUCTURE <lv_metadata> TO <lv_abap_language_version>.
         IF sy-subrc = 0.
           clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
