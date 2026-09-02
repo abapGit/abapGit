@@ -132,7 +132,6 @@ CLASS lcl_bcp47_language_table DEFINITION CREATE PRIVATE.
              text       TYPE string,
            END OF ty_language_mapping,
            ty_language_mappings TYPE STANDARD TABLE OF ty_language_mapping WITH DEFAULT KEY.
-    CLASS-DATA gt_language_mappings TYPE ty_language_mappings.
     CLASS-METHODS:
       sap1_to_text
         IMPORTING
@@ -169,6 +168,8 @@ CLASS lcl_bcp47_language_table DEFINITION CREATE PRIVATE.
           zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CLASS-DATA gt_language_mappings TYPE ty_language_mappings.
+
     CLASS-METHODS fill_language_mappings.
     CLASS-METHODS
       fill_language_mapping

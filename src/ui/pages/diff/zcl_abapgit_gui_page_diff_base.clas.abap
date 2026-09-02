@@ -139,6 +139,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
 
   PRIVATE SECTION.
     TYPES:
+      ty_char1 TYPE c LENGTH 1,
       BEGIN OF ty_view,
         hide_diffs      TYPE abap_bool,
         hidden_chars    TYPE abap_bool,
@@ -158,7 +159,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
     METHODS render_line_split_row
       IMPORTING
         !ii_html   TYPE REF TO zif_abapgit_html
-        !iv_fstate TYPE char1
+        !iv_fstate TYPE ty_char1
         !iv_new    TYPE string
         !iv_old    TYPE string
       RAISING
@@ -206,7 +207,7 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
       IMPORTING
         !is_diff_line  TYPE zif_abapgit_definitions=>ty_diff
         !iv_filename   TYPE string
-        !iv_fstate     TYPE char1
+        !iv_fstate     TYPE ty_char1
         !iv_index      TYPE sy-tabix
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
