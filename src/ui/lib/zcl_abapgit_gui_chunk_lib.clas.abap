@@ -6,6 +6,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
   PUBLIC SECTION.
 
     TYPES:
+      ty_char1 TYPE c LENGTH 1,
       BEGIN OF ty_col_spec,
         tech_name      TYPE string,
         display_name   TYPE string,
@@ -47,8 +48,8 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS render_item_state
       IMPORTING
-        !iv_lstate     TYPE char1
-        !iv_rstate     TYPE char1
+        !iv_lstate     TYPE ty_char1
+        !iv_rstate     TYPE ty_char1
       RETURNING
         VALUE(rv_html) TYPE string .
     CLASS-METHODS render_js_error_banner
@@ -212,7 +213,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
           PREFERRED PARAMETER is_item
       RETURNING
         VALUE(rv_html) TYPE string.
-
   PROTECTED SECTION.
 
     CLASS-METHODS render_repo_top_commit_hash
@@ -253,21 +253,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   METHOD class_constructor.
 
-    DATA lv_fm TYPE string.
-    lv_fm = 'GET_SYSTEM_TIMEZONE'.
-
-    TRY.
-        CALL METHOD ('CL_ABAP_TSTMP')=>get_system_timezone
-          RECEIVING
-            system_timezone = gv_time_zone.
-      CATCH cx_sy_dyn_call_illegal_method.
-        CALL FUNCTION lv_fm
-          IMPORTING
-            timezone            = gv_time_zone
-          EXCEPTIONS
-            customizing_missing = 1
-            OTHERS              = 2 ##FM_SUBRC_OK.
-    ENDTRY.
+    gv_time_zone = zcl_abapgit_time_date=>get_system_timezone( ).
 
   ENDMETHOD.
 
@@ -630,7 +616,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     DATA: lv_system TYPE string.
 
-    FIELD-SYMBOLS <lv_state> TYPE char1.
+    FIELD-SYMBOLS <lv_state> TYPE ty_char1.
 
 
     rv_html = '<span class="state-block">'.
