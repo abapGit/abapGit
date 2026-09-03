@@ -11,15 +11,19 @@ CLASS zcl_abapgit_gui_page_cr_repo DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        !iv_url        TYPE string
+        !iv_url          TYPE string
+        !io_caller_form  TYPE REF TO zcl_abapgit_string_map OPTIONAL
+        !iv_caller_field TYPE string DEFAULT 'url'
       RETURNING
-        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+        VALUE(ri_page)   TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception.
 
     METHODS constructor
       IMPORTING
-        !iv_url TYPE string
+        !iv_url          TYPE string
+        !io_caller_form  TYPE REF TO zcl_abapgit_string_map OPTIONAL
+        !iv_caller_field TYPE string OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
@@ -32,6 +36,8 @@ CLASS zcl_abapgit_gui_page_cr_repo DEFINITION
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
     DATA mo_form_util      TYPE REF TO zcl_abapgit_html_form_utils.
     DATA mv_url TYPE string.
+    DATA mo_caller_form    TYPE REF TO zcl_abapgit_string_map.
+    DATA mv_caller_field   TYPE string.
 
     CONSTANTS:
       BEGIN OF c_id,
@@ -73,6 +79,8 @@ CLASS zcl_abapgit_gui_page_cr_repo IMPLEMENTATION.
     mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
 
     mv_url = iv_url.
+    mo_caller_form = io_caller_form.
+    mv_caller_field = iv_caller_field.
 
     set_defaults( ).
 
@@ -85,7 +93,9 @@ CLASS zcl_abapgit_gui_page_cr_repo IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        iv_url = iv_url.
+        iv_url          = iv_url
+        io_caller_form  = io_caller_form
+        iv_caller_field = iv_caller_field.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title         = 'Create GitHub Repository'
@@ -187,6 +197,13 @@ CLASS zcl_abapgit_gui_page_cr_repo IMPLEMENTATION.
           lv_msg = |GitHub repository { lv_url } created successfully|.
 
           MESSAGE lv_msg TYPE 'S'.
+
+          " Hand the new repository url back to the page that opened this one
+          IF mo_caller_form IS BOUND AND mv_caller_field IS NOT INITIAL.
+            mo_caller_form->set(
+              iv_key = mv_caller_field
+              iv_val = lv_url ).
+          ENDIF.
 
           rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
         ELSE.
