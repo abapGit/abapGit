@@ -26,12 +26,12 @@
   "devDependencies": {
     "@abaplint/cli": "^2.120.42",
     "@abaplint/database-sqlite": "^2.13.40",
-    "@abaplint/runtime": "^2.13.65",
-    "@abaplint/transpiler-cli": "^2.13.65",
+    "@abaplint/runtime": "^2.13.77",
+    "@abaplint/transpiler-cli": "^2.13.77",
     "@eslint/js": "^10.0.1",
     "abapmerge": "^0.16.10",
-    "c8": "^11.0.0",
-    "eslint": "^10.9.1",
+    "c8": "^12.0.0",
+    "eslint": "^10.10.0",
     "express": "^4.22.2",
     "globals": "^17.12.0"
   }
