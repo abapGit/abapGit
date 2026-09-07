@@ -145,11 +145,20 @@ CLASS zcl_abapgit_gui_page_ref_sel IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
+    DATA lv_was_fulfilled TYPE abap_bool.
+
     " The picklist handles its own events (it is registered after this
-    " component, see render). Delegate explicitly and evaluate the outcome
+    " component, see render). Delegate explicitly and evaluate the outcome.
+    " Act only on the transition to fulfilled - the flag stays set afterwards,
+    " and if the selection fails the error box is rendered on this very page,
+    " so its events must not run the selection a second time
+    lv_was_fulfilled = mo_picklist->is_fulfilled( ).
+
     rs_handled = mo_picklist->zif_abapgit_gui_event_handler~on_event( ii_event ).
 
-    IF mo_picklist->is_fulfilled( ) = abap_true AND mo_picklist->was_cancelled( ) = abap_false.
+    IF lv_was_fulfilled = abap_false
+        AND mo_picklist->is_fulfilled( ) = abap_true
+        AND mo_picklist->was_cancelled( ) = abap_false.
       execute_selection( ).
     ENDIF.
 

@@ -124,6 +124,10 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
       APPEND INITIAL LINE TO rt_branches ASSIGNING <ls_branch>.
       <ls_branch>-name = zif_abapgit_popups=>c_new_branch_label.
       <ls_branch>-display_name = zif_abapgit_popups=>c_new_branch_label.
+
+      APPEND INITIAL LINE TO rt_branches ASSIGNING <ls_branch>.
+      <ls_branch>-name = zif_abapgit_popups=>c_new_branch_from_label.
+      <ls_branch>-display_name = zif_abapgit_popups=>c_new_branch_from_label.
     ENDIF.
 
   ENDMETHOD.

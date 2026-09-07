@@ -129,7 +129,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         zcx_abapgit_exception .
     METHODS switch_branch
       IMPORTING
-        !iv_is_return TYPE abap_bool DEFAULT abap_false
+        !io_picklist TYPE REF TO zcl_abapgit_gui_picklist OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS handle_picklist_state
@@ -345,18 +345,24 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
   METHOD handle_picklist_state.
 
+    DATA lo_picklist TYPE REF TO zcl_abapgit_gui_picklist.
+
     IF mo_popup_picklist IS BOUND AND
       ( mo_popup_picklist->is_fulfilled( ) = abap_true OR mo_popup_picklist->is_in_page( ) = abap_false ).
       " Picklist is either fulfilled OR
       " it was on its own page and user went back from it via F3/ESC and the picklist had no "graceful back" handler
-      CASE mo_popup_picklist->id( ).
-        WHEN zif_abapgit_definitions=>c_action-git_branch_switch.
-          switch_branch( abap_true ).
-        WHEN OTHERS.
-          zcx_abapgit_exception=>raise( |Unexpected picklist id { mo_popup_picklist->id( ) }| ).
-      ENDCASE.
-
+      " Consume the picklist before dispatching. The handlers below run during
+      " rendering and may fail or be cancelled, and the GUI re-renders the page
+      " to display the error - the action must not be replayed then
+      lo_picklist = mo_popup_picklist.
       CLEAR mo_popup_picklist.
+
+      CASE lo_picklist->id( ).
+        WHEN zif_abapgit_definitions=>c_action-git_branch_switch.
+          switch_branch( lo_picklist ).
+        WHEN OTHERS.
+          zcx_abapgit_exception=>raise( |Unexpected picklist id { lo_picklist->id( ) }| ).
+      ENDCASE.
     ENDIF.
 
   ENDMETHOD.
@@ -680,7 +686,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     DATA ls_branch TYPE zif_abapgit_git_definitions=>ty_git_branch.
 
-    IF iv_is_return = abap_false.
+    IF io_picklist IS NOT BOUND.
 
       mo_popup_picklist = zcl_abapgit_popup_branch_list=>create(
         iv_url             = mi_repo_online->get_url( )
@@ -691,9 +697,9 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         )->set_id( zif_abapgit_definitions=>c_action-git_branch_switch
         )->set_in_page( ).
 
-    ELSEIF mo_popup_picklist->was_cancelled( ) = abap_false.
+    ELSEIF io_picklist->was_cancelled( ) = abap_false.
 
-      mo_popup_picklist->get_result_item( CHANGING cs_selected = ls_branch ).
+      io_picklist->get_result_item( CHANGING cs_selected = ls_branch ).
       IF ls_branch IS NOT INITIAL.
         zcl_abapgit_services_git=>switch_branch(
           iv_key    = mi_repo->get_key( )
