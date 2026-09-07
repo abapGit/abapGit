@@ -88,8 +88,8 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     ENDIF.
 
     LOOP AT lo_doma_data->ms_dd07v ASSIGNING <ls_dd07v>.
-      IF <ls_dd07v>-domvalue_l = <ls_dd07v>-domvalue_h.
-        " Single value
+      IF <ls_dd07v>-domvalue_h IS INITIAL OR <ls_dd07v>-domvalue_h = <ls_dd07v>-domvalue_l.
+        " Single value, DDIC leaves the upper limit empty
         ls_single_value-fixed_value = <ls_dd07v>-domvalue_l.
         ls_single_value-description = <ls_dd07v>-ddtext.
         APPEND ls_single_value TO ls_data_aff-fixed_values.
@@ -154,7 +154,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
       ls_dd07v-domname = lo_doma_data->ms_dd01v-domname.
       ls_dd07v-valpos = lv_valpos.
       ls_dd07v-domvalue_l = <ls_single_value>-fixed_value.
-      ls_dd07v-domvalue_h = <ls_single_value>-fixed_value.
+      " Upper limit stays empty, else DDIC issues a warning
       ls_dd07v-ddtext = <ls_single_value>-description.
       ls_dd07v-ddlanguage = lo_doma_data->ms_dd01v-ddlanguage.
       APPEND ls_dd07v TO lo_doma_data->ms_dd07v.

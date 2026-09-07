@@ -154,9 +154,15 @@ CLASS ltcl_aff_type_mapping IMPLEMENTATION.
     DATA ls_dd07v TYPE dd07v.
 
     CREATE OBJECT lo_source.
+    " DDIC leaves the upper limit of a single fixed value empty
     ls_dd07v-domvalue_l = 'A'.
-    ls_dd07v-domvalue_h = 'A'.
     ls_dd07v-ddtext = 'Active'.
+    APPEND ls_dd07v TO lo_source->ms_dd07v.
+
+    CLEAR ls_dd07v.
+    ls_dd07v-domvalue_l = 'B'.
+    ls_dd07v-domvalue_h = 'B'.
+    ls_dd07v-ddtext = 'Blocked'.
     APPEND ls_dd07v TO lo_source->ms_dd07v.
 
     CLEAR ls_dd07v.
@@ -173,7 +179,7 @@ CLASS ltcl_aff_type_mapping IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lines( ls_aff-fixed_values )
-      exp = 1 ).
+      exp = 2 ).
     cl_abap_unit_assert=>assert_equals(
       act = lines( ls_aff-fixed_value_intervals )
       exp = 1 ).
@@ -187,7 +193,7 @@ CLASS ltcl_aff_type_mapping IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lines( lo_actual->ms_dd07v )
-      exp = 2 ).
+      exp = 3 ).
     READ TABLE lo_actual->ms_dd07v INTO ls_dd07v INDEX 1.
     cl_abap_unit_assert=>assert_subrc( ).
     cl_abap_unit_assert=>assert_equals(
@@ -199,9 +205,17 @@ CLASS ltcl_aff_type_mapping IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = ls_dd07v-domvalue_l
       exp = 'A' ).
+    " Single fixed value, so no upper limit
+    cl_abap_unit_assert=>assert_initial( ls_dd07v-domvalue_h ).
+
+    READ TABLE lo_actual->ms_dd07v INTO ls_dd07v INDEX 3.
+    cl_abap_unit_assert=>assert_subrc( ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_dd07v-domvalue_l
+      exp = '10' ).
     cl_abap_unit_assert=>assert_equals(
       act = ls_dd07v-domvalue_h
-      exp = 'A' ).
+      exp = '20' ).
   ENDMETHOD.
 
 ENDCLASS.
@@ -434,7 +448,6 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
     ls_expected_dd07v-valpos = 1.
     ls_expected_dd07v-ddlanguage = 'E'.
     ls_expected_dd07v-domvalue_l = 'A'.
-    ls_expected_dd07v-domvalue_h = 'A'.
     ls_expected_dd07v-ddtext = 'Active'.
     APPEND ls_expected_dd07v TO lt_expected_dd07v.
 
