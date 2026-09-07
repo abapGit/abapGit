@@ -126,17 +126,6 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
 
     clear_field(
       EXPORTING
-        iv_fieldname = 'ABAP_LANGUAGE_VERSION'
-      CHANGING
-        cs_metadata  = cs_metadata ).
-    clear_field(
-      EXPORTING
-        iv_fieldname = 'ABAP_LANGU_VERSION'
-      CHANGING
-        cs_metadata  = cs_metadata ).
-
-    clear_field(
-      EXPORTING
         iv_fieldname = 'LINKS'
       CHANGING
         cs_metadata  = cs_metadata ).
@@ -608,6 +597,11 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
         ASSERT sy-subrc = 0.
 
         clear_fields( CHANGING cs_metadata = <lv_metadata> ).
+
+        ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <lv_metadata> TO <lv_abap_language_version>.
+        IF sy-subrc = 0.
+          clear_abap_language_version( CHANGING cv_abap_language_version = <lv_abap_language_version> ).
+        ENDIF.
 
         ASSIGN COMPONENT 'ABAP_LANGU_VERSION' OF STRUCTURE <lv_metadata> TO <lv_abap_language_version>.
         IF sy-subrc = 0.
