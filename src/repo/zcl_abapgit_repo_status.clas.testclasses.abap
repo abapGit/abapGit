@@ -86,7 +86,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_package~read_transport_layer.
+  METHOD zif_abapgit_sap_package~read_namespace.
     RETURN.
   ENDMETHOD.
 

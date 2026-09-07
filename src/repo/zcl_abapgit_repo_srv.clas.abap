@@ -748,8 +748,8 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     IF zcl_abapgit_factory=>get_environment( )->is_sap_object_allowed( ) = abap_false.
       IF li_package->read_responsible( ) = 'SAP'.
         zcx_abapgit_exception=>raise( |Package { iv_package } not allowed, responsible user = 'SAP'| ).
-      ELSEIF li_package->read_transport_layer( ) = 'SAP'.
-        zcx_abapgit_exception=>raise( |Package { iv_package } not allowed, transport layer = 'SAP'| ).
+      ELSEIF li_package->read_namespace( ) = '/0SAP/'.
+        zcx_abapgit_exception=>raise( |Package { iv_package } not allowed, namespace = '/0SAP/'| ).
       ENDIF.
     ENDIF.
 

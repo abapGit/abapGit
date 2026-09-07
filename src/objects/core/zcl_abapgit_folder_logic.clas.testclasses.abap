@@ -84,7 +84,7 @@ CLASS ltcl_folder_logic_package IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_package~read_transport_layer.
+  METHOD zif_abapgit_sap_package~read_namespace.
     RETURN.
   ENDMETHOD.
 
@@ -206,7 +206,7 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_package~read_transport_layer.
+  METHOD zif_abapgit_sap_package~read_namespace.
     RETURN.
   ENDMETHOD.
 
@@ -431,7 +431,7 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_package~read_transport_layer.
+  METHOD zif_abapgit_sap_package~read_namespace.
     RETURN.
   ENDMETHOD.
 
@@ -585,7 +585,7 @@ CLASS ltcl_folder_logic_no_parent IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_package~read_transport_layer.
+  METHOD zif_abapgit_sap_package~read_namespace.
     RETURN.
   ENDMETHOD.
 

@@ -367,7 +367,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_package~read_transport_layer.
+  METHOD zif_abapgit_sap_package~read_namespace.
     RETURN.
   ENDMETHOD.
 

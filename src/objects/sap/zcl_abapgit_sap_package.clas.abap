@@ -471,9 +471,9 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_sap_package~read_transport_layer.
-    SELECT SINGLE pdevclass FROM tdevc
-      INTO rv_transport_layer
+  METHOD zif_abapgit_sap_package~read_namespace.
+    SELECT SINGLE namespace FROM tdevc
+      INTO rv_namespace
       WHERE devclass = mv_package ##SUBRC_OK.           "#EC CI_GENBUFF
   ENDMETHOD.
 
