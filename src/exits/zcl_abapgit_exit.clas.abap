@@ -355,6 +355,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
       TRY.
           gi_exit->deserialize_postprocess(
             EXPORTING
+              iv_package       = iv_package
               it_remote        = it_remote
               is_step          = is_step
               ii_log           = ii_log
