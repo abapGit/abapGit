@@ -316,6 +316,10 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
     ASSIGN mr_dynamic_cache->* TO <ls_dynamic_cache>.
     ASSERT sy-subrc = 0.
 
+    IF io_xml IS NOT BOUND.
+      zcx_abapgit_exception=>raise( |DTDC: JSON metadata not supported for deserialize| ).
+    ENDIF.
+
     io_xml->read(
       EXPORTING
         iv_name = 'DTDC'
