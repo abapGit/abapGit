@@ -738,18 +738,19 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_srv~validate_package.
 
-    DATA: lv_as4user TYPE usnam,
+    DATA: li_package TYPE REF TO zif_abapgit_sap_package,
           li_repo    TYPE REF TO zif_abapgit_repo,
           lv_reason  TYPE string.
 
-    zcl_abapgit_factory=>get_sap_package( iv_package )->validate_name( ).
+    li_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
+    li_package->validate_name( ).
 
-    " Check if package owned by SAP is allowed (new packages are ok, since they are created automatically)
-    lv_as4user = zcl_abapgit_factory=>get_sap_package( iv_package )->read_responsible( ).
-
-    IF sy-subrc = 0 AND lv_as4user = 'SAP' AND
-      zcl_abapgit_factory=>get_environment( )->is_sap_object_allowed( ) = abap_false.
-      zcx_abapgit_exception=>raise( |Package { iv_package } not allowed, responsible user = 'SAP'| ).
+    IF zcl_abapgit_factory=>get_environment( )->is_sap_object_allowed( ) = abap_false.
+      IF li_package->read_responsible( ) = 'SAP'.
+        zcx_abapgit_exception=>raise( |Package { iv_package } not allowed, responsible user = 'SAP'| ).
+      ELSEIF li_package->read_transport_layer( ) = 'SAP'.
+        zcx_abapgit_exception=>raise( |Package { iv_package } not allowed, transport layer = 'SAP'| ).
+      ENDIF.
     ENDIF.
 
     " Check if package is already used in another repo

@@ -42,6 +42,10 @@ CLASS ltcl_sap_package IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~read_transport_layer.
+    RETURN.
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~check_object_type.
     RETURN.
   ENDMETHOD.

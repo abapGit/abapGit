@@ -51,6 +51,9 @@ INTERFACE zif_abapgit_sap_package
   METHODS read_responsible
     RETURNING
       VALUE(rv_responsible) TYPE usnam.
+  METHODS read_transport_layer
+    RETURNING
+      VALUE(rv_transport_layer) TYPE devlayer.
   METHODS create_child
     IMPORTING
       !iv_child TYPE devclass
