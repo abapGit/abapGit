@@ -119,7 +119,7 @@ CLASS ltcl_test IMPLEMENTATION.
           ls_item          TYPE zif_abapgit_definitions=>ty_item,
           lt_objkey        TYPE zcl_abapgit_objects_generic=>ty_t_objkey,
           ls_objkey        LIKE LINE OF lt_objkey,
-          lv_non_value_pos TYPE numc3,
+          lv_non_value_pos TYPE n LENGTH 3,
           lt_key_fields    TYPE ddfields.
 
 * assumption: this object exists in all SAP systems

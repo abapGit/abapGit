@@ -92,6 +92,11 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
         !ii_html TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS render_environment
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS render_hotkey_overview
       RETURNING
         VALUE(ro_html) TYPE REF TO zif_abapgit_html
@@ -113,6 +118,11 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
     METHODS is_edge_control_warning_needed
       RETURNING
         VALUE(rv_result) TYPE abap_bool.
+    CLASS-METHODS js_bool
+      IMPORTING
+        !iv_value    TYPE abap_bool
+      RETURNING
+        VALUE(rv_js) TYPE string.
 ENDCLASS.
 
 
@@ -292,6 +302,17 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD js_bool.
+
+    IF iv_value = abap_true.
+      rv_js = 'true'.
+    ELSE.
+      rv_js = 'false'.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD render_back_navigation.
 
     ii_html->add( 'addHotkey({' ).
@@ -342,6 +363,29 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     LOOP AT lt_parts INTO li_part.
       ii_html->add( li_part ).
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD render_environment.
+
+    DATA li_frontend_services TYPE REF TO zif_abapgit_frontend_services.
+
+    li_frontend_services = zcl_abapgit_ui_factory=>get_frontend_services( ).
+
+    " Tell the frontend which GUI it is rendered into. JS can only infer that
+    " from the DOM and the user agent and has inferred it wrongly before (the
+    " footer reported "IE" for a user on Chrome), while we know it from SAP's
+    " own APIs. Whatever a browser can establish for itself - which browser
+    " control is embedded, which URL scheme its sapevents need - it still finds
+    " out on its own, see gEnv in common.js.
+    "
+    " Only the facts common.js reads are passed; extending this means extending
+    " gEnv as well.
+    ii_html->add( 'setEnvironment({' ).
+    ii_html->add( |  isWebGui: { js_bool( li_frontend_services->is_webgui( ) ) },| ).
+    ii_html->add( |  isSapGuiForWindows: { js_bool( li_frontend_services->is_sapgui_for_windows( ) ) }| ).
+    ii_html->add( '});' ).
 
   ENDMETHOD.
 
@@ -405,6 +449,9 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   METHOD scripts.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    " First, so everything rendered below already runs in a known environment
+    render_environment( ri_html ).
 
     render_link_hints( ri_html ).
     render_command_palettes( ri_html ).
