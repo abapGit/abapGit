@@ -72,6 +72,131 @@ CLASS ltd_aff_supported_true IMPLEMENTATION.
 
 ENDCLASS.
 
+
+CLASS ltd_aff_supported_false DEFINITION FINAL FOR TESTING.
+
+  PUBLIC SECTION.
+    INTERFACES:
+      zif_abapgit_aff_registry.
+ENDCLASS.
+
+
+CLASS ltd_aff_supported_false IMPLEMENTATION.
+
+  METHOD zif_abapgit_aff_registry~is_supported_object_type.
+    rv_result = abap_false.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+CLASS ltcl_read_metadata DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PRIVATE SECTION.
+    DATA:
+      ms_item  TYPE zif_abapgit_definitions=>ty_item,
+      mo_files TYPE REF TO zcl_abapgit_objects_files.
+
+    METHODS:
+      setup,
+      teardown,
+      given_registry
+        IMPORTING
+          iv_supported TYPE abap_bool,
+      aff_format_supported FOR TESTING RAISING cx_static_check,
+      aff_format_not_supported FOR TESTING RAISING cx_static_check.
+
+ENDCLASS.
+
+CLASS zcl_abapgit_objects DEFINITION LOCAL FRIENDS ltcl_read_metadata.
+
+CLASS ltcl_read_metadata IMPLEMENTATION.
+
+  METHOD setup.
+
+    DATA lv_data TYPE xstring.
+
+    ms_item-obj_type = 'DOMA'.
+    ms_item-obj_name = 'Z_TEST_DOMA'.
+
+    " Object is serialized in AFF format, so there's no XML file
+    mo_files = zcl_abapgit_objects_files=>new( ms_item ).
+    mo_files->add_raw( iv_ext  = 'json'
+                       iv_data = lv_data ).
+
+  ENDMETHOD.
+
+  METHOD teardown.
+
+    DATA li_registry TYPE REF TO zif_abapgit_aff_registry.
+
+    " Reset to real registry
+    zcl_abapgit_aff_injector=>set_registry( li_registry ).
+
+  ENDMETHOD.
+
+  METHOD given_registry.
+
+    DATA li_registry TYPE REF TO zif_abapgit_aff_registry.
+
+    IF iv_supported = abap_true.
+      CREATE OBJECT li_registry TYPE ltd_aff_supported_true.
+    ELSE.
+      CREATE OBJECT li_registry TYPE ltd_aff_supported_false.
+    ENDIF.
+
+    zcl_abapgit_aff_injector=>set_registry( li_registry ).
+
+  ENDMETHOD.
+
+  METHOD aff_format_supported.
+
+    DATA lo_xml TYPE REF TO zif_abapgit_xml_input.
+    DATA ls_metadata TYPE zif_abapgit_definitions=>ty_metadata.
+
+    given_registry( abap_true ).
+
+    zcl_abapgit_objects=>read_metadata(
+      EXPORTING
+        is_item     = ms_item
+        io_files    = mo_files
+      IMPORTING
+        eo_xml      = lo_xml
+        es_metadata = ls_metadata ).
+
+    " There's no XML and metadata for JSON format
+    cl_abap_unit_assert=>assert_not_bound( lo_xml ).
+    cl_abap_unit_assert=>assert_initial( ls_metadata ).
+
+  ENDMETHOD.
+
+  METHOD aff_format_not_supported.
+
+    DATA lo_xml TYPE REF TO zif_abapgit_xml_input.
+    DATA ls_metadata TYPE zif_abapgit_definitions=>ty_metadata.
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
+    given_registry( abap_false ).
+
+    TRY.
+        zcl_abapgit_objects=>read_metadata(
+          EXPORTING
+            is_item     = ms_item
+            io_files    = mo_files
+          IMPORTING
+            eo_xml      = lo_xml
+            es_metadata = ls_metadata ).
+        cl_abap_unit_assert=>fail( 'Deserializing AFF format requires the AFF feature' ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        cl_abap_unit_assert=>assert_char_cp(
+          act = lx_error->get_text( )
+          exp = '*AFF format*' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS ltcl_serialize DEFINITION
 *----------------------------------------------------------------------*
