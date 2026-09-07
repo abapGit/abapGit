@@ -425,6 +425,15 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
       iv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-standard
       is_item                  = ls_item ).
 
+    ls_item-obj_type              = 'DEVC'.
+    ls_item-obj_name              = 'ZTEST'.
+    ls_item-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
+
+    " Does not throw
+    zcl_abapgit_abap_language_vers=>check_abap_language_version(
+      iv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard
+      is_item                  = ls_item ).
+
   ENDMETHOD.
 
   METHOD check_abap_language_vers_diff.

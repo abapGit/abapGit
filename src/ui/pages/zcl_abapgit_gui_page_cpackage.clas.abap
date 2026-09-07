@@ -13,9 +13,11 @@ CLASS zcl_abapgit_gui_page_cpackage DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        iv_name        TYPE devclass
+        iv_name         TYPE devclass
+        io_caller_form  TYPE REF TO zcl_abapgit_string_map OPTIONAL
+        iv_caller_field TYPE string DEFAULT 'package'
       RETURNING
-        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+        VALUE(ri_page)  TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception.
 
@@ -32,6 +34,8 @@ CLASS zcl_abapgit_gui_page_cpackage DEFINITION
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
     DATA mo_form_util      TYPE REF TO zcl_abapgit_html_form_utils.
     DATA mv_default_name   TYPE devclass.
+    DATA mo_caller_form    TYPE REF TO zcl_abapgit_string_map.
+    DATA mv_caller_field   TYPE string.
 
     CONSTANTS:
       BEGIN OF c_id,
@@ -132,6 +136,8 @@ CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
 
     CREATE OBJECT lo_component.
     lo_component->mv_default_name = iv_name.
+    lo_component->mo_caller_form = io_caller_form.
+    lo_component->mv_caller_field = iv_caller_field.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title         = 'Create Package'
@@ -163,6 +169,14 @@ CLASS zcl_abapgit_gui_page_cpackage IMPLEMENTATION.
 
           zcl_abapgit_factory=>get_sap_package( ls_create-devclass )->create( ls_create ).
           MESSAGE 'Package created' TYPE 'S'.
+
+          " Hand the new package back to the page that opened this one
+          IF mo_caller_form IS BOUND AND mv_caller_field IS NOT INITIAL.
+            mo_caller_form->set(
+              iv_key = mv_caller_field
+              iv_val = |{ ls_create-devclass }| ).
+          ENDIF.
+
           rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
         ELSE.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.

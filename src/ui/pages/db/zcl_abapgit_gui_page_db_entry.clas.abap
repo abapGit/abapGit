@@ -36,14 +36,9 @@ CLASS zcl_abapgit_gui_page_db_entry DEFINITION
       END OF c_action .
 
     CONSTANTS c_edit_form_id TYPE string VALUE `db_form`.
-    CONSTANTS c_css_url TYPE string VALUE 'css/page_db_entry.css'.
 
     DATA ms_key TYPE zif_abapgit_persistence=>ty_content.
     DATA mv_edit_mode TYPE abap_bool.
-
-    METHODS register_stylesheet
-      RAISING
-        zcx_abapgit_exception.
 
     METHODS render_view
       IMPORTING
@@ -121,7 +116,7 @@ CLASS zcl_abapgit_gui_page_db_entry IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor( ).
-    register_stylesheet( ).
+
     mv_edit_mode = iv_edit_mode.
     ms_key       = is_key.
 
@@ -138,7 +133,6 @@ CLASS zcl_abapgit_gui_page_db_entry IMPLEMENTATION.
         is_key       = is_key.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
-      iv_extra_css_url       = c_css_url
       ii_page_title_provider = lo_component
       ii_child_component     = lo_component ).
 
@@ -172,35 +166,25 @@ CLASS zcl_abapgit_gui_page_db_entry IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD register_stylesheet.
-
-    DATA lo_buf TYPE REF TO zcl_abapgit_string_buffer.
-
-    CREATE OBJECT lo_buf.
-
-    " @@abapmerge include zabapgit_css_page_db_entry.w3mi.data.css > lo_buf->add( '$$' ).
-    gui_services( )->register_page_asset(
-      iv_url       = c_css_url
-      iv_type      = 'text/css'
-      iv_mime_name = 'ZABAPGIT_CSS_PAGE_DB_ENTRY'
-      iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
-
-  ENDMETHOD.
-
-
   METHOD render_edit.
 
     DATA lv_formatted TYPE string.
 
-    lv_formatted = escape(
-      val    = zcl_abapgit_xml_pretty=>print( iv_raw_db_value )
-      format = cl_abap_format=>e_html_attr ).
+    IF iv_raw_db_value CS '<?xml'.
+      lv_formatted = escape(
+        val    = zcl_abapgit_xml_pretty=>print( iv_raw_db_value )
+        format = cl_abap_format=>e_html_attr ).
+    ELSE.
+      lv_formatted = escape(
+        val    = iv_raw_db_value
+        format = cl_abap_format=>e_html_attr ).
+    ENDIF.
 
     " Form
     ii_html->add( |<form id="{ c_edit_form_id }" method="post" action="sapevent:{ c_action-update }">| ).
     ii_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
     ii_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
-    ii_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_formatted }</textarea>| ).
+    ii_html->add( |<textarea rows="34" cols="100" name="xmldata">{ lv_formatted }</textarea>| ).
     ii_html->add( '</form>' ).
 
   ENDMETHOD.
