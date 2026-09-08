@@ -70,6 +70,10 @@ CLASS ltd_aff_supported_true IMPLEMENTATION.
     rv_result = abap_true.
   ENDMETHOD.
 
+  METHOD zif_abapgit_aff_registry~is_experimental_object_type.
+    rv_result = abap_false.
+  ENDMETHOD.
+
 ENDCLASS.
 
 
@@ -87,6 +91,32 @@ CLASS ltd_aff_supported_false IMPLEMENTATION.
     rv_result = abap_false.
   ENDMETHOD.
 
+  METHOD zif_abapgit_aff_registry~is_experimental_object_type.
+    rv_result = abap_false.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+CLASS ltd_aff_experimental DEFINITION FINAL FOR TESTING.
+
+  PUBLIC SECTION.
+    INTERFACES:
+      zif_abapgit_aff_registry.
+ENDCLASS.
+
+
+CLASS ltd_aff_experimental IMPLEMENTATION.
+
+  " Object type is known but the experimental feature is not enabled
+  METHOD zif_abapgit_aff_registry~is_supported_object_type.
+    rv_result = abap_false.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_aff_registry~is_experimental_object_type.
+    rv_result = abap_true.
+  ENDMETHOD.
+
 ENDCLASS.
 
 
@@ -102,8 +132,13 @@ CLASS ltcl_read_metadata DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHO
       teardown,
       given_registry
         IMPORTING
-          iv_supported TYPE abap_bool,
+          iv_supported    TYPE abap_bool
+          iv_experimental TYPE abap_bool DEFAULT abap_false,
+      then_error_contains
+        IMPORTING
+          iv_expected_text TYPE string,
       aff_format_supported FOR TESTING RAISING cx_static_check,
+      aff_format_experimental FOR TESTING RAISING cx_static_check,
       aff_format_not_supported FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
@@ -141,11 +176,36 @@ CLASS ltcl_read_metadata IMPLEMENTATION.
 
     IF iv_supported = abap_true.
       CREATE OBJECT li_registry TYPE ltd_aff_supported_true.
+    ELSEIF iv_experimental = abap_true.
+      CREATE OBJECT li_registry TYPE ltd_aff_experimental.
     ELSE.
       CREATE OBJECT li_registry TYPE ltd_aff_supported_false.
     ENDIF.
 
     zcl_abapgit_aff_injector=>set_registry( li_registry ).
+
+  ENDMETHOD.
+
+  METHOD then_error_contains.
+
+    DATA lo_xml TYPE REF TO zif_abapgit_xml_input.
+    DATA ls_metadata TYPE zif_abapgit_definitions=>ty_metadata.
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
+    TRY.
+        zcl_abapgit_objects=>read_metadata(
+          EXPORTING
+            is_item     = ms_item
+            io_files    = mo_files
+          IMPORTING
+            eo_xml      = lo_xml
+            es_metadata = ls_metadata ).
+        cl_abap_unit_assert=>fail( |Expected error message { iv_expected_text }| ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        cl_abap_unit_assert=>assert_char_cp(
+          act = lx_error->get_text( )
+          exp = iv_expected_text ).
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -170,28 +230,22 @@ CLASS ltcl_read_metadata IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD aff_format_experimental.
+
+    " Object type is supported in AFF format, but only with the experimental feature enabled
+    given_registry( iv_supported    = abap_false
+                    iv_experimental = abap_true ).
+
+    then_error_contains( '*Enable experimental feature*' ).
+
+  ENDMETHOD.
+
   METHOD aff_format_not_supported.
 
-    DATA lo_xml TYPE REF TO zif_abapgit_xml_input.
-    DATA ls_metadata TYPE zif_abapgit_definitions=>ty_metadata.
-    DATA lx_error TYPE REF TO zcx_abapgit_exception.
-
+    " Object type is not supported in AFF format at all
     given_registry( abap_false ).
 
-    TRY.
-        zcl_abapgit_objects=>read_metadata(
-          EXPORTING
-            is_item     = ms_item
-            io_files    = mo_files
-          IMPORTING
-            eo_xml      = lo_xml
-            es_metadata = ls_metadata ).
-        cl_abap_unit_assert=>fail( 'Deserializing AFF format requires the AFF feature' ).
-      CATCH zcx_abapgit_exception INTO lx_error.
-        cl_abap_unit_assert=>assert_char_cp(
-          act = lx_error->get_text( )
-          exp = '*AFF format*' ).
-    ENDTRY.
+    then_error_contains( '*not supported for object type DOMA*' ).
 
   ENDMETHOD.
 

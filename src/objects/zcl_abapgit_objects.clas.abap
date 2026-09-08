@@ -1247,13 +1247,21 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD read_metadata.
 
+    DATA li_registry TYPE REF TO zif_abapgit_aff_registry.
+
     CLEAR: eo_xml, es_metadata.
 
     IF io_files->is_json_metadata( ) = abap_true.
       " There's no XML and metadata for JSON (AFF) format
-      IF zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( is_item-obj_type ) = abap_false.
-        zcx_abapgit_exception=>raise( |Object is serialized in AFF format. Enable experimental | &&
-          |feature { zcl_abapgit_aff_registry=>c_aff_feature } in global settings| ).
+      li_registry = zcl_abapgit_aff_factory=>get_registry( ).
+      IF li_registry->is_supported_object_type( is_item-obj_type ) = abap_false.
+        IF li_registry->is_experimental_object_type( is_item-obj_type ) = abap_true.
+          zcx_abapgit_exception=>raise( |Object is serialized in AFF format. Enable experimental | &&
+            |feature { zcl_abapgit_aff_registry=>c_aff_feature } in global settings| ).
+        ELSE.
+          zcx_abapgit_exception=>raise( |Object is serialized in AFF format| &&
+            |, which is not supported for object type { is_item-obj_type }| ).
+        ENDIF.
       ENDIF.
       RETURN.
     ENDIF.
