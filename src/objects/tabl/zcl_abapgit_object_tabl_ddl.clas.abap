@@ -2216,7 +2216,7 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
         WHERE fieldname = iv_fieldname AND shlpname = ls_dd35v-shlpname AND shtype <> 'G'.
       APPEND ls_dd36m TO lt_dd36m.
     ENDLOOP.
-    SORT lt_dd36m BY flposition ASCENDING.
+    SORT lt_dd36m BY shlpfield ASCENDING flposition ASCENDING.
     LOOP AT lt_dd36m INTO ls_dd36m.
       IF lv_pre IS INITIAL.
         lv_pre = |\n      where |.

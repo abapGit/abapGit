@@ -588,6 +588,7 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA ls_value_condition LIKE LINE OF ls_data-dd36m.
     DATA ls_extension_key LIKE LINE OF ls_data-dd08v.
     DATA lv_ddl TYPE string.
+    DATA lv_expected TYPE string.
 
     lv_ddl =
       `@EndUserText.label : 'Two  spaces:; and ''quotes'''` && |\n| &&
@@ -697,6 +698,30 @@ CLASS ltcl_test IMPLEMENTATION.
       act = lines( ls_data-dd03p ) ).
     READ TABLE ls_data-dd08v INTO ls_extension_key
       WITH KEY fieldname = 'KEY'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+
+    CLEAR ls_data-dd36m.
+    ls_value_condition-fieldname = 'CODE'.
+    ls_value_condition-shlpname = 'ZHELP'.
+    ls_value_condition-shtype = 'F'.
+    ls_value_condition-shtable = 'ZSOURCE'.
+    ls_value_condition-shlpfield = 'VAR'.
+    ls_value_condition-shfield = 'VAR'.
+    ls_value_condition-flposition = 1.
+    APPEND ls_value_condition TO ls_data-dd36m.
+    ls_value_condition-shlpfield = 'VTEXT'.
+    ls_value_condition-shfield = 'VTEXT'.
+    ls_value_condition-flposition = 2.
+    APPEND ls_value_condition TO ls_data-dd36m.
+    ls_value_condition-shlpfield = 'ENAME'.
+    ls_value_condition-shfield = 'ENAME'.
+    ls_value_condition-flposition = 3.
+    APPEND ls_value_condition TO ls_data-dd36m.
+    lv_ddl = lo_format->serialize( ls_data ).
+    lv_expected = |where ename = zsource.ename\n        and var = zsource.var\n        and vtext = zsource.vtext|.
+    FIND lv_expected IN lv_ddl.
     cl_abap_unit_assert=>assert_equals(
       exp = 0
       act = sy-subrc ).
