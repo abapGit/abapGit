@@ -1739,7 +1739,7 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
     DATA lv_include TYPE string.
 
     rv_ddl = serialize_top( is_data ).
-    rv_ddl = rv_ddl && |define table { to_lower( is_data-dd02v-tabname ) } \{\n|.
+    rv_ddl = rv_ddl && |define table { to_lower( is_data-dd02v-tabname ) } \{\n\n|.
     LOOP AT is_data-dd03p INTO ls_dd03p
         WHERE ( fieldname NP '.INCLU*' OR groupname IS NOT INITIAL ) AND adminfield = '0'.
       lv_int = 0.

@@ -193,6 +193,7 @@ CLASS ltcl_test IMPLEMENTATION.
       `@AbapCatalog.deliveryClass : #L` && |\n| &&
       `@AbapCatalog.dataMaintenance : #RESTRICTED` && |\n| &&
       `define table zabapgit {` && |\n| &&
+      `` && |\n| &&
       `  key type  : abap.char(12) not null;` && |\n| &&
       `  key value : abap.char(12) not null;` && |\n| &&
       `  data_str  : abap.string(0);` && |\n| &&
@@ -271,6 +272,7 @@ CLASS ltcl_test IMPLEMENTATION.
       `@AbapCatalog.deliveryClass : #C` && |\n| &&
       `@AbapCatalog.dataMaintenance : #ALLOWED` && |\n| &&
       `define table t000 {` && |\n| &&
+      `` && |\n| &&
       `  key mandt  : mandt not null;` && |\n| &&
       `  mtext      : mtext_d not null;` && |\n| &&
       `  ort01      : ort01 not null;` && |\n| &&
@@ -594,6 +596,7 @@ CLASS ltcl_test IMPLEMENTATION.
       `@AbapCatalog.deliveryClass : #C` && |\n| &&
       `@AbapCatalog.dataMaintenance : #RESTRICTED` && |\n| &&
       `define table zinclude {` && |\n| &&
+      `` && |\n| &&
       `  include zcommon not null;` && |\n| &&
       `  named : include znamed with suffix foo not null;` && |\n| &&
       `  @AbapCatalog.foreignKey.label : 'Extension key'` && |\n| &&
