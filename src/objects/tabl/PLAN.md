@@ -39,7 +39,8 @@ or rejection policy.
       the release-dependent `IS_GTT` component.
   - Support activation types `#NAMETAB_GENERATION_OFFLINE` and
     `#ADAPT_C_STRUCTURES`.
-  - Support data maintenance values `#ALLOWED`, `#LIMITED`, and `#NOT_ALLOWED`.
+  - Support data maintenance values `#ALLOWED`, `#RESTRICTED`, and
+    `#NOT_ALLOWED`; accept legacy `#LIMITED` input for compatibility.
   - Support `@AbapCatalog.primaryKey.invertedHashIndex` when the corresponding
     release-dependent component exists.
   - Validate and preserve delivery class and the end-user label.

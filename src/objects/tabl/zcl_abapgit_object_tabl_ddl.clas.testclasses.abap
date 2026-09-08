@@ -191,7 +191,7 @@ CLASS ltcl_test IMPLEMENTATION.
       `@AbapCatalog.enhancementCategory : #NOT_EXTENSIBLE` && |\n| &&
       `@AbapCatalog.tableCategory : #TRANSPARENT` && |\n| &&
       `@AbapCatalog.deliveryClass : #L` && |\n| &&
-      `@AbapCatalog.dataMaintenance : #LIMITED` && |\n| &&
+      `@AbapCatalog.dataMaintenance : #RESTRICTED` && |\n| &&
       `define table zabapgit {` && |\n| &&
       `  key type  : abap.char(12) not null;` && |\n| &&
       `  key value : abap.char(12) not null;` && |\n| &&
@@ -592,7 +592,7 @@ CLASS ltcl_test IMPLEMENTATION.
       `@AbapCatalog.enhancementCategory : #NOT_EXTENSIBLE` && |\n| &&
       `@AbapCatalog.tableCategory : #TRANSPARENT` && |\n| &&
       `@AbapCatalog.deliveryClass : #C` && |\n| &&
-      `@AbapCatalog.dataMaintenance : #LIMITED` && |\n| &&
+      `@AbapCatalog.dataMaintenance : #RESTRICTED` && |\n| &&
       `define table zinclude {` && |\n| &&
       `  include zcommon not null;` && |\n| &&
       `  named : include znamed with suffix foo not null;` && |\n| &&
@@ -868,6 +868,19 @@ CLASS ltcl_test IMPLEMENTATION.
       exp = '02'
       act = ls_data-dd02v-authclass ).
 
+    lv_ddl =
+      `@EndUserText.label : 'Legacy data maintenance'` && |\n| &&
+      `@AbapCatalog.enhancementCategory : #NOT_EXTENSIBLE` && |\n| &&
+      `@AbapCatalog.tableCategory : #TRANSPARENT` && |\n| &&
+      `@AbapCatalog.deliveryClass : #C` && |\n| &&
+      `@AbapCatalog.dataMaintenance : #LIMITED` && |\n| &&
+      `define table zlegacy {` && |\n| &&
+      `  value : abap.char(1);` && |\n| &&
+      `}`.
+    CLEAR ls_data.
+    ls_data = lo_format->deserialize( lv_ddl ).
+    cl_abap_unit_assert=>assert_initial( ls_data-dd02v-mainflag ).
+
   ENDMETHOD.
 
   METHOD builtin_types.
@@ -1070,6 +1083,33 @@ CLASS ltcl_test IMPLEMENTATION.
         exp = lv_right
         act = ls_foreign_key-card ).
     ENDLOOP.
+
+    CLEAR: ls_data, ls_field, ls_foreign_key.
+    ls_data-dd02v-tabname = 'ZCARDINALITY'.
+    ls_data-dd02v-exclass = '0'.
+    ls_data-dd02v-tabclass = 'TRANSP'.
+    ls_data-dd02v-contflag = 'C'.
+    ls_field-fieldname = 'FIELD'.
+    ls_field-adminfield = '0'.
+    ls_field-datatype = 'CHAR'.
+    ls_field-leng = 1.
+    ls_field-inttype = 'C'.
+    ls_field-intlen = 2.
+    APPEND ls_field TO ls_data-dd03p.
+    ls_foreign_key-fieldname = 'FIELD'.
+    ls_foreign_key-checktable = 'ZCHECK'.
+    ls_foreign_key-cardleft = '1'.
+    APPEND ls_foreign_key TO ls_data-dd08v.
+    lv_ddl = lo_format->serialize( ls_data ).
+    cl_abap_unit_assert=>assert_not_initial( lv_ddl ).
+    ls_roundtrip = lo_format->deserialize( lv_ddl ).
+    READ TABLE ls_roundtrip-dd08v INTO ls_foreign_key
+      WITH KEY fieldname = 'FIELD'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    cl_abap_unit_assert=>assert_initial( ls_foreign_key-cardleft ).
+    cl_abap_unit_assert=>assert_initial( ls_foreign_key-card ).
 
   ENDMETHOD.
 

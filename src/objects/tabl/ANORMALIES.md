@@ -20,6 +20,14 @@ DDL converter.
 - open-abap's fixed-character blank comparison does not behave like the
   corresponding string comparison in the lexer. The lexer therefore uses a
   string-template blank for whitespace detection.
+- `2026-09-08`: Some SAP DDIC foreign-key records contain legacy or incomplete
+       `DD08V` cardinality values that have no direct table-DDL spelling. Since DDL
+       cardinality is optional, the converter preserves the foreign-key target and
+       conditions while omitting only that cardinality.
+
+- `2026-09-08`: Older table DDL may use `#LIMITED` for an initial DDIC
+  `MAINFLAG`, while current table DDL uses `#RESTRICTED`. The parser accepts both;
+  serialization emits `#RESTRICTED` canonically.
 
 ## Conversion boundary
 

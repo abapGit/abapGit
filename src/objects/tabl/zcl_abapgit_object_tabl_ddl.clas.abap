@@ -635,6 +635,8 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
           CASE to_upper( lv_compare ).
             WHEN '#ALLOWED'.
               cs_data-dd02v-mainflag = abap_true.
+            WHEN '#RESTRICTED'.
+              CLEAR cs_data-dd02v-mainflag.
             WHEN '#LIMITED'.
               CLEAR cs_data-dd02v-mainflag.
             WHEN '#NOT_ALLOWED'.
@@ -1981,8 +1983,10 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
     ELSEIF ls_dd08v-cardleft = 'C' AND ls_dd08v-card = 'N'.
       lv_cardinality = | [1..*,0..1] |.
     ELSEIF ls_dd08v-cardleft IS NOT INITIAL OR ls_dd08v-card IS NOT INITIAL.
-      zcx_abapgit_exception=>raise(
-        |TABL DDL serialization error: unsupported foreign key cardinality for { iv_fieldname }| ).
+      " DDIC may contain legacy or incomplete cardinality values which have no
+      " direct DDL representation. Cardinality is optional in table DDL, so
+      " preserve the foreign key and omit only the cardinality in this case.
+      lv_cardinality = | |.
     ENDIF.
     rv_ddl = rv_ddl && |\n    with foreign key{ lv_cardinality }{ to_lower( ls_dd08v-checktable ) }|.
     LOOP AT is_data-dd05m INTO ls_dd05m
@@ -2087,7 +2091,7 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
     ELSEIF is_data-dd02v-mainflag = 'N'.
       rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : #NOT_ALLOWED\n|.
     ELSEIF is_data-dd02v-mainflag IS INITIAL.
-      rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : #LIMITED\n|.
+      rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : #RESTRICTED\n|.
     ELSE.
       zcx_abapgit_exception=>raise(
         |TABL DDL serialization error: unsupported data maintenance value { is_data-dd02v-mainflag }| ).
