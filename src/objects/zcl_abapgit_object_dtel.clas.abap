@@ -318,7 +318,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     ELSEIF sy-subrc <> 0.
       " Check for inactive or modified versions
       SELECT SINGLE rollname FROM dd04l INTO lv_rollname
-        WHERE rollname = lv_rollname.
+        WHERE rollname = lv_rollname. "#EC CI_NOORDER
     ENDIF.
     rv_bool = boolc( sy-subrc = 0 ).
 
