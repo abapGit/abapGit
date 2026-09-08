@@ -29,6 +29,11 @@ DDL converter.
   `MAINFLAG`, while current table DDL uses `#RESTRICTED`. The parser accepts both;
   serialization emits `#RESTRICTED` canonically.
 
+- `2026-09-08`: Current table DDL spells the enhancement annotation as
+  `@AbapCatalog.enhancement.category`; the parser also accepts the older
+  camel-case `@AbapCatalog.enhancementCategory`, while serialization uses the
+  dotted spelling.
+
 ## Conversion boundary
 
 Classic TABL metadata that has no representation in `define table` DDL is not

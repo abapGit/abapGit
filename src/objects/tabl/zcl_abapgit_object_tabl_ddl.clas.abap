@@ -551,6 +551,10 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
       ENDIF.
       lv_name = to_lower( ls_token-value ).
       CONDENSE lv_name NO-GAPS.
+      IF lv_name = '@abapcatalog.enhancement.category'.
+        " Accept the dotted spelling used by current table DDL.
+        lv_name = '@abapcatalog.enhancementcategory'.
+      ENDIF.
       cv_index = cv_index + 1.
       CLEAR lv_value.
       READ TABLE it_tokens INDEX cv_index INTO ls_token.
@@ -2057,15 +2061,15 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
     rv_ddl = rv_ddl && |@EndUserText.label : { escape_string( is_data-dd02v-ddtext ) }\n|.
     CASE is_data-dd02v-exclass.
       WHEN '0'.
-        rv_ddl = rv_ddl && |@AbapCatalog.enhancementCategory : #NOT_CLASSIFIED\n|.
+        rv_ddl = rv_ddl && |@AbapCatalog.enhancement.category : #NOT_CLASSIFIED\n|.
       WHEN '1'.
-        rv_ddl = rv_ddl && |@AbapCatalog.enhancementCategory : #NOT_EXTENSIBLE\n|.
+        rv_ddl = rv_ddl && |@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE\n|.
       WHEN '2'.
-        rv_ddl = rv_ddl && |@AbapCatalog.enhancementCategory : #EXTENSIBLE_CHARACTER\n|.
+        rv_ddl = rv_ddl && |@AbapCatalog.enhancement.category : #EXTENSIBLE_CHARACTER\n|.
       WHEN '3'.
-        rv_ddl = rv_ddl && |@AbapCatalog.enhancementCategory : #EXTENSIBLE_CHARACTER_NUMERIC\n|.
+        rv_ddl = rv_ddl && |@AbapCatalog.enhancement.category : #EXTENSIBLE_CHARACTER_NUMERIC\n|.
       WHEN '4'.
-        rv_ddl = rv_ddl && |@AbapCatalog.enhancementCategory : #EXTENSIBLE_ANY\n|.
+        rv_ddl = rv_ddl && |@AbapCatalog.enhancement.category : #EXTENSIBLE_ANY\n|.
     ENDCASE.
     IF is_data-dd02v-tabclass <> 'TRANSP'.
       zcx_abapgit_exception=>raise(
