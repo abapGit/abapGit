@@ -898,6 +898,7 @@ CLASS ltcl_test IMPLEMENTATION.
       `  dec_field : abap.dec(10,2);` && |\n| &&
       `  curr_field : abap.curr(10,2);` && |\n| &&
       `  quan_field : abap.quan(10,3);` && |\n| &&
+      `  unit_field : abap.unit(3);` && |\n| &&
       `  df16_dec_field : abap.df16_dec(16,3);` && |\n| &&
       `  df34_dec_field : abap.df34_dec(34,3);` && |\n| &&
       `  int1_field : abap.int1;` && |\n| &&
@@ -932,6 +933,7 @@ CLASS ltcl_test IMPLEMENTATION.
     APPEND `DEC_FIELD;DEC;10;2` TO lt_specs.
     APPEND `CURR_FIELD;CURR;10;2` TO lt_specs.
     APPEND `QUAN_FIELD;QUAN;10;3` TO lt_specs.
+    APPEND `UNIT_FIELD;UNIT;3;-` TO lt_specs.
     APPEND `DF16_DEC_FIELD;D16D;16;3` TO lt_specs.
     APPEND `DF34_DEC_FIELD;D34D;34;3` TO lt_specs.
     APPEND `INT1_FIELD;INT1;-;-` TO lt_specs.

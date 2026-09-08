@@ -1481,7 +1481,8 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
         iv_offset = iv_offset ).
     ENDIF.
     IF iv_base = 'char' OR iv_base = 'numc' OR iv_base = 'raw'
-        OR iv_base = 'string' OR iv_base = 'rawstring' OR iv_base = 'sstring'.
+        OR iv_base = 'string' OR iv_base = 'rawstring' OR iv_base = 'sstring'
+        OR iv_base = 'unit'.
       IF iv_decimals IS NOT INITIAL.
         parse_error(
           iv_context = 'character type accepts one parameter'
@@ -1576,6 +1577,10 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
         cs_dd03p-intlen = 8.
       WHEN 'sstring'.
         cs_dd03p-datatype = 'SSTR'.
+        cs_dd03p-inttype = 'C'.
+        cs_dd03p-intlen = cs_dd03p-leng * 2.
+      WHEN 'unit'.
+        cs_dd03p-datatype = 'UNIT'.
         cs_dd03p-inttype = 'C'.
         cs_dd03p-intlen = cs_dd03p-leng * 2.
     ENDCASE.
@@ -2129,7 +2134,7 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
         rv_type = |abap.df34_dec({ lv_leng },{ lv_decimals })|.
       ENDIF.
     ELSEIF is_dd03p-datatype = 'CHAR' OR is_dd03p-datatype = 'NUMC'
-        OR is_dd03p-datatype = 'RAW'.
+        OR is_dd03p-datatype = 'RAW' OR is_dd03p-datatype = 'UNIT'.
       rv_type = |abap.{ to_lower( is_dd03p-datatype ) }({ lv_leng })|.
     ELSE.
       rv_type = serialize_type_special( is_dd03p ).
