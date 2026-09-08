@@ -1,17 +1,13 @@
 
-CLASS lcl_dtel_data DEFINITION.
-  PUBLIC SECTION.
-    DATA ms_dd04v TYPE dd04v.
-    DATA mv_abap_language_version TYPE uccheck.
-ENDCLASS.
-
-CLASS lcl_dtel_data IMPLEMENTATION.
-ENDCLASS.
-
-
 CLASS lcl_aff_type_mapping DEFINITION.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_aff_type_mapping.
+
+    TYPES:
+      BEGIN OF ty_dtel_data,
+        dd04v                 TYPE dd04v,
+        abap_language_version TYPE uccheck,
+      END OF ty_dtel_data.
   PRIVATE SECTION.
     METHODS map_data_type_to_aff
       IMPORTING
@@ -40,101 +36,96 @@ ENDCLASS.
 CLASS lcl_aff_type_mapping IMPLEMENTATION.
 
   METHOD zif_abapgit_aff_type_mapping~to_aff.
-    DATA lo_dtel_data TYPE REF TO lcl_dtel_data.
+    DATA ls_dtel_data TYPE ty_dtel_data.
     DATA ls_data_aff TYPE zif_abapgit_aff_dtel_v1=>ty_main.
 
-    TRY.
-        lo_dtel_data ?= iv_data.
-      CATCH cx_sy_move_cast_error.
-        RETURN.
-    ENDTRY.
+    ls_dtel_data = iv_data.
 
     ls_data_aff-format_version = '1'.
-    ls_data_aff-header-description = lo_dtel_data->ms_dd04v-ddtext.
-    ls_data_aff-header-original_language = lo_dtel_data->ms_dd04v-ddlanguage.
-    ls_data_aff-header-abap_language_version = lo_dtel_data->mv_abap_language_version.
+    ls_data_aff-header-description = ls_dtel_data-dd04v-ddtext.
+    ls_data_aff-header-original_language = ls_dtel_data-dd04v-ddlanguage.
+    ls_data_aff-header-abap_language_version = ls_dtel_data-abap_language_version.
 
-    ls_data_aff-data_type_information-category = map_reference_category_to_aff( lo_dtel_data->ms_dd04v ).
+    ls_data_aff-data_type_information-category = map_reference_category_to_aff( ls_dtel_data-dd04v ).
     IF ls_data_aff-data_type_information-category = zif_abapgit_aff_dtel_v1=>co_category-predefined_type.
       ls_data_aff-data_type_information-predefined_type-data_type = map_data_type_to_aff(
-        iv_ddic_type = lo_dtel_data->ms_dd04v-datatype
-        iv_length    = lo_dtel_data->ms_dd04v-leng ).
-      ls_data_aff-data_type_information-predefined_type-length = lo_dtel_data->ms_dd04v-leng.
-      ls_data_aff-data_type_information-predefined_type-decimals = lo_dtel_data->ms_dd04v-decimals.
+        iv_ddic_type = ls_dtel_data-dd04v-datatype
+        iv_length    = ls_dtel_data-dd04v-leng ).
+      ls_data_aff-data_type_information-predefined_type-length = ls_dtel_data-dd04v-leng.
+      ls_data_aff-data_type_information-predefined_type-decimals = ls_dtel_data-dd04v-decimals.
     ELSE.
-      ls_data_aff-data_type_information-type_name = lo_dtel_data->ms_dd04v-domname.
+      ls_data_aff-data_type_information-type_name = ls_dtel_data-dd04v-domname.
     ENDIF.
 
-    ls_data_aff-field_labels-short = lo_dtel_data->ms_dd04v-scrtext_s.
-    ls_data_aff-field_labels-short_length = lo_dtel_data->ms_dd04v-scrlen1.
-    ls_data_aff-field_labels-medium = lo_dtel_data->ms_dd04v-scrtext_m.
-    ls_data_aff-field_labels-medium_length = lo_dtel_data->ms_dd04v-scrlen2.
-    ls_data_aff-field_labels-long = lo_dtel_data->ms_dd04v-scrtext_l.
-    ls_data_aff-field_labels-long_length = lo_dtel_data->ms_dd04v-scrlen3.
-    ls_data_aff-field_labels-heading = lo_dtel_data->ms_dd04v-reptext.
-    ls_data_aff-field_labels-heading_length = lo_dtel_data->ms_dd04v-headlen.
+    ls_data_aff-field_labels-short = ls_dtel_data-dd04v-scrtext_s.
+    ls_data_aff-field_labels-short_length = ls_dtel_data-dd04v-scrlen1.
+    ls_data_aff-field_labels-medium = ls_dtel_data-dd04v-scrtext_m.
+    ls_data_aff-field_labels-medium_length = ls_dtel_data-dd04v-scrlen2.
+    ls_data_aff-field_labels-long = ls_dtel_data-dd04v-scrtext_l.
+    ls_data_aff-field_labels-long_length = ls_dtel_data-dd04v-scrlen3.
+    ls_data_aff-field_labels-heading = ls_dtel_data-dd04v-reptext.
+    ls_data_aff-field_labels-heading_length = ls_dtel_data-dd04v-headlen.
 
-    ls_data_aff-additional_properties-search_help-name = lo_dtel_data->ms_dd04v-shlpname.
-    ls_data_aff-additional_properties-search_help-parameter = lo_dtel_data->ms_dd04v-shlpfield.
+    ls_data_aff-additional_properties-search_help-name = ls_dtel_data-dd04v-shlpname.
+    ls_data_aff-additional_properties-search_help-parameter = ls_dtel_data-dd04v-shlpfield.
     ls_data_aff-additional_properties-bidirectional_options-basic_direction =
-      lo_dtel_data->ms_dd04v-ltrflddis.
-    ls_data_aff-additional_properties-bidirectional_options-no_filtering = lo_dtel_data->ms_dd04v-bidictrlc.
-    ls_data_aff-additional_properties-parameter_id = lo_dtel_data->ms_dd04v-memoryid.
-    ls_data_aff-additional_properties-default_component_name = lo_dtel_data->ms_dd04v-deffdname.
-    ls_data_aff-additional_properties-change_document_relevant = lo_dtel_data->ms_dd04v-logflag.
-    ls_data_aff-additional_properties-no_input_history = lo_dtel_data->ms_dd04v-nohistory.
+      ls_dtel_data-dd04v-ltrflddis.
+    ls_data_aff-additional_properties-bidirectional_options-no_filtering = ls_dtel_data-dd04v-bidictrlc.
+    ls_data_aff-additional_properties-parameter_id = ls_dtel_data-dd04v-memoryid.
+    ls_data_aff-additional_properties-default_component_name = ls_dtel_data-dd04v-deffdname.
+    ls_data_aff-additional_properties-change_document_relevant = ls_dtel_data-dd04v-logflag.
+    ls_data_aff-additional_properties-no_input_history = ls_dtel_data-dd04v-nohistory.
 
     es_data = ls_data_aff.
   ENDMETHOD.
 
   METHOD zif_abapgit_aff_type_mapping~to_abapgit.
     DATA ls_data_aff TYPE zif_abapgit_aff_dtel_v1=>ty_main.
-    DATA lo_dtel_data TYPE REF TO lcl_dtel_data.
+    DATA ls_dtel_data TYPE ty_dtel_data.
 
     ls_data_aff = iv_data.
-    CREATE OBJECT lo_dtel_data.
 
-    lo_dtel_data->ms_dd04v-rollname = to_upper( iv_object_name ).
-    lo_dtel_data->ms_dd04v-ddtext = ls_data_aff-header-description.
-    lo_dtel_data->ms_dd04v-ddlanguage = ls_data_aff-header-original_language.
-    lo_dtel_data->mv_abap_language_version = ls_data_aff-header-abap_language_version.
+    ls_dtel_data-dd04v-rollname = to_upper( iv_object_name ).
+    ls_dtel_data-dd04v-ddtext = ls_data_aff-header-description.
+    ls_dtel_data-dd04v-ddlanguage = ls_data_aff-header-original_language.
+    ls_dtel_data-abap_language_version = ls_data_aff-header-abap_language_version.
 
     IF ls_data_aff-data_type_information-category = zif_abapgit_aff_dtel_v1=>co_category-predefined_type.
-      lo_dtel_data->ms_dd04v-refkind = 'T'.
-      lo_dtel_data->ms_dd04v-datatype = map_data_type_to_ddic(
+      ls_dtel_data-dd04v-refkind = 'T'.
+      ls_dtel_data-dd04v-datatype = map_data_type_to_ddic(
         ls_data_aff-data_type_information-predefined_type-data_type ).
-      lo_dtel_data->ms_dd04v-leng = ls_data_aff-data_type_information-predefined_type-length.
-      lo_dtel_data->ms_dd04v-decimals = ls_data_aff-data_type_information-predefined_type-decimals.
+      ls_dtel_data-dd04v-leng = ls_data_aff-data_type_information-predefined_type-length.
+      ls_dtel_data-dd04v-decimals = ls_data_aff-data_type_information-predefined_type-decimals.
     ELSE.
       map_reference_category_to_ddic(
         EXPORTING
           iv_category  = ls_data_aff-data_type_information-category
           iv_type_name = ls_data_aff-data_type_information-type_name
         CHANGING
-          cs_dd04v     = lo_dtel_data->ms_dd04v ).
+          cs_dd04v     = ls_dtel_data-dd04v ).
     ENDIF.
 
-    lo_dtel_data->ms_dd04v-scrtext_s = ls_data_aff-field_labels-short.
-    lo_dtel_data->ms_dd04v-scrlen1 = ls_data_aff-field_labels-short_length.
-    lo_dtel_data->ms_dd04v-scrtext_m = ls_data_aff-field_labels-medium.
-    lo_dtel_data->ms_dd04v-scrlen2 = ls_data_aff-field_labels-medium_length.
-    lo_dtel_data->ms_dd04v-scrtext_l = ls_data_aff-field_labels-long.
-    lo_dtel_data->ms_dd04v-scrlen3 = ls_data_aff-field_labels-long_length.
-    lo_dtel_data->ms_dd04v-reptext = ls_data_aff-field_labels-heading.
-    lo_dtel_data->ms_dd04v-headlen = ls_data_aff-field_labels-heading_length.
+    ls_dtel_data-dd04v-scrtext_s = ls_data_aff-field_labels-short.
+    ls_dtel_data-dd04v-scrlen1 = ls_data_aff-field_labels-short_length.
+    ls_dtel_data-dd04v-scrtext_m = ls_data_aff-field_labels-medium.
+    ls_dtel_data-dd04v-scrlen2 = ls_data_aff-field_labels-medium_length.
+    ls_dtel_data-dd04v-scrtext_l = ls_data_aff-field_labels-long.
+    ls_dtel_data-dd04v-scrlen3 = ls_data_aff-field_labels-long_length.
+    ls_dtel_data-dd04v-reptext = ls_data_aff-field_labels-heading.
+    ls_dtel_data-dd04v-headlen = ls_data_aff-field_labels-heading_length.
 
-    lo_dtel_data->ms_dd04v-shlpname = to_upper( ls_data_aff-additional_properties-search_help-name ).
-    lo_dtel_data->ms_dd04v-shlpfield = to_upper( ls_data_aff-additional_properties-search_help-parameter ).
-    lo_dtel_data->ms_dd04v-ltrflddis =
+    ls_dtel_data-dd04v-shlpname = to_upper( ls_data_aff-additional_properties-search_help-name ).
+    ls_dtel_data-dd04v-shlpfield = to_upper( ls_data_aff-additional_properties-search_help-parameter ).
+    ls_dtel_data-dd04v-ltrflddis =
       ls_data_aff-additional_properties-bidirectional_options-basic_direction.
-    lo_dtel_data->ms_dd04v-bidictrlc =
+    ls_dtel_data-dd04v-bidictrlc =
       ls_data_aff-additional_properties-bidirectional_options-no_filtering.
-    lo_dtel_data->ms_dd04v-memoryid = to_upper( ls_data_aff-additional_properties-parameter_id ).
-    lo_dtel_data->ms_dd04v-deffdname = to_upper( ls_data_aff-additional_properties-default_component_name ).
-    lo_dtel_data->ms_dd04v-logflag = ls_data_aff-additional_properties-change_document_relevant.
-    lo_dtel_data->ms_dd04v-nohistory = ls_data_aff-additional_properties-no_input_history.
+    ls_dtel_data-dd04v-memoryid = to_upper( ls_data_aff-additional_properties-parameter_id ).
+    ls_dtel_data-dd04v-deffdname = to_upper( ls_data_aff-additional_properties-default_component_name ).
+    ls_dtel_data-dd04v-logflag = ls_data_aff-additional_properties-change_document_relevant.
+    ls_dtel_data-dd04v-nohistory = ls_data_aff-additional_properties-no_input_history.
 
-    es_data = lo_dtel_data.
+    es_data = ls_dtel_data.
   ENDMETHOD.
 
   METHOD map_reference_category_to_aff.
@@ -275,9 +266,15 @@ CLASS lcl_aff_metadata_handler DEFINITION.
           iv_json   TYPE clike
         CHANGING
           ct_result TYPE zcl_abapgit_json_handler=>ty_enum_mappings,
+      get_skip_paths
+        IMPORTING
+          is_data_aff      TYPE zif_abapgit_aff_dtel_v1=>ty_main
+        RETURNING
+          VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_skip_paths,
       validate
         IMPORTING
-          is_data_aff TYPE zif_abapgit_aff_dtel_v1=>ty_main
+          is_data_aff    TYPE zif_abapgit_aff_dtel_v1=>ty_main
+          iv_object_name TYPE clike
         RAISING
           zcx_abapgit_exception.
 ENDCLASS.
@@ -287,41 +284,24 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
   METHOD serialize.
     DATA lo_json_handler TYPE REF TO zcl_abapgit_json_handler.
     DATA lo_mapper TYPE REF TO zif_abapgit_aff_type_mapping.
-    DATA lo_dtel_data TYPE REF TO lcl_dtel_data.
+    DATA ls_dtel_data TYPE lcl_aff_type_mapping=>ty_dtel_data.
     DATA ls_data_aff TYPE zif_abapgit_aff_dtel_v1=>ty_main.
-    DATA lt_skip_paths TYPE zcl_abapgit_json_handler=>ty_skip_paths.
-    DATA ls_skip_path TYPE zcl_abapgit_json_handler=>ty_path_value_pair.
     DATA lx_exception TYPE REF TO cx_root.
 
-    CREATE OBJECT lo_dtel_data.
-    lo_dtel_data->ms_dd04v = is_dd04v.
-    lo_dtel_data->mv_abap_language_version = iv_abap_language_version.
-    CREATE OBJECT lo_mapper TYPE lcl_aff_type_mapping.
-    lo_mapper->to_aff( EXPORTING iv_data = lo_dtel_data IMPORTING es_data = ls_data_aff ).
-    validate( ls_data_aff ).
+    ls_dtel_data-dd04v = is_dd04v.
+    ls_dtel_data-abap_language_version = iv_abap_language_version.
 
-    ls_skip_path-path = '/dataTypeInformation/predefinedType/decimals'.
-    ls_skip_path-value = '0'.
-    APPEND ls_skip_path TO lt_skip_paths.
-    ls_skip_path-path = '/additionalProperties/bidirectionalOptions/basicDirection'.
-    ls_skip_path-value = 'leftToRight'.
-    APPEND ls_skip_path TO lt_skip_paths.
-    ls_skip_path-path = '/fieldLabels/shortLength'.
-    ls_skip_path-value = '0'.
-    APPEND ls_skip_path TO lt_skip_paths.
-    ls_skip_path-path = '/fieldLabels/mediumLength'.
-    APPEND ls_skip_path TO lt_skip_paths.
-    ls_skip_path-path = '/fieldLabels/longLength'.
-    APPEND ls_skip_path TO lt_skip_paths.
-    ls_skip_path-path = '/fieldLabels/headingLength'.
-    APPEND ls_skip_path TO lt_skip_paths.
+    CREATE OBJECT lo_mapper TYPE lcl_aff_type_mapping.
+    lo_mapper->to_aff( EXPORTING iv_data = ls_dtel_data IMPORTING es_data = ls_data_aff ).
+    validate( is_data_aff    = ls_data_aff
+              iv_object_name = is_dd04v-rollname ).
 
     CREATE OBJECT lo_json_handler.
     TRY.
         rv_json = lo_json_handler->serialize(
           iv_data          = ls_data_aff
           iv_enum_mappings = get_enum_mappings( )
-          iv_skip_paths    = lt_skip_paths ).
+          iv_skip_paths    = get_skip_paths( ls_data_aff ) ).
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
@@ -330,7 +310,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
   METHOD deserialize.
     DATA lo_json_handler TYPE REF TO zcl_abapgit_json_handler.
     DATA lo_mapper TYPE REF TO zif_abapgit_aff_type_mapping.
-    DATA lo_dtel_data TYPE REF TO lcl_dtel_data.
+    DATA ls_dtel_data TYPE lcl_aff_type_mapping=>ty_dtel_data.
     DATA ls_data_aff TYPE zif_abapgit_aff_dtel_v1=>ty_main.
     DATA lv_json TYPE string.
     DATA lx_exception TYPE REF TO cx_root.
@@ -347,7 +327,8 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
-    validate( ls_data_aff ).
+    validate( is_data_aff    = ls_data_aff
+              iv_object_name = iv_object_name ).
 
     CREATE OBJECT lo_mapper TYPE lcl_aff_type_mapping.
     lo_mapper->to_abapgit(
@@ -355,48 +336,88 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
         iv_data        = ls_data_aff
         iv_object_name = iv_object_name
       IMPORTING
-        es_data        = lo_dtel_data ).
-    es_dd04v = lo_dtel_data->ms_dd04v.
-    ev_abap_language_version = lo_dtel_data->mv_abap_language_version.
+        es_data        = ls_dtel_data ).
+    es_dd04v = ls_dtel_data-dd04v.
+    ev_abap_language_version = ls_dtel_data-abap_language_version.
+
+    " The JSON handler resolves "standard" to the source based representation ('X'),
+    " while DD04L expects the DDIC representation (initial)
+    IF ev_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
+      ev_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
+    ENDIF.
   ENDMETHOD.
 
   METHOD validate.
     IF is_data_aff-format_version <> '1'.
-      zcx_abapgit_exception=>raise( 'DTEL AFF format version is unsupported' ).
+      zcx_abapgit_exception=>raise( |DTEL { iv_object_name }: unsupported AFF format version | &&
+                                   |{ is_data_aff-format_version }| ).
     ENDIF.
     IF is_data_aff-header-description IS INITIAL.
-      zcx_abapgit_exception=>raise( 'DTEL description is empty' ).
+      zcx_abapgit_exception=>raise( |DTEL { iv_object_name }: description is empty| ).
     ENDIF.
     CASE is_data_aff-data_type_information-category.
       WHEN zif_abapgit_aff_dtel_v1=>co_category-predefined_type.
         IF is_data_aff-data_type_information-predefined_type-data_type IS INITIAL.
-          zcx_abapgit_exception=>raise( 'DTEL AFF data type is unsupported' ).
+          zcx_abapgit_exception=>raise( |DTEL { iv_object_name }: unsupported data type| ).
         ENDIF.
       WHEN zif_abapgit_aff_dtel_v1=>co_category-domain
           OR zif_abapgit_aff_dtel_v1=>co_category-reference_to_predefined_type
           OR zif_abapgit_aff_dtel_v1=>co_category-reference_dictionary_type
           OR zif_abapgit_aff_dtel_v1=>co_category-reference_clas_int_type.
         IF is_data_aff-data_type_information-type_name IS INITIAL.
-          zcx_abapgit_exception=>raise( 'DTEL AFF type name is empty' ).
+          zcx_abapgit_exception=>raise( |DTEL { iv_object_name }: type name is empty| ).
         ENDIF.
       WHEN OTHERS.
-        zcx_abapgit_exception=>raise( 'DTEL AFF category is unsupported' ).
+        zcx_abapgit_exception=>raise( |DTEL { iv_object_name }: unsupported category| ).
     ENDCASE.
+  ENDMETHOD.
+
+  METHOD get_skip_paths.
+    DATA ls_skip_path TYPE zcl_abapgit_json_handler=>ty_path_value_pair.
+
+    " Numeric fields are serialized even when they are zero, so every
+    " optional one has to be skipped explicitly
+    ls_skip_path-value = '0'.
+    ls_skip_path-path = '/dataTypeInformation/predefinedType/decimals'.
+    APPEND ls_skip_path TO rt_result.
+    ls_skip_path-path = '/fieldLabels/shortLength'.
+    APPEND ls_skip_path TO rt_result.
+    ls_skip_path-path = '/fieldLabels/mediumLength'.
+    APPEND ls_skip_path TO rt_result.
+    ls_skip_path-path = '/fieldLabels/longLength'.
+    APPEND ls_skip_path TO rt_result.
+    ls_skip_path-path = '/fieldLabels/headingLength'.
+    APPEND ls_skip_path TO rt_result.
+
+    IF is_data_aff-data_type_information-category <> zif_abapgit_aff_dtel_v1=>co_category-predefined_type.
+      " "length" is mandatory for predefined types and must be kept even when zero.
+      " For all other categories it drops out together with the whole predefinedType node
+      ls_skip_path-path = '/dataTypeInformation/predefinedType/length'.
+      APPEND ls_skip_path TO rt_result.
+    ENDIF.
+
+    ls_skip_path-path = '/additionalProperties/bidirectionalOptions/basicDirection'.
+    ls_skip_path-value = 'leftToRight'.
+    APPEND ls_skip_path TO rt_result.
   ENDMETHOD.
 
   METHOD add_enum_mapping.
     DATA ls_mapping TYPE zcl_abapgit_json_handler=>ty_enum_mapping.
     DATA ls_pair TYPE zcl_abapgit_json_handler=>ty_json_abap_mapping.
 
-    READ TABLE ct_result WITH KEY path = iv_path INTO ls_mapping.
-    IF sy-subrc <> 0.
-      ls_mapping-path = iv_path.
-    ENDIF.
+    FIELD-SYMBOLS <ls_mapping> TYPE zcl_abapgit_json_handler=>ty_enum_mapping.
+
     ls_pair-abap = iv_abap.
     ls_pair-json = iv_json.
-    APPEND ls_pair TO ls_mapping-mappings.
-    DELETE ct_result WHERE path = iv_path.
-    APPEND ls_mapping TO ct_result.
+
+    READ TABLE ct_result ASSIGNING <ls_mapping> WITH KEY path = iv_path.
+    IF sy-subrc = 0.
+      APPEND ls_pair TO <ls_mapping>-mappings.
+    ELSE.
+      ls_mapping-path = iv_path.
+      APPEND ls_pair TO ls_mapping-mappings.
+      APPEND ls_mapping TO ct_result.
+    ENDIF.
   ENDMETHOD.
 
   METHOD get_enum_mappings.
@@ -441,14 +462,14 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     add_enum_mapping(
       EXPORTING
         iv_path   = '/additionalProperties/bidirectionalOptions/basicDirection'
-        iv_abap   = space
+        iv_abap   = zif_abapgit_aff_dtel_v1=>co_bidi_basic_direction-left_to_right
         iv_json   = 'leftToRight'
       CHANGING
         ct_result = rt_result ).
     add_enum_mapping(
       EXPORTING
         iv_path   = '/additionalProperties/bidirectionalOptions/basicDirection'
-        iv_abap   = abap_true
+        iv_abap   = zif_abapgit_aff_dtel_v1=>co_bidi_basic_direction-right_to_left
         iv_json   = 'rightToLeft'
       CHANGING
         ct_result = rt_result ).
@@ -456,106 +477,101 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     add_enum_mapping(
       EXPORTING
         iv_path   = '/dataTypeInformation/predefinedType/dataType'
-        iv_abap   = 'D16D'
+        iv_abap   = zif_abapgit_aff_ddic_types_v1=>co_data_type-df16_dec
         iv_json   = 'DF16_DEC'
       CHANGING
         ct_result = rt_result ).
     add_enum_mapping(
       EXPORTING
         iv_path   = '/dataTypeInformation/predefinedType/dataType'
-        iv_abap   = 'D16R'
+        iv_abap   = zif_abapgit_aff_ddic_types_v1=>co_data_type-df16_raw
         iv_json   = 'DF16_RAW'
       CHANGING
         ct_result = rt_result ).
     add_enum_mapping(
       EXPORTING
         iv_path   = '/dataTypeInformation/predefinedType/dataType'
-        iv_abap   = 'D16S'
+        iv_abap   = zif_abapgit_aff_ddic_types_v1=>co_data_type-df16_scl
         iv_json   = 'DF16_SCL'
       CHANGING
         ct_result = rt_result ).
     add_enum_mapping(
       EXPORTING
         iv_path   = '/dataTypeInformation/predefinedType/dataType'
-        iv_abap   = 'D16N'
+        iv_abap   = zif_abapgit_aff_ddic_types_v1=>co_data_type-decfloat16
         iv_json   = 'DECFLOAT16'
       CHANGING
         ct_result = rt_result ).
     add_enum_mapping(
       EXPORTING
         iv_path   = '/dataTypeInformation/predefinedType/dataType'
-        iv_abap   = 'D34D'
+        iv_abap   = zif_abapgit_aff_ddic_types_v1=>co_data_type-df34_dec
         iv_json   = 'DF34_DEC'
       CHANGING
         ct_result = rt_result ).
     add_enum_mapping(
       EXPORTING
         iv_path   = '/dataTypeInformation/predefinedType/dataType'
-        iv_abap   = 'D34R'
+        iv_abap   = zif_abapgit_aff_ddic_types_v1=>co_data_type-df34_raw
         iv_json   = 'DF34_RAW'
       CHANGING
         ct_result = rt_result ).
     add_enum_mapping(
       EXPORTING
         iv_path   = '/dataTypeInformation/predefinedType/dataType'
-        iv_abap   = 'D34S'
+        iv_abap   = zif_abapgit_aff_ddic_types_v1=>co_data_type-df34_scl
         iv_json   = 'DF34_SCL'
       CHANGING
         ct_result = rt_result ).
     add_enum_mapping(
       EXPORTING
         iv_path   = '/dataTypeInformation/predefinedType/dataType'
-        iv_abap   = 'D34N'
+        iv_abap   = zif_abapgit_aff_ddic_types_v1=>co_data_type-decfloat34
         iv_json   = 'DECFLOAT34'
       CHANGING
         ct_result = rt_result ).
     add_enum_mapping(
       EXPORTING
         iv_path   = '/dataTypeInformation/predefinedType/dataType'
-        iv_abap   = 'GGM1'
+        iv_abap   = zif_abapgit_aff_ddic_types_v1=>co_data_type-geom_ewkb
         iv_json   = 'GEOM_EWKB'
       CHANGING
         ct_result = rt_result ).
     add_enum_mapping(
       EXPORTING
         iv_path   = '/dataTypeInformation/predefinedType/dataType'
-        iv_abap   = 'RSTR'
+        iv_abap   = zif_abapgit_aff_ddic_types_v1=>co_data_type-rawstring
         iv_json   = 'RAWSTRING'
       CHANGING
         ct_result = rt_result ).
     add_enum_mapping(
       EXPORTING
         iv_path   = '/dataTypeInformation/predefinedType/dataType'
-        iv_abap   = 'SSTR'
+        iv_abap   = zif_abapgit_aff_ddic_types_v1=>co_data_type-sstring
         iv_json   = 'SSTRING'
       CHANGING
         ct_result = rt_result ).
     add_enum_mapping(
       EXPORTING
         iv_path   = '/dataTypeInformation/predefinedType/dataType'
-        iv_abap   = 'STRG'
+        iv_abap   = zif_abapgit_aff_ddic_types_v1=>co_data_type-string
         iv_json   = 'STRING'
       CHANGING
         ct_result = rt_result ).
     add_enum_mapping(
       EXPORTING
         iv_path   = '/dataTypeInformation/predefinedType/dataType'
-        iv_abap   = 'UTCL'
+        iv_abap   = zif_abapgit_aff_ddic_types_v1=>co_data_type-utclong
         iv_json   = 'UTCLONG'
       CHANGING
         ct_result = rt_result ).
 
-    " Deserialization maps JSON member names to snake case before applying custom enums.
     IF iv_snake_case = abap_true.
+      " Deserialization renames the JSON members to snake case before the custom enums are applied
       LOOP AT rt_result ASSIGNING <ls_mapping>.
-        CASE <ls_mapping>-path.
-          WHEN '/dataTypeInformation/category'.
-            <ls_mapping>-path = '/data_type_information/category'.
-          WHEN '/additionalProperties/bidirectionalOptions/basicDirection'.
-            <ls_mapping>-path = '/additional_properties/bidirectional_options/basic_direction'.
-          WHEN '/dataTypeInformation/predefinedType/dataType'.
-            <ls_mapping>-path = '/data_type_information/predefined_type/data_type'.
-        ENDCASE.
+        REPLACE ALL OCCURRENCES OF REGEX `([a-z])([A-Z])`
+          IN <ls_mapping>-path WITH `$1_$2` ##REGEX_POSIX.
+        <ls_mapping>-path = to_lower( <ls_mapping>-path ).
       ENDLOOP.
     ENDIF.
   ENDMETHOD.

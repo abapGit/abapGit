@@ -215,15 +215,13 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
           lv_json      TYPE xstring,
           lv_using_aff TYPE abap_bool.
 
-    IF mv_aff_enabled = abap_true.
-      TRY.
-          lv_json = mo_files->read_raw( 'json' ).
-        CATCH zcx_abapgit_exception.
-      ENDTRY.
-    ENDIF.
+    " The format is determined by the files of the repository, not by mv_aff_enabled:
+    " there is no XML to fall back to when a JSON file is present
+    lv_using_aff = mo_files->contains_file( 'json' ).
 
-    IF lv_json IS NOT INITIAL.
-      lv_using_aff = abap_true.
+    IF lv_using_aff = abap_true.
+      lv_json = mo_files->read_raw( 'json' ).
+
       lcl_aff_metadata_handler=>deserialize(
         EXPORTING
           iv_json                  = lv_json
@@ -274,7 +272,9 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     ENDTRY.
 
     IF lv_using_aff = abap_true.
-      " Note: Translation handling for AFF format not yet implemented
+      " Note: The AFF format has no representation for the supplementary
+      " documentation (c_longtext_id_dtel_suppl) and for translations
+      deserialize_longtexts_aff( c_longtext_id_dtel ).
     ELSE.
       IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
         deserialize_texts(
@@ -446,7 +446,9 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
         iv_ext  = 'json'
         iv_data = lv_json ).
 
-      " Note: Translation handling for AFF format not yet implemented
+      " Note: The AFF format has no representation for the supplementary
+      " documentation (c_longtext_id_dtel_suppl) and for translations
+      serialize_longtexts_aff( iv_longtext_id = c_longtext_id_dtel ).
     ELSE.
       io_xml->add( iv_name = 'DD04V'
                    ig_data = ls_dd04v ).

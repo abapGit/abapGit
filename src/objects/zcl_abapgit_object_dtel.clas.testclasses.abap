@@ -7,7 +7,10 @@ CLASS ltcl_aff_metadata_handler DEFINITION
   PRIVATE SECTION.
     METHODS predefined_roundtrip FOR TESTING RAISING cx_static_check.
     METHODS special_type_roundtrip FOR TESTING RAISING cx_static_check.
+    METHODS zero_length_roundtrip FOR TESTING RAISING cx_static_check.
     METHODS domain_mapping FOR TESTING RAISING cx_static_check.
+    METHODS domain_omits_predefined_type FOR TESTING RAISING cx_static_check.
+    METHODS standard_abap_language_vers FOR TESTING RAISING cx_static_check.
     METHODS reference_mappings FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 
@@ -105,6 +108,107 @@ CLASS ltcl_aff_metadata_handler IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_is_equal
       exp = abap_true ).
+  ENDMETHOD.
+
+
+  METHOD zero_length_roundtrip.
+    DATA lv_json TYPE string.
+    DATA lv_json_roundtrip TYPE xstring.
+    DATA ls_dd04v TYPE dd04v.
+    DATA lv_abap_language_version TYPE uccheck.
+    DATA lv_is_equal TYPE abap_bool.
+
+    " "length" is mandatory for predefined types, so it must survive serialization
+    " even though it is zero
+    lv_json = `{` &&
+      `"formatVersion":"1",` &&
+      `"header":{"description":"String value","originalLanguage":"en"},` &&
+      `"dataTypeInformation":{"category":"predefinedType",` &&
+      `"predefinedType":{"dataType":"STRING","length":0}}` &&
+      `}`.
+
+    lcl_aff_metadata_handler=>deserialize(
+      EXPORTING
+        iv_json                  = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json )
+        iv_object_name           = 'z_test_dtel'
+      IMPORTING
+        es_dd04v                 = ls_dd04v
+        ev_abap_language_version = lv_abap_language_version ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_dd04v-datatype
+      exp = 'STRG' ).
+
+    lv_json_roundtrip = lcl_aff_metadata_handler=>serialize(
+      is_dd04v                 = ls_dd04v
+      iv_abap_language_version = lv_abap_language_version ).
+    lv_is_equal = zcl_abapgit_ajson_utilities=>new( )->is_equal(
+      iv_json_a = lv_json
+      iv_json_b = zcl_abapgit_convert=>xstring_to_string_utf8( lv_json_roundtrip ) ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_is_equal
+      exp = abap_true
+      msg = zcl_abapgit_convert=>xstring_to_string_utf8( lv_json_roundtrip ) ).
+  ENDMETHOD.
+
+
+  METHOD domain_omits_predefined_type.
+    DATA lv_json TYPE string.
+    DATA lv_json_actual TYPE string.
+    DATA ls_dd04v TYPE dd04v.
+    DATA lv_abap_language_version TYPE uccheck.
+
+    " The AFF schema requires "dataType" and "length" inside "predefinedType",
+    " so the node must not be written for the other categories
+    lv_json = `{` &&
+      `"formatVersion":"1",` &&
+      `"header":{"description":"Domain value","originalLanguage":"en"},` &&
+      `"dataTypeInformation":{"category":"domain","typeName":"Z_TEST_DOMAIN"}` &&
+      `}`.
+
+    lcl_aff_metadata_handler=>deserialize(
+      EXPORTING
+        iv_json                  = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json )
+        iv_object_name           = 'z_test_dtel'
+      IMPORTING
+        es_dd04v                 = ls_dd04v
+        ev_abap_language_version = lv_abap_language_version ).
+
+    lv_json_actual = zcl_abapgit_convert=>xstring_to_string_utf8(
+      lcl_aff_metadata_handler=>serialize(
+        is_dd04v                 = ls_dd04v
+        iv_abap_language_version = lv_abap_language_version ) ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson=>parse( lv_json_actual )->exists( '/dataTypeInformation/predefinedType' )
+      exp = abap_false
+      msg = lv_json_actual ).
+  ENDMETHOD.
+
+
+  METHOD standard_abap_language_vers.
+    DATA lv_json TYPE string.
+    DATA ls_dd04v TYPE dd04v.
+    DATA lv_abap_language_version TYPE uccheck.
+
+    " DD04L expects the DDIC representation of "standard", which is initial
+    lv_json = `{` &&
+      `"formatVersion":"1",` &&
+      `"header":{"description":"Character value","originalLanguage":"en",` &&
+      `"abapLanguageVersion":"standard"},` &&
+      `"dataTypeInformation":{"category":"predefinedType",` &&
+      `"predefinedType":{"dataType":"CHAR","length":10}}` &&
+      `}`.
+
+    lcl_aff_metadata_handler=>deserialize(
+      EXPORTING
+        iv_json                  = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json )
+        iv_object_name           = 'z_test_dtel'
+      IMPORTING
+        es_dd04v                 = ls_dd04v
+        ev_abap_language_version = lv_abap_language_version ).
+
+    cl_abap_unit_assert=>assert_initial( lv_abap_language_version ).
   ENDMETHOD.
 
 
