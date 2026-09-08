@@ -9,7 +9,8 @@ CLASS ltcl_login_manager DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHO
       teardown,
       encoding FOR TESTING RAISING zcx_abapgit_exception,
       save FOR TESTING RAISING zcx_abapgit_exception,
-      same_server FOR TESTING RAISING zcx_abapgit_exception.
+      same_server FOR TESTING RAISING zcx_abapgit_exception,
+      overwrite FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -73,6 +74,28 @@ CLASS ltcl_login_manager IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_auth1
       exp = lv_auth2 ).
+
+  ENDMETHOD.
+
+  METHOD overwrite.
+
+    CONSTANTS lc_uri TYPE string VALUE 'https://github.com/abapGit/abapGit.git'.
+
+    DATA lv_auth TYPE string.
+
+    " Credentials rejected by the server, the user supplies new ones
+    zcl_abapgit_login_manager=>set_bearer(
+      iv_uri   = lc_uri
+      iv_token = 'stale' ).
+
+    lv_auth = zcl_abapgit_login_manager=>set_basic(
+      iv_uri      = lc_uri
+      iv_username = c_username
+      iv_password = c_password ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_login_manager=>load( lc_uri )
+      exp = lv_auth ).
 
   ENDMETHOD.
 

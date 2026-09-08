@@ -77,7 +77,7 @@ CLASS zcl_abapgit_object_susc IMPLEMENTATION.
   METHOD put_delete_to_transport.
 
     DATA: lv_tr_object_name TYPE e071-obj_name,
-          lv_tr_return      TYPE char1,
+          lv_tr_return      TYPE c LENGTH 1,
           ls_package_info   TYPE tdevc.
 
 

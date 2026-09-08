@@ -1,6 +1,7 @@
 CLASS ltcl_transport_objects DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
+    TYPES ty_char1 TYPE c LENGTH 1.
     METHODS:
       add_new_to_local_files         FOR TESTING RAISING cx_static_check,
       modified_to_new_local_files    FOR TESTING RAISING cx_static_check,
@@ -23,7 +24,7 @@ CLASS ltcl_transport_objects DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HA
           iv_obj_type TYPE string OPTIONAL
           iv_filename TYPE string OPTIONAL
           iv_path     TYPE string OPTIONAL
-          iv_lstate   TYPE char1,
+          iv_lstate   TYPE ty_char1,
       given_the_local_file
         IMPORTING iv_obj_name          TYPE string
                   iv_obj_type          TYPE string

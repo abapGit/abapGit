@@ -146,8 +146,15 @@ CLASS lcl_password_dialog IMPLEMENTATION.
 
     CASE iv_ucomm.
       WHEN 'OK'. " Enter
-        gv_confirm = abap_true.
-        LEAVE TO SCREEN 0.
+        IF p_user IS INITIAL OR p_pass IS INITIAL.
+          " Empty credentials cannot be used for authentication, and returning them
+          " is indistinguishable from cancelling the popup. The error message keeps
+          " the popup open, so the input can be corrected
+          MESSAGE 'User and password are obligatory' TYPE 'E'.
+        ELSE.
+          gv_confirm = abap_true.
+          LEAVE TO SCREEN 0.
+        ENDIF.
       WHEN 'HELP'. " F1
         TRY.
             zcl_abapgit_services_abapgit=>open_abapgit_wikipage( 'guide-authentication.html' ).

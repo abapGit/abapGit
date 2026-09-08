@@ -17,7 +17,10 @@
     }
   ],
   "syntax": {
-    "version": "v702",
+    "version": {
+      "release": "v702",
+      "language": "Normal"
+    },
     "errorNamespace": "^(Z|Y|LT?CL_|TY_|LIF_|C_|.*ABAPGIT)",
     "globalConstants": [
       "abap_func_exporting",
@@ -74,6 +77,10 @@
     },
     "abapdoc": false,
     "align_type_expressions": true,
+    "cds_check_syntax": true,
+    "no_dynamic_stuff": false,
+    "no_mandt_in_database_operations": false,
+    "xml_bom": true,
     "cds_association_name": true,
     "cds_field_order": true,
     "cds_naming": true,
@@ -236,15 +243,7 @@
     "forbidden_void_type": {
       "check": [
         "^boole_d$",
-        "^char04$",
-        "^char10$",
-        "^char12$",
-        "^char2$",
-        "^char20$",
-        "^char30$",
-        "^char4$",
-        "^char50$",
-        "^char70$",
+        "^char\d+$",
         "^cl_abap_syst",
         "^cl_aff_",
         "^cl_aucv_test_runner_abstract$",
@@ -275,15 +274,13 @@
         "^if_wb_object_operator$",
         "^if_xco_",
         "^int4$",
-        "^numc2$",
+        "^numc\d+$",
         "^pgmid$",
         "^sabp_t_tadir_keys$",
         "^sap_bool$",
         "^srcsystem$",
         "^stringtab$",
-        "^sychar01$",
-        "^sychar10$",
-        "^sychar70$",
+        "^sychar\d+$",
         "^sydatum$",
         "^sylangu$",
         "^syst_langu$",
@@ -371,6 +368,7 @@
       ],
       "checkForms": true,
       "errorWhenEmpty": false,
+      "checkFunctionModules": true,
       "ignoreTestClasses": false,
       "statements": 110
     },
@@ -407,12 +405,21 @@
         "/json/",
         "zcl_abapgit_repo.clas.abap",
         "zcl_abapgit_repo_online.clas.abap"
-      ]
+      ],
+      "ignorePrivate": false
     },
     "no_chained_assignment": true,
     "no_external_form_calls": false,
     "no_inline_in_optional_branches": true,
-    "no_public_attributes": false,
+    "no_public_attributes": {
+      "exclude": [
+        "/test/.*",
+        "zcl_abapgit_object_doma.clas.*",
+        "zcl_abapgit_string_map.clas.abap"
+      ],
+      "allowReadOnly": true,
+      "ignoreTestClasses": true
+    },
     "no_yoda_conditions": false,
     "nrob_consistency": true,
     "object_naming": {

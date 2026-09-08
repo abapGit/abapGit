@@ -64,11 +64,16 @@ INTERFACE zif_abapgit_git_definitions
       name  TYPE string,
       email TYPE string,
     END OF ty_git_user .
+* seconds since the unix epoch plus timezone indicator, eg '1740000000 +0000'
+  TYPES:
+    ty_unixtime TYPE c LENGTH 16 .
+* TIME is optional, if it is initial the current time is used when committing
   TYPES:
     BEGIN OF ty_comment,
       committer TYPE ty_git_user,
       author    TYPE ty_git_user,
       comment   TYPE string,
+      time      TYPE ty_unixtime,
     END OF ty_comment .
 
   TYPES:
