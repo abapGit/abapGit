@@ -159,7 +159,10 @@ CLASS zcl_abapgit_gui_page_ref_sel IMPLEMENTATION.
     IF lv_was_fulfilled = abap_false
         AND mo_picklist->is_fulfilled( ) = abap_true
         AND mo_picklist->was_cancelled( ) = abap_false.
-      execute_selection( ).
+      TRY.
+          execute_selection( ).
+        CATCH zcx_abapgit_cancel ##NO_HANDLER.
+      ENDTRY.
     ENDIF.
 
   ENDMETHOD.
