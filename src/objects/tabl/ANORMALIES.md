@@ -39,6 +39,13 @@ DDL converter.
   serializer preserves this layout while retaining the semicolon on the final
   extension; the parser accepts the omitted intermediate terminators.
 
+- `2026-09-08`: `DD02V-VIEWREF` stores a database view name, while
+  `@AbapCatalog.replacementObject` stores a CDS entity name. The converter
+  delegates both directions to `CL_SBD_DDLS_UTILITY` when available. Classic
+  replacement objects without a CDS mapping therefore do not produce an
+  annotation; the fallback used by source-only runtimes is intentionally
+  compatibility-oriented and cannot validate the entity.
+
 ## Conversion boundary
 
 Classic TABL metadata that has no representation in `define table` DDL is not

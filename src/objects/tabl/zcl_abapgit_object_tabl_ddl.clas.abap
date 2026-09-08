@@ -58,6 +58,24 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
         !iv_offset  TYPE i
       RAISING
         zcx_abapgit_exception .
+    METHODS get_replacement_object
+      IMPORTING
+        !iv_viewref      TYPE clike
+      RETURNING
+        VALUE(rv_object) TYPE string .
+    METHODS get_replacement_view
+      IMPORTING
+        !iv_entityname     TYPE clike
+      RETURNING
+        VALUE(rv_viewname) TYPE string .
+    METHODS parse_replacement_object
+      IMPORTING
+        !iv_value TYPE clike
+        !iv_name  TYPE clike
+      CHANGING
+        !cs_data  TYPE zif_abapgit_object_tabl=>ty_internal
+      RAISING
+        zcx_abapgit_exception .
     METHODS parse_top_annotations
       IMPORTING
         !it_tokens TYPE ty_tokens
@@ -421,6 +439,81 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_replacement_object.
+
+    DATA lv_view_name TYPE string.
+
+    lv_view_name = to_upper( iv_viewref ).
+    IF lv_view_name IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    TRY.
+        " DD02V-VIEWREF contains the database view name. DDL uses the
+        " corresponding CDS entity name instead.
+        CALL METHOD ('CL_SBD_DDLS_UTILITY')=>('MAP_TO_REPLACEMENT_DDLS')
+          EXPORTING
+            i_view_name = lv_view_name
+          IMPORTING
+            e_entityname = rv_object.
+      CATCH cx_root.
+        " The utility is not available on older releases and is also absent
+        " from the open-abap test runtime. In that case no annotation is
+        " emitted rather than serializing DD02V-VIEWREF with the wrong
+        " meaning.
+        CLEAR rv_object.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD get_replacement_view.
+
+    DATA lv_entityname TYPE string.
+
+    lv_entityname = to_upper( iv_entityname ).
+    IF lv_entityname IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    TRY.
+        " The reverse mapping is needed when DDL is saved back to TABL:
+        " DD02V-VIEWREF must receive the database view name.
+        CALL METHOD ('CL_SBD_DDLS_UTILITY')=>('MAP_TO_REPLACEMENT_VIEW')
+          EXPORTING
+            i_entityname = lv_entityname
+          IMPORTING
+            e_view_name = rv_viewname.
+      CATCH cx_root.
+        " Keep source-only parsing usable on releases without the SAP
+        " utility. A SAP system with the utility returns the resolved view
+        " name, or initial for an entity that cannot be resolved.
+        rv_viewname = iv_entityname.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD parse_replacement_object.
+    DATA lv_entityname TYPE string.
+
+    lv_entityname = unescape_string( iv_value ).
+    IF lv_entityname IS INITIAL.
+      parse_error(
+        iv_context = 'replacement object is missing'
+        iv_token = iv_name
+        iv_offset = 0 ).
+    ENDIF.
+    cs_data-dd02v-viewref = get_replacement_view( lv_entityname ).
+    IF cs_data-dd02v-viewref IS INITIAL.
+      parse_error(
+        iv_context = 'replacement object cannot be resolved'
+        iv_token = lv_entityname
+        iv_offset = 0 ).
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD tokenize.
 
     DATA lv_offset TYPE i.
@@ -658,6 +751,13 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
                 iv_token = lv_value
                 iv_offset = 0 ).
           ENDCASE.
+        WHEN '@abapcatalog.replacementobject'.
+          parse_replacement_object(
+            EXPORTING
+              iv_value = lv_value
+              iv_name = lv_name
+            CHANGING
+              cs_data = cs_data ).
         WHEN '@abapcatalog.primarykey.invertedhashindex'.
           IF to_lower( lv_compare ) <> 'true' AND to_lower( lv_compare ) <> 'false'.
             parse_error(
@@ -2130,6 +2230,7 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
   METHOD serialize_top.
     FIELD-SYMBOLS <lv_pk_is_invhash> TYPE c.
     FIELD-SYMBOLS <lv_is_gtt> TYPE abap_bool.
+    DATA lv_replacement_object TYPE string.
     IF is_data-dd02v-exclass NOT BETWEEN '0' AND '4'.
       zcx_abapgit_exception=>raise(
         |TABL DDL serialization error: unsupported enhancement category { is_data-dd02v-exclass }| ).
@@ -2178,6 +2279,10 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
     ELSE.
       zcx_abapgit_exception=>raise(
         |TABL DDL serialization error: unsupported data maintenance value { is_data-dd02v-mainflag }| ).
+    ENDIF.
+    lv_replacement_object = get_replacement_object( is_data-dd02v-viewref ).
+    IF lv_replacement_object IS NOT INITIAL.
+      rv_ddl = rv_ddl && |@AbapCatalog.replacementObject : { escape_string( to_lower( lv_replacement_object ) ) }\n|.
     ENDIF.
     ASSIGN COMPONENT 'PK_IS_INVHASH' OF STRUCTURE is_data-dd02v TO <lv_pk_is_invhash>.
     IF sy-subrc = 0 AND <lv_pk_is_invhash> = abap_true.

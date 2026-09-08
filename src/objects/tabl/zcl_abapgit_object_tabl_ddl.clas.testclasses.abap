@@ -799,6 +799,7 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA ls_condition LIKE LINE OF ls_data-dd05m.
     DATA lv_ddl TYPE string.
     DATA lv_roundtrip TYPE string.
+    DATA lv_replacement_object TYPE string.
     DATA lv_exclass TYPE c LENGTH 1.
     FIELD-SYMBOLS <lv_is_gtt> TYPE abap_bool.
     FIELD-SYMBOLS <lv_invhash> TYPE c.
@@ -812,6 +813,7 @@ CLASS ltcl_test IMPLEMENTATION.
       `@AbapCatalog.activationType : #NAMETAB_GENERATION_OFFLINE` && |\n| &&
       `@AbapCatalog.deliveryClass : #C` && |\n| &&
       `@AbapCatalog.dataMaintenance : #NOT_ALLOWED` && |\n| &&
+      `@AbapCatalog.replacementObject : '/scmb/v_thndlcd_t_entity'` && |\n| &&
       `@AbapCatalog.primaryKey.invertedHashIndex : true` && |\n| &&
       `define table zannotations {` && |\n| &&
       `  @EndUserText.label : 'Amount  field'` && |\n| &&
@@ -857,6 +859,7 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 'Temporary table'
       act = ls_data-dd02v-ddtext ).
+    cl_abap_unit_assert=>assert_not_initial( ls_data-dd02v-viewref ).
 
     ASSIGN COMPONENT 'IS_GTT' OF STRUCTURE ls_data-dd02v TO <lv_is_gtt>.
     IF sy-subrc = 0.
@@ -921,6 +924,7 @@ CLASS ltcl_test IMPLEMENTATION.
       act = ls_condition-fortable ).
 
     ls_data-dd02v-ddtext = 'Temporary table'.
+    lv_replacement_object = lo_format->get_replacement_object( ls_data-dd02v-viewref ).
     lv_roundtrip = lo_format->serialize( ls_data ).
     ls_data = lo_format->deserialize( lv_roundtrip ).
     cl_abap_unit_assert=>assert_equals(
@@ -929,6 +933,11 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 5
       act = lines( ls_data-dd03p ) ).
+    IF lv_replacement_object IS NOT INITIAL.
+      cl_abap_unit_assert=>assert_not_initial( ls_data-dd02v-viewref ).
+    ELSE.
+      cl_abap_unit_assert=>assert_initial( ls_data-dd02v-viewref ).
+    ENDIF.
 
     DO 5 TIMES.
       CLEAR ls_data.
