@@ -692,6 +692,11 @@ CLASS ltcl_test IMPLEMENTATION.
       act = ls_extension_key-noinherit ).
 
     lv_ddl = lo_format->serialize( ls_data ).
+    lv_expected = |where code = zsource.code;\n  code  :|.
+    FIND lv_expected IN lv_ddl.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
     ls_data = lo_format->deserialize( lv_ddl ).
     cl_abap_unit_assert=>assert_equals(
       exp = 5

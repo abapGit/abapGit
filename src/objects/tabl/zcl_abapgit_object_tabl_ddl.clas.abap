@@ -1893,7 +1893,7 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
               is_data = is_data ).
         ENDIF.
       ENDIF.
-      rv_ddl = rv_ddl && |;|.
+      rv_ddl = rv_ddl && |;\n|.
     ENDLOOP.
     LOOP AT is_data-dd35v INTO ls_dd35v.
       READ TABLE lt_fields INTO lv_field
@@ -1906,12 +1906,13 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
       ENDIF.
       rv_ddl = rv_ddl && |\n  extend { to_lower( lv_field ) } :|.
       IF ls_dd35v-shlpname = '*'.
-        rv_ddl = rv_ddl && |\n    remove value help;|.
+        rv_ddl = rv_ddl && |\n    remove value help|.
       ELSEIF ls_dd35v-shlpinher <> abap_true.
         rv_ddl = rv_ddl && serialize_value_help(
           iv_fieldname = lv_field
-            is_data = is_data ) && |;|.
+            is_data = is_data ).
       ENDIF.
+      rv_ddl = rv_ddl && |;\n|.
     ENDLOOP.
     REPLACE ALL OCCURRENCES OF |\n  | IN rv_ddl WITH |\n    |.
   ENDMETHOD.
