@@ -42,6 +42,7 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
              offset TYPE i,
            END OF ty_token.
     TYPES ty_tokens TYPE STANDARD TABLE OF ty_token WITH DEFAULT KEY.
+    TYPES ty_fields TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
 
     METHODS tokenize
       IMPORTING
@@ -189,6 +190,12 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
         VALUE(rv_ddl) TYPE string
       RAISING
         zcx_abapgit_exception .
+    METHODS has_more_extensions
+      IMPORTING
+        !it_fields     TYPE ty_fields
+        !is_data       TYPE zif_abapgit_object_tabl=>ty_internal
+      RETURNING
+        VALUE(rv_more) TYPE abap_bool .
     METHODS serialize_field_annotations
       IMPORTING
         !iv_fieldname TYPE clike
@@ -837,6 +844,7 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
     DATA ls_dd35v TYPE dd35v.
     DATA lv_fieldname TYPE string.
     DATA lv_key TYPE abap_bool.
+    DATA lv_is_include TYPE abap_bool.
 
     parse_field_annotations(
       EXPORTING it_tokens = it_tokens
@@ -857,7 +865,9 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
       cv_index = cv_index + 1.
       READ TABLE it_tokens INDEX cv_index INTO ls_token.
     ENDIF.
+    ls_dd03p-keyflag = lv_key.
     IF to_lower( ls_token-value ) = 'include'.
+      lv_is_include = abap_true.
       ls_dd03p-fieldname = '.INCLU'.
       cv_index = cv_index + 1.
       parse_include( EXPORTING it_tokens = it_tokens
@@ -867,7 +877,6 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
     ELSE.
       lv_fieldname = to_upper( ls_token-value ).
       ls_dd03p-fieldname = lv_fieldname.
-      ls_dd03p-keyflag = lv_key.
       cv_index = cv_index + 1.
       READ TABLE it_tokens INDEX cv_index INTO ls_token.
       IF sy-subrc <> 0 OR ls_token-value <> ':'.
@@ -885,6 +894,7 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
           iv_offset = 0 ).
       ENDIF.
       IF to_lower( ls_token-value ) = 'include'.
+        lv_is_include = abap_true.
         ls_dd03p-groupname = lv_fieldname.
         ls_dd03p-fieldname = '.INCLU'.
         cv_index = cv_index + 1.
@@ -973,13 +983,20 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
       ENDIF.
     ENDIF.
     READ TABLE it_tokens INDEX cv_index INTO ls_token.
-    IF sy-subrc <> 0 OR ls_token-value <> ';'.
+    IF sy-subrc = 0 AND ls_token-value = ';'.
+      cv_index = cv_index + 1.
+    ELSEIF lv_is_include = abap_true
+        AND sy-subrc = 0
+        AND ( strlen( ls_token-value ) > 0 AND ls_token-value(1) = '@'
+          OR to_lower( ls_token-value ) = 'extend' ).
+      " Some ADT table DDL omits the terminator when an include is
+      " immediately followed by its component extensions.
+    ELSE.
       parse_error(
         iv_context = 'expected semicolon after field definition'
         iv_token = ls_token-value
         iv_offset = ls_token-offset ).
     ENDIF.
-    cv_index = cv_index + 1.
     ls_dd03p-adminfield = '0'.
     IF ls_dd08v IS NOT INITIAL.
       ls_dd08v-fieldname = ls_dd03p-fieldname.
@@ -1044,7 +1061,9 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
         ENDIF.
         cs_dd03p-notnull = abap_true.
         cv_index = cv_index + 1.
-      ELSEIF ls_token-value = ';'.
+      ELSEIF ls_token-value = ';'
+          OR ( strlen( ls_token-value ) > 0 AND ls_token-value(1) = '@' )
+          OR to_lower( ls_token-value ) = 'extend'.
         EXIT.
       ELSE.
         parse_error(
@@ -1304,7 +1323,16 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
     WHILE cv_index <= lines( it_tokens ).
       READ TABLE it_tokens INDEX cv_index INTO ls_token.
       lv_keyword = to_lower( ls_token-value ).
-      IF lv_keyword = 'remove'.
+      IF ls_token-value = ';'.
+        cv_index = cv_index + 1.
+        lv_done = abap_true.
+        EXIT.
+      ELSEIF ( strlen( ls_token-value ) > 0 AND ls_token-value(1) = '@' )
+          OR lv_keyword = 'extend'.
+        " Some ADT table DDL omits the terminator between extension blocks.
+        lv_done = abap_true.
+        EXIT.
+      ELSEIF lv_keyword = 'remove'.
         cv_index = cv_index + 1.
         READ TABLE it_tokens INDEX cv_index INTO ls_token.
         IF sy-subrc <> 0.
@@ -1404,10 +1432,6 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
             iv_token = ls_token-value
             iv_offset = ls_token-offset ).
         ENDIF.
-      ELSEIF ls_token-value = ';'.
-        cv_index = cv_index + 1.
-        lv_done = abap_true.
-        EXIT.
       ELSE.
         parse_error(
           iv_context = 'unexpected token in extension'
@@ -1741,6 +1765,7 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
     DATA lv_notnull TYPE string.
     DATA lv_colon TYPE i.
     DATA lv_include TYPE string.
+    DATA lv_extend TYPE string.
 
     rv_ddl = serialize_top( is_data ).
     rv_ddl = rv_ddl && |define table { to_lower( is_data-dd02v-tabname ) } \{\n\n|.
@@ -1789,10 +1814,16 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
         ELSE.
           rv_ddl = rv_ddl && |  { lv_pre } : include { to_lower( ls_dd03p-precfield ) }{ lv_suffix }{ lv_notnull }|.
         ENDIF.
-        rv_ddl = rv_ddl && |;\n|.
-        rv_ddl = rv_ddl && serialize_extend(
+        lv_extend = serialize_extend(
           is_dd03p = ls_dd03p
           is_data = is_data ).
+        IF lv_extend IS INITIAL.
+          rv_ddl = rv_ddl && |;\n|.
+        ELSE.
+          " ADT omits the terminator for an include that owns extensions.
+          rv_ddl = rv_ddl && |\n|.
+          rv_ddl = rv_ddl && lv_extend.
+        ENDIF.
         CONTINUE.
       ENDIF.
       rv_ddl = rv_ddl && serialize_field_annotations(
@@ -1840,14 +1871,44 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD has_more_extensions.
+
+    DATA ls_dd08v LIKE LINE OF is_data-dd08v.
+    DATA ls_dd35v LIKE LINE OF is_data-dd35v.
+
+    LOOP AT is_data-dd08v INTO ls_dd08v
+        WHERE ( noinherit = 'Y' OR checktable = '*' ) AND noinherit <> 'N'.
+      READ TABLE it_fields TRANSPORTING NO FIELDS
+        WITH KEY table_line = ls_dd08v-fieldname.
+      IF sy-subrc = 0.
+        rv_more = abap_true.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
+    LOOP AT is_data-dd35v INTO ls_dd35v.
+      IF ls_dd35v-shlpinher = abap_true.
+        CONTINUE.
+      ENDIF.
+      READ TABLE it_fields TRANSPORTING NO FIELDS
+        WITH KEY table_line = ls_dd35v-fieldname.
+      IF sy-subrc = 0.
+        rv_more = abap_true.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD serialize_extend.
 
     DATA lv_index TYPE i.
     DATA ls_dd03p LIKE LINE OF is_data-dd03p.
-    DATA lt_fields TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+    DATA lt_fields TYPE ty_fields.
     DATA lv_field LIKE LINE OF lt_fields.
     DATA ls_dd08v LIKE LINE OF is_data-dd08v.
     DATA ls_dd35v LIKE LINE OF is_data-dd35v.
+    DATA lv_more TYPE abap_bool.
 
     READ TABLE is_data-dd03p TRANSPORTING NO FIELDS
       WITH KEY fieldname = is_dd03p-fieldname precfield = is_dd03p-precfield.
@@ -1893,7 +1954,14 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
               is_data = is_data ).
         ENDIF.
       ENDIF.
-      rv_ddl = rv_ddl && |;\n|.
+      lv_more = has_more_extensions(
+        it_fields = lt_fields
+        is_data = is_data ).
+      IF lv_more = abap_true.
+        rv_ddl = rv_ddl && |\n|.
+      ELSE.
+        rv_ddl = rv_ddl && |;\n|.
+      ENDIF.
     ENDLOOP.
     LOOP AT is_data-dd35v INTO ls_dd35v.
       READ TABLE lt_fields INTO lv_field
@@ -1904,6 +1972,7 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
       IF ls_dd35v-shlpinher = abap_true.
         CONTINUE.
       ENDIF.
+      DELETE lt_fields WHERE table_line = ls_dd35v-fieldname.
       rv_ddl = rv_ddl && |\n  extend { to_lower( lv_field ) } :|.
       IF ls_dd35v-shlpname = '*'.
         rv_ddl = rv_ddl && |\n    remove value help|.
@@ -1912,7 +1981,14 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
           iv_fieldname = lv_field
             is_data = is_data ).
       ENDIF.
-      rv_ddl = rv_ddl && |;\n|.
+      lv_more = has_more_extensions(
+        it_fields = lt_fields
+        is_data = is_data ).
+      IF lv_more = abap_true.
+        rv_ddl = rv_ddl && |\n|.
+      ELSE.
+        rv_ddl = rv_ddl && |;\n|.
+      ENDIF.
     ENDLOOP.
     REPLACE ALL OCCURRENCES OF |\n  | IN rv_ddl WITH |\n    |.
   ENDMETHOD.

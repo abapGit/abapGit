@@ -34,6 +34,11 @@ DDL converter.
   camel-case `@AbapCatalog.enhancementCategory`, while serialization uses the
   dotted spelling.
 
+- `2026-09-08`: ADT table DDL can omit semicolons between an include and its
+  component extensions, and between intermediate extension blocks. The
+  serializer preserves this layout while retaining the semicolon on the final
+  extension; the parser accepts the omitted intermediate terminators.
+
 ## Conversion boundary
 
 Classic TABL metadata that has no representation in `define table` DDL is not

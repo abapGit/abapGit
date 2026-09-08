@@ -15,6 +15,7 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
     METHODS test1 FOR TESTING RAISING cx_static_check.
     METHODS test2 FOR TESTING RAISING cx_static_check.
     METHODS test_includes_and_value_help FOR TESTING RAISING cx_static_check.
+    METHODS extension_terminators FOR TESTING RAISING cx_static_check.
     METHODS invalid_ddl FOR TESTING RAISING cx_static_check.
     METHODS annotations_and_types FOR TESTING RAISING cx_static_check.
     METHODS builtin_types FOR TESTING RAISING cx_static_check.
@@ -735,6 +736,57 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 0
       act = sy-subrc ).
+
+  ENDMETHOD.
+
+  METHOD extension_terminators.
+
+    DATA lo_format TYPE REF TO zcl_abapgit_object_tabl_ddl.
+    DATA lv_ddl TYPE string.
+    DATA lv_roundtrip TYPE string.
+    DATA lv_expected TYPE string.
+
+    lv_ddl =
+      `@EndUserText.label : 'Extension terminators'` && |\n| &&
+      `@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE` && |\n| &&
+      `@AbapCatalog.tableCategory : #TRANSPARENT` && |\n| &&
+      `@AbapCatalog.deliveryClass : #C` && |\n| &&
+      `@AbapCatalog.dataMaintenance : #RESTRICTED` && |\n| &&
+      `define table zextension {` && |\n| &&
+      `` && |\n| &&
+      `  key include zbase not null` && |\n| &&
+      `  @AbapCatalog.foreignKey.screenCheck : true` && |\n| &&
+      `  extend language :` && |\n| &&
+      `    with foreign key [0..*,1] zlanguage` && |\n| &&
+      `      where spras = zsource.language` && |\n| &&
+      `  @AbapCatalog.foreignKey.screenCheck : true` && |\n| &&
+      `  extend prod :` && |\n| &&
+      `    with foreign key [0..*,1] zprod` && |\n| &&
+      `      where mandt = zsource.mandt` && |\n| &&
+      `      and prod = zsource.prod;` && |\n| &&
+      `  include zdata;` && |\n| &&
+      `` && |\n| &&
+      `}`.
+
+    CREATE OBJECT lo_format.
+    lv_roundtrip = lo_format->serialize( lo_format->deserialize( lv_ddl ) ).
+    lv_expected = |key include zbase not null\n|.
+    FIND lv_expected IN lv_roundtrip.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    lv_expected = |where spras = zsource.language\n|.
+    FIND lv_expected IN lv_roundtrip.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    lv_expected = |and prod = zsource.prod;\n  include zdata;|.
+    FIND lv_expected IN lv_roundtrip.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    lv_roundtrip = lo_format->serialize( lo_format->deserialize( lv_roundtrip ) ).
+    cl_abap_unit_assert=>assert_not_initial( lv_roundtrip ).
 
   ENDMETHOD.
 
