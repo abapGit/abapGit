@@ -242,12 +242,12 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
     DATA: ls_package TYPE zif_abapgit_sap_package=>ty_create.
 
-
-    ls_package-devclass  = mv_package.
-    ls_package-ctext     = mv_package.
-    ls_package-parentcl  = '$TMP'.
-    ls_package-dlvunit   = 'LOCAL'.
-    ls_package-as4user   = sy-uname.
+    ls_package-devclass = mv_package.
+    ls_package-ctext    = mv_package.
+    ls_package-parentcl = '$TMP'.
+    ls_package-dlvunit  = 'LOCAL'.
+    ls_package-as4user  = sy-uname.
+    ls_package-packkind = iv_abap_language_version.
 
     zif_abapgit_sap_package~create( ls_package ).
 
