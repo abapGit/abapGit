@@ -1114,6 +1114,16 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_initial( ls_foreign_key-cardleft ).
     cl_abap_unit_assert=>assert_initial( ls_foreign_key-card ).
 
+    CLEAR ls_data-dd08v.
+    APPEND ls_foreign_key TO ls_data-dd08v.
+    lv_ddl = lo_format->serialize( ls_data ).
+    ls_roundtrip = lo_format->deserialize( lv_ddl ).
+    READ TABLE ls_roundtrip-dd08v INTO ls_foreign_key
+      WITH KEY fieldname = 'FIELD'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+
   ENDMETHOD.
 
   METHOD invalid_ddl.

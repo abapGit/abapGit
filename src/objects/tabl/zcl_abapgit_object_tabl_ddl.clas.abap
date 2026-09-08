@@ -1968,6 +1968,8 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
+    " Cardinality is optional in table DDL; keep the separator when omitted.
+    lv_cardinality = | |.
     IF ls_dd08v-cardleft = 'C' AND ls_dd08v-card = '1'.
       lv_cardinality = | [1,0..1] |.
     ELSEIF ls_dd08v-cardleft = '1' AND ls_dd08v-card = 'C'.
