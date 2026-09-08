@@ -680,7 +680,7 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
     DATA lv_reference TYPE string.
     DATA lv_table TYPE string.
     DATA lv_field TYPE string.
-    FIELD-SYMBOLS <lv_outputstyle> TYPE c.
+    FIELD-SYMBOLS <lv_outputstyle> TYPE zif_abapgit_aff_doma_v1=>ty_output_style.
 
     WHILE cv_index <= lines( it_tokens ).
       READ TABLE it_tokens INDEX cv_index INTO ls_token.

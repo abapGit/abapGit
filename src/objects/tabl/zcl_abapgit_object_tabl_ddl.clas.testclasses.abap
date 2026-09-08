@@ -712,7 +712,7 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lv_exclass TYPE c LENGTH 1.
     FIELD-SYMBOLS <lv_is_gtt> TYPE abap_bool.
     FIELD-SYMBOLS <lv_invhash> TYPE c.
-    FIELD-SYMBOLS <lv_outputstyle> TYPE c.
+    FIELD-SYMBOLS <lv_outputstyle> TYPE zif_abapgit_aff_doma_v1=>ty_output_style.
 
     lv_ddl =
       `// comments and blank lines are ignored` && |\n| &&
