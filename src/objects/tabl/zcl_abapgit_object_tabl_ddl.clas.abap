@@ -1615,7 +1615,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         iv_offset = iv_offset ).
     ENDIF.
     IF iv_base = 'char' OR iv_base = 'numc' OR iv_base = 'raw'
-        OR iv_base = 'lraw'
+        OR iv_base = 'lraw' OR iv_base = 'lchr'
         OR iv_base = 'string' OR iv_base = 'rawstring' OR iv_base = 'sstring'
         OR iv_base = 'unit'.
       IF iv_decimals IS NOT INITIAL.
@@ -1706,6 +1706,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         cs_dd03p-datatype = 'LRAW'.
         cs_dd03p-inttype = 'X'.
         cs_dd03p-intlen = cs_dd03p-leng.
+      WHEN 'lchr'.
+        cs_dd03p-datatype = 'LCHR'.
+        cs_dd03p-inttype = 'C'.
+        cs_dd03p-intlen = cs_dd03p-leng * 2.
       WHEN 'string'.
         cs_dd03p-datatype = 'STRG'.
         cs_dd03p-inttype = 'g'.
@@ -2335,6 +2339,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       ENDIF.
     ELSEIF is_dd03p-datatype = 'CHAR' OR is_dd03p-datatype = 'NUMC'
         OR is_dd03p-datatype = 'RAW' OR is_dd03p-datatype = 'LRAW'
+        OR is_dd03p-datatype = 'LCHR'
         OR is_dd03p-datatype = 'UNIT'.
       rv_type = |abap.{ to_lower( is_dd03p-datatype ) }({ lv_leng })|.
     ELSE.

@@ -1013,6 +1013,7 @@ CLASS ltcl_test IMPLEMENTATION.
       `  numc_field : abap.numc(4);` && |\n| &&
       `  raw_field : abap.raw(4);` && |\n| &&
       `  lraw_field : abap.lraw(1024);` && |\n| &&
+      `  lchr_field : abap.lchr(2048);` && |\n| &&
       `  string_field : abap.string(0);` && |\n| &&
       `  rawstring_field : abap.rawstring(0);` && |\n| &&
       `  sstring_field : abap.sstring(4);` && |\n| &&
@@ -1049,6 +1050,7 @@ CLASS ltcl_test IMPLEMENTATION.
     APPEND `NUMC_FIELD;NUMC;4;` TO lt_specs.
     APPEND `RAW_FIELD;RAW;4;` TO lt_specs.
     APPEND `LRAW_FIELD;LRAW;1024;-` TO lt_specs.
+    APPEND `LCHR_FIELD;LCHR;2048;-` TO lt_specs.
     APPEND `STRING_FIELD;STRG;-;-` TO lt_specs.
     APPEND `RAWSTRING_FIELD;RSTR;-;-` TO lt_specs.
     APPEND `SSTRING_FIELD;SSTR;4;-` TO lt_specs.
