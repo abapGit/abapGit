@@ -1611,6 +1611,7 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
         iv_offset = iv_offset ).
     ENDIF.
     IF iv_base = 'char' OR iv_base = 'numc' OR iv_base = 'raw'
+        OR iv_base = 'lraw'
         OR iv_base = 'string' OR iv_base = 'rawstring' OR iv_base = 'sstring'
         OR iv_base = 'unit'.
       IF iv_decimals IS NOT INITIAL.
@@ -1695,6 +1696,10 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
         cs_dd03p-intlen = cs_dd03p-leng * 2.
       WHEN 'raw'.
         cs_dd03p-datatype = 'RAW'.
+        cs_dd03p-inttype = 'X'.
+        cs_dd03p-intlen = cs_dd03p-leng.
+      WHEN 'lraw'.
+        cs_dd03p-datatype = 'LRAW'.
         cs_dd03p-inttype = 'X'.
         cs_dd03p-intlen = cs_dd03p-leng.
       WHEN 'string'.
@@ -2030,7 +2035,6 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
         CONTINUE.
       ENDIF.
       DELETE lt_fields WHERE table_line = ls_dd08v-fieldname.
-      rv_ddl = rv_ddl && |\n|.
       IF ls_dd08v-checktable <> '*'.
         rv_ddl = rv_ddl && serialize_fkey_annotations(
           iv_fieldname = ls_dd08v-fieldname
@@ -2073,7 +2077,7 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
         CONTINUE.
       ENDIF.
       DELETE lt_fields WHERE table_line = ls_dd35v-fieldname.
-      rv_ddl = rv_ddl && |\n  extend { to_lower( lv_field ) } :|.
+      rv_ddl = rv_ddl && |  extend { to_lower( lv_field ) } :|.
       IF ls_dd35v-shlpname = '*'.
         rv_ddl = rv_ddl && |\n    remove value help|.
       ELSEIF ls_dd35v-shlpinher <> abap_true.
@@ -2326,7 +2330,8 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
         rv_type = |abap.df34_dec({ lv_leng },{ lv_decimals })|.
       ENDIF.
     ELSEIF is_dd03p-datatype = 'CHAR' OR is_dd03p-datatype = 'NUMC'
-        OR is_dd03p-datatype = 'RAW' OR is_dd03p-datatype = 'UNIT'.
+        OR is_dd03p-datatype = 'RAW' OR is_dd03p-datatype = 'LRAW'
+        OR is_dd03p-datatype = 'UNIT'.
       rv_type = |abap.{ to_lower( is_dd03p-datatype ) }({ lv_leng })|.
     ELSE.
       rv_type = serialize_type_special( is_dd03p ).

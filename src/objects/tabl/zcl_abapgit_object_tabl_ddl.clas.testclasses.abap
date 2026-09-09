@@ -775,6 +775,14 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 0
       act = sy-subrc ).
+    FIND |key include zbase not null\n\n| IN lv_roundtrip.
+    IF sy-subrc = 0.
+      cl_abap_unit_assert=>fail( ).
+    ENDIF.
+    FIND |where spras = zsource.language\n\n| IN lv_roundtrip.
+    IF sy-subrc = 0.
+      cl_abap_unit_assert=>fail( ).
+    ENDIF.
     lv_expected = |where spras = zsource.language\n|.
     FIND lv_expected IN lv_roundtrip.
     cl_abap_unit_assert=>assert_equals(
@@ -1004,6 +1012,7 @@ CLASS ltcl_test IMPLEMENTATION.
       `  char_field : abap.char(4);` && |\n| &&
       `  numc_field : abap.numc(4);` && |\n| &&
       `  raw_field : abap.raw(4);` && |\n| &&
+      `  lraw_field : abap.lraw(1024);` && |\n| &&
       `  string_field : abap.string(0);` && |\n| &&
       `  rawstring_field : abap.rawstring(0);` && |\n| &&
       `  sstring_field : abap.sstring(4);` && |\n| &&
@@ -1039,6 +1048,7 @@ CLASS ltcl_test IMPLEMENTATION.
     APPEND `CHAR_FIELD;CHAR;4;` TO lt_specs.
     APPEND `NUMC_FIELD;NUMC;4;` TO lt_specs.
     APPEND `RAW_FIELD;RAW;4;` TO lt_specs.
+    APPEND `LRAW_FIELD;LRAW;1024;-` TO lt_specs.
     APPEND `STRING_FIELD;STRG;-;-` TO lt_specs.
     APPEND `RAWSTRING_FIELD;RSTR;-;-` TO lt_specs.
     APPEND `SSTRING_FIELD;SSTR;4;-` TO lt_specs.
