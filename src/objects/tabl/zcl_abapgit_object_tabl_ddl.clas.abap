@@ -277,7 +277,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
 
   METHOD deserialize.
@@ -441,7 +441,8 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
 
   METHOD get_replacement_object.
 
-    DATA lv_view_name TYPE string.
+    DATA lv_view_name TYPE viewname.
+    DATA lv_entityname TYPE objectname.
 
     lv_view_name = to_upper( iv_viewref ).
     IF lv_view_name IS INITIAL.
@@ -453,9 +454,10 @@ CLASS zcl_abapgit_object_tabl_ddl IMPLEMENTATION.
         " corresponding CDS entity name instead.
         CALL METHOD ('CL_SBD_DDLS_UTILITY')=>('MAP_TO_REPLACEMENT_DDLS')
           EXPORTING
-            i_view_name = lv_view_name
+            i_view_name  = lv_view_name
           IMPORTING
-            e_entityname = rv_object.
+            e_entityname = lv_entityname.
+        rv_object = lv_entityname.
       CATCH cx_root.
         " The utility is not available on older releases and is also absent
         " from the open-abap test runtime. In that case no annotation is
