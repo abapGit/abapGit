@@ -441,8 +441,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
   METHOD get_replacement_object.
 
-    DATA lv_view_name TYPE viewname.
-    DATA lv_entityname TYPE objectname.
+    DATA lv_view_name TYPE ddobjname.
+    DATA lv_entityname TYPE ddobjname.
 
     lv_view_name = to_upper( iv_viewref ).
     IF lv_view_name IS INITIAL.
@@ -471,7 +471,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
   METHOD get_replacement_view.
 
-    DATA lv_entityname TYPE string.
+    DATA lv_entityname TYPE ddobjname.
+    DATA lv_view_name TYPE ddobjname.
 
     lv_entityname = to_upper( iv_entityname ).
     IF lv_entityname IS INITIAL.
@@ -485,7 +486,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           EXPORTING
             i_entityname = lv_entityname
           IMPORTING
-            e_view_name = rv_viewname.
+            e_view_name = lv_view_name.
+        rv_viewname = lv_view_name.
       CATCH cx_root.
         " Keep source-only parsing usable on releases without the SAP
         " utility. A SAP system with the utility returns the resolved view
