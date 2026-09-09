@@ -2212,7 +2212,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       RETURN.
     ENDIF.
     IF ls_dd08v-ddtext IS NOT INITIAL.
-      rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.label : { escape_string( ls_dd08v-ddtext ) }\n|.
+      rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.label : '{ ls_dd08v-ddtext }'\n|.
     ENDIF.
     IF ls_dd08v-frkart IS INITIAL.
     ELSEIF ls_dd08v-frkart = 'TEXT'.

@@ -808,6 +808,7 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lv_ddl TYPE string.
     DATA lv_roundtrip TYPE string.
     DATA lv_replacement_object TYPE string.
+    DATA lv_label_found TYPE abap_bool.
     DATA lv_exclass TYPE c LENGTH 1.
     FIELD-SYMBOLS <lv_is_gtt> TYPE abap_bool.
     FIELD-SYMBOLS <lv_invhash> TYPE c.
@@ -946,6 +947,18 @@ CLASS ltcl_test IMPLEMENTATION.
     ELSE.
       cl_abap_unit_assert=>assert_initial( ls_data-dd02v-viewref ).
     ENDIF.
+
+    READ TABLE ls_data-dd08v INTO ls_foreign_key
+      WITH KEY fieldname = 'FOREIGN_FIELD'.
+    ls_foreign_key-ddtext = |Class 'Logical Object'|.
+    MODIFY ls_data-dd08v FROM ls_foreign_key INDEX sy-tabix.
+    lv_roundtrip = lo_format->serialize( ls_data ).
+    IF lv_roundtrip CS `@AbapCatalog.foreignKey.label : 'Class 'Logical Object''`.
+      lv_label_found = abap_true.
+    ENDIF.
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_true
+      act = lv_label_found ).
 
     DO 5 TIMES.
       CLEAR ls_data.
