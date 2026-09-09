@@ -1036,9 +1036,32 @@ CLASS ltcl_test IMPLEMENTATION.
     ls_field-reftable = 'FPLAA'.
     ls_field-reffield = 'WAERK'.
     APPEND ls_field TO ls_data-dd03p.
+    CLEAR ls_field.
+    ls_field-tabname = 'FPLAA'.
+    ls_field-fieldname = 'WAERK'.
+    ls_field-adminfield = '1'.
+    ls_field-datatype = 'CUKY'.
+    APPEND ls_field TO ls_data-dd03p.
+    CLEAR ls_field.
+    ls_field-fieldname = 'QUANTITY_FLT'.
+    ls_field-adminfield = '0'.
+    ls_field-datatype = 'FLTP'.
+    ls_field-reftable = 'ZREF'.
+    ls_field-reffield = 'UNIT_FIELD'.
+    APPEND ls_field TO ls_data-dd03p.
+    CLEAR ls_field.
+    ls_field-tabname = 'ZREF'.
+    ls_field-fieldname = 'UNIT_FIELD'.
+    ls_field-adminfield = '1'.
+    ls_field-datatype = 'UNIT'.
+    APPEND ls_field TO ls_data-dd03p.
 
     lv_ddl = lo_format->serialize( ls_data ).
     FIND `@Semantics.amount.currencyCode : 'fplaa.waerk'` IN lv_ddl.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    FIND `@Semantics.quantity.unitOfMeasure : 'zref.unit_field'` IN lv_ddl.
     cl_abap_unit_assert=>assert_equals(
       exp = 0
       act = sy-subrc ).

@@ -221,6 +221,12 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
         !is_data       TYPE zif_abapgit_object_tabl=>ty_internal
       RETURNING
         VALUE(rv_more) TYPE abap_bool .
+    METHODS get_reference_datatype
+      IMPORTING
+        !is_field          TYPE dd03p
+        !is_data           TYPE zif_abapgit_object_tabl=>ty_internal
+      RETURNING
+        VALUE(rv_datatype) TYPE dd03p-datatype .
     METHODS serialize_field_annotations
       IMPORTING
         !iv_fieldname TYPE clike
@@ -2120,9 +2126,49 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_reference_datatype.
+    DATA ls_reference LIKE LINE OF is_data-dd03p.
+    DATA ls_dfies TYPE dfies.
+
+    " Prefer the field metadata already read for the table. This also keeps
+    " serialization independent of DDIC access when the caller supplies it.
+    READ TABLE is_data-dd03p INTO ls_reference
+      WITH KEY tabname = is_field-reftable fieldname = is_field-reffield.
+    IF sy-subrc <> 0 AND is_field-reftable = is_data-dd02v-tabname.
+      READ TABLE is_data-dd03p INTO ls_reference
+        WITH KEY fieldname = is_field-reffield.
+    ENDIF.
+    IF sy-subrc = 0.
+      rv_datatype = ls_reference-datatype.
+      RETURN.
+    ENDIF.
+
+    " References may point to a different DDIC object, which is not part of
+    " the DD03P rows returned for the table being serialized.
+    TRY.
+        CALL FUNCTION 'DDIF_FIELDINFO_GET'
+          EXPORTING
+            tabname    = is_field-reftable
+            lfieldname = is_field-reffield
+            langu      = sy-langu
+          IMPORTING
+            dfies_wa   = ls_dfies
+          EXCEPTIONS
+            not_found      = 1
+            internal_error = 2
+            OTHERS         = 3.
+        IF sy-subrc = 0.
+          rv_datatype = ls_dfies-datatype.
+        ENDIF.
+      CATCH cx_sy_dyn_call_error.
+        " The open-abap test runtime does not provide DDIC function modules.
+    ENDTRY.
+  ENDMETHOD.
+
+
   METHOD serialize_field_annotations.
     DATA ls_dd03p LIKE LINE OF is_data-dd03p.
-    DATA ls_reference LIKE LINE OF is_data-dd03p.
+    DATA lv_reference_datatype TYPE dd03p-datatype.
     DATA lv_is_amount TYPE abap_bool.
     DATA lv_reference TYPE string.
     READ TABLE is_data-dd03p INTO ls_dd03p WITH KEY fieldname = iv_fieldname.
@@ -2138,11 +2184,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       rv_ddl = rv_ddl && |  @AbapCatalog.textLanguage\n|.
     ENDIF.
     IF ls_dd03p-reftable IS NOT INITIAL AND ls_dd03p-reffield IS NOT INITIAL.
-      READ TABLE is_data-dd03p INTO ls_reference WITH KEY fieldname = ls_dd03p-reffield.
-      IF sy-subrc = 0 AND ls_reference-datatype = 'CUKY'.
-        lv_is_amount = abap_true.
-      ELSEIF ls_dd03p-datatype = 'CURR'
-          OR ls_dd03p-datatype = 'FLTP'.
+      lv_reference_datatype = get_reference_datatype(
+        is_field = ls_dd03p
+        is_data  = is_data ).
+      IF lv_reference_datatype = 'CUKY'.
         lv_is_amount = abap_true.
       ENDIF.
       IF lv_is_amount = abap_true.
