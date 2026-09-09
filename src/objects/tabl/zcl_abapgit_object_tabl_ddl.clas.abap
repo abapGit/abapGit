@@ -2141,7 +2141,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       READ TABLE is_data-dd03p INTO ls_reference WITH KEY fieldname = ls_dd03p-reffield.
       IF sy-subrc = 0 AND ls_reference-datatype = 'CUKY'.
         lv_is_amount = abap_true.
-      ELSEIF ls_dd03p-datatype = 'CURR'.
+      ELSEIF ls_dd03p-datatype = 'CURR'
+          OR ls_dd03p-datatype = 'FLTP'.
         lv_is_amount = abap_true.
       ENDIF.
       IF lv_is_amount = abap_true.

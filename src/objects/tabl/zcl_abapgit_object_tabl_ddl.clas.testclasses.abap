@@ -18,6 +18,7 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
     METHODS extension_terminators FOR TESTING RAISING cx_static_check.
     METHODS invalid_ddl FOR TESTING RAISING cx_static_check.
     METHODS annotations_and_types FOR TESTING RAISING cx_static_check.
+    METHODS fltp_currency_reference FOR TESTING RAISING cx_static_check.
     METHODS builtin_types FOR TESTING RAISING cx_static_check.
     METHODS foreign_key_cardinalities FOR TESTING RAISING cx_static_check.
 
@@ -1016,6 +1017,34 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_initial( ls_data-dd02v-mainflag ).
 
   ENDMETHOD.
+
+  METHOD fltp_currency_reference.
+
+    DATA lo_format TYPE REF TO zcl_abapgit_object_tabl_ddl.
+    DATA ls_data TYPE zif_abapgit_object_tabl=>ty_internal.
+    DATA ls_field LIKE LINE OF ls_data-dd03p.
+    DATA lv_ddl TYPE string.
+
+    CREATE OBJECT lo_format.
+    ls_data-dd02v-tabname = 'ZFLTP'.
+    ls_data-dd02v-exclass = '0'.
+    ls_data-dd02v-tabclass = 'TRANSP'.
+    ls_data-dd02v-contflag = 'C'.
+    ls_field-fieldname = 'CMPRE_FLT'.
+    ls_field-adminfield = '0'.
+    ls_field-datatype = 'FLTP'.
+    ls_field-reftable = 'FPLAA'.
+    ls_field-reffield = 'WAERK'.
+    APPEND ls_field TO ls_data-dd03p.
+
+    lv_ddl = lo_format->serialize( ls_data ).
+    FIND `@Semantics.amount.currencyCode : 'fplaa.waerk'` IN lv_ddl.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+
+  ENDMETHOD.
+
 
   METHOD builtin_types.
 
