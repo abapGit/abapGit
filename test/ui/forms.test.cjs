@@ -30,7 +30,10 @@ function page({ action = "SAPEVENT:old", fields = [], webgui = false, global = t
     appendChild(input) { input.parentNode = this; this.elements.push(input); },
     removeChild(input) { this.elements.splice(this.elements.indexOf(input), 1); },
     submit() {
+      // Every submit has to arm the browser-back guard, not just the first one:
+      // consume the flag so a later submit that forgot to set it is caught too.
       assert.equal(context.gSapeventNavPending, true);
+      context.gSapeventNavPending = false;
       submissions.push({
         action: this.attrs.action,
         method: this.attrs.method,
