@@ -995,6 +995,13 @@ CLASS ltcl_test IMPLEMENTATION.
       exp = '02'
       act = ls_data-dd02v-authclass ).
 
+    ls_data-dd02v-authclass = '10'.
+    lv_roundtrip = lo_format->serialize( ls_data ).
+    ls_data = lo_format->deserialize( lv_roundtrip ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = '10'
+      act = ls_data-dd02v-authclass ).
+
     lv_ddl =
       `@EndUserText.label : 'Legacy data maintenance'` && |\n| &&
       `@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE` && |\n| &&

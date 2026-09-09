@@ -58,6 +58,13 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
         !iv_offset  TYPE i
       RAISING
         zcx_abapgit_exception .
+    METHODS parse_activation_type
+      IMPORTING
+        !iv_value           TYPE string
+      RETURNING
+        VALUE(rv_authclass) TYPE dd02v-authclass
+      RAISING
+        zcx_abapgit_exception .
     METHODS get_replacement_object
       IMPORTING
         !iv_viewref      TYPE clike
@@ -720,17 +727,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
                 iv_offset = 0 ).
           ENDCASE.
         WHEN '@abapcatalog.activationtype'.
-          CASE to_upper( lv_compare ).
-            WHEN '#NAMETAB_GENERATION_OFFLINE'.
-              cs_data-dd02v-authclass = '01'.
-            WHEN '#ADAPT_C_STRUCTURES'.
-              cs_data-dd02v-authclass = '02'.
-            WHEN OTHERS.
-              parse_error(
-                iv_context = 'unsupported activation type'
-                iv_token = lv_value
-                iv_offset = 0 ).
-          ENDCASE.
+          cs_data-dd02v-authclass = parse_activation_type( lv_value ).
         WHEN '@abapcatalog.deliveryclass'.
           IF strlen( lv_compare ) <> 2 OR lv_compare(1) <> '#'.
             parse_error(
@@ -785,6 +782,23 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       ENDCASE.
     ENDWHILE.
 
+  ENDMETHOD.
+
+
+  METHOD parse_activation_type.
+    CASE to_upper( iv_value ).
+      WHEN '#NAMETAB_GENERATION_OFFLINE'.
+        rv_authclass = '01'.
+      WHEN '#ADAPT_C_STRUCTURES'.
+        rv_authclass = '02'.
+      WHEN '#INITIAL_TABLE_REQUIRED'.
+        rv_authclass = '10'.
+      WHEN OTHERS.
+        parse_error(
+          iv_context = 'unsupported activation type'
+          iv_token = iv_value
+          iv_offset = 0 ).
+    ENDCASE.
   ENDMETHOD.
 
 
@@ -2277,6 +2291,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       rv_ddl = rv_ddl && |@AbapCatalog.activationType : #NAMETAB_GENERATION_OFFLINE\n|.
     ELSEIF is_data-dd02v-authclass = '02'.
       rv_ddl = rv_ddl && |@AbapCatalog.activationType : #ADAPT_C_STRUCTURES\n|.
+    ELSEIF is_data-dd02v-authclass = '10'.
+      rv_ddl = rv_ddl && |@AbapCatalog.activationType : #INITIAL_TABLE_REQUIRED\n|.
     ELSEIF is_data-dd02v-authclass IS NOT INITIAL.
       zcx_abapgit_exception=>raise(
         |TABL DDL serialization error: unsupported activation type { is_data-dd02v-authclass }| ).
