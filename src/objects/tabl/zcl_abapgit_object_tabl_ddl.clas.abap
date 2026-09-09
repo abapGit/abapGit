@@ -762,10 +762,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
               iv_name = lv_name
             CHANGING
               cs_data = cs_data ).
-        WHEN '@abapcatalog.primarykey.invertedhashindex'.
+        WHEN '@abapcatalog.primarykey.invertedindividualindex'.
           IF to_lower( lv_compare ) <> 'true' AND to_lower( lv_compare ) <> 'false'.
             parse_error(
-              iv_context = 'invalid inverted hash index value'
+              iv_context = 'invalid inverted individual index value'
               iv_token = lv_value
               iv_offset = 0 ).
           ENDIF.
@@ -2298,7 +2298,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     ENDIF.
     ASSIGN COMPONENT 'PK_IS_INVHASH' OF STRUCTURE is_data-dd02v TO <lv_pk_is_invhash>.
     IF sy-subrc = 0 AND <lv_pk_is_invhash> = abap_true.
-      rv_ddl = rv_ddl && |@AbapCatalog.primaryKey.invertedHashIndex : true\n|.
+      rv_ddl = rv_ddl && |@AbapCatalog.primaryKey.invertedIndividualIndex : true\n|.
     ENDIF.
   ENDMETHOD.
 

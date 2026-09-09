@@ -809,6 +809,7 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lv_roundtrip TYPE string.
     DATA lv_replacement_object TYPE string.
     DATA lv_label_found TYPE abap_bool.
+    DATA lv_inverted_index_found TYPE abap_bool.
     DATA lv_exclass TYPE c LENGTH 1.
     FIELD-SYMBOLS <lv_is_gtt> TYPE abap_bool.
     FIELD-SYMBOLS <lv_invhash> TYPE c.
@@ -823,7 +824,7 @@ CLASS ltcl_test IMPLEMENTATION.
       `@AbapCatalog.deliveryClass : #C` && |\n| &&
       `@AbapCatalog.dataMaintenance : #NOT_ALLOWED` && |\n| &&
       `@AbapCatalog.replacementObject : '/scmb/v_thndlcd_t_entity'` && |\n| &&
-      `@AbapCatalog.primaryKey.invertedHashIndex : true` && |\n| &&
+      `@AbapCatalog.primaryKey.invertedIndividualIndex : true` && |\n| &&
       `define table zannotations {` && |\n| &&
       `  @EndUserText.label : 'Amount  field'` && |\n| &&
       `  @Semantics.amount.currencyCode : 'zannotations.cuky'` && |\n| &&
@@ -935,6 +936,12 @@ CLASS ltcl_test IMPLEMENTATION.
     ls_data-dd02v-ddtext = 'Temporary table'.
     lv_replacement_object = lo_format->get_replacement_object( ls_data-dd02v-viewref ).
     lv_roundtrip = lo_format->serialize( ls_data ).
+    IF lv_roundtrip CS `@AbapCatalog.primaryKey.invertedIndividualIndex : true`.
+      lv_inverted_index_found = abap_true.
+    ENDIF.
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_true
+      act = lv_inverted_index_found ).
     ls_data = lo_format->deserialize( lv_roundtrip ).
     cl_abap_unit_assert=>assert_equals(
       exp = 'ZANNOTATIONS'
