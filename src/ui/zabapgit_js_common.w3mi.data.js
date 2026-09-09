@@ -338,10 +338,7 @@ function submitSapeventForm(params, action, method, form) {
     }
   }
 
-  // Mark that the popstate the browser control may emit while handling this
-  // sapevent navigation is self-initiated, not a user Back press
-  gSapeventNavPending = true;
-  form.submit();
+  submitForm(form);
 }
 
 // Trigger a server-rendered sapevent element (anchor / submit input) the way a
@@ -352,8 +349,12 @@ function submitSapeventForm(params, action, method, form) {
 // arm the flag - it would never be consumed and the next genuine Back press
 // would be swallowed.
 function clickSapEvent(element) {
+  // Main submit inputs inherit the event from their form rather than carrying
+  // a formaction of their own.
+  var formAction = element.type === "submit" && element.form
+    ? element.form.getAttribute("action") : "";
   var isSapEvent = element.getAttribute("data-sapevent")
-    || /sapevent/i.test(element.hrefsav || element.href || element.getAttribute("formaction") || "");
+    || /sapevent/i.test(element.hrefsav || element.href || element.getAttribute("formaction") || formAction || "");
   if (isSapEvent) gSapeventNavPending = true;
   element.click();
 }
@@ -385,9 +386,13 @@ function setInitialFocusWithQuerySelector(sSelector, bFocusParent) {
 // popstate as a user Back press and fires go_back, which supersedes the submit:
 // the page returns without saving on the Edge control, while the IE control -
 // where the trap never arms - is unaffected.
-function submitFormById(id) {
+function submitForm(form) {
   gSapeventNavPending = true;
-  document.getElementById(id).submit();
+  form.submit();
+}
+
+function submitFormById(id) {
+  submitForm(document.getElementById(id));
 }
 
 // Confirm JS initialization
@@ -1784,12 +1789,12 @@ LinkHints.prototype.hintActivate = function(hint) {
     this.toggleCheckbox(hint);
   } else if (hint.parent.type === "radio") {
     this.toggleRadioButton(hint);
-  } else if (hint.parent.type === "submit") {
-    hint.parent.click();
+  } else if (hint.parent.type === "submit" || hint.parent.type === "button") {
+    clickSapEvent(hint.parent);
   } else if (hint.parent.nodeName === "INPUT" || hint.parent.nodeName === "TEXTAREA") {
     hint.parent.focus();
   } else {
-    hint.parent.click();
+    clickSapEvent(hint.parent);
     if (this.activatedDropdown) this.closeActivatedDropdown();
   }
 };
@@ -2564,12 +2569,14 @@ function enumerateUiActions() {
   });
 
   // forms
-  [].slice.call(document.querySelectorAll("input[type='submit']"))
+  [].slice.call(document.querySelectorAll("input[type='submit'], input[type='button'][data-sapevent]"))
     .forEach(function(input) {
       items.push({
         action: function() {
-          if (input.form.action.includes(input.formAction) || input.classList.contains("main")) {
-            input.form.submit();
+          if (input.type === "button") {
+            clickSapEvent(input);
+          } else if (input.form.action.includes(input.formAction) || input.classList.contains("main")) {
+            submitForm(input.form);
           } else {
             submitSapeventForm({}, input.formAction, "post", input.form);
           }
@@ -2772,7 +2779,7 @@ function findSapEventElements(action) {
   // pattern (\b still assumes word-shaped action names, which all current are)
   var re = new RegExp("\\b" + action.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b");
   return [].slice
-    .call(document.querySelectorAll("a, input[type='submit']"))
+    .call(document.querySelectorAll("a, input[type='submit'], input[type='button'][data-sapevent]"))
     .filter(function(el) {
       var target = el.getAttribute("data-sapevent");
       if (!target) {
