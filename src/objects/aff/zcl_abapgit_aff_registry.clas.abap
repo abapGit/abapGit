@@ -89,6 +89,21 @@ CLASS ZCL_ABAPGIT_AFF_REGISTRY IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_aff_registry~is_experimental_object_type.
+
+    DATA ls_registry_entry TYPE ty_registry_entry.
+
+    IF gt_registry IS INITIAL.
+      initialize_registry_table( ).
+    ENDIF.
+
+    READ TABLE gt_registry WITH TABLE KEY obj_type = iv_obj_type INTO ls_registry_entry.
+    IF sy-subrc = 0.
+      rv_result = ls_registry_entry-experimental.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_aff_registry~is_supported_object_type.
 
     DATA ls_registry_entry TYPE ty_registry_entry.

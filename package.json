@@ -2,7 +2,8 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "test": "npm run eslint && npm run abaplint",
+    "test": "npm run eslint && npm run test:ui && npm run abaplint",
+    "test:ui": "node --test test/ui/*.test.cjs",
     "merge": "abapmerge -f src/zabapgit.prog.abap -c zabapgit_standalone -o zabapgit.abap",
     "merge.ci": "cp zabapgit.abap ci/zabapgit_standalone.prog.abap && cd ci && abaplint --format codeframe && cd ..",
     "build": "rm -rf output && abap_transpile test/abap_transpile.json && cp -f src/ui/zabapgit_icon_font.w3mi.data.woff output/",
@@ -24,14 +25,14 @@
     ]
   },
   "devDependencies": {
-    "@abaplint/cli": "^2.120.42",
+    "@abaplint/cli": "^2.120.45",
     "@abaplint/database-sqlite": "^2.13.40",
-    "@abaplint/runtime": "^2.13.65",
-    "@abaplint/transpiler-cli": "^2.13.65",
+    "@abaplint/runtime": "^2.13.81",
+    "@abaplint/transpiler-cli": "^2.13.81",
     "@eslint/js": "^10.0.1",
     "abapmerge": "^0.16.10",
-    "c8": "^11.0.0",
-    "eslint": "^10.9.1",
+    "c8": "^12.0.0",
+    "eslint": "^10.10.0",
     "express": "^4.22.2",
     "globals": "^17.12.0"
   }
