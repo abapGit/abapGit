@@ -520,14 +520,16 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
 };
 
 RepoOverViewHelper.prototype.openSelectedRepo = function() {
-  this.selectedRepoKey = document.querySelector(".repo-overview tr.selected").dataset.key;
+  var selectedRow = document.querySelector(".repo-overview tr.selected");
+  if (!selectedRow) return;
+  this.selectedRepoKey = selectedRow.dataset.key;
   this.saveLocalStorage();
   document.querySelector(".repo-overview tr.selected td.ro-go a").click();
 };
 
 RepoOverViewHelper.prototype.selectRowByIndex = function(index) {
   var rows = this.getVisibleRows();
-  if (rows.length >= index) {
+  if (index >= 0 && index < rows.length) {
     var selectedRow = rows[index];
     if (selectedRow.classList.contains("selected")) {
       return;
@@ -544,6 +546,7 @@ RepoOverViewHelper.prototype.selectRowByIndex = function(index) {
 RepoOverViewHelper.prototype.selectRowByRepoKey = function(key) {
   var attributeQuery = "[data-key='" + key + "']";
   var row            = document.querySelector(".repo-overview tbody tr" + attributeQuery);
+  if (!row) return;
   // navigation to already selected repo
   if (row.dataset.key === key && row.classList.contains("selected")) {
     return;
@@ -2245,6 +2248,10 @@ function registerStagePatch() {
 // return non empty marked string in case it fits the filter
 // abc + b = a<mark>b</mark>c
 function fuzzyMatchAndMark(str, filter) {
+  function escapeText(text) {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
   var markedStr   = "";
   var filterLower = filter.toLowerCase();
   var strLower    = str.toLowerCase();
@@ -2252,15 +2259,15 @@ function fuzzyMatchAndMark(str, filter) {
 
   for (var i = 0; i < filter.length; i++) {
     while (filterLower[i] !== strLower[cur] && cur < str.length) {
-      markedStr += str[cur++];
+      markedStr += escapeText(str[cur++]);
     }
     if (cur === str.length) break;
-    markedStr += "<mark>" + str[cur++] + "</mark>";
+    markedStr += "<mark>" + escapeText(str[cur++]) + "</mark>";
   }
 
   var matched = i === filter.length;
 
-  if (matched && cur < str.length) markedStr += str.substring(cur);
+  if (matched && cur < str.length) markedStr += escapeText(str.substring(cur));
   return matched ? markedStr: null;
 }
 

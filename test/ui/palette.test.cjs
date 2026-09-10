@@ -136,3 +136,23 @@ for (const [title, filter, expected] of [
     assert.equal(loadUi().fuzzyMatchAndMark(title, filter), expected);
   });
 }
+
+test("filtering escapes title markup while preserving generated highlights", () => {
+  const title = "Repo <img src=x onerror=alert(1)> & Docs";
+  const { palette, filter, key, actions } = page([title]);
+  filter("repo");
+  assert.equal(palette.commands[0].titleSpan.innerHTML,
+    "<mark>R</mark><mark>e</mark><mark>p</mark><mark>o</mark> &lt;img src=x onerror=alert(1)&gt; &amp; Docs");
+  key("Enter");
+  assert.deepEqual(actions, [title]);
+});
+
+test("matching special characters uses the original title, escaping every output segment", () => {
+  const { palette, filter } = page(["<A & B>"]);
+  filter("&");
+  assert.equal(palette.commands[0].titleSpan.innerHTML, "&lt;A <mark>&amp;</mark> B&gt;");
+  filter("<>");
+  assert.equal(palette.commands[0].titleSpan.innerHTML, "<mark>&lt;</mark>A &amp; B<mark>&gt;</mark>");
+  filter("");
+  assert.equal(palette.commands[0].titleSpan.innerText, "<A & B>");
+});
