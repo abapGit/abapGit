@@ -817,7 +817,11 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       ii_html->add( is_attr-error ).
     ENDIF.
 
-    ii_html->add( |<div class="radio-container">| ).
+    IF is_field-condense = abap_true.
+      ii_html->add( |<div class="radio-container">| ).
+    ELSE.
+      ii_html->add( |<div class="radio-container with-border">| ).
+    ENDIF.
 
     LOOP AT is_field-subitems ASSIGNING <ls_opt>.
 
