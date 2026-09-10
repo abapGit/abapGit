@@ -54,6 +54,9 @@ INTERFACE zif_abapgit_sap_package
   METHODS read_responsible
     RETURNING
       VALUE(rv_responsible) TYPE usnam.
+  METHODS read_namespace
+    RETURNING
+      VALUE(rv_namespace) TYPE namespace.
   METHODS create_child
     IMPORTING
       !iv_child TYPE devclass
