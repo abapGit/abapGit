@@ -1,16 +1,13 @@
 const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
 const test = require("node:test");
-const vm = require("node:vm");
 
-const source = fs.readFileSync(path.join(__dirname, "../../src/ui/zabapgit_js_common.w3mi.data.js"), "utf8");
+const loadUi = require("./load-ui.cjs");
 
 // Model only the DOM surface used by action discovery and dispatch. The event
 // ordering is deliberate: embedded controls can emit popstate during submit.
 function page(elements = []) {
   const listeners = {};
-  const context = {
+  const context = loadUi({
     document: {
       addEventListener() {},
       querySelectorAll(selector) {
@@ -29,10 +26,7 @@ function page(elements = []) {
     },
     history: { pushState() {} },
     addEventListener(name, fn) { listeners[name] = fn; }
-  };
-  context.window = context;
-  vm.createContext(context);
-  vm.runInContext(source, context);
+  });
   context.popstate = () => listeners.popstate();
   return context;
 }
