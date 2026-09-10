@@ -1,3 +1,87 @@
+CLASS ltcl_delete_longtexts DEFINITION DEFERRED.
+CLASS zcl_abapgit_object_dtel DEFINITION LOCAL FRIENDS ltcl_delete_longtexts.
+
+CLASS lcl_longtexts_double DEFINITION.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_longtexts.
+    DATA mt_deleted_ids TYPE STANDARD TABLE OF dokil-id WITH DEFAULT KEY.
+ENDCLASS.
+
+CLASS lcl_longtexts_double IMPLEMENTATION.
+  METHOD zif_abapgit_longtexts~changed_by.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_longtexts~serialize.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_longtexts~serialize_aff.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_longtexts~deserialize.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_longtexts~deserialize_aff.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_longtexts~delete.
+    APPEND iv_longtext_id TO mt_deleted_ids.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS ltcl_delete_longtexts DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+  PRIVATE SECTION.
+    DATA mo_longtexts TYPE REF TO lcl_longtexts_double.
+
+    METHODS setup.
+    METHODS teardown.
+    METHODS delete_both_documentation FOR TESTING RAISING zcx_abapgit_exception.
+ENDCLASS.
+
+CLASS ltcl_delete_longtexts IMPLEMENTATION.
+  METHOD setup.
+    CREATE OBJECT mo_longtexts.
+    zcl_abapgit_injector=>set_longtexts( mo_longtexts ).
+  ENDMETHOD.
+
+  METHOD teardown.
+    DATA li_longtexts TYPE REF TO zif_abapgit_longtexts.
+
+    zcl_abapgit_injector=>set_longtexts( li_longtexts ).
+  ENDMETHOD.
+
+  METHOD delete_both_documentation.
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lo_dtel TYPE REF TO zcl_abapgit_object_dtel.
+    DATA lv_longtext_id TYPE dokil-id.
+
+    ls_item-obj_type = 'DTEL'.
+    ls_item-obj_name = 'Z_TEST_DTEL'.
+    CREATE OBJECT lo_dtel
+      EXPORTING
+        is_item     = ls_item
+        iv_language = sy-langu.
+
+    lo_dtel->delete_documentation( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( mo_longtexts->mt_deleted_ids )
+      exp = 2 ).
+    READ TABLE mo_longtexts->mt_deleted_ids INDEX 1 INTO lv_longtext_id.
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_longtext_id
+      exp = 'DE' ).
+    READ TABLE mo_longtexts->mt_deleted_ids INDEX 2 INTO lv_longtext_id.
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_longtext_id
+      exp = 'DZ' ).
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS ltcl_aff_metadata_handler DEFINITION
   FOR TESTING
   RISK LEVEL HARMLESS
@@ -276,10 +360,14 @@ CLASS ltcl_aff_metadata_handler IMPLEMENTATION.
       BEGIN OF ty_test_case,
         category    TYPE string,
         type_name   TYPE string,
+        object_type TYPE tadir-object,
         exp_reftype TYPE dd04v-reftype,
       END OF ty_test_case.
     DATA lt_test_cases TYPE STANDARD TABLE OF ty_test_case.
     DATA ls_test_case TYPE ty_test_case.
+    DATA lt_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
+    DATA ls_file TYPE zif_abapgit_git_definitions=>ty_file.
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
     DATA lv_json TYPE string.
     DATA ls_dd04v TYPE dd04v.
     DATA lv_abap_language_version TYPE uccheck.
@@ -288,20 +376,53 @@ CLASS ltcl_aff_metadata_handler IMPLEMENTATION.
     ls_test_case-type_name = 'ANY'.
     ls_test_case-exp_reftype = 'A'.
     APPEND ls_test_case TO lt_test_cases.
+    ls_test_case-type_name = 'DATA'.
+    ls_test_case-exp_reftype = 'D'.
+    APPEND ls_test_case TO lt_test_cases.
+    ls_test_case-type_name = 'OBJECT'.
+    ls_test_case-exp_reftype = 'O'.
+    APPEND ls_test_case TO lt_test_cases.
+
     ls_test_case-category = 'referenceDictionaryType'.
-    ls_test_case-type_name = 'Z_OTHER_DTEL'.
+    ls_test_case-type_name = 'CHAR'.
     ls_test_case-exp_reftype = 'B'.
     APPEND ls_test_case TO lt_test_cases.
-    ls_test_case-category = 'referenceClasIntType'.
-    ls_test_case-type_name = 'ZCL_TEST'.
-    ls_test_case-exp_reftype = 'C'.
+    ls_test_case-type_name = 'Z_OTHER_DTEL'.
+    ls_test_case-object_type = 'DTEL'.
+    ls_test_case-exp_reftype = 'E'.
     APPEND ls_test_case TO lt_test_cases.
+    ls_test_case-type_name = 'Z_TABLE_TYPE'.
+    ls_test_case-object_type = 'TTYP'.
+    ls_test_case-exp_reftype = 'L'.
+    APPEND ls_test_case TO lt_test_cases.
+    ls_test_case-type_name = 'Z_STRUCTURE'.
+    ls_test_case-object_type = 'TABL'.
+    ls_test_case-exp_reftype = 'S'.
+    APPEND ls_test_case TO lt_test_cases.
+
     ls_test_case-category = 'referenceClasIntType'.
-    ls_test_case-type_name = 'ZIF_TEST'.
+    ls_test_case-type_name = 'Z_SERVICE'.
+    ls_test_case-object_type = 'INTF'.
     ls_test_case-exp_reftype = 'I'.
+    APPEND ls_test_case TO lt_test_cases.
+    ls_test_case-type_name = 'ZIF_TEST'.
+    ls_test_case-object_type = 'CLAS'.
+    ls_test_case-exp_reftype = 'C'.
     APPEND ls_test_case TO lt_test_cases.
 
     LOOP AT lt_test_cases INTO ls_test_case.
+      CLEAR lt_files.
+      IF ls_test_case-object_type IS NOT INITIAL.
+        CLEAR ls_item.
+        ls_item-obj_type = ls_test_case-object_type.
+        ls_item-obj_name = ls_test_case-type_name.
+        CLEAR ls_file.
+        ls_file-filename = zcl_abapgit_filename_logic=>object_to_file(
+          is_item = ls_item
+          iv_ext  = 'xml' ).
+        APPEND ls_file TO lt_files.
+      ENDIF.
+
       lv_json = `{` &&
         `"formatVersion":"1",` &&
         `"header":{"description":"Reference","originalLanguage":"en"},` &&
@@ -313,6 +434,7 @@ CLASS ltcl_aff_metadata_handler IMPLEMENTATION.
         EXPORTING
           iv_json                  = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json )
           iv_object_name           = 'z_test_dtel'
+          it_files                 = lt_files
         IMPORTING
           es_dd04v                 = ls_dd04v
           ev_abap_language_version = lv_abap_language_version ).

@@ -3,12 +3,34 @@ CLASS lcl_aff_type_mapping DEFINITION.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_aff_type_mapping.
 
+    METHODS constructor
+      IMPORTING
+        it_files TYPE zif_abapgit_git_definitions=>ty_files_tt OPTIONAL.
+
     TYPES:
       BEGIN OF ty_dtel_data,
         dd04v                 TYPE dd04v,
         abap_language_version TYPE uccheck,
       END OF ty_dtel_data.
   PRIVATE SECTION.
+    DATA mt_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
+
+    METHODS object_exists_in_files
+      IMPORTING
+        iv_object_type   TYPE tadir-object
+        iv_object_name   TYPE dd04v-domname
+      RETURNING
+        VALUE(rv_exists) TYPE abap_bool.
+    METHODS resolve_dictionary_reference
+      IMPORTING
+        iv_type_name      TYPE dd04v-domname
+      RETURNING
+        VALUE(rv_reftype) TYPE dd04v-reftype.
+    METHODS resolve_clif_reference
+      IMPORTING
+        iv_type_name      TYPE dd04v-domname
+      RETURNING
+        VALUE(rv_reftype) TYPE dd04v-reftype.
     METHODS map_data_type_to_aff
       IMPORTING
         iv_ddic_type       TYPE dd04v-datatype
@@ -34,6 +56,121 @@ CLASS lcl_aff_type_mapping DEFINITION.
 ENDCLASS.
 
 CLASS lcl_aff_type_mapping IMPLEMENTATION.
+
+  METHOD constructor.
+    mt_files = it_files.
+  ENDMETHOD.
+
+  METHOD object_exists_in_files.
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_filename TYPE string.
+
+    ls_item-obj_type = iv_object_type.
+    ls_item-obj_name = iv_object_name.
+
+    lv_filename = zcl_abapgit_filename_logic=>object_to_file(
+      is_item = ls_item
+      iv_ext  = 'json' ).
+    READ TABLE mt_files TRANSPORTING NO FIELDS WITH KEY filename = lv_filename.
+    IF sy-subrc = 0.
+      rv_exists = abap_true.
+      RETURN.
+    ENDIF.
+
+    lv_filename = zcl_abapgit_filename_logic=>object_to_file(
+      is_item = ls_item
+      iv_ext  = 'xml' ).
+    READ TABLE mt_files TRANSPORTING NO FIELDS WITH KEY filename = lv_filename.
+    rv_exists = boolc( sy-subrc = 0 ).
+  ENDMETHOD.
+
+  METHOD resolve_dictionary_reference.
+    DATA lv_object_type TYPE tadir-object.
+
+    IF object_exists_in_files(
+      iv_object_type = 'DTEL'
+      iv_object_name = iv_type_name ) = abap_true.
+      rv_reftype = 'E'.
+      RETURN.
+    ELSEIF object_exists_in_files(
+      iv_object_type = 'TTYP'
+      iv_object_name = iv_type_name ) = abap_true.
+      rv_reftype = 'L'.
+      RETURN.
+    ELSEIF object_exists_in_files(
+      iv_object_type = 'TABL'
+      iv_object_name = iv_type_name ) = abap_true.
+      rv_reftype = 'S'.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE object FROM tadir INTO lv_object_type
+      WHERE pgmid = 'R3TR'
+      AND object = 'DTEL'
+      AND obj_name = iv_type_name.
+    IF sy-subrc = 0.
+      rv_reftype = 'E'.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE object FROM tadir INTO lv_object_type
+      WHERE pgmid = 'R3TR'
+      AND object = 'TTYP'
+      AND obj_name = iv_type_name.
+    IF sy-subrc = 0.
+      rv_reftype = 'L'.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE object FROM tadir INTO lv_object_type
+      WHERE pgmid = 'R3TR'
+      AND object = 'TABL'
+      AND obj_name = iv_type_name.
+    IF sy-subrc = 0.
+      rv_reftype = 'S'.
+    ELSE.
+      rv_reftype = 'B'.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD resolve_clif_reference.
+    DATA lv_object_type TYPE tadir-object.
+
+    IF object_exists_in_files(
+      iv_object_type = 'INTF'
+      iv_object_name = iv_type_name ) = abap_true.
+      rv_reftype = 'I'.
+      RETURN.
+    ELSEIF object_exists_in_files(
+      iv_object_type = 'CLAS'
+      iv_object_name = iv_type_name ) = abap_true.
+      rv_reftype = 'C'.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE object FROM tadir INTO lv_object_type
+      WHERE pgmid = 'R3TR'
+      AND obj_name = iv_type_name
+      AND ( object = 'INTF' OR object = 'CLAS' ).
+    IF sy-subrc = 0.
+      IF lv_object_type = 'INTF'.
+        rv_reftype = 'I'.
+      ELSE.
+        rv_reftype = 'C'.
+      ENDIF.
+    ELSEIF iv_type_name CP 'IF_*'
+        OR iv_type_name CP 'ZIF_*'
+        OR iv_type_name CP 'YIF_*'
+        OR iv_type_name CP '/*/IF_*'
+        OR iv_type_name CP '/*/ZIF_*'
+        OR iv_type_name CP '/*/YIF_*'.
+      " Keep the historical naming fallback for references that are neither
+      " part of the repository nor installed locally.
+      rv_reftype = 'I'.
+    ELSE.
+      rv_reftype = 'C'.
+    ENDIF.
+  ENDMETHOD.
 
   METHOD zif_abapgit_aff_type_mapping~to_aff.
     DATA ls_dtel_data TYPE ty_dtel_data.
@@ -165,20 +302,11 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
       WHEN zif_abapgit_aff_dtel_v1=>co_category-reference_dictionary_type.
         cs_dd04v-refkind = 'R'.
         cs_dd04v-datatype = 'REF'.
-        cs_dd04v-reftype = 'B'.
+        cs_dd04v-reftype = resolve_dictionary_reference( cs_dd04v-domname ).
       WHEN zif_abapgit_aff_dtel_v1=>co_category-reference_clas_int_type.
         cs_dd04v-refkind = 'R'.
         cs_dd04v-datatype = 'REF'.
-        IF cs_dd04v-domname CP 'IF_*'
-            OR cs_dd04v-domname CP 'ZIF_*'
-            OR cs_dd04v-domname CP 'YIF_*'
-            OR cs_dd04v-domname CP '/*/IF_*'
-            OR cs_dd04v-domname CP '/*/ZIF_*'
-            OR cs_dd04v-domname CP '/*/YIF_*'.
-          cs_dd04v-reftype = 'I'.
-        ELSE.
-          cs_dd04v-reftype = 'C'.
-        ENDIF.
+        cs_dd04v-reftype = resolve_clif_reference( cs_dd04v-domname ).
     ENDCASE.
   ENDMETHOD.
 
@@ -247,6 +375,7 @@ CLASS lcl_aff_metadata_handler DEFINITION.
         IMPORTING
           iv_json                  TYPE xstring
           iv_object_name           TYPE sobj_name
+          it_files                 TYPE zif_abapgit_git_definitions=>ty_files_tt OPTIONAL
         EXPORTING
           es_dd04v                 TYPE dd04v
           ev_abap_language_version TYPE uccheck
@@ -330,7 +459,9 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     validate( is_data_aff    = ls_data_aff
               iv_object_name = iv_object_name ).
 
-    CREATE OBJECT lo_mapper TYPE lcl_aff_type_mapping.
+    CREATE OBJECT lo_mapper TYPE lcl_aff_type_mapping
+      EXPORTING
+        it_files = it_files.
     lo_mapper->to_abapgit(
       EXPORTING
         iv_data        = ls_data_aff

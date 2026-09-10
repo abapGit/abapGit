@@ -37,6 +37,9 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     CONSTANTS c_longtext_id_dtel TYPE dokil-id VALUE 'DE' ##NO_TEXT.
     CONSTANTS c_longtext_id_dtel_suppl TYPE dokil-id VALUE 'DZ' ##NO_TEXT.
 
+    METHODS delete_documentation
+      RAISING
+        zcx_abapgit_exception.
     METHODS serialize_texts
       IMPORTING
         !ii_xml TYPE REF TO zif_abapgit_xml_output
@@ -64,6 +67,14 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
       io_i18n_params = io_i18n_params ).
 
     mv_aff_enabled = zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( 'DTEL' ).
+
+  ENDMETHOD.
+
+
+  METHOD delete_documentation.
+
+    delete_longtexts( c_longtext_id_dtel ).
+    delete_longtexts( c_longtext_id_dtel_suppl ).
 
   ENDMETHOD.
 
@@ -202,7 +213,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 
     delete_ddic( 'E' ).
 
-    delete_longtexts( c_longtext_id_dtel ).
+    delete_documentation( ).
 
   ENDMETHOD.
 
@@ -226,6 +237,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
         EXPORTING
           iv_json                  = lv_json
           iv_object_name           = ms_item-obj_name
+          it_files                 = mo_files->get_files( )
         IMPORTING
           es_dd04v                 = ls_dd04v
           ev_abap_language_version = ls_extra-abap_language_version ).
