@@ -2393,9 +2393,11 @@ CommandPalette.prototype.applySelectIndex = function(newIndex) {
   if (newIndex !== this.selectIndex) {
     if (this.selectIndex >= 0) this.commands[this.selectIndex].element.classList.remove("selected");
     var newCmd = this.commands[newIndex];
-    newCmd.element.classList.add("selected");
     this.selectIndex = newIndex;
-    this.adjustScrollPosition(newCmd.element);
+    if (newCmd) {
+      newCmd.element.classList.add("selected");
+      this.adjustScrollPosition(newCmd.element);
+    }
   }
 };
 
@@ -2403,8 +2405,9 @@ CommandPalette.prototype.selectFirst = function() {
   for (var i = 0; i < this.commands.length; i++) {
     if (this.commands[i].element.style.display === "none") continue; // skip hidden
     this.applySelectIndex(i);
-    break;
+    return;
   }
+  this.applySelectIndex(-1);
 };
 
 CommandPalette.prototype.selectNext = function() {
@@ -2462,6 +2465,7 @@ CommandPalette.prototype.toggleDisplay = function(forceState) {
       if (cmd.getTitle) cmd.title = cmd.getTitle();
     });
     this.elements.input.value = "";
+    this.filter = "";
     this.elements.input.focus();
     this.applyFilter();
     this.selectFirst();
