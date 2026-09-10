@@ -396,9 +396,9 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     ELSE.
       " If JSON file not found, fall back to XML
       io_xml->read( EXPORTING iv_name = 'DD01V'
-                        CHANGING  cg_data = ls_dd01v ).
+                    CHANGING  cg_data = ls_dd01v ).
       io_xml->read( EXPORTING iv_name = 'DD07V_TAB'
-                        CHANGING  cg_data = lt_dd07v ).
+                    CHANGING  cg_data = lt_dd07v ).
     ENDIF.
 
     handle_dependencies(
@@ -439,7 +439,12 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    IF mv_aff_enabled = abap_false.
+    IF lv_json IS NOT INITIAL.
+      deserialize_longtexts_aff( c_longtext_id_doma ).
+
+      " Note: Translation handling for AFF format not yet implemented
+      " Translation files would be handled similar to INTF deserialization
+    ELSE.
       io_xml->read( EXPORTING iv_name = 'DD01L_EXTRA'
                     CHANGING  cg_data = ls_extra ).
 
@@ -449,14 +454,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
           UPDATE ('DD01L') SET abap_language_version = ls_extra-abap_language_version WHERE domname = lv_name.
         CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
       ENDTRY.
-    ENDIF.
 
-    IF mv_aff_enabled = abap_true.
-      deserialize_longtexts_aff( c_longtext_id_doma ).
-
-      " Note: Translation handling for AFF format not yet implemented
-      " Translation files would be handled similar to INTF deserialization
-    ELSE.
       IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
         deserialize_texts(
           ii_xml   = io_xml
