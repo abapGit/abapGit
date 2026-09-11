@@ -273,14 +273,20 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
 
   METHOD get_length_of_obj_name.
 
-    rv_len = strlen( iv_filename ) - 25.
+    " Regular lenght is 15 but dots that had been escaped before made it shorter (. -> %2e)
+    rv_len = 15 - 2 * count(
+      val = iv_filename
+      sub = '.' ).
 
   ENDMETHOD.
 
 
   METHOD get_length_of_obj_name_esc.
 
-    rv_len = strlen( iv_filename ) - 25.
+    " Regular lenght is 15 but escaping dots makes it longer (%2e)
+    rv_len = 15 + 2 * count(
+      val = iv_filename
+      sub = '%2e' ).
 
   ENDMETHOD.
 
