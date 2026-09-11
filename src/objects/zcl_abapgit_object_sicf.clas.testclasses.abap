@@ -21,6 +21,8 @@ CLASS ltcl_obj_name_length DEFINITION FINAL FOR TESTING
     METHODS name_with_dot FOR TESTING.
     METHODS name_with_multiple_dots FOR TESTING.
     METHODS name_of_legacy_filename FOR TESTING.
+    METHODS dot_in_suffix FOR TESTING.
+    METHODS escaped_dot_in_suffix FOR TESTING.
 
     " Length of the node name in the escaped object name (serialize)
     METHODS assert_length_esc
@@ -119,6 +121,22 @@ CLASS ltcl_obj_name_length IMPLEMENTATION.
     assert_length(
       iv_filename = 'hello.world  5d821cca40d056a07c9bcf2e8'
       iv_exp      = 13 ).
+
+  ENDMETHOD.
+
+  METHOD dot_in_suffix.
+
+    assert_length(
+      iv_filename = 'hello.world    ab.cd                '
+      iv_exp      = 13 ).
+
+  ENDMETHOD.
+
+  METHOD escaped_dot_in_suffix.
+
+    assert_length_esc(
+      iv_obj_name = 'hello%2eworld    ab%2ecd            '
+      iv_exp      = 17 ).
 
   ENDMETHOD.
 

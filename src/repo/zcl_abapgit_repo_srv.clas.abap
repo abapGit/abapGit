@@ -740,7 +740,8 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     DATA: li_package TYPE REF TO zif_abapgit_sap_package,
           li_repo    TYPE REF TO zif_abapgit_repo,
-          lv_reason  TYPE string.
+                lv_reason  TYPE string,
+                lv_namespace TYPE namespace.
 
     li_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
     li_package->validate_name( ).
@@ -748,8 +749,11 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     IF zcl_abapgit_factory=>get_environment( )->is_sap_object_allowed( ) = abap_false.
       IF li_package->read_responsible( ) = 'SAP'.
         zcx_abapgit_exception=>raise( |Package { iv_package } not allowed, responsible user = 'SAP'| ).
-      ELSEIF li_package->read_namespace( ) CP '/0SAP*/'.
-        zcx_abapgit_exception=>raise( |Package { iv_package } not allowed, namespace = '/0SAP/'| ).
+      ELSE.
+        lv_namespace = li_package->read_namespace( ).
+        IF lv_namespace CP '/0SAP*/'.
+          zcx_abapgit_exception=>raise( |Package { iv_package } not allowed, namespace = '{ lv_namespace }'| ).
+        ENDIF.
       ENDIF.
     ENDIF.
 
