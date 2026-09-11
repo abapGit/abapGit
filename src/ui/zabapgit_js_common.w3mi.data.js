@@ -450,6 +450,39 @@ function findStyleSheetByName(name) {
   }
 }
 
+// Browser storage is optional in embedded controls and can contain stale data.
+function readStoredState(storageName, key) {
+  try {
+    var storage = window[storageName];
+    var data = storage && JSON.parse(storage.getItem(key));
+    return data && typeof data === "object" && !Array.isArray(data) ? data : null;
+  } catch (error) { // eslint-disable-line no-unused-vars
+    return null;
+  }
+}
+
+function readStoredValue(storageName, key) {
+  try {
+    var storage = window[storageName];
+    return storage ? storage.getItem(key) : null;
+  } catch (error) { // eslint-disable-line no-unused-vars
+    return null;
+  }
+}
+
+function writeStoredState(storageName, key, data) {
+  try {
+    var storage = window[storageName];
+    if (storage) storage.setItem(key, JSON.stringify(data));
+  } catch (error) { // eslint-disable-line no-unused-vars
+    // Navigation and selection must still work when persistence is unavailable.
+  }
+}
+
+function escapeHtmlText(text) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function RepoOverViewHelper(opts) {
   if (opts && opts.focusFilterKey) {
     this.focusFilterKey = opts.focusFilterKey;
@@ -471,16 +504,11 @@ RepoOverViewHelper.prototype.setHooks = function() {
 };
 
 RepoOverViewHelper.prototype.onPageLoad = function() {
-  var data = window.localStorage && JSON.parse(window.localStorage.getItem(this.pageId));
-  if (data) {
-    if (data.isDetailsDisplayed) {
-      this.toggleItemsDetail(true);
-    }
-    if (data.selectedRepoKey) {
-      this.selectRowByRepoKey(data.selectedRepoKey);
-    } else {
-      this.selectRowByIndex(0);
-    }
+  var data = readStoredState("localStorage", this.pageId);
+  if (data && data.isDetailsDisplayed === true) this.toggleItemsDetail(true);
+  this.selectRowByIndex(0);
+  if (data && typeof data.selectedRepoKey === "string") {
+    this.selectRowByRepoKey(data.selectedRepoKey);
   }
 };
 
@@ -544,8 +572,11 @@ RepoOverViewHelper.prototype.selectRowByIndex = function(index) {
 };
 
 RepoOverViewHelper.prototype.selectRowByRepoKey = function(key) {
-  var attributeQuery = "[data-key='" + key + "']";
-  var row            = document.querySelector(".repo-overview tbody tr" + attributeQuery);
+  var rows = document.querySelectorAll(".repo-overview tbody tr");
+  var row;
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].dataset.key === key) { row = rows[i]; break }
+  }
   if (!row) return;
   // navigation to already selected repo
   if (row.dataset.key === key && row.classList.contains("selected")) {
@@ -672,13 +703,12 @@ RepoOverViewHelper.prototype.toggleFilterIcon = function(icon, isEnabled) {
 };
 
 RepoOverViewHelper.prototype.saveLocalStorage = function() {
-  if (!window.localStorage) return;
   var data = {
     isDetailsDisplayed      : this.isDetailsDisplayed,
     isOnlyFavoritesDisplayed: this.isOnlyFavoritesDisplayed,
     selectedRepoKey         : this.selectedRepoKey,
   };
-  window.localStorage.setItem(this.pageId, JSON.stringify(data));
+  writeStoredState("localStorage", this.pageId, data);
 };
 
 /**********************************************************
@@ -804,19 +834,17 @@ StageHelper.prototype.detectColumns = function() {
 
 // Store table state on leaving the page
 StageHelper.prototype.onPageUnload = function() {
-  if (!window.sessionStorage) return;
-
-  var data = this.collectData();
-  window.sessionStorage.setItem(this.pageSeed, JSON.stringify(data));
+  writeStoredState("sessionStorage", this.pageSeed, this.collectData());
 };
 
 // Re-store table state on entering the page
 StageHelper.prototype.onPageLoad = function() {
-  var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageSeed));
+  var data = readStoredState("sessionStorage", this.pageSeed);
 
   this.iterateStageTab(true, function(row) {
     var status = data && data[this.getPlainText(row.cells[this.colIndex["name"]])];
-    this.updateRow(row, status || this.STATUS.reset);
+    if (typeof status !== "string" || status.length !== 1 || this.STATUS.isInvalid(status)) status = this.STATUS.reset;
+    this.updateRow(row, status);
   });
 
   this.updateMenu();
@@ -878,8 +906,15 @@ StageHelper.prototype.onFilter = function(e) {
 };
 
 StageHelper.prototype.applyFilterValue = function(sFilterValue) {
+  var pattern;
+  try {
+    pattern = new RegExp(sFilterValue, "gi");
+  } catch (error) { // eslint-disable-line no-unused-vars
+    // Keep regex searches, but treat an incomplete expression as literal text.
+    pattern = new RegExp(sFilterValue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+  }
   this.lastFilterValue = sFilterValue;
-  this.filteredCount   = this.iterateStageTab(true, this.applyFilterToRow, sFilterValue);
+  this.filteredCount   = this.iterateStageTab(true, this.applyFilterToRow, sFilterValue, pattern);
   this.updateMenu();
 };
 
@@ -897,7 +932,7 @@ StageHelper.prototype.getPlainText = function(elem) {
 };
 
 // Apply filter to a single stage line - hide or show
-StageHelper.prototype.applyFilterToRow = function(row, filter) {
+StageHelper.prototype.applyFilterToRow = function(row, filter, pattern) {
   // Collect data cells
   var targets = this.filterTargets.map(function(attr) {
     // Get the innermost tag with the text we want to filter
@@ -919,14 +954,23 @@ StageHelper.prototype.applyFilterToRow = function(row, filter) {
   // Apply filter to cells, mark filtered text
   for (var i = targets.length - 1; i >= 0; i--) {
     var target = targets[i];
-    // Ignore case of filter
-    var regFilter = new RegExp("(" + filter + ")", "gi");
-
-    target.newHtml = (filter)
-      ? target.plainText.replace(regFilter, "<mark>$1</mark>")
-      : target.plainText;
+    var matched = false;
+    var end = 0;
+    var html = "";
+    if (filter) {
+      target.plainText.replace(pattern, function(match) {
+        // Named capture groups add a final groups object in modern browsers.
+        var offset = arguments[arguments.length - (typeof arguments[arguments.length - 1] === "object" ? 3 : 2)];
+        matched = true;
+        html += escapeHtmlText(target.plainText.substring(end, offset)) +
+          "<mark>" + escapeHtmlText(match) + "</mark>";
+        end = offset + match.length;
+        return match;
+      });
+    }
+    target.newHtml = html + escapeHtmlText(target.plainText.substring(end));
     target.isChanged = target.newHtml !== target.curHtml;
-    isVisible        = isVisible || !filter || target.newHtml !== target.plainText;
+    isVisible = isVisible || !filter || matched;
   }
 
   // Update DOM
@@ -1154,7 +1198,6 @@ CheckListWrapper.prototype.onClick = function(e) {
 // Diff helper constructor
 function DiffHelper(params) {
   this.pageSeed    = params.seed;
-  this.counter     = 0;
   this.stageAction = params.stageAction;
 
   // DOM nodes
@@ -1187,7 +1230,12 @@ DiffHelper.prototype.onJump = function(e) {
   var text = ((e.target && e.target.text) || e);
   if (!text) return;
 
-  var elFile = document.querySelector("[data-file*='" + text + "']");
+  // Match the whole path: a file name is not a safe selector, and one path
+  // can be a substring of another.
+  var elFile;
+  this.iterateDiffList(function(div) {
+    if (!elFile && div.getAttribute("data-file") === text) elFile = div;
+  });
   if (!elFile) return;
 
   setTimeout(function() {
@@ -1198,19 +1246,10 @@ DiffHelper.prototype.onJump = function(e) {
 // Action on filter click
 DiffHelper.prototype.onFilter = function(attr, target, state) {
   this.applyFilter(attr, target, state);
-  this.highlightButton(state);
 };
 
 DiffHelper.prototype.onFilterOnlyMyChanges = function(username, state) {
   this.applyOnlyMyChangesFilter(username, state);
-  this.counter = 0;
-
-  if (state) {
-    this.dom.filterButton.classList.add("bgorange");
-  } else {
-    this.dom.filterButton.classList.remove("bgorange");
-  }
-
   // apply logic on Changed By list items
   var changedByListItems = Array.prototype.slice.call(document.querySelectorAll("[data-aux*=changed-by]"));
 
@@ -1236,48 +1275,42 @@ DiffHelper.prototype.onFilterOnlyMyChanges = function(username, state) {
 };
 
 DiffHelper.prototype.applyOnlyMyChangesFilter = function(username, state) {
-  var jumpListItems = Array.prototype.slice.call(document.querySelectorAll("[id*=li_jump]"));
-
-  this.iterateDiffList(function(div) {
-    if (state === true && div.getAttribute("data-changed-by") !== username) {
-      // switching on "Only my changes" filter -> hide other users
-      div.style.display = "none";
-    } else {
-      // current user when filter on, or all rows when filter off
-      div.style.display = "";
-    }
-
-    // hide the file in the jump list
-    var dataFile = div.getAttribute("data-file");
-    jumpListItems
-      .filter(function(item) { return dataFile.includes(item.text) })
-      .map(function(item) { item.style.display = div.style.display });
+  this.onlyMyChangesUser = state ? username : null;
+  // The Changed By checklist resets when this mode changes.
+  this.excludedFilters = (this.excludedFilters || []).filter(function(filter) {
+    return filter.attr !== "changed-by";
   });
+  this.refreshFilters();
 };
 
-// Hide/show diff based on params
+// Hide a diff if any unchecked option excludes it.
 DiffHelper.prototype.applyFilter = function(attr, target, state) {
-  var jumpListItems = Array.prototype.slice.call(document.querySelectorAll("[id*=li_jump]"));
-
-  this.iterateDiffList(function(div) {
-    if (div.getAttribute("data-" + attr) === target) {
-      div.style.display = state ? "" : "none";
-
-      // hide the file in the jump list
-      var dataFile = div.getAttribute("data-file");
-      jumpListItems
-        .filter(function(item) { return dataFile.includes(item.text) })
-        .map(function(item) { item.style.display = div.style.display });
-    }
+  this.excludedFilters = (this.excludedFilters || []).filter(function(filter) {
+    return filter.attr !== attr || filter.target !== target;
   });
+  if (!state) this.excludedFilters.push({ attr: attr, target: target });
+  this.refreshFilters();
+};
+
+DiffHelper.prototype.refreshFilters = function() {
+  var jumpListItems = Array.prototype.slice.call(document.querySelectorAll("[id*=li_jump]"));
+  this.iterateDiffList(function(div) {
+    var hidden = this.onlyMyChangesUser != null && div.getAttribute("data-changed-by") !== this.onlyMyChangesUser;
+    hidden = hidden || (this.excludedFilters || []).some(function(filter) {
+      return div.getAttribute("data-" + filter.attr) === filter.target;
+    });
+    div.style.display = hidden ? "none" : "";
+    var dataFile = div.getAttribute("data-file");
+    jumpListItems.forEach(function(item) {
+      if (dataFile === item.text) item.style.display = div.style.display;
+    });
+  });
+  this.highlightButton();
 };
 
 // Action on stage -> save visible diffs as state for stage page
 DiffHelper.prototype.onStage = function(e) { // eslint-disable-line no-unused-vars
-  if (window.sessionStorage) {
-    var data = this.buildStageCache();
-    window.sessionStorage.setItem(this.pageSeed, JSON.stringify(data));
-  }
+  writeStoredState("sessionStorage", this.pageSeed, this.buildStageCache());
   var getParams = { key: this.repoKey, seed: this.pageSeed };
   submitSapeventForm(getParams, this.stageAction, "get");
 };
@@ -1308,9 +1341,10 @@ DiffHelper.prototype.iterateDiffList = function(cb /*, ...*/) {
 };
 
 // Highlight filter button if filter is activated
-DiffHelper.prototype.highlightButton = function(state) {
-  this.counter += state ? -1 : 1;
-  if (this.counter > 0) {
+DiffHelper.prototype.highlightButton = function() {
+  if (!this.dom.filterButton) return;
+  var active = this.onlyMyChangesUser != null || (this.excludedFilters || []).length > 0;
+  if (active) {
     this.dom.filterButton.classList.add("bgorange");
   } else {
     this.dom.filterButton.classList.remove("bgorange");
@@ -2140,7 +2174,7 @@ Patch.prototype.getAllSectionCheckboxesForId = function(sId, sIdPrefix) {
 Patch.prototype.getAllCheckboxesForId = function(sId, sIdPrefix, sNewIdPrefix) {
   var oRegex = new RegExp("^" + sIdPrefix);
 
-  sId = sId.replace(oRegex, sNewIdPrefix);
+  sId = sId.replace(oRegex, sNewIdPrefix) + "_";
   return document.querySelectorAll(this.buildSelectorInputStartsWithId(this.escape(sId)));
 };
 
@@ -2258,10 +2292,6 @@ function registerStagePatch() {
 // return non empty marked string in case it fits the filter
 // abc + b = a<mark>b</mark>c
 function fuzzyMatchAndMark(str, filter) {
-  function escapeText(text) {
-    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-
   var markedStr   = "";
   var filterLower = filter.toLowerCase();
   var strLower    = str.toLowerCase();
@@ -2269,15 +2299,15 @@ function fuzzyMatchAndMark(str, filter) {
 
   for (var i = 0; i < filter.length; i++) {
     while (filterLower[i] !== strLower[cur] && cur < str.length) {
-      markedStr += escapeText(str[cur++]);
+      markedStr += escapeHtmlText(str[cur++]);
     }
     if (cur === str.length) break;
-    markedStr += "<mark>" + escapeText(str[cur++]) + "</mark>";
+    markedStr += "<mark>" + escapeHtmlText(str[cur++]) + "</mark>";
   }
 
   var matched = i === filter.length;
 
-  if (matched && cur < str.length) markedStr += escapeText(str.substring(cur));
+  if (matched && cur < str.length) markedStr += escapeHtmlText(str.substring(cur));
   return matched ? markedStr: null;
 }
 
@@ -2498,11 +2528,10 @@ CommandPalette.prototype.getCommandByElement = function(element) {
 CommandPalette.prototype.handleUlClick = function(event) {
   var element = event.target || event.srcElement;
   if (!element) return;
-  if (element.nodeName === "SPAN") element = element.parentNode;
-
-  if (element.nodeName === "I") element = element.parentNode;
-
-  if (element.nodeName !== "LI") return;
+  while (element && element !== this.elements.ul && element.nodeName !== "LI") {
+    element = element.parentNode;
+  }
+  if (!element || element === this.elements.ul) return;
   this.exec(this.getCommandByElement(element));
 };
 
@@ -2663,24 +2692,18 @@ function enumerateJumpAllFiles() {
  * Save Scroll Position
  **********************************************************/
 
+// Not supported by Java GUI, and the quota can be exhausted anywhere:
+// remembering the scroll offset must never abort the action it wraps.
 function saveScrollPosition() {
-  // Not supported by Java GUI
-  try { if (!window.sessionStorage) { return } }
-  catch (err) { return err }
-
-  window.sessionStorage.setItem("scrollTop", document.querySelector("html").scrollTop);
+  writeStoredState("sessionStorage", "scrollTop", document.querySelector("html").scrollTop);
 }
 
 function restoreScrollPosition() {
-  // Not supported by Java GUI
-  try { if (!window.sessionStorage) { return } }
-  catch (err) { return err }
-
-  var scrollTop = window.sessionStorage.getItem("scrollTop");
+  var scrollTop = readStoredValue("sessionStorage", "scrollTop");
   if (scrollTop) {
     document.querySelector("html").scrollTop = scrollTop;
   }
-  window.sessionStorage.setItem("scrollTop", 0);
+  writeStoredState("sessionStorage", "scrollTop", 0);
 }
 
 function memorizeScrollPosition(fn) {
