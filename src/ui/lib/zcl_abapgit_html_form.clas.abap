@@ -576,13 +576,11 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     IF mv_webgui = abap_true AND is_cmd-cmd_type <> zif_abapgit_html_form=>c_cmd_type-link.
       lv_action = escape( val    = is_cmd-action
                           format = cl_abap_format=>e_html_attr ).
-      lv_js = |submitSapeventForm(\{ \}, '{ lv_action }', 'post', |
+      lv_js = |submitSapeventForm(\{ \}, this.getAttribute('data-sapevent'), 'post', |
            && |document.getElementById('{ mv_form_id }'))|.
-      ii_html->add_a(
-        iv_txt   = is_cmd-label
-        iv_act   = lv_js
-        iv_typ   = zif_abapgit_html=>c_action_type-onclick
-        iv_class = lv_class ).
+      " Keep the action discoverable by hotkeys even though the link uses onclick
+      ii_html->add( |<a href="#" data-sapevent="{ lv_action }" onclick="{ lv_js }"|
+                 && | class="{ lv_class }">{ is_cmd-label }</a>| ).
       RETURN.
     ENDIF.
 
@@ -819,7 +817,11 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       ii_html->add( is_attr-error ).
     ENDIF.
 
-    ii_html->add( |<div class="radio-container">| ).
+    IF is_field-condense = abap_true.
+      ii_html->add( |<div class="radio-container">| ).
+    ELSE.
+      ii_html->add( |<div class="radio-container with-border">| ).
+    ENDIF.
 
     LOOP AT is_field-subitems ASSIGNING <ls_opt>.
 
@@ -982,7 +984,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
         lv_side_action = escape( val    = is_field-side_action
                                  format = cl_abap_format=>e_html_attr ).
         ii_html->add( |<input type="button" value="&#x2026;" title="{ is_field-label }"|
-                   && | onclick="submitSapeventForm(\{ \}, '{ lv_side_action }', 'post', |
+                   && | data-sapevent="{ lv_side_action }"|
+                   && | onclick="submitSapeventForm(\{ \}, this.getAttribute('data-sapevent'), 'post', |
                    && |document.getElementById('{ mv_form_id }'))">| ).
       ELSE.
         ii_html->add( |<input type="submit" value="&#x2026;" formaction="sapevent:{ is_field-side_action }"|

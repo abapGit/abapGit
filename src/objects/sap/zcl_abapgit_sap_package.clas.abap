@@ -389,7 +389,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_package~list_subpackages.
 
-    DATA: lt_list     LIKE rt_list.
+    DATA lt_list LIKE rt_list.
 
     SELECT devclass FROM tdevc
       INTO TABLE lt_list
@@ -467,6 +467,13 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   METHOD zif_abapgit_sap_package~read_responsible.
     SELECT SINGLE as4user FROM tdevc
       INTO rv_responsible
+      WHERE devclass = mv_package ##SUBRC_OK.           "#EC CI_GENBUFF
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_sap_package~read_namespace.
+    SELECT SINGLE namespace FROM tdevc
+      INTO rv_namespace
       WHERE devclass = mv_package ##SUBRC_OK.           "#EC CI_GENBUFF
   ENDMETHOD.
 
