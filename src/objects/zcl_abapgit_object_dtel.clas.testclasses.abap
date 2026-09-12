@@ -445,27 +445,32 @@ CLASS ltcl_aff_metadata_handler IMPLEMENTATION.
       cl_abap_unit_assert=>assert_equals(
         act = ls_dd04v-refkind
         exp = 'R' ).
-      cl_abap_unit_assert=>assert_equals(
-        act = ls_dd04v-datatype
-        exp = 'REF' ).
+      IF ls_test_case-exp_reftype = 'B'.
+        cl_abap_unit_assert=>assert_equals(
+          act = ls_dd04v-datatype
+          exp = ls_test_case-type_name ).
+        cl_abap_unit_assert=>assert_initial( ls_dd04v-domname ).
+      ELSE.
+        cl_abap_unit_assert=>assert_equals(
+          act = ls_dd04v-datatype
+          exp = 'REF' ).
+      ENDIF.
       cl_abap_unit_assert=>assert_equals(
         act = ls_dd04v-reftype
         exp = ls_test_case-exp_reftype
         msg = ls_test_case-category ).
 
-      IF ls_test_case-category = 'referenceToPredefinedType'.
-        lv_json_roundtrip = lcl_aff_metadata_handler=>serialize(
-          is_dd04v                 = ls_dd04v
-          iv_abap_language_version = lv_abap_language_version ).
-        lv_json_actual = zcl_abapgit_convert=>xstring_to_string_utf8( lv_json_roundtrip ).
-        lv_is_equal = zcl_abapgit_ajson_utilities=>new( )->is_equal(
-          iv_json_a = lv_json
-          iv_json_b = lv_json_actual ).
-        cl_abap_unit_assert=>assert_equals(
-          act = lv_is_equal
-          exp = abap_true
-          msg = lv_json_actual ).
-      ENDIF.
+      lv_json_roundtrip = lcl_aff_metadata_handler=>serialize(
+        is_dd04v                 = ls_dd04v
+        iv_abap_language_version = lv_abap_language_version ).
+      lv_json_actual = zcl_abapgit_convert=>xstring_to_string_utf8( lv_json_roundtrip ).
+      lv_is_equal = zcl_abapgit_ajson_utilities=>new( )->is_equal(
+        iv_json_a = lv_json
+        iv_json_b = lv_json_actual ).
+      cl_abap_unit_assert=>assert_equals(
+        act = lv_is_equal
+        exp = abap_true
+        msg = lv_json_actual ).
     ENDLOOP.
   ENDMETHOD.
 

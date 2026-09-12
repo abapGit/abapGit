@@ -202,6 +202,8 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
         WHEN 'O'.
           ls_data_aff-data_type_information-type_name = 'OBJECT'.
       ENDCASE.
+    ELSEIF ls_dtel_data-dd04v-reftype = 'B'.
+      ls_data_aff-data_type_information-type_name = ls_dtel_data-dd04v-datatype.
     ELSE.
       ls_data_aff-data_type_information-type_name = ls_dtel_data-dd04v-domname.
     ENDIF.
@@ -296,6 +298,8 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD map_reference_category_to_ddic.
+    DATA lv_reftype TYPE dd04v-reftype.
+
     cs_dd04v-domname = to_upper( iv_type_name ).
     CASE iv_category.
       WHEN zif_abapgit_aff_dtel_v1=>co_category-domain.
@@ -313,8 +317,14 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
         ENDCASE.
       WHEN zif_abapgit_aff_dtel_v1=>co_category-reference_dictionary_type.
         cs_dd04v-refkind = 'R'.
-        cs_dd04v-datatype = 'REF'.
-        cs_dd04v-reftype = resolve_dictionary_reference( cs_dd04v-domname ).
+        lv_reftype = resolve_dictionary_reference( cs_dd04v-domname ).
+        cs_dd04v-reftype = lv_reftype.
+        IF lv_reftype = 'B'.
+          cs_dd04v-datatype = cs_dd04v-domname.
+          CLEAR cs_dd04v-domname.
+        ELSE.
+          cs_dd04v-datatype = 'REF'.
+        ENDIF.
       WHEN zif_abapgit_aff_dtel_v1=>co_category-reference_clas_int_type.
         cs_dd04v-refkind = 'R'.
         cs_dd04v-datatype = 'REF'.
