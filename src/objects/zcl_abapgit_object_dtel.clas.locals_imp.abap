@@ -71,7 +71,8 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     lv_filename = zcl_abapgit_filename_logic=>object_to_file(
       is_item = ls_item
       iv_ext  = 'json' ).
-    READ TABLE mt_files TRANSPORTING NO FIELDS WITH KEY filename = lv_filename.
+    READ TABLE mt_files TRANSPORTING NO FIELDS
+      WITH KEY file COMPONENTS filename = lv_filename.
     IF sy-subrc = 0.
       rv_exists = abap_true.
       RETURN.
@@ -80,7 +81,8 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     lv_filename = zcl_abapgit_filename_logic=>object_to_file(
       is_item = ls_item
       iv_ext  = 'xml' ).
-    READ TABLE mt_files TRANSPORTING NO FIELDS WITH KEY filename = lv_filename.
+    READ TABLE mt_files TRANSPORTING NO FIELDS
+      WITH KEY file COMPONENTS filename = lv_filename.
     rv_exists = boolc( sy-subrc = 0 ).
   ENDMETHOD.
 
