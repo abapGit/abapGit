@@ -1115,6 +1115,9 @@ CheckListWrapper.prototype.onClick = function(e) {
   var option   = nodeA.innerText;
   var oldState = nodeLi.getAttribute("data-check");
   if (oldState === null) return; // no data-check attribute - non-checkbox
+  // These links only toggle a filter. Following href="#" would emit a
+  // popstate which the browser-back trap interprets as a request to go back.
+  e.preventDefault();
   var newState = oldState !== "X";
 
   if (newState) {
