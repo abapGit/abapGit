@@ -95,6 +95,7 @@ CLASS ltcl_aff_metadata_handler DEFINITION
     METHODS domain_mapping FOR TESTING RAISING cx_static_check.
     METHODS domain_omits_predefined_type FOR TESTING RAISING cx_static_check.
     METHODS standard_abap_language_vers FOR TESTING RAISING cx_static_check.
+    METHODS reference_predefined_roundtrip FOR TESTING RAISING cx_static_check.
     METHODS reference_mappings FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 
@@ -352,6 +353,57 @@ CLASS ltcl_aff_metadata_handler IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = ls_dd04v-nohistory
       exp = abap_true ).
+  ENDMETHOD.
+
+
+  METHOD reference_predefined_roundtrip.
+    DATA lv_json TYPE string.
+    DATA lv_json_actual TYPE string.
+    DATA lv_json_roundtrip TYPE xstring.
+    DATA ls_dd04v TYPE dd04v.
+    DATA lv_abap_language_version TYPE uccheck.
+    DATA lv_is_equal TYPE abap_bool.
+
+    lv_json = `{` &&
+      `"formatVersion":"1",` &&
+      `"header":{"description":"Reference to predefined type ANY",` &&
+      `"originalLanguage":"en"},` &&
+      `"dataTypeInformation":{"category":"referenceToPredefinedType",` &&
+      `"predefinedType":{"dataType":"CHAR","length":2}}` &&
+      `}`.
+
+    lcl_aff_metadata_handler=>deserialize(
+      EXPORTING
+        iv_json        = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json )
+        iv_object_name = 'z_test_dtel'
+      IMPORTING
+        es_dd04v                 = ls_dd04v
+        ev_abap_language_version = lv_abap_language_version ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_dd04v-refkind
+      exp = 'R' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_dd04v-reftype
+      exp = 'A' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_dd04v-datatype
+      exp = 'CHAR' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_dd04v-leng
+      exp = 2 ).
+
+    lv_json_roundtrip = lcl_aff_metadata_handler=>serialize(
+      is_dd04v                 = ls_dd04v
+      iv_abap_language_version = lv_abap_language_version ).
+    lv_json_actual = zcl_abapgit_convert=>xstring_to_string_utf8( lv_json_roundtrip ).
+    lv_is_equal = zcl_abapgit_ajson_utilities=>new( )->is_equal(
+      iv_json_a = lv_json
+      iv_json_b = lv_json_actual ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_is_equal
+      exp = abap_true
+      msg = lv_json_actual ).
   ENDMETHOD.
 
 

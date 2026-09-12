@@ -196,7 +196,16 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
         zif_abapgit_aff_dtel_v1=>co_category-reference_to_predefined_type.
       CASE ls_dtel_data-dd04v-reftype.
         WHEN 'A'.
-          ls_data_aff-data_type_information-type_name = 'ANY'.
+          IF ls_dtel_data-dd04v-datatype = 'REF'.
+            " Legacy representation used a type name for REF TO ANY.
+            ls_data_aff-data_type_information-type_name = 'ANY'.
+          ELSE.
+            ls_data_aff-data_type_information-predefined_type-data_type = map_data_type_to_aff(
+              iv_ddic_type = ls_dtel_data-dd04v-datatype
+              iv_length    = ls_dtel_data-dd04v-leng ).
+            ls_data_aff-data_type_information-predefined_type-length = ls_dtel_data-dd04v-leng.
+            ls_data_aff-data_type_information-predefined_type-decimals = ls_dtel_data-dd04v-decimals.
+          ENDIF.
         WHEN 'D'.
           ls_data_aff-data_type_information-type_name = 'DATA'.
         WHEN 'O'.
@@ -243,6 +252,15 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
 
     IF ls_data_aff-data_type_information-category = zif_abapgit_aff_dtel_v1=>co_category-predefined_type.
       ls_dtel_data-dd04v-refkind = 'T'.
+      ls_dtel_data-dd04v-datatype = map_data_type_to_ddic(
+        ls_data_aff-data_type_information-predefined_type-data_type ).
+      ls_dtel_data-dd04v-leng = ls_data_aff-data_type_information-predefined_type-length.
+      ls_dtel_data-dd04v-decimals = ls_data_aff-data_type_information-predefined_type-decimals.
+    ELSEIF ls_data_aff-data_type_information-category =
+        zif_abapgit_aff_dtel_v1=>co_category-reference_to_predefined_type
+        AND ls_data_aff-data_type_information-predefined_type-data_type IS NOT INITIAL.
+      ls_dtel_data-dd04v-refkind = 'R'.
+      ls_dtel_data-dd04v-reftype = 'A'.
       ls_dtel_data-dd04v-datatype = map_data_type_to_ddic(
         ls_data_aff-data_type_information-predefined_type-data_type ).
       ls_dtel_data-dd04v-leng = ls_data_aff-data_type_information-predefined_type-length.
@@ -509,12 +527,13 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |DTEL { iv_object_name }: description is empty| ).
     ENDIF.
     CASE is_data_aff-data_type_information-category.
-      WHEN zif_abapgit_aff_dtel_v1=>co_category-predefined_type.
-        IF is_data_aff-data_type_information-predefined_type-data_type IS INITIAL.
+      WHEN zif_abapgit_aff_dtel_v1=>co_category-predefined_type
+          OR zif_abapgit_aff_dtel_v1=>co_category-reference_to_predefined_type.
+        IF is_data_aff-data_type_information-predefined_type-data_type IS INITIAL
+            AND is_data_aff-data_type_information-type_name IS INITIAL.
           zcx_abapgit_exception=>raise( |DTEL { iv_object_name }: unsupported data type| ).
         ENDIF.
       WHEN zif_abapgit_aff_dtel_v1=>co_category-domain
-          OR zif_abapgit_aff_dtel_v1=>co_category-reference_to_predefined_type
           OR zif_abapgit_aff_dtel_v1=>co_category-reference_dictionary_type
           OR zif_abapgit_aff_dtel_v1=>co_category-reference_clas_int_type.
         IF is_data_aff-data_type_information-type_name IS INITIAL.
@@ -542,7 +561,10 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     ls_skip_path-path = '/fieldLabels/headingLength'.
     APPEND ls_skip_path TO rt_result.
 
-    IF is_data_aff-data_type_information-category <> zif_abapgit_aff_dtel_v1=>co_category-predefined_type.
+    IF is_data_aff-data_type_information-category <> zif_abapgit_aff_dtel_v1=>co_category-predefined_type
+        AND ( is_data_aff-data_type_information-category <>
+              zif_abapgit_aff_dtel_v1=>co_category-reference_to_predefined_type
+              OR is_data_aff-data_type_information-predefined_type-data_type IS INITIAL ).
       " "length" is mandatory for predefined types and must be kept even when zero.
       " For all other categories it drops out together with the whole predefinedType node
       ls_skip_path-path = '/dataTypeInformation/predefinedType/length'.
