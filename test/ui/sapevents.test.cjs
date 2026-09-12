@@ -90,14 +90,6 @@ test("link hints guard main submits inheriting the form action", () => {
   new context.LinkHints("f").hintActivate({ parent: input });
 });
 
-test("link hints guard main submits when the form only exposes an action property", () => {
-  const input = element("INPUT", { type: "submit" });
-  input.form = { action: "SAPEVENT:save" };
-  const context = page();
-  input.click = () => assert.equal(context.gSapeventNavPending, true);
-  new context.LinkHints("f").hintActivate({ parent: input });
-});
-
 test("link hints guard sapevent links but leave ordinary links unarmed", () => {
   for (const href of ["SAPEVENT:go_back", "https://example.org/"]) {
     const anchor = element("A", { href });

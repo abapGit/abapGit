@@ -352,7 +352,7 @@ function clickSapEvent(element) {
   // Main submit inputs inherit the event from their form rather than carrying
   // a formaction of their own.
   var formAction = element.type === "submit" && element.form
-    ? (element.form.getAttribute ? element.form.getAttribute("action") : element.form.action) : "";
+    ? element.form.getAttribute("action") : "";
   var isSapEvent = element.getAttribute("data-sapevent")
     || /sapevent/i.test(element.hrefsav || element.href || element.getAttribute("formaction") || formAction || "");
   if (isSapEvent) gSapeventNavPending = true;
