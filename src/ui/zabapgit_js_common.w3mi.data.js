@@ -768,7 +768,14 @@ StageHelper.prototype.setHooks = function() {
   this.dom.patchBtn.onclick        = this.submitPatch.bind(this);
   this.dom.objectSearch.oninput    = this.onFilter.bind(this);
   this.dom.objectSearch.onkeypress = this.onFilter.bind(this);
+  // SAP GUI for HTML renders the page in an ITS-managed iframe and replaces
+  // that iframe on every navigation instead of navigating it. A frame torn
+  // down that way gets pagehide, never beforeunload, so listening only for
+  // beforeunload loses the table state there. The embedded controls of the
+  // desktop GUIs predate pagehide, so keep both - storing twice is harmless,
+  // it writes the same state under the same key.
   window.addEventListener("beforeunload", this.onPageUnload.bind(this));
+  window.addEventListener("pagehide", this.onPageUnload.bind(this));
   window.addEventListener("load", this.onPageLoad.bind(this));
 
   var self = this;
