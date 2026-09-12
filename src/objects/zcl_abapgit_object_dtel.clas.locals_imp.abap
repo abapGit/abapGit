@@ -206,13 +206,17 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
             ls_data_aff-data_type_information-predefined_type-length = ls_dtel_data-dd04v-leng.
             ls_data_aff-data_type_information-predefined_type-decimals = ls_dtel_data-dd04v-decimals.
           ENDIF.
+        WHEN 'B'.
+          ls_data_aff-data_type_information-predefined_type-data_type = map_data_type_to_aff(
+            iv_ddic_type = ls_dtel_data-dd04v-domname
+            iv_length    = ls_dtel_data-dd04v-leng ).
+          ls_data_aff-data_type_information-predefined_type-length = ls_dtel_data-dd04v-leng.
+          ls_data_aff-data_type_information-predefined_type-decimals = ls_dtel_data-dd04v-decimals.
         WHEN 'D'.
           ls_data_aff-data_type_information-type_name = 'DATA'.
         WHEN 'O'.
           ls_data_aff-data_type_information-type_name = 'OBJECT'.
       ENDCASE.
-    ELSEIF ls_dtel_data-dd04v-reftype = 'B'.
-      ls_data_aff-data_type_information-type_name = ls_dtel_data-dd04v-datatype.
     ELSE.
       ls_data_aff-data_type_information-type_name = ls_dtel_data-dd04v-domname.
     ENDIF.
@@ -260,8 +264,9 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
         zif_abapgit_aff_dtel_v1=>co_category-reference_to_predefined_type
         AND ls_data_aff-data_type_information-predefined_type-data_type IS NOT INITIAL.
       ls_dtel_data-dd04v-refkind = 'R'.
-      ls_dtel_data-dd04v-reftype = 'A'.
-      ls_dtel_data-dd04v-datatype = map_data_type_to_ddic(
+      ls_dtel_data-dd04v-reftype = 'B'.
+      ls_dtel_data-dd04v-datatype = 'REF'.
+      ls_dtel_data-dd04v-domname = map_data_type_to_ddic(
         ls_data_aff-data_type_information-predefined_type-data_type ).
       ls_dtel_data-dd04v-leng = ls_data_aff-data_type_information-predefined_type-length.
       ls_dtel_data-dd04v-decimals = ls_data_aff-data_type_information-predefined_type-decimals.
@@ -305,7 +310,9 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
         CASE is_dd04v-reftype.
           WHEN 'A' OR 'D' OR 'O'.
             rv_category = zif_abapgit_aff_dtel_v1=>co_category-reference_to_predefined_type.
-          WHEN 'B' OR 'E' OR 'L' OR 'S'.
+          WHEN 'B'.
+            rv_category = zif_abapgit_aff_dtel_v1=>co_category-reference_to_predefined_type.
+          WHEN 'E' OR 'L' OR 'S'.
             rv_category = zif_abapgit_aff_dtel_v1=>co_category-reference_dictionary_type.
           WHEN 'C' OR 'I'.
             rv_category = zif_abapgit_aff_dtel_v1=>co_category-reference_clas_int_type.
@@ -337,12 +344,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
         cs_dd04v-refkind = 'R'.
         lv_reftype = resolve_dictionary_reference( cs_dd04v-domname ).
         cs_dd04v-reftype = lv_reftype.
-        IF lv_reftype = 'B'.
-          cs_dd04v-datatype = cs_dd04v-domname.
-          CLEAR cs_dd04v-domname.
-        ELSE.
-          cs_dd04v-datatype = 'REF'.
-        ENDIF.
+        cs_dd04v-datatype = 'REF'.
       WHEN zif_abapgit_aff_dtel_v1=>co_category-reference_clas_int_type.
         cs_dd04v-refkind = 'R'.
         cs_dd04v-datatype = 'REF'.

@@ -385,9 +385,12 @@ CLASS ltcl_aff_metadata_handler IMPLEMENTATION.
       exp = 'R' ).
     cl_abap_unit_assert=>assert_equals(
       act = ls_dd04v-reftype
-      exp = 'A' ).
+      exp = 'B' ).
     cl_abap_unit_assert=>assert_equals(
       act = ls_dd04v-datatype
+      exp = 'REF' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_dd04v-domname
       exp = 'CHAR' ).
     cl_abap_unit_assert=>assert_equals(
       act = ls_dd04v-leng
@@ -439,9 +442,6 @@ CLASS ltcl_aff_metadata_handler IMPLEMENTATION.
     APPEND ls_test_case TO lt_test_cases.
 
     ls_test_case-category = 'referenceDictionaryType'.
-    ls_test_case-type_name = 'CHAR'.
-    ls_test_case-exp_reftype = 'B'.
-    APPEND ls_test_case TO lt_test_cases.
     ls_test_case-type_name = 'Z_OTHER_DTEL'.
     ls_test_case-object_type = 'DTEL'.
     ls_test_case-exp_reftype = 'E'.
@@ -497,16 +497,9 @@ CLASS ltcl_aff_metadata_handler IMPLEMENTATION.
       cl_abap_unit_assert=>assert_equals(
         act = ls_dd04v-refkind
         exp = 'R' ).
-      IF ls_test_case-exp_reftype = 'B'.
-        cl_abap_unit_assert=>assert_equals(
-          act = ls_dd04v-datatype
-          exp = ls_test_case-type_name ).
-        cl_abap_unit_assert=>assert_initial( ls_dd04v-domname ).
-      ELSE.
-        cl_abap_unit_assert=>assert_equals(
-          act = ls_dd04v-datatype
-          exp = 'REF' ).
-      ENDIF.
+      cl_abap_unit_assert=>assert_equals(
+        act = ls_dd04v-datatype
+        exp = 'REF' ).
       cl_abap_unit_assert=>assert_equals(
         act = ls_dd04v-reftype
         exp = ls_test_case-exp_reftype
