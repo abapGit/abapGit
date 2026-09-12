@@ -27,12 +27,14 @@ function page() {
     patch: { innerHTML: "Patch All (3)" },
     search: { value: "" }
   };
+  const listeners = {};
   const context = loadUi({
     document: {
       addEventListener() {},
       getElementById(id) { return nodes[id]; },
       querySelector() { return null; }
     },
+    addEventListener(type, fn) { listeners[type] = fn; },
     scrollTo() {},
     alert(message) { assert.fail(message); }
   });
@@ -43,7 +45,7 @@ function page() {
     seed: "stage", formAction: "stage_commit", patchAction: "stage_patch", stageAllAction: "stage_all",
     ids: { stageTab: "table", commitBtn: "commit", patchBtn: "patch", objectSearch: "search" }
   });
-  return { helper, rows, nodes, submissions };
+  return { context, helper, rows, nodes, submissions, listeners };
 }
 
 test("commit without selection or filter uses the stage-all action", () => {
@@ -122,3 +124,26 @@ test("changing a selected status does not double-count and resetting restores fi
   assert.equal(helper.selectedCount, 0);
   assert.equal(nodes.commit.innerHTML, "Add <b>Filtered</b> and Commit (2)");
 });
+
+// SAP GUI for HTML renders abapGit in an ITS-managed iframe and replaces that
+// iframe wholesale on every navigation. A browser fires pagehide (and unload)
+// when a frame is torn down that way, but never beforeunload - so a listener
+// registered only on beforeunload never runs and the table state is lost.
+for (const event of ["pagehide", "beforeunload"]) {
+  test(`leaving the page on ${event} stores the table state`, () => {
+    const { context, helper, rows, listeners } = page();
+    const store = {};
+    context.sessionStorage = {
+      getItem(key) { return key in store ? store[key] : null },
+      setItem(key, value) { store[key] = value }
+    };
+
+    helper.updateRow(rows[0], helper.STATUS.add);
+    assert.ok(listeners[event], `no ${event} listener registered`);
+    listeners[event]();
+
+    assert.deepEqual(JSON.parse(store.stage), {
+      "zcl_keep.clas.abap": "A", "zcl_keep_old.clas.abap": "?", "zcl_hidden.clas.abap": "?"
+    });
+  });
+}
