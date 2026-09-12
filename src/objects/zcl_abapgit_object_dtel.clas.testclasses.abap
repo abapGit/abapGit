@@ -446,6 +446,10 @@ CLASS ltcl_aff_metadata_handler IMPLEMENTATION.
     ls_test_case-object_type = 'DTEL'.
     ls_test_case-exp_reftype = 'E'.
     APPEND ls_test_case TO lt_test_cases.
+    CLEAR ls_test_case-object_type.
+    ls_test_case-type_name = 'ZDTEL_EXAMPLE_SIMPLE'.
+    ls_test_case-exp_reftype = 'E'.
+    APPEND ls_test_case TO lt_test_cases.
     ls_test_case-type_name = 'Z_TABLE_TYPE'.
     ls_test_case-object_type = 'TTYP'.
     ls_test_case-exp_reftype = 'L'.

@@ -88,6 +88,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
 
   METHOD resolve_dictionary_reference.
     DATA lv_object_type TYPE tadir-object.
+    DATA lv_ddic_type TYPE dd04v-datatype.
 
     IF object_exists_in_files(
       iv_object_type = 'DTEL'
@@ -131,7 +132,17 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     IF sy-subrc = 0.
       rv_reftype = 'S'.
     ELSE.
-      rv_reftype = 'B'.
+      " Built-in types are the only dictionary references that can be
+      " identified without looking up a repository object. Unknown names
+      " are data elements; the referenced object may be imported later.
+      lv_ddic_type = iv_type_name.
+      IF map_data_type_to_aff(
+           iv_ddic_type = lv_ddic_type
+           iv_length    = 0 ) IS NOT INITIAL.
+        rv_reftype = 'B'.
+      ELSE.
+        rv_reftype = 'E'.
+      ENDIF.
     ENDIF.
   ENDMETHOD.
 
