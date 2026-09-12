@@ -177,6 +177,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
   METHOD zif_abapgit_aff_type_mapping~to_aff.
     DATA ls_dtel_data TYPE ty_dtel_data.
     DATA ls_data_aff TYPE zif_abapgit_aff_dtel_v1=>ty_main.
+    DATA lv_ddic_type TYPE dd04v-datatype.
 
     ls_dtel_data = iv_data.
 
@@ -207,8 +208,9 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
             ls_data_aff-data_type_information-predefined_type-decimals = ls_dtel_data-dd04v-decimals.
           ENDIF.
         WHEN 'B'.
+          lv_ddic_type = ls_dtel_data-dd04v-domname.
           ls_data_aff-data_type_information-predefined_type-data_type = map_data_type_to_aff(
-            iv_ddic_type = ls_dtel_data-dd04v-domname
+            iv_ddic_type = lv_ddic_type
             iv_length    = ls_dtel_data-dd04v-leng ).
           ls_data_aff-data_type_information-predefined_type-length = ls_dtel_data-dd04v-leng.
           ls_data_aff-data_type_information-predefined_type-decimals = ls_dtel_data-dd04v-decimals.
