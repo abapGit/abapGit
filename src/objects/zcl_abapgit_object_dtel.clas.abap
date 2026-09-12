@@ -407,7 +407,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
         " Keep the metadata format consistent for inactive DTELs
         mo_files->add_raw(
           iv_ext  = 'json'
-          iv_data = '{}' ).
+          iv_data = zcl_abapgit_convert=>string_to_xstring_utf8( '{}' ) ).
       ENDIF.
       RETURN.
     ENDIF.

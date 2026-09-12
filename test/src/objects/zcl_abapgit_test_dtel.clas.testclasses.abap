@@ -395,7 +395,9 @@ CLASS ltcl_test_aff IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = ls_file-filename
       exp = 'zabapgit_test_dtel_inactive.dtel.json' ).
-    cl_abap_unit_assert=>assert_initial( ls_file-data ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_file-data
+      exp = zcl_abapgit_convert=>string_to_xstring_utf8( '{}' ) ).
 
   ENDMETHOD.
 
