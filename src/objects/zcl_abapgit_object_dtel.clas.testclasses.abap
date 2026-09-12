@@ -369,8 +369,11 @@ CLASS ltcl_aff_metadata_handler IMPLEMENTATION.
     DATA ls_file TYPE zif_abapgit_git_definitions=>ty_file.
     DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
     DATA lv_json TYPE string.
+    DATA lv_json_actual TYPE string.
+    DATA lv_json_roundtrip TYPE xstring.
     DATA ls_dd04v TYPE dd04v.
     DATA lv_abap_language_version TYPE uccheck.
+    DATA lv_is_equal TYPE abap_bool.
 
     ls_test_case-category = 'referenceToPredefinedType'.
     ls_test_case-type_name = 'ANY'.
@@ -449,6 +452,20 @@ CLASS ltcl_aff_metadata_handler IMPLEMENTATION.
         act = ls_dd04v-reftype
         exp = ls_test_case-exp_reftype
         msg = ls_test_case-category ).
+
+      IF ls_test_case-category = 'referenceToPredefinedType'.
+        lv_json_roundtrip = lcl_aff_metadata_handler=>serialize(
+          is_dd04v                 = ls_dd04v
+          iv_abap_language_version = lv_abap_language_version ).
+        lv_json_actual = zcl_abapgit_convert=>xstring_to_string_utf8( lv_json_roundtrip ).
+        lv_is_equal = zcl_abapgit_ajson_utilities=>new( )->is_equal(
+          iv_json_a = lv_json
+          iv_json_b = lv_json_actual ).
+        cl_abap_unit_assert=>assert_equals(
+          act = lv_is_equal
+          exp = abap_true
+          msg = lv_json_actual ).
+      ENDIF.
     ENDLOOP.
   ENDMETHOD.
 

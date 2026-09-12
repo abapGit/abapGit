@@ -192,6 +192,16 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
         iv_length    = ls_dtel_data-dd04v-leng ).
       ls_data_aff-data_type_information-predefined_type-length = ls_dtel_data-dd04v-leng.
       ls_data_aff-data_type_information-predefined_type-decimals = ls_dtel_data-dd04v-decimals.
+    ELSEIF ls_data_aff-data_type_information-category =
+        zif_abapgit_aff_dtel_v1=>co_category-reference_to_predefined_type.
+      CASE ls_dtel_data-dd04v-reftype.
+        WHEN 'A'.
+          ls_data_aff-data_type_information-type_name = 'ANY'.
+        WHEN 'D'.
+          ls_data_aff-data_type_information-type_name = 'DATA'.
+        WHEN 'O'.
+          ls_data_aff-data_type_information-type_name = 'OBJECT'.
+      ENDCASE.
     ELSE.
       ls_data_aff-data_type_information-type_name = ls_dtel_data-dd04v-domname.
     ENDIF.
