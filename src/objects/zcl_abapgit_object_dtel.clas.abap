@@ -403,6 +403,12 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers = '0000'.
     IF sy-subrc <> 0 OR ls_dd04v IS INITIAL.
+      IF mv_aff_enabled = abap_true.
+        " Keep the metadata format consistent for inactive DTELs
+        mo_files->add_raw(
+          iv_ext  = 'json'
+          iv_data = lv_json ).
+      ENDIF.
       RETURN.
     ENDIF.
 

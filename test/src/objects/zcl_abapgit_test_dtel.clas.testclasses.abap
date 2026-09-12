@@ -136,6 +136,7 @@ CLASS ltcl_test_aff DEFINITION FOR TESTING DURATION SHORT RISK LEVEL CRITICAL FI
     METHODS deserialize_xml_serialize_aff FOR TESTING RAISING cx_static_check.
     METHODS domain_serialize_aff FOR TESTING RAISING cx_static_check.
     METHODS deserialize_aff_serialize_aff FOR TESTING RAISING cx_static_check.
+    METHODS serialize_inactive_empty_aff FOR TESTING RAISING cx_static_check.
 
     METHODS deserialize_xml
       IMPORTING
@@ -354,6 +355,47 @@ CLASS ltcl_test_aff IMPLEMENTATION.
                                                            iv_json_b = lv_exp )
       exp = abap_true
       msg = lv_json ).
+
+  ENDMETHOD.
+
+  METHOD serialize_inactive_empty_aff.
+
+    DATA ls_item        TYPE zif_abapgit_definitions=>ty_item.
+    DATA lo_dtel        TYPE REF TO zif_abapgit_object.
+    DATA lo_files       TYPE REF TO zcl_abapgit_objects_files.
+    DATA li_xml_out     TYPE REF TO zif_abapgit_xml_output.
+    DATA lt_files       TYPE zif_abapgit_git_definitions=>ty_files_tt.
+    DATA ls_file        TYPE zif_abapgit_git_definitions=>ty_file.
+    DATA lo_i18n_params TYPE REF TO zcl_abapgit_i18n_params.
+
+    ls_item-obj_type = 'DTEL'.
+    ls_item-obj_name = 'ZABAPGIT_TEST_DTEL_INACTIVE'.
+
+    lo_files = zcl_abapgit_objects_files=>new( ls_item ).
+    lo_i18n_params = zcl_abapgit_i18n_params=>new(
+      iv_main_language      = sy-langu
+      iv_main_language_only = abap_true ).
+
+    CREATE OBJECT lo_dtel TYPE zcl_abapgit_object_dtel
+      EXPORTING
+        iv_language    = sy-langu
+        is_item        = ls_item
+        io_files       = lo_files
+        io_i18n_params = lo_i18n_params.
+
+    CREATE OBJECT li_xml_out TYPE zcl_abapgit_xml_output.
+    lo_dtel->serialize( li_xml_out ).
+
+    lt_files = lo_files->get_files( ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_files )
+      exp = 1 ).
+
+    READ TABLE lt_files INTO ls_file INDEX 1.
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_file-filename
+      exp = 'zabapgit_test_dtel_inactive.dtel.json' ).
+    cl_abap_unit_assert=>assert_initial( ls_file-data ).
 
   ENDMETHOD.
 
