@@ -1487,6 +1487,21 @@ function toggleDisplay(divId) {
  * Keyboard Navigation
  **********************************************************/
 
+// Submenu headings are dummy links. Keep their hover/focus behavior without
+// following "#", which can trigger the popstate browser-back trap.
+function preventSubmenuNavigation(event) {
+  var anchor = event.target || event.srcElement;
+  while (anchor && anchor.nodeName !== "A") anchor = anchor.parentNode;
+  if (!anchor || anchor.getAttribute("href") !== "#") return;
+  if (anchor.parentNode && anchor.parentNode.nodeName === "LI"
+    && anchor.nextElementSibling && anchor.nextElementSibling.nodeName === "UL") {
+    event.preventDefault();
+  }
+}
+
+// Independent of the optional link-hint and keyboard-navigation settings.
+document.addEventListener("click", preventSubmenuNavigation);
+
 function KeyNavigation() { }
 
 KeyNavigation.prototype.onkeydown = function(event) {
