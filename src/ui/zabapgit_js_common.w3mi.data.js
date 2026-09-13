@@ -768,7 +768,14 @@ StageHelper.prototype.setHooks = function() {
   this.dom.patchBtn.onclick        = this.submitPatch.bind(this);
   this.dom.objectSearch.oninput    = this.onFilter.bind(this);
   this.dom.objectSearch.onkeypress = this.onFilter.bind(this);
+  // SAP GUI for HTML renders the page in an ITS-managed iframe and replaces
+  // that iframe on every navigation instead of navigating it. A frame torn
+  // down that way gets pagehide, never beforeunload, so listening only for
+  // beforeunload loses the table state there. The embedded controls of the
+  // desktop GUIs predate pagehide, so keep both - storing twice is harmless,
+  // it writes the same state under the same key.
   window.addEventListener("beforeunload", this.onPageUnload.bind(this));
+  window.addEventListener("pagehide", this.onPageUnload.bind(this));
   window.addEventListener("load", this.onPageLoad.bind(this));
 
   var self = this;
@@ -1115,6 +1122,9 @@ CheckListWrapper.prototype.onClick = function(e) {
   var option   = nodeA.innerText;
   var oldState = nodeLi.getAttribute("data-check");
   if (oldState === null) return; // no data-check attribute - non-checkbox
+  // These links only toggle a filter. Following href="#" would emit a
+  // popstate which the browser-back trap interprets as a request to go back.
+  e.preventDefault();
   var newState = oldState !== "X";
 
   if (newState) {
@@ -2712,6 +2722,40 @@ function toggleSticky() {
 /**********************************************************
  * Browser Control
  **********************************************************/
+
+// Local links must not create history entries: their popstate would be
+// mistaken for browser Back. Run after the link's own click handler so that
+// dummy links can still toggle controls or submit forms normally.
+function handleLocalFragmentClick(event) {
+  if (event.defaultPrevented) return;
+  var anchor = event.target || event.srcElement;
+  while (anchor && anchor.nodeName !== "A") anchor = anchor.parentNode;
+  if (!anchor) return;
+
+  var href = anchor.getAttribute("href");
+  if (!href || href.charAt(0) !== "#") return;
+
+  // ITS rewrites SAP-event links to #sapeventNN. These must retain their
+  // routing behavior. A literal "#" is still a dummy, including form links
+  // whose data-sapevent is consumed by an onclick submit handler.
+  if (href !== "#" && (anchor.getAttribute("data-sapevent")
+    || /sapevent/i.test(anchor.hrefsav || "") || /^#sapevent\d+$/i.test(href))) return;
+
+  // Explicit new-window/download links are not in-page navigation.
+  var target = anchor.getAttribute("target");
+  if (target && target.toLowerCase() !== "_self" || anchor.hasAttribute("download")) return;
+
+  event.preventDefault();
+  if (href === "#") return;
+
+  var id = href.substring(1);
+  try { id = decodeURIComponent(id) }
+  catch (error) { /* A literal percent can also occur in an element ID. */ } // eslint-disable-line no-unused-vars
+  var destination = document.getElementById(id) || document.getElementsByName(id)[0];
+  if (destination) destination.scrollIntoView();
+}
+
+document.addEventListener("click", handleLocalFragmentClick);
 
 // Toggle display of warning message when using Edge (based on Chromium) browser control
 // Todo: Remove once https://github.com/abapGit/abapGit/issues/4841 is fixed
