@@ -52,6 +52,12 @@ CLASS zcl_abapgit_objects_check DEFINITION
       RETURNING
         VALUE(rt_overwrite) TYPE zif_abapgit_definitions=>ty_overwrite_tt.
 
+    CLASS-METHODS warning_overwrite_files
+      IMPORTING
+        !it_results     TYPE zif_abapgit_definitions=>ty_results_tt
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files.
+
     CLASS-METHODS warning_package_adjust
       IMPORTING
         !ii_repo      TYPE REF TO zif_abapgit_repo
@@ -243,6 +249,8 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
     rs_checks-overwrite = warning_overwrite_find( lt_results ).
 
+    rs_checks-overwrite_files = warning_overwrite_files( lt_results ).
+
     rs_checks-warning_package = warning_package_find(
       ii_repo    = ii_repo
       it_results = lt_results ).
@@ -401,6 +409,27 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         it_overwrite_new = lt_overwrite
       CHANGING
         ct_results       = ct_results ).
+
+  ENDMETHOD.
+
+
+  METHOD warning_overwrite_files.
+
+    DATA lv_status TYPE c LENGTH 2.
+
+    FIELD-SYMBOLS:
+      <ls_result> LIKE LINE OF it_results,
+      <ls_file>   LIKE LINE OF rt_files.
+
+    " collect changed files that are not assiciated with TADIR objects
+    LOOP AT it_results ASSIGNING <ls_result> USING KEY sec_key WHERE obj_type IS INITIAL AND obj_name IS INITIAL.
+      CONCATENATE <ls_result>-lstate <ls_result>-rstate INTO lv_status RESPECTING BLANKS.
+
+      IF lv_status IS NOT INITIAL.
+        APPEND INITIAL LINE TO rt_files ASSIGNING <ls_file>.
+        MOVE-CORRESPONDING <ls_result> TO <ls_file>.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
