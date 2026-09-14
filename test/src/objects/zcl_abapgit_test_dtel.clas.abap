@@ -1,0 +1,7 @@
+CLASS zcl_abapgit_test_dtel DEFINITION PUBLIC.
+  PUBLIC SECTION.
+ENDCLASS.
+
+CLASS zcl_abapgit_test_dtel IMPLEMENTATION.
+
+ENDCLASS.

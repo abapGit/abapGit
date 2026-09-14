@@ -2,8 +2,19 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
+
+    METHODS constructor
+      IMPORTING
+        is_item        TYPE zif_abapgit_definitions=>ty_item
+        iv_language    TYPE spras
+        io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    DATA mv_aff_enabled TYPE abap_bool.
 
     TYPES:
       BEGIN OF ty_dd04_text,
@@ -26,6 +37,9 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     CONSTANTS c_longtext_id_dtel TYPE dokil-id VALUE 'DE' ##NO_TEXT.
     CONSTANTS c_longtext_id_dtel_suppl TYPE dokil-id VALUE 'DZ' ##NO_TEXT.
 
+    METHODS delete_documentation
+      RAISING
+        zcx_abapgit_exception.
     METHODS serialize_texts
       IMPORTING
         !ii_xml TYPE REF TO zif_abapgit_xml_output
@@ -42,6 +56,27 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
+
+
+  METHOD constructor.
+
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
+
+    mv_aff_enabled = zcl_abapgit_aff_factory=>get_registry( )->is_supported_object_type( 'DTEL' ).
+
+  ENDMETHOD.
+
+
+  METHOD delete_documentation.
+
+    delete_longtexts( c_longtext_id_dtel ).
+    delete_longtexts( c_longtext_id_dtel_suppl ).
+
+  ENDMETHOD.
 
 
   METHOD deserialize_texts.
@@ -178,19 +213,38 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 
     delete_ddic( 'E' ).
 
-    delete_longtexts( c_longtext_id_dtel ).
+    delete_documentation( ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_dd04v TYPE dd04v,
-          ls_extra TYPE ty_extra,
-          lv_name  TYPE ddobjname.
+    DATA: ls_dd04v     TYPE dd04v,
+          ls_extra     TYPE ty_extra,
+          lv_name      TYPE ddobjname,
+          lv_json      TYPE xstring,
+          lv_using_aff TYPE abap_bool.
 
-    io_xml->read( EXPORTING iv_name = 'DD04V'
-                  CHANGING cg_data = ls_dd04v ).
+    " The format is determined by the files of the repository, not by mv_aff_enabled:
+    " there is no XML to fall back to when a JSON file is present
+    lv_using_aff = mo_files->contains_file( 'json' ).
+
+    IF lv_using_aff = abap_true.
+      lv_json = mo_files->read_raw( 'json' ).
+
+      lcl_aff_metadata_handler=>deserialize(
+        EXPORTING
+          iv_json                  = lv_json
+          iv_object_name           = ms_item-obj_name
+          it_files                 = mo_files->get_files( )
+        IMPORTING
+          es_dd04v                 = ls_dd04v
+          ev_abap_language_version = ls_extra-abap_language_version ).
+    ELSE.
+      io_xml->read( EXPORTING iv_name = 'DD04V'
+                    CHANGING cg_data = ls_dd04v ).
+    ENDIF.
 
     IF ls_dd04v-ddtext IS INITIAL.
       zcx_abapgit_exception=>raise( |DTEL { ms_item-obj_name }: description is empty| ).
@@ -216,9 +270,11 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    " Fields that are not part of dd04v
-    io_xml->read( EXPORTING iv_name = 'DD04L_EXTRA'
-                  CHANGING  cg_data = ls_extra ).
+    IF lv_using_aff = abap_false.
+      " Fields that are not part of dd04v
+      io_xml->read( EXPORTING iv_name = 'DD04L_EXTRA'
+                    CHANGING  cg_data = ls_extra ).
+    ENDIF.
 
     TRY.
         set_abap_language_version( CHANGING cv_abap_language_version = ls_extra-abap_language_version ).
@@ -227,18 +283,24 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
       CATCH cx_sy_dynamic_osql_semantics ##NO_HANDLER.
     ENDTRY.
 
-    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
-      deserialize_texts(
-        ii_xml   = io_xml
-        is_dd04v = ls_dd04v ).
+    IF lv_using_aff = abap_true.
+      " Note: The AFF format has no representation for the supplementary
+      " documentation (c_longtext_id_dtel_suppl) and for translations
+      deserialize_longtexts_aff( c_longtext_id_dtel ).
+    ELSE.
+      IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
+        deserialize_texts(
+          ii_xml   = io_xml
+          is_dd04v = ls_dd04v ).
+      ENDIF.
+
+      deserialize_longtexts( ii_xml         = io_xml
+                             iv_longtext_id = c_longtext_id_dtel ).
+
+      deserialize_longtexts( ii_xml           = io_xml
+                             iv_longtext_name = 'LONGTEXTS_' && c_longtext_id_dtel_suppl
+                             iv_longtext_id   = c_longtext_id_dtel_suppl ).
     ENDIF.
-
-    deserialize_longtexts( ii_xml         = io_xml
-                           iv_longtext_id = c_longtext_id_dtel ).
-
-    deserialize_longtexts( ii_xml           = io_xml
-                           iv_longtext_name = 'LONGTEXTS_' && c_longtext_id_dtel_suppl
-                           iv_longtext_id   = c_longtext_id_dtel_suppl ).
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
@@ -268,7 +330,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     ELSEIF sy-subrc <> 0.
       " Check for inactive or modified versions
       SELECT SINGLE rollname FROM dd04l INTO lv_rollname
-        WHERE rollname = lv_rollname.
+        WHERE rollname = lv_rollname. "#EC CI_NOORDER
     ENDIF.
     rv_bool = boolc( sy-subrc = 0 ).
 
@@ -328,7 +390,8 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 
     DATA: lv_name  TYPE ddobjname,
           ls_extra TYPE ty_extra,
-          ls_dd04v TYPE dd04v.
+          ls_dd04v TYPE dd04v,
+          lv_json  TYPE xstring.
 
     FIELD-SYMBOLS <lg_field> TYPE any.
 
@@ -340,6 +403,12 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers = '0000'.
     IF sy-subrc <> 0 OR ls_dd04v IS INITIAL.
+      IF mv_aff_enabled = abap_true.
+        " Keep the metadata format consistent for inactive DTELs
+        mo_files->add_raw(
+          iv_ext  = 'json'
+          iv_data = zcl_abapgit_convert=>string_to_xstring_utf8( '{}' ) ).
+      ENDIF.
       RETURN.
     ENDIF.
 
@@ -384,24 +453,38 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
       CLEAR ls_dd04v-authclass.
     ENDIF.
 
-    io_xml->add( iv_name = 'DD04V'
-                 ig_data = ls_dd04v ).
-
     ls_extra-abap_language_version = get_abap_language_version( ).
 
-    io_xml->add( iv_name = 'DD04L_EXTRA'
-                 ig_data = ls_extra ).
+    IF mv_aff_enabled = abap_true.
+      lv_json = lcl_aff_metadata_handler=>serialize(
+        is_dd04v                 = ls_dd04v
+        iv_abap_language_version = ls_extra-abap_language_version ).
 
-    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
-      serialize_texts( io_xml ).
+      mo_files->add_raw(
+        iv_ext  = 'json'
+        iv_data = lv_json ).
+
+      " Note: The AFF format has no representation for the supplementary
+      " documentation (c_longtext_id_dtel_suppl) and for translations
+      serialize_longtexts_aff( iv_longtext_id = c_longtext_id_dtel ).
+    ELSE.
+      io_xml->add( iv_name = 'DD04V'
+                   ig_data = ls_dd04v ).
+
+      io_xml->add( iv_name = 'DD04L_EXTRA'
+                   ig_data = ls_extra ).
+
+      IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
+        serialize_texts( io_xml ).
+      ENDIF.
+
+      serialize_longtexts( ii_xml         = io_xml
+                           iv_longtext_id = c_longtext_id_dtel ).
+
+      serialize_longtexts( ii_xml           = io_xml
+                           iv_longtext_name = 'LONGTEXTS_' && c_longtext_id_dtel_suppl
+                           iv_longtext_id   = c_longtext_id_dtel_suppl ).
     ENDIF.
-
-    serialize_longtexts( ii_xml         = io_xml
-                         iv_longtext_id = c_longtext_id_dtel ).
-
-    serialize_longtexts( ii_xml           = io_xml
-                         iv_longtext_name = 'LONGTEXTS_' && c_longtext_id_dtel_suppl
-                         iv_longtext_id   = c_longtext_id_dtel_suppl ).
 
   ENDMETHOD.
 ENDCLASS.
