@@ -156,3 +156,18 @@ test("matching special characters uses the original title, escaping every output
   filter("");
   assert.equal(palette.commands[0].titleSpan.innerText, "<A & B>");
 });
+
+for (const targetName of ["LI", "SPAN", "I", "MARK"]) {
+  test(`clicking palette ${targetName} executes the associated command once`, () => {
+    const { palette, actions, filter } = page();
+    filter("open");
+    const cmd = palette.commands[2];
+    let target = cmd.element;
+    if (targetName === "SPAN") target = cmd.titleSpan;
+    if (targetName === "I") target = { nodeName: "I", parentNode: cmd.element };
+    if (targetName === "MARK") target = { nodeName: "MARK", parentNode: cmd.titleSpan };
+    palette.elements.ul.listeners.click({ target });
+    assert.deepEqual(actions, ["Open Settings"]);
+    assert.equal(palette.elements.palette.style.display, "none");
+  });
+}
