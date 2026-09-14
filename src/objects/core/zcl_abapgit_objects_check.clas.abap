@@ -422,7 +422,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
       <ls_file>   LIKE LINE OF rt_files.
 
     " collect changed files that are not assiciated with TADIR objects
-    LOOP AT it_results ASSIGNING <ls_result> USING KEY sec_key WHERE obj_type IS INITIAL AND obj_name IS INITIAL.
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type IS INITIAL AND obj_name IS INITIAL ##PRIMKEY[SEC_KEY].
       CONCATENATE <ls_result>-lstate <ls_result>-rstate INTO lv_status RESPECTING BLANKS.
 
       IF lv_status IS NOT INITIAL.
