@@ -190,6 +190,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
           lv_absolute_name        TYPE string,
           lv_folder_logic         TYPE string,
           lt_unique_package_names TYPE HASHED TABLE OF devclass WITH UNIQUE KEY table_line.
+    DATA lv_abap_language_version TYPE uccheck.
 
     lv_length = strlen( io_dot->get_starting_folder( ) ).
     IF lv_length > strlen( iv_path ).
@@ -212,12 +213,14 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
     " Automatically create package using minimal properties
     " Details will be updated during deserialization
     IF iv_create_if_not_exists = abap_true.
+      lv_abap_language_version = zcl_abapgit_abap_language_vers=>create( io_dot )->get_package_abap_language_vers( ).
       IF iv_top(1) = '$'.
-        zcl_abapgit_factory=>get_sap_package( iv_top )->create_local( ).
+        zcl_abapgit_factory=>get_sap_package( iv_top )->create_local( lv_abap_language_version ).
       ELSE.
         ls_package-devclass = iv_top.
-        ls_package-ctext = iv_top.
-        ls_package-as4user = sy-uname.
+        ls_package-ctext    = iv_top.
+        ls_package-as4user  = sy-uname.
+        ls_package-packkind = lv_abap_language_version.
         zcl_abapgit_factory=>get_sap_package( iv_top )->create( ls_package ).
       ENDIF.
     ENDIF.

@@ -9,5 +9,12 @@ INTERFACE zif_abapgit_aff_registry
       IMPORTING
         iv_obj_type      TYPE tadir-object
       RETURNING
+        VALUE(rv_result) TYPE abap_bool,
+    "! Returns TRUE if the object type is known to abapGit but is still experimental,
+    "! ie. it is only supported if the experimental feature AFF is enabled in the settings.
+    is_experimental_object_type
+      IMPORTING
+        iv_obj_type      TYPE tadir-object
+      RETURNING
         VALUE(rv_result) TYPE abap_bool.
 ENDINTERFACE.

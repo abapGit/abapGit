@@ -13,6 +13,13 @@ CLASS ltcl_aff_registry DEFINITION FINAL FOR TESTING
           iv_obj_type     TYPE tadir-object
           iv_is_supported TYPE abap_bool
           iv_experimental TYPE abap_bool DEFAULT abap_false,
+      assert_is_experimental
+        IMPORTING
+          iv_obj_type     TYPE tadir-object
+          iv_experimental TYPE abap_bool,
+      clas_not_experimental FOR TESTING RAISING cx_static_check,
+      chkc_not_experimental FOR TESTING RAISING cx_static_check,
+      intf_is_experimental FOR TESTING RAISING cx_static_check,
       clas_not_supported FOR TESTING RAISING cx_static_check,
       chkc FOR TESTING RAISING cx_static_check,
       chko FOR TESTING RAISING cx_static_check,
@@ -44,6 +51,34 @@ CLASS ltcl_aff_registry IMPLEMENTATION.
     lv_act = lo_cut->is_supported_object_type( iv_obj_type ).
     cl_abap_unit_assert=>assert_equals( exp = iv_is_supported
                                         act = lv_act ).
+  ENDMETHOD.
+
+  METHOD assert_is_experimental.
+    DATA:
+      lo_cut TYPE REF TO zif_abapgit_aff_registry,
+      lv_act TYPE abap_bool.
+
+    CREATE OBJECT lo_cut TYPE zcl_abapgit_aff_registry.
+    lv_act = lo_cut->is_experimental_object_type( iv_obj_type ).
+    cl_abap_unit_assert=>assert_equals( exp = iv_experimental
+                                        act = lv_act ).
+  ENDMETHOD.
+
+  METHOD clas_not_experimental.
+    " Object type is not known to abapGit at all
+    assert_is_experimental( iv_obj_type = 'CLAS'
+                            iv_experimental = abap_false ).
+  ENDMETHOD.
+
+  METHOD chkc_not_experimental.
+    " Object type is supported without enabling the experimental feature
+    assert_is_experimental( iv_obj_type = 'CHKC'
+                            iv_experimental = abap_false ).
+  ENDMETHOD.
+
+  METHOD intf_is_experimental.
+    assert_is_experimental( iv_obj_type = 'INTF'
+                            iv_experimental = abap_true ).
   ENDMETHOD.
 
   METHOD clas_not_supported.

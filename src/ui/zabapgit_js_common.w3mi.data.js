@@ -338,10 +338,7 @@ function submitSapeventForm(params, action, method, form) {
     }
   }
 
-  // Mark that the popstate the browser control may emit while handling this
-  // sapevent navigation is self-initiated, not a user Back press
-  gSapeventNavPending = true;
-  form.submit();
+  submitForm(form);
 }
 
 // Trigger a server-rendered sapevent element (anchor / submit input) the way a
@@ -352,8 +349,12 @@ function submitSapeventForm(params, action, method, form) {
 // arm the flag - it would never be consumed and the next genuine Back press
 // would be swallowed.
 function clickSapEvent(element) {
+  // Main submit inputs inherit the event from their form rather than carrying
+  // a formaction of their own.
+  var formAction = element.type === "submit" && element.form
+    ? element.form.getAttribute("action") : "";
   var isSapEvent = element.getAttribute("data-sapevent")
-    || /sapevent/i.test(element.hrefsav || element.href || element.getAttribute("formaction") || "");
+    || /sapevent/i.test(element.hrefsav || element.href || element.getAttribute("formaction") || formAction || "");
   if (isSapEvent) gSapeventNavPending = true;
   element.click();
 }
@@ -385,9 +386,13 @@ function setInitialFocusWithQuerySelector(sSelector, bFocusParent) {
 // popstate as a user Back press and fires go_back, which supersedes the submit:
 // the page returns without saving on the Edge control, while the IE control -
 // where the trap never arms - is unaffected.
-function submitFormById(id) {
+function submitForm(form) {
   gSapeventNavPending = true;
-  document.getElementById(id).submit();
+  form.submit();
+}
+
+function submitFormById(id) {
+  submitForm(document.getElementById(id));
 }
 
 // Confirm JS initialization
@@ -515,14 +520,16 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
 };
 
 RepoOverViewHelper.prototype.openSelectedRepo = function() {
-  this.selectedRepoKey = document.querySelector(".repo-overview tr.selected").dataset.key;
+  var selectedRow = document.querySelector(".repo-overview tr.selected");
+  if (!selectedRow) return;
+  this.selectedRepoKey = selectedRow.dataset.key;
   this.saveLocalStorage();
   document.querySelector(".repo-overview tr.selected td.ro-go a").click();
 };
 
 RepoOverViewHelper.prototype.selectRowByIndex = function(index) {
   var rows = this.getVisibleRows();
-  if (rows.length >= index) {
+  if (index >= 0 && index < rows.length) {
     var selectedRow = rows[index];
     if (selectedRow.classList.contains("selected")) {
       return;
@@ -539,6 +546,7 @@ RepoOverViewHelper.prototype.selectRowByIndex = function(index) {
 RepoOverViewHelper.prototype.selectRowByRepoKey = function(key) {
   var attributeQuery = "[data-key='" + key + "']";
   var row            = document.querySelector(".repo-overview tbody tr" + attributeQuery);
+  if (!row) return;
   // navigation to already selected repo
   if (row.dataset.key === key && row.classList.contains("selected")) {
     return;
@@ -760,7 +768,14 @@ StageHelper.prototype.setHooks = function() {
   this.dom.patchBtn.onclick        = this.submitPatch.bind(this);
   this.dom.objectSearch.oninput    = this.onFilter.bind(this);
   this.dom.objectSearch.onkeypress = this.onFilter.bind(this);
+  // SAP GUI for HTML renders the page in an ITS-managed iframe and replaces
+  // that iframe on every navigation instead of navigating it. A frame torn
+  // down that way gets pagehide, never beforeunload, so listening only for
+  // beforeunload loses the table state there. The embedded controls of the
+  // desktop GUIs predate pagehide, so keep both - storing twice is harmless,
+  // it writes the same state under the same key.
   window.addEventListener("beforeunload", this.onPageUnload.bind(this));
+  window.addEventListener("pagehide", this.onPageUnload.bind(this));
   window.addEventListener("load", this.onPageLoad.bind(this));
 
   var self = this;
@@ -1107,6 +1122,9 @@ CheckListWrapper.prototype.onClick = function(e) {
   var option   = nodeA.innerText;
   var oldState = nodeLi.getAttribute("data-check");
   if (oldState === null) return; // no data-check attribute - non-checkbox
+  // These links only toggle a filter. Following href="#" would emit a
+  // popstate which the browser-back trap interprets as a request to go back.
+  e.preventDefault();
   var newState = oldState !== "X";
 
   if (newState) {
@@ -1784,12 +1802,12 @@ LinkHints.prototype.hintActivate = function(hint) {
     this.toggleCheckbox(hint);
   } else if (hint.parent.type === "radio") {
     this.toggleRadioButton(hint);
-  } else if (hint.parent.type === "submit") {
-    hint.parent.click();
+  } else if (hint.parent.type === "submit" || hint.parent.type === "button") {
+    clickSapEvent(hint.parent);
   } else if (hint.parent.nodeName === "INPUT" || hint.parent.nodeName === "TEXTAREA") {
     hint.parent.focus();
   } else {
-    hint.parent.click();
+    clickSapEvent(hint.parent);
     if (this.activatedDropdown) this.closeActivatedDropdown();
   }
 };
@@ -2240,6 +2258,10 @@ function registerStagePatch() {
 // return non empty marked string in case it fits the filter
 // abc + b = a<mark>b</mark>c
 function fuzzyMatchAndMark(str, filter) {
+  function escapeText(text) {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
   var markedStr   = "";
   var filterLower = filter.toLowerCase();
   var strLower    = str.toLowerCase();
@@ -2247,15 +2269,15 @@ function fuzzyMatchAndMark(str, filter) {
 
   for (var i = 0; i < filter.length; i++) {
     while (filterLower[i] !== strLower[cur] && cur < str.length) {
-      markedStr += str[cur++];
+      markedStr += escapeText(str[cur++]);
     }
     if (cur === str.length) break;
-    markedStr += "<mark>" + str[cur++] + "</mark>";
+    markedStr += "<mark>" + escapeText(str[cur++]) + "</mark>";
   }
 
   var matched = i === filter.length;
 
-  if (matched && cur < str.length) markedStr += str.substring(cur);
+  if (matched && cur < str.length) markedStr += escapeText(str.substring(cur));
   return matched ? markedStr: null;
 }
 
@@ -2388,9 +2410,11 @@ CommandPalette.prototype.applySelectIndex = function(newIndex) {
   if (newIndex !== this.selectIndex) {
     if (this.selectIndex >= 0) this.commands[this.selectIndex].element.classList.remove("selected");
     var newCmd = this.commands[newIndex];
-    newCmd.element.classList.add("selected");
     this.selectIndex = newIndex;
-    this.adjustScrollPosition(newCmd.element);
+    if (newCmd) {
+      newCmd.element.classList.add("selected");
+      this.adjustScrollPosition(newCmd.element);
+    }
   }
 };
 
@@ -2398,8 +2422,9 @@ CommandPalette.prototype.selectFirst = function() {
   for (var i = 0; i < this.commands.length; i++) {
     if (this.commands[i].element.style.display === "none") continue; // skip hidden
     this.applySelectIndex(i);
-    break;
+    return;
   }
+  this.applySelectIndex(-1);
 };
 
 CommandPalette.prototype.selectNext = function() {
@@ -2457,6 +2482,7 @@ CommandPalette.prototype.toggleDisplay = function(forceState) {
       if (cmd.getTitle) cmd.title = cmd.getTitle();
     });
     this.elements.input.value = "";
+    this.filter = "";
     this.elements.input.focus();
     this.applyFilter();
     this.selectFirst();
@@ -2564,12 +2590,14 @@ function enumerateUiActions() {
   });
 
   // forms
-  [].slice.call(document.querySelectorAll("input[type='submit']"))
+  [].slice.call(document.querySelectorAll("input[type='submit'], input[type='button'][data-sapevent]"))
     .forEach(function(input) {
       items.push({
         action: function() {
-          if (input.form.action.includes(input.formAction) || input.classList.contains("main")) {
-            input.form.submit();
+          if (input.type === "button") {
+            clickSapEvent(input);
+          } else if (input.form.action.includes(input.formAction) || input.classList.contains("main")) {
+            submitForm(input.form);
           } else {
             submitSapeventForm({}, input.formAction, "post", input.form);
           }
@@ -2695,6 +2723,40 @@ function toggleSticky() {
  * Browser Control
  **********************************************************/
 
+// Local links must not create history entries: their popstate would be
+// mistaken for browser Back. Run after the link's own click handler so that
+// dummy links can still toggle controls or submit forms normally.
+function handleLocalFragmentClick(event) {
+  if (event.defaultPrevented) return;
+  var anchor = event.target || event.srcElement;
+  while (anchor && anchor.nodeName !== "A") anchor = anchor.parentNode;
+  if (!anchor) return;
+
+  var href = anchor.getAttribute("href");
+  if (!href || href.charAt(0) !== "#") return;
+
+  // ITS rewrites SAP-event links to #sapeventNN. These must retain their
+  // routing behavior. A literal "#" is still a dummy, including form links
+  // whose data-sapevent is consumed by an onclick submit handler.
+  if (href !== "#" && (anchor.getAttribute("data-sapevent")
+    || /sapevent/i.test(anchor.hrefsav || "") || /^#sapevent\d+$/i.test(href))) return;
+
+  // Explicit new-window/download links are not in-page navigation.
+  var target = anchor.getAttribute("target");
+  if (target && target.toLowerCase() !== "_self" || anchor.hasAttribute("download")) return;
+
+  event.preventDefault();
+  if (href === "#") return;
+
+  var id = href.substring(1);
+  try { id = decodeURIComponent(id) }
+  catch (error) { /* A literal percent can also occur in an element ID. */ } // eslint-disable-line no-unused-vars
+  var destination = document.getElementById(id) || document.getElementsByName(id)[0];
+  if (destination) destination.scrollIntoView();
+}
+
+document.addEventListener("click", handleLocalFragmentClick);
+
 // Toggle display of warning message when using Edge (based on Chromium) browser control
 // Todo: Remove once https://github.com/abapGit/abapGit/issues/4841 is fixed
 function toggleBrowserControlWarning() {
@@ -2772,7 +2834,7 @@ function findSapEventElements(action) {
   // pattern (\b still assumes word-shaped action names, which all current are)
   var re = new RegExp("\\b" + action.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b");
   return [].slice
-    .call(document.querySelectorAll("a, input[type='submit']"))
+    .call(document.querySelectorAll("a, input[type='submit'], input[type='button'][data-sapevent]"))
     .filter(function(el) {
       var target = el.getAttribute("data-sapevent");
       if (!target) {

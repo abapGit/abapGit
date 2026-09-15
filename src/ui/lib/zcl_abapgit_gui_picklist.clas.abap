@@ -129,11 +129,13 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
 
     ro_form = zcl_abapgit_html_form=>create( ).
 
+    ASSIGN mr_list->* TO <lt_list>.
+
     ro_form->radio(
       iv_name     = c_radio_name
-      iv_label    = mv_title ).
+      iv_label    = mv_title
+      iv_condense = boolc( lines( <lt_list> ) <= 15 ) ).
 
-    ASSIGN mr_list->* TO <lt_list>.
     LOOP AT <lt_list> ASSIGNING <ls_row>.
       lv_index = sy-tabix.
 

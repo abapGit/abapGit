@@ -242,12 +242,12 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
     DATA: ls_package TYPE zif_abapgit_sap_package=>ty_create.
 
-
-    ls_package-devclass  = mv_package.
-    ls_package-ctext     = mv_package.
-    ls_package-parentcl  = '$TMP'.
-    ls_package-dlvunit   = 'LOCAL'.
-    ls_package-as4user   = sy-uname.
+    ls_package-devclass = mv_package.
+    ls_package-ctext    = mv_package.
+    ls_package-parentcl = '$TMP'.
+    ls_package-dlvunit  = 'LOCAL'.
+    ls_package-as4user  = sy-uname.
+    ls_package-packkind = iv_abap_language_version.
 
     zif_abapgit_sap_package~create( ls_package ).
 
@@ -389,7 +389,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_package~list_subpackages.
 
-    DATA: lt_list     LIKE rt_list.
+    DATA lt_list LIKE rt_list.
 
     SELECT devclass FROM tdevc
       INTO TABLE lt_list
@@ -467,6 +467,13 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   METHOD zif_abapgit_sap_package~read_responsible.
     SELECT SINGLE as4user FROM tdevc
       INTO rv_responsible
+      WHERE devclass = mv_package ##SUBRC_OK.           "#EC CI_GENBUFF
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_sap_package~read_namespace.
+    SELECT SINGLE namespace FROM tdevc
+      INTO rv_namespace
       WHERE devclass = mv_package ##SUBRC_OK.           "#EC CI_GENBUFF
   ENDMETHOD.
 

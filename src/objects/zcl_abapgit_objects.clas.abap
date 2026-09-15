@@ -228,6 +228,16 @@ CLASS zcl_abapgit_objects DEFINITION
       RETURNING
         VALUE(rv_bool) TYPE abap_bool.
 
+    CLASS-METHODS read_metadata
+      IMPORTING
+        !is_item     TYPE zif_abapgit_definitions=>ty_item
+        !io_files    TYPE REF TO zcl_abapgit_objects_files
+      EXPORTING
+        !eo_xml      TYPE REF TO zif_abapgit_xml_input
+        !es_metadata TYPE zif_abapgit_definitions=>ty_metadata
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -722,14 +732,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
           lo_files->set_files( lt_remote ).
 
-          IF lo_files->is_json_metadata( ) = abap_false.
-            "analyze XML in order to instantiate the proper serializer
-            lo_xml = lo_files->read_xml( ).
-            ls_metadata = lo_xml->get_metadata( ).
-          ELSE.
-            " there's no XML and metadata for JSON format
-            CLEAR: lo_xml, ls_metadata.
-          ENDIF.
+          read_metadata(
+            EXPORTING
+              is_item     = ls_item
+              io_files    = lo_files
+            IMPORTING
+              eo_xml      = lo_xml
+              es_metadata = ls_metadata ).
 
           li_obj = create_object(
             is_item        = ls_item
@@ -1232,6 +1241,34 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       INSERT ls_item INTO TABLE rt_items.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD read_metadata.
+
+    DATA li_registry TYPE REF TO zif_abapgit_aff_registry.
+
+    CLEAR: eo_xml, es_metadata.
+
+    IF io_files->is_json_metadata( ) = abap_true.
+      " There's no XML and metadata for JSON (AFF) format
+      li_registry = zcl_abapgit_aff_factory=>get_registry( ).
+      IF li_registry->is_supported_object_type( is_item-obj_type ) = abap_false.
+        IF li_registry->is_experimental_object_type( is_item-obj_type ) = abap_true.
+          zcx_abapgit_exception=>raise( |Object is serialized in AFF format. Enable experimental | &&
+            |feature { zcl_abapgit_aff_registry=>c_aff_feature } in global settings| ).
+        ELSE.
+          zcx_abapgit_exception=>raise( |Object is serialized in AFF format| &&
+            |, which is not supported for object type { is_item-obj_type }| ).
+        ENDIF.
+      ENDIF.
+      RETURN.
+    ENDIF.
+
+    " Analyze XML in order to instantiate the proper serializer
+    eo_xml = io_files->read_xml( ).
+    es_metadata = eo_xml->get_metadata( ).
 
   ENDMETHOD.
 

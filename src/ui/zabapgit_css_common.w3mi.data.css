@@ -1489,8 +1489,16 @@ table.unit_tests {
   border-radius: 2px;
   display: inline-block;
 }
+.dialog .radio-container.with-border input[type="radio"] + label {
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  margin-bottom: 2px;
+}
 .dialog .radio-container input[type="radio"]:checked + label {
   border: 1px solid transparent;
+}
+.dialog .radio-container label:hover {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 .dialog table {
   width: 100%;
@@ -1643,16 +1651,6 @@ table.unit_tests {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.3);
-}
-
-.modal .radio-container label {
-  /* hacky, improve later, get rid of !important, hook it to a named style instead */
-  border-radius: 3px !important;
-  border: 1px solid rgba(0, 0, 0, 0.3) !important;
-  margin-bottom: 2px !important;
-}
-.modal .radio-container label:hover {
-  background-color: rgba(0, 0, 0, 0.1);
 }
 
 /* WHERE USED PAGE */

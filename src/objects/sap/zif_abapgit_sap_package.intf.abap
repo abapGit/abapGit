@@ -14,6 +14,7 @@ INTERFACE zif_abapgit_sap_package
            parentcl  TYPE devclass,
            pdevclass TYPE c LENGTH 4,
            as4user   TYPE usnam,
+           packkind  TYPE uccheck,
          END OF ty_create.
 
   METHODS get
@@ -30,6 +31,8 @@ INTERFACE zif_abapgit_sap_package
     RAISING
       zcx_abapgit_exception .
   METHODS create_local
+    IMPORTING
+      iv_abap_language_version TYPE uccheck
     RAISING
       zcx_abapgit_exception .
   METHODS list_subpackages
@@ -51,6 +54,9 @@ INTERFACE zif_abapgit_sap_package
   METHODS read_responsible
     RETURNING
       VALUE(rv_responsible) TYPE usnam.
+  METHODS read_namespace
+    RETURNING
+      VALUE(rv_namespace) TYPE namespace.
   METHODS create_child
     IMPORTING
       !iv_child TYPE devclass
