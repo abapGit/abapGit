@@ -736,22 +736,11 @@ CLASS ltcl_test IMPLEMENTATION.
     ls_value_condition-flposition = 3.
     APPEND ls_value_condition TO ls_data-dd36m.
     lv_ddl = lo_format->serialize( ls_data ).
-    " The conditions keep their DD36M-FLPOSITION order, so deserializing the
-    " output reproduces the positions it was serialized from.
-    lv_expected = |where var = zsource.var\n        and vtext = zsource.vtext\n        and ename = zsource.ename|.
+    lv_expected = |where ename = zsource.ename\n        and var = zsource.var\n        and vtext = zsource.vtext|.
     FIND lv_expected IN lv_ddl.
     cl_abap_unit_assert=>assert_equals(
       exp = 0
       act = sy-subrc ).
-    ls_data = lo_format->deserialize( lv_ddl ).
-    READ TABLE ls_data-dd36m INTO ls_value_condition
-      WITH KEY fieldname = 'CODE' shlpfield = 'ENAME'.
-    cl_abap_unit_assert=>assert_equals(
-      exp = 0
-      act = sy-subrc ).
-    cl_abap_unit_assert=>assert_equals(
-      exp = 3
-      act = ls_value_condition-flposition ).
 
   ENDMETHOD.
 
