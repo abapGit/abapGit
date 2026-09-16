@@ -24,6 +24,7 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
     METHODS foreign_key_cardinalities FOR TESTING RAISING cx_static_check.
     METHODS foreign_key_annotations FOR TESTING RAISING cx_static_check.
     METHODS condition_positions FOR TESTING RAISING cx_static_check.
+    METHODS delimited_names FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -1528,6 +1529,63 @@ CLASS ltcl_test IMPLEMENTATION.
         exp = lv_index
         act = ls_value_condition-flposition ).
     ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD delimited_names.
+
+    DATA lo_format TYPE REF TO zcl_abapgit_object_tabl_ddl.
+    DATA ls_data TYPE zif_abapgit_object_tabl=>ty_internal.
+    DATA ls_roundtrip TYPE zif_abapgit_object_tabl=>ty_internal.
+    DATA ls_field LIKE LINE OF ls_data-dd03p.
+    DATA lv_ddl TYPE string.
+
+    CREATE OBJECT lo_format.
+    ls_data-dd02v-tabname = 'ZDRAFT'.
+    ls_data-dd02v-ddtext = 'Draft'.
+    ls_data-dd02v-exclass = '0'.
+    ls_data-dd02v-tabclass = 'TRANSP'.
+    ls_data-dd02v-contflag = 'C'.
+    ls_field-fieldname = 'FIELD'.
+    ls_field-adminfield = '0'.
+    ls_field-datatype = 'CHAR'.
+    ls_field-leng = 1.
+    ls_field-inttype = 'C'.
+    ls_field-intlen = 2.
+    APPEND ls_field TO ls_data-dd03p.
+    CLEAR ls_field.
+    ls_field-fieldname = '.INCLU'.
+    ls_field-groupname = '%ADMIN'.
+    ls_field-precfield = 'SYCH_BDL_DRAFT_ADMIN_INC'.
+    ls_field-adminfield = '0'.
+    APPEND ls_field TO ls_data-dd03p.
+
+    " A group name that is not a plain identifier has to be written as a
+    " delimited name, otherwise the DDL cannot be activated.
+    lv_ddl = lo_format->serialize( ls_data ).
+    FIND `"%admin" : include sych_bdl_draft_admin_inc;` IN lv_ddl.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+
+    " The quotes delimit the name, they are not part of it.
+    ls_roundtrip = lo_format->deserialize( lv_ddl ).
+    READ TABLE ls_roundtrip-dd03p INTO ls_field WITH KEY groupname = '%ADMIN'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = '.INCLU'
+      act = ls_field-fieldname ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'SYCH_BDL_DRAFT_ADMIN_INC'
+      act = ls_field-precfield ).
+
+    " A plain name is never quoted.
+    FIND `"field"` IN lv_ddl.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 4
+      act = sy-subrc ).
 
   ENDMETHOD.
 

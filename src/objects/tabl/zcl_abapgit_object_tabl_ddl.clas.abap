@@ -68,6 +68,12 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
         VALUE(rt_tokens) TYPE ty_tokens
       RAISING
         zcx_abapgit_exception .
+    METHODS flush_token
+      IMPORTING
+        !iv_offset  TYPE i
+      CHANGING
+        !cv_current TYPE string
+        !ct_tokens  TYPE ty_tokens .
     METHODS parse_error
       IMPORTING
         !iv_context TYPE clike
@@ -300,6 +306,16 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
         !iv_string       TYPE clike
       RETURNING
         VALUE(rv_string) TYPE string .
+    METHODS escape_name
+      IMPORTING
+        !iv_name       TYPE clike
+      RETURNING
+        VALUE(rv_name) TYPE string .
+    METHODS unescape_name
+      IMPORTING
+        !iv_name       TYPE clike
+      RETURNING
+        VALUE(rv_name) TYPE string .
     METHODS serialize_type
       IMPORTING
         !is_dd03p      TYPE dd03p
@@ -482,6 +498,34 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD escape_name.
+    CONSTANTS lc_plain TYPE string VALUE 'abcdefghijklmnopqrstuvwxyz0123456789_/'.
+    rv_name = to_lower( iv_name ).
+    " A name that is not a plain identifier has to be written as a delimited
+    " name, for example the %ADMIN group of a draft admin include.
+    IF rv_name CN lc_plain.
+      rv_name = |"{ rv_name }"|.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD unescape_name.
+    DATA lv_length TYPE i.
+    DATA lv_last TYPE i.
+    rv_name = iv_name.
+    lv_length = strlen( rv_name ).
+    IF lv_length < 2 OR rv_name(1) <> '"'.
+      RETURN.
+    ENDIF.
+    lv_last = lv_length - 1.
+    IF rv_name+lv_last(1) <> '"'.
+      RETURN.
+    ENDIF.
+    lv_length = lv_length - 2.
+    rv_name = rv_name+1(lv_length).
+  ENDMETHOD.
+
+
   METHOD parse_error.
     zcx_abapgit_exception=>raise( |TABL DDL parse error at offset { iv_offset }: { iv_context } ({ iv_token })| ).
   ENDMETHOD.
@@ -585,6 +629,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     DATA lv_start TYPE i.
     DATA lv_next TYPE i.
     DATA lv_quoted TYPE abap_bool.
+    DATA lv_delimited TYPE abap_bool.
     DATA lv_char TYPE string.
     DATA lv_current TYPE string.
     DATA ls_token TYPE ty_token.
@@ -592,6 +637,17 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     lv_length = strlen( iv_ddl ).
     WHILE lv_offset < lv_length.
       lv_char = iv_ddl+lv_offset(1).
+      IF lv_delimited = abap_true.
+        " A delimited name runs to the closing double quote. The quotes are
+        " kept in the token so the parser can tell a delimited name apart
+        " from a keyword.
+        lv_current = lv_current && lv_char.
+        IF lv_char = '"'.
+          lv_delimited = abap_false.
+        ENDIF.
+        lv_offset = lv_offset + 1.
+        CONTINUE.
+      ENDIF.
       IF lv_quoted = abap_true.
         lv_current = lv_current && lv_char.
         IF lv_char = |'|.
@@ -612,15 +668,17 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         ENDIF.
         lv_quoted = abap_true.
         lv_current = lv_current && lv_char.
+      ELSEIF lv_char = '"'.
+        IF lv_current IS INITIAL.
+          lv_start = lv_offset.
+        ENDIF.
+        lv_delimited = abap_true.
+        lv_current = lv_current && lv_char.
       ELSEIF lv_char = '/' AND lv_offset + 1 < lv_length
           AND ( iv_ddl+lv_offset(2) = '//' OR iv_ddl+lv_offset(2) = '/*' ).
-        IF lv_current IS NOT INITIAL.
-          CLEAR ls_token.
-          ls_token-value = lv_current.
-          ls_token-offset = lv_start.
-          APPEND ls_token TO rt_tokens.
-          CLEAR lv_current.
-        ENDIF.
+        flush_token(
+          EXPORTING iv_offset = lv_start
+          CHANGING cv_current = lv_current ct_tokens = rt_tokens ).
         IF iv_ddl+lv_offset(2) = '//'.
           WHILE lv_offset < lv_length AND iv_ddl+lv_offset(1) <> |\n|.
             lv_offset = lv_offset + 1.
@@ -643,34 +701,22 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         CONTINUE.
       ELSEIF lv_char = '-' AND lv_offset + 1 < lv_length
           AND iv_ddl+lv_offset(2) = '--'.
-        IF lv_current IS NOT INITIAL.
-          CLEAR ls_token.
-          ls_token-value = lv_current.
-          ls_token-offset = lv_start.
-          APPEND ls_token TO rt_tokens.
-          CLEAR lv_current.
-        ENDIF.
+        flush_token(
+          EXPORTING iv_offset = lv_start
+          CHANGING cv_current = lv_current ct_tokens = rt_tokens ).
         WHILE lv_offset < lv_length AND iv_ddl+lv_offset(1) <> |\n|.
           lv_offset = lv_offset + 1.
         ENDWHILE.
         CONTINUE.
       ELSEIF lv_char = | | OR lv_char = |\n| OR lv_char = |\r| OR lv_char = |\t|.
-        IF lv_current IS NOT INITIAL.
-          CLEAR ls_token.
-          ls_token-value = lv_current.
-          ls_token-offset = lv_start.
-          APPEND ls_token TO rt_tokens.
-          CLEAR lv_current.
-        ENDIF.
+        flush_token(
+          EXPORTING iv_offset = lv_start
+          CHANGING cv_current = lv_current ct_tokens = rt_tokens ).
       ELSEIF lv_char = ':' OR lv_char = ';' OR lv_char = '='
           OR lv_char = '{' OR lv_char = '}'.
-        IF lv_current IS NOT INITIAL.
-          CLEAR ls_token.
-          ls_token-value = lv_current.
-          ls_token-offset = lv_start.
-          APPEND ls_token TO rt_tokens.
-          CLEAR lv_current.
-        ENDIF.
+        flush_token(
+          EXPORTING iv_offset = lv_start
+          CHANGING cv_current = lv_current ct_tokens = rt_tokens ).
         CLEAR ls_token.
         ls_token-value = lv_char.
         ls_token-offset = lv_offset.
@@ -683,19 +729,34 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       ENDIF.
       lv_offset = lv_offset + 1.
     ENDWHILE.
-    IF lv_current IS NOT INITIAL.
-      CLEAR ls_token.
-      ls_token-value = lv_current.
-      ls_token-offset = lv_start.
-      APPEND ls_token TO rt_tokens.
-    ENDIF.
     IF lv_quoted = abap_true.
       parse_error(
         iv_context = 'unterminated string literal'
         iv_token = lv_current
         iv_offset = lv_start ).
     ENDIF.
+    IF lv_delimited = abap_true.
+      parse_error(
+        iv_context = 'unterminated delimited name'
+        iv_token = lv_current
+        iv_offset = lv_start ).
+    ENDIF.
+    flush_token(
+      EXPORTING iv_offset = lv_start
+      CHANGING cv_current = lv_current ct_tokens = rt_tokens ).
 
+  ENDMETHOD.
+
+
+  METHOD flush_token.
+    DATA ls_token TYPE ty_token.
+    IF cv_current IS INITIAL.
+      RETURN.
+    ENDIF.
+    ls_token-value = cv_current.
+    ls_token-offset = iv_offset.
+    APPEND ls_token TO ct_tokens.
+    CLEAR cv_current.
   ENDMETHOD.
 
 
@@ -1052,7 +1113,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
                       cv_index = cv_index
                       cs_dd03p = ls_dd03p ).
     ELSE.
-      lv_fieldname = to_upper( ls_token-value ).
+      lv_fieldname = to_upper( unescape_name( ls_token-value ) ).
       ls_dd03p-fieldname = lv_fieldname.
       cv_index = cv_index + 1.
       READ TABLE it_tokens INDEX cv_index INTO ls_token.
@@ -1512,7 +1573,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         iv_token = ls_token-value
         iv_offset = ls_token-offset ).
     ENDIF.
-    lv_fieldname = to_upper( ls_token-value ).
+    lv_fieldname = to_upper( unescape_name( ls_token-value ) ).
     cv_index = cv_index + 1.
     READ TABLE it_tokens INDEX cv_index INTO ls_token.
     IF sy-subrc <> 0 OR ls_token-value <> ':'.
@@ -1994,10 +2055,12 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       IF ls_dd03p-keyflag = abap_true.
         lv_int = 4.
       ENDIF.
+      " The delimiting quotes of a non-plain name count towards the column
+      " the colons are aligned on.
       IF ls_dd03p-groupname IS INITIAL.
-        lv_int = lv_int + strlen( ls_dd03p-fieldname ).
+        lv_int = lv_int + strlen( escape_name( ls_dd03p-fieldname ) ).
       ELSE.
-        lv_int = lv_int + strlen( ls_dd03p-groupname ).
+        lv_int = lv_int + strlen( escape_name( ls_dd03p-groupname ) ).
       ENDIF.
       IF lv_int > lv_colon.
         lv_colon = lv_int.
@@ -2008,9 +2071,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       IF ls_dd03p-keyflag = abap_true.
         lv_key = |key |.
       ENDIF.
-      lv_pre = |{ lv_key }{ to_lower( ls_dd03p-fieldname ) }|.
+      lv_pre = |{ lv_key }{ escape_name( ls_dd03p-fieldname ) }|.
       IF ls_dd03p-groupname IS NOT INITIAL.
-        lv_pre = |{ lv_key }{ to_lower( ls_dd03p-groupname ) }|.
+        lv_pre = |{ lv_key }{ escape_name( ls_dd03p-groupname ) }|.
       ENDIF.
       IF strlen( lv_pre ) < lv_colon.
         lv_pre = lv_pre && repeat(
