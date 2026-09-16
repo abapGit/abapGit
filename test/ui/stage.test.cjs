@@ -147,3 +147,64 @@ for (const event of ["pagehide", "beforeunload"]) {
     });
   });
 }
+
+for (const filter of ["[", "(", "\\"]) {
+  test(`malformed regex ${JSON.stringify(filter)} is literal and the table remains usable`, () => {
+    const { helper, rows, nodes } = page();
+    rows[0].cells[0] = cell("name", "file" + filter + ".txt");
+    helper.applyFilterValue(filter);
+    assert.equal(nodes.table.style.display, "");
+    assert.deepEqual(rows.map(row => row.style.display), ["", "none", "none"]);
+    helper.applyFilterValue("keep");
+    assert.equal(rows[1].style.display, "");
+    helper.applyFilterValue("");
+    assert.ok(rows.every(row => row.style.display === ""));
+  });
+}
+
+test("stage highlights escape text and preserve regex captures and file names", () => {
+  const { helper, rows } = page();
+  rows[0].cells[0] = cell("name", "<b>A&B</b>.txt");
+  helper.applyFilterValue("(A&)(B)");
+  assert.equal(rows[0].cells[0].innerHTML, "&lt;b&gt;<mark>A&amp;B</mark>&lt;/b&gt;.txt");
+  assert.equal(rows[0].style.display, "");
+  helper.applyFilterValue("<");
+  assert.equal(rows[0].cells[0].innerHTML, "<mark>&lt;</mark>b&gt;A&amp;B<mark>&lt;</mark>/b&gt;.txt");
+  helper.applyFilterValue("");
+  assert.equal(rows[0].cells[0].innerHTML, "&lt;b&gt;A&amp;B&lt;/b&gt;.txt");
+  assert.equal(helper.collectData()["<b>A&B</b>.txt"], "?");
+});
+
+test("zero-width regex matches keep matching rows visible", () => {
+  const { helper, rows } = page();
+  helper.applyFilterValue("^zcl");
+  assert.ok(rows.every(row => row.style.display === ""));
+  helper.applyFilterValue("(?=keep)");
+  assert.deepEqual(rows.map(row => row.style.display), ["", "", "none"]);
+});
+
+for (const raw of ["{broken", "[]", '{"zcl_keep.clas.abap":"BAD"}', '{"zcl_keep.clas.abap":7}']) {
+  test(`stage restores safe defaults from invalid saved state: ${raw}`, () => {
+    const { context, helper, rows } = page();
+    context.sessionStorage = { getItem() { return raw; } };
+    helper.onPageLoad();
+    assert.ok(rows.every(row => row.cells[3].innerText === "?"));
+    assert.equal(helper.selectedCount, 0);
+  });
+}
+
+test("stage restores valid selected statuses", () => {
+  const { context, helper, rows } = page();
+  context.sessionStorage = { getItem() { return '{"zcl_keep.clas.abap":"A","zcl_keep_old.clas.abap":"R"}'; } };
+  helper.onPageLoad();
+  assert.deepEqual(rows.map(row => row.cells[3].innerText), ["A", "R", "?"]);
+  assert.equal(helper.selectedCount, 2);
+});
+
+test("stage load and unload survive storage access failure", () => {
+  const { context, helper } = page();
+  Object.defineProperty(context, "sessionStorage", { get() { throw Error("denied"); } });
+  helper.onPageLoad();
+  helper.onPageUnload();
+  assert.equal(helper.selectedCount, 0);
+});
