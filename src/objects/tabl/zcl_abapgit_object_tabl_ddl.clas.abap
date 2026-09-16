@@ -2450,7 +2450,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       RETURN.
     ENDIF.
     IF ls_dd08v-ddtext IS NOT INITIAL.
-      rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.label : { escape_string( ls_dd08v-ddtext ) }\n|.
+      " ADT emits this label without escaping the apostrophes inside it,
+      " unlike the other annotations. Match that rather than produce a
+      " different serialization than the tool the DDL comes from.
+      rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.label : '{ ls_dd08v-ddtext }'\n|.
     ENDIF.
     IF ls_dd08v-frkart IS INITIAL.
     ELSEIF ls_dd08v-frkart = 'TEXT'.

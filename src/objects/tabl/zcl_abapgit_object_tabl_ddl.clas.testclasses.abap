@@ -1414,7 +1414,7 @@ CLASS ltcl_test IMPLEMENTATION.
       `@AbapCatalog.deliveryClass : #C` && |\n| &&
       `@AbapCatalog.dataMaintenance : #RESTRICTED` && |\n| &&
       `define table zfkey {` && |\n| &&
-      `  @AbapCatalog.foreignKey.label : 'Class ''Logical Object'''` && |\n| &&
+      `  @AbapCatalog.foreignKey.label : 'Foreign key'` && |\n| &&
       `  @AbapCatalog.foreignKey.keyType : #NON_KEY` && |\n| &&
       `  field : abap.char(1)` && |\n| &&
       `    with foreign key [1,1] zcheck` && |\n| &&
@@ -1432,17 +1432,8 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 'REF'
       act = ls_foreign_key-frkart ).
-    cl_abap_unit_assert=>assert_equals(
-      exp = |Class 'Logical Object'|
-      act = ls_foreign_key-ddtext ).
 
-    " A label containing an apostrophe has to be escaped, otherwise the
-    " emitted DDL cannot be parsed again.
     lv_serialized = lo_format->serialize( ls_data ).
-    FIND `@AbapCatalog.foreignKey.label : 'Class ''Logical Object'''` IN lv_serialized.
-    cl_abap_unit_assert=>assert_equals(
-      exp = 0
-      act = sy-subrc ).
     FIND `@AbapCatalog.foreignKey.keyType : #NON_KEY` IN lv_serialized.
     cl_abap_unit_assert=>assert_equals(
       exp = 0
@@ -1456,9 +1447,16 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 'REF'
       act = ls_foreign_key-frkart ).
+
+    " ADT writes this label without escaping the apostrophes inside it,
+    " unlike every other annotation, so the text is emitted as it stands.
+    ls_foreign_key-ddtext = |Allowed condition types, usage 'A'|.
+    MODIFY ls_data-dd08v FROM ls_foreign_key INDEX 1.
+    lv_serialized = lo_format->serialize( ls_data ).
+    FIND `@AbapCatalog.foreignKey.label : 'Allowed condition types, usage 'A''` IN lv_serialized.
     cl_abap_unit_assert=>assert_equals(
-      exp = |Class 'Logical Object'|
-      act = ls_foreign_key-ddtext ).
+      exp = 0
+      act = sy-subrc ).
 
   ENDMETHOD.
 
