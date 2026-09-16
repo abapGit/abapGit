@@ -25,6 +25,7 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
     METHODS foreign_key_annotations FOR TESTING RAISING cx_static_check.
     METHODS condition_positions FOR TESTING RAISING cx_static_check.
     METHODS delimited_names FOR TESTING RAISING cx_static_check.
+    METHODS roundtrip_stability FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -1573,6 +1574,97 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 4
       act = sy-subrc ).
+
+  ENDMETHOD.
+
+  METHOD roundtrip_stability.
+
+    DATA lo_format TYPE REF TO zcl_abapgit_object_tabl_ddl.
+    DATA ls_data TYPE zif_abapgit_object_tabl=>ty_internal.
+    DATA ls_roundtrip TYPE zif_abapgit_object_tabl=>ty_internal.
+    DATA ls_field LIKE LINE OF ls_data-dd03p.
+    DATA ls_foreign_key LIKE LINE OF ls_data-dd08v.
+    DATA ls_value_help LIKE LINE OF ls_data-dd35v.
+    DATA ls_value_condition LIKE LINE OF ls_data-dd36m.
+    DATA lv_ddl TYPE string.
+    DATA lv_again TYPE string.
+    DATA lv_parsed TYPE abap_bool.
+
+    CREATE OBJECT lo_format.
+    ls_data-dd02v-tabname = 'ZPROBE'.
+    ls_data-dd02v-ddtext = 'Probe'.
+    ls_data-dd02v-exclass = '0'.
+    ls_data-dd02v-tabclass = 'TRANSP'.
+    ls_data-dd02v-contflag = 'C'.
+    ls_field-fieldname = 'CODE'.
+    ls_field-adminfield = '0'.
+    ls_field-datatype = 'CHAR'.
+    ls_field-leng = 1.
+    ls_field-inttype = 'C'.
+    ls_field-intlen = 2.
+    APPEND ls_field TO ls_data-dd03p.
+
+    ls_value_help-fieldname = 'CODE'.
+    ls_value_help-shlpname = 'ZHELP'.
+    APPEND ls_value_help TO ls_data-dd35v.
+    ls_value_condition-fieldname = 'CODE'.
+    ls_value_condition-shlpname = 'ZHELP'.
+    ls_value_condition-shtype = 'F'.
+    ls_value_condition-shtable = 'ZSOURCE'.
+    ls_value_condition-shlpfield = 'VAR'.
+    ls_value_condition-shfield = 'VAR'.
+    ls_value_condition-flposition = 1.
+    APPEND ls_value_condition TO ls_data-dd36m.
+    ls_value_condition-shlpfield = 'ENAME'.
+    ls_value_condition-shfield = 'ENAME'.
+    ls_value_condition-flposition = 2.
+    APPEND ls_value_condition TO ls_data-dd36m.
+
+    " Value help conditions are emitted in SHLPFIELD order, so a round trip
+    " renumbers DD36M-FLPOSITION into that order: ENAME moves from 2 to 1.
+    lv_ddl = lo_format->serialize( ls_data ).
+    ls_roundtrip = lo_format->deserialize( lv_ddl ).
+    READ TABLE ls_roundtrip-dd36m INTO ls_value_condition
+      WITH KEY fieldname = 'CODE' shlpfield = 'ENAME'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 1
+      act = ls_value_condition-flposition ).
+    " The renumbering settles after one round trip, so repeated serialization
+    " does not keep producing new content.
+    lv_again = lo_format->serialize( ls_roundtrip ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = lv_ddl
+      act = lv_again ).
+
+    CLEAR ls_data-dd35v.
+    CLEAR ls_data-dd36m.
+    ls_foreign_key-fieldname = 'CODE'.
+    ls_foreign_key-checktable = 'ZCHECK'.
+    ls_foreign_key-ddtext = |Allowed condition types, usage 'A'|.
+    APPEND ls_foreign_key TO ls_data-dd08v.
+    lv_ddl = lo_format->serialize( ls_data ).
+    TRY.
+        ls_roundtrip = lo_format->deserialize( lv_ddl ).
+        lv_parsed = abap_true.
+      CATCH zcx_abapgit_exception.
+        lv_parsed = abap_false.
+    ENDTRY.
+    " The label is emitted without escaping, but it is still read back
+    " unchanged: the tokenizer joins the runs either side of the apostrophe
+    " back into one token.
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_true
+      act = lv_parsed ).
+    READ TABLE ls_roundtrip-dd08v INTO ls_foreign_key WITH KEY fieldname = 'CODE'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = |Allowed condition types, usage 'A'|
+      act = ls_foreign_key-ddtext ).
 
   ENDMETHOD.
 
