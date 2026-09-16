@@ -22,6 +22,8 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
     METHODS reference_semantics FOR TESTING RAISING cx_static_check.
     METHODS builtin_types FOR TESTING RAISING cx_static_check.
     METHODS foreign_key_cardinalities FOR TESTING RAISING cx_static_check.
+    METHODS foreign_key_annotations FOR TESTING RAISING cx_static_check.
+    METHODS condition_positions FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -733,11 +735,22 @@ CLASS ltcl_test IMPLEMENTATION.
     ls_value_condition-flposition = 3.
     APPEND ls_value_condition TO ls_data-dd36m.
     lv_ddl = lo_format->serialize( ls_data ).
-    lv_expected = |where ename = zsource.ename\n        and var = zsource.var\n        and vtext = zsource.vtext|.
+    " The conditions keep their DD36M-FLPOSITION order, so deserializing the
+    " output reproduces the positions it was serialized from.
+    lv_expected = |where var = zsource.var\n        and vtext = zsource.vtext\n        and ename = zsource.ename|.
     FIND lv_expected IN lv_ddl.
     cl_abap_unit_assert=>assert_equals(
       exp = 0
       act = sy-subrc ).
+    ls_data = lo_format->deserialize( lv_ddl ).
+    READ TABLE ls_data-dd36m INTO ls_value_condition
+      WITH KEY fieldname = 'CODE' shlpfield = 'ENAME'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 3
+      act = ls_value_condition-flposition ).
 
   ENDMETHOD.
 
@@ -777,6 +790,14 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 0
       act = sy-subrc ).
+    " The whole extension block is indented, including its first line.
+    lv_expected = |key include zbase not null\n| &&
+      |    @AbapCatalog.foreignKey.screenCheck : true\n| &&
+      |    extend language :\n|.
+    FIND lv_expected IN lv_roundtrip.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
     FIND |key include zbase not null\n\n| IN lv_roundtrip.
     IF sy-subrc = 0.
       cl_abap_unit_assert=>fail( ).
@@ -810,7 +831,6 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lv_ddl TYPE string.
     DATA lv_roundtrip TYPE string.
     DATA lv_replacement_object TYPE string.
-    DATA lv_label_found TYPE abap_bool.
     DATA lv_inverted_index_found TYPE abap_bool.
     DATA lv_exclass TYPE c LENGTH 1.
     FIELD-SYMBOLS <lv_is_gtt> TYPE abap_bool.
@@ -888,12 +908,18 @@ CLASS ltcl_test IMPLEMENTATION.
 
     READ TABLE ls_data-dd03p INTO ls_field WITH KEY fieldname = 'AMOUNT'.
     cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    cl_abap_unit_assert=>assert_equals(
       exp = 'ZANNOTATIONS'
       act = ls_field-reftable ).
     cl_abap_unit_assert=>assert_equals(
       exp = 'CUKY'
       act = ls_field-reffield ).
     READ TABLE ls_data-dd03p INTO ls_field WITH KEY fieldname = 'QUANTITY'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
     cl_abap_unit_assert=>assert_equals(
       exp = 'ZANNOTATIONS'
       act = ls_field-reftable ).
@@ -902,9 +928,15 @@ CLASS ltcl_test IMPLEMENTATION.
       act = ls_field-reffield ).
     READ TABLE ls_data-dd03p INTO ls_field WITH KEY fieldname = 'TEXT'.
     cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    cl_abap_unit_assert=>assert_equals(
       exp = abap_true
       act = ls_field-languflag ).
     READ TABLE ls_data-dd03p INTO ls_field WITH KEY fieldname = 'DECIMAL'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
     ASSIGN COMPONENT 'OUTPUTSTYLE' OF STRUCTURE ls_field TO <lv_outputstyle>.
     IF sy-subrc = 0.
       cl_abap_unit_assert=>assert_equals(
@@ -956,18 +988,6 @@ CLASS ltcl_test IMPLEMENTATION.
     ELSE.
       cl_abap_unit_assert=>assert_initial( ls_data-dd02v-viewref ).
     ENDIF.
-
-    READ TABLE ls_data-dd08v INTO ls_foreign_key
-      WITH KEY fieldname = 'FOREIGN_FIELD'.
-    ls_foreign_key-ddtext = |Class 'Logical Object'|.
-    MODIFY ls_data-dd08v FROM ls_foreign_key INDEX sy-tabix.
-    lv_roundtrip = lo_format->serialize( ls_data ).
-    IF lv_roundtrip CS `@AbapCatalog.foreignKey.label : 'Class 'Logical Object''`.
-      lv_label_found = abap_true.
-    ENDIF.
-    cl_abap_unit_assert=>assert_equals(
-      exp = abap_true
-      act = lv_label_found ).
 
     DO 5 TIMES.
       CLEAR ls_data.
@@ -1223,7 +1243,7 @@ CLASS ltcl_test IMPLEMENTATION.
     APPEND `LANG_FIELD;LANG;1;-` TO lt_specs.
     APPEND `DATN_FIELD;DATN;8;-` TO lt_specs.
     APPEND `TIMN_FIELD;TIMN;6;-` TO lt_specs.
-    APPEND `UTCL_FIELD;UTCL;-;-` TO lt_specs.
+    APPEND `UTCL_FIELD;UTCL;27;-` TO lt_specs.
     APPEND `D16N_FIELD;D16N;-;-` TO lt_specs.
     APPEND `D34N_FIELD;D34N;-;-` TO lt_specs.
     APPEND `CUKY_FIELD;CUKY;5;-` TO lt_specs.
@@ -1385,6 +1405,129 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 0
       act = sy-subrc ).
+
+  ENDMETHOD.
+
+  METHOD foreign_key_annotations.
+
+    DATA lo_format TYPE REF TO zcl_abapgit_object_tabl_ddl.
+    DATA ls_data TYPE zif_abapgit_object_tabl=>ty_internal.
+    DATA ls_roundtrip TYPE zif_abapgit_object_tabl=>ty_internal.
+    DATA ls_foreign_key LIKE LINE OF ls_data-dd08v.
+    DATA lv_ddl TYPE string.
+    DATA lv_serialized TYPE string.
+
+    lv_ddl =
+      `@EndUserText.label : 'Foreign key annotations'` && |\n| &&
+      `@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE` && |\n| &&
+      `@AbapCatalog.tableCategory : #TRANSPARENT` && |\n| &&
+      `@AbapCatalog.deliveryClass : #C` && |\n| &&
+      `@AbapCatalog.dataMaintenance : #RESTRICTED` && |\n| &&
+      `define table zfkey {` && |\n| &&
+      `  @AbapCatalog.foreignKey.label : 'Class ''Logical Object'''` && |\n| &&
+      `  @AbapCatalog.foreignKey.keyType : #NON_KEY` && |\n| &&
+      `  field : abap.char(1)` && |\n| &&
+      `    with foreign key [1,1] zcheck` && |\n| &&
+      `      where code = zfkey.field;` && |\n| &&
+      `}`.
+
+    CREATE OBJECT lo_format.
+    ls_data = lo_format->deserialize( lv_ddl ).
+    READ TABLE ls_data-dd08v INTO ls_foreign_key WITH KEY fieldname = 'FIELD'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    " #NON_KEY is longer than DD08V-FRKART, so it must be mapped before it is
+    " stored, not truncated to 'NON_'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'REF'
+      act = ls_foreign_key-frkart ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = |Class 'Logical Object'|
+      act = ls_foreign_key-ddtext ).
+
+    " A label containing an apostrophe has to be escaped, otherwise the
+    " emitted DDL cannot be parsed again.
+    lv_serialized = lo_format->serialize( ls_data ).
+    FIND `@AbapCatalog.foreignKey.label : 'Class ''Logical Object'''` IN lv_serialized.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    FIND `@AbapCatalog.foreignKey.keyType : #NON_KEY` IN lv_serialized.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+
+    ls_roundtrip = lo_format->deserialize( lv_serialized ).
+    READ TABLE ls_roundtrip-dd08v INTO ls_foreign_key WITH KEY fieldname = 'FIELD'.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'REF'
+      act = ls_foreign_key-frkart ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = |Class 'Logical Object'|
+      act = ls_foreign_key-ddtext ).
+
+  ENDMETHOD.
+
+  METHOD condition_positions.
+
+    DATA lo_format TYPE REF TO zcl_abapgit_object_tabl_ddl.
+    DATA ls_data TYPE zif_abapgit_object_tabl=>ty_internal.
+    DATA ls_condition LIKE LINE OF ls_data-dd05m.
+    DATA ls_value_condition LIKE LINE OF ls_data-dd36m.
+    DATA lv_ddl TYPE string.
+    DATA lv_index TYPE i.
+
+    lv_ddl =
+      `@EndUserText.label : 'Condition positions'` && |\n| &&
+      `@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE` && |\n| &&
+      `@AbapCatalog.tableCategory : #TRANSPARENT` && |\n| &&
+      `@AbapCatalog.deliveryClass : #C` && |\n| &&
+      `@AbapCatalog.dataMaintenance : #RESTRICTED` && |\n| &&
+      `define table zpositions {` && |\n| &&
+      `  first : abap.char(1)` && |\n| &&
+      `    with foreign key [1,1] zcheck` && |\n| &&
+      `      where a = zpositions.a` && |\n| &&
+      `        and b = zpositions.b` && |\n| &&
+      `        and c = zpositions.c` && |\n| &&
+      `        and d = zpositions.d;` && |\n| &&
+      `  second : abap.char(1)` && |\n| &&
+      `    with value help zhelp` && |\n| &&
+      `      where v = zpositions.v` && |\n| &&
+      `        and w = zpositions.w` && |\n| &&
+      `        and x = zpositions.x` && |\n| &&
+      `        and y = zpositions.y;` && |\n| &&
+      `}`.
+
+    CREATE OBJECT lo_format.
+    ls_data = lo_format->deserialize( lv_ddl ).
+
+    " Positions have to be consecutive, they are not a running total of the
+    " conditions seen so far.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 4
+      act = lines( ls_data-dd05m ) ).
+    lv_index = 0.
+    LOOP AT ls_data-dd05m INTO ls_condition.
+      lv_index = lv_index + 1.
+      cl_abap_unit_assert=>assert_equals(
+        exp = lv_index
+        act = ls_condition-primpos ).
+    ENDLOOP.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 4
+      act = lines( ls_data-dd36m ) ).
+    lv_index = 0.
+    LOOP AT ls_data-dd36m INTO ls_value_condition.
+      lv_index = lv_index + 1.
+      cl_abap_unit_assert=>assert_equals(
+        exp = lv_index
+        act = ls_value_condition-flposition ).
+    ENDLOOP.
 
   ENDMETHOD.
 

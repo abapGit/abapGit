@@ -8,7 +8,7 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
     METHODS read_data
       IMPORTING
         !iv_name       TYPE tadir-obj_name
-        !iv_language   TYPE sy-langu DEFAULT sy-langu
+        !iv_language   TYPE sy-langu DEFAULT 'E'
       RETURNING
         VALUE(rs_data) TYPE zif_abapgit_object_tabl=>ty_internal
       RAISING
@@ -43,6 +43,23 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
            END OF ty_token.
     TYPES ty_tokens TYPE STANDARD TABLE OF ty_token WITH DEFAULT KEY.
     TYPES ty_fields TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+    TYPES: BEGIN OF ty_cardinality,
+             token    TYPE string,
+             cardleft TYPE dd08v-cardleft,
+             card     TYPE dd08v-card,
+           END OF ty_cardinality.
+    TYPES ty_cardinalities TYPE STANDARD TABLE OF ty_cardinality WITH DEFAULT KEY.
+    TYPES: BEGIN OF ty_reference,
+             reftable TYPE dd03p-reftable,
+             reffield TYPE dd03p-reffield,
+             datatype TYPE dd03p-datatype,
+           END OF ty_reference.
+    TYPES ty_references TYPE SORTED TABLE OF ty_reference WITH UNIQUE KEY reftable reffield.
+
+    " Buffers DDIC lookups for references pointing outside the table being
+    " serialized, so a table with many amount or quantity fields does not
+    " trigger one DDIF_FIELDINFO_GET per field on every serialize call.
+    DATA mt_reference TYPE ty_references.
 
     METHODS tokenize
       IMPORTING
@@ -146,6 +163,14 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
         !cs_dd35v  TYPE dd35v
       RAISING
         zcx_abapgit_exception .
+    METHODS is_block_terminator
+      IMPORTING
+        !iv_token            TYPE clike
+      RETURNING
+        VALUE(rv_terminator) TYPE abap_bool .
+    METHODS get_cardinalities
+      RETURNING
+        VALUE(rt_cardinalities) TYPE ty_cardinalities .
     METHODS parse_cardinality
       IMPORTING
         !iv_token  TYPE clike
@@ -215,6 +240,16 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
         VALUE(rv_ddl) TYPE string
       RAISING
         zcx_abapgit_exception .
+    METHODS is_foreign_key_extension
+      IMPORTING
+        !is_dd08v           TYPE dd08v
+      RETURNING
+        VALUE(rv_extension) TYPE abap_bool .
+    METHODS is_value_help_extension
+      IMPORTING
+        !is_dd35v           TYPE dd35v
+      RETURNING
+        VALUE(rv_extension) TYPE abap_bool .
     METHODS has_more_extensions
       IMPORTING
         !it_fields     TYPE ty_fields
@@ -452,6 +487,18 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_block_terminator.
+    " ADT table DDL omits the semicolon when the next construct already ends
+    " the current block, which is the case for a field annotation and for the
+    " start of a component extension.
+    IF strlen( iv_token ) > 0 AND iv_token(1) = '@'.
+      rv_terminator = abap_true.
+    ELSEIF to_lower( iv_token ) = 'extend'.
+      rv_terminator = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD get_replacement_object.
 
     DATA lv_view_name TYPE ddobjname.
@@ -505,7 +552,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         " Keep source-only parsing usable on releases without the SAP
         " utility. A SAP system with the utility returns the resolved view
         " name, or initial for an entity that cannot be resolved.
-        rv_viewname = iv_entityname.
+        rv_viewname = lv_entityname.
     ENDTRY.
 
   ENDMETHOD.
@@ -817,6 +864,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     DATA lv_reference TYPE string.
     DATA lv_table TYPE string.
     DATA lv_field TYPE string.
+    DATA lv_keytype TYPE string.
     FIELD-SYMBOLS <lv_outputstyle> TYPE zif_abapgit_aff_doma_v1=>ty_output_style.
 
     WHILE cv_index <= lines( it_tokens ).
@@ -915,11 +963,16 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
               iv_token = lv_value
               iv_offset = 0 ).
           ENDIF.
-          cs_dd08v-frkart = to_upper( lv_compare+1 ).
-          IF cs_dd08v-frkart = 'TEXT_KEY'.
+          " DD08V-FRKART is CHAR(4), so the DDL keyword has to be mapped
+          " before it is assigned, otherwise it is truncated first and no
+          " longer matches.
+          lv_keytype = to_upper( lv_compare+1 ).
+          IF lv_keytype = 'TEXT_KEY'.
             cs_dd08v-frkart = 'TEXT'.
-          ELSEIF cs_dd08v-frkart = 'NON_KEY'.
+          ELSEIF lv_keytype = 'NON_KEY'.
             cs_dd08v-frkart = 'REF'.
+          ELSE.
+            cs_dd08v-frkart = lv_keytype.
           ENDIF.
         WHEN '@abapcatalog.foreignkey.screencheck'.
           IF to_lower( lv_compare ) = 'true'.
@@ -1111,8 +1164,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       cv_index = cv_index + 1.
     ELSEIF lv_is_include = abap_true
         AND sy-subrc = 0
-        AND ( strlen( ls_token-value ) > 0 AND ls_token-value(1) = '@'
-          OR to_lower( ls_token-value ) = 'extend' ).
+        AND is_block_terminator( ls_token-value ) = abap_true.
       " Some ADT table DDL omits the terminator when an include is
       " immediately followed by its component extensions.
     ELSE.
@@ -1186,8 +1238,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         cs_dd03p-notnull = abap_true.
         cv_index = cv_index + 1.
       ELSEIF ls_token-value = ';'
-          OR ( strlen( ls_token-value ) > 0 AND ls_token-value(1) = '@' )
-          OR to_lower( ls_token-value ) = 'extend'.
+          OR is_block_terminator( ls_token-value ) = abap_true.
         EXIT.
       ELSE.
         parse_error(
@@ -1200,41 +1251,69 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_cardinalities.
+
+    " Single source of truth for the mapping between the DDL cardinality
+    " token and DD08V-CARDLEFT/CARD, read in both directions by
+    " parse_cardinality and serialize_field_foreign_key.
+    DATA ls_cardinality TYPE ty_cardinality.
+
+    ls_cardinality-token = '[1,0..1]'.
+    ls_cardinality-cardleft = 'C'.
+    ls_cardinality-card = '1'.
+    APPEND ls_cardinality TO rt_cardinalities.
+    ls_cardinality-token = '[0..1,1]'.
+    ls_cardinality-cardleft = '1'.
+    ls_cardinality-card = 'C'.
+    APPEND ls_cardinality TO rt_cardinalities.
+    ls_cardinality-token = '[1,1]'.
+    ls_cardinality-cardleft = '1'.
+    ls_cardinality-card = '1'.
+    APPEND ls_cardinality TO rt_cardinalities.
+    ls_cardinality-token = '[1..*,1]'.
+    ls_cardinality-cardleft = '1'.
+    ls_cardinality-card = 'N'.
+    APPEND ls_cardinality TO rt_cardinalities.
+    ls_cardinality-token = '[0..*,1]'.
+    ls_cardinality-cardleft = '1'.
+    ls_cardinality-card = 'CN'.
+    APPEND ls_cardinality TO rt_cardinalities.
+    ls_cardinality-token = '[0..*,0..1]'.
+    ls_cardinality-cardleft = 'C'.
+    ls_cardinality-card = 'CN'.
+    APPEND ls_cardinality TO rt_cardinalities.
+    ls_cardinality-token = '[0..1,0..1]'.
+    ls_cardinality-cardleft = 'C'.
+    ls_cardinality-card = 'C'.
+    APPEND ls_cardinality TO rt_cardinalities.
+    ls_cardinality-token = '[1..*,]'.
+    ls_cardinality-cardleft = 'N'.
+    ls_cardinality-card = 'N'.
+    APPEND ls_cardinality TO rt_cardinalities.
+    ls_cardinality-token = '[1..*,0..1]'.
+    ls_cardinality-cardleft = 'C'.
+    ls_cardinality-card = 'N'.
+    APPEND ls_cardinality TO rt_cardinalities.
+
+  ENDMETHOD.
+
+
   METHOD parse_cardinality.
-    CASE iv_token.
-      WHEN '[1,0..1]'.
-        cs_dd08v-cardleft = 'C'.
-        cs_dd08v-card = '1'.
-      WHEN '[0..1,1]'.
-        cs_dd08v-cardleft = '1'.
-        cs_dd08v-card = 'C'.
-      WHEN '[1,1]'.
-        cs_dd08v-cardleft = '1'.
-        cs_dd08v-card = '1'.
-      WHEN '[1..*,1]'.
-        cs_dd08v-cardleft = '1'.
-        cs_dd08v-card = 'N'.
-      WHEN '[0..*,1]'.
-        cs_dd08v-cardleft = '1'.
-        cs_dd08v-card = 'CN'.
-      WHEN '[0..*,0..1]'.
-        cs_dd08v-cardleft = 'C'.
-        cs_dd08v-card = 'CN'.
-      WHEN '[0..1,0..1]'.
-        cs_dd08v-cardleft = 'C'.
-        cs_dd08v-card = 'C'.
-      WHEN '[1..*,]'.
-        cs_dd08v-cardleft = 'N'.
-        cs_dd08v-card = 'N'.
-      WHEN '[1..*,0..1]'.
-        cs_dd08v-cardleft = 'C'.
-        cs_dd08v-card = 'N'.
-      WHEN OTHERS.
-        parse_error(
-          iv_context = 'unsupported foreign key cardinality'
-          iv_token = iv_token
-          iv_offset = iv_offset ).
-    ENDCASE.
+
+    DATA lt_cardinalities TYPE ty_cardinalities.
+    DATA ls_cardinality TYPE ty_cardinality.
+
+    lt_cardinalities = get_cardinalities( ).
+    READ TABLE lt_cardinalities INTO ls_cardinality WITH KEY token = iv_token.
+    IF sy-subrc <> 0.
+      parse_error(
+        iv_context = 'unsupported foreign key cardinality'
+        iv_token = iv_token
+        iv_offset = iv_offset ).
+    ENDIF.
+    cs_dd08v-cardleft = ls_cardinality-cardleft.
+    cs_dd08v-card = ls_cardinality-card.
+
   ENDMETHOD.
 
 
@@ -1314,6 +1393,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           TRANSLATE ls_dd05m-fortable TO UPPER CASE.
           TRANSLATE ls_dd05m-forkey TO UPPER CASE.
         ENDIF.
+        CLEAR lv_primpos.
         LOOP AT cs_data-dd05m TRANSPORTING NO FIELDS WHERE fieldname = iv_fieldname.
           lv_primpos = lv_primpos + 1.
         ENDLOOP.
@@ -1392,6 +1472,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           TRANSLATE ls_dd36m-shtable TO UPPER CASE.
           TRANSLATE ls_dd36m-shfield TO UPPER CASE.
         ENDIF.
+        CLEAR lv_position.
         LOOP AT cs_data-dd36m TRANSPORTING NO FIELDS WHERE fieldname = iv_fieldname.
           lv_position = lv_position + 1.
         ENDLOOP.
@@ -1422,7 +1503,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     ls_dd08v = cs_dd08v.
     ls_dd35v = cs_dd35v.
 
-    READ TABLE it_tokens INDEX cv_index INTO ls_token.
+    " cv_index points at the EXTEND keyword, which the caller already checked.
     cv_index = cv_index + 1.
     READ TABLE it_tokens INDEX cv_index INTO ls_token.
     IF sy-subrc <> 0 OR ls_token-value IS INITIAL.
@@ -1451,8 +1532,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         cv_index = cv_index + 1.
         lv_done = abap_true.
         EXIT.
-      ELSEIF ( strlen( ls_token-value ) > 0 AND ls_token-value(1) = '@' )
-          OR lv_keyword = 'extend'.
+      ELSEIF is_block_terminator( ls_token-value ) = abap_true.
         " Some ADT table DDL omits the terminator between extension blocks.
         lv_done = abap_true.
         EXIT.
@@ -1810,6 +1890,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       WHEN 'utcl'.
         cs_dd03p-datatype = 'UTCL'.
         cs_dd03p-inttype = 'P'.
+        cs_dd03p-leng = 27.
+        cs_dd03p-intlen = 8.
       WHEN 'd16n'.
         cs_dd03p-datatype = 'D16N'.
         cs_dd03p-inttype = 'a'.
@@ -1873,6 +1955,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
   METHOD read_data.
     DATA lv_name TYPE ddobjname.
     lv_name = iv_name.
+    " The texts read here end up in the serialized DDL, so the language is a
+    " deliberate choice of the caller (the repository master language) and
+    " must not default to the logon language, which would make the output
+    " differ between developers.
     CALL FUNCTION 'DDIF_TABL_GET'
       EXPORTING name = lv_name langu = iv_language
       IMPORTING dd02v_wa = rs_data-dd02v dd09l_wa = rs_data-dd09l
@@ -1954,7 +2040,6 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           rv_ddl = rv_ddl && |;\n|.
         ELSE.
           " ADT omits the terminator for an include that owns extensions.
-          rv_ddl = rv_ddl && |\n|.
           rv_ddl = rv_ddl && lv_extend.
         ENDIF.
         CONTINUE.
@@ -2004,13 +2089,33 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_foreign_key_extension.
+    " A DD08V row describes a component extension when it is not inherited
+    " from the include, either because it overrides ('Y') or removes ('*') the
+    " inherited foreign key.
+    IF ( is_dd08v-noinherit = 'Y' OR is_dd08v-checktable = '*' )
+        AND is_dd08v-noinherit <> 'N'.
+      rv_extension = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD is_value_help_extension.
+    IF is_dd35v-shlpinher <> abap_true.
+      rv_extension = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD has_more_extensions.
 
     DATA ls_dd08v LIKE LINE OF is_data-dd08v.
     DATA ls_dd35v LIKE LINE OF is_data-dd35v.
 
-    LOOP AT is_data-dd08v INTO ls_dd08v
-        WHERE ( noinherit = 'Y' OR checktable = '*' ) AND noinherit <> 'N'.
+    LOOP AT is_data-dd08v INTO ls_dd08v.
+      IF is_foreign_key_extension( ls_dd08v ) = abap_false.
+        CONTINUE.
+      ENDIF.
       READ TABLE it_fields TRANSPORTING NO FIELDS
         WITH KEY table_line = ls_dd08v-fieldname.
       IF sy-subrc = 0.
@@ -2019,7 +2124,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
     LOOP AT is_data-dd35v INTO ls_dd35v.
-      IF ls_dd35v-shlpinher = abap_true.
+      IF is_value_help_extension( ls_dd35v ) = abap_false.
         CONTINUE.
       ENDIF.
       READ TABLE it_fields TRANSPORTING NO FIELDS
@@ -2055,8 +2160,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       ENDIF.
       APPEND ls_dd03p-fieldname TO lt_fields.
     ENDLOOP.
-    LOOP AT is_data-dd08v INTO ls_dd08v
-        WHERE ( noinherit = 'Y' OR checktable = '*' ) AND noinherit <> 'N'.
+    LOOP AT is_data-dd08v INTO ls_dd08v.
+      IF is_foreign_key_extension( ls_dd08v ) = abap_false.
+        CONTINUE.
+      ENDIF.
       READ TABLE lt_fields TRANSPORTING NO FIELDS
         WITH KEY table_line = ls_dd08v-fieldname.
       IF sy-subrc <> 0.
@@ -2096,19 +2203,19 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
     LOOP AT is_data-dd35v INTO ls_dd35v.
+      IF is_value_help_extension( ls_dd35v ) = abap_false.
+        CONTINUE.
+      ENDIF.
       READ TABLE lt_fields INTO lv_field
         WITH KEY table_line = ls_dd35v-fieldname.
       IF sy-subrc <> 0.
-        CONTINUE.
-      ENDIF.
-      IF ls_dd35v-shlpinher = abap_true.
         CONTINUE.
       ENDIF.
       DELETE lt_fields WHERE table_line = ls_dd35v-fieldname.
       rv_ddl = rv_ddl && |  extend { to_lower( lv_field ) } :|.
       IF ls_dd35v-shlpname = '*'.
         rv_ddl = rv_ddl && |\n    remove value help|.
-      ELSEIF ls_dd35v-shlpinher <> abap_true.
+      ELSE.
         rv_ddl = rv_ddl && serialize_value_help(
           iv_fieldname = lv_field
             is_data = is_data ).
@@ -2122,12 +2229,19 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         rv_ddl = rv_ddl && |;\n|.
       ENDIF.
     ENDLOOP.
-    REPLACE ALL OCCURRENCES OF |\n  | IN rv_ddl WITH |\n    |.
+    IF rv_ddl IS NOT INITIAL.
+      " The block always starts on a line of its own. Emitting that newline
+      " here instead of in the caller makes the re-indent below cover the
+      " first line as well.
+      rv_ddl = |\n{ rv_ddl }|.
+      REPLACE ALL OCCURRENCES OF |\n  | IN rv_ddl WITH |\n    |.
+    ENDIF.
   ENDMETHOD.
 
 
   METHOD get_reference_datatype.
     DATA ls_reference LIKE LINE OF is_data-dd03p.
+    DATA ls_buffered TYPE ty_reference.
     DATA ls_dfies TYPE dfies.
 
     " Prefer the field metadata already read for the table. This also keeps
@@ -2144,7 +2258,17 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     ENDIF.
 
     " References may point to a different DDIC object, which is not part of
-    " the DD03P rows returned for the table being serialized.
+    " the DD03P rows returned for the table being serialized. A table with
+    " many amount or quantity fields would otherwise hit DDIC once per field
+    " on every serialize call, so the outcome is buffered, including the
+    " negative one.
+    READ TABLE mt_reference INTO ls_buffered
+      WITH TABLE KEY reftable = is_field-reftable reffield = is_field-reffield.
+    IF sy-subrc = 0.
+      rv_datatype = ls_buffered-datatype.
+      RETURN.
+    ENDIF.
+
     TRY.
         CALL FUNCTION 'DDIF_FIELDINFO_GET'
           EXPORTING
@@ -2163,6 +2287,11 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       CATCH cx_sy_dyn_call_error.
         " The open-abap test runtime does not provide DDIC function modules.
     ENDTRY.
+
+    ls_buffered-reftable = is_field-reftable.
+    ls_buffered-reffield = is_field-reffield.
+    ls_buffered-datatype = rv_datatype.
+    INSERT ls_buffered INTO TABLE mt_reference.
   ENDMETHOD.
 
 
@@ -2209,6 +2338,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     DATA ls_dd08v LIKE LINE OF is_data-dd08v.
     DATA ls_dd05m LIKE LINE OF is_data-dd05m.
     DATA lt_dd05m TYPE STANDARD TABLE OF dd05m WITH DEFAULT KEY.
+    DATA lt_cardinalities TYPE ty_cardinalities.
+    DATA ls_cardinality TYPE ty_cardinality.
     DATA lv_pre TYPE string.
     DATA lv_cardinality TYPE string.
     DATA lv_target TYPE string.
@@ -2217,30 +2348,15 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       RETURN.
     ENDIF.
     " Cardinality is optional in table DDL; keep the separator when omitted.
+    " DDIC may also contain legacy or incomplete cardinality values which have
+    " no direct DDL representation, in which case the foreign key is preserved
+    " and only the cardinality is left out.
     lv_cardinality = | |.
-    IF ls_dd08v-cardleft = 'C' AND ls_dd08v-card = '1'.
-      lv_cardinality = | [1,0..1] |.
-    ELSEIF ls_dd08v-cardleft = '1' AND ls_dd08v-card = 'C'.
-      lv_cardinality = | [0..1,1] |.
-    ELSEIF ls_dd08v-cardleft = '1' AND ls_dd08v-card = '1'.
-      lv_cardinality = | [1,1] |.
-    ELSEIF ls_dd08v-cardleft = '1' AND ls_dd08v-card = 'N'.
-      lv_cardinality = | [1..*,1] |.
-    ELSEIF ls_dd08v-cardleft = '1' AND ls_dd08v-card = 'CN'.
-      lv_cardinality = | [0..*,1] |.
-    ELSEIF ls_dd08v-cardleft = 'C' AND ls_dd08v-card = 'CN'.
-      lv_cardinality = | [0..*,0..1] |.
-    ELSEIF ls_dd08v-cardleft = 'C' AND ls_dd08v-card = 'C'.
-      lv_cardinality = | [0..1,0..1] |.
-    ELSEIF ls_dd08v-cardleft = 'N' AND ls_dd08v-card = 'N'.
-      lv_cardinality = | [1..*,] |.
-    ELSEIF ls_dd08v-cardleft = 'C' AND ls_dd08v-card = 'N'.
-      lv_cardinality = | [1..*,0..1] |.
-    ELSEIF ls_dd08v-cardleft IS NOT INITIAL OR ls_dd08v-card IS NOT INITIAL.
-      " DDIC may contain legacy or incomplete cardinality values which have no
-      " direct DDL representation. Cardinality is optional in table DDL, so
-      " preserve the foreign key and omit only the cardinality in this case.
-      lv_cardinality = | |.
+    lt_cardinalities = get_cardinalities( ).
+    READ TABLE lt_cardinalities INTO ls_cardinality
+      WITH KEY cardleft = ls_dd08v-cardleft card = ls_dd08v-card.
+    IF sy-subrc = 0.
+      lv_cardinality = | { ls_cardinality-token } |.
     ENDIF.
     rv_ddl = rv_ddl && |\n    with foreign key{ lv_cardinality }{ to_lower( ls_dd08v-checktable ) }|.
     LOOP AT is_data-dd05m INTO ls_dd05m
@@ -2271,7 +2387,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       RETURN.
     ENDIF.
     IF ls_dd08v-ddtext IS NOT INITIAL.
-      rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.label : '{ ls_dd08v-ddtext }'\n|.
+      rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.label : { escape_string( ls_dd08v-ddtext ) }\n|.
     ENDIF.
     IF ls_dd08v-frkart IS INITIAL.
     ELSEIF ls_dd08v-frkart = 'TEXT'.
@@ -2473,7 +2589,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         WHERE fieldname = iv_fieldname AND shlpname = ls_dd35v-shlpname AND shtype <> 'G'.
       APPEND ls_dd36m TO lt_dd36m.
     ENDLOOP.
-    SORT lt_dd36m BY shlpfield ASCENDING flposition ASCENDING.
+    " Keep the DDIC condition order, so serialize and deserialize agree on
+    " DD36M-FLPOSITION. This mirrors the DD05M-PRIMPOS handling for foreign
+    " keys.
+    SORT lt_dd36m BY flposition ASCENDING.
     LOOP AT lt_dd36m INTO ls_dd36m.
       IF lv_pre IS INITIAL.
         lv_pre = |\n      where |.
