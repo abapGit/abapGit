@@ -2169,7 +2169,6 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
   METHOD serialize_field_annotations.
     DATA ls_dd03p LIKE LINE OF is_data-dd03p.
     DATA lv_reference_datatype TYPE dd03p-datatype.
-    DATA lv_is_amount TYPE abap_bool.
     DATA lv_reference TYPE string.
     READ TABLE is_data-dd03p INTO ls_dd03p WITH KEY fieldname = iv_fieldname.
     IF sy-subrc <> 0.
@@ -2187,14 +2186,14 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       lv_reference_datatype = get_reference_datatype(
         is_field = ls_dd03p
         is_data  = is_data ).
-      IF lv_reference_datatype = 'CUKY'.
-        lv_is_amount = abap_true.
-      ENDIF.
-      IF lv_is_amount = abap_true.
-        lv_reference = |{ to_lower( ls_dd03p-reftable ) }.{ to_lower( ls_dd03p-reffield ) }|.
+      lv_reference = |{ to_lower( ls_dd03p-reftable ) }.{ to_lower( ls_dd03p-reffield ) }|.
+      " The semantics follow either the field's own type or the type of the
+      " referenced field, so decimal floating point amounts and quantities are
+      " classified as well. A reference that matches neither carries no
+      " semantics and must not produce an annotation.
+      IF ls_dd03p-datatype = 'CURR' OR lv_reference_datatype = 'CUKY'.
         rv_ddl = rv_ddl && |  @Semantics.amount.currencyCode : '{ lv_reference }'\n|.
-      ELSE.
-        lv_reference = |{ to_lower( ls_dd03p-reftable ) }.{ to_lower( ls_dd03p-reffield ) }|.
+      ELSEIF ls_dd03p-datatype = 'QUAN' OR lv_reference_datatype = 'UNIT'.
         rv_ddl = rv_ddl && |  @Semantics.quantity.unitOfMeasure : '{ lv_reference }'\n|.
       ENDIF.
     ENDIF.

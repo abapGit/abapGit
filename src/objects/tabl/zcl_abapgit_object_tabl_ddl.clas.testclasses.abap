@@ -19,6 +19,7 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
     METHODS invalid_ddl FOR TESTING RAISING cx_static_check.
     METHODS annotations_and_types FOR TESTING RAISING cx_static_check.
     METHODS fltp_currency_reference FOR TESTING RAISING cx_static_check.
+    METHODS reference_semantics FOR TESTING RAISING cx_static_check.
     METHODS builtin_types FOR TESTING RAISING cx_static_check.
     METHODS foreign_key_cardinalities FOR TESTING RAISING cx_static_check.
 
@@ -1064,6 +1065,80 @@ CLASS ltcl_test IMPLEMENTATION.
     FIND `@Semantics.quantity.unitOfMeasure : 'zref.unit_field'` IN lv_ddl.
     cl_abap_unit_assert=>assert_equals(
       exp = 0
+      act = sy-subrc ).
+
+  ENDMETHOD.
+
+  METHOD reference_semantics.
+
+    DATA lo_format TYPE REF TO zcl_abapgit_object_tabl_ddl.
+    DATA ls_data TYPE zif_abapgit_object_tabl=>ty_internal.
+    DATA ls_field LIKE LINE OF ls_data-dd03p.
+    DATA lv_ddl TYPE string.
+    DATA lv_matches TYPE i.
+
+    CREATE OBJECT lo_format.
+    ls_data-dd02v-tabname = 'ZSEM'.
+    ls_data-dd02v-exclass = '0'.
+    ls_data-dd02v-tabclass = 'TRANSP'.
+    ls_data-dd02v-contflag = 'C'.
+
+    " The referenced fields are not part of this table, so the semantics can
+    " only be derived from the type of the field carrying the reference.
+    ls_field-fieldname = 'AMOUNT'.
+    ls_field-adminfield = '0'.
+    ls_field-datatype = 'CURR'.
+    ls_field-leng = 10.
+    ls_field-decimals = 2.
+    ls_field-reftable = 'ZEXTERNAL'.
+    ls_field-reffield = 'CURRENCY'.
+    APPEND ls_field TO ls_data-dd03p.
+
+    CLEAR ls_field.
+    ls_field-fieldname = 'QUANTITY'.
+    ls_field-adminfield = '0'.
+    ls_field-datatype = 'QUAN'.
+    ls_field-leng = 10.
+    ls_field-decimals = 3.
+    ls_field-reftable = 'ZEXTERNAL'.
+    ls_field-reffield = 'UOM'.
+    APPEND ls_field TO ls_data-dd03p.
+
+    " Neither the field nor the referenced field carries amount or quantity
+    " semantics, so no annotation may be written.
+    CLEAR ls_field.
+    ls_field-fieldname = 'PLAIN'.
+    ls_field-adminfield = '0'.
+    ls_field-datatype = 'CHAR'.
+    ls_field-leng = 10.
+    ls_field-reftable = 'ZSEM'.
+    ls_field-reffield = 'OTHER'.
+    APPEND ls_field TO ls_data-dd03p.
+
+    CLEAR ls_field.
+    ls_field-fieldname = 'OTHER'.
+    ls_field-adminfield = '0'.
+    ls_field-datatype = 'CHAR'.
+    ls_field-leng = 10.
+    APPEND ls_field TO ls_data-dd03p.
+
+    lv_ddl = lo_format->serialize( ls_data ).
+
+    FIND `@Semantics.amount.currencyCode : 'zexternal.currency'` IN lv_ddl.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    FIND `@Semantics.quantity.unitOfMeasure : 'zexternal.uom'` IN lv_ddl.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = sy-subrc ).
+    FIND ALL OCCURRENCES OF `@Semantics.` IN lv_ddl MATCH COUNT lv_matches.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 2
+      act = lv_matches ).
+    FIND `zsem.other` IN lv_ddl.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 4
       act = sy-subrc ).
 
   ENDMETHOD.
