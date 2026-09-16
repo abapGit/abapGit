@@ -45,6 +45,8 @@ Avoid expanding the fixtures into a general-purpose browser emulator.
 | [`repo-overview.test.cjs`](repo-overview.test.cjs) | Repository selection and persisted state |
 | [`scroll.test.cjs`](scroll.test.cjs) | Scroll restoration and unavailable storage |
 | [`source-viewer.test.cjs`](source-viewer.test.cjs) | Asset loading, response ordering, caching, failures/retries, line numbers, and IE fallbacks |
+| [`keyboard-guards.test.cjs`](keyboard-guards.test.cjs) | Modified shortcuts, typing in editable controls, and deliberate hint activation/yanking |
+| [`diff-copy.test.cjs`](diff-copy.test.cjs) | Diff-column copying, invalid/empty selections, unrelated table clicks, and clipboard fallbacks |
 
 To measure the shipped JavaScript with Node's V8 coverage:
 
@@ -58,11 +60,9 @@ the report, not an aggregate that might also include test fixtures.
 
 Priority gaps for further regression tests:
 
-- Global hotkeys: Ctrl/Alt/Meta combinations, selects, and editable content.
-- Link hints: ordinary typing must not change yank mode; partial hints and
-  cancelling/reopening must leave predictable state.
-- Diff text selection: table-background clicks, empty selections, copying from
-  unrelated tables, and left/right/unified columns.
+- Link hints: partial hints and cancelling/reopening must leave predictable state.
+- Diff text selection: browser-native range cloning and dragging across cells;
+  the unit tests supply representative cloned fragments.
 - Keyboard menu navigation and modal focus: disabled/hidden controls, dropdown
   boundaries, and focus restoration.
 - Source viewer DOM lifecycle: opening/closing, keyboard-handler removal, and
