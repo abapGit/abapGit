@@ -34,7 +34,7 @@ function page(keys = []) {
   helper.updateActionLinks = () => {};
   helper.saveLocalStorage = () => saved.push(helper.selectedRepoKey);
   helper.registerKeyboardShortcuts();
-  return { helper, rows, opened, saved, enter() { listeners.keypress({ keyCode: 13 }); } };
+  return { context, helper, rows, opened, saved, enter() { listeners.keypress({ keyCode: 13 }); } };
 }
 
 test("empty repository lists tolerate initial selection and Enter", () => {
@@ -73,3 +73,42 @@ test("restoring a removed repository key leaves the current selection intact", (
   assert.equal(helper.selectedRepoKey, "1");
   assert.deepEqual(saved, ["1"]);
 });
+
+for (const raw of [null, "{broken", "[]", "42", '{"selectedRepoKey":"missing"}', '{"selectedRepoKey":"a\'b"}']) {
+  test(`invalid or stale saved repository state falls back to the first row: ${raw}`, () => {
+    const { context, helper, rows } = page(["1", "2"]);
+    context.localStorage = { getItem() { return raw; } };
+    helper.onPageLoad();
+    assert.equal(rows[0].classList.contains("selected"), true);
+  });
+}
+
+test("saved repository selection and detail preference are restored", () => {
+  const { context, helper, rows } = page(["1", "2"]);
+  context.localStorage = { getItem() { return '{"selectedRepoKey":"2","isDetailsDisplayed":true}'; } };
+  let details;
+  helper.toggleItemsDetail = value => { details = value; };
+  helper.onPageLoad();
+  assert.equal(rows[1].classList.contains("selected"), true);
+  assert.equal(rows[0].classList.contains("selected"), false);
+  assert.equal(details, true);
+});
+
+for (const failure of ["access", "read", "write"]) {
+  test(`repository selection and opening survive storage ${failure} failure`, () => {
+    const { context, helper, rows, opened } = page(["1", "2"]);
+    Object.defineProperty(context, "localStorage", { get() {
+      if (failure === "access") throw Error("denied");
+      return {
+        getItem() { if (failure === "read") throw Error("denied"); return null; },
+        setItem() { if (failure === "write") throw Error("full"); }
+      };
+    } });
+    delete helper.saveLocalStorage;
+    helper.onPageLoad();
+    helper.selectRowByIndex(1);
+    helper.openSelectedRepo();
+    assert.equal(rows[1].classList.contains("selected"), true);
+    assert.deepEqual(opened, ["2"]);
+  });
+}
