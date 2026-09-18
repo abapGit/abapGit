@@ -363,7 +363,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     " find troublesome objects
     ls_checks = ii_repo->deserialize_checks( ).
 
-    IF ls_checks-overwrite IS INITIAL.
+    IF ls_checks-overwrite IS INITIAL AND ls_checks-overwrite_files IS INITIAL.
       zcx_abapgit_exception=>raise(
         'There is nothing to pull. The local state completely matches the remote repository.' ).
     ENDIF.
