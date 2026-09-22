@@ -260,6 +260,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
       iv_readonly    = abap_true
     )->command(
       iv_label       = 'Back'
+      iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-link
       iv_action      = zif_abapgit_definitions=>c_action-go_back ).
 
   ENDMETHOD.
