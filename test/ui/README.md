@@ -38,6 +38,37 @@ Avoid expanding the fixtures into a general-purpose browser emulator.
 | [`forms.test.cjs`](forms.test.cjs) | Desktop and WebGUI form routing, parameter encoding, repeated submissions, and preservation of existing fields |
 | [`stage.test.cjs`](stage.test.cjs) | Commit and patch actions, selection/filter precedence, visible-file staging, and selection counts |
 | [`palette.test.cjs`](palette.test.cjs) | Filtering, keyboard navigation, command execution, reopening, and fuzzy matching |
+| [`checklist.test.cjs`](checklist.test.cjs) | Filter clicks and cancellation of fragment navigation |
+| [`diff.test.cjs`](diff.test.cjs) | Combined filters, staging visible files, and exact-path jumps |
+| [`fragments.test.cjs`](fragments.test.cjs) | Local fragment handling and browser Back interactions |
+| [`patch.test.cjs`](patch.test.cjs) | File and section selection boundaries and patch submission |
+| [`repo-overview.test.cjs`](repo-overview.test.cjs) | Repository selection and persisted state |
+| [`scroll.test.cjs`](scroll.test.cjs) | Scroll restoration and unavailable storage |
+| [`source-viewer.test.cjs`](source-viewer.test.cjs) | Asset loading, response ordering, caching, failures/retries, line numbers, and IE fallbacks |
+| [`keyboard-guards.test.cjs`](keyboard-guards.test.cjs) | Modified shortcuts, typing in editable controls, and deliberate hint activation/yanking |
+| [`link-hints.test.cjs`](link-hints.test.cjs) | Partial hints, cancellation/reopening, copy-mode reset, disabled controls, and checkbox activation |
+| [`key-navigation.test.cjs`](key-navigation.test.cjs) | Dropdown navigation and boundaries, link activation, modified keys, and editing controls |
+| [`diff-copy.test.cjs`](diff-copy.test.cjs) | Diff-column copying, invalid/empty selections, unrelated table clicks, and clipboard fallbacks |
+
+To measure the shipped JavaScript with Node's V8 coverage:
+
+```sh
+node --test --experimental-test-coverage test/ui/*.test.cjs
+```
+
+The VM loader supplies the source filename so coverage includes `common.js`,
+instead of omitting the anonymous evaluated script. Check the script's row in
+the report, not an aggregate that might also include test fixtures.
+
+Priority gaps for further regression tests:
+
+- Link hints: browser event ordering, visibility, and copying text from nested markup.
+- Diff text selection: browser-native range cloning and dragging across cells;
+  the unit tests supply representative cloned fragments.
+- Keyboard menu navigation and modal focus: disabled/hidden controls, dropdown
+  boundaries, and focus restoration.
+- Source viewer DOM lifecycle: opening/closing, keyboard-handler removal, and
+  repeated openings. Asset-loading tests do not cover these interactions.
 
 Important regression expectations:
 

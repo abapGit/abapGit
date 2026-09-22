@@ -1382,6 +1382,7 @@ function addMarginBottom() {
 function DiffColumnSelection() {
   this.selectedColumnIdx = -1;
   this.lineNumColumnIdx  = -1;
+  this.selectedTable     = null;
   //https://stackoverflow.com/questions/2749244/javascript-setinterval-and-this-solution
   document.addEventListener("mousedown", this.mousedownEventListener.bind(this));
   document.addEventListener("copy", this.copyEventListener.bind(this));
@@ -1404,8 +1405,9 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
 
   var td = e.target;
 
+  this.selectedTable = null;
   while (td !== null && td !== undefined && td.tagName !== "TD" && td.tagName !== "TBODY") td = td.parentElement;
-  if (td === null || td === undefined) return;
+  if (!td || td.tagName !== "TD") return;
   var table = td.parentElement.parentElement;
 
   var patchColumnCount = 0;
@@ -1458,29 +1460,35 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
     this.selectedColumnIdx = -1;
     this.lineNumColumnIdx  = -1;
   }
+  if (this.selectedColumnIdx >= 0) this.selectedTable = table;
 };
 
 DiffColumnSelection.prototype.copyEventListener = function(e) {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
-  var td = e.target;
-
-  while (td !== null && td !== undefined && td.tagName !== "TD" && td.tagName !== "TBODY") td = td.parentElement;
-  if (td !== null && td !== undefined) {
+  if (e.defaultPrevented || !this.selectedTable || !this.selectedTable.contains(e.target)) return;
+  var text = this.getSelectedText();
+  if (text !== null) {
     // Use window.clipboardData instead of e.clipboardData
     // (https://stackoverflow.com/questions/23470958/ie-10-copy-paste-issue)
     var clipboardData = (e.clipboardData === undefined ? window.clipboardData : e.clipboardData);
-    var text          = this.getSelectedText();
-    clipboardData.setData("text", text);
-    e.preventDefault();
+    if (!clipboardData || typeof clipboardData.setData !== "function") return;
+    try {
+      if (clipboardData.setData("text", text) !== false) e.preventDefault();
+    } catch (error) { // eslint-disable-line no-unused-vars
+      // Leave native copying available if the browser denies clipboard access.
+    }
   }
 };
 
 DiffColumnSelection.prototype.getSelectedText = function() {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
+  if (!this.selectedTable || this.selectedColumnIdx < 0 || !window.getSelection) return null;
   var sel   = window.getSelection();
+  if (!sel || !sel.rangeCount || sel.isCollapsed) return null;
   var range = sel.getRangeAt(0);
+  if (!this.selectedTable.contains(range.startContainer) || !this.selectedTable.contains(range.endContainer)) return null;
   var doc   = range.cloneContents();
   var nodes = doc.querySelectorAll("tr");
   var text  = "";
@@ -1531,7 +1539,7 @@ function toggleDisplay(divId) {
 function KeyNavigation() { }
 
 KeyNavigation.prototype.onkeydown = function(event) {
-  if (event.defaultPrevented) return;
+  if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) return;
 
   // navigate with arrows through list items and support pressing links with enter and space
   var isHandled = false;
@@ -1671,6 +1679,12 @@ LinkHints.prototype.getHintStartValue = function(targetsCount) {
   return Math.pow(10, maxHintStringLength - 1);
 };
 
+LinkHints.prototype.isDisabled = function(element) {
+  // :disabled also covers controls inside disabled fieldsets.
+  var matches = element.matches || element.msMatchesSelector;
+  return element.disabled || (matches && matches.call(element, ":disabled"));
+};
+
 LinkHints.prototype.deployHintContainers = function() {
 
   var hintTargets = document.querySelectorAll("a, input, textarea, i");
@@ -1682,7 +1696,7 @@ LinkHints.prototype.deployHintContainers = function() {
   // </span>
   for (var i = 0, N = hintTargets.length; i < N; i++) {
     // skip hidden fields
-    if (hintTargets[i].type === "hidden") {
+    if (hintTargets[i].type === "hidden" || this.isDisabled(hintTargets[i])) {
       continue;
     }
 
@@ -1750,7 +1764,7 @@ LinkHints.prototype.getHandler = function() {
 };
 
 LinkHints.prototype.handleKey = function(event) {
-  if (event.defaultPrevented) {
+  if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || !Hotkeys.isHotkeyCallPossible()) {
     return;
   }
 
@@ -1795,6 +1809,7 @@ LinkHints.prototype.handleKey = function(event) {
       var visibleHints = this.filterHints();
       if (!visibleHints) {
         this.displayHints(false);
+        this.yankModeActive = false;
         if (this.activatedDropdown) this.closeActivatedDropdown();
       }
     }
@@ -1822,6 +1837,9 @@ LinkHints.prototype.displayHints = function(isActivate) {
 };
 
 LinkHints.prototype.hintActivate = function(hint) {
+  // A control may have become disabled since the hints were deployed.
+  if (this.isDisabled(hint.parent)) return;
+
   if (hint.parent.nodeName === "A"
     // hint.parent.href doesn`t have a # at the end while accessing dropdowns the first time.
     // Seems like a idiosyncrasy of SAP GUI`s IE. So let`s ignore the last character.
@@ -1957,7 +1975,7 @@ Hotkeys.prototype.showHotkeys = function() {
 };
 
 Hotkeys.prototype.onkeydown = function(oEvent) {
-  if (oEvent.defaultPrevented) {
+  if (oEvent.defaultPrevented || oEvent.ctrlKey || oEvent.altKey || oEvent.metaKey) {
     return;
   }
 
@@ -1978,7 +1996,9 @@ Hotkeys.isHotkeyCallPossible = function() {
   var activeElementType     = ((document.activeElement && document.activeElement.nodeName) || "");
   var activeElementReadOnly = ((document.activeElement && document.activeElement.readOnly) || false);
 
-  return (activeElementReadOnly || (activeElementType !== "INPUT" && activeElementType !== "TEXTAREA"));
+  if (document.activeElement && document.activeElement.isContentEditable) return false;
+  return (activeElementReadOnly || (activeElementType !== "INPUT" && activeElementType !== "TEXTAREA"
+    && activeElementType !== "SELECT"));
 };
 
 // ctrl-modified keys are denoted with a leading "^" (e.g. "^p"), spell it out for the help sheet
