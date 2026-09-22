@@ -46,6 +46,8 @@ Avoid expanding the fixtures into a general-purpose browser emulator.
 | [`scroll.test.cjs`](scroll.test.cjs) | Scroll restoration and unavailable storage |
 | [`source-viewer.test.cjs`](source-viewer.test.cjs) | Asset loading, response ordering, caching, failures/retries, line numbers, and IE fallbacks |
 | [`keyboard-guards.test.cjs`](keyboard-guards.test.cjs) | Modified shortcuts, typing in editable controls, and deliberate hint activation/yanking |
+| [`link-hints.test.cjs`](link-hints.test.cjs) | Partial hints, cancellation/reopening, copy-mode reset, disabled controls, and checkbox activation |
+| [`key-navigation.test.cjs`](key-navigation.test.cjs) | Dropdown navigation and boundaries, link activation, modified keys, and editing controls |
 | [`diff-copy.test.cjs`](diff-copy.test.cjs) | Diff-column copying, invalid/empty selections, unrelated table clicks, and clipboard fallbacks |
 
 To measure the shipped JavaScript with Node's V8 coverage:
@@ -60,7 +62,7 @@ the report, not an aggregate that might also include test fixtures.
 
 Priority gaps for further regression tests:
 
-- Link hints: partial hints and cancelling/reopening must leave predictable state.
+- Link hints: browser event ordering, visibility, and copying text from nested markup.
 - Diff text selection: browser-native range cloning and dragging across cells;
   the unit tests supply representative cloned fragments.
 - Keyboard menu navigation and modal focus: disabled/hidden controls, dropdown

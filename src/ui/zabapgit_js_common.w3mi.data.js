@@ -1539,7 +1539,7 @@ function toggleDisplay(divId) {
 function KeyNavigation() { }
 
 KeyNavigation.prototype.onkeydown = function(event) {
-  if (event.defaultPrevented) return;
+  if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) return;
 
   // navigate with arrows through list items and support pressing links with enter and space
   var isHandled = false;
@@ -1679,6 +1679,12 @@ LinkHints.prototype.getHintStartValue = function(targetsCount) {
   return Math.pow(10, maxHintStringLength - 1);
 };
 
+LinkHints.prototype.isDisabled = function(element) {
+  // :disabled also covers controls inside disabled fieldsets.
+  var matches = element.matches || element.msMatchesSelector;
+  return element.disabled || (matches && matches.call(element, ":disabled"));
+};
+
 LinkHints.prototype.deployHintContainers = function() {
 
   var hintTargets = document.querySelectorAll("a, input, textarea, i");
@@ -1690,7 +1696,7 @@ LinkHints.prototype.deployHintContainers = function() {
   // </span>
   for (var i = 0, N = hintTargets.length; i < N; i++) {
     // skip hidden fields
-    if (hintTargets[i].type === "hidden") {
+    if (hintTargets[i].type === "hidden" || this.isDisabled(hintTargets[i])) {
       continue;
     }
 
@@ -1803,6 +1809,7 @@ LinkHints.prototype.handleKey = function(event) {
       var visibleHints = this.filterHints();
       if (!visibleHints) {
         this.displayHints(false);
+        this.yankModeActive = false;
         if (this.activatedDropdown) this.closeActivatedDropdown();
       }
     }
@@ -1830,6 +1837,9 @@ LinkHints.prototype.displayHints = function(isActivate) {
 };
 
 LinkHints.prototype.hintActivate = function(hint) {
+  // A control may have become disabled since the hints were deployed.
+  if (this.isDisabled(hint.parent)) return;
+
   if (hint.parent.nodeName === "A"
     // hint.parent.href doesn`t have a # at the end while accessing dropdowns the first time.
     // Seems like a idiosyncrasy of SAP GUI`s IE. So let`s ignore the last character.
