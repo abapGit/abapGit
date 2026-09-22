@@ -1454,6 +1454,12 @@ DiffColumnSelection.prototype.copyEventListener = function(e) {
   }
 };
 
+// IE's contains() accepts only elements, but selection ranges usually start and end in text nodes.
+function containsNode(element, node) {
+  if (node && node.nodeType !== 1) node = node.parentNode;
+  return !!node && element.contains(node);
+}
+
 DiffColumnSelection.prototype.getSelectedText = function() {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
@@ -1461,7 +1467,7 @@ DiffColumnSelection.prototype.getSelectedText = function() {
   var sel   = window.getSelection();
   if (!sel || !sel.rangeCount || sel.isCollapsed) return null;
   var range = sel.getRangeAt(0);
-  if (!this.selectedTable.contains(range.startContainer) || !this.selectedTable.contains(range.endContainer)) return null;
+  if (!containsNode(this.selectedTable, range.startContainer) || !containsNode(this.selectedTable, range.endContainer)) return null;
   var doc   = range.cloneContents();
   var nodes = doc.querySelectorAll("tr");
   var text  = "";
