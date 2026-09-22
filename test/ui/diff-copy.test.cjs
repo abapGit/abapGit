@@ -61,7 +61,7 @@ for (const remote of [false, true]) for (const right of [false, true]) for (cons
     p.fragment.querySelectorAll = () => rows;
     p.helper.copyEventListener(p.event);
     assert.equal(p.copied().value, `first ${kind}\nsecond ${kind}\nlast ${kind}`);
-    assert.equal(p.helper.lineNumColumnIdx, index - 2);
+    assert.equal(p.helper.selectedColumnIdx, index);
     assert.equal(p.cancelled(), true);
   });
 }

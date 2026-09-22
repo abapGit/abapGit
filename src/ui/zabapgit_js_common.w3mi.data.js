@@ -1381,7 +1381,6 @@ function addMarginBottom() {
 
 function DiffColumnSelection() {
   this.selectedColumnIdx = -1;
-  this.lineNumColumnIdx  = -1;
   this.selectedTable     = null;
   //https://stackoverflow.com/questions/2749244/javascript-setinterval-and-this-solution
   document.addEventListener("mousedown", this.mousedownEventListener.bind(this));
@@ -1393,8 +1392,7 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
   // Process mousedown event for all TD elements -> apply CSS class at TABLE level.
   // (https://stackoverflow.com/questions/40956717/how-to-addeventlistener-to-multiple-elements-in-a-single-line)
-  var unifiedLineNumColumnIdx    = 0;
-  var unifiedCodeColumnIdx       = 3;
+  var unifiedCodeColumnIdx = 3;
   var range;
 
   if (e.button !== 0) return; // function is only valid for left button, not right button
@@ -1406,15 +1404,16 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
   if (!td || td.tagName !== "TD") return;
   var table = td.parentElement.parentElement;
 
-  // Remote-leading diffs swap the old/new cells while retaining their classes.
-  // Use the actual position, which also accounts for the optional patch column.
-  var splitCodeColumnIdx = td.cellIndex;
+  if (td.classList.contains("diff_left") || td.classList.contains("diff_right")) {
+    var isLeft = td.classList.contains("diff_left");
+    table.classList.remove(isLeft ? "diff_select_right" : "diff_select_left");
+    table.classList.add(isLeft ? "diff_select_left" : "diff_select_right");
 
-  if (td.classList.contains("diff_left")) {
-    table.classList.remove("diff_select_right");
-    table.classList.add("diff_select_left");
+    // Remote-leading diffs swap the old/new cells while retaining their classes.
+    // Use the actual position, which also accounts for the optional patch column.
+    var splitCodeColumnIdx = td.cellIndex;
     if (window.getSelection() && this.selectedColumnIdx !== splitCodeColumnIdx) {
-      // De-select to avoid effect of dragging selection in case the right column was first selected
+      // De-select to avoid effect of dragging selection in case the other column was first selected
       if (document.body.createTextRange) { // All IE but Edge
         // document.getSelection().removeAllRanges() may trigger error
         // so use this code which is equivalent but does not fail
@@ -1427,33 +1426,12 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
       }
     }
     this.selectedColumnIdx = splitCodeColumnIdx;
-    this.lineNumColumnIdx  = splitCodeColumnIdx - 2;
-
-  } else if (td.classList.contains("diff_right")) {
-    table.classList.remove("diff_select_left");
-    table.classList.add("diff_select_right");
-    if (window.getSelection() && this.selectedColumnIdx !== splitCodeColumnIdx) {
-      if (document.body.createTextRange) { // All IE but Edge
-        // document.getSelection().removeAllRanges() may trigger error
-        // so use this code which is equivalent but does not fail
-        // (https://stackoverflow.com/questions/22914075/javascript-error-800a025e-using-range-selector)
-        range = document.body.createTextRange();
-        range.collapse();
-        range.select();
-      } else {
-        document.getSelection().removeAllRanges();
-      }
-    }
-    this.selectedColumnIdx = splitCodeColumnIdx;
-    this.lineNumColumnIdx  = splitCodeColumnIdx - 2;
 
   } else if (td.classList.contains("diff_unified")) {
     this.selectedColumnIdx = unifiedCodeColumnIdx;
-    this.lineNumColumnIdx  = unifiedLineNumColumnIdx;
 
   } else {
     this.selectedColumnIdx = -1;
-    this.lineNumColumnIdx  = -1;
   }
   if (this.selectedColumnIdx >= 0) this.selectedTable = table;
 };
