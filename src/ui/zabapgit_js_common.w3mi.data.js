@@ -1395,10 +1395,6 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
   // (https://stackoverflow.com/questions/40956717/how-to-addeventlistener-to-multiple-elements-in-a-single-line)
   var unifiedLineNumColumnIdx    = 0;
   var unifiedCodeColumnIdx       = 3;
-  var splitLineNumLeftColumnIdx  = 0;
-  var splitCodeLeftColumnIdx     = 2;
-  var splitLineNumRightColumnIdx = 3;
-  var splitCodeRightColumnIdx    = 5;
   var range;
 
   if (e.button !== 0) return; // function is only valid for left button, not right button
@@ -1410,15 +1406,14 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
   if (!td || td.tagName !== "TD") return;
   var table = td.parentElement.parentElement;
 
-  var patchColumnCount = 0;
-  if (td.parentElement.cells[0].classList.contains("patch")) {
-    patchColumnCount = 1;
-  }
+  // Remote-leading diffs swap the old/new cells while retaining their classes.
+  // Use the actual position, which also accounts for the optional patch column.
+  var splitCodeColumnIdx = td.cellIndex;
 
   if (td.classList.contains("diff_left")) {
     table.classList.remove("diff_select_right");
     table.classList.add("diff_select_left");
-    if (window.getSelection() && this.selectedColumnIdx !== splitCodeLeftColumnIdx + patchColumnCount) {
+    if (window.getSelection() && this.selectedColumnIdx !== splitCodeColumnIdx) {
       // De-select to avoid effect of dragging selection in case the right column was first selected
       if (document.body.createTextRange) { // All IE but Edge
         // document.getSelection().removeAllRanges() may trigger error
@@ -1431,13 +1426,13 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
         document.getSelection().removeAllRanges();
       }
     }
-    this.selectedColumnIdx = splitCodeLeftColumnIdx + patchColumnCount;
-    this.lineNumColumnIdx  = splitLineNumLeftColumnIdx + patchColumnCount;
+    this.selectedColumnIdx = splitCodeColumnIdx;
+    this.lineNumColumnIdx  = splitCodeColumnIdx - 2;
 
   } else if (td.classList.contains("diff_right")) {
     table.classList.remove("diff_select_left");
     table.classList.add("diff_select_right");
-    if (window.getSelection() && this.selectedColumnIdx !== splitCodeRightColumnIdx + patchColumnCount) {
+    if (window.getSelection() && this.selectedColumnIdx !== splitCodeColumnIdx) {
       if (document.body.createTextRange) { // All IE but Edge
         // document.getSelection().removeAllRanges() may trigger error
         // so use this code which is equivalent but does not fail
@@ -1449,8 +1444,8 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
         document.getSelection().removeAllRanges();
       }
     }
-    this.selectedColumnIdx = splitCodeRightColumnIdx + patchColumnCount;
-    this.lineNumColumnIdx  = splitLineNumRightColumnIdx + patchColumnCount;
+    this.selectedColumnIdx = splitCodeColumnIdx;
+    this.lineNumColumnIdx  = splitCodeColumnIdx - 2;
 
   } else if (td.classList.contains("diff_unified")) {
     this.selectedColumnIdx = unifiedCodeColumnIdx;
