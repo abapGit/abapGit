@@ -10,6 +10,7 @@ function node(tagName, classes = []) {
 function page(side = 'diff_left', patch = false) {
   const table = node('TABLE'), tbody = node('TBODY'), row = node('TR');
   const cell = node('TD', [side]), text = { parentElement: cell };
+  cell.cellIndex = side === 'diff_unified' ? 3 : (side === 'diff_left' ? 2 : 5) + (patch ? 1 : 0);
   tbody.parentElement = table; row.parentElement = tbody; cell.parentElement = row;
   row.cells = [node('TD', patch ? ['patch'] : [])];
   const fragment = { textContent: 'selected code', querySelectorAll() { return []; } };
@@ -33,6 +34,34 @@ for (const [side, patch, index] of [['diff_left', false, 2], ['diff_right', fals
     assert.equal(p.helper.selectedColumnIdx, index);
     p.helper.copyEventListener(p.event);
     assert.deepEqual(p.copied(), { type: 'text', value: 'selected code' });
+    assert.equal(p.cancelled(), true);
+  });
+}
+
+for (const remote of [false, true]) for (const right of [false, true]) for (const patch of [false, true]) {
+  test(`split block copying: remote=${remote}, right=${right}, patch=${patch}`, () => {
+    // The ABAP renderer swaps old/new cells when the remote file leads changes,
+    // keeping diff_left on new and diff_right on old regardless of their position.
+    const kind = remote === right ? 'new' : 'old';
+    const p = page(kind === 'new' ? 'diff_left' : 'diff_right', patch);
+    const index = (right ? 5 : 2) + (patch ? 1 : 0);
+    p.cell.cellIndex = index;
+    p.helper.mousedownEventListener({ button: 0, target: p.cell });
+    function code(text, type) { return { ...node('TD', [type]), textContent: text }; }
+    const rows = ['first', 'second', 'last'].map(text => {
+      const old = code(text + ' old', 'old'), newer = code(text + ' new', 'new');
+      const cells = [node('TD'), node('TD'), remote ? old : newer,
+        node('TD'), node('TD'), remote ? newer : old];
+      if (patch) cells.unshift(node('TD', ['patch']));
+      return { cells };
+    });
+    // cloneContents omits cells preceding the start and following the end.
+    rows[0].cells = rows[0].cells.slice(index);
+    rows[2].cells = rows[2].cells.slice(0, index + 1);
+    p.fragment.querySelectorAll = () => rows;
+    p.helper.copyEventListener(p.event);
+    assert.equal(p.copied().value, `first ${kind}\nsecond ${kind}\nlast ${kind}`);
+    assert.equal(p.helper.selectedColumnIdx, index);
     assert.equal(p.cancelled(), true);
   });
 }
