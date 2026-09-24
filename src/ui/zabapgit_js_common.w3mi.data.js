@@ -205,7 +205,8 @@ function debugOutput(text, dstID) {
 
 // Debug Info rows telling whether browser storage works in this control. Each call stores
 // the current time, so after a restart the "previous check" row shows whether it persisted.
-// Stored entries follow as key, size and a value preview (values can be long, e.g. stage state).
+// Stored entries follow as key, size and a value preview (values can be long, e.g. stage state),
+// leaving out our own check entry, whose value the status line already reports.
 function describeBrowserStorage() {
   var checkKey   = "abapGitStorageCheck";
   var previewLen = 200;
@@ -229,6 +230,7 @@ function describeBrowserStorage() {
         var keys = [];
         for (var i = 0; i < storage.length; i++) keys.push(storage.key(i));
         keys.sort().forEach(function(key) {
+          if (key === checkKey) return;
           var value   = String(storage.getItem(key));
           var preview = value.length > previewLen ? value.substr(0, previewLen) + "\u2026" : value;
           entries.push([storageName, escapeHtmlText(String(key)), value.length, escapeHtmlText(preview)]);
@@ -240,12 +242,12 @@ function describeBrowserStorage() {
     rows.push([storageName, status]);
   });
 
-  var html = "<table>" + rows.map(function(row) {
+  var html = "<h2>Browser Storage</h2><table>" + rows.map(function(row) {
     return "<tr><td>" + row[0] + ":</td><td>" + row[1] + "</td></tr>";
   }).join("") + "</table>";
 
   if (entries.length) {
-    html += "<table><tr><th>Storage</th><th>Key</th><th>Size</th><th>Value</th></tr>" + entries.map(function(entry) {
+    html += "<br><table><tr><th>Storage</th><th>Key</th><th>Size</th><th>Value</th></tr>" + entries.map(function(entry) {
       return "<tr><td>" + entry[0] + "</td><td>" + entry[1] + "</td><td>" + entry[2]
         + "</td><td><code>" + entry[3] + "</code></td></tr>";
     }).join("") + "</table>";
