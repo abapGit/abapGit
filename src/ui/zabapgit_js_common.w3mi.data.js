@@ -205,9 +205,12 @@ function debugOutput(text, dstID) {
 
 // Debug Info rows telling whether browser storage works in this control. Each call stores
 // the current time, so after a restart the "previous check" row shows whether it persisted.
+// Stored entries follow as key, size and a value preview (values can be long, e.g. stage state).
 function describeBrowserStorage() {
-  var checkKey = "abapGitStorageCheck";
-  var rows     = [["Page URL", escapeHtmlText(String(window.location && window.location.href))]];
+  var checkKey   = "abapGitStorageCheck";
+  var previewLen = 200;
+  var rows       = [["Page URL", escapeHtmlText(String(window.location && window.location.href))]];
+  var entries    = [];
 
   ["localStorage", "sessionStorage"].forEach(function(storageName) {
     var status;
@@ -222,6 +225,14 @@ function describeBrowserStorage() {
         status = storage.getItem(checkKey) === now ? "read/write OK" : "write not read back";
         status += ", " + storage.length + " entries, previous check: "
           + (previous === null ? "none" : escapeHtmlText(previous));
+
+        var keys = [];
+        for (var i = 0; i < storage.length; i++) keys.push(storage.key(i));
+        keys.sort().forEach(function(key) {
+          var value   = String(storage.getItem(key));
+          var preview = value.length > previewLen ? value.substr(0, previewLen) + "\u2026" : value;
+          entries.push([storageName, escapeHtmlText(String(key)), value.length, escapeHtmlText(preview)]);
+        });
       }
     } catch (error) {
       status = "error: " + escapeHtmlText(String(error && (error.name || error.message) || error));
@@ -229,9 +240,17 @@ function describeBrowserStorage() {
     rows.push([storageName, status]);
   });
 
-  return "<table>" + rows.map(function(row) {
+  var html = "<table>" + rows.map(function(row) {
     return "<tr><td>" + row[0] + ":</td><td>" + row[1] + "</td></tr>";
   }).join("") + "</table>";
+
+  if (entries.length) {
+    html += "<table><tr><th>Storage</th><th>Key</th><th>Size</th><th>Value</th></tr>" + entries.map(function(entry) {
+      return "<tr><td>" + entry[0] + "</td><td>" + entry[1] + "</td><td>" + entry[2]
+        + "</td><td><code>" + entry[3] + "</code></td></tr>";
+    }).join("") + "</table>";
+  }
+  return html;
 }
 
 // Set to true right before we navigate via a sapevent (form submit or a
