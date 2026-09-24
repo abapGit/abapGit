@@ -49,6 +49,9 @@
 /* exported setKeyBindings
    -- zcl_abapgit_gui_hotkey_ctl->render_scripts */
 
+/* exported describeBrowserStorage
+   -- zcl_abapgit_gui_page_debuginfo->render_scripts */
+
 /* exported perfOut, perfLog, perfClear
     -- not called from ABAP, for frontend debugging */
 
@@ -198,6 +201,37 @@ function debugOutput(text, dstID) {
   // so render it as HTML rather than escaping it
   paragraph.innerHTML = text;
   stdout.appendChild(paragraph);
+}
+
+// Debug Info rows telling whether browser storage works in this control. Each call stores
+// the current time, so after a restart the "previous check" row shows whether it persisted.
+function describeBrowserStorage() {
+  var checkKey = "abapGitStorageCheck";
+  var rows     = [["Page URL", escapeHtmlText(String(window.location && window.location.href))]];
+
+  ["localStorage", "sessionStorage"].forEach(function(storageName) {
+    var status;
+    try {
+      var storage = window[storageName];
+      if (!storage) {
+        status = "not available";
+      } else {
+        var previous = storage.getItem(checkKey);
+        var now      = new Date().toString();
+        storage.setItem(checkKey, now);
+        status = storage.getItem(checkKey) === now ? "read/write OK" : "write not read back";
+        status += ", " + storage.length + " entries, previous check: "
+          + (previous === null ? "none" : escapeHtmlText(previous));
+      }
+    } catch (error) {
+      status = "error: " + escapeHtmlText(String(error && (error.name || error.message) || error));
+    }
+    rows.push([storageName, status]);
+  });
+
+  return "<table>" + rows.map(function(row) {
+    return "<tr><td>" + row[0] + ":</td><td>" + row[1] + "</td></tr>";
+  }).join("") + "</table>";
 }
 
 // Set to true right before we navigate via a sapevent (form submit or a
