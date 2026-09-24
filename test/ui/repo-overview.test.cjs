@@ -15,7 +15,7 @@ function page(keys = []) {
   const opened = [];
   const saved = [];
   const context = loadUi({ document: {
-    activeElement: { id: "", tagName: "BODY" },
+    activeElement: { id: "", tagName: "BODY", nodeName: "BODY" },
     addEventListener(name, handler) { listeners[name] = handler; },
     querySelectorAll() { return rows; },
     querySelector(selector) {
@@ -34,7 +34,18 @@ function page(keys = []) {
   helper.updateActionLinks = () => {};
   helper.saveLocalStorage = () => saved.push(helper.selectedRepoKey);
   helper.registerKeyboardShortcuts();
-  return { context, helper, rows, opened, saved, enter() { listeners.keypress({ keyCode: 13 }); } };
+  return {
+    context, helper, rows, opened, saved,
+    enter() { listeners.keypress({ keyCode: 13 }); },
+    keypress(keyCode) { listeners.keypress({ keyCode }); },
+    // Returns whether the key was handled (default prevented)
+    keydown(key, extra = {}) {
+      let prevented = false;
+      listeners.keydown({ key, preventDefault() { prevented = true; }, ...extra });
+      return prevented;
+    },
+    focus(element) { context.document.activeElement = element; }
+  };
 }
 
 test("empty repository lists tolerate initial selection and Enter", () => {
@@ -112,3 +123,58 @@ for (const failure of ["access", "read", "write"]) {
     assert.deepEqual(opened, ["2"]);
   });
 }
+
+test("arrow keys move the selection within the visible rows", () => {
+  const { helper, rows, keydown, saved } = page(["1", "2", "3"]);
+  helper.selectRowByIndex(0);
+  assert.equal(keydown("ArrowDown"), true);
+  assert.equal(keydown("Down"), true); // IE key name
+  assert.equal(rows[2].classList.contains("selected"), true);
+  keydown("ArrowDown"); // stays on the last row
+  assert.equal(helper.selectedRepoKey, "3");
+  keydown("ArrowUp");
+  assert.equal(helper.selectedRepoKey, "2");
+  assert.deepEqual(saved, ["1", "2", "3", "2"]);
+});
+
+test("arrow keys scroll the newly selected row into view only when it is off screen", () => {
+  const { context, helper, rows, keydown } = page(["1", "2", "3"]);
+  context.innerHeight = 100;
+  const scrolled = [];
+  const tops = [0, 50, 150];
+  rows.forEach((row, i) => {
+    row.getBoundingClientRect = () => ({ top: tops[i], bottom: tops[i] + 20 });
+    row.scrollIntoView = alignToTop => scrolled.push([row.dataset.key, alignToTop]);
+  });
+  helper.selectRowByIndex(0);
+  keydown("ArrowDown");
+  keydown("ArrowDown");
+  tops[0] = -30;
+  keydown("ArrowUp");
+  keydown("ArrowUp");
+  assert.deepEqual(scrolled, [["3", false], ["1", true]]);
+});
+
+test("arrow keys are left alone in fields, menus, open palettes and with modifiers", () => {
+  const { context, helper, keydown, focus } = page(["1", "2"]);
+  helper.selectRowByIndex(0);
+  focus({ nodeName: "INPUT" });
+  assert.equal(keydown("ArrowDown"), false);
+  focus({ nodeName: "A", parentElement: { nodeName: "LI", parentElement: null } });
+  assert.equal(keydown("ArrowDown"), false);
+  focus({ nodeName: "BODY" });
+  assert.equal(keydown("ArrowDown", { altKey: true }), false);
+  assert.equal(keydown("ArrowDown", { defaultPrevented: true }), false);
+  context.CommandPalette.isVisible = () => true;
+  assert.equal(keydown("ArrowDown"), false);
+  assert.equal(helper.selectedRepoKey, "1");
+});
+
+test("number keys still move the selection", () => {
+  const { helper, keypress } = page(["1", "2"]);
+  helper.selectRowByIndex(0);
+  keypress(50); // "2"
+  assert.equal(helper.selectedRepoKey, "2");
+  keypress(56); // "8"
+  assert.equal(helper.selectedRepoKey, "1");
+});
