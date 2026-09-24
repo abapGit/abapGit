@@ -203,12 +203,11 @@ function debugOutput(text, dstID) {
   stdout.appendChild(paragraph);
 }
 
-// Debug Info rows telling whether browser storage works in this control. Each call stores
-// the current time, so after a restart the "previous check" row shows whether it persisted.
-// Stored entries follow as key, size and a value preview (values can be long, e.g. stage state),
-// leaving out our own check entry, whose value the status line already reports.
+// Debug Info rows telling whether browser storage works in this control, followed by the
+// stored entries as key, size and a value preview (values can be long, e.g. stage state).
+// The write test removes its probe again, so the check leaves no data behind.
 function describeBrowserStorage() {
-  var checkKey   = "abapGitStorageCheck";
+  var probeKey   = "abapGitStorageProbe";
   var previewLen = 200;
   var rows       = [["Page URL", escapeHtmlText(String(window.location && window.location.href))]];
   var entries    = [];
@@ -220,21 +219,18 @@ function describeBrowserStorage() {
       if (!storage) {
         status = "not available";
       } else {
-        var previous = storage.getItem(checkKey);
-        var now      = new Date().toString();
-        storage.setItem(checkKey, now);
-        status = storage.getItem(checkKey) === now ? "read/write OK" : "write not read back";
-        status += ", " + storage.length + " entries, previous check: "
-          + (previous === null ? "none" : escapeHtmlText(previous));
-
         var keys = [];
         for (var i = 0; i < storage.length; i++) keys.push(storage.key(i));
         keys.sort().forEach(function(key) {
-          if (key === checkKey) return;
           var value   = String(storage.getItem(key));
           var preview = value.length > previewLen ? value.substr(0, previewLen) + "\u2026" : value;
           entries.push([storageName, escapeHtmlText(String(key)), value.length, escapeHtmlText(preview)]);
         });
+
+        storage.setItem(probeKey, "1");
+        status = storage.getItem(probeKey) === "1" ? "read/write OK" : "write not read back";
+        storage.removeItem(probeKey);
+        status += ", " + keys.length + " entries";
       }
     } catch (error) {
       status = "error: " + escapeHtmlText(String(error && (error.name || error.message) || error));
