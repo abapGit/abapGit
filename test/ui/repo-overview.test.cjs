@@ -112,3 +112,23 @@ for (const failure of ["access", "read", "write"]) {
     assert.deepEqual(opened, ["2"]);
   });
 }
+
+test("action links keep their raw sapevent href when the repository key is swapped", () => {
+  const attrs = { href: "sapevent:go_stage?key=#" };
+  const classes = new Set(["action_link", "action_online_repo"]);
+  const link = {
+    // A normalizing href property, as in the SAP GUI for Java browser control
+    get href() { return "sapevent://" + attrs.href.slice("sapevent:".length).replace("?", "/?"); },
+    set href(value) { attrs.href = value; },
+    getAttribute(name) { return attrs[name] === undefined ? null : attrs[name]; },
+    setAttribute(name, value) { attrs[name] = value; },
+    classList: { contains(name) { return classes.has(name); } },
+    parentElement: { classList: { add() {}, remove() {} } }
+  };
+  const context = loadUi({ document: {
+    addEventListener() {},
+    querySelectorAll(selector) { assert.equal(selector, "a.action_link"); return [link]; }
+  } });
+  context.RepoOverViewHelper.prototype.updateActionLinks({ dataset: { key: "42", offline: "" } });
+  assert.equal(attrs.href, "sapevent:go_stage?key=42");
+});
