@@ -624,6 +624,10 @@ div.debug_container p {
   margin: 0px;
 }
 
+div.debug_container th {
+  text-align: left;
+}
+
 /* ACTION LINKS */
 
 li.action_link.enabled{

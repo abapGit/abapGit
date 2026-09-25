@@ -49,6 +49,9 @@
 /* exported setKeyBindings
    -- zcl_abapgit_gui_hotkey_ctl->render_scripts */
 
+/* exported describeBrowserStorage
+   -- zcl_abapgit_gui_page_debuginfo->render_scripts */
+
 /* exported perfOut, perfLog, perfClear
     -- not called from ABAP, for frontend debugging */
 
@@ -198,6 +201,54 @@ function debugOutput(text, dstID) {
   // so render it as HTML rather than escaping it
   paragraph.innerHTML = text;
   stdout.appendChild(paragraph);
+}
+
+// Debug Info rows telling whether browser storage works in this control, followed by the
+// stored entries as key, size and a value preview (values can be long, e.g. stage state).
+// The write test removes its probe again, so the check leaves no data behind.
+function describeBrowserStorage() {
+  var probeKey   = "abapGitStorageProbe";
+  var previewLen = 200;
+  var rows       = [["Page URL", escapeHtmlText(String(window.location && window.location.href))]];
+  var entries    = [];
+
+  ["localStorage", "sessionStorage"].forEach(function(storageName) {
+    var status;
+    try {
+      var storage = window[storageName];
+      if (!storage) {
+        status = "not available";
+      } else {
+        var keys = [];
+        for (var i = 0; i < storage.length; i++) keys.push(storage.key(i));
+        keys.sort().forEach(function(key) {
+          var value   = String(storage.getItem(key));
+          var preview = value.length > previewLen ? value.substr(0, previewLen) + "\u2026" : value;
+          entries.push([storageName, escapeHtmlText(String(key)), value.length, escapeHtmlText(preview)]);
+        });
+
+        storage.setItem(probeKey, "1");
+        status = storage.getItem(probeKey) === "1" ? "read/write OK" : "write not read back";
+        storage.removeItem(probeKey);
+        status += ", " + keys.length + " entries";
+      }
+    } catch (error) {
+      status = "error: " + escapeHtmlText(String(error && (error.name || error.message) || error));
+    }
+    rows.push([storageName, status]);
+  });
+
+  var html = "<h2>Browser Storage</h2><table>" + rows.map(function(row) {
+    return "<tr><td>" + row[0] + ":</td><td>" + row[1] + "</td></tr>";
+  }).join("") + "</table>";
+
+  if (entries.length) {
+    html += "<br><table><tr><th>Storage</th><th>Key</th><th>Size</th><th>Value</th></tr>" + entries.map(function(entry) {
+      return "<tr><td>" + entry[0] + "</td><td>" + entry[1] + "</td><td>" + entry[2]
+        + "</td><td><code>" + entry[3] + "</code></td></tr>";
+    }).join("") + "</table>";
+  }
+  return html;
 }
 
 // Set to true right before we navigate via a sapevent (form submit or a
