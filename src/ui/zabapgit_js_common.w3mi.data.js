@@ -641,7 +641,10 @@ RepoOverViewHelper.prototype.updateActionLinks = function(selectedRow) {
   var actionLinks = document.querySelectorAll("a.action_link");
   actionLinks.forEach(function(link) {
     // adjust repo key in urls
-    link.href = link.href.replace(reKey, newKey);
+    // Use the raw attribute: the href property is the browser's normalized URL, which the
+    // SAP GUI for Java control turns into "sapevent://go_stage/?key=..." (action "//go_stage/")
+    var href = link.getAttribute("href");
+    if (href) link.setAttribute("href", href.replace(reKey, newKey));
 
     // SAP GUI for HTML rewrites links and saves the original in hrefsav
     // see /sap/public/icmandir/its/lsgui/js/htmlviewer.js
