@@ -600,7 +600,10 @@ RepoOverViewHelper.prototype.updateActionLinks = function(selectedRow) {
   var actionLinks = document.querySelectorAll("a.action_link");
   actionLinks.forEach(function(link) {
     // adjust repo key in urls
-    link.href = link.href.replace(reKey, newKey);
+    // Use the raw attribute: the href property is the browser's normalized URL, which the
+    // SAP GUI for Java control turns into "sapevent://go_stage/?key=..." (action "//go_stage/")
+    var href = link.getAttribute("href");
+    if (href) link.setAttribute("href", href.replace(reKey, newKey));
 
     // SAP GUI for HTML rewrites links and saves the original in hrefsav
     // see /sap/public/icmandir/its/lsgui/js/htmlviewer.js
@@ -1454,6 +1457,12 @@ DiffColumnSelection.prototype.copyEventListener = function(e) {
   }
 };
 
+// IE's contains() accepts only elements, but selection ranges usually start and end in text nodes.
+function containsNode(element, node) {
+  if (node && node.nodeType !== 1) node = node.parentNode;
+  return !!node && element.contains(node);
+}
+
 DiffColumnSelection.prototype.getSelectedText = function() {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
@@ -1461,7 +1470,7 @@ DiffColumnSelection.prototype.getSelectedText = function() {
   var sel   = window.getSelection();
   if (!sel || !sel.rangeCount || sel.isCollapsed) return null;
   var range = sel.getRangeAt(0);
-  if (!this.selectedTable.contains(range.startContainer) || !this.selectedTable.contains(range.endContainer)) return null;
+  if (!containsNode(this.selectedTable, range.startContainer) || !containsNode(this.selectedTable, range.endContainer)) return null;
   var doc   = range.cloneContents();
   var nodes = doc.querySelectorAll("tr");
   var text  = "";

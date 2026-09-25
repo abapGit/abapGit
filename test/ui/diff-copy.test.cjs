@@ -4,12 +4,12 @@ const loadUi = require('./load-ui.cjs');
 
 function node(tagName, classes = []) {
   const set = new Set(classes);
-  return { tagName, classList: { contains: name => set.has(name), add: name => set.add(name), remove: name => set.delete(name) },
+  return { tagName, nodeType: 1, classList: { contains: name => set.has(name), add: name => set.add(name), remove: name => set.delete(name) },
     contains(child) { for (; child; child = child.parentElement) if (child === this) return true; return false; } };
 }
 function page(side = 'diff_left', patch = false) {
   const table = node('TABLE'), tbody = node('TBODY'), row = node('TR');
-  const cell = node('TD', [side]), text = { parentElement: cell };
+  const cell = node('TD', [side]), text = { nodeType: 3, parentNode: cell, parentElement: cell };
   cell.cellIndex = side === 'diff_unified' ? 3 : (side === 'diff_left' ? 2 : 5) + (patch ? 1 : 0);
   tbody.parentElement = table; row.parentElement = tbody; cell.parentElement = row;
   row.cells = [node('TD', patch ? ['patch'] : [])];
@@ -97,6 +97,15 @@ for (const scenario of ['empty', 'collapsed', 'outside-range', 'outside-target',
     assert.equal(p.cancelled(), false);
   });
 }
+
+test('text node selections copy code when contains() rejects text nodes (IE)', () => {
+  const p = page();
+  const contains = p.tbody.contains;
+  p.tbody.contains = function(child) { return child.nodeType === 1 && contains.call(this, child); };
+  p.helper.copyEventListener(p.event);
+  assert.deepEqual(p.copied(), { type: 'text', value: 'selected code' });
+  assert.equal(p.cancelled(), true);
+});
 
 test('legacy clipboard fallback remains supported', () => {
   const p = page();
