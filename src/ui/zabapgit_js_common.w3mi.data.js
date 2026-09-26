@@ -2436,9 +2436,10 @@ function CommandPalette(commandEnumerator, opts) {
   this.commands = commandEnumerator();
   if (!this.commands) return;
   // this.commands = [{
-  //   action:    "sap_event_action_code_with_params"
-  //   iconClass: "icon icon_x ..."
-  //   title:     "my command X"
+  //   action:      "sap_event_action_code_with_params"
+  //   iconClass:   "icon icon_x ..."
+  //   title:       "my command X"
+  //   isAvailable: function, optional - re-checked whenever the list is filtered
   // }, ...];
 
   // one or more keys can open the palette, e.g. ["F1", "^p"]
@@ -2463,16 +2464,42 @@ function CommandPalette(commandEnumerator, opts) {
   this.hookEvents();
   Hotkeys.addHotkeyToHelpSheet(opts.toggleKey, opts.hotkeyDescription);
 
-  if (!CommandPalette.instances) {
-    CommandPalette.instances = [];
-  }
   CommandPalette.instances.push(this);
 }
 
+// Declared up front, not on first registration: the stage and repository
+// overview pages ask isVisible() on every keypress, also when no palette got
+// registered - e.g. one that had nothing to list (enumerateJumpAllFiles)
+CommandPalette.instances = [];
+
 CommandPalette.prototype.hookEvents = function() {
   document.addEventListener("keydown", this.handleToggleKey.bind(this));
+  document.addEventListener("mousedown", this.handleOutsideClick.bind(this));
+  this.elements.input.addEventListener("keydown", this.handleInputKeydown.bind(this));
   this.elements.input.addEventListener("keyup", this.handleInputKey.bind(this));
   this.elements.ul.addEventListener("click", this.handleUlClick.bind(this));
+};
+
+// Moving the selection on keydown lets a held arrow key repeat, and keeps the
+// caret from jumping to the start or end of the input.
+// No Escape to close: SAP GUI acts on that key whatever the page does with it.
+// SAP GUI for Java leaves abapGit, and the Edge control loses the keyboard
+// focus, so the next toggle key (Ctrl+P) opens the print dialog instead.
+CommandPalette.prototype.handleInputKeydown = function(event) {
+  if (event.key === "ArrowUp" || event.key === "Up") {
+    this.selectPrev();
+  } else if (event.key === "ArrowDown" || event.key === "Down") {
+    this.selectNext();
+  } else {
+    return;
+  }
+  event.preventDefault();
+};
+
+CommandPalette.prototype.handleOutsideClick = function(event) {
+  var target = event.target || event.srcElement;
+  if (this.elements.palette.style.display === "none" || this.elements.palette.contains(target)) return;
+  this.toggleDisplay(false);
 };
 
 CommandPalette.prototype.renderCommandItem = function(cmd) {
@@ -2518,11 +2545,7 @@ CommandPalette.prototype.handleToggleKey = function(event) {
 };
 
 CommandPalette.prototype.handleInputKey = function(event) {
-  if (event.key === "ArrowUp" || event.key === "Up") {
-    this.selectPrev();
-  } else if (event.key === "ArrowDown" || event.key === "Down") {
-    this.selectNext();
-  } else if (event.key === "Enter") {
+  if (event.key === "Enter") {
     this.exec(this.getSelected());
   } else if (event.key === "Backspace" && !this.filter) {
     this.toggleDisplay(false);
@@ -2537,7 +2560,9 @@ CommandPalette.prototype.handleInputKey = function(event) {
 CommandPalette.prototype.applyFilter = function() {
   for (var i = 0; i < this.commands.length; i++) {
     var cmd = this.commands[i];
-    if (!this.filter) {
+    if (cmd.isAvailable && !cmd.isAvailable()) {
+      cmd.element.style.display = "none";
+    } else if (!this.filter) {
       cmd.element.style.display = "";
       cmd.titleSpan.innerText   = cmd.title;
     } else {
@@ -2687,6 +2712,15 @@ function createRepoCatalogEnumerator(catalog, action) {
   };
 }
 
+// The repository overview hides the actions that do not apply to the selected
+// repository (e.g. Pull for an offline one) by leaving their list item without
+// the "enabled" class, see RepoOverViewHelper.updateActionLinks. Every other
+// anchor is always available.
+function isActionLinkEnabled(anchor) {
+  var listItem = anchor.parentElement;
+  return !listItem || !listItem.classList.contains("action_link") || listItem.classList.contains("enabled");
+}
+
 function enumerateUiActions() {
   var items = [];
   function processUL(ulNode, prefix) {
@@ -2728,9 +2762,10 @@ function enumerateUiActions() {
       // Clicking the wired anchor routes on every browser control (desktop and
       // WebGUI); no need to reconstruct the sapevent from the href, which ITS
       // rewrites on WebGUI anyway.
-      action  : function() { clickSapEvent(anchor) },
-      getTitle: getTitle,
-      title   : getTitle()
+      action     : function() { clickSapEvent(anchor) },
+      getTitle   : getTitle,
+      title      : getTitle(),
+      isAvailable: function() { return isActionLinkEnabled(anchor) }
     };
   });
 
@@ -3196,8 +3231,7 @@ SourceViewer.prototype.show = function() {
   overlay.className = "source-viewer";
   overlay.tabIndex = -1;
   heading.className = "source-viewer-heading";
-  heading.appendChild(document.createTextNode("Source Viewer (" +
-    (this.isInternetExplorer() ? "X" : "Esc or X") + " to close)"));
+  heading.appendChild(document.createTextNode("Source Viewer (X to close)"));
   close.type = "button";
   close.innerHTML = "&times;";
   close.className = "source-viewer-close";
@@ -3259,9 +3293,10 @@ SourceViewer.prototype.show = function() {
     sourceViewer.activeSource = null;
   }
 
+  // Not Escape: SAP GUI acts on that key whatever the page does with it.
+  // SAP GUI for Java leaves abapGit, and the Edge control loses the keyboard focus.
   function isCloseKey(event) {
-    return event.key === "x" || event.key === "X" || event.keyCode === 88 ||
-      (!sourceViewer.isInternetExplorer() && (event.key === "Escape" || event.keyCode === 27));
+    return event.key === "x" || event.key === "X" || event.keyCode === 88;
   }
 
   function getTabIndex(event) {
