@@ -45,6 +45,13 @@ function page(titles = ["Open Repo", "Save", "Open Settings"]) {
   return { palette, actions, key, filter, selected };
 }
 
+test("no palette is visible while none is registered, also after one had nothing to list", () => {
+  const context = loadUi({ document: { addEventListener() {}, getElementById() { return null; } } });
+  assert.equal(context.CommandPalette.isVisible(), false);
+  new context.CommandPalette(context.enumerateJumpAllFiles, { toggleKey: "F2", hotkeyDescription: "Jump" });
+  assert.equal(context.CommandPalette.isVisible(), false);
+});
+
 test("Enter after a filter with no matches does not execute the previous selection", () => {
   const { palette, actions, key, filter, selected } = page();
   key("ArrowDown");
