@@ -3133,8 +3133,7 @@ SourceViewer.prototype.show = function() {
   overlay.className = "source-viewer";
   overlay.tabIndex = -1;
   heading.className = "source-viewer-heading";
-  heading.appendChild(document.createTextNode("Source Viewer (" +
-    (this.isInternetExplorer() ? "X" : "Esc or X") + " to close)"));
+  heading.appendChild(document.createTextNode("Source Viewer (X to close)"));
   close.type = "button";
   close.innerHTML = "&times;";
   close.className = "source-viewer-close";
@@ -3196,9 +3195,10 @@ SourceViewer.prototype.show = function() {
     sourceViewer.activeSource = null;
   }
 
+  // Not Escape: SAP GUI acts on that key whatever the page does with it.
+  // SAP GUI for Java leaves abapGit, and the Edge control loses the keyboard focus.
   function isCloseKey(event) {
-    return event.key === "x" || event.key === "X" || event.keyCode === 88 ||
-      (!sourceViewer.isInternetExplorer() && (event.key === "Escape" || event.keyCode === 27));
+    return event.key === "x" || event.key === "X" || event.keyCode === 88;
   }
 
   function getTabIndex(event) {
