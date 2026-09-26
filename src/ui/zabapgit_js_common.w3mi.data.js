@@ -410,11 +410,6 @@ function clickSapEvent(element) {
   element.click();
 }
 
-// Set focus to a control
-function setInitialFocus(id) {
-  document.getElementById(id).focus();
-}
-
 // Set focus to an element with query selector
 function setInitialFocusWithQuerySelector(sSelector, bFocusParent) {
   var oSelected = document.querySelector(sSelector);
@@ -3080,10 +3075,9 @@ function trapFocus() {
   var firstElement = focusable[0];
   var lastElement = focusable[focusable.length - 1];
 
-  // Focus the main button when modal opens, if it exists
-  if (document.querySelector(".main-button")) {
-    setInitialFocus("main-button");
-  }
+  // No initial focus on the main button: while a button has focus, link hints
+  // and letter hotkeys are off (Hotkeys.isHotkeyCallPossible), and letting them
+  // through would make Enter fire both the button and its Enter hotkey.
 
   modal.onkeydown = function(e) {
     var keyCode = e.keyCode || e.which;
