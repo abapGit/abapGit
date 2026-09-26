@@ -534,6 +534,20 @@ function escapeHtmlText(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+// Scroll only when needed, aligning to the nearest edge (IE lacks scrollIntoView options).
+// At the top, align below the header: once sticky, it covers the top of the viewport.
+function scrollRowIntoView(row) {
+  if (!row.getBoundingClientRect) return;
+  var rect   = row.getBoundingClientRect();
+  var header = document.getElementById("header");
+  var top    = header && header.getBoundingClientRect ? Math.max(0, header.getBoundingClientRect().bottom) : 0;
+  if (rect.top < top) {
+    window.scrollBy(0, rect.top - top);
+  } else if (rect.bottom > (window.innerHeight || document.documentElement.clientHeight)) {
+    row.scrollIntoView(false);
+  }
+}
+
 function RepoOverViewHelper(opts) {
   if (opts && opts.focusFilterKey) {
     this.focusFilterKey = opts.focusFilterKey;
@@ -576,26 +590,56 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
       return;
     }
 
-    var keycode         = event.keyCode;
-    var rows            = Array.prototype.slice.call(self.getVisibleRows());
-    var selected        = document.querySelector(".repo-overview tr.selected");
-    var indexOfSelected = rows.indexOf(selected);
-    var lastRow         = rows.length - 1;
+    var keycode = event.keyCode;
 
     if (keycode === 13 && document.activeElement.tagName.toLowerCase() !== "input") {
       // "enter" to open, unless command field has focus
       self.openSelectedRepo();
-    } else if ((keycode === 52 || keycode === 56) && indexOfSelected > 0) {
+    } else if (keycode === 52 || keycode === 56) {
       // "4,8" for previous, digits are the numlock keys
-      // NB: numpad must be activated, keypress does not detect arrows
-      //     if we need arrows it will be keydown. But then mind the keycodes, they may change !
-      //     e.g. 100 is 'd' with keypress (and conflicts with diff hotkey), and also it is arrow-left keydown
-      self.selectRowByIndex(indexOfSelected - 1);
-    } else if ((keycode === 54 || keycode === 50) && indexOfSelected < lastRow) {
+      // NB: keypress does not detect arrows, they are handled on keydown below
+      self.selectAdjacentRow(-1);
+    } else if (keycode === 54 || keycode === 50) {
       // "6,2" for next
-      self.selectRowByIndex(indexOfSelected + 1);
+      self.selectAdjacentRow(1);
     }
   });
+
+  // Arrows only fire keydown. Only the arrow keys are handled here: keydown keycodes
+  // differ from keypress ones (e.g. 100 is "d" on keypress but numpad-4 on keydown).
+  document.addEventListener("keydown", function(event) {
+    if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+    if (CommandPalette.isVisible() || !self.isArrowNavigationTarget(document.activeElement)) return;
+
+    var offset;
+    if (event.key === "ArrowUp" || event.key === "Up" || event.keyCode === 38) {
+      offset = -1;
+    } else if (event.key === "ArrowDown" || event.key === "Down" || event.keyCode === 40) {
+      offset = 1;
+    } else {
+      return;
+    }
+    self.selectAdjacentRow(offset);
+    event.preventDefault(); // the selected row is scrolled into view instead
+  });
+};
+
+// Leave arrows to form fields and to menus (KeyNavigation moves through dropdown items)
+RepoOverViewHelper.prototype.isArrowNavigationTarget = function(element) {
+  for (var el = element; el && el.nodeName; el = el.parentElement) {
+    if (/^(INPUT|TEXTAREA|SELECT|LI)$/.test(el.nodeName) || el.isContentEditable) return false;
+  }
+  return true;
+};
+
+RepoOverViewHelper.prototype.selectAdjacentRow = function(offset) {
+  var rows     = Array.prototype.slice.call(this.getVisibleRows());
+  var selected = document.querySelector(".repo-overview tr.selected");
+  var index    = rows.indexOf(selected);
+  if (index < 0 || index + offset < 0 || index + offset >= rows.length) return;
+
+  this.selectRowByIndex(index + offset);
+  scrollRowIntoView(rows[index + offset]);
 };
 
 RepoOverViewHelper.prototype.openSelectedRepo = function() {
@@ -2600,7 +2644,7 @@ CommandPalette.prototype.exec = function(cmd) {
 
 // Is any command palette visible?
 CommandPalette.isVisible = function() {
-  return CommandPalette.instances.reduce(function(result, instance) { return result || instance.elements.palette.style.display !== "none" }, false);
+  return (CommandPalette.instances || []).reduce(function(result, instance) { return result || instance.elements.palette.style.display !== "none" }, false);
 };
 
 function addHotkey(opts) {
