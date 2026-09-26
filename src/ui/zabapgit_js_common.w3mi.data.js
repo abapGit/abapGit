@@ -3292,6 +3292,12 @@ SourceViewer.prototype.handleKeydown = function(event) {
 function registerSourceViewerShortcuts() {
   var sourceViewer = new SourceViewer();
   document.addEventListener("keydown", sourceViewer.handleKeydown.bind(sourceViewer));
+
+  // This runs while common.js loads in the page head, before the page renders
+  // its hotkey overview, so list the shortcut there once the page is parsed
+  document.addEventListener("DOMContentLoaded", function() {
+    Hotkeys.addHotkeyToHelpSheet("ctrl+shift+?", "Source Viewer");
+  });
 }
 
 registerSourceViewerShortcuts();

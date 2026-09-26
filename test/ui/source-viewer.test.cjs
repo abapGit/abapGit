@@ -76,3 +76,17 @@ test('IE uses stylesheet rules and avoids requesting cached JavaScript', () => {
   assert.match(p.viewer.source.value, /Internet Explorer cannot display/);
   assert.equal(p.requests.length, 0);
 });
+
+test('the shortcut is listed in the hotkey overview once the page is parsed', () => {
+  const listeners = {}, items = [];
+  function element() { return { children: [], appendChild(child) { this.children.push(child); } }; }
+  const list = { appendChild(li) { items.push(li.children.map(span => span.innerText)); } };
+  loadUi({ document: {
+    addEventListener(name, fn) { (listeners[name] = listeners[name] || []).push(fn); },
+    createElement: element,
+    querySelector(selector) { return selector === '#hotkeys ul.hotkeys' ? list : null; }
+  } });
+  assert.deepEqual(items, []); // the overview is rendered after common.js loads
+  listeners.DOMContentLoaded.forEach(fn => fn());
+  assert.deepEqual(items, [['ctrl+shift+?', 'Source Viewer']]);
+});
