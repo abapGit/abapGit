@@ -2400,11 +2400,13 @@ function CommandPalette(commandEnumerator, opts) {
   this.hookEvents();
   Hotkeys.addHotkeyToHelpSheet(opts.toggleKey, opts.hotkeyDescription);
 
-  if (!CommandPalette.instances) {
-    CommandPalette.instances = [];
-  }
   CommandPalette.instances.push(this);
 }
+
+// Declared up front, not on first registration: the stage and repository
+// overview pages ask isVisible() on every keypress, also when no palette got
+// registered - e.g. one that had nothing to list (enumerateJumpAllFiles)
+CommandPalette.instances = [];
 
 CommandPalette.prototype.hookEvents = function() {
   document.addEventListener("keydown", this.handleToggleKey.bind(this));
