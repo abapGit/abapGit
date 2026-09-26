@@ -171,3 +171,40 @@ for (const targetName of ["LI", "SPAN", "I", "MARK"]) {
     assert.equal(palette.elements.palette.style.display, "none");
   });
 }
+
+test("unavailable commands are hidden, skipped and re-checked on reopening", () => {
+  const { palette, actions, key, filter, selected } = page(["Pull", "Stage", "Export"]);
+  let offline = false;
+  // Pull and Stage apply to online repositories, Export to offline ones
+  palette.commands.forEach(cmd => { cmd.isAvailable = () => (cmd.title === "Export") === offline; });
+  palette.toggleDisplay(true);
+  assert.deepEqual(selected(), ["Pull"]);
+  assert.equal(palette.commands[2].element.style.display, "none");
+  filter("e"); // matches all three titles
+  assert.deepEqual(selected(), ["Stage"]);
+  key("ArrowDown");
+  assert.deepEqual(selected(), ["Stage"]);
+
+  offline = true;
+  palette.toggleDisplay(true);
+  assert.deepEqual(selected(), ["Export"]);
+  key("Enter");
+  assert.deepEqual(actions, ["Export"]);
+});
+
+test("repository overview action links are only available while their list item is enabled", () => {
+  function li(classes) {
+    const set = new Set(classes);
+    return { nodeName: "LI", classList: { contains(name) { return set.has(name); } } };
+  }
+  const anchor = parent => ({ nodeName: "A", href: "sapevent:go_stage?key=1", innerText: "Stage", parentElement: parent });
+  const items = [li(["action_link", "enabled"]), li(["action_link"]), li([])];
+  items.forEach(item => { item.firstElementChild = anchor(item); item.children = [item.firstElementChild]; });
+  const toolbar = { nodeName: "UL", children: items };
+  const context = loadUi({ document: {
+    addEventListener() {},
+    querySelectorAll(selector) { return selector.includes("actionbar") ? [toolbar] : []; }
+  } });
+  const commands = context.enumerateUiActions();
+  assert.deepEqual([...commands].map(cmd => cmd.isAvailable()), [true, false, true]);
+});
