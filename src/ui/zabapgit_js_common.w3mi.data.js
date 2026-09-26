@@ -2417,9 +2417,10 @@ function CommandPalette(commandEnumerator, opts) {
   this.commands = commandEnumerator();
   if (!this.commands) return;
   // this.commands = [{
-  //   action:    "sap_event_action_code_with_params"
-  //   iconClass: "icon icon_x ..."
-  //   title:     "my command X"
+  //   action:      "sap_event_action_code_with_params"
+  //   iconClass:   "icon icon_x ..."
+  //   title:       "my command X"
+  //   isAvailable: function, optional - re-checked whenever the list is filtered
   // }, ...];
 
   // one or more keys can open the palette, e.g. ["F1", "^p"]
@@ -2520,7 +2521,9 @@ CommandPalette.prototype.handleInputKey = function(event) {
 CommandPalette.prototype.applyFilter = function() {
   for (var i = 0; i < this.commands.length; i++) {
     var cmd = this.commands[i];
-    if (!this.filter) {
+    if (cmd.isAvailable && !cmd.isAvailable()) {
+      cmd.element.style.display = "none";
+    } else if (!this.filter) {
       cmd.element.style.display = "";
       cmd.titleSpan.innerText   = cmd.title;
     } else {
@@ -2670,6 +2673,15 @@ function createRepoCatalogEnumerator(catalog, action) {
   };
 }
 
+// The repository overview hides the actions that do not apply to the selected
+// repository (e.g. Pull for an offline one) by leaving their list item without
+// the "enabled" class, see RepoOverViewHelper.updateActionLinks. Every other
+// anchor is always available.
+function isActionLinkEnabled(anchor) {
+  var listItem = anchor.parentElement;
+  return !listItem || !listItem.classList.contains("action_link") || listItem.classList.contains("enabled");
+}
+
 function enumerateUiActions() {
   var items = [];
   function processUL(ulNode, prefix) {
@@ -2711,9 +2723,10 @@ function enumerateUiActions() {
       // Clicking the wired anchor routes on every browser control (desktop and
       // WebGUI); no need to reconstruct the sapevent from the href, which ITS
       // rewrites on WebGUI anyway.
-      action  : function() { clickSapEvent(anchor) },
-      getTitle: getTitle,
-      title   : getTitle()
+      action     : function() { clickSapEvent(anchor) },
+      getTitle   : getTitle,
+      title      : getTitle(),
+      isAvailable: function() { return isActionLinkEnabled(anchor) }
     };
   });
 
