@@ -17,6 +17,7 @@ function page(keys = []) {
   const context = loadUi({ document: {
     activeElement: { id: "", tagName: "BODY", nodeName: "BODY" },
     addEventListener(name, handler) { listeners[name] = handler; },
+    getElementById() { return null; },
     querySelectorAll() { return rows; },
     querySelector(selector) {
       const selected = rows.find(row => row.classList.contains("selected"));
@@ -141,6 +142,7 @@ test("arrow keys scroll the newly selected row into view only when it is off scr
   const { context, helper, rows, keydown } = page(["1", "2", "3"]);
   context.innerHeight = 100;
   const scrolled = [];
+  context.scrollBy = (x, y) => scrolled.push(["by", y]);
   const tops = [0, 50, 150];
   rows.forEach((row, i) => {
     row.getBoundingClientRect = () => ({ top: tops[i], bottom: tops[i] + 20 });
@@ -152,7 +154,20 @@ test("arrow keys scroll the newly selected row into view only when it is off scr
   tops[0] = -30;
   keydown("ArrowUp");
   keydown("ArrowUp");
-  assert.deepEqual(scrolled, [["3", false], ["1", true]]);
+  assert.deepEqual(scrolled, [["3", false], ["by", -30]]);
+});
+
+test("scrolling up keeps the selected row clear of the sticky header", () => {
+  const { context, helper, rows, keydown } = page(["1", "2"]);
+  context.innerHeight = 100;
+  const scrolled = [];
+  context.scrollBy = (x, y) => scrolled.push(y);
+  context.document.getElementById = id => (id === "header" ? { getBoundingClientRect: () => ({ bottom: 47 }) } : null);
+  const tops = [30, 60]; // row 1 is partly behind the header
+  rows.forEach((row, i) => { row.getBoundingClientRect = () => ({ top: tops[i], bottom: tops[i] + 20 }); });
+  helper.selectRowByIndex(1);
+  keydown("ArrowUp");
+  assert.deepEqual(scrolled, [-17]);
 });
 
 test("arrow keys are left alone in fields, menus, open palettes and with modifiers", () => {

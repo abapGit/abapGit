@@ -534,12 +534,15 @@ function escapeHtmlText(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-// Scroll only when needed, aligning to the nearest edge (IE lacks scrollIntoView options)
+// Scroll only when needed, aligning to the nearest edge (IE lacks scrollIntoView options).
+// At the top, align below the header: once sticky, it covers the top of the viewport.
 function scrollRowIntoView(row) {
   if (!row.getBoundingClientRect) return;
-  var rect = row.getBoundingClientRect();
-  if (rect.top < 0) {
-    row.scrollIntoView(true);
+  var rect   = row.getBoundingClientRect();
+  var header = document.getElementById("header");
+  var top    = header && header.getBoundingClientRect ? Math.max(0, header.getBoundingClientRect().bottom) : 0;
+  if (rect.top < top) {
+    window.scrollBy(0, rect.top - top);
   } else if (rect.bottom > (window.innerHeight || document.documentElement.clientHeight)) {
     row.scrollIntoView(false);
   }
