@@ -534,6 +534,20 @@ function escapeHtmlText(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+// Scroll only when needed, aligning to the nearest edge (IE lacks scrollIntoView options).
+// At the top, align below the header: once sticky, it covers the top of the viewport.
+function scrollRowIntoView(row) {
+  if (!row.getBoundingClientRect) return;
+  var rect   = row.getBoundingClientRect();
+  var header = document.getElementById("header");
+  var top    = header && header.getBoundingClientRect ? Math.max(0, header.getBoundingClientRect().bottom) : 0;
+  if (rect.top < top) {
+    window.scrollBy(0, rect.top - top);
+  } else if (rect.bottom > (window.innerHeight || document.documentElement.clientHeight)) {
+    row.scrollIntoView(false);
+  }
+}
+
 function RepoOverViewHelper(opts) {
   if (opts && opts.focusFilterKey) {
     this.focusFilterKey = opts.focusFilterKey;
@@ -576,26 +590,56 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
       return;
     }
 
-    var keycode         = event.keyCode;
-    var rows            = Array.prototype.slice.call(self.getVisibleRows());
-    var selected        = document.querySelector(".repo-overview tr.selected");
-    var indexOfSelected = rows.indexOf(selected);
-    var lastRow         = rows.length - 1;
+    var keycode = event.keyCode;
 
     if (keycode === 13 && document.activeElement.tagName.toLowerCase() !== "input") {
       // "enter" to open, unless command field has focus
       self.openSelectedRepo();
-    } else if ((keycode === 52 || keycode === 56) && indexOfSelected > 0) {
+    } else if (keycode === 52 || keycode === 56) {
       // "4,8" for previous, digits are the numlock keys
-      // NB: numpad must be activated, keypress does not detect arrows
-      //     if we need arrows it will be keydown. But then mind the keycodes, they may change !
-      //     e.g. 100 is 'd' with keypress (and conflicts with diff hotkey), and also it is arrow-left keydown
-      self.selectRowByIndex(indexOfSelected - 1);
-    } else if ((keycode === 54 || keycode === 50) && indexOfSelected < lastRow) {
+      // NB: keypress does not detect arrows, they are handled on keydown below
+      self.selectAdjacentRow(-1);
+    } else if (keycode === 54 || keycode === 50) {
       // "6,2" for next
-      self.selectRowByIndex(indexOfSelected + 1);
+      self.selectAdjacentRow(1);
     }
   });
+
+  // Arrows only fire keydown. Only the arrow keys are handled here: keydown keycodes
+  // differ from keypress ones (e.g. 100 is "d" on keypress but numpad-4 on keydown).
+  document.addEventListener("keydown", function(event) {
+    if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+    if (CommandPalette.isVisible() || !self.isArrowNavigationTarget(document.activeElement)) return;
+
+    var offset;
+    if (event.key === "ArrowUp" || event.key === "Up" || event.keyCode === 38) {
+      offset = -1;
+    } else if (event.key === "ArrowDown" || event.key === "Down" || event.keyCode === 40) {
+      offset = 1;
+    } else {
+      return;
+    }
+    self.selectAdjacentRow(offset);
+    event.preventDefault(); // the selected row is scrolled into view instead
+  });
+};
+
+// Leave arrows to form fields and to menus (KeyNavigation moves through dropdown items)
+RepoOverViewHelper.prototype.isArrowNavigationTarget = function(element) {
+  for (var el = element; el && el.nodeName; el = el.parentElement) {
+    if (/^(INPUT|TEXTAREA|SELECT|LI)$/.test(el.nodeName) || el.isContentEditable) return false;
+  }
+  return true;
+};
+
+RepoOverViewHelper.prototype.selectAdjacentRow = function(offset) {
+  var rows     = Array.prototype.slice.call(this.getVisibleRows());
+  var selected = document.querySelector(".repo-overview tr.selected");
+  var index    = rows.indexOf(selected);
+  if (index < 0 || index + offset < 0 || index + offset >= rows.length) return;
+
+  this.selectRowByIndex(index + offset);
+  scrollRowIntoView(rows[index + offset]);
 };
 
 RepoOverViewHelper.prototype.openSelectedRepo = function() {
@@ -2373,9 +2417,10 @@ function CommandPalette(commandEnumerator, opts) {
   this.commands = commandEnumerator();
   if (!this.commands) return;
   // this.commands = [{
-  //   action:    "sap_event_action_code_with_params"
-  //   iconClass: "icon icon_x ..."
-  //   title:     "my command X"
+  //   action:      "sap_event_action_code_with_params"
+  //   iconClass:   "icon icon_x ..."
+  //   title:       "my command X"
+  //   isAvailable: function, optional - re-checked whenever the list is filtered
   // }, ...];
 
   // one or more keys can open the palette, e.g. ["F1", "^p"]
@@ -2400,11 +2445,13 @@ function CommandPalette(commandEnumerator, opts) {
   this.hookEvents();
   Hotkeys.addHotkeyToHelpSheet(opts.toggleKey, opts.hotkeyDescription);
 
-  if (!CommandPalette.instances) {
-    CommandPalette.instances = [];
-  }
   CommandPalette.instances.push(this);
 }
+
+// Declared up front, not on first registration: the stage and repository
+// overview pages ask isVisible() on every keypress, also when no palette got
+// registered - e.g. one that had nothing to list (enumerateJumpAllFiles)
+CommandPalette.instances = [];
 
 CommandPalette.prototype.hookEvents = function() {
   document.addEventListener("keydown", this.handleToggleKey.bind(this));
@@ -2494,7 +2541,9 @@ CommandPalette.prototype.handleInputKey = function(event) {
 CommandPalette.prototype.applyFilter = function() {
   for (var i = 0; i < this.commands.length; i++) {
     var cmd = this.commands[i];
-    if (!this.filter) {
+    if (cmd.isAvailable && !cmd.isAvailable()) {
+      cmd.element.style.display = "none";
+    } else if (!this.filter) {
       cmd.element.style.display = "";
       cmd.titleSpan.innerText   = cmd.title;
     } else {
@@ -2620,7 +2669,7 @@ CommandPalette.prototype.exec = function(cmd) {
 
 // Is any command palette visible?
 CommandPalette.isVisible = function() {
-  return CommandPalette.instances.reduce(function(result, instance) { return result || instance.elements.palette.style.display !== "none" }, false);
+  return (CommandPalette.instances || []).reduce(function(result, instance) { return result || instance.elements.palette.style.display !== "none" }, false);
 };
 
 function addHotkey(opts) {
@@ -2642,6 +2691,15 @@ function createRepoCatalogEnumerator(catalog, action) {
       };
     });
   };
+}
+
+// The repository overview hides the actions that do not apply to the selected
+// repository (e.g. Pull for an offline one) by leaving their list item without
+// the "enabled" class, see RepoOverViewHelper.updateActionLinks. Every other
+// anchor is always available.
+function isActionLinkEnabled(anchor) {
+  var listItem = anchor.parentElement;
+  return !listItem || !listItem.classList.contains("action_link") || listItem.classList.contains("enabled");
 }
 
 function enumerateUiActions() {
@@ -2685,9 +2743,10 @@ function enumerateUiActions() {
       // Clicking the wired anchor routes on every browser control (desktop and
       // WebGUI); no need to reconstruct the sapevent from the href, which ITS
       // rewrites on WebGUI anyway.
-      action  : function() { clickSapEvent(anchor) },
-      getTitle: getTitle,
-      title   : getTitle()
+      action     : function() { clickSapEvent(anchor) },
+      getTitle   : getTitle,
+      title      : getTitle(),
+      isAvailable: function() { return isActionLinkEnabled(anchor) }
     };
   });
 
@@ -3153,8 +3212,7 @@ SourceViewer.prototype.show = function() {
   overlay.className = "source-viewer";
   overlay.tabIndex = -1;
   heading.className = "source-viewer-heading";
-  heading.appendChild(document.createTextNode("Source Viewer (" +
-    (this.isInternetExplorer() ? "X" : "Esc or X") + " to close)"));
+  heading.appendChild(document.createTextNode("Source Viewer (X to close)"));
   close.type = "button";
   close.innerHTML = "&times;";
   close.className = "source-viewer-close";
@@ -3216,9 +3274,10 @@ SourceViewer.prototype.show = function() {
     sourceViewer.activeSource = null;
   }
 
+  // Not Escape: SAP GUI acts on that key whatever the page does with it.
+  // SAP GUI for Java leaves abapGit, and the Edge control loses the keyboard focus.
   function isCloseKey(event) {
-    return event.key === "x" || event.key === "X" || event.keyCode === 88 ||
-      (!sourceViewer.isInternetExplorer() && (event.key === "Escape" || event.keyCode === 27));
+    return event.key === "x" || event.key === "X" || event.keyCode === 88;
   }
 
   function getTabIndex(event) {
