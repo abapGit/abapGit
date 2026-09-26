@@ -1021,12 +1021,7 @@ StageHelper.prototype.applyFilterValue = function(sFilterValue) {
 // (iterateStageTab change mode), it includes display:none descendants,
 // so the link-hint codes would leak into the file names
 StageHelper.prototype.getPlainText = function(elem) {
-  var clone = elem.cloneNode(true);
-  var hints = clone.querySelectorAll("span.link-hint");
-  for (var i = hints.length - 1; i >= 0; i--) {
-    hints[i].parentNode.removeChild(hints[i]);
-  }
-  return clone.textContent;
+  return getTextWithoutLinkHints(elem);
 };
 
 // Apply filter to a single stage line - hide or show
@@ -1875,7 +1870,9 @@ LinkHints.prototype.handleKey = function(event) {
       this.displayHints(false);
       event.preventDefault();
       if (this.yankModeActive) {
-        submitSapeventForm({ clipboard: hint.parent.firstChild.textContent }, "clipboard");
+        var yankText = this.getYankText(hint.parent);
+        // The backend rejects an empty clipboard with an error popup
+        if (yankText) submitSapeventForm({ clipboard: yankText }, "clipboard");
         this.yankModeActive = false;
       } else {
         this.hintActivate(hint);
@@ -1891,6 +1888,17 @@ LinkHints.prototype.handleKey = function(event) {
       }
     }
   }
+};
+
+// The text a yanked hint copies: what the element shows. A field shows its
+// value and has no child nodes at all; a link can start with an icon, so its
+// first child is not necessarily its text; an icon-only element falls back to
+// its tooltip.
+LinkHints.prototype.getYankText = function(element) {
+  if (element.nodeName === "INPUT" || element.nodeName === "TEXTAREA") {
+    return element.value || "";
+  }
+  return getTextWithoutLinkHints(element).trim() || element.title || "";
 };
 
 LinkHints.prototype.closeActivatedDropdown = function() {
@@ -1977,6 +1985,17 @@ LinkHints.prototype.filterHints = function() {
   }
   return visibleHints;
 };
+
+// Text content of an element without the codes of the link hints injected
+// into it (deployHintContainers appends them to links, their labels included)
+function getTextWithoutLinkHints(element) {
+  var clone = element.cloneNode(true);
+  var hints = clone.querySelectorAll("span.link-hint");
+  for (var i = hints.length - 1; i >= 0; i--) {
+    hints[i].parentNode.removeChild(hints[i]);
+  }
+  return clone.textContent;
+}
 
 function activateLinkHints(linkHintHotKey) {
   if (!linkHintHotKey) return;

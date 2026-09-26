@@ -47,7 +47,7 @@ test('hint selection still yanks only when deliberately enabled', () => {
   const p = page();
   let clicked = 0, copied;
   p.context.submitSapeventForm = (params, action) => { copied = { ...params, action }; };
-  const hint = { parent: { firstChild: { textContent: 'link text' } } };
+  const hint = { parent: { nodeName: 'A', cloneNode() { return { textContent: 'link text', querySelectorAll: () => [] }; } } };
   p.hints.hintsMap = { '1': hint };
   p.hints.hintActivate = () => clicked++;
   p.hints.displayHints = state => { p.hints.areHintsDisplayed = state; };
