@@ -63,6 +63,41 @@ for (const cancel of ['x', 'f']) {
   });
 }
 
+// A copy of a link as deployHintContainers leaves it: optional icon, text, hint code
+function link(text, attrs = {}) {
+  return node('A', Object.assign({ cloneNode() {
+    const hint = { textContent: '12' };
+    const clone = { textContent: text + hint.textContent, querySelectorAll: () => [hint] };
+    hint.parentNode = { removeChild() { clone.textContent = text; } };
+    return clone;
+  } }, attrs));
+}
+
+for (const [name, target, expected] of [
+  ['a text field copies its value', node('INPUT', { type: 'text', value: 'ZCL_FOO' }), 'ZCL_FOO'],
+  ['a text area copies its value', node('TEXTAREA', { value: 'message' }), 'message'],
+  ['an icon link copies its text without the hint code', link(' Stage '), 'Stage'],
+  ['an icon-only link copies its tooltip', link('', { title: 'Refresh' }), 'Refresh']
+]) {
+  test(`yanking ${name}`, () => {
+    const p = page([target]);
+    const copied = [];
+    p.context.submitSapeventForm = (params, action) => copied.push([action, params.clipboard]);
+    p.key('y'); p.key('f'); p.key('1');
+    assert.deepEqual(copied, [['clipboard', expected]]);
+    assert.equal(p.hints.yankModeActive, false);
+  });
+}
+
+test('yanking an element without text copies nothing instead of failing in the backend', () => {
+  const p = page([node('INPUT', { type: 'text', value: '' })]);
+  let copies = 0;
+  p.context.submitSapeventForm = () => copies++;
+  p.key('y'); p.key('f'); p.key('1');
+  assert.equal(copies, 0);
+  assert.equal(p.hints.yankModeActive, false);
+});
+
 test('disabled controls, including fieldset descendants, have no hints', () => {
   const targets = [node('INPUT', { disabled: true }), node('INPUT', { disabledByFieldset: true }),
     node('INPUT', { type: 'hidden' }), node('I'), node('A')];
