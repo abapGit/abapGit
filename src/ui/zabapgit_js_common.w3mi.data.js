@@ -2455,8 +2455,32 @@ CommandPalette.instances = [];
 
 CommandPalette.prototype.hookEvents = function() {
   document.addEventListener("keydown", this.handleToggleKey.bind(this));
+  document.addEventListener("mousedown", this.handleOutsideClick.bind(this));
+  this.elements.input.addEventListener("keydown", this.handleInputKeydown.bind(this));
   this.elements.input.addEventListener("keyup", this.handleInputKey.bind(this));
   this.elements.ul.addEventListener("click", this.handleUlClick.bind(this));
+};
+
+// Moving the selection on keydown lets a held arrow key repeat, and keeps the
+// caret from jumping to the start or end of the input.
+// No Escape to close: SAP GUI acts on that key whatever the page does with it.
+// SAP GUI for Java leaves abapGit, and the Edge control loses the keyboard
+// focus, so the next toggle key (Ctrl+P) opens the print dialog instead.
+CommandPalette.prototype.handleInputKeydown = function(event) {
+  if (event.key === "ArrowUp" || event.key === "Up") {
+    this.selectPrev();
+  } else if (event.key === "ArrowDown" || event.key === "Down") {
+    this.selectNext();
+  } else {
+    return;
+  }
+  event.preventDefault();
+};
+
+CommandPalette.prototype.handleOutsideClick = function(event) {
+  var target = event.target || event.srcElement;
+  if (this.elements.palette.style.display === "none" || this.elements.palette.contains(target)) return;
+  this.toggleDisplay(false);
 };
 
 CommandPalette.prototype.renderCommandItem = function(cmd) {
@@ -2502,11 +2526,7 @@ CommandPalette.prototype.handleToggleKey = function(event) {
 };
 
 CommandPalette.prototype.handleInputKey = function(event) {
-  if (event.key === "ArrowUp" || event.key === "Up") {
-    this.selectPrev();
-  } else if (event.key === "ArrowDown" || event.key === "Down") {
-    this.selectNext();
-  } else if (event.key === "Enter") {
+  if (event.key === "Enter") {
     this.exec(this.getSelected());
   } else if (event.key === "Backspace" && !this.filter) {
     this.toggleDisplay(false);
