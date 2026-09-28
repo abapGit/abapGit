@@ -1473,7 +1473,6 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
     ri_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
 
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
     LOOP AT mt_diff_files INTO ls_diff_file.
       li_progress->show(
         iv_current = sy-tabix
