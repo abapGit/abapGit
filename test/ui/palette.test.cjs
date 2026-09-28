@@ -225,12 +225,40 @@ test("unavailable commands are hidden, skipped and re-checked on reopening", () 
   assert.deepEqual(actions, ["Export"]);
 });
 
+test("toolbar titles leave out link hint codes, also for links in a closed dropdown", () => {
+  // A dropdown entry once link hints were deployed: its hidden hint code stays
+  // in the DOM, and innerText includes it while the dropdown is not rendered
+  const anchor = { nodeName: "A", href: "sapevent:go_settings", innerText: "Global106",
+    cloneNode() {
+      const hint = { textContent: "106" };
+      const clone = { textContent: "\n  Global106", querySelectorAll: () => [hint] };
+      hint.parentNode = { removeChild() { clone.textContent = "\n  Global"; } };
+      return clone;
+    } };
+  const dropdownLink = { nodeName: "A", innerText: "Settings" };
+  const dropdown = { nodeName: "LI", children: [dropdownLink, { nodeName: "UL", children: [
+    { nodeName: "LI", children: [anchor], firstElementChild: anchor }
+  ] }] };
+  anchor.parentElement = dropdown.children[1].children[0];
+  anchor.parentElement.classList = { contains() { return false; } };
+  const toolbar = { nodeName: "UL", children: [dropdown] };
+  const context = loadUi({ document: {
+    addEventListener() {},
+    querySelectorAll(selector) { return selector.includes("toolbar") ? [toolbar] : []; }
+  } });
+  const commands = context.enumerateUiActions();
+  assert.equal(commands.length, 1);
+  assert.equal(commands[0].title, "Settings: Global");
+  assert.equal(commands[0].getTitle(), "Settings: Global");
+});
+
 test("repository overview action links are only available while their list item is enabled", () => {
   function li(classes) {
     const set = new Set(classes);
     return { nodeName: "LI", classList: { contains(name) { return set.has(name); } } };
   }
-  const anchor = parent => ({ nodeName: "A", href: "sapevent:go_stage?key=1", innerText: "Stage", parentElement: parent });
+  const anchor = parent => ({ nodeName: "A", href: "sapevent:go_stage?key=1", parentElement: parent,
+    cloneNode() { return { textContent: "Stage", querySelectorAll: () => [] }; } });
   const items = [li(["action_link", "enabled"]), li(["action_link"]), li([])];
   items.forEach(item => { item.firstElementChild = anchor(item); item.children = [item.firstElementChild]; });
   const toolbar = { nodeName: "UL", children: items };
