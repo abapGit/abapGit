@@ -908,7 +908,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD refresh.
 
-    zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->refresh( ).
+    zcl_abapgit_repo_srv=>get_instance( )->reload( iv_key )->refresh( ).
 
   ENDMETHOD.
 
