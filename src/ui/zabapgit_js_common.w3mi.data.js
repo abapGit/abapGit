@@ -411,11 +411,6 @@ function clickSapEvent(element) {
   element.click();
 }
 
-// Set focus to a control
-function setInitialFocus(id) {
-  document.getElementById(id).focus();
-}
-
 // Set focus to an element with query selector
 function setInitialFocusWithQuerySelector(sSelector, bFocusParent) {
   var oSelected = document.querySelector(sSelector);
@@ -1329,13 +1324,9 @@ CheckListWrapper.prototype.onClick = function(e) {
 
 // Diff helper constructor
 function DiffHelper(params) {
-  this.pageSeed    = params.seed;
-  this.stageAction = params.stageAction;
-
   // DOM nodes
   this.dom = {
-    diffList   : document.getElementById(params.ids.diffList),
-    stageButton: document.getElementById(params.ids.stageButton)
+    diffList: document.getElementById(params.ids.diffList)
   };
 
   this.repoKey = this.dom.diffList.getAttribute("data-repo-key");
@@ -1348,12 +1339,6 @@ function DiffHelper(params) {
   if (document.getElementById(params.ids.filterMenu)) {
     this.checkList        = new CheckListWrapper(params.ids.filterMenu, this.onFilter.bind(this), this.onFilterOnlyMyChanges.bind(this));
     this.dom.filterButton = document.getElementById(params.ids.filterMenu).parentNode;
-  }
-
-  // Hijack stage command
-  if (this.dom.stageButton) {
-    this.dom.stageButton.href    = "#";
-    this.dom.stageButton.onclick = this.onStage.bind(this);
   }
 }
 
@@ -1438,25 +1423,6 @@ DiffHelper.prototype.refreshFilters = function() {
     });
   });
   this.highlightButton();
-};
-
-// Action on stage -> save visible diffs as state for stage page
-DiffHelper.prototype.onStage = function(e) { // eslint-disable-line no-unused-vars
-  writeStoredState("sessionStorage", this.pageSeed, this.buildStageCache());
-  var getParams = { key: this.repoKey, seed: this.pageSeed };
-  submitSapeventForm(getParams, this.stageAction, "get");
-};
-
-// Collect visible diffs
-DiffHelper.prototype.buildStageCache = function() {
-  var list = {};
-  this.iterateDiffList(function(div) {
-    var filename = div.getAttribute("data-file");
-    if (!div.style.display && filename) { // No display override - visible !!
-      list[filename] = "A"; // Add
-    }
-  });
-  return list;
 };
 
 // Table iterator
@@ -2070,8 +2036,9 @@ function Hotkeys(oKeyMap) {
     // the hotkey execution
     this.oKeyMap[sKey] = function(oEvent) {
 
-      // gHelper is only valid for diff page
-      var diffHelper = (window.gHelper || {});
+      // The helper object of the page, if it has one: the diff, stage and
+      // repository overview pages create it as gHelper
+      var pageHelper = (window.gHelper || {});
 
       // We have either a js function on this
       if (this[action]) {
@@ -2079,9 +2046,9 @@ function Hotkeys(oKeyMap) {
         return;
       }
 
-      // Or a method of the helper object for the diff page
-      if (diffHelper[action]) {
-        diffHelper[action].call(diffHelper);
+      // Or a method of the page helper (e.g. submitCommit on the stage page)
+      if (pageHelper[action]) {
+        pageHelper[action].call(pageHelper);
         return;
       }
 
@@ -3128,10 +3095,9 @@ function trapFocus() {
   var firstElement = focusable[0];
   var lastElement = focusable[focusable.length - 1];
 
-  // Focus the main button when modal opens, if it exists
-  if (document.querySelector(".main-button")) {
-    setInitialFocus("main-button");
-  }
+  // No initial focus on the main button: while a button has focus, link hints
+  // and letter hotkeys are off (Hotkeys.isHotkeyCallPossible), and letting them
+  // through would make Enter fire both the button and its Enter hotkey.
 
   modal.onkeydown = function(e) {
     var keyCode = e.keyCode || e.which;
@@ -3190,7 +3156,7 @@ SourceViewer.prototype.getStylesheetSource = function(url) {
 
     try {
       rules = styleSheets[index].cssRules || styleSheets[index].rules;
-    } catch (error) {
+    } catch (error) { // eslint-disable-line no-unused-vars
       this.reportError("Could not access " + url + " from the document stylesheets.");
       return "";
     }
