@@ -11,7 +11,8 @@
  **********************************************************/
 
 /* exported confirmInitialized
-   -- zcl_abapgit_gui_page->zif_abapgit_gui_renderable~render */
+   -- zcl_abapgit_gui_page->zif_abapgit_gui_renderable~render,
+      which also renders the js-error-banner it hides */
 
 /* exported setEnvironment
    -- zcl_abapgit_gui_page->render_environment */
@@ -440,6 +441,41 @@ function submitForm(form) {
 function submitFormById(id) {
   submitForm(document.getElementById(id));
 }
+
+// The error banner only reports a page that failed to initialize: once
+// confirmInitialized has hidden it, an error in an event handler would go
+// unnoticed. Show it again with the error, so a user on a browser control we
+// cannot test ourselves can tell us what broke.
+//
+// Only errors of this script and of the inline page scripts count. Others are
+// not ours to report - on WebGUI, ITS runs scripts of its own - and a script
+// of another origin reports nothing but "Script error." anyway. The first
+// error is the one worth reporting, later ones are mostly its consequences.
+var gScriptErrorReported = false;
+var gCommonJsUrlPattern  = /(^|\/)js\/common\.js(\?|$)/;
+
+function isOwnScript(url) {
+  var page = String(window.location && window.location.href).replace(/#.*$/, "");
+  return gCommonJsUrlPattern.test(url) || url.replace(/#.*$/, "") === page;
+}
+
+function reportScriptError(message, url, line) {
+  var errorBanner = document.getElementById("js-error-banner");
+  if (gScriptErrorReported || !errorBanner || !url || !isOwnScript(url)) return;
+  gScriptErrorReported = true;
+
+  var icon = errorBanner.querySelector("i");
+  var file = gCommonJsUrlPattern.test(url) ? "common.js" : "page script";
+  while (errorBanner.firstChild) errorBanner.removeChild(errorBanner.firstChild);
+  if (icon) errorBanner.appendChild(icon);
+  errorBanner.appendChild(document.createTextNode(" JavaScript error: " + message
+    + " (" + file + (line ? ":" + line : "") + "), please log an issue"));
+  errorBanner.style.display = "";
+}
+
+window.addEventListener("error", function(event) {
+  reportScriptError(event.message, event.filename, event.lineno);
+});
 
 // Confirm JS initialization
 function confirmInitialized() {
