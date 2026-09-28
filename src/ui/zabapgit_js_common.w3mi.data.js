@@ -2764,9 +2764,11 @@ function enumerateUiActions() {
     var anchor = item[0];
     var prefix = item[1];
     // title is re-read on each palette open, some labels change dynamically
-    // (e.g. commit/patch buttons on the stage page)
+    // (e.g. commit/patch buttons on the stage page). Not from innerText: link
+    // hints stay in the DOM once deployed, and for a link that is not rendered
+    // - one in a closed dropdown - innerText includes their hidden codes.
     var getTitle = function() {
-      return (prefix ? prefix + ": " : "") + anchor.innerText.trim();
+      return (prefix ? prefix + ": " : "") + getTextWithoutLinkHints(anchor).replace(/\s+/g, " ").trim();
     };
     return {
       // Clicking the wired anchor routes on every browser control (desktop and
