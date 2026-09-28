@@ -1828,3 +1828,36 @@ div.wu table th[data-gid="where"] {
   font-size: 12px;
   white-space: pre;
 }
+
+.webgui-busy-lock {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2147483647;
+  cursor: wait;
+  outline: none;
+}
+
+.webgui-busy-lock[hidden] {
+  display: none;
+}
+
+.webgui-busy-lock span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 1em 2em;
+  background-color: var(--theme-container-background-color);
+  color: var(--theme-primary-font-color);
+  border: 1px solid var(--theme-container-border-color);
+  border-radius: 4px;
+  opacity: 0;
+  animation: webgui-busy-message 0s 500ms forwards;
+}
+
+@keyframes webgui-busy-message {
+  to { opacity: 1; }
+}

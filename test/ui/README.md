@@ -38,6 +38,7 @@ Avoid expanding the fixtures into a general-purpose browser emulator.
 | [`forms.test.cjs`](forms.test.cjs) | Desktop and WebGUI form routing, parameter encoding, repeated submissions, and preservation of existing fields |
 | [`stage.test.cjs`](stage.test.cjs) | Commit and patch actions, selection/filter precedence, visible-file staging, and selection counts |
 | [`palette.test.cjs`](palette.test.cjs) | Filtering, keyboard navigation, command execution, reopening, and fuzzy matching |
+| [`busy.test.cjs`](busy.test.cjs) | WebGUI busy lock: locking and unlocking, input blocking, focus, page lifecycle, unsupported or changed shells |
 | [`checklist.test.cjs`](checklist.test.cjs) | Filter clicks and cancellation of fragment navigation |
 | [`diff.test.cjs`](diff.test.cjs) | Combined filters, staging visible files, and exact-path jumps |
 | [`fragments.test.cjs`](fragments.test.cjs) | Local fragment handling and browser Back interactions |
