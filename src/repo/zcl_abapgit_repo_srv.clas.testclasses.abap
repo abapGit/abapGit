@@ -65,6 +65,7 @@ CLASS ltcl_reload DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINA
     METHODS branch_changed_elsewhere FOR TESTING RAISING zcx_abapgit_exception.
     METHODS unchanged_keeps_instance FOR TESTING RAISING zcx_abapgit_exception.
     METHODS switched_to_offline FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS offline_keeps_imported_files FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -161,6 +162,36 @@ CLASS ltcl_reload IMPLEMENTATION.
 
     li_repo = mi_srv->reload( c_key ).
     cl_abap_unit_assert=>assert_true( li_repo->is_offline( ) ).
+
+  ENDMETHOD.
+
+  METHOD offline_keeps_imported_files.
+
+    DATA li_before TYPE REF TO zif_abapgit_repo.
+    DATA li_after TYPE REF TO zif_abapgit_repo.
+    DATA lt_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
+    DATA ls_file LIKE LINE OF lt_files.
+
+    change_persisted_repo( iv_offline = abap_true ).
+
+    ls_file-path     = '/src/'.
+    ls_file-filename = 'zcl_test.clas.abap'.
+    APPEND ls_file TO lt_files.
+
+    " Files imported from a ZIP exist only in memory
+    li_before = mi_srv->get( c_key ).
+    li_before->set_files_remote( lt_files ).
+
+    change_persisted_repo(
+      iv_branch_name = 'refs/heads/feature'
+      iv_offline     = abap_true ).
+
+    li_after = mi_srv->reload( c_key ).
+
+    cl_abap_unit_assert=>assert_false( boolc( li_after = li_before ) ).
+    cl_abap_unit_assert=>assert_equals(
+      act = li_after->get_files_remote( )
+      exp = lt_files ).
 
   ENDMETHOD.
 

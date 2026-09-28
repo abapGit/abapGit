@@ -739,6 +739,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
   METHOD zif_abapgit_repo_srv~reload.
 
     DATA li_repo TYPE REF TO zif_abapgit_repo.
+    DATA li_old TYPE REF TO zif_abapgit_repo.
     DATA ls_repo TYPE zif_abapgit_persistence=>ty_repo.
     DATA ls_meta TYPE zif_abapgit_persistence=>ty_repo_xml.
 
@@ -752,11 +753,17 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     " Metadata can be changed outside of this session, e.g. branch switched via API
     IF ls_repo <> li_repo->ms_data.
+      li_old = li_repo.
       MOVE-CORRESPONDING ls_repo TO ls_meta.
       reinstantiate_repo(
         iv_key  = iv_key
         is_meta = ls_meta ).
       li_repo = zif_abapgit_repo_srv~get( iv_key ).
+
+      " Offline repos have no remote to fetch from, keep the imported files
+      IF li_old->is_offline( ) = abap_true AND li_repo->is_offline( ) = abap_true.
+        li_repo->set_files_remote( li_old->get_files_remote( ) ).
+      ENDIF.
     ENDIF.
 
     ri_repo = li_repo.
