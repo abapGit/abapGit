@@ -611,7 +611,10 @@ RepoOverViewHelper.prototype.onPageLoad = function() {
 RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
   var self = this;
   document.addEventListener("keypress", function(event) {
-    if (document.activeElement.id === "filter") {
+    // Leave keys typed elsewhere alone: in the filter or the command palette,
+    // or as a link hint code - its digits would otherwise move the selection,
+    // and the action links with it, before the hint activates one of them
+    if (event.defaultPrevented || LinkHints.areHintsDisplayed || !Hotkeys.isHotkeyCallPossible()) {
       return;
     }
     if (self.focusFilterKey && event.key === self.focusFilterKey && !CommandPalette.isVisible()) {
@@ -1863,14 +1866,15 @@ LinkHints.prototype.handleKey = function(event) {
 
   } else if (this.areHintsDisplayed) {
 
-    // the user tries to reach a hint
+    // the user tries to reach a hint - the key is consumed here, so page
+    // shortcuts listening after us must not act on it as well
+    event.preventDefault();
     this.pendingPath += event.key;
 
     var hint = this.hintsMap[this.pendingPath];
 
     if (hint) { // we are there, we have a fully specified tooltip. Let us activate or yank it
       this.displayHints(false);
-      event.preventDefault();
       if (this.yankModeActive) {
         var yankText = this.getYankText(hint.parent);
         // The backend rejects an empty clipboard with an error popup
@@ -1909,8 +1913,14 @@ LinkHints.prototype.closeActivatedDropdown = function() {
   this.activatedDropdown = null;
 };
 
+// Are hints displayed, i.e. is the user typing a hint code? Page shortcuts
+// registered before the link hints cannot rely on the key being marked as
+// consumed. A page has at most one LinkHints instance (activateLinkHints).
+LinkHints.areHintsDisplayed = false;
+
 LinkHints.prototype.displayHints = function(isActivate) {
-  this.areHintsDisplayed = isActivate;
+  this.areHintsDisplayed      = isActivate;
+  LinkHints.areHintsDisplayed = isActivate;
   for (var i = this.hintsMap.first; i <= this.hintsMap.last; i++) {
     var hint = this.hintsMap[i];
     if (isActivate) {
@@ -2757,9 +2767,11 @@ function enumerateUiActions() {
     var anchor = item[0];
     var prefix = item[1];
     // title is re-read on each palette open, some labels change dynamically
-    // (e.g. commit/patch buttons on the stage page)
+    // (e.g. commit/patch buttons on the stage page). Not from innerText: link
+    // hints stay in the DOM once deployed, and for a link that is not rendered
+    // - one in a closed dropdown - innerText includes their hidden codes.
     var getTitle = function() {
-      return (prefix ? prefix + ": " : "") + anchor.innerText.trim();
+      return (prefix ? prefix + ": " : "") + getTextWithoutLinkHints(anchor).replace(/\s+/g, " ").trim();
     };
     return {
       // Clicking the wired anchor routes on every browser control (desktop and
