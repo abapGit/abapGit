@@ -18,11 +18,14 @@ function page(titles = ["Open Repo", "Save", "Open Settings"]) {
       appendChild(child) { child.parentNode = this; this.children.push(child); },
       addEventListener(name, fn) { this.listeners[name] = fn; },
       focus() {},
+      contains(node) { for (; node; node = node.parentNode) if (node === this) return true; return false; },
       getBoundingClientRect() { return { top: 0, bottom: 100, height: 100 }; }
     };
   }
+  const documentListeners = {};
   const context = loadUi({ document: {
-    addEventListener() {}, querySelector() { return null; },
+    addEventListener(name, fn) { (documentListeners[name] = documentListeners[name] || []).push(fn); },
+    querySelector() { return null; },
     createElement: element, body: element("body")
   } });
   const actions = [];
@@ -30,10 +33,17 @@ function page(titles = ["Open Repo", "Save", "Open Settings"]) {
     title, action() { actions.push(title); }
   })), { toggleKey: "F1", hotkeyDescription: "Commands" });
   palette.toggleDisplay(true);
-  // Invoke the registered keyup handler; this fixture does not simulate
-  // browser default actions or the preceding keydown/keypress events.
+  // Invoke the registered keydown and keyup handlers - keyup follows even if
+  // keydown was default prevented. This fixture does not simulate browser
+  // default actions, keypress events or key repeat.
   function key(key) {
+    let prevented = false;
+    palette.elements.input.listeners.keydown({ key, preventDefault() { prevented = true; } });
     palette.elements.input.listeners.keyup({ key, preventDefault() {} });
+    return prevented;
+  }
+  function mousedown(target) {
+    documentListeners.mousedown.forEach(fn => fn({ target }));
   }
   function filter(value) {
     palette.elements.input.value = value;
@@ -42,8 +52,15 @@ function page(titles = ["Open Repo", "Save", "Open Settings"]) {
   function selected() {
     return palette.commands.filter(cmd => cmd.element.classList.contains("selected")).map(cmd => cmd.title);
   }
-  return { palette, actions, key, filter, selected };
+  return { palette, actions, key, filter, selected, mousedown, element };
 }
+
+test("no palette is visible while none is registered, also after one had nothing to list", () => {
+  const context = loadUi({ document: { addEventListener() {}, getElementById() { return null; } } });
+  assert.equal(context.CommandPalette.isVisible(), false);
+  new context.CommandPalette(context.enumerateJumpAllFiles, { toggleKey: "F2", hotkeyDescription: "Jump" });
+  assert.equal(context.CommandPalette.isVisible(), false);
+});
 
 test("Enter after a filter with no matches does not execute the previous selection", () => {
   const { palette, actions, key, filter, selected } = page();
@@ -70,6 +87,22 @@ for (const [up, down] of [["ArrowUp", "ArrowDown"], ["Up", "Down"]]) {
     assert.deepEqual(selected(), ["Open Repo"]);
   });
 }
+
+test("held arrow keys keep moving the selection, as each repeat is a keydown", () => {
+  const { palette, selected } = page();
+  const down = () => palette.elements.input.listeners.keydown({ key: "ArrowDown", preventDefault() {} });
+  down(); down(); // auto-repeat sends keydowns only, the single keyup comes on release
+  assert.deepEqual(selected(), ["Open Settings"]);
+});
+
+test("clicking outside closes the palette, clicking inside keeps it open", () => {
+  const { palette, mousedown, element } = page();
+  mousedown(palette.commands[1].titleSpan);
+  mousedown(palette.elements.input);
+  assert.equal(palette.elements.palette.style.display, "");
+  mousedown(element("div"));
+  assert.equal(palette.elements.palette.style.display, "none");
+});
 
 test("changing the filter selects the first matching command and Enter executes it once", () => {
   const { palette, actions, key, filter, selected } = page();
@@ -171,3 +204,40 @@ for (const targetName of ["LI", "SPAN", "I", "MARK"]) {
     assert.equal(palette.elements.palette.style.display, "none");
   });
 }
+
+test("unavailable commands are hidden, skipped and re-checked on reopening", () => {
+  const { palette, actions, key, filter, selected } = page(["Pull", "Stage", "Export"]);
+  let offline = false;
+  // Pull and Stage apply to online repositories, Export to offline ones
+  palette.commands.forEach(cmd => { cmd.isAvailable = () => (cmd.title === "Export") === offline; });
+  palette.toggleDisplay(true);
+  assert.deepEqual(selected(), ["Pull"]);
+  assert.equal(palette.commands[2].element.style.display, "none");
+  filter("e"); // matches all three titles
+  assert.deepEqual(selected(), ["Stage"]);
+  key("ArrowDown");
+  assert.deepEqual(selected(), ["Stage"]);
+
+  offline = true;
+  palette.toggleDisplay(true);
+  assert.deepEqual(selected(), ["Export"]);
+  key("Enter");
+  assert.deepEqual(actions, ["Export"]);
+});
+
+test("repository overview action links are only available while their list item is enabled", () => {
+  function li(classes) {
+    const set = new Set(classes);
+    return { nodeName: "LI", classList: { contains(name) { return set.has(name); } } };
+  }
+  const anchor = parent => ({ nodeName: "A", href: "sapevent:go_stage?key=1", innerText: "Stage", parentElement: parent });
+  const items = [li(["action_link", "enabled"]), li(["action_link"]), li([])];
+  items.forEach(item => { item.firstElementChild = anchor(item); item.children = [item.firstElementChild]; });
+  const toolbar = { nodeName: "UL", children: items };
+  const context = loadUi({ document: {
+    addEventListener() {},
+    querySelectorAll(selector) { return selector.includes("actionbar") ? [toolbar] : []; }
+  } });
+  const commands = context.enumerateUiActions();
+  assert.deepEqual([...commands].map(cmd => cmd.isAvailable()), [true, false, true]);
+});

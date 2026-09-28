@@ -534,6 +534,20 @@ function escapeHtmlText(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+// Scroll only when needed, aligning to the nearest edge (IE lacks scrollIntoView options).
+// At the top, align below the header: once sticky, it covers the top of the viewport.
+function scrollRowIntoView(row) {
+  if (!row.getBoundingClientRect) return;
+  var rect   = row.getBoundingClientRect();
+  var header = document.getElementById("header");
+  var top    = header && header.getBoundingClientRect ? Math.max(0, header.getBoundingClientRect().bottom) : 0;
+  if (rect.top < top) {
+    window.scrollBy(0, rect.top - top);
+  } else if (rect.bottom > (window.innerHeight || document.documentElement.clientHeight)) {
+    row.scrollIntoView(false);
+  }
+}
+
 function RepoOverViewHelper(opts) {
   if (opts && opts.focusFilterKey) {
     this.focusFilterKey = opts.focusFilterKey;
@@ -576,26 +590,56 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
       return;
     }
 
-    var keycode         = event.keyCode;
-    var rows            = Array.prototype.slice.call(self.getVisibleRows());
-    var selected        = document.querySelector(".repo-overview tr.selected");
-    var indexOfSelected = rows.indexOf(selected);
-    var lastRow         = rows.length - 1;
+    var keycode = event.keyCode;
 
     if (keycode === 13 && document.activeElement.tagName.toLowerCase() !== "input") {
       // "enter" to open, unless command field has focus
       self.openSelectedRepo();
-    } else if ((keycode === 52 || keycode === 56) && indexOfSelected > 0) {
+    } else if (keycode === 52 || keycode === 56) {
       // "4,8" for previous, digits are the numlock keys
-      // NB: numpad must be activated, keypress does not detect arrows
-      //     if we need arrows it will be keydown. But then mind the keycodes, they may change !
-      //     e.g. 100 is 'd' with keypress (and conflicts with diff hotkey), and also it is arrow-left keydown
-      self.selectRowByIndex(indexOfSelected - 1);
-    } else if ((keycode === 54 || keycode === 50) && indexOfSelected < lastRow) {
+      // NB: keypress does not detect arrows, they are handled on keydown below
+      self.selectAdjacentRow(-1);
+    } else if (keycode === 54 || keycode === 50) {
       // "6,2" for next
-      self.selectRowByIndex(indexOfSelected + 1);
+      self.selectAdjacentRow(1);
     }
   });
+
+  // Arrows only fire keydown. Only the arrow keys are handled here: keydown keycodes
+  // differ from keypress ones (e.g. 100 is "d" on keypress but numpad-4 on keydown).
+  document.addEventListener("keydown", function(event) {
+    if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+    if (CommandPalette.isVisible() || !self.isArrowNavigationTarget(document.activeElement)) return;
+
+    var offset;
+    if (event.key === "ArrowUp" || event.key === "Up" || event.keyCode === 38) {
+      offset = -1;
+    } else if (event.key === "ArrowDown" || event.key === "Down" || event.keyCode === 40) {
+      offset = 1;
+    } else {
+      return;
+    }
+    self.selectAdjacentRow(offset);
+    event.preventDefault(); // the selected row is scrolled into view instead
+  });
+};
+
+// Leave arrows to form fields and to menus (KeyNavigation moves through dropdown items)
+RepoOverViewHelper.prototype.isArrowNavigationTarget = function(element) {
+  for (var el = element; el && el.nodeName; el = el.parentElement) {
+    if (/^(INPUT|TEXTAREA|SELECT|LI)$/.test(el.nodeName) || el.isContentEditable) return false;
+  }
+  return true;
+};
+
+RepoOverViewHelper.prototype.selectAdjacentRow = function(offset) {
+  var rows     = Array.prototype.slice.call(this.getVisibleRows());
+  var selected = document.querySelector(".repo-overview tr.selected");
+  var index    = rows.indexOf(selected);
+  if (index < 0 || index + offset < 0 || index + offset >= rows.length) return;
+
+  this.selectRowByIndex(index + offset);
+  scrollRowIntoView(rows[index + offset]);
 };
 
 RepoOverViewHelper.prototype.openSelectedRepo = function() {
@@ -977,12 +1021,7 @@ StageHelper.prototype.applyFilterValue = function(sFilterValue) {
 // (iterateStageTab change mode), it includes display:none descendants,
 // so the link-hint codes would leak into the file names
 StageHelper.prototype.getPlainText = function(elem) {
-  var clone = elem.cloneNode(true);
-  var hints = clone.querySelectorAll("span.link-hint");
-  for (var i = hints.length - 1; i >= 0; i--) {
-    hints[i].parentNode.removeChild(hints[i]);
-  }
-  return clone.textContent;
+  return getTextWithoutLinkHints(elem);
 };
 
 // Apply filter to a single stage line - hide or show
@@ -1831,7 +1870,9 @@ LinkHints.prototype.handleKey = function(event) {
       this.displayHints(false);
       event.preventDefault();
       if (this.yankModeActive) {
-        submitSapeventForm({ clipboard: hint.parent.firstChild.textContent }, "clipboard");
+        var yankText = this.getYankText(hint.parent);
+        // The backend rejects an empty clipboard with an error popup
+        if (yankText) submitSapeventForm({ clipboard: yankText }, "clipboard");
         this.yankModeActive = false;
       } else {
         this.hintActivate(hint);
@@ -1847,6 +1888,17 @@ LinkHints.prototype.handleKey = function(event) {
       }
     }
   }
+};
+
+// The text a yanked hint copies: what the element shows. A field shows its
+// value and has no child nodes at all; a link can start with an icon, so its
+// first child is not necessarily its text; an icon-only element falls back to
+// its tooltip.
+LinkHints.prototype.getYankText = function(element) {
+  if (element.nodeName === "INPUT" || element.nodeName === "TEXTAREA") {
+    return element.value || "";
+  }
+  return getTextWithoutLinkHints(element).trim() || element.title || "";
 };
 
 LinkHints.prototype.closeActivatedDropdown = function() {
@@ -1933,6 +1985,17 @@ LinkHints.prototype.filterHints = function() {
   }
   return visibleHints;
 };
+
+// Text content of an element without the codes of the link hints injected
+// into it (deployHintContainers appends them to links, their labels included)
+function getTextWithoutLinkHints(element) {
+  var clone = element.cloneNode(true);
+  var hints = clone.querySelectorAll("span.link-hint");
+  for (var i = hints.length - 1; i >= 0; i--) {
+    hints[i].parentNode.removeChild(hints[i]);
+  }
+  return clone.textContent;
+}
 
 function activateLinkHints(linkHintHotKey) {
   if (!linkHintHotKey) return;
@@ -2373,9 +2436,10 @@ function CommandPalette(commandEnumerator, opts) {
   this.commands = commandEnumerator();
   if (!this.commands) return;
   // this.commands = [{
-  //   action:    "sap_event_action_code_with_params"
-  //   iconClass: "icon icon_x ..."
-  //   title:     "my command X"
+  //   action:      "sap_event_action_code_with_params"
+  //   iconClass:   "icon icon_x ..."
+  //   title:       "my command X"
+  //   isAvailable: function, optional - re-checked whenever the list is filtered
   // }, ...];
 
   // one or more keys can open the palette, e.g. ["F1", "^p"]
@@ -2400,16 +2464,42 @@ function CommandPalette(commandEnumerator, opts) {
   this.hookEvents();
   Hotkeys.addHotkeyToHelpSheet(opts.toggleKey, opts.hotkeyDescription);
 
-  if (!CommandPalette.instances) {
-    CommandPalette.instances = [];
-  }
   CommandPalette.instances.push(this);
 }
 
+// Declared up front, not on first registration: the stage and repository
+// overview pages ask isVisible() on every keypress, also when no palette got
+// registered - e.g. one that had nothing to list (enumerateJumpAllFiles)
+CommandPalette.instances = [];
+
 CommandPalette.prototype.hookEvents = function() {
   document.addEventListener("keydown", this.handleToggleKey.bind(this));
+  document.addEventListener("mousedown", this.handleOutsideClick.bind(this));
+  this.elements.input.addEventListener("keydown", this.handleInputKeydown.bind(this));
   this.elements.input.addEventListener("keyup", this.handleInputKey.bind(this));
   this.elements.ul.addEventListener("click", this.handleUlClick.bind(this));
+};
+
+// Moving the selection on keydown lets a held arrow key repeat, and keeps the
+// caret from jumping to the start or end of the input.
+// No Escape to close: SAP GUI acts on that key whatever the page does with it.
+// SAP GUI for Java leaves abapGit, and the Edge control loses the keyboard
+// focus, so the next toggle key (Ctrl+P) opens the print dialog instead.
+CommandPalette.prototype.handleInputKeydown = function(event) {
+  if (event.key === "ArrowUp" || event.key === "Up") {
+    this.selectPrev();
+  } else if (event.key === "ArrowDown" || event.key === "Down") {
+    this.selectNext();
+  } else {
+    return;
+  }
+  event.preventDefault();
+};
+
+CommandPalette.prototype.handleOutsideClick = function(event) {
+  var target = event.target || event.srcElement;
+  if (this.elements.palette.style.display === "none" || this.elements.palette.contains(target)) return;
+  this.toggleDisplay(false);
 };
 
 CommandPalette.prototype.renderCommandItem = function(cmd) {
@@ -2455,11 +2545,7 @@ CommandPalette.prototype.handleToggleKey = function(event) {
 };
 
 CommandPalette.prototype.handleInputKey = function(event) {
-  if (event.key === "ArrowUp" || event.key === "Up") {
-    this.selectPrev();
-  } else if (event.key === "ArrowDown" || event.key === "Down") {
-    this.selectNext();
-  } else if (event.key === "Enter") {
+  if (event.key === "Enter") {
     this.exec(this.getSelected());
   } else if (event.key === "Backspace" && !this.filter) {
     this.toggleDisplay(false);
@@ -2474,7 +2560,9 @@ CommandPalette.prototype.handleInputKey = function(event) {
 CommandPalette.prototype.applyFilter = function() {
   for (var i = 0; i < this.commands.length; i++) {
     var cmd = this.commands[i];
-    if (!this.filter) {
+    if (cmd.isAvailable && !cmd.isAvailable()) {
+      cmd.element.style.display = "none";
+    } else if (!this.filter) {
       cmd.element.style.display = "";
       cmd.titleSpan.innerText   = cmd.title;
     } else {
@@ -2600,7 +2688,7 @@ CommandPalette.prototype.exec = function(cmd) {
 
 // Is any command palette visible?
 CommandPalette.isVisible = function() {
-  return CommandPalette.instances.reduce(function(result, instance) { return result || instance.elements.palette.style.display !== "none" }, false);
+  return (CommandPalette.instances || []).reduce(function(result, instance) { return result || instance.elements.palette.style.display !== "none" }, false);
 };
 
 function addHotkey(opts) {
@@ -2622,6 +2710,15 @@ function createRepoCatalogEnumerator(catalog, action) {
       };
     });
   };
+}
+
+// The repository overview hides the actions that do not apply to the selected
+// repository (e.g. Pull for an offline one) by leaving their list item without
+// the "enabled" class, see RepoOverViewHelper.updateActionLinks. Every other
+// anchor is always available.
+function isActionLinkEnabled(anchor) {
+  var listItem = anchor.parentElement;
+  return !listItem || !listItem.classList.contains("action_link") || listItem.classList.contains("enabled");
 }
 
 function enumerateUiActions() {
@@ -2665,9 +2762,10 @@ function enumerateUiActions() {
       // Clicking the wired anchor routes on every browser control (desktop and
       // WebGUI); no need to reconstruct the sapevent from the href, which ITS
       // rewrites on WebGUI anyway.
-      action  : function() { clickSapEvent(anchor) },
-      getTitle: getTitle,
-      title   : getTitle()
+      action     : function() { clickSapEvent(anchor) },
+      getTitle   : getTitle,
+      title      : getTitle(),
+      isAvailable: function() { return isActionLinkEnabled(anchor) }
     };
   });
 
@@ -3133,8 +3231,7 @@ SourceViewer.prototype.show = function() {
   overlay.className = "source-viewer";
   overlay.tabIndex = -1;
   heading.className = "source-viewer-heading";
-  heading.appendChild(document.createTextNode("Source Viewer (" +
-    (this.isInternetExplorer() ? "X" : "Esc or X") + " to close)"));
+  heading.appendChild(document.createTextNode("Source Viewer (X to close)"));
   close.type = "button";
   close.innerHTML = "&times;";
   close.className = "source-viewer-close";
@@ -3196,9 +3293,10 @@ SourceViewer.prototype.show = function() {
     sourceViewer.activeSource = null;
   }
 
+  // Not Escape: SAP GUI acts on that key whatever the page does with it.
+  // SAP GUI for Java leaves abapGit, and the Edge control loses the keyboard focus.
   function isCloseKey(event) {
-    return event.key === "x" || event.key === "X" || event.keyCode === 88 ||
-      (!sourceViewer.isInternetExplorer() && (event.key === "Escape" || event.keyCode === 27));
+    return event.key === "x" || event.key === "X" || event.keyCode === 88;
   }
 
   function getTabIndex(event) {

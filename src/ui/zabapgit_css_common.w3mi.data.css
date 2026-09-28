@@ -636,7 +636,7 @@ li.action_link.enabled{
   display: block;
 }
 
-li.action_link:not(enabled){
+li.action_link:not(.enabled){
   visibility: hidden;
   position: fixed; /* so it does not take up space when hidden */
   display: none;
