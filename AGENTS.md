@@ -30,7 +30,7 @@ working in this repository.
 - Preserve ABAP 7.02 compatibility as configured in `abaplint.json`. Access to
   newer SAP APIs must follow the project's existing compatibility patterns.
 - Edit source and metadata together where needed. Do not hand-edit generated
-  `zabapgit.abap`, `output/`, or dependency files to implement a source change.
+  `zabapgit.abap`, `output/`, or downloaded `lint_deps/` to implement a source change.
 - For serialization changes, consider deserialization, round trips, stable diffs,
   and compatibility with existing repositories and supported SAP releases.
 - For UI changes, account for SAP GUI for Windows, SAP GUI for Java, and WebGUI;
@@ -40,7 +40,7 @@ working in this repository.
 
 ## Validation
 
-Run checks appropriate to the change, using the same commands as CI:
+Run the checks appropriate to the change; CI runs the same checks:
 
 | Command | Purpose |
 | --- | --- |
