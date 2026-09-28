@@ -736,6 +736,34 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_repo_srv~reload.
+
+    DATA li_repo TYPE REF TO zif_abapgit_repo.
+    DATA ls_repo TYPE zif_abapgit_persistence=>ty_repo.
+    DATA ls_meta TYPE zif_abapgit_persistence=>ty_repo_xml.
+
+    li_repo = zif_abapgit_repo_srv~get( iv_key ).
+
+    TRY.
+        ls_repo = zcl_abapgit_persist_factory=>get_repo( )->read( iv_key ).
+      CATCH zcx_abapgit_not_found.
+        zcx_abapgit_exception=>raise( |Repository not found in database. Key: REPO, { iv_key }| ).
+    ENDTRY.
+
+    " Metadata can be changed outside of this session, e.g. branch switched via API
+    IF ls_repo <> li_repo->ms_data.
+      MOVE-CORRESPONDING ls_repo TO ls_meta.
+      reinstantiate_repo(
+        iv_key  = iv_key
+        is_meta = ls_meta ).
+      li_repo = zif_abapgit_repo_srv~get( iv_key ).
+    ENDIF.
+
+    ri_repo = li_repo.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_repo_srv~validate_package.
 
     DATA: li_package TYPE REF TO zif_abapgit_sap_package,
