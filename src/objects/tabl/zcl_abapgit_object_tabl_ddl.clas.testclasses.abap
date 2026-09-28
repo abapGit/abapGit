@@ -866,6 +866,7 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lv_inverted_index_found TYPE abap_bool.
     DATA lv_exclass TYPE c LENGTH 1.
     FIELD-SYMBOLS <lv_is_gtt> TYPE abap_bool.
+    FIELD-SYMBOLS <lv_viewref> TYPE any.
     FIELD-SYMBOLS <lv_invhash> TYPE c.
     FIELD-SYMBOLS <lv_outputstyle> TYPE zif_abapgit_aff_doma_v1=>ty_output_style.
 
@@ -927,9 +928,13 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 'Temporary table'
       act = ls_data-dd02v-ddtext ).
-    cl_abap_unit_assert=>assert_equals(
-      exp = 'ZANNOTATIONS_V'
-      act = ls_data-dd02v-viewref ).
+    " DD02V-VIEWREF does not exist before 7.40
+    ASSIGN COMPONENT 'VIEWREF' OF STRUCTURE ls_data-dd02v TO <lv_viewref>.
+    IF sy-subrc = 0.
+      cl_abap_unit_assert=>assert_equals(
+        exp = 'ZANNOTATIONS_V'
+        act = <lv_viewref> ).
+    ENDIF.
 
     ASSIGN COMPONENT 'IS_GTT' OF STRUCTURE ls_data-dd02v TO <lv_is_gtt>.
     IF sy-subrc = 0.
@@ -1007,9 +1012,12 @@ CLASS ltcl_test IMPLEMENTATION.
 
     ls_data-dd02v-ddtext = 'Temporary table'.
     lv_roundtrip = lo_format->serialize( ls_data ).
-    cl_abap_unit_assert=>assert_char_cp(
-      exp = `*@AbapCatalog.replacementObject : 'zannotations_entity'*`
-      act = lv_roundtrip ).
+    ASSIGN COMPONENT 'VIEWREF' OF STRUCTURE ls_data-dd02v TO <lv_viewref>.
+    IF sy-subrc = 0.
+      cl_abap_unit_assert=>assert_char_cp(
+        exp = `*@AbapCatalog.replacementObject : 'zannotations_entity'*`
+        act = lv_roundtrip ).
+    ENDIF.
     IF lv_roundtrip CS `@AbapCatalog.primaryKey.invertedIndividualIndex : true`.
       lv_inverted_index_found = abap_true.
     ENDIF.
@@ -1023,9 +1031,13 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 5
       act = lines( ls_data-dd03p ) ).
-    cl_abap_unit_assert=>assert_equals(
-      exp = 'ZANNOTATIONS_V'
-      act = ls_data-dd02v-viewref ).
+    " DD02V-VIEWREF does not exist before 7.40
+    ASSIGN COMPONENT 'VIEWREF' OF STRUCTURE ls_data-dd02v TO <lv_viewref>.
+    IF sy-subrc = 0.
+      cl_abap_unit_assert=>assert_equals(
+        exp = 'ZANNOTATIONS_V'
+        act = <lv_viewref> ).
+    ENDIF.
 
     DO 5 TIMES.
       CLEAR ls_data.
