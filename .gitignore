@@ -16,3 +16,6 @@ list.txt
 .DS_Store
 .claude
 .frontend
+/.sapcli/
+AGENTS.md
+CLAUDE.md
