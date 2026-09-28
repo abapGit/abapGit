@@ -875,7 +875,6 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
       iv_show_commit        = abap_false
       iv_interactive_branch = abap_true
       iv_sci_result         = mv_sci_result ) ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
     ri_html->add( render_main_language_warning( ) ).
 
     ri_html->add( '<div class="stage-container">' ).

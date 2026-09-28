@@ -579,6 +579,11 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     ri_html->add( '<div class="not_sticky">' ).
 
+    " Visible until the page scripts confirm they initialized, and shown again
+    " by common.js for a later script error - on every page, so a broken
+    " common.js does not go unnoticed where most users start
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
+
     ri_html->add( '<div id="main">' ).
     ri_html->add( render_content( ) ). " TODO -> render child
     ri_html->add( '</div>' ).
