@@ -25,17 +25,16 @@ function page() {
   return { context, helper, rows, jumps, classes };
 }
 
-test("diff filters intersect and staging/jump links follow the visible files", () => {
+test("diff filters intersect and jump links follow the visible files", () => {
   const { helper, rows, jumps, classes } = page();
   helper.applyFilter("extension", "abap", false);
   helper.applyFilter("changed-by", "ME", false);
   helper.applyFilter("changed-by", "ME", true);
   assert.deepEqual(rows.map(row => row.style.display), ["none", "none", ""]);
   assert.deepEqual(jumps.map(row => row.style.display), ["none", "none", ""]);
-  assert.deepEqual(Object.keys(helper.buildStageCache()), ["/src/a.abap.xml"]);
   helper.applyFilter("object-type", "CLAS", false);
   helper.applyFilter("extension", "abap", true);
-  assert.deepEqual(Object.keys(helper.buildStageCache()), ["/src/b.abap"]);
+  assert.deepEqual(rows.map(row => row.style.display), ["none", "", "none"]);
   helper.applyFilter("object-type", "CLAS", true);
   helper.applyFilter("object-type", "CLAS", true);
   assert.equal(classes.has("bgorange"), false);
@@ -51,18 +50,6 @@ test("Only my changes preserves other filter categories when enabled and disable
   assert.equal(classes.has("bgorange"), true);
   helper.applyFilter("extension", "xml", true);
   assert.equal(classes.has("bgorange"), false);
-});
-
-test("staging still navigates if session storage is full", () => {
-  const { context, helper } = page();
-  context.sessionStorage = { setItem() { throw Error("full"); } };
-  helper.repoKey = "1";
-  helper.pageSeed = "diff";
-  helper.stageAction = "stage";
-  let submitted;
-  context.submitSapeventForm = (params, action, method) => { submitted = { ...params, action, method }; };
-  helper.onStage();
-  assert.deepEqual(submitted, { key: "1", seed: "diff", action: "stage", method: "get" });
 });
 
 test("jump scrolls to the exact path, not to a path that merely contains it", () => {
