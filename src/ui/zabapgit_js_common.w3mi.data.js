@@ -3144,7 +3144,7 @@ SourceViewer.prototype.getStylesheetSource = function(url) {
 
     try {
       rules = styleSheets[index].cssRules || styleSheets[index].rules;
-    } catch (error) {
+    } catch (error) { // eslint-disable-line no-unused-vars
       this.reportError("Could not access " + url + " from the document stylesheets.");
       return "";
     }
