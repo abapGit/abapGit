@@ -5,6 +5,7 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
 
   PUBLIC SECTION.
 
+    METHODS constructor .
     METHODS read_data
       IMPORTING
         !iv_name       TYPE tadir-obj_name
@@ -60,6 +61,7 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
     " serialized, so a table with many amount or quantity fields does not
     " trigger one DDIF_FIELDINFO_GET per field on every serialize call.
     DATA mt_reference TYPE ty_references.
+    DATA mi_replacement_mapping TYPE REF TO lif_replacement_mapping.
 
     METHODS tokenize
       IMPORTING
@@ -344,6 +346,11 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
 
+  METHOD constructor.
+    CREATE OBJECT mi_replacement_mapping TYPE lcl_replacement_mapping.
+  ENDMETHOD.
+
+
   METHOD deserialize.
 
     DATA lt_tokens TYPE ty_tokens.
@@ -546,29 +553,15 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
   METHOD get_replacement_object.
 
     DATA lv_view_name TYPE ddobjname.
-    DATA lv_entityname TYPE ddobjname.
 
     lv_view_name = to_upper( iv_viewref ).
     IF lv_view_name IS INITIAL.
       RETURN.
     ENDIF.
 
-    TRY.
-        " DD02V-VIEWREF contains the database view name. DDL uses the
-        " corresponding CDS entity name instead.
-        CALL METHOD ('CL_SBD_DDLS_UTILITY')=>('MAP_TO_REPLACEMENT_DDLS')
-          EXPORTING
-            i_view_name  = lv_view_name
-          IMPORTING
-            e_entityname = lv_entityname.
-        rv_object = lv_entityname.
-      CATCH cx_root.
-        " The utility is not available on older releases and is also absent
-        " from the open-abap test runtime. In that case no annotation is
-        " emitted rather than serializing DD02V-VIEWREF with the wrong
-        " meaning.
-        CLEAR rv_object.
-    ENDTRY.
+    " DD02V-VIEWREF contains the database view name. DDL uses the
+    " corresponding CDS entity name instead.
+    rv_object = mi_replacement_mapping->to_entity( lv_view_name ).
 
   ENDMETHOD.
 
@@ -576,28 +569,15 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
   METHOD get_replacement_view.
 
     DATA lv_entityname TYPE ddobjname.
-    DATA lv_view_name TYPE ddobjname.
 
     lv_entityname = to_upper( iv_entityname ).
     IF lv_entityname IS INITIAL.
       RETURN.
     ENDIF.
 
-    TRY.
-        " The reverse mapping is needed when DDL is saved back to TABL:
-        " DD02V-VIEWREF must receive the database view name.
-        CALL METHOD ('CL_SBD_DDLS_UTILITY')=>('MAP_TO_REPLACEMENT_VIEW')
-          EXPORTING
-            i_entityname = lv_entityname
-          IMPORTING
-            e_view_name = lv_view_name.
-        rv_viewname = lv_view_name.
-      CATCH cx_root.
-        " Keep source-only parsing usable on releases without the SAP
-        " utility. A SAP system with the utility returns the resolved view
-        " name, or initial for an entity that cannot be resolved.
-        rv_viewname = lv_entityname.
-    ENDTRY.
+    " The reverse mapping is needed when DDL is saved back to TABL:
+    " DD02V-VIEWREF must receive the database view name.
+    rv_viewname = mi_replacement_mapping->to_view( lv_entityname ).
 
   ENDMETHOD.
 
