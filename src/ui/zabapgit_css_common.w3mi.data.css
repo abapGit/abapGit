@@ -131,6 +131,22 @@ div.dummydiv {
   text-align:       center;
 }
 
+/* The banner stays visible until the page scripts confirm they initialized,
+   which takes a moment on every page load. Keep it collapsed for that moment,
+   so it shows only when initialization failed, not as a flicker on every page
+   switch. Without CSS animations it simply shows at once, as before. */
+#js-error-banner {
+  animation: js-error-banner-delay 2s;
+}
+@keyframes js-error-banner-delay {
+  from, to {
+    visibility:     hidden;
+    max-height:     0;
+    padding-top:    0;
+    padding-bottom: 0;
+  }
+}
+
 a.close-btn {
   text-decoration: none;
 }
