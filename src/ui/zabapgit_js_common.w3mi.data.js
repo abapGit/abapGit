@@ -470,6 +470,7 @@ function reportScriptError(message, url, line) {
   if (icon) errorBanner.appendChild(icon);
   errorBanner.appendChild(document.createTextNode(" JavaScript error: " + message
     + " (" + file + (line ? ":" + line : "") + "), please log an issue"));
+  errorBanner.style.animationName = "none"; // skip the delay in the css, the error is known now
   errorBanner.style.display = "";
 }
 
