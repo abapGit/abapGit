@@ -485,7 +485,123 @@ function confirmInitialized() {
     errorBanner.style.display = "none";
   }
   debugOutput("js: OK"); // Final final confirmation :)
+  // Last: an optional feature must not keep the page from confirming its setup
+  initializeWebGuiBusyLock();
 }
+
+var gWebGuiBusyLock;
+
+// WebGUI's Lightspeed shell locks during a round trip, but its event handling
+// does not cover this HTML-viewer iframe. Follow its lifecycle rather than
+// guessing completion from page loads: some SAP events leave this page intact.
+function initializeWebGuiBusyLock() {
+  if (!gEnv.isWebGui || gWebGuiBusyLock) return;
+  var shell;
+  try {
+    var sap = window.parent.sap;
+    // WebGUI deletes sap.g4h.$ after bootstrapping. These aliases survive.
+    shell = sap && sap.its && sap.its.LS;
+    if (!shell) shell = window.parent.mysap && window.parent.mysap.LS;
+    // LS exposes a facade; event subscriptions belong to its internal provider.
+    if (shell && typeof shell.oGetInternal === "function") shell = shell.oGetInternal(window.parent.UCF_System);
+  } catch (error) { // eslint-disable-line no-unused-vars
+    return; // Cross-origin embedding, or a WebGUI release without these hooks
+  }
+  if (!shell || !shell.E_EVENTS || !shell.E_EVENTS.Lock || !shell.E_EVENTS.Unlock
+      || typeof shell.attachEvent !== "function" || typeof shell.detachEvent !== "function"
+      || typeof shell.bLocked !== "function") return;
+
+  var overlay = document.createElement("div");
+  overlay.className = "webgui-busy-lock";
+  overlay.tabIndex = -1;
+  overlay.hidden = true;
+  overlay.setAttribute("role", "status");
+  overlay.setAttribute("aria-label", "Working...");
+  var message = document.createElement("span");
+  message.textContent = "Working...";
+  overlay.appendChild(message);
+  document.body.appendChild(overlay);
+  var previousFocus;
+  var previousBusy;
+  var locked = false;
+  var inputEvents = ["click", "dblclick", "mousedown", "mouseup", "pointerdown", "pointerup",
+    "touchstart", "touchmove", "touchend", "wheel", "keydown", "keypress", "keyup", "submit", "contextmenu"];
+
+  function isShellLocked() {
+    try {
+      return shell.bLocked();
+    } catch (error) { // eslint-disable-line no-unused-vars
+      return false;
+    }
+  }
+
+  function blockInput(event) {
+    if (!locked) return;
+    // Self-healing: an Unlock notification that never arrived must not leave
+    // the page blocked for good. The first input after it frees the page.
+    if (!isShellLocked()) {
+      listener.unlock();
+      return;
+    }
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+
+  var listener = {
+    lock: function() {
+      if (locked) return;
+      locked = true;
+      previousFocus = document.activeElement;
+      previousBusy = document.body.getAttribute("aria-busy");
+      document.body.setAttribute("aria-busy", "true");
+      overlay.hidden = false;
+      overlay.focus({ preventScroll: true });
+    },
+    unlock: function() {
+      if (!locked) return;
+      locked = false;
+      var restoreFocus = document.activeElement === overlay;
+      overlay.hidden = true;
+      if (previousBusy === null) document.body.removeAttribute("aria-busy");
+      else document.body.setAttribute("aria-busy", previousBusy);
+      if (restoreFocus && previousFocus && document.body.contains(previousFocus)) {
+        previousFocus.focus({ preventScroll: true });
+      }
+    }
+  };
+  function destroy() {
+    try {
+      shell.detachEvent(shell.E_EVENTS.Lock, listener, "lock");
+      shell.detachEvent(shell.E_EVENTS.Unlock, listener, "unlock");
+    } catch (error) { // eslint-disable-line no-unused-vars
+      // Nothing left to undo for a subscription the shell never took
+    }
+    inputEvents.forEach(function(name) { window.removeEventListener(name, blockInput, true) });
+    window.removeEventListener("pagehide", destroy);
+    listener.unlock();
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    gWebGuiBusyLock = null;
+  }
+
+  // The shell hooks are internals of Lightspeed, not an API. A release that
+  // rejects the subscription gets no busy lock - never a half-attached one
+  // that locks on Lock and misses the Unlock.
+  try {
+    shell.attachEvent(shell.E_EVENTS.Lock, listener, "lock");
+    shell.attachEvent(shell.E_EVENTS.Unlock, listener, "unlock");
+  } catch (error) { // eslint-disable-line no-unused-vars
+    destroy();
+    return;
+  }
+  inputEvents.forEach(function(name) {
+    window.addEventListener(name, blockInput, { capture: true, passive: false });
+  });
+  window.addEventListener("pagehide", destroy);
+  gWebGuiBusyLock = listener;
+  if (isShellLocked()) listener.lock();
+}
+
+window.addEventListener("pageshow", function() { initializeWebGuiBusyLock() });
 
 /**********************************************************
  * Performance utils (for debugging)
