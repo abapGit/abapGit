@@ -42,6 +42,13 @@ test("an error after initialization shows the banner again, with message and lin
   assert.equal(banner.textContent, " JavaScript error: TypeError: x is undefined (common.js:1234), please log an issue");
 });
 
+test("an error during initialization shows the banner at once, without the css delay", () => {
+  const { banner, error } = page();
+  error("TypeError: x is undefined", "file:///C:/Users/me/AppData/Local/SAP/abapGit/js/common.js", 1234);
+  assert.equal(banner.style.animationName, "none");
+  assert.equal(banner.style.display, "");
+});
+
 test("errors of the inline page scripts are reported too", () => {
   const { banner, error } = page();
   error("ReferenceError: gHelper is not defined", PAGE_URL, 12);
