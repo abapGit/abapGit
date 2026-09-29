@@ -159,3 +159,20 @@ test('cancelling a partial hint closes the dropdown opened by hints', () => {
   assert.equal(dropdown.classList.contains('force-nav-hover'), false);
   assert.equal(p.hints.activatedDropdown, null);
 });
+
+test('hint code keys are consumed and the displayed state is visible to page shortcuts', () => {
+  const targets = Array.from({ length: 12 }, () => node('A'));
+  const p = page(targets);
+  const prevented = [];
+  const press = key => p.hints.handleKey({ key, preventDefault() { prevented.push(key); } });
+  press('f');
+  assert.equal(p.context.LinkHints.areHintsDisplayed, true);
+  press('2');
+  press('9'); // no hint 29: cancels, but the key was still meant for the hints
+  assert.deepEqual(prevented, ['2', '9']);
+  assert.equal(p.context.LinkHints.areHintsDisplayed, false);
+  press('f'); press('1'); press('0');
+  assert.deepEqual(prevented, ['2', '9', '1', '0']);
+  assert.equal(p.context.LinkHints.areHintsDisplayed, false);
+  assert.deepEqual(p.actions, [targets[0]]);
+});
