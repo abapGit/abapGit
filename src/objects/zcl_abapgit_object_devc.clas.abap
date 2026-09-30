@@ -149,11 +149,14 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
   METHOD is_local.
 
     DATA lv_dlvunit TYPE tdevc-dlvunit.
+    DATA lv_comp_type TYPE c LENGTH 1.
 
     SELECT SINGLE dlvunit FROM tdevc INTO lv_dlvunit
         WHERE devclass = iv_package_name AND intsys <> 'SAP'.
-    IF sy-subrc = 0 AND lv_dlvunit = 'LOCAL'.
-      rv_is_local = abap_true.
+    IF sy-subrc = 0.
+      " Look up type of software component (typically LOCAL or ZLOCAL but others are possible)
+      SELECT SINGLE comp_type FROM cvers INTO lv_comp_type WHERE component = lv_dlvunit.
+      rv_is_local = boolc( sy-subrc = 0 AND lv_comp_type CA 'LJZ' ).
     ENDIF.
 
   ENDMETHOD.
@@ -412,7 +415,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
         EXCEPTIONS
           object_not_changeable = 1
           object_invalid        = 2
-*          deletion_not_allowed  = 3 downport, does not exist in 7.30
+*         deletion_not_allowed  = 3 downport, does not exist in 7.30
           intern_err            = 4
           OTHERS                = 5 ).
       IF sy-subrc <> 0.
@@ -645,8 +648,8 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
           prefix_in_use              = 13
           unexpected_error           = 14
           intern_err                 = 15
-*          wrong_mainpack_value       = 16  downport, does not exist in 7.30
-*          superpackage_invalid       = 17  downport, does not exist in 7.30
+*         wrong_mainpack_value       = 16  downport, does not exist in 7.30
+*         superpackage_invalid       = 17  downport, does not exist in 7.30
           OTHERS                     = 18 ).
       IF sy-subrc <> 0.
         unlock_and_raise_error( li_package ).
@@ -678,10 +681,10 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
           unexpected_error           = 15
           intern_err                 = 16
           no_access                  = 17
-*          invalid_translation_depth  = 18 downport, does not exist in 7.30
-*          wrong_mainpack_value       = 19 downport, does not exist in 7.30
-*          superpackage_invalid       = 20 downport, does not exist in 7.30
-*          error_in_cts_checks        = 21 downport, does not exist in 7.31
+*         invalid_translation_depth  = 18 downport, does not exist in 7.30
+*         wrong_mainpack_value       = 19 downport, does not exist in 7.30
+*         superpackage_invalid       = 20 downport, does not exist in 7.30
+*         error_in_cts_checks        = 21 downport, does not exist in 7.31
           OTHERS                     = 22 ).
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
@@ -739,12 +742,12 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     ELSE.
       cl_package_helper=>check_package_existence(
         EXPORTING
-          i_package_name          = mv_local_devclass
+          i_package_name   = mv_local_devclass
         IMPORTING
-          e_package_exists        = rv_bool
+          e_package_exists = rv_bool
         EXCEPTIONS
-          intern_err              = 1
-          OTHERS                  = 2 ).
+          intern_err       = 1
+          OTHERS           = 2 ).
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
