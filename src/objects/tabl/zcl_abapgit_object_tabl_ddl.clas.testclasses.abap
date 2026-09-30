@@ -1,6 +1,47 @@
 CLASS ltcl_test DEFINITION DEFERRED.
 CLASS zcl_abapgit_object_tabl_ddl DEFINITION LOCAL FRIENDS ltcl_test.
 
+" Knows exactly one view/entity pair, so replacement objects resolve the same
+" way on every system instead of depending on the installed CDS entities.
+CLASS ltd_replacement_mapping DEFINITION FOR TESTING FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES lif_replacement_mapping.
+
+    METHODS constructor
+      IMPORTING
+        !iv_view_name  TYPE ddobjname
+        !iv_entityname TYPE ddobjname.
+
+  PRIVATE SECTION.
+    DATA mv_view_name TYPE ddobjname.
+    DATA mv_entityname TYPE ddobjname.
+
+ENDCLASS.
+
+
+CLASS ltd_replacement_mapping IMPLEMENTATION.
+
+  METHOD constructor.
+    mv_view_name = iv_view_name.
+    mv_entityname = iv_entityname.
+  ENDMETHOD.
+
+  METHOD lif_replacement_mapping~to_entity.
+    IF iv_view_name = mv_view_name.
+      rv_entityname = mv_entityname.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD lif_replacement_mapping~to_view.
+    IF iv_entityname = mv_entityname.
+      rv_view_name = mv_view_name.
+    ENDIF.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
 CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
 
   PRIVATE SECTION.
@@ -18,6 +59,7 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
     METHODS extension_terminators FOR TESTING RAISING cx_static_check.
     METHODS invalid_ddl FOR TESTING RAISING cx_static_check.
     METHODS annotations_and_types FOR TESTING RAISING cx_static_check.
+    METHODS unresolved_replacement FOR TESTING RAISING cx_static_check.
     METHODS fltp_currency_reference FOR TESTING RAISING cx_static_check.
     METHODS reference_semantics FOR TESTING RAISING cx_static_check.
     METHODS builtin_types FOR TESTING RAISING cx_static_check.
@@ -821,10 +863,10 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA ls_condition LIKE LINE OF ls_data-dd05m.
     DATA lv_ddl TYPE string.
     DATA lv_roundtrip TYPE string.
-    DATA lv_replacement_object TYPE string.
     DATA lv_inverted_index_found TYPE abap_bool.
     DATA lv_exclass TYPE c LENGTH 1.
     FIELD-SYMBOLS <lv_is_gtt> TYPE abap_bool.
+    FIELD-SYMBOLS <lv_viewref> TYPE any.
     FIELD-SYMBOLS <lv_invhash> TYPE c.
     FIELD-SYMBOLS <lv_outputstyle> TYPE zif_abapgit_aff_doma_v1=>ty_output_style.
 
@@ -836,7 +878,7 @@ CLASS ltcl_test IMPLEMENTATION.
       `@AbapCatalog.activationType : #NAMETAB_GENERATION_OFFLINE` && |\n| &&
       `@AbapCatalog.deliveryClass : #C` && |\n| &&
       `@AbapCatalog.dataMaintenance : #NOT_ALLOWED` && |\n| &&
-      `@AbapCatalog.replacementObject : '/scmb/v_thndlcd_t_entity'` && |\n| &&
+      `@AbapCatalog.replacementObject : 'zannotations_entity'` && |\n| &&
       `@AbapCatalog.primaryKey.invertedIndividualIndex : true` && |\n| &&
       `define table zannotations {` && |\n| &&
       `  @EndUserText.label : 'Amount  field'` && |\n| &&
@@ -859,6 +901,10 @@ CLASS ltcl_test IMPLEMENTATION.
       `}`.
 
     CREATE OBJECT lo_format.
+    CREATE OBJECT lo_format->mi_replacement_mapping TYPE ltd_replacement_mapping
+      EXPORTING
+        iv_view_name  = 'ZANNOTATIONS_V'
+        iv_entityname = 'ZANNOTATIONS_ENTITY'.
     ls_data = lo_format->deserialize( lv_ddl ).
 
     cl_abap_unit_assert=>assert_equals(
@@ -882,7 +928,13 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 'Temporary table'
       act = ls_data-dd02v-ddtext ).
-    cl_abap_unit_assert=>assert_not_initial( ls_data-dd02v-viewref ).
+    " DD02V-VIEWREF does not exist before 7.40
+    ASSIGN COMPONENT 'VIEWREF' OF STRUCTURE ls_data-dd02v TO <lv_viewref>.
+    IF sy-subrc = 0.
+      cl_abap_unit_assert=>assert_equals(
+        exp = 'ZANNOTATIONS_V'
+        act = <lv_viewref> ).
+    ENDIF.
 
     ASSIGN COMPONENT 'IS_GTT' OF STRUCTURE ls_data-dd02v TO <lv_is_gtt>.
     IF sy-subrc = 0.
@@ -959,8 +1011,13 @@ CLASS ltcl_test IMPLEMENTATION.
       act = ls_condition-fortable ).
 
     ls_data-dd02v-ddtext = 'Temporary table'.
-    lv_replacement_object = lo_format->get_replacement_object( ls_data-dd02v-viewref ).
     lv_roundtrip = lo_format->serialize( ls_data ).
+    ASSIGN COMPONENT 'VIEWREF' OF STRUCTURE ls_data-dd02v TO <lv_viewref>.
+    IF sy-subrc = 0.
+      cl_abap_unit_assert=>assert_char_cp(
+        exp = `*@AbapCatalog.replacementObject : 'zannotations_entity'*`
+        act = lv_roundtrip ).
+    ENDIF.
     IF lv_roundtrip CS `@AbapCatalog.primaryKey.invertedIndividualIndex : true`.
       lv_inverted_index_found = abap_true.
     ENDIF.
@@ -974,10 +1031,12 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 5
       act = lines( ls_data-dd03p ) ).
-    IF lv_replacement_object IS NOT INITIAL.
-      cl_abap_unit_assert=>assert_not_initial( ls_data-dd02v-viewref ).
-    ELSE.
-      cl_abap_unit_assert=>assert_initial( ls_data-dd02v-viewref ).
+    " DD02V-VIEWREF does not exist before 7.40
+    ASSIGN COMPONENT 'VIEWREF' OF STRUCTURE ls_data-dd02v TO <lv_viewref>.
+    IF sy-subrc = 0.
+      cl_abap_unit_assert=>assert_equals(
+        exp = 'ZANNOTATIONS_V'
+        act = <lv_viewref> ).
     ENDIF.
 
     DO 5 TIMES.
@@ -1682,6 +1741,32 @@ CLASS ltcl_test IMPLEMENTATION.
         cl_abap_unit_assert=>assert_bound( lx_error ).
         cl_abap_unit_assert=>assert_text_matches(
           pattern = `TABL DDL parse error.*expected TABLE`
+          text = lx_error->get_text( ) ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD unresolved_replacement.
+
+    DATA lo_format TYPE REF TO zcl_abapgit_object_tabl_ddl.
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
+    CREATE OBJECT lo_format.
+    CREATE OBJECT lo_format->mi_replacement_mapping TYPE ltd_replacement_mapping
+      EXPORTING
+        iv_view_name  = 'ZANNOTATIONS_V'
+        iv_entityname = 'ZANNOTATIONS_ENTITY'.
+
+    TRY.
+        lo_format->deserialize(
+          `@AbapCatalog.replacementObject : 'zunknown_entity'` && |\n| &&
+          `define table zannotations {` && |\n| &&
+          `  key field : abap.char(1) not null;` && |\n| &&
+          `}` ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        cl_abap_unit_assert=>assert_text_matches(
+          pattern = `replacement object cannot be resolved`
           text = lx_error->get_text( ) ).
     ENDTRY.
 

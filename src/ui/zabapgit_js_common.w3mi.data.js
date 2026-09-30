@@ -11,7 +11,8 @@
  **********************************************************/
 
 /* exported confirmInitialized
-   -- zcl_abapgit_gui_page->zif_abapgit_gui_renderable~render */
+   -- zcl_abapgit_gui_page->zif_abapgit_gui_renderable~render,
+      which also renders the js-error-banner it hides */
 
 /* exported setEnvironment
    -- zcl_abapgit_gui_page->render_environment */
@@ -410,11 +411,6 @@ function clickSapEvent(element) {
   element.click();
 }
 
-// Set focus to a control
-function setInitialFocus(id) {
-  document.getElementById(id).focus();
-}
-
 // Set focus to an element with query selector
 function setInitialFocusWithQuerySelector(sSelector, bFocusParent) {
   var oSelected = document.querySelector(sSelector);
@@ -446,6 +442,42 @@ function submitFormById(id) {
   submitForm(document.getElementById(id));
 }
 
+// The error banner only reports a page that failed to initialize: once
+// confirmInitialized has hidden it, an error in an event handler would go
+// unnoticed. Show it again with the error, so a user on a browser control we
+// cannot test ourselves can tell us what broke.
+//
+// Only errors of this script and of the inline page scripts count. Others are
+// not ours to report - on WebGUI, ITS runs scripts of its own - and a script
+// of another origin reports nothing but "Script error." anyway. The first
+// error is the one worth reporting, later ones are mostly its consequences.
+var gScriptErrorReported = false;
+var gCommonJsUrlPattern  = /(^|\/)js\/common\.js(\?|$)/;
+
+function isOwnScript(url) {
+  var page = String(window.location && window.location.href).replace(/#.*$/, "");
+  return gCommonJsUrlPattern.test(url) || url.replace(/#.*$/, "") === page;
+}
+
+function reportScriptError(message, url, line) {
+  var errorBanner = document.getElementById("js-error-banner");
+  if (gScriptErrorReported || !errorBanner || !url || !isOwnScript(url)) return;
+  gScriptErrorReported = true;
+
+  var icon = errorBanner.querySelector("i");
+  var file = gCommonJsUrlPattern.test(url) ? "common.js" : "page script";
+  while (errorBanner.firstChild) errorBanner.removeChild(errorBanner.firstChild);
+  if (icon) errorBanner.appendChild(icon);
+  errorBanner.appendChild(document.createTextNode(" JavaScript error: " + message
+    + " (" + file + (line ? ":" + line : "") + "), please log an issue"));
+  errorBanner.style.animationName = "none"; // skip the delay in the css, the error is known now
+  errorBanner.style.display = "";
+}
+
+window.addEventListener("error", function(event) {
+  reportScriptError(event.message, event.filename, event.lineno);
+});
+
 // Confirm JS initialization
 function confirmInitialized() {
   var errorBanner = document.getElementById("js-error-banner");
@@ -453,7 +485,123 @@ function confirmInitialized() {
     errorBanner.style.display = "none";
   }
   debugOutput("js: OK"); // Final final confirmation :)
+  // Last: an optional feature must not keep the page from confirming its setup
+  initializeWebGuiBusyLock();
 }
+
+var gWebGuiBusyLock;
+
+// WebGUI's Lightspeed shell locks during a round trip, but its event handling
+// does not cover this HTML-viewer iframe. Follow its lifecycle rather than
+// guessing completion from page loads: some SAP events leave this page intact.
+function initializeWebGuiBusyLock() {
+  if (!gEnv.isWebGui || gWebGuiBusyLock) return;
+  var shell;
+  try {
+    var sap = window.parent.sap;
+    // WebGUI deletes sap.g4h.$ after bootstrapping. These aliases survive.
+    shell = sap && sap.its && sap.its.LS;
+    if (!shell) shell = window.parent.mysap && window.parent.mysap.LS;
+    // LS exposes a facade; event subscriptions belong to its internal provider.
+    if (shell && typeof shell.oGetInternal === "function") shell = shell.oGetInternal(window.parent.UCF_System);
+  } catch (error) { // eslint-disable-line no-unused-vars
+    return; // Cross-origin embedding, or a WebGUI release without these hooks
+  }
+  if (!shell || !shell.E_EVENTS || !shell.E_EVENTS.Lock || !shell.E_EVENTS.Unlock
+      || typeof shell.attachEvent !== "function" || typeof shell.detachEvent !== "function"
+      || typeof shell.bLocked !== "function") return;
+
+  var overlay = document.createElement("div");
+  overlay.className = "webgui-busy-lock";
+  overlay.tabIndex = -1;
+  overlay.hidden = true;
+  overlay.setAttribute("role", "status");
+  overlay.setAttribute("aria-label", "Working...");
+  var message = document.createElement("span");
+  message.textContent = "Working...";
+  overlay.appendChild(message);
+  document.body.appendChild(overlay);
+  var previousFocus;
+  var previousBusy;
+  var locked = false;
+  var inputEvents = ["click", "dblclick", "mousedown", "mouseup", "pointerdown", "pointerup",
+    "touchstart", "touchmove", "touchend", "wheel", "keydown", "keypress", "keyup", "submit", "contextmenu"];
+
+  function isShellLocked() {
+    try {
+      return shell.bLocked();
+    } catch (error) { // eslint-disable-line no-unused-vars
+      return false;
+    }
+  }
+
+  function blockInput(event) {
+    if (!locked) return;
+    // Self-healing: an Unlock notification that never arrived must not leave
+    // the page blocked for good. The first input after it frees the page.
+    if (!isShellLocked()) {
+      listener.unlock();
+      return;
+    }
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+
+  var listener = {
+    lock: function() {
+      if (locked) return;
+      locked = true;
+      previousFocus = document.activeElement;
+      previousBusy = document.body.getAttribute("aria-busy");
+      document.body.setAttribute("aria-busy", "true");
+      overlay.hidden = false;
+      overlay.focus({ preventScroll: true });
+    },
+    unlock: function() {
+      if (!locked) return;
+      locked = false;
+      var restoreFocus = document.activeElement === overlay;
+      overlay.hidden = true;
+      if (previousBusy === null) document.body.removeAttribute("aria-busy");
+      else document.body.setAttribute("aria-busy", previousBusy);
+      if (restoreFocus && previousFocus && document.body.contains(previousFocus)) {
+        previousFocus.focus({ preventScroll: true });
+      }
+    }
+  };
+  function destroy() {
+    try {
+      shell.detachEvent(shell.E_EVENTS.Lock, listener, "lock");
+      shell.detachEvent(shell.E_EVENTS.Unlock, listener, "unlock");
+    } catch (error) { // eslint-disable-line no-unused-vars
+      // Nothing left to undo for a subscription the shell never took
+    }
+    inputEvents.forEach(function(name) { window.removeEventListener(name, blockInput, true) });
+    window.removeEventListener("pagehide", destroy);
+    listener.unlock();
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    gWebGuiBusyLock = null;
+  }
+
+  // The shell hooks are internals of Lightspeed, not an API. A release that
+  // rejects the subscription gets no busy lock - never a half-attached one
+  // that locks on Lock and misses the Unlock.
+  try {
+    shell.attachEvent(shell.E_EVENTS.Lock, listener, "lock");
+    shell.attachEvent(shell.E_EVENTS.Unlock, listener, "unlock");
+  } catch (error) { // eslint-disable-line no-unused-vars
+    destroy();
+    return;
+  }
+  inputEvents.forEach(function(name) {
+    window.addEventListener(name, blockInput, { capture: true, passive: false });
+  });
+  window.addEventListener("pagehide", destroy);
+  gWebGuiBusyLock = listener;
+  if (isShellLocked()) listener.lock();
+}
+
+window.addEventListener("pageshow", function() { initializeWebGuiBusyLock() });
 
 /**********************************************************
  * Performance utils (for debugging)
@@ -534,6 +682,20 @@ function escapeHtmlText(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+// Scroll only when needed, aligning to the nearest edge (IE lacks scrollIntoView options).
+// At the top, align below the header: once sticky, it covers the top of the viewport.
+function scrollRowIntoView(row) {
+  if (!row.getBoundingClientRect) return;
+  var rect   = row.getBoundingClientRect();
+  var header = document.getElementById("header");
+  var top    = header && header.getBoundingClientRect ? Math.max(0, header.getBoundingClientRect().bottom) : 0;
+  if (rect.top < top) {
+    window.scrollBy(0, rect.top - top);
+  } else if (rect.bottom > (window.innerHeight || document.documentElement.clientHeight)) {
+    row.scrollIntoView(false);
+  }
+}
+
 function RepoOverViewHelper(opts) {
   if (opts && opts.focusFilterKey) {
     this.focusFilterKey = opts.focusFilterKey;
@@ -566,7 +728,10 @@ RepoOverViewHelper.prototype.onPageLoad = function() {
 RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
   var self = this;
   document.addEventListener("keypress", function(event) {
-    if (document.activeElement.id === "filter") {
+    // Leave keys typed elsewhere alone: in the filter or the command palette,
+    // or as a link hint code - its digits would otherwise move the selection,
+    // and the action links with it, before the hint activates one of them
+    if (event.defaultPrevented || LinkHints.areHintsDisplayed || !Hotkeys.isHotkeyCallPossible()) {
       return;
     }
     if (self.focusFilterKey && event.key === self.focusFilterKey && !CommandPalette.isVisible()) {
@@ -576,26 +741,56 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
       return;
     }
 
-    var keycode         = event.keyCode;
-    var rows            = Array.prototype.slice.call(self.getVisibleRows());
-    var selected        = document.querySelector(".repo-overview tr.selected");
-    var indexOfSelected = rows.indexOf(selected);
-    var lastRow         = rows.length - 1;
+    var keycode = event.keyCode;
 
     if (keycode === 13 && document.activeElement.tagName.toLowerCase() !== "input") {
       // "enter" to open, unless command field has focus
       self.openSelectedRepo();
-    } else if ((keycode === 52 || keycode === 56) && indexOfSelected > 0) {
+    } else if (keycode === 52 || keycode === 56) {
       // "4,8" for previous, digits are the numlock keys
-      // NB: numpad must be activated, keypress does not detect arrows
-      //     if we need arrows it will be keydown. But then mind the keycodes, they may change !
-      //     e.g. 100 is 'd' with keypress (and conflicts with diff hotkey), and also it is arrow-left keydown
-      self.selectRowByIndex(indexOfSelected - 1);
-    } else if ((keycode === 54 || keycode === 50) && indexOfSelected < lastRow) {
+      // NB: keypress does not detect arrows, they are handled on keydown below
+      self.selectAdjacentRow(-1);
+    } else if (keycode === 54 || keycode === 50) {
       // "6,2" for next
-      self.selectRowByIndex(indexOfSelected + 1);
+      self.selectAdjacentRow(1);
     }
   });
+
+  // Arrows only fire keydown. Only the arrow keys are handled here: keydown keycodes
+  // differ from keypress ones (e.g. 100 is "d" on keypress but numpad-4 on keydown).
+  document.addEventListener("keydown", function(event) {
+    if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+    if (CommandPalette.isVisible() || !self.isArrowNavigationTarget(document.activeElement)) return;
+
+    var offset;
+    if (event.key === "ArrowUp" || event.key === "Up" || event.keyCode === 38) {
+      offset = -1;
+    } else if (event.key === "ArrowDown" || event.key === "Down" || event.keyCode === 40) {
+      offset = 1;
+    } else {
+      return;
+    }
+    self.selectAdjacentRow(offset);
+    event.preventDefault(); // the selected row is scrolled into view instead
+  });
+};
+
+// Leave arrows to form fields and to menus (KeyNavigation moves through dropdown items)
+RepoOverViewHelper.prototype.isArrowNavigationTarget = function(element) {
+  for (var el = element; el && el.nodeName; el = el.parentElement) {
+    if (/^(INPUT|TEXTAREA|SELECT|LI)$/.test(el.nodeName) || el.isContentEditable) return false;
+  }
+  return true;
+};
+
+RepoOverViewHelper.prototype.selectAdjacentRow = function(offset) {
+  var rows     = Array.prototype.slice.call(this.getVisibleRows());
+  var selected = document.querySelector(".repo-overview tr.selected");
+  var index    = rows.indexOf(selected);
+  if (index < 0 || index + offset < 0 || index + offset >= rows.length) return;
+
+  this.selectRowByIndex(index + offset);
+  scrollRowIntoView(rows[index + offset]);
 };
 
 RepoOverViewHelper.prototype.openSelectedRepo = function() {
@@ -985,12 +1180,7 @@ StageHelper.prototype.applyFilterValue = function(sFilterValue) {
 // (iterateStageTab change mode), it includes display:none descendants,
 // so the link-hint codes would leak into the file names
 StageHelper.prototype.getPlainText = function(elem) {
-  var clone = elem.cloneNode(true);
-  var hints = clone.querySelectorAll("span.link-hint");
-  for (var i = hints.length - 1; i >= 0; i--) {
-    hints[i].parentNode.removeChild(hints[i]);
-  }
-  return clone.textContent;
+  return getTextWithoutLinkHints(elem);
 };
 
 // Apply filter to a single stage line - hide or show
@@ -1259,13 +1449,9 @@ CheckListWrapper.prototype.onClick = function(e) {
 
 // Diff helper constructor
 function DiffHelper(params) {
-  this.pageSeed    = params.seed;
-  this.stageAction = params.stageAction;
-
   // DOM nodes
   this.dom = {
-    diffList   : document.getElementById(params.ids.diffList),
-    stageButton: document.getElementById(params.ids.stageButton)
+    diffList: document.getElementById(params.ids.diffList)
   };
 
   this.repoKey = this.dom.diffList.getAttribute("data-repo-key");
@@ -1278,12 +1464,6 @@ function DiffHelper(params) {
   if (document.getElementById(params.ids.filterMenu)) {
     this.checkList        = new CheckListWrapper(params.ids.filterMenu, this.onFilter.bind(this), this.onFilterOnlyMyChanges.bind(this));
     this.dom.filterButton = document.getElementById(params.ids.filterMenu).parentNode;
-  }
-
-  // Hijack stage command
-  if (this.dom.stageButton) {
-    this.dom.stageButton.href    = "#";
-    this.dom.stageButton.onclick = this.onStage.bind(this);
   }
 }
 
@@ -1368,25 +1548,6 @@ DiffHelper.prototype.refreshFilters = function() {
     });
   });
   this.highlightButton();
-};
-
-// Action on stage -> save visible diffs as state for stage page
-DiffHelper.prototype.onStage = function(e) { // eslint-disable-line no-unused-vars
-  writeStoredState("sessionStorage", this.pageSeed, this.buildStageCache());
-  var getParams = { key: this.repoKey, seed: this.pageSeed };
-  submitSapeventForm(getParams, this.stageAction, "get");
-};
-
-// Collect visible diffs
-DiffHelper.prototype.buildStageCache = function() {
-  var list = {};
-  this.iterateDiffList(function(div) {
-    var filename = div.getAttribute("data-file");
-    if (!div.style.display && filename) { // No display override - visible !!
-      list[filename] = "A"; // Add
-    }
-  });
-  return list;
 };
 
 // Table iterator
@@ -1830,16 +1991,19 @@ LinkHints.prototype.handleKey = function(event) {
 
   } else if (this.areHintsDisplayed) {
 
-    // the user tries to reach a hint
+    // the user tries to reach a hint - the key is consumed here, so page
+    // shortcuts listening after us must not act on it as well
+    event.preventDefault();
     this.pendingPath += event.key;
 
     var hint = this.hintsMap[this.pendingPath];
 
     if (hint) { // we are there, we have a fully specified tooltip. Let us activate or yank it
       this.displayHints(false);
-      event.preventDefault();
       if (this.yankModeActive) {
-        submitSapeventForm({ clipboard: hint.parent.firstChild.textContent }, "clipboard");
+        var yankText = this.getYankText(hint.parent);
+        // The backend rejects an empty clipboard with an error popup
+        if (yankText) submitSapeventForm({ clipboard: yankText }, "clipboard");
         this.yankModeActive = false;
       } else {
         this.hintActivate(hint);
@@ -1857,14 +2021,31 @@ LinkHints.prototype.handleKey = function(event) {
   }
 };
 
+// The text a yanked hint copies: what the element shows. A field shows its
+// value and has no child nodes at all; a link can start with an icon, so its
+// first child is not necessarily its text; an icon-only element falls back to
+// its tooltip.
+LinkHints.prototype.getYankText = function(element) {
+  if (element.nodeName === "INPUT" || element.nodeName === "TEXTAREA") {
+    return element.value || "";
+  }
+  return getTextWithoutLinkHints(element).trim() || element.title || "";
+};
+
 LinkHints.prototype.closeActivatedDropdown = function() {
   if (!this.activatedDropdown) return;
   this.activatedDropdown.classList.remove("force-nav-hover");
   this.activatedDropdown = null;
 };
 
+// Are hints displayed, i.e. is the user typing a hint code? Page shortcuts
+// registered before the link hints cannot rely on the key being marked as
+// consumed. A page has at most one LinkHints instance (activateLinkHints).
+LinkHints.areHintsDisplayed = false;
+
 LinkHints.prototype.displayHints = function(isActivate) {
-  this.areHintsDisplayed = isActivate;
+  this.areHintsDisplayed      = isActivate;
+  LinkHints.areHintsDisplayed = isActivate;
   for (var i = this.hintsMap.first; i <= this.hintsMap.last; i++) {
     var hint = this.hintsMap[i];
     if (isActivate) {
@@ -1942,6 +2123,17 @@ LinkHints.prototype.filterHints = function() {
   return visibleHints;
 };
 
+// Text content of an element without the codes of the link hints injected
+// into it (deployHintContainers appends them to links, their labels included)
+function getTextWithoutLinkHints(element) {
+  var clone = element.cloneNode(true);
+  var hints = clone.querySelectorAll("span.link-hint");
+  for (var i = hints.length - 1; i >= 0; i--) {
+    hints[i].parentNode.removeChild(hints[i]);
+  }
+  return clone.textContent;
+}
+
 function activateLinkHints(linkHintHotKey) {
   if (!linkHintHotKey) return;
   var oLinkHint = new LinkHints(linkHintHotKey);
@@ -1969,8 +2161,9 @@ function Hotkeys(oKeyMap) {
     // the hotkey execution
     this.oKeyMap[sKey] = function(oEvent) {
 
-      // gHelper is only valid for diff page
-      var diffHelper = (window.gHelper || {});
+      // The helper object of the page, if it has one: the diff, stage and
+      // repository overview pages create it as gHelper
+      var pageHelper = (window.gHelper || {});
 
       // We have either a js function on this
       if (this[action]) {
@@ -1978,9 +2171,9 @@ function Hotkeys(oKeyMap) {
         return;
       }
 
-      // Or a method of the helper object for the diff page
-      if (diffHelper[action]) {
-        diffHelper[action].call(diffHelper);
+      // Or a method of the page helper (e.g. submitCommit on the stage page)
+      if (pageHelper[action]) {
+        pageHelper[action].call(pageHelper);
         return;
       }
 
@@ -2381,9 +2574,10 @@ function CommandPalette(commandEnumerator, opts) {
   this.commands = commandEnumerator();
   if (!this.commands) return;
   // this.commands = [{
-  //   action:    "sap_event_action_code_with_params"
-  //   iconClass: "icon icon_x ..."
-  //   title:     "my command X"
+  //   action:      "sap_event_action_code_with_params"
+  //   iconClass:   "icon icon_x ..."
+  //   title:       "my command X"
+  //   isAvailable: function, optional - re-checked whenever the list is filtered
   // }, ...];
 
   // one or more keys can open the palette, e.g. ["F1", "^p"]
@@ -2408,16 +2602,42 @@ function CommandPalette(commandEnumerator, opts) {
   this.hookEvents();
   Hotkeys.addHotkeyToHelpSheet(opts.toggleKey, opts.hotkeyDescription);
 
-  if (!CommandPalette.instances) {
-    CommandPalette.instances = [];
-  }
   CommandPalette.instances.push(this);
 }
 
+// Declared up front, not on first registration: the stage and repository
+// overview pages ask isVisible() on every keypress, also when no palette got
+// registered - e.g. one that had nothing to list (enumerateJumpAllFiles)
+CommandPalette.instances = [];
+
 CommandPalette.prototype.hookEvents = function() {
   document.addEventListener("keydown", this.handleToggleKey.bind(this));
+  document.addEventListener("mousedown", this.handleOutsideClick.bind(this));
+  this.elements.input.addEventListener("keydown", this.handleInputKeydown.bind(this));
   this.elements.input.addEventListener("keyup", this.handleInputKey.bind(this));
   this.elements.ul.addEventListener("click", this.handleUlClick.bind(this));
+};
+
+// Moving the selection on keydown lets a held arrow key repeat, and keeps the
+// caret from jumping to the start or end of the input.
+// No Escape to close: SAP GUI acts on that key whatever the page does with it.
+// SAP GUI for Java leaves abapGit, and the Edge control loses the keyboard
+// focus, so the next toggle key (Ctrl+P) opens the print dialog instead.
+CommandPalette.prototype.handleInputKeydown = function(event) {
+  if (event.key === "ArrowUp" || event.key === "Up") {
+    this.selectPrev();
+  } else if (event.key === "ArrowDown" || event.key === "Down") {
+    this.selectNext();
+  } else {
+    return;
+  }
+  event.preventDefault();
+};
+
+CommandPalette.prototype.handleOutsideClick = function(event) {
+  var target = event.target || event.srcElement;
+  if (this.elements.palette.style.display === "none" || this.elements.palette.contains(target)) return;
+  this.toggleDisplay(false);
 };
 
 CommandPalette.prototype.renderCommandItem = function(cmd) {
@@ -2463,11 +2683,7 @@ CommandPalette.prototype.handleToggleKey = function(event) {
 };
 
 CommandPalette.prototype.handleInputKey = function(event) {
-  if (event.key === "ArrowUp" || event.key === "Up") {
-    this.selectPrev();
-  } else if (event.key === "ArrowDown" || event.key === "Down") {
-    this.selectNext();
-  } else if (event.key === "Enter") {
+  if (event.key === "Enter") {
     this.exec(this.getSelected());
   } else if (event.key === "Backspace" && !this.filter) {
     this.toggleDisplay(false);
@@ -2482,7 +2698,9 @@ CommandPalette.prototype.handleInputKey = function(event) {
 CommandPalette.prototype.applyFilter = function() {
   for (var i = 0; i < this.commands.length; i++) {
     var cmd = this.commands[i];
-    if (!this.filter) {
+    if (cmd.isAvailable && !cmd.isAvailable()) {
+      cmd.element.style.display = "none";
+    } else if (!this.filter) {
       cmd.element.style.display = "";
       cmd.titleSpan.innerText   = cmd.title;
     } else {
@@ -2608,7 +2826,7 @@ CommandPalette.prototype.exec = function(cmd) {
 
 // Is any command palette visible?
 CommandPalette.isVisible = function() {
-  return CommandPalette.instances.reduce(function(result, instance) { return result || instance.elements.palette.style.display !== "none" }, false);
+  return (CommandPalette.instances || []).reduce(function(result, instance) { return result || instance.elements.palette.style.display !== "none" }, false);
 };
 
 function addHotkey(opts) {
@@ -2630,6 +2848,15 @@ function createRepoCatalogEnumerator(catalog, action) {
       };
     });
   };
+}
+
+// The repository overview hides the actions that do not apply to the selected
+// repository (e.g. Pull for an offline one) by leaving their list item without
+// the "enabled" class, see RepoOverViewHelper.updateActionLinks. Every other
+// anchor is always available.
+function isActionLinkEnabled(anchor) {
+  var listItem = anchor.parentElement;
+  return !listItem || !listItem.classList.contains("action_link") || listItem.classList.contains("enabled");
 }
 
 function enumerateUiActions() {
@@ -2665,17 +2892,20 @@ function enumerateUiActions() {
     var anchor = item[0];
     var prefix = item[1];
     // title is re-read on each palette open, some labels change dynamically
-    // (e.g. commit/patch buttons on the stage page)
+    // (e.g. commit/patch buttons on the stage page). Not from innerText: link
+    // hints stay in the DOM once deployed, and for a link that is not rendered
+    // - one in a closed dropdown - innerText includes their hidden codes.
     var getTitle = function() {
-      return (prefix ? prefix + ": " : "") + anchor.innerText.trim();
+      return (prefix ? prefix + ": " : "") + getTextWithoutLinkHints(anchor).replace(/\s+/g, " ").trim();
     };
     return {
       // Clicking the wired anchor routes on every browser control (desktop and
       // WebGUI); no need to reconstruct the sapevent from the href, which ITS
       // rewrites on WebGUI anyway.
-      action  : function() { clickSapEvent(anchor) },
-      getTitle: getTitle,
-      title   : getTitle()
+      action     : function() { clickSapEvent(anchor) },
+      getTitle   : getTitle,
+      title      : getTitle(),
+      isAvailable: function() { return isActionLinkEnabled(anchor) }
     };
   });
 
@@ -2990,10 +3220,9 @@ function trapFocus() {
   var firstElement = focusable[0];
   var lastElement = focusable[focusable.length - 1];
 
-  // Focus the main button when modal opens, if it exists
-  if (document.querySelector(".main-button")) {
-    setInitialFocus("main-button");
-  }
+  // No initial focus on the main button: while a button has focus, link hints
+  // and letter hotkeys are off (Hotkeys.isHotkeyCallPossible), and letting them
+  // through would make Enter fire both the button and its Enter hotkey.
 
   modal.onkeydown = function(e) {
     var keyCode = e.keyCode || e.which;
@@ -3052,7 +3281,7 @@ SourceViewer.prototype.getStylesheetSource = function(url) {
 
     try {
       rules = styleSheets[index].cssRules || styleSheets[index].rules;
-    } catch (error) {
+    } catch (error) { // eslint-disable-line no-unused-vars
       this.reportError("Could not access " + url + " from the document stylesheets.");
       return "";
     }
@@ -3141,8 +3370,7 @@ SourceViewer.prototype.show = function() {
   overlay.className = "source-viewer";
   overlay.tabIndex = -1;
   heading.className = "source-viewer-heading";
-  heading.appendChild(document.createTextNode("Source Viewer (" +
-    (this.isInternetExplorer() ? "X" : "Esc or X") + " to close)"));
+  heading.appendChild(document.createTextNode("Source Viewer (X to close)"));
   close.type = "button";
   close.innerHTML = "&times;";
   close.className = "source-viewer-close";
@@ -3204,9 +3432,10 @@ SourceViewer.prototype.show = function() {
     sourceViewer.activeSource = null;
   }
 
+  // Not Escape: SAP GUI acts on that key whatever the page does with it.
+  // SAP GUI for Java leaves abapGit, and the Edge control loses the keyboard focus.
   function isCloseKey(event) {
-    return event.key === "x" || event.key === "X" || event.keyCode === 88 ||
-      (!sourceViewer.isInternetExplorer() && (event.key === "Escape" || event.keyCode === 27));
+    return event.key === "x" || event.key === "X" || event.keyCode === 88;
   }
 
   function getTabIndex(event) {

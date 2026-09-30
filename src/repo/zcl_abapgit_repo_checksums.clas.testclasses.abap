@@ -304,6 +304,8 @@ CLASS lcl_repo_mock IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_repo_srv~get_label_list.
   ENDMETHOD.
+  METHOD zif_abapgit_repo_srv~reload.
+  ENDMETHOD.
   METHOD zif_abapgit_repo~create_new_log.
   ENDMETHOD.
   METHOD zif_abapgit_repo~delete_checks.

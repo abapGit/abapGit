@@ -38,8 +38,9 @@ Avoid expanding the fixtures into a general-purpose browser emulator.
 | [`forms.test.cjs`](forms.test.cjs) | Desktop and WebGUI form routing, parameter encoding, repeated submissions, and preservation of existing fields |
 | [`stage.test.cjs`](stage.test.cjs) | Commit and patch actions, selection/filter precedence, visible-file staging, and selection counts |
 | [`palette.test.cjs`](palette.test.cjs) | Filtering, keyboard navigation, command execution, reopening, and fuzzy matching |
+| [`busy.test.cjs`](busy.test.cjs) | WebGUI busy lock: locking and unlocking, input blocking, focus, page lifecycle, unsupported or changed shells |
 | [`checklist.test.cjs`](checklist.test.cjs) | Filter clicks and cancellation of fragment navigation |
-| [`diff.test.cjs`](diff.test.cjs) | Combined filters, staging visible files, and exact-path jumps |
+| [`diff.test.cjs`](diff.test.cjs) | Combined filters, jump-list visibility, and exact-path jumps |
 | [`fragments.test.cjs`](fragments.test.cjs) | Local fragment handling and browser Back interactions |
 | [`patch.test.cjs`](patch.test.cjs) | File and section selection boundaries and patch submission |
 | [`repo-overview.test.cjs`](repo-overview.test.cjs) | Repository selection and persisted state |
@@ -49,6 +50,7 @@ Avoid expanding the fixtures into a general-purpose browser emulator.
 | [`link-hints.test.cjs`](link-hints.test.cjs) | Partial hints, cancellation/reopening, copy-mode reset, disabled controls, and checkbox activation |
 | [`key-navigation.test.cjs`](key-navigation.test.cjs) | Dropdown navigation and boundaries, link activation, modified keys, and editing controls |
 | [`diff-copy.test.cjs`](diff-copy.test.cjs) | Diff-column copying, invalid/empty selections, unrelated table clicks, and clipboard fallbacks |
+| [`error-banner.test.cjs`](error-banner.test.cjs) | Reporting later script errors in the banner, and ignoring scripts that are not ours |
 
 To measure the shipped JavaScript with Node's V8 coverage:
 

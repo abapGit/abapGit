@@ -611,6 +611,10 @@ CLASS lcl_repo_srv IMPLEMENTATION.
   METHOD zif_abapgit_repo_srv~get_label_list.
     RETURN.
   ENDMETHOD.
+
+  METHOD zif_abapgit_repo_srv~reload.
+    RETURN.
+  ENDMETHOD.
 ENDCLASS.
 
 CLASS lcl_tadir DEFINITION FINAL.
