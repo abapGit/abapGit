@@ -37,6 +37,13 @@ CLASS zcl_abapgit_services_repo DEFINITION
         VALUE(ri_repo)  TYPE REF TO zif_abapgit_repo
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS new_oci
+      IMPORTING
+        !is_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params
+      RETURNING
+        VALUE(ri_repo)  TYPE REF TO zif_abapgit_repo
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS refresh_local_checksums
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -132,6 +139,13 @@ CLASS zcl_abapgit_services_repo DEFINITION
     CLASS-METHODS check_for_restart
       IMPORTING
         !ii_repo TYPE REF TO zif_abapgit_repo .
+    CLASS-METHODS is_abapgit_package_repo
+      IMPORTING
+        !ii_repo      TYPE REF TO zif_abapgit_repo
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -201,17 +215,27 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       lc_abapgit_prog TYPE progname VALUE `ZABAPGIT`.
 
     DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
+    DATA lv_is_self_repo TYPE abap_bool.
 
-    IF ii_repo->is_offline( ) = abap_true.
+    IF sy-cprog <> lc_abapgit_prog.
       RETURN.
     ENDIF.
 
-    li_repo_online ?= ii_repo.
+    IF ii_repo->supports_git( ) = abap_true.
+      li_repo_online ?= ii_repo.
+      lv_is_self_repo = zcl_abapgit_url=>is_abapgit_repo( li_repo_online->get_url( ) ).
+    ELSE.
+      TRY.
+          lv_is_self_repo = is_abapgit_package_repo( ii_repo ).
+        CATCH zcx_abapgit_exception.
+          CLEAR lv_is_self_repo.
+      ENDTRY.
+    ENDIF.
 
     " If abapGit was used to update itself, then restart to avoid LOAD_PROGRAM_&_MISMATCH dumps
     " because abapGit code was changed at runtime
     IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true AND
-       zcl_abapgit_url=>is_abapgit_repo( li_repo_online->get_url( ) ) = abap_true AND
+       lv_is_self_repo = abap_true AND
        sy-batch = abap_false AND
        sy-cprog = lc_abapgit_prog.
 
@@ -278,41 +302,66 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_overwrite> LIKE LINE OF is_checks-overwrite.
 
-    IF ii_repo->is_offline( ) = abap_true.
+    IF sy-cprog <> lc_abapgit_prog.
       RETURN.
     ENDIF.
 
-    li_repo_online ?= ii_repo.
+    IF ii_repo->supports_git( ) = abap_true.
+      li_repo_online ?= ii_repo.
+      IF zcl_abapgit_url=>is_abapgit_repo( li_repo_online->get_url( ) ) = abap_false.
+        RETURN.
+      ENDIF.
+    ELSEIF is_abapgit_package_repo( ii_repo ) = abap_false.
+      RETURN.
+    ENDIF.
 
     " If abapGit is used to update itself, then check for updates to classes and interfaces that
     " are known to cause dumps.
-    IF zcl_abapgit_url=>is_abapgit_repo( li_repo_online->get_url( ) ) = abap_true AND sy-cprog = lc_abapgit_prog.
-      LOOP AT is_checks-overwrite ASSIGNING <ls_overwrite> WHERE decision = zif_abapgit_definitions=>c_yes.
-        CASE <ls_overwrite>-obj_type.
-          WHEN 'CLAS'.
-            IF <ls_overwrite>-obj_name = 'ZCL_ABAPGIT_OBJECT_CLAS'
+    LOOP AT is_checks-overwrite ASSIGNING <ls_overwrite> WHERE decision = zif_abapgit_definitions=>c_yes.
+      CASE <ls_overwrite>-obj_type.
+        WHEN 'CLAS'.
+          IF <ls_overwrite>-obj_name = 'ZCL_ABAPGIT_OBJECT_CLAS'
               OR <ls_overwrite>-obj_name = 'ZCL_ABAPGIT_OBJECT_INTF'
               OR <ls_overwrite>-obj_name = 'ZCL_ABAPGIT_OBJECTS'
               OR <ls_overwrite>-obj_name CP 'ZCL_ABAPGIT_OO_*'
               OR <ls_overwrite>-obj_name = 'ZCL_ABAPGIT_OBJECTS_SUPER'
               OR <ls_overwrite>-obj_name = 'ZCX_ABAPGIT_EXCEPTION'.
-              lv_will_dump = abap_true.
-              EXIT.
-            ENDIF.
-          WHEN 'INTF'.
-            IF <ls_overwrite>-obj_name = 'ZIF_ABAPGIT_DEFINITIONS'
+            lv_will_dump = abap_true.
+            EXIT.
+          ENDIF.
+        WHEN 'INTF'.
+          IF <ls_overwrite>-obj_name = 'ZIF_ABAPGIT_DEFINITIONS'
               OR <ls_overwrite>-obj_name = 'ZIF_ABAPGIT_CTS_API'
               OR <ls_overwrite>-obj_name = 'ZIF_ABAPGIT_PERSISTENCE'.
-              lv_will_dump = abap_true.
-              EXIT.
-            ENDIF.
-        ENDCASE.
-      ENDLOOP.
+            lv_will_dump = abap_true.
+            EXIT.
+          ENDIF.
+      ENDCASE.
+    ENDLOOP.
 
-      IF lv_will_dump = abap_true.
-        zcx_abapgit_exception=>raise( 'Selected objects will cause a dump during self-update. Use standalone version.' ).
-      ENDIF.
+    IF lv_will_dump = abap_true.
+      zcx_abapgit_exception=>raise( 'Selected objects will cause a dump during self-update. Use standalone version.' ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD is_abapgit_package_repo.
+
+    CONSTANTS lc_abapgit_prog TYPE progname VALUE `ZABAPGIT`.
+    DATA lv_abapgit_package TYPE devclass.
+
+    IF sy-cprog <> lc_abapgit_prog.
+      RETURN.
+    ENDIF.
+
+    " OCI artifacts have no Git hosting URL to identify the abapGit self-update source.
+    " Match the package that owns the running ZABAPGIT program instead.
+    lv_abapgit_package = zcl_abapgit_factory=>get_tadir( )->get_object_package(
+      iv_object   = 'PROG'
+      iv_obj_name = lc_abapgit_prog ).
+    rv_yes = boolc( lv_abapgit_package IS NOT INITIAL AND
+                    ii_repo->get_package( ) = lv_abapgit_package ).
 
   ENDMETHOD.
 
@@ -422,6 +471,43 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     " Set default repo for user
     zcl_abapgit_persist_factory=>get_user( )->set_repo_show( ri_repo->get_key( ) ).
 
+    COMMIT WORK AND WAIT.
+
+  ENDMETHOD.
+
+
+  METHOD new_oci.
+
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
+    check_package( is_repo_params ).
+
+    ri_repo = zcl_abapgit_repo_srv=>get_instance( )->new_oci(
+      iv_registry       = is_repo_params-oci_registry
+      iv_repository     = is_repo_params-oci_repository
+      iv_reference      = is_repo_params-oci_reference
+      iv_name           = is_repo_params-name
+      iv_package        = is_repo_params-package
+      iv_display_name   = is_repo_params-display_name
+      iv_folder_logic   = is_repo_params-folder_logic
+      iv_labels         = is_repo_params-labels
+      iv_ign_subpkg     = is_repo_params-ignore_subpackages
+      iv_main_lang_only = is_repo_params-main_lang_only
+      iv_abap_lang_vers = is_repo_params-abap_lang_vers ).
+
+    TRY.
+        check_package_exists(
+          iv_package = is_repo_params-package
+          it_remote  = ri_repo->get_files_remote( ) ).
+        ri_repo->checksums( )->rebuild( ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        zcl_abapgit_repo_srv=>get_instance( )->delete( ri_repo ).
+        COMMIT WORK.
+        RAISE EXCEPTION lx_error.
+    ENDTRY.
+
+    toggle_favorite( ri_repo->get_key( ) ).
+    zcl_abapgit_persist_factory=>get_user( )->set_repo_show( ri_repo->get_key( ) ).
     COMMIT WORK AND WAIT.
 
   ENDMETHOD.
@@ -928,13 +1014,18 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     lv_question = 'This will rebuild and overwrite local repo checksums.'.
 
-    IF li_repo->is_offline( ) = abap_false.
+    IF li_repo->supports_git( ) = abap_true.
       lv_question = lv_question
                 && ' The logic: if local and remote file differs then:'
                 && ' if remote branch is ahead then assume changes are remote,'
                 && ' else (branches are equal) assume changes are local.'
                 && ' This will lead to incorrect state for files changed on both sides.'
                 && ' Please make sure you don''t have ones like that.'.
+    ELSEIF li_repo->get_repo_kind( ) = zif_abapgit_persistence=>c_repo_kind-oci.
+      lv_question = lv_question
+                && ' For OCI repositories this does not inspect the remote snapshot or classify changes.'
+                && ' It treats current local object contents as the new checksum baseline.'
+                && ' Review local changes before rebuilding.'.
     ENDIF.
 
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
@@ -1007,6 +1098,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD transport_to_branch.
 
+    DATA li_repo TYPE REF TO zif_abapgit_repo.
     DATA:
       li_repo_online         TYPE REF TO zif_abapgit_repo_online,
       lo_transport_to_branch TYPE REF TO zcl_abapgit_transport_2_branch,
@@ -1019,7 +1111,11 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Not authorized' ).
     ENDIF.
 
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
+    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
+    IF li_repo->supports_git( ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Transport to branch is only supported for Git repositories' ).
+    ENDIF.
+    li_repo_online ?= li_repo.
 
     lv_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transport( ).
     " Also include deleted objects that are included in transport

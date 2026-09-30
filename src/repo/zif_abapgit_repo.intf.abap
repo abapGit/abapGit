@@ -12,6 +12,34 @@ INTERFACE zif_abapgit_repo
   METHODS is_offline
     RETURNING
       VALUE(rv_offline) TYPE abap_bool .
+  METHODS get_repo_kind
+    RETURNING
+      VALUE(rv_kind) TYPE zif_abapgit_persistence=>ty_repo_kind.
+  METHODS supports_git
+    RETURNING
+      VALUE(rv_yes) TYPE abap_bool.
+  METHODS supports_push
+    RETURNING
+      VALUE(rv_yes) TYPE abap_bool.
+  METHODS get_remote_address
+    RETURNING
+      VALUE(rv_address) TYPE string.
+  METHODS get_selected_reference
+    RETURNING
+      VALUE(rv_reference) TYPE string.
+  METHODS get_resolved_revision
+    RETURNING
+      VALUE(rv_revision) TYPE string.
+  METHODS get_imported_revision
+    RETURNING
+      VALUE(rv_revision) TYPE string.
+  METHODS set_oci_reference
+    IMPORTING
+      iv_registry   TYPE string
+      iv_repository TYPE string
+      iv_reference  TYPE string
+    RAISING
+      zcx_abapgit_exception.
   METHODS get_package
     RETURNING
       VALUE(rv_package) TYPE zif_abapgit_persistence=>ty_repo-package .

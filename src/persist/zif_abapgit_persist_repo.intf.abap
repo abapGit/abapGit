@@ -4,15 +4,19 @@ INTERFACE zif_abapgit_persist_repo
 
   METHODS add
     IMPORTING
-      !iv_url          TYPE string OPTIONAL
-      !iv_branch_name  TYPE string OPTIONAL
-      !iv_branch       TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL
-      !iv_display_name TYPE string OPTIONAL
-      !iv_package      TYPE devclass
-      !iv_offline      TYPE abap_bool DEFAULT abap_false
-      !is_dot_abapgit  TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit
+      !iv_url            TYPE string OPTIONAL
+      !iv_branch_name    TYPE string OPTIONAL
+      !iv_branch         TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL
+      !iv_display_name   TYPE string OPTIONAL
+      !iv_package        TYPE devclass
+      !iv_offline        TYPE abap_bool DEFAULT abap_false
+      !iv_repo_kind      TYPE zif_abapgit_persistence=>ty_repo_kind OPTIONAL
+      !iv_oci_registry   TYPE string OPTIONAL
+      !iv_oci_repository TYPE string OPTIONAL
+      !iv_oci_reference  TYPE string OPTIONAL
+      !is_dot_abapgit    TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit
     RETURNING
-      VALUE(rv_key)    TYPE zif_abapgit_persistence=>ty_repo-key
+      VALUE(rv_key)      TYPE zif_abapgit_persistence=>ty_repo-key
     RAISING
       zcx_abapgit_exception .
   METHODS delete

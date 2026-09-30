@@ -132,3 +132,30 @@ test("action links keep their raw sapevent href when the repository key is swapp
   context.RepoOverViewHelper.prototype.updateActionLinks({ dataset: { key: "42", offline: "" } });
   assert.equal(attrs.href, "sapevent:go_stage?key=42");
 });
+
+test("Git-only list actions are hidden for OCI repositories while Pull remains available", () => {
+  const states = new Map();
+  const makeLink = (name) => ({
+    classList: { contains(value) { return value === name; } },
+    parentElement: { classList: {
+      add() { states.set(name, true); },
+      remove() { states.set(name, false); }
+    } },
+    getAttribute() { return null; },
+    setAttribute() {}
+  });
+  const links = [makeLink("action_online_repo"), makeLink("action_git_repo")];
+  const context = loadUi({ document: {
+    addEventListener() {},
+    querySelectorAll(selector) { assert.equal(selector, "a.action_link"); return links; }
+  } });
+  const selected = { dataset: { key: "oci", offline: "", git: "" } };
+
+  context.RepoOverViewHelper.prototype.updateActionLinks(selected);
+  assert.equal(states.get("action_online_repo"), true);
+  assert.equal(states.get("action_git_repo"), false);
+
+  selected.dataset.git = "X";
+  context.RepoOverViewHelper.prototype.updateActionLinks(selected);
+  assert.equal(states.get("action_git_repo"), true);
+});

@@ -75,6 +75,23 @@ INTERFACE zif_abapgit_repo_srv
       VALUE(ri_repo)     TYPE REF TO zif_abapgit_repo
     RAISING
       zcx_abapgit_exception .
+  METHODS new_oci
+    IMPORTING
+      !iv_registry       TYPE string
+      !iv_repository     TYPE string
+      !iv_reference      TYPE string
+      !iv_display_name   TYPE string OPTIONAL
+      !iv_name           TYPE string OPTIONAL
+      !iv_package        TYPE devclass
+      !iv_folder_logic   TYPE string DEFAULT zif_abapgit_dot_abapgit=>c_folder_logic-prefix
+      !iv_labels         TYPE string OPTIONAL
+      !iv_ign_subpkg     TYPE abap_bool DEFAULT abap_false
+      !iv_main_lang_only TYPE abap_bool DEFAULT abap_false
+      !iv_abap_lang_vers TYPE string OPTIONAL
+    RETURNING
+      VALUE(ri_repo)     TYPE REF TO zif_abapgit_repo
+    RAISING
+      zcx_abapgit_exception .
   METHODS purge
     IMPORTING
       !ii_repo      TYPE REF TO zif_abapgit_repo
