@@ -464,12 +464,15 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       li_log = mi_repo->get_log( ).
       IF li_log IS BOUND AND li_log->count( ) > 0.
         ro_toolbar->add( iv_txt = 'Log'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?key={ mv_key }| ).
+                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?key={ mv_key }|
+                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
       ro_toolbar->add( iv_txt = 'Branch'
-                       io_sub = build_branch_dropdown( ) ).
+                       io_sub = build_branch_dropdown( )
+                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ro_toolbar->add( iv_txt = 'Tag'
-                       io_sub = build_tag_dropdown( ) ).
+                       io_sub = build_tag_dropdown( )
+                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
     ELSEIF mi_repo->is_offline( ) = abap_true.
       " offline repo
@@ -496,7 +499,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       li_log = mi_repo->get_log( ).
       IF li_log IS BOUND AND li_log->count( ) > 0.
         ro_toolbar->add( iv_txt = 'Log'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?key={ mv_key }| ).
+                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?key={ mv_key }|
+                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
 
     ELSE.
@@ -519,10 +523,12 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDIF.
 
     ro_toolbar->add( iv_txt = 'Advanced'
-                     io_sub = build_advanced_dropdown( ) ).
+                     io_sub = build_advanced_dropdown( )
+                     iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
     ro_toolbar->add( iv_txt = 'View'
-                     io_sub = build_view_dropdown( ) ).
+                     io_sub = build_view_dropdown( )
+                     iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
     ro_toolbar->add( iv_txt = 'Refresh'
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh }?key={ mv_key }|
