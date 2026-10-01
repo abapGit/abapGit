@@ -19,18 +19,33 @@ CLASS zcl_abapgit_gui_page_ref_sel DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS constructor
+    CLASS-METHODS create_in_page
       IMPORTING
-        !iv_key    TYPE zif_abapgit_persistence=>ty_repo-key
-        !iv_action TYPE string
+        !iv_key             TYPE zif_abapgit_persistence=>ty_repo-key
+        !iv_action          TYPE string
+      RETURNING
+        VALUE(ro_component) TYPE REF TO zcl_abapgit_gui_page_ref_sel
       RAISING
         zcx_abapgit_exception.
+
+    METHODS constructor
+      IMPORTING
+        !iv_key     TYPE zif_abapgit_persistence=>ty_repo-key
+        !iv_action  TYPE string
+        !iv_in_page TYPE abap_bool DEFAULT abap_false
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS is_fulfilled
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA mv_key TYPE zif_abapgit_persistence=>ty_repo-key.
     DATA mv_action TYPE string.
+    DATA mv_in_page TYPE abap_bool.
     DATA mo_picklist TYPE REF TO zcl_abapgit_gui_picklist.
 
     METHODS create_picklist
@@ -52,10 +67,22 @@ CLASS zcl_abapgit_gui_page_ref_sel IMPLEMENTATION.
 
     super->constructor( ).
 
-    mv_key    = iv_key.
-    mv_action = iv_action.
+    mv_key     = iv_key.
+    mv_action  = iv_action.
+    mv_in_page = iv_in_page.
 
     create_picklist( ).
+
+  ENDMETHOD.
+
+
+  METHOD create_in_page.
+
+    CREATE OBJECT ro_component
+      EXPORTING
+        iv_key     = iv_key
+        iv_action  = iv_action
+        iv_in_page = abap_true.
 
   ENDMETHOD.
 
@@ -103,7 +130,14 @@ CLASS zcl_abapgit_gui_page_ref_sel IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Unexpected ref selection action { mv_action }| ).
     ENDCASE.
 
-    mo_picklist->set_id( mv_action ).
+    mo_picklist->set_id( mv_action )->set_in_page( mv_in_page ).
+
+  ENDMETHOD.
+
+
+  METHOD is_fulfilled.
+
+    rv_yes = mo_picklist->is_fulfilled( ).
 
   ENDMETHOD.
 
