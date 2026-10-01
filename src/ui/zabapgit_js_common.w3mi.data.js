@@ -142,8 +142,22 @@ if (window.NodeList && !NodeList.prototype.forEach) {
 // place before any other script on the page runs. Everything a browser can
 // establish for itself is probed here instead of being asked for.
 var gEnv = {
+  // Seeded by the backend (setEnvironment)
   isWebGui          : false, // SAP GUI for HTML
-  isSapGuiForWindows: false  // neither of the two: SAP GUI for Java
+  isSapGuiForWindows: false, // neither of the two: SAP GUI for Java
+
+  // Derived from the facts above in setEnvironment: the browser control SAP GUI
+  // for Windows embeds, "Edge" (Chromium) or "IE". Empty on the other GUIs,
+  // which embed none: the HTML GUI runs in the browser of the user, whose user
+  // agent describes no browser control at all.
+  browserControl: "",
+
+  // Probed: the page runs on the IE engine, as the IE control does, whatever
+  // the GUI. document.documentMode exists in no other browser.
+  isInternetExplorer: !!document.documentMode,
+
+  // Probed on first use by getSapeventPrefix, see there
+  sapeventPrefix: undefined
 };
 
 // Every fact seeded here has to be declared in gEnv above. An unknown key
@@ -157,36 +171,34 @@ function setEnvironment(env) {
       window.console.log("abapGit: unknown environment key '" + key + "'");
     }
   }
+  gEnv.browserControl = detectBrowserControl();
+}
+
+function detectBrowserControl() {
+  if (!gEnv.isSapGuiForWindows) return "";
+  return /Edg/.test(window.navigator.userAgent) ? "Edge" : "IE";
 }
 
 // The prefix a sapevent URL needs for the browser control in use. Probed from
 // the links the backend rendered, because the user agent does not distinguish
 // the control versions - and kept, because the control cannot change under a
-// page that is already displayed.
-var gSapeventPrefix; // undefined until first probed
-
+// page that is already displayed. Not probed up front: common.js runs before
+// the page body, and with it these links, is there.
 function getSapeventPrefix() {
-  if (gSapeventPrefix === undefined) {
+  if (gEnv.sapeventPrefix === undefined) {
     // Depending on the used browser control and its version, different URL schemes
     // are used which we distinguish here
     if (document.querySelector('a[href*="file:///SAPEVENT:"]')) {
       // Prefix for old (SAPGUI <= 8.00 PL3) chromium based browser control
-      gSapeventPrefix = "file:///";
+      gEnv.sapeventPrefix = "file:///";
     } else if (document.querySelector('a[href^="sap-cust"]')) {
       // Prefix for new (SAPGUI >= 8.00 PL3 Hotfix 1) chromium based browser control
-      gSapeventPrefix = "sap-cust://sap-place-holder/";
+      gEnv.sapeventPrefix = "sap-cust://sap-place-holder/";
     } else {
-      gSapeventPrefix = ""; // No prefix for old IE control
+      gEnv.sapeventPrefix = ""; // No prefix for old IE control
     }
   }
-  return gSapeventPrefix;
-}
-
-// Is the embedded browser control the Edge (Chromium) one rather than the old
-// IE one? Only meaningful inside SAP GUI for Windows - the HTML GUI runs in the
-// browser of the user, whose user agent describes no browser control at all.
-function isEdgeControl() {
-  return navigator.userAgent.includes("Edg");
+  return gEnv.sapeventPrefix;
 }
 
 /**********************************************************
@@ -3068,9 +3080,8 @@ document.addEventListener("click", handleLocalFragmentClick);
 function toggleBrowserControlWarning() {
   // The warning is about the Edge control, so hide it wherever that is not what
   // we run in: on the old IE control, and on a GUI that embeds no browser
-  // control at all, whose user agent describes the browser of the user and can
-  // report "Edg" for reasons the warning has nothing to do with.
-  if (!isEdgeControl() || !gEnv.isSapGuiForWindows) {
+  // control at all (see gEnv.browserControl)
+  if (gEnv.browserControl !== "Edge") {
     var elBrowserControlWarning = document.getElementById("browser-control-warning");
     if (elBrowserControlWarning) {
       elBrowserControlWarning.style.display = "none";
@@ -3080,12 +3091,11 @@ function toggleBrowserControlWarning() {
 
 // Output type of HTML control in the abapGit footer
 function displayBrowserControlFooter() {
-  // Only report a control where there is one. The HTML GUI runs in the browser
-  // of the user, whose user agent describes no browser control at all - reading
-  // it there once reported "IE" for a user on Chrome.
+  // Only report a control where there is one (see gEnv.browserControl). Reading
+  // the user agent on the HTML GUI once reported "IE" for a user on Chrome.
   var out = document.getElementById("browser-control-footer");
-  if (!out || !gEnv.isSapGuiForWindows) return;
-  out.innerHTML = " - " + (isEdgeControl() ? "Edge" : "IE");
+  if (!out || !gEnv.browserControl) return;
+  out.innerHTML = " - " + gEnv.browserControl;
 }
 
 // Redirect browser "Back" navigation to the SAPGUI back sapevent (action "go_back").
@@ -3299,10 +3309,6 @@ SourceViewer.prototype.reportError = function(message) {
   window.alert("abapGit source viewer error:\n" + message);
 };
 
-SourceViewer.prototype.isInternetExplorer = function() {
-  return !!document.documentMode;
-};
-
 SourceViewer.prototype.updateLineNumbers = function(content) {
   var lineCount = content ? content.split(/\r\n|\r|\n/).length : 1;
   var lineNumbers = [];
@@ -3493,10 +3499,10 @@ SourceViewer.prototype.selectSource = function(sourceDefinition) {
   } else if (sourceDefinition.getContent) {
     sourceDefinition.content = sourceDefinition.getContent(sourceDefinition.url);
     display(sourceDefinition.content);
-  } else if (this.isInternetExplorer() && sourceDefinition.url.indexOf("css/") === 0) {
+  } else if (gEnv.isInternetExplorer && sourceDefinition.url.indexOf("css/") === 0) {
     sourceDefinition.content = this.getStylesheetSource(sourceDefinition.url);
     display(sourceDefinition.content);
-  } else if (this.isInternetExplorer()) {
+  } else if (gEnv.isInternetExplorer) {
     display("Internet Explorer cannot display cached JavaScript source.\n" +
       "Use the Edge WebView2 browser control for this source view.");
   } else {

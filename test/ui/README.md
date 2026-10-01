@@ -51,6 +51,7 @@ Avoid expanding the fixtures into a general-purpose browser emulator.
 | [`key-navigation.test.cjs`](key-navigation.test.cjs) | Dropdown navigation and boundaries, link activation, modified keys, and editing controls |
 | [`diff-copy.test.cjs`](diff-copy.test.cjs) | Diff-column copying, invalid/empty selections, unrelated table clicks, and clipboard fallbacks |
 | [`error-banner.test.cjs`](error-banner.test.cjs) | Reporting later script errors in the banner, and ignoring scripts that are not ours |
+| [`environment.test.cjs`](environment.test.cjs) | Browser control per GUI (warning and footer), IE engine, sapevent prefix probing, and unknown environment keys |
 
 To measure the shipped JavaScript with Node's V8 coverage:
 
