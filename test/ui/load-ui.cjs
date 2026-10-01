@@ -2,7 +2,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 
-const source = fs.readFileSync(path.join(__dirname, "../../src/ui/zabapgit_js_common.w3mi.data.js"), "utf8");
+const filename = path.join(__dirname, "../../src/ui/zabapgit_js_common.w3mi.data.js");
+const source = fs.readFileSync(filename, "utf8");
 
 // Evaluate the shipped script in a fresh browser global for every test.
 module.exports = function loadUi(overrides = {}) {
@@ -13,6 +14,6 @@ module.exports = function loadUi(overrides = {}) {
   };
   context.window = context;
   vm.createContext(context);
-  vm.runInContext(source, context);
+  vm.runInContext(source, context, { filename });
   return context;
 };

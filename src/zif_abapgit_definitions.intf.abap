@@ -37,6 +37,8 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_files_item_by_file_tt TYPE SORTED TABLE OF ty_file_item WITH UNIQUE KEY file-path file-filename.
   TYPES:
+    ty_files TYPE STANDARD TABLE OF zif_abapgit_git_definitions=>ty_file WITH DEFAULT KEY.
+  TYPES:
     ty_yes_no         TYPE c LENGTH 1,
     ty_yes_no_partial TYPE c LENGTH 1.
   TYPES:
@@ -78,6 +80,7 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     BEGIN OF ty_deserialize_checks,
       overwrite             TYPE ty_overwrite_tt,
+      overwrite_files       TYPE ty_files,
       warning_package       TYPE ty_overwrite_tt,
       data_loss             TYPE ty_overwrite_tt,
       delete_tabl_with_data TYPE ty_overwrite_tt,

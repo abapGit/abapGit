@@ -273,11 +273,13 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD find_remote_dot_apack.
 
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
+    DATA lt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt.
 
-    get_files_remote( ).
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote.
 
-    READ TABLE mt_remote ASSIGNING <ls_remote>
+    lt_remote = get_files_remote( ).
+
+    READ TABLE lt_remote ASSIGNING <ls_remote>
       WITH KEY file_path
       COMPONENTS path     = zif_abapgit_definitions=>c_root_dir
                  filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
@@ -607,11 +609,15 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~find_remote_dot_abapgit.
 
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
+    DATA lt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt.
 
-    get_files_remote( ).
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote.
 
-    READ TABLE mt_remote ASSIGNING <ls_remote>
+    " Use the filtered file list so exclude_remote_paths in local settings
+    " can pin a repo-specific local .abapgit.xml against the remote root dot
+    lt_remote = get_files_remote( ).
+
+    READ TABLE lt_remote ASSIGNING <ls_remote>
       WITH KEY file_path
       COMPONENTS path     = zif_abapgit_definitions=>c_root_dir
                  filename = zif_abapgit_definitions=>c_dot_abapgit.

@@ -7,6 +7,7 @@ CLASS ltcl_find_remote_dot_abapgit DEFINITION FINAL FOR TESTING
     METHODS:
       positive FOR TESTING RAISING cx_static_check,
       new_repo_needs_no_dot_abapgit FOR TESTING RAISING cx_static_check,
+      dot_ignored_when_excluded FOR TESTING RAISING cx_static_check,
 
       given_any_repo,
       when_find_remote_dot_abapgit,
@@ -18,7 +19,9 @@ CLASS ltcl_find_remote_dot_abapgit DEFINITION FINAL FOR TESTING
       then_dot_abapgit_is_not_bound,
       given_repo_has_files
         IMPORTING
-          iv_number_of_files TYPE i.
+          iv_number_of_files TYPE i,
+      given_dot_excluded_locally
+        RAISING zcx_abapgit_exception.
 
     DATA:
       mi_repo        TYPE REF TO zif_abapgit_repo,
@@ -47,6 +50,20 @@ CLASS ltcl_find_remote_dot_abapgit IMPLEMENTATION.
     given_any_repo( ).
     given_repo_has_files( 3 ). " a few random files
     given_no_dot_abapgit_file( ).
+
+    when_find_remote_dot_abapgit( ).
+
+    then_dot_abapgit_is_not_bound( ).
+    then_no_exception_is_raised( ).
+
+  ENDMETHOD.
+
+
+  METHOD dot_ignored_when_excluded.
+
+    given_any_repo( ).
+    given_dot_abapgit_file( ).
+    given_dot_excluded_locally( ).
 
     when_find_remote_dot_abapgit( ).
 
@@ -104,6 +121,17 @@ CLASS ltcl_find_remote_dot_abapgit IMPLEMENTATION.
 
 
   METHOD given_no_dot_abapgit_file.
+
+  ENDMETHOD.
+
+
+  METHOD given_dot_excluded_locally.
+
+    DATA ls_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings.
+
+    ls_settings = mi_repo->get_local_settings( ).
+    APPEND '/.abapgit.xml' TO ls_settings-exclude_remote_paths.
+    mi_repo->set_local_settings( ls_settings ).
 
   ENDMETHOD.
 

@@ -152,11 +152,15 @@ test("message toggle runs before dummy navigation is suppressed", () => {
 test("diff Jump keeps its own scroll behavior without a subsequent Back", () => {
   const p = page();
   let jumps = 0;
-  p.context.document.querySelector = () => ({ scrollIntoView() { jumps++; } });
   p.context.setTimeout = fn => fn();
   const anchor = p.link("#");
   anchor.text = "/src/file.abap";
   const helper = Object.create(p.context.DiffHelper.prototype);
+  helper.dom = { diffList: { children: [{
+    className: "diff",
+    getAttribute(name) { return name === "data-file" ? anchor.text : null; },
+    scrollIntoView() { jumps++; }
+  }] } };
   p.followFragment(anchor, { ownHandler(e) { helper.onJump(e); } });
   assert.equal(jumps, 1);
   assert.equal(p.backs, 0);
