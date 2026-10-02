@@ -32,7 +32,13 @@ CLASS zcl_abapgit_git_add_patch DEFINITION
         RETURNING
           VALUE(rt_patch) TYPE string_table
         RAISING
-          zcx_abapgit_exception.
+          zcx_abapgit_exception,
+
+      without_marker
+        IMPORTING
+          iv_line        TYPE string
+        RETURNING
+          VALUE(rv_line) TYPE string.
 ENDCLASS.
 
 
@@ -49,26 +55,26 @@ CLASS ZCL_ABAPGIT_GIT_ADD_PATCH IMPLEMENTATION.
       CASE <ls_diff>-result.
         WHEN zif_abapgit_definitions=>c_diff-unchanged.
 
-          INSERT <ls_diff>-old INTO TABLE rt_patch.
+          INSERT without_marker( <ls_diff>-old ) INTO TABLE rt_patch.
 
         WHEN zif_abapgit_definitions=>c_diff-insert.
 
           IF <ls_diff>-patch_flag = abap_true.
-            INSERT <ls_diff>-new INTO TABLE rt_patch.
+            INSERT without_marker( <ls_diff>-new ) INTO TABLE rt_patch.
           ENDIF.
 
         WHEN zif_abapgit_definitions=>c_diff-delete.
 
           IF <ls_diff>-patch_flag = abap_false.
-            INSERT <ls_diff>-old INTO TABLE rt_patch.
+            INSERT without_marker( <ls_diff>-old ) INTO TABLE rt_patch.
           ENDIF.
 
         WHEN zif_abapgit_definitions=>c_diff-update.
 
           IF <ls_diff>-patch_flag = abap_true.
-            INSERT <ls_diff>-new INTO TABLE rt_patch.
+            INSERT without_marker( <ls_diff>-new ) INTO TABLE rt_patch.
           ELSE.
-            INSERT <ls_diff>-old INTO TABLE rt_patch.
+            INSERT without_marker( <ls_diff>-old ) INTO TABLE rt_patch.
           ENDIF.
 
         WHEN OTHERS.
@@ -78,6 +84,21 @@ CLASS ZCL_ABAPGIT_GIT_ADD_PATCH IMPLEMENTATION.
       ENDCASE.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD without_marker.
+
+    " zcl_abapgit_diff_std appends a form feed to a last line without newline
+    " when only the other side has one. It marks the diff, not the file
+    DATA lv_length TYPE i.
+
+    rv_line = iv_line.
+    lv_length = strlen( rv_line ) - 1.
+    IF lv_length >= 0 AND rv_line+lv_length(1) = cl_abap_char_utilities=>form_feed.
+      rv_line = rv_line(lv_length).
+    ENDIF.
 
   ENDMETHOD.
 
