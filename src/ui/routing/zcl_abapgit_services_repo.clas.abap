@@ -351,12 +351,22 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     DATA ls_tadir TYPE zif_abapgit_definitions=>ty_tadir.
 
     FIELD-SYMBOLS <ls_overwrite> LIKE LINE OF is_checks-overwrite.
+    FIELD-SYMBOLS <ls_tabl_data> LIKE LINE OF is_checks-delete_tabl_with_data.
 
     " get confirmed deletions
     LOOP AT is_checks-overwrite ASSIGNING <ls_overwrite>
       WHERE ( action = zif_abapgit_objects=>c_deserialize_action-delete
       OR action = zif_abapgit_objects=>c_deserialize_action-delete_add )
       AND decision = zif_abapgit_definitions=>c_yes.
+
+      " a table that contains data needs its own confirmation
+      READ TABLE is_checks-delete_tabl_with_data ASSIGNING <ls_tabl_data>
+        WITH KEY object_type_and_name COMPONENTS
+          obj_type = <ls_overwrite>-obj_type
+          obj_name = <ls_overwrite>-obj_name.
+      IF sy-subrc = 0 AND <ls_tabl_data>-decision = zif_abapgit_definitions=>c_no.
+        CONTINUE.
+      ENDIF.
 
       ls_tadir-pgmid    = 'R3TR'.
       ls_tadir-object   = <ls_overwrite>-obj_type.
