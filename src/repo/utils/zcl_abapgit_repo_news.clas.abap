@@ -119,7 +119,7 @@ CLASS zcl_abapgit_repo_news IMPLEMENTATION.
     FIELD-SYMBOLS <ls_file> LIKE LINE OF lt_remote.
 
 
-    IF ii_repo->is_offline( ) = abap_true.
+    IF ii_repo->supports_git( ) = abap_false.
       RETURN.
     ENDIF.
 

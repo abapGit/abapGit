@@ -33,6 +33,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       BEGIN OF ty_overview,
         favorite            TYPE string,
         offline             TYPE abap_bool,
+        git                 TYPE abap_bool,
         key                 TYPE zif_abapgit_persistence=>ty_value,
         name                TYPE string,
         labels              TYPE string_table,
@@ -388,6 +389,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ls_overview-favorite        = zcl_abapgit_persist_factory=>get_user(
         )->is_favorite_repo( <ls_repo>->ms_data-key ).
       ls_overview-offline         = <ls_repo>->ms_data-offline.
+      ls_overview-git             = <ls_repo>->supports_git( ).
       ls_overview-key             = <ls_repo>->ms_data-key.
       ls_overview-name            = <ls_repo>->get_name( ).
       ls_overview-labels          = zcl_abapgit_repo_labels=>split( <ls_repo>->ms_data-local_settings-labels ).
@@ -443,6 +445,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     CONSTANTS:
       lc_offline_class TYPE string VALUE `action_offline_repo`,
       lc_online_class  TYPE string VALUE `action_online_repo`,
+      lc_git_class     TYPE string VALUE `action_git_repo`,
       lc_action_class  TYPE string VALUE `action_link`.
 
     DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
@@ -462,13 +465,13 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     lo_toolbar->add(
       iv_txt      = |Stage|
       iv_act      = |{ zif_abapgit_definitions=>c_action-go_stage }{ lv_dummy_key_param }|
-      iv_class    = |{ lc_action_class } { lc_online_class }|
+      iv_class    = |{ lc_action_class } { lc_git_class }|
       iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar->add(
       iv_txt      = |Patch|
       iv_act      = |{ zif_abapgit_definitions=>c_action-go_patch }{ lv_dummy_key_param }|
-      iv_class    = |{ lc_action_class } { lc_online_class }|
+      iv_class    = |{ lc_action_class } { lc_git_class }|
       iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar->add(
@@ -506,7 +509,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     lo_toolbar_more_sub->add(
       iv_txt      = |Stage by Transport|
       iv_act      = |{ zif_abapgit_definitions=>c_action-go_stage_transport }{ lv_dummy_key_param }|
-      iv_class    = |{ lc_action_class } { lc_online_class }|
+      iv_class    = |{ lc_action_class } { lc_git_class }|
       iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar_more_sub->add(
@@ -736,7 +739,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       lv_fav_tr_class = ''.
     ENDIF.
 
-    ii_html->add( |<tr{ lv_fav_tr_class } data-key="{ is_repo-key }" data-offline="{ is_repo-offline }">| ).
+    ii_html->add(
+      |<tr{ lv_fav_tr_class } data-key="{ is_repo-key }" data-offline="{ is_repo-offline }"| &&
+      | data-git="{ is_repo-git }">| ).
 
     " Favorite
     lv_favorite_icon = ii_html->icon(

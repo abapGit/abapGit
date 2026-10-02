@@ -52,6 +52,13 @@ CLASS zcl_abapgit_hash DEFINITION
         VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS sha256_raw
+      IMPORTING
+        !iv_data         TYPE xstring
+      RETURNING
+        VALUE(rv_sha256) TYPE string
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS sha1_string
       IMPORTING
         !iv_data       TYPE string
@@ -169,6 +176,28 @@ CLASS zcl_abapgit_hash IMPLEMENTATION.
 
     rv_sha1 = lv_hash.
     TRANSLATE rv_sha1 TO LOWER CASE.
+
+  ENDMETHOD.
+
+
+  METHOD sha256_raw.
+
+    DATA: lv_hash  TYPE string,
+          lx_error TYPE REF TO cx_abap_message_digest.
+
+    TRY.
+        cl_abap_message_digest=>calculate_hash_for_raw(
+          EXPORTING
+            if_algorithm     = 'SHA256'
+            if_data          = iv_data
+          IMPORTING
+            ef_hashstring    = lv_hash ).
+      CATCH cx_abap_message_digest INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
+
+    rv_sha256 = lv_hash.
+    TRANSLATE rv_sha256 TO LOWER CASE.
 
   ENDMETHOD.
 

@@ -49,8 +49,11 @@ CLASS zcl_abapgit_flow_page_utils IMPLEMENTATION.
     FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
 
     lv_key = ii_event->query( )->get( 'KEY' ).
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-    li_repo ?= li_repo_online.
+    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+    IF li_repo->supports_git( ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Flow operations are only supported for Git repositories' ).
+    ENDIF.
+    li_repo_online ?= li_repo.
 
     lv_remote_sha1 = ii_event->query( )->get( 'REMOTE_SHA1' ).
 

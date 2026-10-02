@@ -364,6 +364,10 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
 
+    IF li_repo->supports_git( ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Patch is only supported for Git repositories' ).
+    ENDIF.
+
     IF li_repo->get_local_settings( )-code_inspector_check_variant IS NOT INITIAL.
 
       TRY.
@@ -404,6 +408,10 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     lv_sci_result = zif_abapgit_definitions=>c_sci_result-no_run.
 
     li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+
+    IF li_repo->supports_git( ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Staging is unavailable for this repository type' ).
+    ENDIF.
 
     TRY.
         li_repo_online ?= li_repo.
@@ -477,6 +485,11 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
     ENDIF.
 
+    IF li_repo IS BOUND AND li_repo->supports_git( ) = abap_false AND
+       ii_event->mv_action <> zif_abapgit_definitions=>c_action-git_pull.
+      zcx_abapgit_exception=>raise( 'Git branch and tag operations are only supported for Git repositories' ).
+    ENDIF.
+
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-git_pull.                      " GIT Pull
         zcl_abapgit_services_git=>pull( lv_key ).
@@ -511,9 +524,11 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     DATA lt_r_trkorr TYPE zif_abapgit_definitions=>ty_trrngtrkor_tt.
     DATA li_repo TYPE REF TO zif_abapgit_repo.
 
-    lt_r_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_select_wb_tc_tr_and_tsk( ).
-
     li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    IF li_repo->supports_git( ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Stage by transport is only supported for Git repositories' ).
+    ENDIF.
+    lt_r_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_select_wb_tc_tr_and_tsk( ).
 
     CREATE OBJECT ro_filter.
     ro_filter->set_filter_values( iv_package  = li_repo->get_package( )

@@ -918,16 +918,22 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     DATA: li_repo_online TYPE REF TO zif_abapgit_repo_online,
           lx_error       TYPE REF TO zcx_abapgit_exception,
           lv_hint        TYPE string,
-          lv_icon        TYPE string.
+          lv_icon        TYPE string,
+          lv_remote_address TYPE string,
+          lv_reference TYPE string,
+          lv_revision TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     IF ii_repo->is_offline( ) = abap_true.
       lv_icon = 'plug/darkgrey'.
       lv_hint = 'Offline Repository'.
-    ELSE.
+    ELSEIF ii_repo->supports_git( ) = abap_true.
       lv_icon = 'cloud-upload-alt/blue'.
       lv_hint = 'On-line Repository'.
+    ELSE.
+      lv_icon = 'cloud-download-alt/blue'.
+      lv_hint = 'OCI Registry Repository'.
     ENDIF.
 
     ri_html->add( '<table class="w100"><tr>' ).
@@ -938,10 +944,11 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ri_html->add_icon( iv_name = lv_icon
                        iv_hint = lv_hint ).
     ri_html->add( |<span class="name">{ ii_repo->get_name( ) }</span>| ).
-    IF ii_repo->is_offline( ) = abap_false.
+    IF ii_repo->supports_git( ) = abap_true.
       li_repo_online ?= ii_repo.
-
       ri_html->add( render_repo_url( li_repo_online->get_url( ) ) ).
+    ELSEIF ii_repo->is_offline( ) = abap_false.
+      ri_html->add( render_repo_url( ii_repo->get_remote_address( ) ) ).
     ENDIF.
 
     IF iv_show_edit = abap_true.
@@ -954,17 +961,18 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ENDIF.
 
     IF ii_repo->is_offline( ) = abap_false.
-      li_repo_online ?= ii_repo.
+      lv_remote_address = ii_repo->get_remote_address( ).
 
       ri_html->add_a( iv_txt   = ri_html->icon( iv_name  = 'copy-solid'
                                                 iv_class = 'pad-sides'
                                                 iv_hint  = 'Copy URL to Clipboard' )
                       iv_act   = |{ zif_abapgit_definitions=>c_action-clipboard }| &&
-                                 |?clipboard={ li_repo_online->get_url( ) }|
+                                 |?clipboard={ lv_remote_address }|
                       iv_class = |url| ).
     ENDIF.
 
-    IF ii_repo->is_offline( ) = abap_false AND iv_show_commit = abap_true.
+    IF ii_repo->supports_git( ) = abap_true AND iv_show_commit = abap_true.
+      li_repo_online ?= ii_repo.
       TRY.
           render_repo_top_commit_hash( ii_html        = ri_html
                                        ii_repo_online = li_repo_online ).
@@ -1033,11 +1041,25 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ENDIF.
 
     " Branch
-    IF ii_repo->is_offline( ) = abap_false.
+    IF ii_repo->supports_git( ) = abap_true.
       li_repo_online ?= ii_repo.
       IF iv_show_branch = abap_true.
         ri_html->add( render_branch_name( ii_repo_online = li_repo_online
                                           iv_interactive = iv_interactive_branch ) ).
+      ENDIF.
+    ELSEIF ii_repo->get_repo_kind( ) = zif_abapgit_persistence=>c_repo_kind-oci.
+      lv_reference = ii_repo->get_selected_reference( ).
+      ri_html->add( |<span class="url">Reference: { escape( val = lv_reference
+                                                            format = cl_abap_format=>e_html_text ) }</span>| ).
+      lv_revision = ii_repo->get_resolved_revision( ).
+      IF lv_revision IS NOT INITIAL.
+        ri_html->add( |<span class="url">Resolved: { escape( val = lv_revision
+                                                             format = cl_abap_format=>e_html_text ) }</span>| ).
+      ENDIF.
+      lv_revision = ii_repo->get_imported_revision( ).
+      IF lv_revision IS NOT INITIAL.
+        ri_html->add( |<span class="url">Imported: { escape( val = lv_revision
+                                                             format = cl_abap_format=>e_html_text ) }</span>| ).
       ENDIF.
     ENDIF.
 

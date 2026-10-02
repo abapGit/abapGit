@@ -154,15 +154,33 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
   METHOD instantiate_and_add.
 
-    IF is_repo_meta-offline = abap_false.
-      CREATE OBJECT ri_repo TYPE zcl_abapgit_repo_online
-        EXPORTING
-          is_data = is_repo_meta.
-    ELSE.
-      CREATE OBJECT ri_repo TYPE zcl_abapgit_repo_offline
-        EXPORTING
-          is_data = is_repo_meta.
+    DATA lv_kind TYPE zif_abapgit_persistence=>ty_repo_kind.
+
+    lv_kind = is_repo_meta-repo_kind.
+    IF lv_kind IS INITIAL.
+      IF is_repo_meta-offline = abap_true.
+        lv_kind = zif_abapgit_persistence=>c_repo_kind-offline.
+      ELSE.
+        lv_kind = zif_abapgit_persistence=>c_repo_kind-git.
+      ENDIF.
     ENDIF.
+
+    CASE lv_kind.
+      WHEN zif_abapgit_persistence=>c_repo_kind-git.
+        CREATE OBJECT ri_repo TYPE zcl_abapgit_repo_online
+          EXPORTING
+            is_data = is_repo_meta.
+      WHEN zif_abapgit_persistence=>c_repo_kind-offline.
+        CREATE OBJECT ri_repo TYPE zcl_abapgit_repo_offline
+          EXPORTING
+            is_data = is_repo_meta.
+      WHEN zif_abapgit_persistence=>c_repo_kind-oci.
+        CREATE OBJECT ri_repo TYPE zcl_abapgit_repo_oci
+          EXPORTING
+            is_data = is_repo_meta.
+      WHEN OTHERS.
+        zcx_abapgit_exception=>raise( |Unknown repository kind { lv_kind }| ).
+    ENDCASE.
     add( ri_repo ).
 
   ENDMETHOD.
@@ -335,7 +353,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     " Instances in mt_list are of *_online and *_offline type
     " If type is changed object should be recreated from the proper class
     " TODO refactor, e.g. unify repo logic in one class
-    IF is_change_mask-offline = abap_true.
+    IF is_change_mask-offline = abap_true OR is_change_mask-repo_kind = abap_true.
       reinstantiate_repo(
         iv_key  = iv_key
         is_meta = is_meta ).
@@ -477,6 +495,10 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     lt_repos = zcl_abapgit_persist_factory=>get_repo( )->list( ).
     LOOP AT lt_repos ASSIGNING <ls_repo> WHERE offline = abap_false.
 
+      IF <ls_repo>-repo_kind = zif_abapgit_persistence=>c_repo_kind-oci.
+        CONTINUE.
+      ENDIF.
+
       lv_check_repo_address = zcl_abapgit_url=>url_address( <ls_repo>-url ).
 
       IF lv_current_repo_address = lv_check_repo_address.
@@ -502,20 +524,27 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     DATA: lt_repo        TYPE zif_abapgit_repo_srv=>ty_repo_list,
           li_repo        TYPE REF TO zif_abapgit_repo,
-          lv_url         TYPE string,
           lv_package     TYPE devclass,
-          li_repo_online TYPE REF TO zif_abapgit_repo_online,
+          lv_remote_address TYPE string,
+          ls_oci_reference TYPE zcl_abapgit_oci_reference=>ty_reference,
+          ls_installed_reference TYPE zcl_abapgit_oci_reference=>ty_reference,
           lv_err         TYPE string.
 
     lt_repo = zif_abapgit_repo_srv~list( ).
 
     LOOP AT lt_repo INTO li_repo.
       CHECK li_repo->is_offline( ) = abap_false.
-      li_repo_online ?= li_repo.
-
-      lv_url     = li_repo_online->get_url( ).
+      lv_remote_address = li_repo->get_remote_address( ).
       lv_package = li_repo->get_package( ).
-      CHECK to_upper( lv_url ) = to_upper( iv_url ).
+      IF li_repo->supports_git( ) = abap_true.
+        CHECK to_upper( lv_remote_address ) = to_upper( iv_url ).
+      ELSE.
+        CHECK iv_url CP 'oci://*'.
+        ls_oci_reference = zcl_abapgit_oci_reference=>parse( iv_url ).
+        ls_installed_reference = zcl_abapgit_oci_reference=>parse( lv_remote_address ).
+        CHECK ls_oci_reference-registry = ls_installed_reference-registry
+          AND ls_oci_reference-repository = ls_installed_reference-repository.
+      ENDIF.
 
       " Validate bindings
       "TODO refactor: move this message out of this method
@@ -528,6 +557,87 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       rv_installed = abap_true.
       EXIT.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_srv~new_oci.
+
+    DATA: ls_repo TYPE zif_abapgit_persistence=>ty_repo,
+          ls_reference TYPE zcl_abapgit_oci_reference=>ty_reference,
+          lv_key TYPE zif_abapgit_persistence=>ty_repo-key,
+          lv_canonical TYPE string,
+          lv_installed TYPE abap_bool,
+          lx_error TYPE REF TO zcx_abapgit_exception,
+          lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit.
+
+    IF iv_registry IS INITIAL OR iv_repository IS INITIAL OR iv_reference IS INITIAL OR
+       iv_package IS INITIAL.
+      zcx_abapgit_exception=>raise( 'OCI registry, repository, reference, and package are required' ).
+    ENDIF.
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-create_repo ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Not authorized' ).
+    ENDIF.
+
+    ls_reference = zcl_abapgit_oci_reference=>parse(
+      zcl_abapgit_oci_reference=>build(
+        iv_registry   = iv_registry
+        iv_repository = iv_repository
+        iv_reference  = iv_reference ) ).
+    lv_canonical = ls_reference-canonical.
+
+    zif_abapgit_repo_srv~validate_package(
+      iv_package    = iv_package
+      iv_ign_subpkg = iv_ign_subpkg ).
+    lv_installed = zif_abapgit_repo_srv~is_repo_installed(
+      iv_url            = lv_canonical
+      iv_target_package = iv_package ).
+    IF lv_installed = abap_true.
+      zcx_abapgit_exception=>raise( |OCI repository { lv_canonical } is already installed| ).
+    ENDIF.
+
+    lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
+    lo_dot_abapgit->set_folder_logic( iv_folder_logic ).
+    lo_dot_abapgit->set_name( iv_name ).
+    lo_dot_abapgit->set_abap_language_version( iv_abap_lang_vers ).
+
+    lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
+      iv_url            = lv_canonical
+      iv_display_name   = iv_display_name
+      iv_package        = iv_package
+      iv_offline        = abap_false
+      iv_repo_kind      = zif_abapgit_persistence=>c_repo_kind-oci
+      iv_oci_registry   = ls_reference-registry
+      iv_oci_repository = ls_reference-repository
+      iv_oci_reference  = ls_reference-reference
+      is_dot_abapgit    = lo_dot_abapgit->get_data( ) ).
+
+    TRY.
+        ls_repo = zcl_abapgit_persist_factory=>get_repo( )->read( lv_key ).
+      CATCH zcx_abapgit_not_found.
+        zcl_abapgit_persist_factory=>get_repo( )->delete( lv_key ).
+        COMMIT WORK AND WAIT.
+        zcx_abapgit_exception=>raise( 'new_oci not found' ).
+    ENDTRY.
+
+    TRY.
+        ri_repo = instantiate_and_add( ls_repo ).
+        ls_repo-local_settings-ignore_subpackages = iv_ign_subpkg.
+        ls_repo-local_settings-main_language_only = iv_main_lang_only.
+        ls_repo-local_settings-labels = iv_labels.
+        ri_repo->set_local_settings( ls_repo-local_settings ).
+        ri_repo->refresh( ).
+        ri_repo->get_files_remote( ).
+        ri_repo->find_remote_dot_abapgit( ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        IF ri_repo IS BOUND.
+          zif_abapgit_repo_srv~delete( ri_repo ).
+        ELSE.
+          zcl_abapgit_persist_factory=>get_repo( )->delete( lv_key ).
+        ENDIF.
+        COMMIT WORK AND WAIT.
+        RAISE EXCEPTION lx_error.
+    ENDTRY.
 
   ENDMETHOD.
 
