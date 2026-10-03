@@ -24,17 +24,18 @@ CLASS zcl_abapgit_syntax_xml DEFINITION
         "for XML tags, we will use a submatch
         " main pattern includes quoted strings so we can ignore < and > in attr values
         xml_tag  TYPE string VALUE '(?:"[^"]*")|(?:''[^'']*'')|(?:`[^`]*`)|([<>])',
-        attr     TYPE string VALUE '(?:^|\s)[-a-z:_0-9]+\s*(?==\s*["|''|`])',
+        attr     TYPE string VALUE '(?:^|\s)[-a-z:_.0-9]+\s*(?==\s*["''`])',
         attr_val TYPE string VALUE '("[^"]*")|(''[^'']*'')|(`[^`]*`)',
         " comments <!-- ... -->
-        comment  TYPE string VALUE '[\<]!--.*--[\>]|[\<]!--|--[\>]',
+        comment  TYPE string VALUE '<!--(?:(?!-->).)*-->|<!--|-->',
       END OF c_regex .
 
     METHODS constructor .
   PROTECTED SECTION.
-    CLASS-DATA gv_comment TYPE abap_bool.
+    DATA mv_comment TYPE abap_bool.
 
     METHODS order_matches REDEFINITION.
+    METHODS parse_line REDEFINITION.
 
   PRIVATE SECTION.
 ENDCLASS.
@@ -49,7 +50,7 @@ CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
     super->constructor( ).
 
     " Reset indicator for multi-line comments
-    CLEAR gv_comment.
+    CLEAR mv_comment.
 
     " Initialize instances of regular expressions
     add_rule( iv_regex    = c_regex-xml_tag
@@ -78,6 +79,9 @@ CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
       lv_match      TYPE string,
       lv_line_len   TYPE i,
       lv_cmmt_end   TYPE i,
+      lv_comment_end TYPE i,
+      lv_prev_end   TYPE i,
+      ls_comment    TYPE ty_match,
       lv_index      TYPE sy-tabix,
       lv_prev_token TYPE c,
       lv_state      TYPE c VALUE 'O'. " O - for open tag; C - for closed tag;
@@ -86,13 +90,11 @@ CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
       <ls_prev>  TYPE ty_match,
       <ls_match> TYPE ty_match.
 
-    SORT ct_matches BY offset.
-
     lv_line_len = strlen( iv_line ).
 
-    " Check if this is part of multi-line comment and mark it accordingly
-    IF gv_comment = abap_true.
-      READ TABLE ct_matches WITH KEY token = c_token-comment TRANSPORTING NO FIELDS.
+    " A continued comment ends at the first delimiter, regardless of its content.
+    IF mv_comment = abap_true.
+      FIND FIRST OCCURRENCE OF '-->' IN iv_line MATCH OFFSET lv_comment_end.
       IF sy-subrc <> 0.
         CLEAR ct_matches.
         APPEND INITIAL LINE TO ct_matches ASSIGNING <ls_match>.
@@ -101,10 +103,25 @@ CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
         <ls_match>-length = lv_line_len.
         RETURN.
       ENDIF.
+      lv_comment_end = lv_comment_end + 3.
+      DELETE ct_matches WHERE offset < lv_comment_end.
+      ls_comment-token = c_token-comment.
+      ls_comment-length = lv_comment_end.
+      APPEND ls_comment TO ct_matches.
+      mv_comment = abap_false.
     ENDIF.
+
+    " Longest matches, including any continued comment prefix.
+    SORT ct_matches BY offset length DESCENDING.
 
     LOOP AT ct_matches ASSIGNING <ls_match>.
       lv_index = sy-tabix.
+
+      " Ignore comment delimiters and nested quotes inside an accepted match.
+      IF <ls_match>-offset < lv_prev_end.
+        DELETE ct_matches INDEX lv_index.
+        CONTINUE.
+      ENDIF.
 
       lv_match = substring( val = iv_line
                             off = <ls_match>-offset
@@ -133,16 +150,17 @@ CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
           ENDIF.
 
         WHEN c_token-comment.
+          lv_state = 'C'.
           IF lv_match = '<!--'.
             DELETE ct_matches WHERE offset > <ls_match>-offset.
             DELETE ct_matches WHERE offset = <ls_match>-offset AND token = c_token-xml_tag.
             <ls_match>-length = lv_line_len - <ls_match>-offset.
-            gv_comment = abap_true.
+            mv_comment = abap_true.
           ELSEIF lv_match = '-->'.
             DELETE ct_matches WHERE offset < <ls_match>-offset.
             <ls_match>-length = <ls_match>-offset + 3.
             <ls_match>-offset = 0.
-            gv_comment = abap_false.
+            mv_comment = abap_false.
           ELSE.
             lv_cmmt_end = <ls_match>-offset + <ls_match>-length.
             DELETE ct_matches WHERE offset > <ls_match>-offset AND offset <= lv_cmmt_end.
@@ -161,6 +179,7 @@ CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
 
       ENDCASE.
 
+      lv_prev_end = <ls_match>-offset + <ls_match>-length.
       lv_prev_token = <ls_match>-token.
       ASSIGN <ls_match> TO <ls_prev>.
     ENDLOOP.
@@ -177,6 +196,92 @@ CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
       ENDIF.
 
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD parse_line.
+
+    DATA:
+      lv_line_len       TYPE i,
+      lv_segment_start  TYPE i,
+      lv_scan_offset    TYPE i,
+      lv_pattern        TYPE string,
+      lv_comment_end    TYPE i,
+      lv_found_offset   TYPE i,
+      lv_found_length   TYPE i,
+      lv_segment        TYPE string,
+      lv_comment_length TYPE i,
+      lt_segment_matches TYPE ty_match_tt,
+      ls_comment        TYPE ty_match.
+
+    FIELD-SYMBOLS <ls_segment_match> TYPE ty_match.
+
+    lv_line_len = strlen( iv_line ).
+    lv_pattern = c_regex-attr_val && '|<!--'.
+
+    " Comments are parsed separately so their quotes cannot hide subsequent tags.
+    IF mv_comment = abap_true.
+      FIND FIRST OCCURRENCE OF '-->' IN iv_line MATCH OFFSET lv_comment_end.
+      IF sy-subrc <> 0.
+        ls_comment-token = c_token-comment.
+        ls_comment-length = lv_line_len.
+        APPEND ls_comment TO rt_matches.
+        RETURN.
+      ENDIF.
+      lv_segment_start = lv_comment_end + 3.
+      lv_scan_offset = lv_segment_start.
+      ls_comment-token = c_token-comment.
+      ls_comment-length = lv_segment_start.
+      APPEND ls_comment TO rt_matches.
+    ENDIF.
+
+    WHILE lv_scan_offset < lv_line_len.
+      FIND FIRST OCCURRENCE OF REGEX lv_pattern IN iv_line+lv_scan_offset
+        MATCH OFFSET lv_found_offset MATCH LENGTH lv_found_length ##REGEX_POSIX.
+      IF sy-subrc <> 0.
+        EXIT.
+      ENDIF.
+      lv_found_offset = lv_found_offset + lv_scan_offset.
+      lv_scan_offset = lv_found_offset + lv_found_length.
+      IF substring( val = iv_line
+                    off = lv_found_offset
+                    len = lv_found_length ) <> '<!--'.
+        CONTINUE.
+      ENDIF.
+
+      lv_segment = substring( val = iv_line
+                              off = lv_segment_start
+                              len = lv_found_offset - lv_segment_start ).
+      lt_segment_matches = super->parse_line( lv_segment ).
+      LOOP AT lt_segment_matches ASSIGNING <ls_segment_match>.
+        <ls_segment_match>-offset = <ls_segment_match>-offset + lv_segment_start.
+      ENDLOOP.
+      APPEND LINES OF lt_segment_matches TO rt_matches.
+
+      lv_comment_length = 4.
+      FIND FIRST OCCURRENCE OF '-->' IN iv_line+lv_scan_offset MATCH OFFSET lv_comment_end.
+      IF sy-subrc = 0.
+        lv_scan_offset = lv_scan_offset + lv_comment_end + 3.
+        lv_comment_length = lv_scan_offset - lv_found_offset.
+      ELSE.
+        lv_scan_offset = lv_line_len.
+      ENDIF.
+      CLEAR ls_comment.
+      ls_comment-token = c_token-comment.
+      ls_comment-offset = lv_found_offset.
+      ls_comment-length = lv_comment_length.
+      APPEND ls_comment TO rt_matches.
+      lv_segment_start = lv_scan_offset.
+    ENDWHILE.
+
+    lv_segment = substring( val = iv_line
+                            off = lv_segment_start ).
+    lt_segment_matches = super->parse_line( lv_segment ).
+    LOOP AT lt_segment_matches ASSIGNING <ls_segment_match>.
+      <ls_segment_match>-offset = <ls_segment_match>-offset + lv_segment_start.
+    ENDLOOP.
+    APPEND LINES OF lt_segment_matches TO rt_matches.
 
   ENDMETHOD.
 ENDCLASS.
