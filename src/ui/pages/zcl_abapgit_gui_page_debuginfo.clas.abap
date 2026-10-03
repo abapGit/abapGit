@@ -512,7 +512,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
     ri_html->add( render_supported_object_types( ) ).
     ri_html->add( '</div>' ).
 
-    mv_html = |<!DOCTYPE html><html lang="en">\n<html>\n|
+    mv_html = |<!DOCTYPE html>\n<html lang="en">\n|
       && |<head>\n<title>abapGit Debug Info</title>\n</head>\n|
       && |<body>\n{ ri_html->render( ) }\n</body>\n</html>\n|.
 

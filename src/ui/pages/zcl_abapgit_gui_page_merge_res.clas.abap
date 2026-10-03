@@ -379,7 +379,7 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
       lv_bg = ' diff_ins'.
       lv_mark = `+`.
     ENDIF.
-    lv_new = |<td class="num" line-num="{ is_diff_line-new_num }"></td>|
+    lv_new = |<td class="num" data-num="{ is_diff_line-new_num }"></td>|
           && |<td class="code{ lv_bg }">{ lv_mark }{ is_diff_line-new }</td>|.
 
     " Old line
@@ -392,7 +392,7 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
       lv_bg = ' diff_del'.
       lv_mark = `-`.
     ENDIF.
-    lv_old = |<td class="num" line-num="{ is_diff_line-old_num }"></td>|
+    lv_old = |<td class="num" data-num="{ is_diff_line-old_num }"></td>|
           && |<td class="code{ lv_bg }">{ lv_mark }{ is_diff_line-old }</td>|.
 
     " render line, inverse sides if remote is newer

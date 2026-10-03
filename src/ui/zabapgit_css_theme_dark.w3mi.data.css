@@ -155,7 +155,7 @@ div.diff_content { background-color: var(--theme-background-color); }
 /* DIFF TABLE */
 
 table.diff_tab td,th { color: #fff; }
-table.diff_tab thead.nav_line { background-color: var(--theme-container-background-color); }
+table.diff_tab tr.nav_line { background-color: var(--theme-container-background-color); }
 
 /* STYLES FOR SYNTAX HIGHLIGHTING */
 
