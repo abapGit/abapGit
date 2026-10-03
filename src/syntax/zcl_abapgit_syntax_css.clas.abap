@@ -55,7 +55,7 @@ CLASS zcl_abapgit_syntax_css DEFINITION
         " single or double quoted strings
         text      TYPE string VALUE '("[^"]*")|(''[^'']*'')|(`[^`]*`)',
         " Digits occur in HTML tags and CSS functions (h1, matrix3d)
-        keyword   TYPE string VALUE '@-?[a-z][a-z0-9\-]*\b|\b[a-z][a-z0-9\-]*\b',
+        keyword   TYPE string VALUE '--[a-z][a-z0-9\-]*\b|@-?[a-z][a-z0-9\-]*\b|\b[a-z][a-z0-9\-]*\b',
         " selectors begin with :
         selectors TYPE string VALUE '::?[a-z][a-z0-9\-]*\b',
         " units
