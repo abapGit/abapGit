@@ -512,8 +512,9 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
     ri_html->add( render_supported_object_types( ) ).
     ri_html->add( '</div>' ).
 
-    mv_html = '<!DOCTYPE html><html lang="en"><title>abapGit Debug Info</title></head>'.
-    mv_html = |<body>{ ri_html->render( ) }</body></html>|.
+    mv_html = |<!DOCTYPE html><html lang="en">\n<html>\n|
+      && |<head>\n<title>abapGit Debug Info</title>\n</head>\n|
+      && |<body>\n{ ri_html->render( ) }\n</body>\n</html>\n|.
 
     register_deferred_script( render_scripts( ) ).
 
