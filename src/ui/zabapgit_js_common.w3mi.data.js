@@ -648,6 +648,86 @@ function perfClear() {
 }
 
 /**********************************************************
+ * Keyboard
+ **********************************************************/
+
+// The page-wide key handlers all register here, and one document listener per
+// event type calls them in a fixed order. Who sees a key first matters: link
+// hints must consume a hint code before the repository overview reads its digits
+// as row moves, and later handlers skip a key an earlier one consumed
+// (event.defaultPrevented). Registering them directly left that order to the
+// order in which the ABAP pages happen to render their scripts.
+//
+// keypress and keydown stay separate events: keypress carries the typed
+// character (the one reliable source of it on the IE control), keydown the keys
+// that type none, like the arrows and F1.
+// Not in here, on purpose: listeners of single elements (inputs, popups) and
+// the source viewer's capturing listeners while it is open.
+var gKeyboard = {
+  order: {
+    sourceViewer: 10, // Ctrl+Shift+?, a troubleshooting key that no page shortcut may take
+    linkHints   : 20,
+    menus       : 30, // arrow keys through dropdown menus (KeyNavigation)
+    palette     : 40, // the toggle keys of the command palettes
+    page        : 50, // shortcuts of the page helpers (repository overview, stage)
+    hotkeys     : 60
+  },
+  handlers: {}
+};
+
+gKeyboard.on = function(type, order, handler) {
+  var handlers = gKeyboard.handlers[type];
+  if (!handlers) {
+    handlers = gKeyboard.handlers[type] = [];
+    document.addEventListener(type, function(event) { gKeyboard.dispatch(type, event) });
+  }
+  // after all handlers of the same order, so these keep their registration order
+  // (Array.prototype.sort is not stable on the IE control)
+  var i = handlers.length;
+  while (i > 0 && handlers[i - 1].order > order) i--;
+  handlers.splice(i, 0, { order: order, handler: handler });
+};
+
+// A failing handler must not take the later ones down with it, as it did not
+// while each had a listener of its own. Its error is rethrown afterwards, for
+// the error banner (see confirmInitialized).
+gKeyboard.dispatch = function(type, event) {
+  var handlers = gKeyboard.handlers[type].slice(); // a handler may register another one
+  var firstError;
+  for (var i = 0; i < handlers.length; i++) {
+    try {
+      handlers[i].handler(event);
+    } catch (error) {
+      if (firstError === undefined) firstError = error;
+    }
+  }
+  if (firstError !== undefined) throw firstError;
+};
+
+// Does the element take this key itself, as text or to move its caret? Then
+// it is no shortcut. A read-only field takes no text, so letter and digit
+// shortcuts stay on there, but it still moves its caret with the arrow keys.
+gKeyboard.isTakenByField = function(element, isArrowKey) {
+  if (!element) return false;
+  if (element.isContentEditable) return true;
+  if (!/^(INPUT|TEXTAREA|SELECT)$/.test(element.nodeName || "")) return false;
+  return isArrowKey || !element.readOnly;
+};
+
+// Is the user typing? Then letter and digit shortcuts must leave the key alone
+gKeyboard.isTyping = function() {
+  return gKeyboard.isTakenByField(document.activeElement, false);
+};
+
+// For keydown: -1 for arrow up, 1 for arrow down, 0 for any other key.
+// IE and old Edge name them "Up" and "Down", older controls only give the key code.
+gKeyboard.getVerticalArrow = function(event) {
+  if (event.key === "ArrowUp" || event.key === "Up" || event.keyCode === 38) return -1;
+  if (event.key === "ArrowDown" || event.key === "Down" || event.keyCode === 40) return 1;
+  return 0;
+};
+
+/**********************************************************
  * Repo Overview Logic
  **********************************************************/
 
@@ -739,11 +819,11 @@ RepoOverViewHelper.prototype.onPageLoad = function() {
 
 RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
   var self = this;
-  document.addEventListener("keypress", function(event) {
+  gKeyboard.on("keypress", gKeyboard.order.page, function(event) {
     // Leave keys typed elsewhere alone: in the filter or the command palette,
     // or as a link hint code - its digits would otherwise move the selection,
     // and the action links with it, before the hint activates one of them
-    if (event.defaultPrevented || LinkHints.areHintsDisplayed || !Hotkeys.isHotkeyCallPossible()) {
+    if (event.defaultPrevented || LinkHints.areHintsDisplayed || gKeyboard.isTyping()) {
       return;
     }
     if (self.focusFilterKey && event.key === self.focusFilterKey && !CommandPalette.isVisible()) {
@@ -770,18 +850,12 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
 
   // Arrows only fire keydown. Only the arrow keys are handled here: keydown keycodes
   // differ from keypress ones (e.g. 100 is "d" on keypress but numpad-4 on keydown).
-  document.addEventListener("keydown", function(event) {
+  gKeyboard.on("keydown", gKeyboard.order.page, function(event) {
     if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
     if (CommandPalette.isVisible() || !self.isArrowNavigationTarget(document.activeElement)) return;
 
-    var offset;
-    if (event.key === "ArrowUp" || event.key === "Up" || event.keyCode === 38) {
-      offset = -1;
-    } else if (event.key === "ArrowDown" || event.key === "Down" || event.keyCode === 40) {
-      offset = 1;
-    } else {
-      return;
-    }
+    var offset = gKeyboard.getVerticalArrow(event);
+    if (!offset) return;
     self.selectAdjacentRow(offset);
     event.preventDefault(); // the selected row is scrolled into view instead
   });
@@ -789,8 +863,9 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
 
 // Leave arrows to form fields and to menus (KeyNavigation moves through dropdown items)
 RepoOverViewHelper.prototype.isArrowNavigationTarget = function(element) {
+  if (gKeyboard.isTakenByField(element, true)) return false;
   for (var el = element; el && el.nodeName; el = el.parentElement) {
-    if (/^(INPUT|TEXTAREA|SELECT|LI)$/.test(el.nodeName) || el.isContentEditable) return false;
+    if (el.nodeName === "LI") return false;
   }
   return true;
 };
@@ -1053,7 +1128,7 @@ StageHelper.prototype.onFilterMe = function() {
 
 // Hook global click listener on table, load/unload actions
 StageHelper.prototype.setHooks = function() {
-  window.addEventListener("keypress", this.onCtrlEnter.bind(this));
+  gKeyboard.on("keypress", gKeyboard.order.page, this.onCtrlEnter.bind(this));
   this.dom.stageTab.onclick        = this.onTableClick.bind(this);
   this.dom.commitBtn.onclick       = this.submitCommit.bind(this);
   this.dom.patchBtn.onclick        = this.submitPatch.bind(this);
@@ -1070,10 +1145,11 @@ StageHelper.prototype.setHooks = function() {
   window.addEventListener("load", this.onPageLoad.bind(this));
 
   var self = this;
-  document.addEventListener("keypress", function(event) {
-    if (document.activeElement.id !== self.ids.objectSearch
-      && self.focusFilterKey && event.key === self.focusFilterKey
-      && !CommandPalette.isVisible()) {
+  gKeyboard.on("keypress", gKeyboard.order.page, function(event) {
+    // the same guard as on the repository overview, where typing in the
+    // filter itself is covered by gKeyboard.isTyping as well
+    if (event.defaultPrevented || LinkHints.areHintsDisplayed || gKeyboard.isTyping()) return;
+    if (self.focusFilterKey && event.key === self.focusFilterKey && !CommandPalette.isVisible()) {
 
       self.dom.objectSearch.focus();
       event.preventDefault();
@@ -1751,9 +1827,9 @@ KeyNavigation.prototype.onkeydown = function(event) {
   var isHandled = false;
   if (event.key === "Enter" || event.key === " ") {
     isHandled = this.onEnterOrSpace();
-  } else if (/Down$/.test(event.key)) {
+  } else if (gKeyboard.getVerticalArrow(event) === 1) {
     isHandled = this.onArrowDown();
-  } else if (/Up$/.test(event.key)) {
+  } else if (gKeyboard.getVerticalArrow(event) === -1) {
     isHandled = this.onArrowUp();
   } else if (event.key === "Backspace") {
     isHandled = this.onBackspace();
@@ -1859,7 +1935,7 @@ KeyNavigation.prototype.getHandler = function() {
 // this function enables the navigation with arrows through list items (li)
 // e.g. in dropdown menus
 function enableArrowListNavigation() {
-  document.addEventListener("keydown", new KeyNavigation().getHandler());
+  gKeyboard.on("keydown", gKeyboard.order.menus, new KeyNavigation().getHandler());
 }
 
 /**********************************************************
@@ -1970,7 +2046,7 @@ LinkHints.prototype.getHandler = function() {
 };
 
 LinkHints.prototype.handleKey = function(event) {
-  if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || !Hotkeys.isHotkeyCallPossible()) {
+  if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || gKeyboard.isTyping()) {
     return;
   }
 
@@ -1978,7 +2054,7 @@ LinkHints.prototype.handleKey = function(event) {
     this.yankModeActive = !this.yankModeActive;
   }
 
-  if (event.key === this.linkHintHotKey && Hotkeys.isHotkeyCallPossible()) {
+  if (event.key === this.linkHintHotKey) {
 
     // on user hide hints, close an opened dropdown too
     if (this.areHintsDisplayed && this.activatedDropdown) this.closeActivatedDropdown();
@@ -2141,7 +2217,7 @@ function getTextWithoutLinkHints(element) {
 function activateLinkHints(linkHintHotKey) {
   if (!linkHintHotKey) return;
   var oLinkHint = new LinkHints(linkHintHotKey);
-  document.addEventListener("keypress", oLinkHint.getHandler());
+  gKeyboard.on("keypress", gKeyboard.order.linkHints, oLinkHint.getHandler());
 }
 
 /**********************************************************
@@ -2217,7 +2293,7 @@ Hotkeys.prototype.onkeydown = function(oEvent) {
     return;
   }
 
-  if (!Hotkeys.isHotkeyCallPossible()) {
+  if (gKeyboard.isTyping()) {
     return;
   }
 
@@ -2228,15 +2304,6 @@ Hotkeys.prototype.onkeydown = function(oEvent) {
   if (fnHotkey) {
     fnHotkey.call(this, oEvent);
   }
-};
-
-Hotkeys.isHotkeyCallPossible = function() {
-  var activeElementType     = ((document.activeElement && document.activeElement.nodeName) || "");
-  var activeElementReadOnly = ((document.activeElement && document.activeElement.readOnly) || false);
-
-  if (document.activeElement && document.activeElement.isContentEditable) return false;
-  return (activeElementReadOnly || (activeElementType !== "INPUT" && activeElementType !== "TEXTAREA"
-    && activeElementType !== "SELECT"));
 };
 
 // ctrl-modified keys are denoted with a leading "^" (e.g. "^p"), spell it out for the help sheet
@@ -2269,7 +2336,7 @@ Hotkeys.addHotkeyToHelpSheet = function(key, description) {
 function setKeyBindings(oKeyMap) {
   var oHotkeys = new Hotkeys(oKeyMap);
 
-  document.addEventListener("keypress", oHotkeys.onkeydown.bind(oHotkeys));
+  gKeyboard.on("keypress", gKeyboard.order.hotkeys, oHotkeys.onkeydown.bind(oHotkeys));
   setTimeout(function() {
     var div                     = document.getElementById("hotkeys-hint");
     if  (div) div.style.opacity = 0.2;
@@ -2615,7 +2682,7 @@ function CommandPalette(commandEnumerator, opts) {
 CommandPalette.instances = [];
 
 CommandPalette.prototype.hookEvents = function() {
-  document.addEventListener("keydown", this.handleToggleKey.bind(this));
+  gKeyboard.on("keydown", gKeyboard.order.palette, this.handleToggleKey.bind(this));
   document.addEventListener("mousedown", this.handleOutsideClick.bind(this));
   this.elements.input.addEventListener("keydown", this.handleInputKeydown.bind(this));
   this.elements.input.addEventListener("keyup", this.handleInputKey.bind(this));
@@ -2628,9 +2695,10 @@ CommandPalette.prototype.hookEvents = function() {
 // SAP GUI for Java leaves abapGit, and the Edge control loses the keyboard
 // focus, so the next toggle key (Ctrl+P) opens the print dialog instead.
 CommandPalette.prototype.handleInputKeydown = function(event) {
-  if (event.key === "ArrowUp" || event.key === "Up") {
+  var arrow = gKeyboard.getVerticalArrow(event);
+  if (arrow === -1) {
     this.selectPrev();
-  } else if (event.key === "ArrowDown" || event.key === "Down") {
+  } else if (arrow === 1) {
     this.selectNext();
   } else {
     return;
@@ -3223,7 +3291,7 @@ function trapFocus() {
   var lastElement = focusable[focusable.length - 1];
 
   // No initial focus on the main button: while a button has focus, link hints
-  // and letter hotkeys are off (Hotkeys.isHotkeyCallPossible), and letting them
+  // and letter hotkeys are off (gKeyboard.isTyping), and letting them
   // through would make Enter fire both the button and its Enter hotkey.
 
   modal.onkeydown = function(e) {
@@ -3526,7 +3594,7 @@ SourceViewer.prototype.handleKeydown = function(event) {
 
 function registerSourceViewerShortcuts() {
   var sourceViewer = new SourceViewer();
-  document.addEventListener("keydown", sourceViewer.handleKeydown.bind(sourceViewer));
+  gKeyboard.on("keydown", gKeyboard.order.sourceViewer, sourceViewer.handleKeydown.bind(sourceViewer));
 }
 
 registerSourceViewerShortcuts();
