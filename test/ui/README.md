@@ -47,6 +47,7 @@ Avoid expanding the fixtures into a general-purpose browser emulator.
 | [`scroll.test.cjs`](scroll.test.cjs) | Scroll restoration and unavailable storage |
 | [`source-viewer.test.cjs`](source-viewer.test.cjs) | Asset loading, response ordering, caching, failures/retries, line numbers, and IE fallbacks |
 | [`keyboard-guards.test.cjs`](keyboard-guards.test.cjs) | Modified shortcuts, typing in editable controls, and deliberate hint activation/yanking |
+| [`keyboard.test.cjs`](keyboard.test.cjs) | Order of the page-wide key handlers, isolation of failing handlers, the shared typing guard, arrow keys, and the stage filter key |
 | [`link-hints.test.cjs`](link-hints.test.cjs) | Partial hints, cancellation/reopening, copy-mode reset, disabled controls, and checkbox activation |
 | [`key-navigation.test.cjs`](key-navigation.test.cjs) | Dropdown navigation and boundaries, link activation, modified keys, and editing controls |
 | [`diff-copy.test.cjs`](diff-copy.test.cjs) | Diff-column copying, invalid/empty selections, unrelated table clicks, and clipboard fallbacks |
