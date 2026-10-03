@@ -163,7 +163,7 @@ CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
             mv_comment = abap_false.
           ELSE.
             lv_cmmt_end = <ls_match>-offset + <ls_match>-length.
-            DELETE ct_matches WHERE offset > <ls_match>-offset AND offset <= lv_cmmt_end.
+            DELETE ct_matches WHERE offset > <ls_match>-offset AND offset < lv_cmmt_end.
             DELETE ct_matches WHERE offset = <ls_match>-offset AND token = c_token-xml_tag.
           ENDIF.
 

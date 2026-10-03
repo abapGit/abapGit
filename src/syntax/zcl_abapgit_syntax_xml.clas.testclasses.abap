@@ -808,6 +808,7 @@ CLASS ltcl_xml_regressions DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVE
       quoted_comment_markers FOR TESTING,
       comment_first_end FOR TESTING,
       comment_nested_start FOR TESTING,
+      comment_tag_attribute FOR TESTING,
       instance_isolation FOR TESTING,
       dotted_attributes FOR TESTING,
       text_after_comment FOR TESTING,
@@ -855,6 +856,16 @@ CLASS ltcl_xml_regressions IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->process_line( '<last/>' )
       exp = |<span class="xml_tag">&lt;last/&gt;</span>| ).
+  ENDMETHOD.
+
+  METHOD comment_tag_attribute.
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->process_line( '<!--a--><tag value="v"/>' )
+      exp = |<span class="comment">&lt;!--a--&gt;</span>|
+         && |<span class="xml_tag">&lt;tag</span>|
+         && |<span class="attr"> value</span>=|
+         && |<span class="attr_val">"v"</span>|
+         && |<span class="xml_tag">/&gt;</span>| ).
   ENDMETHOD.
 
   METHOD instance_isolation.
