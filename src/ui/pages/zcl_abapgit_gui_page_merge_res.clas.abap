@@ -205,14 +205,12 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
       lv_beacon = '---'.
     ENDIF.
 
-    ri_html->add( '<thead class="nav_line">' ).
-    ri_html->add( '<tr>' ).
+    ri_html->add( '<tr class="nav_line">' ).
 
     ri_html->add( '<th class="num"></th>' ).
     ri_html->add( |<th colspan="3">@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
 
     ri_html->add( '</tr>' ).
-    ri_html->add( '</thead>' ).
 
   ENDMETHOD.
 
