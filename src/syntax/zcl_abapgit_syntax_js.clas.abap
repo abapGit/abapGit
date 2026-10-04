@@ -7,9 +7,7 @@ CLASS zcl_abapgit_syntax_js DEFINITION
 
     CONSTANTS:
       " JavaScript
-      " 1) General keywords
-      " 2) Variable types
-      " 3) HTML Tags
+      " Language keywords / built-in members and objects
       BEGIN OF c_css,
         keyword   TYPE string VALUE 'keyword',
         text      TYPE string VALUE 'text',
@@ -26,11 +24,11 @@ CLASS zcl_abapgit_syntax_js DEFINITION
     CONSTANTS:
       BEGIN OF c_regex,
         " comments /* ... */ or //
-        comment TYPE string VALUE '\/\*.*\*\/|\/\*|\*\/|\/\/',
-        " single or double quoted strings
+        comment TYPE string VALUE '\/\*|\*\/|\/\/',
+        " Single / double quoted strings and template literals
         text    TYPE string VALUE '"|''|`',
-        " in general keywords don't contain numbers (except -ms-scrollbar-3dlight-color)
-        keyword TYPE string VALUE '\b[a-z-]+\b',
+        " Consume whole identifiers, including digits, underscores and dollar signs
+        keyword TYPE string VALUE '[a-zA-Z0-9_$]+',
       END OF c_regex .
 
     CLASS-METHODS class_constructor .
@@ -44,7 +42,8 @@ CLASS zcl_abapgit_syntax_js DEFINITION
            END OF ty_keyword.
 
     CLASS-DATA gt_keywords TYPE HASHED TABLE OF ty_keyword WITH UNIQUE KEY keyword.
-    CLASS-DATA gv_comment TYPE abap_bool.
+    DATA mv_comment TYPE abap_bool.
+    DATA mv_text_tag TYPE string.
 
     CLASS-METHODS init_keywords.
     CLASS-METHODS insert_keywords
@@ -78,7 +77,7 @@ CLASS zcl_abapgit_syntax_js IMPLEMENTATION.
     super->constructor( ).
 
     " Reset indicator for multi-line comments
-    CLEAR gv_comment.
+    CLEAR: mv_comment, mv_text_tag.
 
     " Initialize instances of regular expression
     add_rule( iv_regex = c_regex-keyword
@@ -107,42 +106,69 @@ CLASS zcl_abapgit_syntax_js IMPLEMENTATION.
 
     CLEAR gt_keywords.
 
-    " 1) General keywords
+    " Language keywords, reserved words and contextual keywords (ECMAScript)
     lv_keywords =
-    'alert|all|body|break|bytetostring|case|continue|default|delete|do|document|else|event|export|for|function|if|' &&
-    'import|in|innerhtml|isnan|item|mimetypes|navigator|new|onabort|onblur|onchange|onclick|ondblclick|ondragdrop|' &&
-    'onerror|onfocus|onkeydown|onkeypress|onkeyup|onload|onmousedown|onmousemove|onmouseout|onmouseover|onmouseup|' &&
-    'onmove|onreset|onselect|onsubmit|onunload|onresize|options|parsefloat|parseint|prototype|return|screen|switch|' &&
-    'unit|var|void|while|window|with|anchor|applet|area|button|checkbox|fileupload|form|frame|hidden|link|mimetype|' &&
-    'password|plugin|radio|reset|select|submit|text|textarea|abs|acos|alert|anchor|asin|atan|atan2|back|big|blink|' &&
-    'blur|bold|captureevents|ceil|charat|charcodeat|clearinterval|cleartimeout|click|close|concat|confirm|cos|' &&
-    'disableexternalcapture|enableexternalcapture|eval|exp|find|fixed|floor|focus|fontcolor|fontsize|forward|' &&
-    'fromcharcode|getdate|getday|getelementbyid|gethours|getminutes|getmonth|getoptionvalue|getoptionvaluecount|' &&
-    'getseconds|getselection|gettime|gettimezoneoffset|getyear|go|handleevent|home|indexof|italics|javaenabled|join|' &&
-    'lastindexof|link|load|log|match|max|min|moveabove|movebelow|moveby|moveto|movetoabsolute|open|parse|plugins|' &&
-    'pop|pow|preference|print|prompt|push|random|refresh|releaseevents|reload|replace|reset|resizeby|resizeto|' &&
-    'reverse|round|routeevent|scroll|scrollby|scrollto|search|select|setdate|sethours|setinterval|setminutes|' &&
-    'setmonth|setseconds|settime|settimeout|setyear|shift|sin|slice|small|sort|splice|split|sqrt|stop|strike|sub|' &&
-    'submit|substr|substring|sup|taintenabled|tan|togmtstring|tolocalestring|tolowercase|tostring|touppercase|' &&
-    'unshift|unwatch|utc|valueof|watch|write|writeln|e|ln10|ln2|log10e|log2e|max_value|min_value|negative_infinity|' &&
-    'nan|pi|positive_infinity|url|above|action|alinkcolor|anchors|appcodename|appname|appversion|applets|arguments|' &&
-    'arity|availheight|availwidth|background|backgroundcolor|below|bgcolor|border|bottom|caller|cancelbubble|' &&
-    'checked|clientheight|clientwidth|clientx|clienty|clip|closed|color|colordepth|complete|constructor|cookie|' &&
-    'count|current|defaultchecked|defaultselected|defaultstatus|defaultvalue|description|display|document|domain|' &&
-    'elements|embeds|enabledplugin|encoding|false|fgcolor|filename|form|formname|forms|frames|hash|height|history|' &&
-    'host|hostname|href|hspace|images|innerheight|innerwidth|language|lastmodified|layers|left|length|linkcolor|' &&
-    'links|location|locationbar|lowsrc|menubar|method|mimetypes|name|next|null|offsetheight|offsetleft|offsetparent|' &&
-    'offsetwidth|opener|outerheight|outerwidth|pagex|pagexoffset|pagey|pageyoffset|parent|parentlayer|pathname|' &&
-    'personalbar|pixeldepth|platform|plugins|port|poswidth|previous|protocol|prototype|referrer|right|scrolltop|' &&
-    'scrollbars|search|selected|selectedindex|self|siblingabove|siblingbelow|src|srcelement|status|statusbar|style|' &&
-    'suffixes|tags|target|text|this|title|toolbar|top|true|type|useragent|value|visibility|vlinkcolor|vspace|width|' &&
-    'window|zindex'.
+    'async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|' &&
+    'false|finally|for|from|function|get|if|implements|import|in|instanceof|interface|let|new|null|of|package|' &&
+    'private|protected|public|return|set|static|super|switch|this|throw|true|try|typeof|using|var|void|while|with|' &&
+    'yield'.
     insert_keywords( iv_keywords = lv_keywords
                      iv_token = c_token-keyword ).
 
-    " 2) Variable types
+    " Global values / functions and commonly used built-in members (case-sensitive)
     lv_keywords =
-    'array|boolean|date|function|image|layer|math|number|object|option|regexp|string'.
+    'Infinity|NaN|undefined|decodeURI|decodeURIComponent|encodeURI|encodeURIComponent|escape|eval|isFinite|' &&
+    'isNaN|parseFloat|parseInt|unescape|arguments|constructor|prototype|length|name|valueOf|toString|' &&
+    'toLocaleString|apply|bind|call|assign|create|defineProperties|defineProperty|entries|freeze|fromEntries|' &&
+    'getOwnPropertyDescriptor|getOwnPropertyDescriptors|getOwnPropertyNames|getOwnPropertySymbols|' &&
+    'getPrototypeOf|hasOwn|hasOwnProperty|is|isExtensible|isFrozen|isSealed|keys|preventExtensions|' &&
+    'propertyIsEnumerable|seal|setPrototypeOf|values|at|concat|copyWithin|every|fill|filter|find|findIndex|' &&
+    'findLast|findLastIndex|flat|flatMap|forEach|includes|indexOf|isArray|join|lastIndexOf|map|pop|push|' &&
+    'reduce|reduceRight|reverse|shift|slice|some|sort|splice|toReversed|toSorted|toSpliced|unshift|' &&
+    'charAt|charCodeAt|codePointAt|endsWith|fromCharCode|fromCodePoint|localeCompare|match|matchAll|' &&
+    'normalize|padEnd|padStart|repeat|replace|replaceAll|search|split|startsWith|substring|substr|' &&
+    'toLowerCase|toUpperCase|toLocaleLowerCase|toLocaleUpperCase|trim|trimEnd|trimStart|' &&
+    'MAX_VALUE|MIN_VALUE|MAX_SAFE_INTEGER|MIN_SAFE_INTEGER|NEGATIVE_INFINITY|POSITIVE_INFINITY|EPSILON|' &&
+    'isInteger|isSafeInteger|toExponential|toFixed|toPrecision|E|LN10|LN2|LOG10E|LOG2E|PI|SQRT1_2|SQRT2|' &&
+    'abs|acos|acosh|asin|asinh|atan|atan2|atanh|cbrt|ceil|clz32|cos|cosh|exp|expm1|floor|fround|hypot|' &&
+    'imul|log|log10|log1p|log2|max|min|pow|random|round|sign|sin|sinh|sqrt|tan|tanh|trunc|' &&
+    'now|parse|UTC|getDate|getDay|getFullYear|getHours|getMilliseconds|getMinutes|getMonth|getSeconds|' &&
+    'getTime|getTimezoneOffset|getUTCDate|getUTCDay|getUTCFullYear|getUTCHours|getUTCMilliseconds|' &&
+    'getUTCMinutes|getUTCMonth|getUTCSeconds|setDate|setFullYear|setHours|setMilliseconds|setMinutes|' &&
+    'setMonth|setSeconds|setTime|setUTCDate|setUTCFullYear|setUTCHours|setUTCMilliseconds|setUTCMinutes|' &&
+    'setUTCMonth|setUTCSeconds|toDateString|toISOString|toJSON|toTimeString|toUTCString|' &&
+    'all|allSettled|any|race|reject|resolve|then|withResolvers|add|clear|has|size|stringify|exec|test'.
+    insert_keywords( iv_keywords = lv_keywords
+                     iv_token = c_token-keyword ).
+
+    " Browser globals / DOM members; HTML tag names are not JavaScript keywords
+    lv_keywords =
+    'alert|confirm|prompt|console|debug|error|info|warn|window|document|navigator|screen|history|location|' &&
+    'self|parent|top|opener|frames|localStorage|sessionStorage|fetch|setTimeout|clearTimeout|setInterval|' &&
+    'clearInterval|requestAnimationFrame|cancelAnimationFrame|queueMicrotask|structuredClone|atob|btoa|' &&
+    'addEventListener|removeEventListener|dispatchEvent|getElementById|getElementsByClassName|' &&
+    'getElementsByTagName|querySelector|querySelectorAll|createElement|createTextNode|appendChild|' &&
+    'removeChild|replaceChild|insertBefore|setAttribute|getAttribute|removeAttribute|classList|' &&
+    'innerHTML|outerHTML|textContent|style|value|checked|disabled|selected|selectedIndex|children|' &&
+    'parentNode|parentElement|nextSibling|previousSibling|firstChild|lastChild|body|head|title|cookie|' &&
+    'forms|images|links|href|host|hostname|pathname|port|protocol|hash|origin|reload|replaceState|' &&
+    'pushState|back|forward|go|open|close|focus|blur|click|submit|reset|scroll|scrollBy|scrollTo|' &&
+    'clientHeight|clientWidth|offsetHeight|offsetWidth|offsetLeft|offsetTop|offsetParent|scrollTop|' &&
+    'scrollLeft|innerHeight|innerWidth|outerHeight|outerWidth|pageXOffset|pageYOffset|userAgent|' &&
+    'onabort|onblur|onchange|onclick|ondblclick|onerror|onfocus|oninput|onkeydown|onkeypress|onkeyup|' &&
+    'onload|onmousedown|onmousemove|onmouseout|onmouseover|onmouseup|onreset|onresize|onselect|onsubmit|onunload'.
+    insert_keywords( iv_keywords = lv_keywords
+                     iv_token = c_token-keyword ).
+
+    " Built-in objects / constructors (Function is distinct from the function keyword)
+    lv_keywords =
+    'Array|ArrayBuffer|AsyncDisposableStack|Atomics|BigInt|BigInt64Array|BigUint64Array|Boolean|DataView|' &&
+    'Date|DisposableStack|Error|EvalError|FinalizationRegistry|Float16Array|Float32Array|Float64Array|' &&
+    'Function|Int8Array|Int16Array|Int32Array|Intl|Iterator|JSON|Map|Math|Number|Object|Promise|Proxy|' &&
+    'RangeError|ReferenceError|Reflect|RegExp|Set|SharedArrayBuffer|String|SuppressedError|Symbol|' &&
+    'SyntaxError|TypeError|Uint8Array|Uint8ClampedArray|Uint16Array|Uint32Array|URIError|WeakMap|WeakRef|' &&
+    'WeakSet|globalThis|AggregateError|AbortController|AbortSignal|Blob|CustomEvent|Event|File|FileReader|' &&
+    'FormData|Headers|Image|Node|Option|Request|Response|TextDecoder|TextEncoder|URL|URLSearchParams|WebSocket'.
     insert_keywords( iv_keywords = lv_keywords
                      iv_token = c_token-variables ).
 
@@ -170,10 +196,7 @@ CLASS zcl_abapgit_syntax_js IMPLEMENTATION.
 
   METHOD is_keyword.
 
-    DATA lv_str TYPE string.
-
-    lv_str = to_lower( iv_chunk ).
-    READ TABLE gt_keywords WITH TABLE KEY keyword = lv_str TRANSPORTING NO FIELDS.
+    READ TABLE gt_keywords WITH TABLE KEY keyword = iv_chunk TRANSPORTING NO FIELDS.
     rv_yes = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -182,105 +205,118 @@ CLASS zcl_abapgit_syntax_js IMPLEMENTATION.
   METHOD order_matches.
 
     DATA:
-      lv_match      TYPE string,
-      lv_line_len   TYPE i,
-      lv_cmmt_end   TYPE i,
-      lv_prev_end   TYPE i,
-      lv_prev_token TYPE c.
+      lt_matches       TYPE ty_match_tt,
+      ls_match         TYPE ty_match,
+      lv_match         TYPE string,
+      lv_line_len      TYPE i,
+      lv_comment_start TYPE i,
+      lv_next          TYPE i,
+      lv_pos           TYPE i,
+      lv_tag           TYPE string,
+      lv_closed        TYPE abap_bool.
 
     FIELD-SYMBOLS:
-      <ls_prev>    TYPE ty_match,
       <ls_match>   TYPE ty_match,
       <ls_keyword> TYPE ty_keyword.
 
-    " Longest matches
     SORT ct_matches BY offset length DESCENDING.
-
     lv_line_len = strlen( iv_line ).
 
-    " Check if this is part of multi-line comment and mark it accordingly
-    IF gv_comment = abap_true.
-      READ TABLE ct_matches WITH KEY token = c_token-comment TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
-        CLEAR ct_matches.
-        APPEND INITIAL LINE TO ct_matches ASSIGNING <ls_match>.
-        <ls_match>-token = c_token-comment.
-        <ls_match>-offset = 0.
-        <ls_match>-length = lv_line_len.
-        RETURN.
-      ENDIF.
+    " A template literal may continue from the preceding line
+    IF mv_text_tag IS NOT INITIAL.
+      CLEAR ls_match.
+      ls_match-token = c_token-text.
+      INSERT ls_match INTO ct_matches INDEX 1.
     ENDIF.
 
     LOOP AT ct_matches ASSIGNING <ls_match>.
-      " Delete matches after open text match
-      IF lv_prev_token = c_token-text AND <ls_match>-token <> c_token-text.
-        CLEAR <ls_match>-token.
+      IF <ls_match>-offset < lv_next.
         CONTINUE.
       ENDIF.
-
       lv_match = substring( val = iv_line
                             off = <ls_match>-offset
                             len = <ls_match>-length ).
 
+      " Only */ can end an open block comment; quotes and // are ordinary text
+      IF mv_comment = abap_true.
+        IF <ls_match>-token = c_token-comment AND lv_match = '*/'.
+          CLEAR ls_match.
+          ls_match-token = c_token-comment.
+          ls_match-offset = lv_comment_start.
+          lv_next = <ls_match>-offset + 2.
+          ls_match-length = lv_next - lv_comment_start.
+          APPEND ls_match TO lt_matches.
+          CLEAR mv_comment.
+        ENDIF.
+        CONTINUE.
+      ENDIF.
+
       CASE <ls_match>-token.
         WHEN c_token-keyword.
-          " Skip keyword that's part of previous (longer) keyword
-          IF <ls_match>-offset < lv_prev_end.
-            CLEAR <ls_match>-token.
-            CONTINUE.
-          ENDIF.
-
-          " Map generic keyword to specific token
-          lv_match = to_lower( lv_match ).
           READ TABLE gt_keywords ASSIGNING <ls_keyword> WITH TABLE KEY keyword = lv_match.
           IF sy-subrc = 0.
-            <ls_match>-token = <ls_keyword>-token.
+            ls_match = <ls_match>.
+            ls_match-token = <ls_keyword>-token.
+            APPEND ls_match TO lt_matches.
           ENDIF.
 
         WHEN c_token-comment.
           IF lv_match = '/*'.
-            DELETE ct_matches WHERE offset > <ls_match>-offset.
-            <ls_match>-length = lv_line_len - <ls_match>-offset.
-            gv_comment = abap_true.
+            lv_comment_start = <ls_match>-offset.
+            mv_comment = abap_true.
           ELSEIF lv_match = '//'.
-            DELETE ct_matches WHERE offset > <ls_match>-offset.
-            <ls_match>-length = lv_line_len - <ls_match>-offset.
-          ELSEIF lv_match = '*/'.
-            DELETE ct_matches WHERE offset < <ls_match>-offset.
-            <ls_match>-length = <ls_match>-offset + 2.
-            <ls_match>-offset = 0.
-            gv_comment = abap_false.
-          ELSE.
-            lv_cmmt_end = <ls_match>-offset + <ls_match>-length.
-            DELETE ct_matches WHERE offset > <ls_match>-offset AND offset <= lv_cmmt_end.
+            ls_match = <ls_match>.
+            ls_match-length = lv_line_len - ls_match-offset.
+            APPEND ls_match TO lt_matches.
+            EXIT.
           ENDIF.
 
         WHEN c_token-text.
-          <ls_match>-text_tag = lv_match.
-          IF lv_prev_token = c_token-text.
-            IF <ls_match>-text_tag = <ls_prev>-text_tag.
-              <ls_prev>-length = <ls_match>-offset + <ls_match>-length - <ls_prev>-offset.
-              CLEAR lv_prev_token.
-            ENDIF.
-            CLEAR <ls_match>-token.
-            CONTINUE.
+          lv_tag = lv_match.
+          lv_pos = <ls_match>-offset + 1.
+          IF mv_text_tag IS NOT INITIAL.
+            lv_tag = mv_text_tag.
+            lv_pos = 0.
+            CLEAR mv_text_tag.
           ENDIF.
-
+          CLEAR lv_closed.
+          WHILE lv_pos < lv_line_len.
+            IF iv_line+lv_pos(1) = '\'.
+              " Escaped delimiters and escaped backslashes do not close the string
+              lv_pos = lv_pos + 2.
+            ELSEIF iv_line+lv_pos(1) = lv_tag.
+              lv_pos = lv_pos + 1.
+              lv_closed = abap_true.
+              EXIT.
+            ELSE.
+              lv_pos = lv_pos + 1.
+            ENDIF.
+          ENDWHILE.
+          lv_next = nmin( val1 = lv_pos
+                          val2 = lv_line_len ).
+          ls_match = <ls_match>.
+          ls_match-length = lv_next - ls_match-offset.
+          APPEND ls_match TO lt_matches.
+          " Treat the entire template as text, including interpolation
+          IF lv_closed = abap_false AND lv_tag = '`'.
+            mv_text_tag = lv_tag.
+          ENDIF.
       ENDCASE.
-
-      lv_prev_token = <ls_match>-token.
-      lv_prev_end   = <ls_match>-offset + <ls_match>-length.
-      ASSIGN <ls_match> TO <ls_prev>.
     ENDLOOP.
 
-    DELETE ct_matches WHERE token IS INITIAL.
+    IF mv_comment = abap_true.
+      CLEAR ls_match.
+      ls_match-token = c_token-comment.
+      ls_match-offset = lv_comment_start.
+      ls_match-length = lv_line_len - lv_comment_start.
+      APPEND ls_match TO lt_matches.
+    ENDIF.
+    ct_matches = lt_matches.
 
   ENDMETHOD.
 
 
   METHOD parse_line. "REDEFINITION
-
-    DATA lv_index TYPE i.
 
     FIELD-SYMBOLS <ls_match> LIKE LINE OF rt_matches.
 
@@ -288,7 +324,6 @@ CLASS zcl_abapgit_syntax_js IMPLEMENTATION.
 
     " Remove non-keywords
     LOOP AT rt_matches ASSIGNING <ls_match> WHERE token = c_token-keyword.
-      lv_index = sy-tabix.
       IF abap_false = is_keyword( substring( val = iv_line
                                              off = <ls_match>-offset
                                              len = <ls_match>-length ) ).
