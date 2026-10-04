@@ -1842,6 +1842,8 @@ div.wu table th[data-gid="where"] {
   box-sizing: border-box;
   resize: none;
   font-size: 12px;
+  overflow-x: auto;
+  overflow-y: auto;
   white-space: pre;
 }
 
