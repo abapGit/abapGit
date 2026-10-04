@@ -48,9 +48,9 @@ CLASS ltcl_syntax_js IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->process_line( 'false true null void undefined NaN Infinity' )
       exp = |<span class="values">false</span> <span class="values">true</span> |
-         && |<span class="values">null</span> <span class="values">void</span> |
-         && |<span class="values">undefined</span> <span class="values">NaN</span> |
-         && |<span class="values">Infinity</span>| ).
+            && |<span class="values">null</span> <span class="values">void</span> |
+            && |<span class="values">undefined</span> <span class="values">NaN</span> |
+            && |<span class="values">Infinity</span>| ).
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->process_line( 'return void 0;' )
       exp = '<span class="keyword">return</span> <span class="values">void</span> 0;' ).
