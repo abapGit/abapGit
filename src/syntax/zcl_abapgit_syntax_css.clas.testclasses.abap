@@ -9,6 +9,8 @@ CLASS ltcl_syntax_css DEFINITION FINAL FOR TESTING
       setup,
       properties_and_values FOR TESTING,
       functions FOR TESTING,
+      function_calls FOR TESTING,
+      custom_properties FOR TESTING,
       selectors FOR TESTING,
       at_rules FOR TESTING,
       html_tags FOR TESTING,
@@ -48,6 +50,38 @@ CLASS ltcl_syntax_css IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->process_line( 'TRANSLATEY(0) clamp(0, 1, 2)' )
       exp = |<span class="functions">TRANSLATEY</span>(0) <span class="functions">clamp</span>(0, 1, 2)| ).
+  ENDMETHOD.
+
+  METHOD function_calls.
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->process_line( 'transform: rotate(45deg) scale(2);' )
+      exp = |<span class="properties">transform</span>: <span class="functions">rotate</span>(45deg) |
+         && |<span class="functions">scale</span>(2);| ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->process_line( 'grid-template-columns: repeat(2, 1fr);' )
+      exp = |<span class="properties">grid-template-columns</span>: <span class="functions">repeat</span>(2, 1fr);| ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->process_line( 'translate(0) inset(0) opacity(0) perspective(0)' )
+      exp = |<span class="functions">translate</span>(0) <span class="functions">inset</span>(0) |
+         && |<span class="functions">opacity</span>(0) <span class="functions">perspective</span>(0)| ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->process_line( 'rotate: 45deg; @media(min-width: 1px)' )
+      exp = |<span class="properties">rotate</span>: 45deg; <span class="at_rules">@media</span>(|
+         && |<span class="properties">min-width</span>: <span class="units">1px</span>)| ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->process_line( 'rotate scale repeat' )
+      exp = |<span class="properties">rotate</span> <span class="properties">scale</span> |
+         && |<span class="values">repeat</span>| ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->process_line( '/* rotate(0) */ "scale(2)"' )
+      exp = |<span class="comment">/* rotate(0) */</span> <span class="text">"scale(2)"</span>| ).
+  ENDMETHOD.
+
+  METHOD custom_properties.
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->process_line( '--gap: 1rem; width: var(--gap);' )
+      exp = |--gap: <span class="units">1rem</span>; <span class="properties">width</span>: |
+         && |<span class="functions">var</span>(--gap);| ).
   ENDMETHOD.
 
   METHOD selectors.

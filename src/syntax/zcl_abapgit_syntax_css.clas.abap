@@ -169,7 +169,7 @@ CLASS zcl_abapgit_syntax_css IMPLEMENTATION.
 
     CLEAR gt_keywords.
 
-    " Keywords shared by categories keep the first inserted token (properties take precedence).
+    " Shared keywords keep the first inserted token unless followed directly by ( (function call).
     " 1) CSS Properties
     lv_keywords =
     'align-content|align-items|align-self|animation|animation-delay|animation-direction|animation-duration|' &&
@@ -422,6 +422,7 @@ CLASS zcl_abapgit_syntax_css IMPLEMENTATION.
     DATA:
       lv_match      TYPE string,
       lv_line_len   TYPE i,
+      lv_next       TYPE i,
       lv_cmmt_end   TYPE i,
       lv_prev_end   TYPE i,
       lv_prev_token TYPE c.
@@ -473,6 +474,12 @@ CLASS zcl_abapgit_syntax_css IMPLEMENTATION.
           READ TABLE gt_keywords ASSIGNING <ls_keyword> WITH TABLE KEY keyword = lv_match.
           IF sy-subrc = 0.
             <ls_match>-token = <ls_keyword>-token.
+          ENDIF.
+
+          " A keyword directly followed by ( is a function call; keep @ rules as at-rules
+          lv_next = <ls_match>-offset + <ls_match>-length.
+          IF lv_next < lv_line_len AND lv_match(1) <> '@' AND iv_line+lv_next(1) = '('.
+            <ls_match>-token = c_token-functions.
           ENDIF.
 
         WHEN c_token-comment.
