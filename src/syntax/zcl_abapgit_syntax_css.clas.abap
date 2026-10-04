@@ -58,9 +58,13 @@ CLASS zcl_abapgit_syntax_css DEFINITION
         keyword   TYPE string VALUE '--[a-z][a-z0-9\-]*\b|@-?[a-z][a-z0-9\-]*\b|\b[a-z][a-z0-9\-]*\b',
         " selectors begin with :
         selectors TYPE string VALUE '::?[a-z][a-z0-9\-]*\b',
-        " units
+        " CSS numbers followed by a unit or %, excluding the preceding identifier boundary
         units     TYPE string
-        VALUE '\b[0-9\. ]+(ch|cm|em|ex|in|mm|pc|pt|px|rem|vh|vmax|vmin|vw)\b|\b[0-9\. ]+%',
+        VALUE '(^|[^a-z0-9_.-])([+-]?([0-9]+(\.[0-9]+)?|\.[0-9]+)(e[+-]?[0-9]+)?((' &
+              'cm|mm|q|in|pt|pc|px|' &
+              'em|rem|ex|rex|cap|rcap|ch|rch|ic|ric|lh|rlh|' &
+              '[sld]?v(w|h|i|b|min|max)|cqw|cqh|cqi|cqb|cqmin|cqmax|' &
+              'deg|grad|rad|turn|s|ms|hz|khz|dpi|dpcm|dppx|x|fr)\b|%))',
       END OF c_regex .
 
     CLASS-METHODS class_constructor .
@@ -129,7 +133,8 @@ CLASS zcl_abapgit_syntax_css IMPLEMENTATION.
 
     add_rule( iv_regex = c_regex-units
               iv_token = c_token-units
-              iv_style = c_css-units ).
+              iv_style = c_css-units
+              iv_submatch = 2 ).
 
     " Styles for keywords
     add_rule( iv_regex = ''
