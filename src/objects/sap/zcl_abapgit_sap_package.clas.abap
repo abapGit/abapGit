@@ -310,10 +310,14 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     rs_package-korrflag  = li_package->wbo_korr_flag.
 
     " Interface does not contain ABAP language version (package_kind) in lower releases
-    SELECT SINGLE package_kind FROM ('TDEVC') INTO rs_package-packkind WHERE devclass = mv_package.
-    IF sy-subrc <> 0.
-      rs_package-packkind = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
-    ENDIF.
+    TRY.
+        SELECT SINGLE package_kind FROM ('TDEVC') INTO rs_package-packkind WHERE devclass = mv_package.
+        IF sy-subrc <> 0.
+          rs_package-packkind = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
+        ENDIF.
+      CATCH cx_root ##NO_HANDLER.
+    ENDTRY.
+
 
   ENDMETHOD.
 
