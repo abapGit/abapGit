@@ -3332,6 +3332,7 @@ function SourceViewer() {
   this.source = null;
   this.lineNumbers = null;
   this.activeSource = null;
+  this.validationUnlock = null;
 }
 
 SourceViewer.prototype.getHtmlSource = function() {
@@ -3423,7 +3424,42 @@ SourceViewer.prototype.getAssetSource = function(url, success) {
   }
 };
 
+SourceViewer.prototype.lockValidation = function() {
+  var busy = document.createElement("div");
+  var previousFocus = document.activeElement;
+  var sourceViewer = this;
+  var inputEvents = ["click", "dblclick", "mousedown", "mouseup", "pointerdown", "pointerup",
+    "touchstart", "touchend", "keydown", "keypress", "keyup", "submit", "contextmenu"];
+
+  busy.className = "source-viewer-busy";
+  busy.tabIndex = -1;
+  busy.setAttribute("role", "status");
+  busy.setAttribute("aria-busy", "true");
+  busy.textContent = "Validating HTML...";
+  busy.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;" +
+    "z-index:2147483647;cursor:wait;background:rgba(0,0,0,0.5);color:#fff;" +
+    "display:flex;align-items:center;justify-content:center;font:16px sans-serif;";
+
+  function blockInput(event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+
+  this.validationUnlock = function() {
+    inputEvents.forEach(function(name) { window.removeEventListener(name, blockInput, true) });
+    window.removeEventListener("pageshow", sourceViewer.validationUnlock);
+    if (busy.parentNode) busy.parentNode.removeChild(busy);
+    sourceViewer.validationUnlock = null;
+    if (previousFocus && document.body.contains(previousFocus)) previousFocus.focus();
+  };
+  inputEvents.forEach(function(name) { window.addEventListener(name, blockInput, true) });
+  window.addEventListener("pageshow", this.validationUnlock);
+  document.body.appendChild(busy);
+  busy.focus();
+};
+
 SourceViewer.prototype.validateHtml = function() {
+  if (this.validationUnlock) return;
   var form = document.createElement("form");
   var fields = {
     fragment: this.activeSource === this.sources[0] ? this.source.value : this.sources[0].content,
@@ -3450,8 +3486,10 @@ SourceViewer.prototype.validateHtml = function() {
   });
   document.body.appendChild(form);
   try {
+    if (!gEnv.isWebGui) this.lockValidation();
     form.submit();
   } catch (error) {
+    if (this.validationUnlock) this.validationUnlock();
     this.reportError("Could not submit HTML to the W3C validator: " + error.message);
   } finally {
     document.body.removeChild(form);
