@@ -89,6 +89,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
           ls_package   TYPE scompkdtln,
           lv_component TYPE dlvunit.
 
+    FIELD-SYMBOLS <lv_packkind> TYPE uccheck.
 
     ASSERT NOT is_package-devclass IS INITIAL.
 
@@ -112,7 +113,8 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     " Set software component to HOME or ZCUSTOM_DEVELOPMENT (ABAP Cloud) if none is set at this point.
     " Otherwise SOFTWARE_COMPONENT_INVALID will be raised.
     IF ls_package-dlvunit IS INITIAL.
-      IF ls_package-packkind = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development.
+      ASSIGN COMPONENT 'PACKKIND' OF STRUCTURE ls_package TO <lv_packkind>.
+      IF sy-subrc = 0 AND <lv_packkind> = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development.
         ls_package-parentcl = 'ZCUSTOM_DEVELOPMENT'.
         ls_package-dlvunit  = 'ZCUSTOM_DEVELOPMENT'.
       ELSE.
