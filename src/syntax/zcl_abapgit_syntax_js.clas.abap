@@ -13,6 +13,7 @@ CLASS zcl_abapgit_syntax_js DEFINITION
         text      TYPE string VALUE 'text',
         comment   TYPE string VALUE 'comment',
         variables TYPE string VALUE 'variables',
+        values    TYPE string VALUE 'values',
       END OF c_css .
     CONSTANTS:
       BEGIN OF c_token,
@@ -20,6 +21,7 @@ CLASS zcl_abapgit_syntax_js DEFINITION
         text      TYPE c VALUE 'T',
         comment   TYPE c VALUE 'C',
         variables TYPE c VALUE 'V',
+        values    TYPE c VALUE 'L',
       END OF c_token .
     CONSTANTS:
       BEGIN OF c_regex,
@@ -97,6 +99,10 @@ CLASS zcl_abapgit_syntax_js IMPLEMENTATION.
               iv_token = c_token-variables
               iv_style = c_css-variables ).
 
+    add_rule( iv_regex = ''
+              iv_token = c_token-values
+              iv_style = c_css-values ).
+
   ENDMETHOD.
 
 
@@ -109,15 +115,20 @@ CLASS zcl_abapgit_syntax_js IMPLEMENTATION.
     " Language keywords, reserved words and contextual keywords (ECMAScript)
     lv_keywords =
     'async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|' &&
-    'false|finally|for|from|function|get|if|implements|import|in|instanceof|interface|let|new|null|of|package|' &&
-    'private|protected|public|return|set|static|super|switch|this|throw|true|try|typeof|using|var|void|while|with|' &&
+    'finally|for|from|function|get|if|implements|import|in|instanceof|interface|let|new|of|package|' &&
+    'private|protected|public|return|set|static|super|switch|this|throw|try|typeof|using|var|while|with|' &&
     'yield'.
     insert_keywords( iv_keywords = lv_keywords
                      iv_token    = c_token-keyword ).
 
-    " Global values / functions and commonly used built-in members (case-sensitive)
+    " Literal / global values; void is an operator yielding undefined
+    lv_keywords = 'false|true|null|void|undefined|NaN|Infinity'.
+    insert_keywords( iv_keywords = lv_keywords
+                     iv_token    = c_token-values ).
+
+    " Global functions and commonly used built-in members (case-sensitive)
     lv_keywords =
-    'Infinity|NaN|undefined|decodeURI|decodeURIComponent|encodeURI|encodeURIComponent|escape|eval|isFinite|' &&
+    'decodeURI|decodeURIComponent|encodeURI|encodeURIComponent|escape|eval|isFinite|' &&
     'isNaN|parseFloat|parseInt|unescape|arguments|constructor|prototype|length|name|valueOf|toString|' &&
     'toLocaleString|apply|bind|call|assign|create|defineProperties|defineProperty|entries|freeze|fromEntries|' &&
     'getOwnPropertyDescriptor|getOwnPropertyDescriptors|getOwnPropertyNames|getOwnPropertySymbols|' &&

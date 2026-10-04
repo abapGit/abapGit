@@ -7,6 +7,8 @@ CLASS ltcl_syntax_js DEFINITION FINAL FOR TESTING
     METHODS:
       setup,
       language_keywords FOR TESTING,
+      values FOR TESTING,
+      value_boundaries FOR TESTING,
       built_in_objects FOR TESTING,
       built_in_members FOR TESTING,
       case_sensitive FOR TESTING,
@@ -40,6 +42,30 @@ CLASS ltcl_syntax_js IMPLEMENTATION.
         act = mo_cut->process_line( lv_keyword )
         exp = |<span class="keyword">{ lv_keyword }</span>| ).
     ENDLOOP.
+  ENDMETHOD.
+
+  METHOD values.
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->process_line( 'false true null void undefined NaN Infinity' )
+      exp = |<span class="values">false</span> <span class="values">true</span> |
+         && |<span class="values">null</span> <span class="values">void</span> |
+         && |<span class="values">undefined</span> <span class="values">NaN</span> |
+         && |<span class="values">Infinity</span>| ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->process_line( 'return void 0;' )
+      exp = '<span class="keyword">return</span> <span class="values">void</span> 0;' ).
+  ENDMETHOD.
+
+  METHOD value_boundaries.
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->process_line( 'False TRUE Null Void Undefined nan infinity trueValue null_ $false' )
+      exp = 'False TRUE Null Void Undefined nan infinity trueValue null_ $false' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->process_line( '"false true null void undefined NaN Infinity"' )
+      exp = '<span class="text">"false true null void undefined NaN Infinity"</span>' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->process_line( '// false true null void undefined NaN Infinity' )
+      exp = '<span class="comment">// false true null void undefined NaN Infinity</span>' ).
   ENDMETHOD.
 
   METHOD built_in_objects.
