@@ -843,6 +843,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
   METHOD render_beacon.
 
     DATA: lv_beacon  TYPE string,
+          lv_colspan TYPE i,
           lt_beacons TYPE zif_abapgit_definitions=>ty_string_tt.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -861,8 +862,10 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
       mi_extra->render_beacon_begin_of_row(
         ii_html = ri_html
         is_diff = is_diff ).
+      lv_colspan = 6.
     ELSE.
       render_beacon_begin_of_row( ri_html ).
+      lv_colspan = 5.
     ENDIF.
 
     IF mv_unified = abap_true.
@@ -870,7 +873,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
       ri_html->add( '<th class="mark"></th>' ).
       ri_html->add( |<th>@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
     ELSE.
-      ri_html->add( |<th colspan="5">@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
+      ri_html->add( |<th colspan="{ lv_colspan }">@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
     ENDIF.
 
     ri_html->add( '</tr>' ).
@@ -1239,6 +1242,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     ri_html->add( '<tr class="diff_line">' ).
     CASE is_diff_line-result.
       WHEN zif_abapgit_definitions=>c_diff-update.
+        ri_html->add( |<td class="num diff_others" colspan="4"></td>| ).
         APPEND is_diff_line TO mt_delayed_lines. " Delay output of subsequent updates
       WHEN zif_abapgit_definitions=>c_diff-insert.
         ri_html->add( |<td class="num diff_others" data-num=""></td>|
