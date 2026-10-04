@@ -3423,16 +3423,52 @@ SourceViewer.prototype.getAssetSource = function(url, success) {
   }
 };
 
+SourceViewer.prototype.validateHtml = function() {
+  var form = document.createElement("form");
+  var fields = {
+    fragment: this.activeSource === this.sources[0] ? this.source.value : this.sources[0].content,
+    prefill: "0",
+    doctype: "Inline",
+    group: "1",
+    ss: "1",
+    outline: "1"
+  };
+
+  form.method = "post";
+  form.action = "https://validator.w3.org/check";
+  form.enctype = "multipart/form-data";
+  form.acceptCharset = "UTF-8";
+  form.target = "_blank";
+  form.style.display = "none";
+  Object.keys(fields).forEach(function(name) {
+    var input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = fields[name];
+    form.appendChild(input);
+  });
+  document.body.appendChild(form);
+  try {
+    form.submit();
+  } catch (error) {
+    this.reportError("Could not submit HTML to the W3C validator: " + error.message);
+  } finally {
+    document.body.removeChild(form);
+  }
+};
+
 SourceViewer.prototype.show = function() {
   var overlay = document.createElement("div");
   var heading = document.createElement("div");
   var close = document.createElement("button");
   var tabs = document.createElement("div");
+  var validate = document.createElement("button");
   var sourceContainer = document.createElement("div");
   var lineNumbers = document.createElement("pre");
   var source = document.createElement("textarea");
   var sourceViewer = this;
 
+  this.sources[0].content = this.getHtmlSource();
   overlay.className = "source-viewer";
   overlay.tabIndex = -1;
   heading.className = "source-viewer-heading";
@@ -3474,6 +3510,15 @@ SourceViewer.prototype.show = function() {
     sourceDefinition.tab = tab;
     tabs.appendChild(tab);
   });
+
+  validate.type = "button";
+  validate.className = "source-viewer-tab";
+  validate.appendChild(document.createTextNode("Validate HTML"));
+  validate.title = "Send HTML source to the W3C validator (opens in a new tab)";
+  validate.onclick = function() {
+    sourceViewer.validateHtml();
+  };
+  tabs.appendChild(validate);
 
   function stopEvent(event) {
     event.preventDefault();
