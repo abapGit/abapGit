@@ -308,7 +308,12 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     rs_package-pdevclass = li_package->transport_layer.
     rs_package-as4user   = li_package->changed_by.
     rs_package-korrflag  = li_package->wbo_korr_flag.
-    rs_package-packkind  = li_package->package_kind. " ABAP language version
+
+    " Interface does not contain ABAP language version (package_kind) in lower releases
+    SELECT SINGLE package_kind FROM ('TDEVC') INTO rs_package-packkind WHERE devclass = mv_package.
+    IF sy-subrc <> 0.
+      rs_package-packkind = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
+    ENDIF.
 
   ENDMETHOD.
 
