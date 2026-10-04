@@ -3438,7 +3438,8 @@ SourceViewer.prototype.validateHtml = function() {
   form.action = "https://validator.w3.org/check";
   form.enctype = "multipart/form-data";
   form.acceptCharset = "UTF-8";
-  form.target = "_blank";
+  // Desktop SAP GUI opens _blank externally with only the URL, losing POST data.
+  form.target = gEnv.isWebGui ? "_blank" : "_self";
   form.style.display = "none";
   Object.keys(fields).forEach(function(name) {
     var input = document.createElement("input");
@@ -3514,7 +3515,8 @@ SourceViewer.prototype.show = function() {
   validate.type = "button";
   validate.className = "source-viewer-tab";
   validate.appendChild(document.createTextNode("Validate HTML"));
-  validate.title = "Send HTML source to the W3C validator (opens in a new tab)";
+  validate.title = "Send HTML source to the W3C validator" +
+    (gEnv.isWebGui ? " (opens in a new tab)" : " (opens in the SAP GUI browser control)");
   validate.onclick = function() {
     sourceViewer.validateHtml();
   };
