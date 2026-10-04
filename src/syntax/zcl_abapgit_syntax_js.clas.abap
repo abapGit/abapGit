@@ -113,7 +113,7 @@ CLASS zcl_abapgit_syntax_js IMPLEMENTATION.
     'private|protected|public|return|set|static|super|switch|this|throw|true|try|typeof|using|var|void|while|with|' &&
     'yield'.
     insert_keywords( iv_keywords = lv_keywords
-                     iv_token = c_token-keyword ).
+                     iv_token    = c_token-keyword ).
 
     " Global values / functions and commonly used built-in members (case-sensitive)
     lv_keywords =
@@ -139,7 +139,7 @@ CLASS zcl_abapgit_syntax_js IMPLEMENTATION.
     'setUTCMonth|setUTCSeconds|toDateString|toISOString|toJSON|toTimeString|toUTCString|' &&
     'all|allSettled|any|race|reject|resolve|then|withResolvers|add|clear|has|size|stringify|exec|test'.
     insert_keywords( iv_keywords = lv_keywords
-                     iv_token = c_token-keyword ).
+                     iv_token    = c_token-keyword ).
 
     " Browser globals / DOM members; HTML tag names are not JavaScript keywords
     lv_keywords =
@@ -158,7 +158,7 @@ CLASS zcl_abapgit_syntax_js IMPLEMENTATION.
     'onabort|onblur|onchange|onclick|ondblclick|onerror|onfocus|oninput|onkeydown|onkeypress|onkeyup|' &&
     'onload|onmousedown|onmousemove|onmouseout|onmouseover|onmouseup|onreset|onresize|onselect|onsubmit|onunload'.
     insert_keywords( iv_keywords = lv_keywords
-                     iv_token = c_token-keyword ).
+                     iv_token    = c_token-keyword ).
 
     " Built-in objects / constructors (Function is distinct from the function keyword)
     lv_keywords =
@@ -170,7 +170,7 @@ CLASS zcl_abapgit_syntax_js IMPLEMENTATION.
     'WeakSet|globalThis|AggregateError|AbortController|AbortSignal|Blob|CustomEvent|Event|File|FileReader|' &&
     'FormData|Headers|Image|Node|Option|Request|Response|TextDecoder|TextEncoder|URL|URLSearchParams|WebSocket'.
     insert_keywords( iv_keywords = lv_keywords
-                     iv_token = c_token-variables ).
+                     iv_token    = c_token-variables ).
 
   ENDMETHOD.
 

@@ -46,18 +46,18 @@ CLASS ltcl_syntax_js IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->process_line( 'Array Promise Map Set Symbol BigInt Uint8Array JSON Function function' )
       exp = |<span class="variables">Array</span> <span class="variables">Promise</span> |
-         && |<span class="variables">Map</span> <span class="variables">Set</span> |
-         && |<span class="variables">Symbol</span> <span class="variables">BigInt</span> |
-         && |<span class="variables">Uint8Array</span> <span class="variables">JSON</span> |
-         && |<span class="variables">Function</span> <span class="keyword">function</span>| ).
+            && |<span class="variables">Map</span> <span class="variables">Set</span> |
+            && |<span class="variables">Symbol</span> <span class="variables">BigInt</span> |
+            && |<span class="variables">Uint8Array</span> <span class="variables">JSON</span> |
+            && |<span class="variables">Function</span> <span class="keyword">function</span>| ).
   ENDMETHOD.
 
   METHOD built_in_members.
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->process_line( 'document.querySelector(item).innerHTML = parseInt(value);' )
       exp = |<span class="keyword">document</span>.<span class="keyword">querySelector</span>(item).|
-         && |<span class="keyword">innerHTML</span> = <span class="keyword">parseInt</span>(|
-         && |<span class="keyword">value</span>);| ).
+            && |<span class="keyword">innerHTML</span> = <span class="keyword">parseInt</span>(|
+            && |<span class="keyword">value</span>);| ).
   ENDMETHOD.
 
   METHOD case_sensitive.
@@ -112,8 +112,8 @@ CLASS ltcl_syntax_js IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->process_line( '/* first */ const /* second */ return // tail' )
       exp = |<span class="comment">/* first */</span> <span class="keyword">const</span> |
-         && |<span class="comment">/* second */</span> <span class="keyword">return</span> |
-         && |<span class="comment">// tail</span>| ).
+            && |<span class="comment">/* second */</span> <span class="keyword">return</span> |
+            && |<span class="comment">// tail</span>| ).
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->process_line( '*/ const' )
       exp = '*/ <span class="keyword">const</span>' ).
