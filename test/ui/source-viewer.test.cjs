@@ -17,7 +17,7 @@ function page() {
     Object.assign(requests[index], { readyState: 4, status, responseText: content });
     requests[index].onreadystatechange();
   }
-  return { viewer, sources, requests, errors, respond };
+  return { context, viewer, sources, requests, errors, respond };
 }
 
 for (const status of [200, 0]) {
@@ -67,7 +67,7 @@ for (const status of [404, 500, 0]) {
 
 test('IE uses stylesheet rules and avoids requesting cached JavaScript', () => {
   const p = page();
-  p.viewer.isInternetExplorer = () => true;
+  p.context.gEnv.isInternetExplorer = true;
   p.viewer.getStylesheetSource = () => 'body {}';
   p.sources[0].url = 'css/common.css';
   p.viewer.selectSource(p.sources[0]);
