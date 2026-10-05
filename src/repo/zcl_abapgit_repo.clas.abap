@@ -168,9 +168,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     IF lv_main_language <> sy-langu.
 
       lv_error_message = |Current login language |
-                      && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( sy-langu ) }'|
+                      && |'{ zcl_abapgit_convert_language=>conversion_exit_isola_output( sy-langu ) }'|
                       && | does not match main language |
-                      && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( lv_main_language ) }'.|.
+                      && |'{ zcl_abapgit_convert_language=>conversion_exit_isola_output( lv_main_language ) }'.|.
 
       " Feature open in main language only exists if abapGit tcode is present
       IF zcl_abapgit_services_abapgit=>get_abapgit_tcode( ) IS INITIAL.
