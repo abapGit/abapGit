@@ -479,7 +479,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     " Local changes
     LOOP AT ms_files-local ASSIGNING <ls_local>.
       AT FIRST.
-        ri_html->add( '<thead><tr class="local">' ).
+        ri_html->add( '<thead>' ).
+        ri_html->add( '<tr class="local">' ).
         ri_html->add( '<th class="stage-status"></th>' ). " Diff state
         ri_html->add( '<th class="stage-objtype">Type</th>' ).
         ri_html->add( '<th title="Click filename to see diff">File</th>' ).
@@ -489,7 +490,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         ri_html->add( '<th class="cmd">' ).
         ri_html->add( '<a>add</a>&#x2193; <a>reset</a>&#x2193;' ).
         ri_html->add( '</th>' ).
-        ri_html->add( '</tr></thead>' ).
+        ri_html->add( '</tr>' ).
+        ri_html->add( '</thead>' ).
         ri_html->add( '<tbody>' ).
       ENDAT.
 
@@ -527,7 +529,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     " Remote changes
     LOOP AT ms_files-remote ASSIGNING <ls_remote>.
       AT FIRST.
-        ri_html->add( '<thead><tr class="remote">' ).
+        ri_html->add( '<thead>' ).
+        ri_html->add( '<tr class="remote">' ).
         ri_html->add( '<th></th>' ). " Diff state
         ri_html->add( '<th></th>' ). " Type
         ri_html->add( '<th colspan="3">Files to remove or non-code</th>' ).
@@ -535,7 +538,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         ri_html->add( '<th class="cmd">' ).
         ri_html->add( '<a>ignore</a>&#x2193; <a>remove</a>&#x2193; <a>reset</a>&#x2193;' ).
         ri_html->add( '</th>' ).
-        ri_html->add( '</tr></thead>' ).
+        ri_html->add( '</tr>' ).
+        ri_html->add( '</thead>' ).
         ri_html->add( '<tbody>' ).
       ENDAT.
 

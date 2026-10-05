@@ -287,10 +287,10 @@ table.diff_tab thead.header th {
   color: #eee;
   background-color: var(--theme-greyscale-medium);
 }
-table.diff_tab thead.nav_line {
+table.diff_tab tr.nav_line {
   background-color: #edf2f9;
 }
-table.diff_tab thead.nav_line th {
+table.diff_tab tr.nav_line th {
   color: var(--theme-greyscale-medium);
 }
 table.diff_tab td.num, th.num {
