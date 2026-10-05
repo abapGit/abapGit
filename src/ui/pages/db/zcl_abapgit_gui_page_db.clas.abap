@@ -681,7 +681,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
         rs_render-css_class = 'data'.
       WHEN 'cmd'.
         lv_action  = zcl_abapgit_html_action_utils=>dbkey_encode( is_row ).
-        lo_toolbar = zcl_abapgit_html_toolbar=>create( 'actionbar-database-utility'
+        lo_toolbar = zcl_abapgit_html_toolbar=>create( |actionbar-database-utility-{ iv_row_index }|
           )->add(
             iv_txt = 'Display'
             iv_act = |{ zif_abapgit_definitions=>c_action-db_display }?{ lv_action }|

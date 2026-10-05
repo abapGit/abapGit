@@ -3520,7 +3520,7 @@ SourceViewer.prototype.show = function() {
   sourceContainer.className = "source-viewer-content";
   lineNumbers.setAttribute("aria-hidden", "true");
   lineNumbers.className = "source-viewer-line-numbers";
-  source.wrap = "off";
+  source.wrap = "soft";
   source.className = "source-viewer-source";
 
   overlay.appendChild(heading);
