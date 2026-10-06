@@ -41,6 +41,10 @@
    -- zcl_abapgit_gui_page_diff_base->render_scripts,
       which also does new CommandPalette( enumerateJumpAllFiles ) */
 
+/* exported rememberScrollPosition
+   -- zcl_abapgit_gui_page_repo_over, zcl_abapgit_gui_page_repo_view,
+      zcl_abapgit_gui_page_db */
+
 /* exported onDiffCollapse
    -- zcl_abapgit_gui_page_diff_base->render_diff_head */
 
@@ -3074,6 +3078,43 @@ function memorizeScrollPosition(fn) {
     saveScrollPosition();
     return fn.apply(this, arguments);
   };
+}
+
+// Keep list pages independent of the one-shot scroll position used by diffs.
+function rememberScrollPosition(pageId) {
+  var storage;
+  var key = "scrollTop:" + pageId;
+  try {
+    storage = window.sessionStorage;
+    if (!storage) return;
+    // Storage can be present but inaccessible in embedded browser controls.
+    storage.getItem(key);
+  } catch (err) { return err }
+
+  function save() {
+    var root = document.scrollingElement || document.documentElement;
+    try {
+      storage.setItem(key, window.pageYOffset || root.scrollTop);
+    } catch (err) { return err }
+  }
+
+  function restore() {
+    try {
+      var position = Number(storage.getItem(key));
+      if (isFinite(position) && position >= 0) window.scrollTo(0, position);
+    } catch (err) { return err }
+    window.addEventListener("scroll", save);
+    // Capture the final position before links, hotkeys or forms navigate away.
+    document.addEventListener("click", save, true);
+    document.addEventListener("submit", save, true);
+  }
+
+  // Wait for layout and the overview's saved display settings to be restored.
+  if (document.readyState === "complete") {
+    restore();
+  } else {
+    window.addEventListener("load", restore);
+  }
 }
 
 /**********************************************************
