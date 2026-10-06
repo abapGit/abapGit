@@ -212,7 +212,7 @@ function getSapeventPrefix() {
 // Output text to the debug div
 function debugOutput(text, dstID) {
   var stdout    = document.getElementById(dstID || "debug-output");
-  var paragraph = document.createElement("p");
+  var paragraph = document.createElement("div");
 
   // text is trusted, server-generated debug markup (e.g. the Debug Info table),
   // so render it as HTML rather than escaping it
