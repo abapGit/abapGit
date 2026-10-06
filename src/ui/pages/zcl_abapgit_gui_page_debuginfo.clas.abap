@@ -138,7 +138,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
-      ri_html->add( '<h2>abapGit - Standalone Version</h2>' ).
+      ri_html->add( '<h1>abapGit - Standalone Version</h1>' ).
       ri_html->add( '<div>To keep abapGit up-to-date (or also to contribute) you need to' ).
       ri_html->add( |install it as a repository ({ ri_html->a(
         iv_txt = 'Developer Version'
@@ -148,7 +148,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
       lv_devclass = zcl_abapgit_factory=>get_tadir( )->get_object_package(
         iv_object   = 'CLAS'
         iv_obj_name = 'ZCX_ABAPGIT_EXCEPTION' ).
-      ri_html->add( '<h2>abapGit - Developer Version</h2>' ).
+      ri_html->add( '<h1>abapGit - Developer Version</h1>' ).
       ri_html->add( |<div>abapGit is installed in package { lv_devclass }</div>| ).
     ENDIF.
 
@@ -257,7 +257,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( '<table border="1px"><thead><tr>' ).
+    ri_html->add( '<table class="borders"><thead><tr>' ).
     ri_html->add( '<td>Exit</td><td class="center">Implemented?</td>' ).
     ri_html->add( '</tr></thead><tbody>' ).
 
@@ -339,7 +339,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     rv_html = rv_html && |<br><br>Supported object types in <strong>this</strong> system:<br><br>|.
 
-    rv_html = rv_html && |<table border="1px"><thead><tr>|.
+    rv_html = rv_html && |<table class="borders"><thead><tr>|.
     rv_html = rv_html && |<td>Object</td><td>Description</td><td>Class</td><td>Version</td>|.
     rv_html = rv_html && |<td>Steps</td><td>AFF</td>|.
     rv_html = rv_html && |</tr></thead><tbody>|.
