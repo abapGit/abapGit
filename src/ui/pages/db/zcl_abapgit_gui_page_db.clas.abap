@@ -644,6 +644,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
 
     DATA lt_db_entries TYPE zif_abapgit_persistence=>ty_contents.
+    DATA lo_script TYPE REF TO zif_abapgit_html.
 
     register_handlers( ).
 
@@ -660,6 +661,10 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
     ri_html->add( '</div>' ).
 
     ri_html->add( lcl_popup_to_confirm=>render( ) ).
+
+    lo_script = zcl_abapgit_html=>create( ).
+    lo_script->add( 'rememberScrollPosition("db-list");' ).
+    register_deferred_script( lo_script ).
 
   ENDMETHOD.
 
