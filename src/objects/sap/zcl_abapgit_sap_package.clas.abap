@@ -1,15 +1,16 @@
 CLASS zcl_abapgit_sap_package DEFINITION
   PUBLIC
   CREATE PRIVATE
-  GLOBAL FRIENDS zcl_abapgit_factory .
+  GLOBAL FRIENDS zcl_abapgit_factory.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_sap_package .
+    INTERFACES zif_abapgit_sap_package.
 
     METHODS constructor
       IMPORTING
-        !iv_package TYPE devclass .
+        !iv_package TYPE devclass.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA mv_package TYPE devclass.
@@ -212,6 +213,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     DATA: li_parent TYPE REF TO if_package,
           ls_child  TYPE zif_abapgit_sap_package=>ty_create.
 
+    FIELD-SYMBOLS <lv_package_kind> TYPE uccheck.
 
     cl_package_factory=>load_package(
       EXPORTING
@@ -236,6 +238,12 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     ls_child-parentcl  = mv_package.
     ls_child-pdevclass = li_parent->transport_layer.
     ls_child-as4user   = sy-uname.
+
+    " Interface does not contain ABAP language version (package_kind) in lower releases
+    ASSIGN li_parent->('PACKAGE_KIND') TO <lv_package_kind>.
+    IF sy-subrc = 0.
+      ls_child-packkind = <lv_package_kind>.
+    ENDIF.
 
     zif_abapgit_sap_package~create( ls_child ).
 
@@ -283,6 +291,8 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
     DATA li_package TYPE REF TO if_package.
 
+    FIELD-SYMBOLS <lv_package_kind> TYPE uccheck.
+
     cl_package_factory=>load_package(
       EXPORTING
         i_package_name             = mv_package
@@ -310,14 +320,10 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     rs_package-korrflag  = li_package->wbo_korr_flag.
 
     " Interface does not contain ABAP language version (package_kind) in lower releases
-    TRY.
-        SELECT SINGLE package_kind FROM ('TDEVC') INTO rs_package-packkind WHERE devclass = mv_package.
-        IF sy-subrc <> 0.
-          rs_package-packkind = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
-        ENDIF.
-      CATCH cx_root ##NO_HANDLER.
-    ENDTRY.
-
+    ASSIGN li_package->('PACKAGE_KIND') TO <lv_package_kind>.
+    IF sy-subrc = 0.
+      rs_package-packkind = <lv_package_kind>.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -435,7 +441,6 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     DATA: lt_list   LIKE rt_list,
           lv_parent TYPE tdevc-parentcl.
 
-
     APPEND mv_package TO rt_list.
 
     lv_parent = zif_abapgit_sap_package~read_parent( ).
@@ -449,6 +454,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
 
   METHOD zif_abapgit_sap_package~read_description.
+
     DATA li_package TYPE REF TO if_package.
 
     cl_package_factory=>load_package(
@@ -469,6 +475,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     ENDIF.
 
     rv_description = li_package->short_text.
+
   ENDMETHOD.
 
 
@@ -501,8 +508,9 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
     DATA lv_tree TYPE string.
 
-* update package tree for SE80
+    " update package tree for SE80
     lv_tree = 'EU_' && mv_package.
+
     CALL FUNCTION 'WB_TREE_ACTUALIZE'
       EXPORTING
         tree_name              = lv_tree
