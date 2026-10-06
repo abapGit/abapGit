@@ -42,7 +42,8 @@
       which also does new CommandPalette( enumerateJumpAllFiles ) */
 
 /* exported rememberScrollPosition
-   -- zcl_abapgit_gui_page_repo_over, zcl_abapgit_gui_page_db */
+   -- zcl_abapgit_gui_page_repo_over, zcl_abapgit_gui_page_repo_view,
+      zcl_abapgit_gui_page_db */
 
 /* exported onDiffCollapse
    -- zcl_abapgit_gui_page_diff_base->render_diff_head */
