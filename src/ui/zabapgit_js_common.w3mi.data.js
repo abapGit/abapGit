@@ -3240,6 +3240,18 @@ function redirectBrowserBackToSapEvent(backAction) {
 
     triggerSapEventBack(backAction);
   });
+
+  // A sapevent that leaves the page in place (no_more_act, e.g. stage_filter or
+  // clipboard) is not followed by a popstate on WebGUI, so the flag would stay
+  // set and swallow the next genuine Back press. A genuine Back press always
+  // starts with user input, while the control emits its popstate right after
+  // the submit - so the next input ends the wait. Not keyup: Enter submits on
+  // keypress, and its keyup can come before the control's popstate.
+  // On the document, not the window: the WebGUI busy lock stops input during a
+  // round trip on the window, so that input never gets here.
+  ["keydown", "mousedown", "contextmenu"].forEach(function(name) {
+    document.addEventListener(name, function() { gSapeventNavPending = false }, true);
+  });
 }
 
 // Find the server-rendered elements (anchors / submit inputs) the backend

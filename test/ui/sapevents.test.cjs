@@ -7,9 +7,10 @@ const loadUi = require("./load-ui.cjs");
 // ordering is deliberate: embedded controls can emit popstate during submit.
 function page(elements = []) {
   const listeners = {};
+  const capture = {};
   const context = loadUi({
     document: {
-      addEventListener() {},
+      addEventListener(name, fn, useCapture) { if (useCapture) capture[name] = fn; },
       querySelectorAll(selector) {
         return elements.filter(element => selector.split(", ").some(part => {
           const simple = part.match(/^([a-z]+)(\[[^\]]+\])*$/);
@@ -28,6 +29,7 @@ function page(elements = []) {
     addEventListener(name, fn) { listeners[name] = fn; }
   });
   context.popstate = () => listeners.popstate();
+  context.input = name => capture[name] && capture[name]({ type: name });
   return context;
 }
 
@@ -131,4 +133,34 @@ test("submitFormById keeps guarding server-rendered forms", () => {
   form.submit = () => { submits++; assert.equal(context.gSapeventNavPending, true); };
   context.submitFormById(form.id);
   assert.equal(submits, 1);
+});
+
+// A sapevent that leaves the page in place (no_more_act, e.g. stage_filter or
+// clipboard) is not followed by a popstate on WebGUI. The next user input ends
+// the wait for one, so the Back press that follows is not swallowed.
+test("user input after a submit without popstate re-enables Back", () => {
+  for (const name of ["keydown", "mousedown", "contextmenu"]) {
+    const form = { id: "filter_form", submit() {} };
+    const context = page([form]);
+    let backs = 0;
+    context.redirectBrowserBackToSapEvent();
+    context.triggerSapEventBack = () => backs++;
+    context.submitFormById(form.id);
+    context.input(name);
+    context.popstate();
+    assert.equal(backs, 1, name);
+  }
+});
+
+// Enter submits on keypress; its keyup can come before the control's popstate
+test("keyup after a submit keeps ignoring the submit-induced popstate", () => {
+  const form = { id: "filter_form", submit() {} };
+  const context = page([form]);
+  let backs = 0;
+  context.redirectBrowserBackToSapEvent();
+  context.triggerSapEventBack = () => backs++;
+  context.submitFormById(form.id);
+  context.input("keyup");
+  context.popstate();
+  assert.equal(backs, 0);
 });
