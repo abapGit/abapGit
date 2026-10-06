@@ -208,7 +208,7 @@ function getSapeventPrefix() {
 // Output text to the debug div
 function debugOutput(text, dstID) {
   var stdout    = document.getElementById(dstID || "debug-output");
-  var paragraph = document.createElement("p");
+  var paragraph = document.createElement("div");
 
   // text is trusted, server-generated debug markup (e.g. the Debug Info table),
   // so render it as HTML rather than escaping it
@@ -3332,6 +3332,7 @@ function SourceViewer() {
   this.source = null;
   this.lineNumbers = null;
   this.activeSource = null;
+  this.validationUnlock = null;
 }
 
 SourceViewer.prototype.getHtmlSource = function() {
@@ -3423,16 +3424,90 @@ SourceViewer.prototype.getAssetSource = function(url, success) {
   }
 };
 
+SourceViewer.prototype.lockValidation = function() {
+  var busy = document.createElement("div");
+  var previousFocus = document.activeElement;
+  var sourceViewer = this;
+  var inputEvents = ["click", "dblclick", "mousedown", "mouseup", "pointerdown", "pointerup",
+    "touchstart", "touchend", "keydown", "keypress", "keyup", "submit", "contextmenu"];
+
+  busy.className = "source-viewer-busy";
+  busy.tabIndex = -1;
+  busy.setAttribute("role", "status");
+  busy.setAttribute("aria-busy", "true");
+  busy.textContent = "Validating HTML...";
+  busy.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;" +
+    "z-index:2147483647;cursor:wait;background:rgba(0,0,0,0.5);color:#fff;" +
+    "display:flex;align-items:center;justify-content:center;font:16px sans-serif;";
+
+  function blockInput(event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+
+  this.validationUnlock = function() {
+    inputEvents.forEach(function(name) { window.removeEventListener(name, blockInput, true) });
+    window.removeEventListener("pageshow", sourceViewer.validationUnlock);
+    if (busy.parentNode) busy.parentNode.removeChild(busy);
+    sourceViewer.validationUnlock = null;
+    if (previousFocus && document.body.contains(previousFocus)) previousFocus.focus();
+  };
+  inputEvents.forEach(function(name) { window.addEventListener(name, blockInput, true) });
+  window.addEventListener("pageshow", this.validationUnlock);
+  document.body.appendChild(busy);
+  busy.focus();
+};
+
+SourceViewer.prototype.validateHtml = function() {
+  if (this.validationUnlock) return;
+  var form = document.createElement("form");
+  var fields = {
+    fragment: this.activeSource === this.sources[0] ? this.source.value : this.sources[0].content,
+    prefill: "0",
+    doctype: "Inline",
+    group: "1",
+    ss: "1",
+    outline: "1"
+  };
+
+  form.method = "post";
+  form.action = "https://validator.w3.org/check";
+  form.enctype = "multipart/form-data";
+  form.acceptCharset = "UTF-8";
+  // Desktop SAP GUI opens _blank externally with only the URL, losing POST data.
+  form.target = gEnv.isWebGui ? "_blank" : "_self";
+  form.style.display = "none";
+  Object.keys(fields).forEach(function(name) {
+    var input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = fields[name];
+    form.appendChild(input);
+  });
+  document.body.appendChild(form);
+  try {
+    if (!gEnv.isWebGui) this.lockValidation();
+    form.submit();
+  } catch (error) {
+    if (this.validationUnlock) this.validationUnlock();
+    this.reportError("Could not submit HTML to the W3C validator: " + error.message);
+  } finally {
+    document.body.removeChild(form);
+  }
+};
+
 SourceViewer.prototype.show = function() {
   var overlay = document.createElement("div");
   var heading = document.createElement("div");
   var close = document.createElement("button");
   var tabs = document.createElement("div");
+  var validate = document.createElement("button");
   var sourceContainer = document.createElement("div");
   var lineNumbers = document.createElement("pre");
   var source = document.createElement("textarea");
   var sourceViewer = this;
 
+  this.sources[0].content = this.getHtmlSource();
   overlay.className = "source-viewer";
   overlay.tabIndex = -1;
   heading.className = "source-viewer-heading";
@@ -3445,7 +3520,7 @@ SourceViewer.prototype.show = function() {
   sourceContainer.className = "source-viewer-content";
   lineNumbers.setAttribute("aria-hidden", "true");
   lineNumbers.className = "source-viewer-line-numbers";
-  source.wrap = "off";
+  source.wrap = "soft";
   source.className = "source-viewer-source";
 
   overlay.appendChild(heading);
@@ -3474,6 +3549,16 @@ SourceViewer.prototype.show = function() {
     sourceDefinition.tab = tab;
     tabs.appendChild(tab);
   });
+
+  validate.type = "button";
+  validate.className = "source-viewer-tab";
+  validate.appendChild(document.createTextNode("Validate HTML"));
+  validate.title = "Send HTML source to the W3C validator" +
+    (gEnv.isWebGui ? " (opens in a new tab)" : " (opens in the SAP GUI browser control)");
+  validate.onclick = function() {
+    sourceViewer.validateHtml();
+  };
+  tabs.appendChild(validate);
 
   function stopEvent(event) {
     event.preventDefault();
