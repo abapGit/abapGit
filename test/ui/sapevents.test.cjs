@@ -124,6 +124,49 @@ test("palette main submit preserves the form and ignores submit-induced popstate
   assert.equal(backs, 1);
 });
 
+// The browser SAP GUI for Java embeds has no key for Back (nor a context menu
+// entry), so abapGit takes Alt+Left there. Everywhere else the browser goes
+// back itself, and the trap turns that into go_back: a second one would follow.
+function altLeft(context, keys = {}) {
+  let prevented = false;
+  context.gKeyboard.dispatch("keydown", { key: "ArrowLeft", keyCode: 37, altKey: true, ctrlKey: false,
+    shiftKey: false, metaKey: false, ...keys, preventDefault() { prevented = true; } });
+  return prevented;
+}
+
+function backTrap(env) {
+  const context = page();
+  context.navigator = { userAgent: env.isSapGuiForWindows ? "Mozilla/5.0 Chrome/150 Edg/150" : "Mozilla/5.0" };
+  context.setEnvironment(env);
+  context.redirectBrowserBackToSapEvent();
+  const backs = [];
+  context.triggerSapEventBack = action => backs.push(action);
+  return { context, backs };
+}
+
+test("Alt+Left goes back in SAP GUI for Java", () => {
+  const { context, backs } = backTrap({ isWebGui: false, isSapGuiForWindows: false });
+  assert.equal(altLeft(context), true);
+  assert.deepEqual(backs, ["go_back"]);
+});
+
+test("Alt+Left is left to the browser in SAP GUI for Windows and WebGUI", () => {
+  for (const env of [{ isWebGui: false, isSapGuiForWindows: true }, { isWebGui: true, isSapGuiForWindows: false }]) {
+    const { context, backs } = backTrap(env);
+    if (context.gKeyboard.handlers.keydown) assert.equal(altLeft(context), false);
+    assert.deepEqual(backs, [], JSON.stringify(env));
+  }
+});
+
+test("only Alt+Left goes back in SAP GUI for Java, no other combination", () => {
+  const { context, backs } = backTrap({ isWebGui: false, isSapGuiForWindows: false });
+  for (const keys of [{ altKey: false }, { ctrlKey: true }, { shiftKey: true }, { metaKey: true },
+    { key: "ArrowRight", keyCode: 39 }]) {
+    if (context.gKeyboard.handlers.keydown) assert.equal(altLeft(context, keys), false, JSON.stringify(keys));
+  }
+  assert.deepEqual(backs, []);
+});
+
 test("submitFormById keeps guarding server-rendered forms", () => {
   const form = { id: "edit_form" };
   const context = page([form]);
