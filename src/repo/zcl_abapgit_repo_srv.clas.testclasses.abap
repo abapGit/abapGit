@@ -116,6 +116,7 @@ CLASS ltcl_reload IMPLEMENTATION.
     DATA li_before TYPE REF TO zif_abapgit_repo.
     DATA li_cached TYPE REF TO zif_abapgit_repo.
     DATA li_after TYPE REF TO zif_abapgit_repo.
+    DATA lv_same TYPE abap_bool.
 
     li_before = mi_srv->get( c_key ).
 
@@ -132,10 +133,16 @@ CLASS ltcl_reload IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = li_after->ms_data-branch_name
       exp = 'refs/heads/feature' ).
-    cl_abap_unit_assert=>assert_false( boolc( li_after = li_before ) ).
+    lv_same = boolc( li_after = li_before ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_same
+      exp = abap_false ).
 
     li_cached = mi_srv->get( c_key ).
-    cl_abap_unit_assert=>assert_true( boolc( li_cached = li_after ) ).
+    lv_same = boolc( li_cached = li_after ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_same
+      exp = abap_true ).
 
   ENDMETHOD.
 
@@ -143,11 +150,15 @@ CLASS ltcl_reload IMPLEMENTATION.
 
     DATA li_before TYPE REF TO zif_abapgit_repo.
     DATA li_after TYPE REF TO zif_abapgit_repo.
+    DATA lv_same TYPE abap_bool.
 
     li_before = mi_srv->get( c_key ).
     li_after = mi_srv->reload( c_key ).
 
-    cl_abap_unit_assert=>assert_true( boolc( li_after = li_before ) ).
+    lv_same = boolc( li_after = li_before ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_same
+      exp = abap_true ).
 
   ENDMETHOD.
 
@@ -156,12 +167,16 @@ CLASS ltcl_reload IMPLEMENTATION.
     DATA li_repo TYPE REF TO zif_abapgit_repo.
 
     li_repo = mi_srv->get( c_key ).
-    cl_abap_unit_assert=>assert_false( li_repo->is_offline( ) ).
+    cl_abap_unit_assert=>assert_equals(
+      act = li_repo->is_offline( )
+      exp = abap_false ).
 
     change_persisted_repo( iv_offline = abap_true ).
 
     li_repo = mi_srv->reload( c_key ).
-    cl_abap_unit_assert=>assert_true( li_repo->is_offline( ) ).
+    cl_abap_unit_assert=>assert_equals(
+      act = li_repo->is_offline( )
+      exp = abap_true ).
 
   ENDMETHOD.
 
@@ -171,6 +186,7 @@ CLASS ltcl_reload IMPLEMENTATION.
     DATA li_after TYPE REF TO zif_abapgit_repo.
     DATA lt_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
     DATA ls_file LIKE LINE OF lt_files.
+    DATA lv_same TYPE abap_bool.
 
     change_persisted_repo( iv_offline = abap_true ).
 
@@ -188,7 +204,10 @@ CLASS ltcl_reload IMPLEMENTATION.
 
     li_after = mi_srv->reload( c_key ).
 
-    cl_abap_unit_assert=>assert_false( boolc( li_after = li_before ) ).
+    lv_same = boolc( li_after = li_before ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_same
+      exp = abap_false ).
     cl_abap_unit_assert=>assert_equals(
       act = li_after->get_files_remote( )
       exp = lt_files ).
