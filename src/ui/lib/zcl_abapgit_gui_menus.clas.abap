@@ -147,6 +147,10 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
       iv_key  = iv_key
       iv_act  = iv_act ).
 
+    ro_menu->add(
+      iv_txt = 'Back'
+      iv_act = zif_abapgit_definitions=>c_action-go_back ).
+
   ENDMETHOD.
 
 
@@ -161,7 +165,10 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
     )->add(
       iv_txt = 'Personal'
       iv_act = zif_abapgit_definitions=>c_action-go_settings_personal
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings_personal ) ).
+      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings_personal )
+    )->add(
+      iv_txt = 'Back'
+      iv_act = zif_abapgit_definitions=>c_action-go_back ).
 
   ENDMETHOD.
 ENDCLASS.
