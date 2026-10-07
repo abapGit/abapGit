@@ -2,12 +2,12 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_component
   FINAL
-  CREATE PRIVATE .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_gui_event_handler .
-    INTERFACES zif_abapgit_gui_renderable .
+    INTERFACES zif_abapgit_gui_event_handler.
+    INTERFACES zif_abapgit_gui_renderable.
 
     CLASS-METHODS create
       IMPORTING
@@ -15,12 +15,12 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS constructor
       IMPORTING
         !ii_repo TYPE REF TO zif_abapgit_repo
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -48,15 +48,15 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
     CONSTANTS:
       BEGIN OF c_event,
         save TYPE string VALUE 'save',
-      END OF c_event .
+      END OF c_event.
     CONSTANTS c_empty_rows TYPE i VALUE 2 ##NO_TEXT.
 
-    DATA mo_form TYPE REF TO zcl_abapgit_html_form .
-    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
-    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
+    DATA mo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
+    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
 
-    DATA mi_repo TYPE REF TO zif_abapgit_repo .
-    DATA mv_requirements_count TYPE i .
+    DATA mi_repo TYPE REF TO zif_abapgit_repo.
+    DATA mv_requirements_count TYPE i.
 
     METHODS validate_form
       IMPORTING
@@ -64,25 +64,25 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
       RETURNING
         VALUE(ro_validation_log) TYPE REF TO zcl_abapgit_string_map
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS validate_version_constant
       IMPORTING
         !iv_version_constant TYPE string
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS get_form_schema
       RETURNING
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS read_settings
       RETURNING
         VALUE(ro_form_data) TYPE REF TO zcl_abapgit_string_map
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS save_settings
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -116,7 +116,8 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_page_title      = 'Repository Settings'
       io_page_menu       = zcl_abapgit_gui_menus=>repo_settings(
                              iv_key = ii_repo->get_key( )
-                             iv_act = zif_abapgit_definitions=>c_action-repo_settings )
+                             iv_act = zif_abapgit_definitions=>c_action-repo_settings
+                             iv_with_back = abap_true )
       ii_child_component = lo_component ).
 
   ENDMETHOD.

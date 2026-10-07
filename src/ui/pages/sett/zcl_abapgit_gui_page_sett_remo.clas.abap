@@ -2,12 +2,12 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_component
   FINAL
-  CREATE PRIVATE .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_gui_event_handler .
-    INTERFACES zif_abapgit_gui_renderable .
+    INTERFACES zif_abapgit_gui_event_handler.
+    INTERFACES zif_abapgit_gui_renderable.
     INTERFACES zif_abapgit_gui_hotkeys.
 
     CLASS-METHODS create
@@ -16,7 +16,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS constructor
       IMPORTING
         !ii_repo TYPE REF TO zif_abapgit_repo
@@ -55,13 +55,13 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
         choose_commit       TYPE string VALUE 'choose_commit',
         choose_pull_request TYPE string VALUE 'choose_pull_request',
         change_head_type    TYPE string VALUE 'change_head_type',
-      END OF c_event .
+      END OF c_event.
 
-    DATA mi_repo TYPE REF TO zif_abapgit_repo .
+    DATA mi_repo TYPE REF TO zif_abapgit_repo.
     DATA ms_settings_snapshot TYPE ty_remote_settings.
-    DATA mo_form TYPE REF TO zcl_abapgit_html_form .
-    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
-    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
+    DATA mo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
+    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
     DATA mv_refresh_on_back TYPE abap_bool.
     DATA mv_offline_switch_saved_url TYPE string.
 
@@ -367,7 +367,8 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       iv_page_title      = 'Remote Settings'
       io_page_menu       = zcl_abapgit_gui_menus=>repo_settings(
                              iv_key = ii_repo->get_key( )
-                             iv_act = zif_abapgit_definitions=>c_action-repo_remote_settings )
+                             iv_act = zif_abapgit_definitions=>c_action-repo_remote_settings
+                             iv_with_back = abap_true )
       ii_child_component = lo_component ).
 
   ENDMETHOD.

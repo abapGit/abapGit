@@ -92,7 +92,8 @@ CLASS zcl_abapgit_gui_page_sett_bckg IMPLEMENTATION.
       iv_page_title      = 'Background Mode'
       io_page_menu       = zcl_abapgit_gui_menus=>repo_settings(
                              iv_key = ii_repo->get_key( )
-                             iv_act = zif_abapgit_definitions=>c_action-repo_background )
+                             iv_act = zif_abapgit_definitions=>c_action-repo_background
+                             iv_with_back = abap_true )
       ii_child_component = lo_component ).
 
   ENDMETHOD.
@@ -108,8 +109,8 @@ CLASS zcl_abapgit_gui_page_sett_bckg IMPLEMENTATION.
     lt_methods = zcl_abapgit_background=>list_methods( ).
 
     ro_form = zcl_abapgit_html_form=>create(
-                iv_form_id   = 'repo-background-form'
-                iv_help_page = 'https://docs.abapgit.org/settings-background-mode.html' ).
+      iv_form_id   = 'repo-background-form'
+      iv_help_page = 'https://docs.abapgit.org/settings-background-mode.html' ).
 
     ro_form->start_group(
       iv_name          = c_id-mode_selection
@@ -125,8 +126,8 @@ CLASS zcl_abapgit_gui_page_sett_bckg IMPLEMENTATION.
 
     LOOP AT lt_methods INTO ls_method.
       ro_form->option(
-        iv_label       = ls_method-description
-        iv_value       = ls_method-class ).
+        iv_label = ls_method-description
+        iv_value = ls_method-class ).
     ENDLOOP.
 
     ro_form->table(
@@ -252,8 +253,8 @@ CLASS zcl_abapgit_gui_page_sett_bckg IMPLEMENTATION.
   METHOD save_settings.
 
     DATA:
-      ls_per         TYPE zif_abapgit_persist_background=>ty_background,
-      lt_settings    LIKE ls_per-settings.
+      ls_per      TYPE zif_abapgit_persist_background=>ty_background,
+      lt_settings LIKE ls_per-settings.
 
     FIELD-SYMBOLS:
       <ls_settings> LIKE LINE OF ls_per-settings.

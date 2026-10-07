@@ -101,7 +101,9 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Personal Settings'
-      io_page_menu       = zcl_abapgit_gui_menus=>settings( zif_abapgit_definitions=>c_action-go_settings_personal )
+      io_page_menu       = zcl_abapgit_gui_menus=>settings(
+        iv_act       = zif_abapgit_definitions=>c_action-go_settings_personal
+        iv_with_back = abap_true )
       ii_child_component = lo_component ).
 
   ENDMETHOD.
