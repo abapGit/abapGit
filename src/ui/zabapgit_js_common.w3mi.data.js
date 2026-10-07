@@ -41,6 +41,10 @@
    -- zcl_abapgit_gui_page_diff_base->render_scripts,
       which also does new CommandPalette( enumerateJumpAllFiles ) */
 
+/* exported rememberScrollPosition
+   -- zcl_abapgit_gui_page_repo_over, zcl_abapgit_gui_page_repo_view,
+      zcl_abapgit_gui_page_db */
+
 /* exported onDiffCollapse
    -- zcl_abapgit_gui_page_diff_base->render_diff_head */
 
@@ -666,6 +670,7 @@ function perfClear() {
 var gKeyboard = {
   order: {
     sourceViewer: 10, // Ctrl+Shift+?, a troubleshooting key that no page shortcut may take
+    browserBack : 15, // Alt+Left where the browser does not go back itself (SAP GUI for Java)
     linkHints   : 20,
     menus       : 30, // arrow keys through dropdown menus (KeyNavigation)
     palette     : 40, // the toggle keys of the command palettes
@@ -3076,6 +3081,43 @@ function memorizeScrollPosition(fn) {
   };
 }
 
+// Keep list pages independent of the one-shot scroll position used by diffs.
+function rememberScrollPosition(pageId) {
+  var storage;
+  var key = "scrollTop:" + pageId;
+  try {
+    storage = window.sessionStorage;
+    if (!storage) return;
+    // Storage can be present but inaccessible in embedded browser controls.
+    storage.getItem(key);
+  } catch (err) { return err }
+
+  function save() {
+    var root = document.scrollingElement || document.documentElement;
+    try {
+      storage.setItem(key, window.pageYOffset || root.scrollTop);
+    } catch (err) { return err }
+  }
+
+  function restore() {
+    try {
+      var position = Number(storage.getItem(key));
+      if (isFinite(position) && position >= 0) window.scrollTo(0, position);
+    } catch (err) { return err }
+    window.addEventListener("scroll", save);
+    // Capture the final position before links, hotkeys or forms navigate away.
+    document.addEventListener("click", save, true);
+    document.addEventListener("submit", save, true);
+  }
+
+  // Wait for layout and the overview's saved display settings to be restored.
+  if (document.readyState === "complete") {
+    restore();
+  } else {
+    window.addEventListener("load", restore);
+  }
+}
+
 /**********************************************************
  * Sticky Header
  **********************************************************/
@@ -3187,6 +3229,19 @@ function redirectBrowserBackToSapEvent(backAction) {
   // Arm the trap: this sentinel entry absorbs the first Back press
   window.history.pushState({ abapGitBackTrap: true }, "");
 
+  // The browser SAP GUI for Java embeds has no key for Back (nor an entry in
+  // its context menu), so Alt+Left is taken here. Everywhere else the browser
+  // goes back itself and the popstate below handles it; a second go_back would
+  // follow if it were taken there too. Also in input fields, as browsers do.
+  if (!gEnv.isWebGui && !gEnv.isSapGuiForWindows) {
+    gKeyboard.on("keydown", gKeyboard.order.browserBack, function(event) {
+      if (event.defaultPrevented || !event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return;
+      if (event.key !== "ArrowLeft" && event.keyCode !== 37) return;
+      event.preventDefault();
+      triggerSapEventBack(backAction);
+    });
+  }
+
   window.addEventListener("popstate", function() {
     // Re-arm so subsequent Back presses are also captured
     window.history.pushState({ abapGitBackTrap: true }, "");
@@ -3198,6 +3253,18 @@ function redirectBrowserBackToSapEvent(backAction) {
     }
 
     triggerSapEventBack(backAction);
+  });
+
+  // A sapevent that leaves the page in place (no_more_act, e.g. stage_filter or
+  // clipboard) is not followed by a popstate on WebGUI, so the flag would stay
+  // set and swallow the next genuine Back press. A genuine Back press always
+  // starts with user input, while the control emits its popstate right after
+  // the submit - so the next input ends the wait. Not keyup: Enter submits on
+  // keypress, and its keyup can come before the control's popstate.
+  // On the document, not the window: the WebGUI busy lock stops input during a
+  // round trip on the window, so that input never gets here.
+  ["keydown", "mousedown", "contextmenu"].forEach(function(name) {
+    document.addEventListener(name, function() { gSapeventNavPending = false }, true);
   });
 }
 
@@ -3268,52 +3335,54 @@ function triggerSapEventBack(backAction) {
  * Popup Control
  **********************************************************/
 
-// Prevents keyboard navigation to elements outside the modal popup
+// Keeps Tab and Shift+Tab inside the in-page popup (zcl_abapgit_gui_in_page_modal)
+// while it is open. On the document, not the popup: right after rendering the
+// focus is still on the page behind it, where a listener of the popup never
+// hears the key.
 // eslint-disable-next-line no-unused-vars
 function trapFocus() {
   var modal = document.getElementById("modal");
   if (!modal) return;
 
-  var focusableSelectors = "button, [href], input, select, textarea, [tabindex]";
-  var focusableElements = modal.querySelectorAll(focusableSelectors);
-
-  // Filter out elements with tabindex="-1"
-  var focusable = [];
-  for (var i = 0; i < focusableElements.length; i++) {
-    if (focusableElements[i].getAttribute("tabindex") !== "-1") {
-      focusable.push(focusableElements[i]);
+  // Read on every key, the popup can change. Hidden controls (e.g. the radio
+  // buttons behind the labels of a picklist) and tabindex="-1" (the hidden
+  // submit button) are no tab stops.
+  function getTabStops() {
+    var candidates = modal.querySelectorAll("button, [href], input, select, textarea, [tabindex]");
+    var tabStops = [];
+    for (var i = 0; i < candidates.length; i++) {
+      var candidate = candidates[i];
+      if (candidate.disabled || candidate.getAttribute("tabindex") === "-1") continue;
+      if (!candidate.offsetWidth && !candidate.offsetHeight && !candidate.getClientRects().length) continue;
+      tabStops.push(candidate);
     }
+    return tabStops;
   }
-
-  if (focusable.length === 0) return;
-
-  var firstElement = focusable[0];
-  var lastElement = focusable[focusable.length - 1];
 
   // No initial focus on the main button: while a button has focus, link hints
   // and letter hotkeys are off (gKeyboard.isTyping), and letting them
   // through would make Enter fire both the button and its Enter hotkey.
 
-  modal.onkeydown = function(e) {
-    var keyCode = e.keyCode || e.which;
+  document.addEventListener("keydown", function(event) {
+    if ((event.keyCode || event.which) !== 9 || event.ctrlKey || event.altKey || event.metaKey) return;
 
-    // Tab key
-    if (keyCode === 9) {
-      if (e.shiftKey) {
-        // Shift + Tab
-        if (document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement.focus();
-        }
-      } else {
-        // Tab only
-        if (document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement.focus();
-        }
-      }
+    var tabStops = getTabStops();
+    if (tabStops.length === 0) return;
+
+    var current = tabStops.indexOf(document.activeElement);
+    var target;
+    if (current === -1) {
+      target = event.shiftKey ? tabStops[tabStops.length - 1] : tabStops[0];
+    } else if (event.shiftKey && current === 0) {
+      target = tabStops[tabStops.length - 1];
+    } else if (!event.shiftKey && current === tabStops.length - 1) {
+      target = tabStops[0];
     }
-  };
+    if (!target) return; // inside the popup, the browser moves on itself
+
+    event.preventDefault();
+    target.focus();
+  }, true);
 }
 
 /**********************************************************
