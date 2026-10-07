@@ -1,28 +1,16 @@
 CLASS zcl_abapgit_repo_pull DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_factory .
 
   PUBLIC SECTION.
 
-    " The steps of a pull, without any UI. The caller gets the checks,
-    " fills in the decisions (popups, form, or "yes to all") and pulls.
+    INTERFACES zif_abapgit_repo_pull .
+
     METHODS constructor
       IMPORTING
         !ii_repo TYPE REF TO zif_abapgit_repo .
-    METHODS checks
-      RETURNING
-        VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
-      RAISING
-        zcx_abapgit_exception .
-    METHODS pull
-      IMPORTING
-        !is_checks    TYPE zif_abapgit_definitions=>ty_deserialize_checks
-        !ii_log       TYPE REF TO zif_abapgit_log OPTIONAL
-      RETURNING
-        VALUE(ri_log) TYPE REF TO zif_abapgit_log
-      RAISING
-        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -44,13 +32,6 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_repo_pull IMPLEMENTATION.
-
-
-  METHOD checks.
-
-    rs_checks = mi_repo->deserialize_checks( ).
-
-  ENDMETHOD.
 
 
   METHOD constructor.
@@ -116,7 +97,14 @@ CLASS zcl_abapgit_repo_pull IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD pull.
+  METHOD zif_abapgit_repo_pull~checks.
+
+    rs_checks = mi_repo->deserialize_checks( ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_pull~pull.
 
     IF ii_log IS BOUND.
       ri_log = ii_log.

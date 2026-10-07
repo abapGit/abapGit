@@ -1,3 +1,7 @@
+CLASS ltcl_pull DEFINITION DEFERRED.
+CLASS ltcl_objects_to_delete DEFINITION DEFERRED.
+CLASS zcl_abapgit_repo_pull DEFINITION LOCAL FRIENDS ltcl_pull ltcl_objects_to_delete.
+
 CLASS ltd_repo DEFINITION FINAL FOR TESTING.
 
   PUBLIC SECTION.
@@ -90,7 +94,7 @@ CLASS ltcl_pull DEFINITION FINAL FOR TESTING
 
   PRIVATE SECTION.
     DATA mo_repo TYPE REF TO ltd_repo.
-    DATA mo_cut TYPE REF TO zcl_abapgit_repo_pull.
+    DATA mi_cut TYPE REF TO zif_abapgit_repo_pull.
 
     METHODS setup.
     METHODS checks_from_repo FOR TESTING RAISING zcx_abapgit_exception.
@@ -104,7 +108,7 @@ CLASS ltcl_pull IMPLEMENTATION.
 
   METHOD setup.
     CREATE OBJECT mo_repo.
-    CREATE OBJECT mo_cut
+    CREATE OBJECT mi_cut TYPE zcl_abapgit_repo_pull
       EXPORTING
         ii_repo = mo_repo.
   ENDMETHOD.
@@ -115,7 +119,7 @@ CLASS ltcl_pull IMPLEMENTATION.
 
     mo_repo->ms_checks-transport-required = abap_true.
 
-    ls_checks = mo_cut->checks( ).
+    ls_checks = mi_cut->checks( ).
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_checks-transport-required
@@ -128,7 +132,7 @@ CLASS ltcl_pull IMPLEMENTATION.
     DATA li_log TYPE REF TO zif_abapgit_log.
     DATA ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
 
-    li_log = mo_cut->pull( ls_checks ).
+    li_log = mi_cut->pull( ls_checks ).
 
     cl_abap_unit_assert=>assert_bound( li_log ).
     cl_abap_unit_assert=>assert_true( boolc( li_log = mo_repo->mi_new_log ) ).
@@ -144,7 +148,7 @@ CLASS ltcl_pull IMPLEMENTATION.
 
     CREATE OBJECT li_given TYPE zcl_abapgit_log.
 
-    li_log = mo_cut->pull( is_checks = ls_checks
+    li_log = mi_cut->pull( is_checks = ls_checks
                            ii_log    = li_given ).
 
     cl_abap_unit_assert=>assert_true( boolc( li_log = li_given ) ).
@@ -166,7 +170,7 @@ CLASS ltcl_pull IMPLEMENTATION.
     INSERT ls_overwrite INTO TABLE ls_checks-overwrite.
     ls_checks-transport-transport = 'A4HK900001'.
 
-    mo_cut->pull( ls_checks ).
+    mi_cut->pull( ls_checks ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_repo->mv_deserialized
@@ -213,8 +217,6 @@ CLASS ltcl_objects_to_delete DEFINITION FINAL FOR TESTING
     DATA ms_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
 
 ENDCLASS.
-
-CLASS zcl_abapgit_repo_pull DEFINITION LOCAL FRIENDS ltcl_objects_to_delete.
 
 CLASS ltcl_objects_to_delete IMPLEMENTATION.
 

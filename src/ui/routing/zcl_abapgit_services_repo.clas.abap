@@ -312,15 +312,13 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD gui_deserialize.
 
-    DATA lo_pull TYPE REF TO zcl_abapgit_repo_pull.
+    DATA li_pull TYPE REF TO zif_abapgit_repo_pull.
     DATA ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
 
     " find troublesome objects
-    CREATE OBJECT lo_pull
-      EXPORTING
-        ii_repo = ii_repo.
+    li_pull = zcl_abapgit_factory=>get_repo_pull( ii_repo ).
 
-    ls_checks = lo_pull->checks( ).
+    ls_checks = li_pull->checks( ).
 
     IF ls_checks-overwrite IS INITIAL AND ls_checks-overwrite_files IS INITIAL.
       zcx_abapgit_exception=>raise(
@@ -839,15 +837,13 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD real_deserialize.
 
-    DATA lo_pull TYPE REF TO zcl_abapgit_repo_pull.
+    DATA li_pull TYPE REF TO zif_abapgit_repo_pull.
     DATA li_log TYPE REF TO zif_abapgit_log.
     DATA lv_msg TYPE string.
 
-    CREATE OBJECT lo_pull
-      EXPORTING
-        ii_repo = ii_repo.
+    li_pull = zcl_abapgit_factory=>get_repo_pull( ii_repo ).
 
-    li_log = lo_pull->pull( is_checks ).
+    li_log = li_pull->pull( is_checks ).
 
     IF li_log->get_status( ) = zif_abapgit_log=>c_status-ok.
       lv_msg = |Repository { ii_repo->get_name( ) } successfully pulled for package { ii_repo->get_package( ) }|.
