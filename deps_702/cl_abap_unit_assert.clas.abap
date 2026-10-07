@@ -1,5 +1,6 @@
-* Signatures of CL_ABAP_UNIT_ASSERT as available on 7.02, so that abaplint
-* reports methods added in later releases (ASSERT_TRUE, ASSERT_FALSE, ...).
+* The methods of CL_ABAP_UNIT_ASSERT that abapGit uses and that exist on 7.02,
+* so that abaplint reports methods added in later releases (ASSERT_TRUE, ...).
+* Add a method here only if it exists on 7.02.
 * Only read by abaplint, see abaplint.json. Based on open-abap.
 CLASS cl_abap_unit_assert DEFINITION PUBLIC.
   PUBLIC SECTION.
@@ -10,23 +11,6 @@ CLASS cl_abap_unit_assert DEFINITION PUBLIC.
           exp                     TYPE any
           msg                     TYPE csequence OPTIONAL
           tol                     TYPE f OPTIONAL
-          quit                    TYPE i OPTIONAL
-          level                   TYPE i OPTIONAL
-        RETURNING
-          VALUE(assertion_failed) TYPE abap_bool.
-
-    CLASS-METHODS abort
-      IMPORTING
-        msg    TYPE csequence OPTIONAL
-        detail TYPE csequence OPTIONAL
-        quit   TYPE int1 DEFAULT 2 PREFERRED PARAMETER msg.
-
-    CLASS-METHODS
-      assert_differs
-        IMPORTING
-          act                     TYPE simple
-          exp                     TYPE simple
-          msg                     TYPE csequence OPTIONAL
           quit                    TYPE i OPTIONAL
           level                   TYPE i OPTIONAL
         RETURNING
@@ -97,17 +81,6 @@ CLASS cl_abap_unit_assert DEFINITION PUBLIC.
           VALUE(assertion_failed) TYPE abap_bool.
 
     CLASS-METHODS
-      assert_char_np
-        IMPORTING
-          act                     TYPE clike
-          exp                     TYPE clike
-          msg                     TYPE csequence OPTIONAL
-          quit                    TYPE i OPTIONAL
-          level                   TYPE i OPTIONAL
-        RETURNING
-          VALUE(assertion_failed) TYPE abap_bool.
-
-    CLASS-METHODS
       assert_bound
         IMPORTING
           act                     TYPE any
@@ -143,10 +116,6 @@ ENDCLASS.
 CLASS cl_abap_unit_assert IMPLEMENTATION.
   METHOD assert_equals.
   ENDMETHOD.
-  METHOD abort.
-  ENDMETHOD.
-  METHOD assert_differs.
-  ENDMETHOD.
   METHOD assert_number_between.
   ENDMETHOD.
   METHOD assert_not_initial.
@@ -158,8 +127,6 @@ CLASS cl_abap_unit_assert IMPLEMENTATION.
   METHOD assert_subrc.
   ENDMETHOD.
   METHOD assert_char_cp.
-  ENDMETHOD.
-  METHOD assert_char_np.
   ENDMETHOD.
   METHOD assert_bound.
   ENDMETHOD.

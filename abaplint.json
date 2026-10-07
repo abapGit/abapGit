@@ -233,12 +233,7 @@
     "exit_or_check": true,
     "expand_macros": true,
     "exporting": true,
-    "forbidden_identifier": {
-      "check": [
-        "^assert_true$",
-        "^assert_false$"
-      ]
-    },
+    "forbidden_identifier": true,
     "forbidden_pseudo_and_pragma": {
       "ignoreGlobalClassDefinition": true,
       "ignoreGlobalInterface": true,
