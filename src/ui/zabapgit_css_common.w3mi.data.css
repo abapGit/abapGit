@@ -86,6 +86,7 @@ span.separator {
 .w800px       { width: 800px }
 .w1000px      { width: 1000px }
 .wmax600px    { max-width: 600px }
+.borders      { border: 1px solid }
 .auto-center  { /* use with max-width */
   width: 100%;
   margin-left: auto;
