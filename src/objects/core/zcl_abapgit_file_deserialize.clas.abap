@@ -268,10 +268,6 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
         WHEN 'SRVB'.
           lt_requires = lt_items.
           DELETE lt_requires WHERE obj_type <> 'SRVD'.
-        WHEN 'OA2S'.
-          lt_requires = lt_items.
-          " the scope is created from the object it is assigned to
-          DELETE lt_requires WHERE obj_type <> 'IWSG'.
       ENDCASE.
 * TODO: END extract to object handler method
 
