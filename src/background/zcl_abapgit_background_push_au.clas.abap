@@ -175,8 +175,9 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
 
       ls_comment-comment = build_comment( ls_user_files ).
 
-      ii_repo_online->push( is_comment = ls_comment
-                            io_stage   = lo_stage ).
+      zcl_abapgit_factory=>get_repo_push( ii_repo_online )->push(
+        is_comment = ls_comment
+        io_stage   = lo_stage ).
     ENDLOOP.
 
     IF lines( ls_files-remote ) > 0.
@@ -215,8 +216,9 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
     ls_comment-committer-name  = 'Deletion'.
     ls_comment-committer-email = 'deletion@localhost'.
 
-    ii_repo_online->push( is_comment = ls_comment
-                          io_stage   = lo_stage ).
+    zcl_abapgit_factory=>get_repo_push( ii_repo_online )->push(
+      is_comment = ls_comment
+      io_stage   = lo_stage ).
 
   ENDMETHOD.
 

@@ -42,6 +42,11 @@ CLASS zcl_abapgit_factory DEFINITION
         !ii_repo            TYPE REF TO zif_abapgit_repo
       RETURNING
         VALUE(ri_repo_pull) TYPE REF TO zif_abapgit_repo_pull.
+    CLASS-METHODS get_repo_push
+      IMPORTING
+        !ii_repo_online     TYPE REF TO zif_abapgit_repo_online
+      RETURNING
+        VALUE(ri_repo_push) TYPE REF TO zif_abapgit_repo_push.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -64,6 +69,7 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-DATA gi_sap_report TYPE REF TO zif_abapgit_sap_report.
     CLASS-DATA gi_function_module TYPE REF TO zif_abapgit_function_module.
     CLASS-DATA gi_repo_pull TYPE REF TO zif_abapgit_repo_pull.
+    CLASS-DATA gi_repo_push TYPE REF TO zif_abapgit_repo_push.
     CLASS-DATA gi_default_transport TYPE REF TO zif_abapgit_default_transport .
 ENDCLASS.
 
@@ -140,6 +146,20 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
       CREATE OBJECT ri_repo_pull TYPE zcl_abapgit_repo_pull
         EXPORTING
           ii_repo = ii_repo.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_repo_push.
+
+    " bound to one repository, so a new instance unless a test double is injected
+    IF gi_repo_push IS BOUND.
+      ri_repo_push = gi_repo_push.
+    ELSE.
+      CREATE OBJECT ri_repo_push TYPE zcl_abapgit_repo_push
+        EXPORTING
+          ii_repo_online = ii_repo_online.
     ENDIF.
 
   ENDMETHOD.

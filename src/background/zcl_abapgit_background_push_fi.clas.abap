@@ -99,8 +99,9 @@ CLASS zcl_abapgit_background_push_fi IMPLEMENTATION.
     ls_comment-committer-email = iv_email.
     ls_comment-comment         = build_comment( ls_files ).
 
-    ii_repo_online->push( is_comment = ls_comment
-                          io_stage   = lo_stage ).
+    zcl_abapgit_factory=>get_repo_push( ii_repo_online )->push(
+      is_comment = ls_comment
+      io_stage   = lo_stage ).
 
   ENDMETHOD.
 

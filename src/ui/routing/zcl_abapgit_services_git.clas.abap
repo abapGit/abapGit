@@ -101,17 +101,9 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
         INTO ls_comment-comment SEPARATED BY cl_abap_char_utilities=>newline.
     ENDIF.
 
-    zcl_abapgit_exit=>get_instance( )->validate_before_push(
-      is_comment     = ls_comment
-      io_stage       = io_stage
-      ii_repo_online = ii_repo_online ).
-
-    ii_repo_online->push( is_comment = ls_comment
-                          io_stage   = io_stage ).
-
-    COMMIT WORK.
-
-    zcl_abapgit_exit=>get_instance( )->validate_after_push( ii_repo_online ).
+    zcl_abapgit_factory=>get_repo_push( ii_repo_online )->push(
+      is_comment = ls_comment
+      io_stage   = io_stage ).
 
   ENDMETHOD.
 
