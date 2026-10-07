@@ -670,6 +670,7 @@ function perfClear() {
 var gKeyboard = {
   order: {
     sourceViewer: 10, // Ctrl+Shift+?, a troubleshooting key that no page shortcut may take
+    browserBack : 15, // Alt+Left where the browser does not go back itself (SAP GUI for Java)
     linkHints   : 20,
     menus       : 30, // arrow keys through dropdown menus (KeyNavigation)
     palette     : 40, // the toggle keys of the command palettes
@@ -3227,6 +3228,19 @@ function redirectBrowserBackToSapEvent(backAction) {
 
   // Arm the trap: this sentinel entry absorbs the first Back press
   window.history.pushState({ abapGitBackTrap: true }, "");
+
+  // The browser SAP GUI for Java embeds has no key for Back (nor an entry in
+  // its context menu), so Alt+Left is taken here. Everywhere else the browser
+  // goes back itself and the popstate below handles it; a second go_back would
+  // follow if it were taken there too. Also in input fields, as browsers do.
+  if (!gEnv.isWebGui && !gEnv.isSapGuiForWindows) {
+    gKeyboard.on("keydown", gKeyboard.order.browserBack, function(event) {
+      if (event.defaultPrevented || !event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return;
+      if (event.key !== "ArrowLeft" && event.keyCode !== 37) return;
+      event.preventDefault();
+      triggerSapEventBack(backAction);
+    });
+  }
 
   window.addEventListener("popstate", function() {
     // Re-arm so subsequent Back presses are also captured
