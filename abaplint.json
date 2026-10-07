@@ -8,6 +8,10 @@
   "dependencies": [
     {
       "files": "/**/*.*",
+      "folder": "/deps_702"
+    },
+    {
+      "files": "/**/*.*",
       "folder": "/deps"
     },
     {

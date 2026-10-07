@@ -60,11 +60,11 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
                                             msg = iv_msg ).
 
         IF lines( lt_filter_adj ) > 1.
-          cl_abap_unit_assert=>fail( msg = 'To many entries' ).
+          cl_abap_unit_assert=>fail( 'To many entries' ).
         ENDIF.
 
       CATCH zcx_abapgit_exception INTO lr_ex.
-        cl_abap_unit_assert=>fail( msg = lr_ex->get_text( ) ).
+        cl_abap_unit_assert=>fail( lr_ex->get_text( ) ).
     ENDTRY.
   ENDMETHOD.
 

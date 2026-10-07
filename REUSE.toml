@@ -19,3 +19,8 @@ SPDX-License-Identifier = "MIT"
 path = "src/stringmap/**/*"
 SPDX-FileCopyrightText = "2020 Alexander Tsybulsky <https://github.com/sbcgua/abap-string-map>"
 SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "deps_702/**/*"
+SPDX-FileCopyrightText = "2020 open-abap <https://github.com/open-abap/open-abap>"
+SPDX-License-Identifier = "MIT"

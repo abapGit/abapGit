@@ -104,7 +104,7 @@ CLASS ltcl_xml IMPLEMENTATION.
 
     TRY.
         mo_xml->parse( lv_xml ).
-        cl_abap_unit_assert=>fail( msg = 'Exception not raised' ).
+        cl_abap_unit_assert=>fail( 'Exception not raised' ).
 
       CATCH zcx_abapgit_exception INTO lo_error.
         lv_text = lo_error->get_text( ).
@@ -128,7 +128,7 @@ CLASS ltcl_xml IMPLEMENTATION.
 
     TRY.
         mo_xml->parse( lv_xml ).
-        cl_abap_unit_assert=>fail( msg = 'Exception not raised' ).
+        cl_abap_unit_assert=>fail( 'Exception not raised' ).
 
       CATCH zcx_abapgit_exception INTO lo_error.
         lv_text = lo_error->get_text( ).

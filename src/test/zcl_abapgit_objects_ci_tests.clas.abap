@@ -134,7 +134,7 @@ CLASS zcl_abapgit_objects_ci_tests IMPLEMENTATION.
         ENDLOOP.
 
       CATCH zcx_abapgit_exception INTO lx_error.
-        cl_abap_unit_assert=>fail( msg = lx_error->get_text( ) ).
+        cl_abap_unit_assert=>fail( lx_error->get_text( ) ).
     ENDTRY.
 
   ENDMETHOD.
