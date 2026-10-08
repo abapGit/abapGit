@@ -6,7 +6,7 @@
     "test:ui": "node --test test/ui/*.test.cjs",
     "merge": "abapmerge -f src/zabapgit.prog.abap -c zabapgit_standalone -o zabapgit.abap",
     "merge.ci": "cp zabapgit.abap ci/zabapgit_standalone.prog.abap && cd ci && abaplint --format codeframe && cd ..",
-    "build": "rm -rf output && abap_transpile test/abap_transpile.json && cp -f src/ui/zabapgit_icon_font.w3mi.data.woff output/",
+    "build": "rm -rf output && abap_transpile test/abap_transpile.json && cp -f src/ui/zabapgit_icon_font.w3mi.data.woff output/project/",
     "unit": "npm run build && echo RUNNING && node output/index.mjs --skip-critical",
     "coverage": "npm run unit && c8 node output/index.mjs --skip-critical && c8 report --reporter=html",
     "integration": "npm run build && echo RUNNING && node output/index.mjs --only-critical",
