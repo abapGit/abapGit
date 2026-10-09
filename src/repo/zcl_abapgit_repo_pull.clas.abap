@@ -1,6 +1,5 @@
 CLASS zcl_abapgit_repo_pull DEFINITION
   PUBLIC
-  FINAL
   CREATE PRIVATE
   GLOBAL FRIENDS zcl_abapgit_factory .
 
@@ -12,6 +11,15 @@ CLASS zcl_abapgit_repo_pull DEFINITION
       IMPORTING
         !ii_repo TYPE REF TO zif_abapgit_repo .
   PROTECTED SECTION.
+
+    " Allows testing the pull sequence without deleting SAP objects
+    METHODS delete_tadir
+      IMPORTING
+        !it_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !is_checks TYPE zif_abapgit_definitions=>ty_delete_checks
+        !ii_log    TYPE REF TO zif_abapgit_log
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
 
     DATA mi_repo TYPE REF TO zif_abapgit_repo .
@@ -54,12 +62,21 @@ CLASS zcl_abapgit_repo_pull IMPLEMENTATION.
     IF lines( lt_tadir ) > 0.
       ls_checks-transport = is_checks-transport.
 
-      zcl_abapgit_objects=>delete( it_tadir  = lt_tadir
-                                   is_checks = ls_checks
-                                   ii_log    = ii_log ).
+      delete_tadir( it_tadir  = lt_tadir
+                    is_checks = ls_checks
+                    ii_log    = ii_log ).
 
       mi_repo->refresh( iv_drop_log = abap_false ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD delete_tadir.
+
+    zcl_abapgit_objects=>delete( it_tadir  = it_tadir
+                                 is_checks = is_checks
+                                 ii_log    = ii_log ).
 
   ENDMETHOD.
 
