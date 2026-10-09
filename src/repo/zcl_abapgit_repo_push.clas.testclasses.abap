@@ -26,6 +26,7 @@ CLASS ltd_exit DEFINITION FINAL FOR TESTING.
     INTERFACES zif_abapgit_exit.
 
     DATA mv_fail_before TYPE abap_bool.
+    DATA mv_fail_after TYPE abap_bool.
     DATA ms_comment TYPE zif_abapgit_git_definitions=>ty_comment.
 
 ENDCLASS.
@@ -42,6 +43,9 @@ CLASS ltd_exit IMPLEMENTATION.
 
   METHOD zif_abapgit_exit~validate_after_push.
     ltd_calls=>add( `after` ).
+    IF mv_fail_after = abap_true.
+      zcx_abapgit_exception=>raise( 'rejected after push' ).
+    ENDIF.
   ENDMETHOD.
 
   METHOD zif_abapgit_exit~adjust_commit_message.
@@ -115,6 +119,7 @@ CLASS ltd_repo_online DEFINITION FINAL FOR TESTING.
 
     DATA ms_comment TYPE zif_abapgit_git_definitions=>ty_comment.
     DATA mo_stage TYPE REF TO zcl_abapgit_stage.
+    DATA mv_fail_push TYPE abap_bool.
 
 ENDCLASS.
 
@@ -122,6 +127,9 @@ CLASS ltd_repo_online IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_online~push.
     ltd_calls=>add( `push` ).
+    IF mv_fail_push = abap_true.
+      zcx_abapgit_exception=>raise( 'push failed' ).
+    ENDIF.
     ms_comment = is_comment.
     mo_stage = io_stage.
   ENDMETHOD.
@@ -225,6 +233,10 @@ CLASS ltcl_push DEFINITION FINAL FOR TESTING
     METHODS exits_around_push FOR TESTING RAISING zcx_abapgit_exception.
     METHODS passes_comment_and_stage FOR TESTING RAISING zcx_abapgit_exception.
     METHODS exit_before_stops_push FOR TESTING.
+    METHODS push_failure_skips_after FOR TESTING.
+    METHODS exit_after_failure_propagates FOR TESTING.
+    METHODS factory_binds_repository FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS factory_uses_injected_push FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -254,8 +266,10 @@ CLASS ltcl_push IMPLEMENTATION.
   METHOD teardown.
 
     DATA li_no_exit TYPE REF TO zif_abapgit_exit.
+    DATA li_no_push TYPE REF TO zif_abapgit_repo_push.
 
     zcl_abapgit_injector=>set_exit( li_no_exit ).
+    zcl_abapgit_injector=>set_repo_push( li_no_push ).
 
   ENDMETHOD.
 
@@ -272,6 +286,8 @@ CLASS ltcl_push IMPLEMENTATION.
 
   METHOD passes_comment_and_stage.
 
+    DATA lv_same TYPE abap_bool.
+
     mi_cut->push( is_comment = ms_comment
                   io_stage   = mo_stage ).
 
@@ -281,7 +297,10 @@ CLASS ltcl_push IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_repo->ms_comment
       exp = ms_comment ).
-    cl_abap_unit_assert=>assert_true( boolc( mo_repo->mo_stage = mo_stage ) ).
+    lv_same = boolc( mo_repo->mo_stage = mo_stage ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_same
+      exp = abap_true ).
 
   ENDMETHOD.
 
@@ -299,6 +318,98 @@ CLASS ltcl_push IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = ltd_calls=>gv_calls
       exp = `before` ).
+
+  ENDMETHOD.
+
+  METHOD push_failure_skips_after.
+
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
+    mo_repo->mv_fail_push = abap_true.
+    TRY.
+        mi_cut->push( is_comment = ms_comment
+                      io_stage   = mo_stage ).
+        cl_abap_unit_assert=>fail( 'exception expected' ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        cl_abap_unit_assert=>assert_equals(
+          act = lx_error->get_text( )
+          exp = 'push failed' ).
+    ENDTRY.
+    cl_abap_unit_assert=>assert_equals(
+      act = ltd_calls=>gv_calls
+      exp = `before,push` ).
+
+  ENDMETHOD.
+
+  METHOD exit_after_failure_propagates.
+
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
+    mo_exit->mv_fail_after = abap_true.
+    TRY.
+        mi_cut->push( is_comment = ms_comment
+                      io_stage   = mo_stage ).
+        cl_abap_unit_assert=>fail( 'exception expected' ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        cl_abap_unit_assert=>assert_equals(
+          act = lx_error->get_text( )
+          exp = 'rejected after push' ).
+    ENDTRY.
+    cl_abap_unit_assert=>assert_equals(
+      act = ltd_calls=>gv_calls
+      exp = `before,push,after` ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_repo->ms_comment
+      exp = ms_comment ).
+
+  ENDMETHOD.
+
+  METHOD factory_binds_repository.
+
+    DATA lo_other TYPE REF TO ltd_repo_online.
+    DATA li_first TYPE REF TO zif_abapgit_repo_push.
+    DATA li_second TYPE REF TO zif_abapgit_repo_push.
+
+    CREATE OBJECT lo_other.
+    li_first = zcl_abapgit_factory=>get_repo_push( mo_repo ).
+    li_second = zcl_abapgit_factory=>get_repo_push( lo_other ).
+    li_first->push( is_comment = ms_comment
+                    io_stage   = mo_stage ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_repo->ms_comment
+      exp = ms_comment ).
+    cl_abap_unit_assert=>assert_initial( lo_other->ms_comment ).
+    ms_comment-comment = 'Second repository'.
+    li_second->push( is_comment = ms_comment
+                     io_stage   = mo_stage ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_other->ms_comment
+      exp = ms_comment ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_repo->ms_comment-comment
+      exp = 'Test commit' ).
+
+  ENDMETHOD.
+
+  METHOD factory_uses_injected_push.
+
+    DATA lo_other TYPE REF TO ltd_repo_online.
+    DATA li_push TYPE REF TO zif_abapgit_repo_push.
+    DATA lv_same TYPE abap_bool.
+
+    CREATE OBJECT lo_other.
+    zcl_abapgit_injector=>set_repo_push( mi_cut ).
+    li_push = zcl_abapgit_factory=>get_repo_push( lo_other ).
+    lv_same = boolc( li_push = mi_cut ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_same
+      exp = abap_true ).
+    li_push->push( is_comment = ms_comment
+                   io_stage   = mo_stage ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_repo->ms_comment
+      exp = ms_comment ).
+    cl_abap_unit_assert=>assert_initial( lo_other->ms_comment ).
 
   ENDMETHOD.
 
