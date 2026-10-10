@@ -76,6 +76,7 @@
   ],
   "write_unit_tests": true,
   "write_source_map": true,
+  "incremental_output": true,
   "options": {
     "ignoreSyntaxCheck": false,
     "addFilenames": true,
