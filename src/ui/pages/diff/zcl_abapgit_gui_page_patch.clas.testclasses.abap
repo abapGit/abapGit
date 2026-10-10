@@ -237,6 +237,11 @@ CLASS lcl_continue_user DEFINITION FINAL.
     INTERFACES zif_abapgit_persist_user.
 ENDCLASS.
 
+CLASS lcl_continue_settings DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_persist_settings.
+ENDCLASS.
+
 CLASS lcl_continue_repo_srv DEFINITION FINAL.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_repo_srv.
@@ -261,6 +266,7 @@ CLASS ltcl_continue_patching DEFINITION FINAL FOR TESTING
   PRIVATE SECTION.
     DATA mi_previous_srv TYPE REF TO zif_abapgit_repo_srv.
     DATA mi_previous_user TYPE REF TO zif_abapgit_persist_user.
+    DATA mi_previous_settings TYPE REF TO zif_abapgit_persist_settings.
     DATA mo_repo TYPE REF TO lcl_continue_repo.
     DATA mo_patch TYPE REF TO zcl_abapgit_gui_page_patch.
     DATA mo_fixture TYPE REF TO lcl_continue_patch.
@@ -272,6 +278,7 @@ CLASS ltcl_continue_patching DEFINITION FINAL FOR TESTING
     METHODS commit_with_remaining_changes FOR TESTING RAISING cx_static_check.
     METHODS commit_without_remaining FOR TESTING RAISING cx_static_check.
     METHODS commit_refresh_failure FOR TESTING RAISING cx_static_check.
+    METHODS commit_refresh_warning FOR TESTING RAISING cx_static_check.
     METHODS commit_patch
       RETURNING VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
       RAISING cx_static_check.
@@ -441,6 +448,15 @@ CLASS lcl_continue_user IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+CLASS lcl_continue_settings IMPLEMENTATION.
+  METHOD zif_abapgit_persist_settings~read.
+    CREATE OBJECT ro_settings.
+    ro_settings->set_defaults( ).
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_settings~modify.
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS lcl_continue_patch IMPLEMENTATION.
   METHOD refresh_full.
     " Simulate a successful push changing the remote, without network access
@@ -496,9 +512,13 @@ CLASS ltcl_continue_patching IMPLEMENTATION.
     DATA ls_repo TYPE zif_abapgit_persistence=>ty_repo.
     DATA ls_file TYPE zif_abapgit_git_definitions=>ty_file.
     DATA lo_user TYPE REF TO lcl_continue_user.
+    DATA lo_settings TYPE REF TO lcl_continue_settings.
 
     mi_previous_srv = zcl_abapgit_repo_srv=>get_instance( ).
     mi_previous_user = zcl_abapgit_persist_factory=>get_user( ).
+    mi_previous_settings = zcl_abapgit_persist_factory=>get_settings( ).
+    CREATE OBJECT lo_settings.
+    zcl_abapgit_persist_injector=>set_settings( lo_settings ).
     CREATE OBJECT lo_user.
     zcl_abapgit_persist_injector=>set_current_user( lo_user ).
     CREATE OBJECT lo_srv.
@@ -525,6 +545,7 @@ CLASS ltcl_continue_patching IMPLEMENTATION.
   METHOD teardown.
     zcl_abapgit_repo_srv=>inject_instance( mi_previous_srv ).
     zcl_abapgit_persist_injector=>set_current_user( mi_previous_user ).
+    zcl_abapgit_persist_injector=>set_settings( mi_previous_settings ).
   ENDMETHOD.
 
   METHOD commit_patch.
@@ -574,13 +595,8 @@ CLASS ltcl_continue_patching IMPLEMENTATION.
 
   METHOD commit_refresh_failure.
     DATA ls_handled TYPE zif_abapgit_gui_event_handler=>ty_handling_result.
-    DATA lv_message TYPE string.
     mo_fixture->mv_fail_refresh = abap_true.
     ls_handled = commit_patch( ).
-    CONCATENATE sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_message.
-    cl_abap_unit_assert=>assert_equals(
-      act = boolc( lv_message CS 'Commit was successful, but continuing patching failed' )
-      exp = abap_true ).
     cl_abap_unit_assert=>assert_equals(
       act = ls_handled-state
       exp = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark ).
@@ -590,6 +606,18 @@ CLASS ltcl_continue_patching IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_fixture->mv_refreshes
       exp = 1 ).
+  ENDMETHOD.
+
+  METHOD commit_refresh_warning.
+    DATA ls_handled TYPE zif_abapgit_gui_event_handler=>ty_handling_result.
+    DATA lv_message TYPE string.
+    mo_fixture->mv_fail_refresh = abap_true.
+    ls_handled = commit_patch( ).
+    " MESSAGE with a free text fills these fields on SAP, but not in open-abap
+    CONCATENATE sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_message.
+    cl_abap_unit_assert=>assert_equals(
+      act = boolc( lv_message CS 'Commit was successful, but continuing patching failed' )
+      exp = abap_true ).
   ENDMETHOD.
 
   METHOD successive_patches.
