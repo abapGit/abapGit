@@ -276,7 +276,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_val = ls_dot-name ).
     ro_form_data->set(
       iv_key = c_id-main_language
-      iv_val = |{ lv_main_lang } ({ zcl_abapgit_convert=>language_sap1_to_text( lv_main_lang ) })| ).
+      iv_val = |{ lv_main_lang } ({ zcl_abapgit_convert_language=>sap1_to_text( lv_main_lang ) })| ).
     ro_form_data->set(
       iv_key = c_id-i18n_langs
       iv_val = zcl_abapgit_lxe_texts=>convert_table_to_lang_string( lo_dot->get_i18n_languages( ) ) ).

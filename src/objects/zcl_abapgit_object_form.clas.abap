@@ -115,7 +115,7 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
 
     DATA lv_tdspras TYPE laiso.
 
-    lv_tdspras = zcl_abapgit_convert=>conversion_exit_isola_output( is_header-tdspras ).
+    lv_tdspras = zcl_abapgit_convert_language=>conversion_exit_isola_output( is_header-tdspras ).
 
     " Refuse to serialize inconsistent text-header data. An empty tdspras
     " or a tdspras that ISO conversion cannot map (typically because the

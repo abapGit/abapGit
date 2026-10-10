@@ -311,7 +311,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM lt_unique_language.
 
     LOOP AT lt_unique_language INTO lv_unique.
-      lv_sap2 = zcl_abapgit_convert=>language_sap1_to_sap2( lv_unique ).
+      lv_sap2 = zcl_abapgit_convert_language=>sap1_to_sap2( lv_unique ).
       APPEND lv_sap2 TO rs_result.
     ENDLOOP.
 
