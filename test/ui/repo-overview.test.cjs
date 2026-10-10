@@ -36,7 +36,7 @@ function page(keys = []) {
   helper.saveLocalStorage = () => saved.push(helper.selectedRepoKey);
   helper.registerKeyboardShortcuts();
   return {
-    context, helper, rows, opened, saved,
+    context, helper, rows, opened, saved, listeners,
     enter() { listeners.keypress({ keyCode: 13 }); },
     keypress(keyCode) { listeners.keypress({ keyCode }); },
     // Returns whether the key was handled (default prevented)
@@ -76,12 +76,9 @@ test("Enter without selection does nothing; selecting the last row opens it", ()
   assert.deepEqual(opened, ["2"]);
 });
 
-// Registers the keyboard shortcuts once more to get at the keypress handler
+// A keypress as the browser sends it, with the typed character as well
 function keypress(p) {
-  let handler;
-  p.context.document.addEventListener = (name, fn) => { if (name === "keypress") handler = fn; };
-  p.helper.registerKeyboardShortcuts();
-  return (keyCode, event = {}) => handler({ keyCode, key: String.fromCharCode(keyCode), ...event });
+  return (keyCode, event = {}) => p.listeners.keypress({ keyCode, key: String.fromCharCode(keyCode), ...event });
 }
 
 test("digit 2 selects the next repository", () => {

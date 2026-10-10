@@ -574,8 +574,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ri_html->add( |<form class="inline" method="post" action="sapevent:{ c_action-apply_filter }">| ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_text_input(
       iv_name      = |filter|
-      iv_label     = |Filter: { render_filter_help_hint( ) }|
+      iv_label     = |Filter:|
       iv_value     = ms_list_settings-filter ) ).
+    ri_html->add( render_filter_help_hint( ) ).
     ri_html->add( |<input type="submit" class="hidden-submit" title="Filter">| ).
     ri_html->add( |</form>| ).
 
@@ -672,6 +673,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
     ri_html->add( 'var gHelper = new RepoOverViewHelper({ focusFilterKey: "f" });' ).
+    ri_html->add( 'rememberScrollPosition("repo-overview");' ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_palette( c_action-select ) ).
 
   ENDMETHOD.

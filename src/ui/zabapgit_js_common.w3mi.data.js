@@ -41,6 +41,10 @@
    -- zcl_abapgit_gui_page_diff_base->render_scripts,
       which also does new CommandPalette( enumerateJumpAllFiles ) */
 
+/* exported rememberScrollPosition
+   -- zcl_abapgit_gui_page_repo_over, zcl_abapgit_gui_page_repo_view,
+      zcl_abapgit_gui_page_db */
+
 /* exported onDiffCollapse
    -- zcl_abapgit_gui_page_diff_base->render_diff_head */
 
@@ -142,8 +146,22 @@ if (window.NodeList && !NodeList.prototype.forEach) {
 // place before any other script on the page runs. Everything a browser can
 // establish for itself is probed here instead of being asked for.
 var gEnv = {
+  // Seeded by the backend (setEnvironment)
   isWebGui          : false, // SAP GUI for HTML
-  isSapGuiForWindows: false  // neither of the two: SAP GUI for Java
+  isSapGuiForWindows: false, // neither of the two: SAP GUI for Java
+
+  // Derived from the facts above in setEnvironment: the browser control SAP GUI
+  // for Windows embeds, "Edge" (Chromium) or "IE". Empty on the other GUIs,
+  // which embed none: the HTML GUI runs in the browser of the user, whose user
+  // agent describes no browser control at all.
+  browserControl: "",
+
+  // Probed: the page runs on the IE engine, as the IE control does, whatever
+  // the GUI. document.documentMode exists in no other browser.
+  isInternetExplorer: !!document.documentMode,
+
+  // Probed on first use by getSapeventPrefix, see there
+  sapeventPrefix: undefined
 };
 
 // Every fact seeded here has to be declared in gEnv above. An unknown key
@@ -157,36 +175,34 @@ function setEnvironment(env) {
       window.console.log("abapGit: unknown environment key '" + key + "'");
     }
   }
+  gEnv.browserControl = detectBrowserControl();
+}
+
+function detectBrowserControl() {
+  if (!gEnv.isSapGuiForWindows) return "";
+  return /Edg/.test(window.navigator.userAgent) ? "Edge" : "IE";
 }
 
 // The prefix a sapevent URL needs for the browser control in use. Probed from
 // the links the backend rendered, because the user agent does not distinguish
 // the control versions - and kept, because the control cannot change under a
-// page that is already displayed.
-var gSapeventPrefix; // undefined until first probed
-
+// page that is already displayed. Not probed up front: common.js runs before
+// the page body, and with it these links, is there.
 function getSapeventPrefix() {
-  if (gSapeventPrefix === undefined) {
+  if (gEnv.sapeventPrefix === undefined) {
     // Depending on the used browser control and its version, different URL schemes
     // are used which we distinguish here
     if (document.querySelector('a[href*="file:///SAPEVENT:"]')) {
       // Prefix for old (SAPGUI <= 8.00 PL3) chromium based browser control
-      gSapeventPrefix = "file:///";
+      gEnv.sapeventPrefix = "file:///";
     } else if (document.querySelector('a[href^="sap-cust"]')) {
       // Prefix for new (SAPGUI >= 8.00 PL3 Hotfix 1) chromium based browser control
-      gSapeventPrefix = "sap-cust://sap-place-holder/";
+      gEnv.sapeventPrefix = "sap-cust://sap-place-holder/";
     } else {
-      gSapeventPrefix = ""; // No prefix for old IE control
+      gEnv.sapeventPrefix = ""; // No prefix for old IE control
     }
   }
-  return gSapeventPrefix;
-}
-
-// Is the embedded browser control the Edge (Chromium) one rather than the old
-// IE one? Only meaningful inside SAP GUI for Windows - the HTML GUI runs in the
-// browser of the user, whose user agent describes no browser control at all.
-function isEdgeControl() {
-  return navigator.userAgent.includes("Edg");
+  return gEnv.sapeventPrefix;
 }
 
 /**********************************************************
@@ -196,7 +212,7 @@ function isEdgeControl() {
 // Output text to the debug div
 function debugOutput(text, dstID) {
   var stdout    = document.getElementById(dstID || "debug-output");
-  var paragraph = document.createElement("p");
+  var paragraph = document.createElement("div");
 
   // text is trusted, server-generated debug markup (e.g. the Debug Info table),
   // so render it as HTML rather than escaping it
@@ -636,6 +652,87 @@ function perfClear() {
 }
 
 /**********************************************************
+ * Keyboard
+ **********************************************************/
+
+// The page-wide key handlers all register here, and one document listener per
+// event type calls them in a fixed order. Who sees a key first matters: link
+// hints must consume a hint code before the repository overview reads its digits
+// as row moves, and later handlers skip a key an earlier one consumed
+// (event.defaultPrevented). Registering them directly left that order to the
+// order in which the ABAP pages happen to render their scripts.
+//
+// keypress and keydown stay separate events: keypress carries the typed
+// character (the one reliable source of it on the IE control), keydown the keys
+// that type none, like the arrows and F1.
+// Not in here, on purpose: listeners of single elements (inputs, popups) and
+// the source viewer's capturing listeners while it is open.
+var gKeyboard = {
+  order: {
+    sourceViewer: 10, // Ctrl+Shift+?, a troubleshooting key that no page shortcut may take
+    browserBack : 15, // Alt+Left where the browser does not go back itself (SAP GUI for Java)
+    linkHints   : 20,
+    menus       : 30, // arrow keys through dropdown menus (KeyNavigation)
+    palette     : 40, // the toggle keys of the command palettes
+    page        : 50, // shortcuts of the page helpers (repository overview, stage)
+    hotkeys     : 60
+  },
+  handlers: {}
+};
+
+gKeyboard.on = function(type, order, handler) {
+  var handlers = gKeyboard.handlers[type];
+  if (!handlers) {
+    handlers = gKeyboard.handlers[type] = [];
+    document.addEventListener(type, function(event) { gKeyboard.dispatch(type, event) });
+  }
+  // after all handlers of the same order, so these keep their registration order
+  // (Array.prototype.sort is not stable on the IE control)
+  var i = handlers.length;
+  while (i > 0 && handlers[i - 1].order > order) i--;
+  handlers.splice(i, 0, { order: order, handler: handler });
+};
+
+// A failing handler must not take the later ones down with it, as it did not
+// while each had a listener of its own. Its error is rethrown afterwards, for
+// the error banner (see confirmInitialized).
+gKeyboard.dispatch = function(type, event) {
+  var handlers = gKeyboard.handlers[type].slice(); // a handler may register another one
+  var firstError;
+  for (var i = 0; i < handlers.length; i++) {
+    try {
+      handlers[i].handler(event);
+    } catch (error) {
+      if (firstError === undefined) firstError = error;
+    }
+  }
+  if (firstError !== undefined) throw firstError;
+};
+
+// Does the element take this key itself, as text or to move its caret? Then
+// it is no shortcut. A read-only field takes no text, so letter and digit
+// shortcuts stay on there, but it still moves its caret with the arrow keys.
+gKeyboard.isTakenByField = function(element, isArrowKey) {
+  if (!element) return false;
+  if (element.isContentEditable) return true;
+  if (!/^(INPUT|TEXTAREA|SELECT)$/.test(element.nodeName || "")) return false;
+  return isArrowKey || !element.readOnly;
+};
+
+// Is the user typing? Then letter and digit shortcuts must leave the key alone
+gKeyboard.isTyping = function() {
+  return gKeyboard.isTakenByField(document.activeElement, false);
+};
+
+// For keydown: -1 for arrow up, 1 for arrow down, 0 for any other key.
+// IE and old Edge name them "Up" and "Down", older controls only give the key code.
+gKeyboard.getVerticalArrow = function(event) {
+  if (event.key === "ArrowUp" || event.key === "Up" || event.keyCode === 38) return -1;
+  if (event.key === "ArrowDown" || event.key === "Down" || event.keyCode === 40) return 1;
+  return 0;
+};
+
+/**********************************************************
  * Repo Overview Logic
  **********************************************************/
 
@@ -727,11 +824,11 @@ RepoOverViewHelper.prototype.onPageLoad = function() {
 
 RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
   var self = this;
-  document.addEventListener("keypress", function(event) {
+  gKeyboard.on("keypress", gKeyboard.order.page, function(event) {
     // Leave keys typed elsewhere alone: in the filter or the command palette,
     // or as a link hint code - its digits would otherwise move the selection,
     // and the action links with it, before the hint activates one of them
-    if (event.defaultPrevented || LinkHints.areHintsDisplayed || !Hotkeys.isHotkeyCallPossible()) {
+    if (event.defaultPrevented || LinkHints.areHintsDisplayed || gKeyboard.isTyping()) {
       return;
     }
     if (self.focusFilterKey && event.key === self.focusFilterKey && !CommandPalette.isVisible()) {
@@ -758,18 +855,12 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
 
   // Arrows only fire keydown. Only the arrow keys are handled here: keydown keycodes
   // differ from keypress ones (e.g. 100 is "d" on keypress but numpad-4 on keydown).
-  document.addEventListener("keydown", function(event) {
+  gKeyboard.on("keydown", gKeyboard.order.page, function(event) {
     if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
     if (CommandPalette.isVisible() || !self.isArrowNavigationTarget(document.activeElement)) return;
 
-    var offset;
-    if (event.key === "ArrowUp" || event.key === "Up" || event.keyCode === 38) {
-      offset = -1;
-    } else if (event.key === "ArrowDown" || event.key === "Down" || event.keyCode === 40) {
-      offset = 1;
-    } else {
-      return;
-    }
+    var offset = gKeyboard.getVerticalArrow(event);
+    if (!offset) return;
     self.selectAdjacentRow(offset);
     event.preventDefault(); // the selected row is scrolled into view instead
   });
@@ -777,8 +868,9 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
 
 // Leave arrows to form fields and to menus (KeyNavigation moves through dropdown items)
 RepoOverViewHelper.prototype.isArrowNavigationTarget = function(element) {
+  if (gKeyboard.isTakenByField(element, true)) return false;
   for (var el = element; el && el.nodeName; el = el.parentElement) {
-    if (/^(INPUT|TEXTAREA|SELECT|LI)$/.test(el.nodeName) || el.isContentEditable) return false;
+    if (el.nodeName === "LI") return false;
   }
   return true;
 };
@@ -1049,7 +1141,7 @@ StageHelper.prototype.onFilterMe = function() {
 
 // Hook global click listener on table, load/unload actions
 StageHelper.prototype.setHooks = function() {
-  window.addEventListener("keypress", this.onCtrlEnter.bind(this));
+  gKeyboard.on("keypress", gKeyboard.order.page, this.onCtrlEnter.bind(this));
   this.dom.stageTab.onclick        = this.onTableClick.bind(this);
   this.dom.commitBtn.onclick       = this.submitCommit.bind(this);
   this.dom.patchBtn.onclick        = this.submitPatch.bind(this);
@@ -1066,10 +1158,11 @@ StageHelper.prototype.setHooks = function() {
   window.addEventListener("load", this.onPageLoad.bind(this));
 
   var self = this;
-  document.addEventListener("keypress", function(event) {
-    if (document.activeElement.id !== self.ids.objectSearch
-      && self.focusFilterKey && event.key === self.focusFilterKey
-      && !CommandPalette.isVisible()) {
+  gKeyboard.on("keypress", gKeyboard.order.page, function(event) {
+    // the same guard as on the repository overview, where typing in the
+    // filter itself is covered by gKeyboard.isTyping as well
+    if (event.defaultPrevented || LinkHints.areHintsDisplayed || gKeyboard.isTyping()) return;
+    if (self.focusFilterKey && event.key === self.focusFilterKey && !CommandPalette.isVisible()) {
 
       self.dom.objectSearch.focus();
       event.preventDefault();
@@ -1747,9 +1840,9 @@ KeyNavigation.prototype.onkeydown = function(event) {
   var isHandled = false;
   if (event.key === "Enter" || event.key === " ") {
     isHandled = this.onEnterOrSpace();
-  } else if (/Down$/.test(event.key)) {
+  } else if (gKeyboard.getVerticalArrow(event) === 1) {
     isHandled = this.onArrowDown();
-  } else if (/Up$/.test(event.key)) {
+  } else if (gKeyboard.getVerticalArrow(event) === -1) {
     isHandled = this.onArrowUp();
   } else if (event.key === "Backspace") {
     isHandled = this.onBackspace();
@@ -1855,7 +1948,7 @@ KeyNavigation.prototype.getHandler = function() {
 // this function enables the navigation with arrows through list items (li)
 // e.g. in dropdown menus
 function enableArrowListNavigation() {
-  document.addEventListener("keydown", new KeyNavigation().getHandler());
+  gKeyboard.on("keydown", gKeyboard.order.menus, new KeyNavigation().getHandler());
 }
 
 /**********************************************************
@@ -1966,7 +2059,7 @@ LinkHints.prototype.getHandler = function() {
 };
 
 LinkHints.prototype.handleKey = function(event) {
-  if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || !Hotkeys.isHotkeyCallPossible()) {
+  if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || gKeyboard.isTyping()) {
     return;
   }
 
@@ -1974,7 +2067,7 @@ LinkHints.prototype.handleKey = function(event) {
     this.yankModeActive = !this.yankModeActive;
   }
 
-  if (event.key === this.linkHintHotKey && Hotkeys.isHotkeyCallPossible()) {
+  if (event.key === this.linkHintHotKey) {
 
     // on user hide hints, close an opened dropdown too
     if (this.areHintsDisplayed && this.activatedDropdown) this.closeActivatedDropdown();
@@ -2137,7 +2230,7 @@ function getTextWithoutLinkHints(element) {
 function activateLinkHints(linkHintHotKey) {
   if (!linkHintHotKey) return;
   var oLinkHint = new LinkHints(linkHintHotKey);
-  document.addEventListener("keypress", oLinkHint.getHandler());
+  gKeyboard.on("keypress", gKeyboard.order.linkHints, oLinkHint.getHandler());
 }
 
 /**********************************************************
@@ -2213,7 +2306,7 @@ Hotkeys.prototype.onkeydown = function(oEvent) {
     return;
   }
 
-  if (!Hotkeys.isHotkeyCallPossible()) {
+  if (gKeyboard.isTyping()) {
     return;
   }
 
@@ -2224,15 +2317,6 @@ Hotkeys.prototype.onkeydown = function(oEvent) {
   if (fnHotkey) {
     fnHotkey.call(this, oEvent);
   }
-};
-
-Hotkeys.isHotkeyCallPossible = function() {
-  var activeElementType     = ((document.activeElement && document.activeElement.nodeName) || "");
-  var activeElementReadOnly = ((document.activeElement && document.activeElement.readOnly) || false);
-
-  if (document.activeElement && document.activeElement.isContentEditable) return false;
-  return (activeElementReadOnly || (activeElementType !== "INPUT" && activeElementType !== "TEXTAREA"
-    && activeElementType !== "SELECT"));
 };
 
 // ctrl-modified keys are denoted with a leading "^" (e.g. "^p"), spell it out for the help sheet
@@ -2265,7 +2349,7 @@ Hotkeys.addHotkeyToHelpSheet = function(key, description) {
 function setKeyBindings(oKeyMap) {
   var oHotkeys = new Hotkeys(oKeyMap);
 
-  document.addEventListener("keypress", oHotkeys.onkeydown.bind(oHotkeys));
+  gKeyboard.on("keypress", gKeyboard.order.hotkeys, oHotkeys.onkeydown.bind(oHotkeys));
   setTimeout(function() {
     var div                     = document.getElementById("hotkeys-hint");
     if  (div) div.style.opacity = 0.2;
@@ -2611,7 +2695,7 @@ function CommandPalette(commandEnumerator, opts) {
 CommandPalette.instances = [];
 
 CommandPalette.prototype.hookEvents = function() {
-  document.addEventListener("keydown", this.handleToggleKey.bind(this));
+  gKeyboard.on("keydown", gKeyboard.order.palette, this.handleToggleKey.bind(this));
   document.addEventListener("mousedown", this.handleOutsideClick.bind(this));
   this.elements.input.addEventListener("keydown", this.handleInputKeydown.bind(this));
   this.elements.input.addEventListener("keyup", this.handleInputKey.bind(this));
@@ -2624,9 +2708,10 @@ CommandPalette.prototype.hookEvents = function() {
 // SAP GUI for Java leaves abapGit, and the Edge control loses the keyboard
 // focus, so the next toggle key (Ctrl+P) opens the print dialog instead.
 CommandPalette.prototype.handleInputKeydown = function(event) {
-  if (event.key === "ArrowUp" || event.key === "Up") {
+  var arrow = gKeyboard.getVerticalArrow(event);
+  if (arrow === -1) {
     this.selectPrev();
-  } else if (event.key === "ArrowDown" || event.key === "Down") {
+  } else if (arrow === 1) {
     this.selectNext();
   } else {
     return;
@@ -3004,6 +3089,43 @@ function memorizeScrollPosition(fn) {
   };
 }
 
+// Keep list pages independent of the one-shot scroll position used by diffs.
+function rememberScrollPosition(pageId) {
+  var storage;
+  var key = "scrollTop:" + pageId;
+  try {
+    storage = window.sessionStorage;
+    if (!storage) return;
+    // Storage can be present but inaccessible in embedded browser controls.
+    storage.getItem(key);
+  } catch (err) { return err }
+
+  function save() {
+    var root = document.scrollingElement || document.documentElement;
+    try {
+      storage.setItem(key, window.pageYOffset || root.scrollTop);
+    } catch (err) { return err }
+  }
+
+  function restore() {
+    try {
+      var position = Number(storage.getItem(key));
+      if (isFinite(position) && position >= 0) window.scrollTo(0, position);
+    } catch (err) { return err }
+    window.addEventListener("scroll", save);
+    // Capture the final position before links, hotkeys or forms navigate away.
+    document.addEventListener("click", save, true);
+    document.addEventListener("submit", save, true);
+  }
+
+  // Wait for layout and the overview's saved display settings to be restored.
+  if (document.readyState === "complete") {
+    restore();
+  } else {
+    window.addEventListener("load", restore);
+  }
+}
+
 /**********************************************************
  * Sticky Header
  **********************************************************/
@@ -3076,9 +3198,8 @@ document.addEventListener("click", handleLocalFragmentClick);
 function toggleBrowserControlWarning() {
   // The warning is about the Edge control, so hide it wherever that is not what
   // we run in: on the old IE control, and on a GUI that embeds no browser
-  // control at all, whose user agent describes the browser of the user and can
-  // report "Edg" for reasons the warning has nothing to do with.
-  if (!isEdgeControl() || !gEnv.isSapGuiForWindows) {
+  // control at all (see gEnv.browserControl)
+  if (gEnv.browserControl !== "Edge") {
     var elBrowserControlWarning = document.getElementById("browser-control-warning");
     if (elBrowserControlWarning) {
       elBrowserControlWarning.style.display = "none";
@@ -3088,12 +3209,11 @@ function toggleBrowserControlWarning() {
 
 // Output type of HTML control in the abapGit footer
 function displayBrowserControlFooter() {
-  // Only report a control where there is one. The HTML GUI runs in the browser
-  // of the user, whose user agent describes no browser control at all - reading
-  // it there once reported "IE" for a user on Chrome.
+  // Only report a control where there is one (see gEnv.browserControl). Reading
+  // the user agent on the HTML GUI once reported "IE" for a user on Chrome.
   var out = document.getElementById("browser-control-footer");
-  if (!out || !gEnv.isSapGuiForWindows) return;
-  out.innerHTML = " - " + (isEdgeControl() ? "Edge" : "IE");
+  if (!out || !gEnv.browserControl) return;
+  out.innerHTML = " - " + gEnv.browserControl;
 }
 
 // Redirect browser "Back" navigation to the SAPGUI back sapevent (action "go_back").
@@ -3117,6 +3237,19 @@ function redirectBrowserBackToSapEvent(backAction) {
   // Arm the trap: this sentinel entry absorbs the first Back press
   window.history.pushState({ abapGitBackTrap: true }, "");
 
+  // The browser SAP GUI for Java embeds has no key for Back (nor an entry in
+  // its context menu), so Alt+Left is taken here. Everywhere else the browser
+  // goes back itself and the popstate below handles it; a second go_back would
+  // follow if it were taken there too. Also in input fields, as browsers do.
+  if (!gEnv.isWebGui && !gEnv.isSapGuiForWindows) {
+    gKeyboard.on("keydown", gKeyboard.order.browserBack, function(event) {
+      if (event.defaultPrevented || !event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return;
+      if (event.key !== "ArrowLeft" && event.keyCode !== 37) return;
+      event.preventDefault();
+      triggerSapEventBack(backAction);
+    });
+  }
+
   window.addEventListener("popstate", function() {
     // Re-arm so subsequent Back presses are also captured
     window.history.pushState({ abapGitBackTrap: true }, "");
@@ -3128,6 +3261,18 @@ function redirectBrowserBackToSapEvent(backAction) {
     }
 
     triggerSapEventBack(backAction);
+  });
+
+  // A sapevent that leaves the page in place (no_more_act, e.g. stage_filter or
+  // clipboard) is not followed by a popstate on WebGUI, so the flag would stay
+  // set and swallow the next genuine Back press. A genuine Back press always
+  // starts with user input, while the control emits its popstate right after
+  // the submit - so the next input ends the wait. Not keyup: Enter submits on
+  // keypress, and its keyup can come before the control's popstate.
+  // On the document, not the window: the WebGUI busy lock stops input during a
+  // round trip on the window, so that input never gets here.
+  ["keydown", "mousedown", "contextmenu"].forEach(function(name) {
+    document.addEventListener(name, function() { gSapeventNavPending = false }, true);
   });
 }
 
@@ -3198,52 +3343,54 @@ function triggerSapEventBack(backAction) {
  * Popup Control
  **********************************************************/
 
-// Prevents keyboard navigation to elements outside the modal popup
+// Keeps Tab and Shift+Tab inside the in-page popup (zcl_abapgit_gui_in_page_modal)
+// while it is open. On the document, not the popup: right after rendering the
+// focus is still on the page behind it, where a listener of the popup never
+// hears the key.
 // eslint-disable-next-line no-unused-vars
 function trapFocus() {
   var modal = document.getElementById("modal");
   if (!modal) return;
 
-  var focusableSelectors = "button, [href], input, select, textarea, [tabindex]";
-  var focusableElements = modal.querySelectorAll(focusableSelectors);
-
-  // Filter out elements with tabindex="-1"
-  var focusable = [];
-  for (var i = 0; i < focusableElements.length; i++) {
-    if (focusableElements[i].getAttribute("tabindex") !== "-1") {
-      focusable.push(focusableElements[i]);
+  // Read on every key, the popup can change. Hidden controls (e.g. the radio
+  // buttons behind the labels of a picklist) and tabindex="-1" (the hidden
+  // submit button) are no tab stops.
+  function getTabStops() {
+    var candidates = modal.querySelectorAll("button, [href], input, select, textarea, [tabindex]");
+    var tabStops = [];
+    for (var i = 0; i < candidates.length; i++) {
+      var candidate = candidates[i];
+      if (candidate.disabled || candidate.getAttribute("tabindex") === "-1") continue;
+      if (!candidate.offsetWidth && !candidate.offsetHeight && !candidate.getClientRects().length) continue;
+      tabStops.push(candidate);
     }
+    return tabStops;
   }
 
-  if (focusable.length === 0) return;
-
-  var firstElement = focusable[0];
-  var lastElement = focusable[focusable.length - 1];
-
   // No initial focus on the main button: while a button has focus, link hints
-  // and letter hotkeys are off (Hotkeys.isHotkeyCallPossible), and letting them
+  // and letter hotkeys are off (gKeyboard.isTyping), and letting them
   // through would make Enter fire both the button and its Enter hotkey.
 
-  modal.onkeydown = function(e) {
-    var keyCode = e.keyCode || e.which;
+  document.addEventListener("keydown", function(event) {
+    if ((event.keyCode || event.which) !== 9 || event.ctrlKey || event.altKey || event.metaKey) return;
 
-    // Tab key
-    if (keyCode === 9) {
-      if (e.shiftKey) {
-        // Shift + Tab
-        if (document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement.focus();
-        }
-      } else {
-        // Tab only
-        if (document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement.focus();
-        }
-      }
+    var tabStops = getTabStops();
+    if (tabStops.length === 0) return;
+
+    var current = tabStops.indexOf(document.activeElement);
+    var target;
+    if (current === -1) {
+      target = event.shiftKey ? tabStops[tabStops.length - 1] : tabStops[0];
+    } else if (event.shiftKey && current === 0) {
+      target = tabStops[tabStops.length - 1];
+    } else if (!event.shiftKey && current === tabStops.length - 1) {
+      target = tabStops[0];
     }
-  };
+    if (!target) return; // inside the popup, the browser moves on itself
+
+    event.preventDefault();
+    target.focus();
+  }, true);
 }
 
 /**********************************************************
@@ -3262,6 +3409,7 @@ function SourceViewer() {
   this.source = null;
   this.lineNumbers = null;
   this.activeSource = null;
+  this.validationUnlock = null;
 }
 
 SourceViewer.prototype.getHtmlSource = function() {
@@ -3305,10 +3453,6 @@ SourceViewer.prototype.log = function(message) {
 SourceViewer.prototype.reportError = function(message) {
   this.log(message);
   window.alert("abapGit source viewer error:\n" + message);
-};
-
-SourceViewer.prototype.isInternetExplorer = function() {
-  return !!document.documentMode;
 };
 
 SourceViewer.prototype.updateLineNumbers = function(content) {
@@ -3357,16 +3501,90 @@ SourceViewer.prototype.getAssetSource = function(url, success) {
   }
 };
 
+SourceViewer.prototype.lockValidation = function() {
+  var busy = document.createElement("div");
+  var previousFocus = document.activeElement;
+  var sourceViewer = this;
+  var inputEvents = ["click", "dblclick", "mousedown", "mouseup", "pointerdown", "pointerup",
+    "touchstart", "touchend", "keydown", "keypress", "keyup", "submit", "contextmenu"];
+
+  busy.className = "source-viewer-busy";
+  busy.tabIndex = -1;
+  busy.setAttribute("role", "status");
+  busy.setAttribute("aria-busy", "true");
+  busy.textContent = "Validating HTML...";
+  busy.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;" +
+    "z-index:2147483647;cursor:wait;background:rgba(0,0,0,0.5);color:#fff;" +
+    "display:flex;align-items:center;justify-content:center;font:16px sans-serif;";
+
+  function blockInput(event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+
+  this.validationUnlock = function() {
+    inputEvents.forEach(function(name) { window.removeEventListener(name, blockInput, true) });
+    window.removeEventListener("pageshow", sourceViewer.validationUnlock);
+    if (busy.parentNode) busy.parentNode.removeChild(busy);
+    sourceViewer.validationUnlock = null;
+    if (previousFocus && document.body.contains(previousFocus)) previousFocus.focus();
+  };
+  inputEvents.forEach(function(name) { window.addEventListener(name, blockInput, true) });
+  window.addEventListener("pageshow", this.validationUnlock);
+  document.body.appendChild(busy);
+  busy.focus();
+};
+
+SourceViewer.prototype.validateHtml = function() {
+  if (this.validationUnlock) return;
+  var form = document.createElement("form");
+  var fields = {
+    fragment: this.activeSource === this.sources[0] ? this.source.value : this.sources[0].content,
+    prefill: "0",
+    doctype: "Inline",
+    group: "1",
+    ss: "1",
+    outline: "1"
+  };
+
+  form.method = "post";
+  form.action = "https://validator.w3.org/check";
+  form.enctype = "multipart/form-data";
+  form.acceptCharset = "UTF-8";
+  // Desktop SAP GUI opens _blank externally with only the URL, losing POST data.
+  form.target = gEnv.isWebGui ? "_blank" : "_self";
+  form.style.display = "none";
+  Object.keys(fields).forEach(function(name) {
+    var input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = fields[name];
+    form.appendChild(input);
+  });
+  document.body.appendChild(form);
+  try {
+    if (!gEnv.isWebGui) this.lockValidation();
+    form.submit();
+  } catch (error) {
+    if (this.validationUnlock) this.validationUnlock();
+    this.reportError("Could not submit HTML to the W3C validator: " + error.message);
+  } finally {
+    document.body.removeChild(form);
+  }
+};
+
 SourceViewer.prototype.show = function() {
   var overlay = document.createElement("div");
   var heading = document.createElement("div");
   var close = document.createElement("button");
   var tabs = document.createElement("div");
+  var validate = document.createElement("button");
   var sourceContainer = document.createElement("div");
   var lineNumbers = document.createElement("pre");
   var source = document.createElement("textarea");
   var sourceViewer = this;
 
+  this.sources[0].content = this.getHtmlSource();
   overlay.className = "source-viewer";
   overlay.tabIndex = -1;
   heading.className = "source-viewer-heading";
@@ -3379,7 +3597,7 @@ SourceViewer.prototype.show = function() {
   sourceContainer.className = "source-viewer-content";
   lineNumbers.setAttribute("aria-hidden", "true");
   lineNumbers.className = "source-viewer-line-numbers";
-  source.wrap = "off";
+  source.wrap = "soft";
   source.className = "source-viewer-source";
 
   overlay.appendChild(heading);
@@ -3408,6 +3626,16 @@ SourceViewer.prototype.show = function() {
     sourceDefinition.tab = tab;
     tabs.appendChild(tab);
   });
+
+  validate.type = "button";
+  validate.className = "source-viewer-tab";
+  validate.appendChild(document.createTextNode("Validate HTML"));
+  validate.title = "Send HTML source to the W3C validator" +
+    (gEnv.isWebGui ? " (opens in a new tab)" : " (opens in the SAP GUI browser control)");
+  validate.onclick = function() {
+    sourceViewer.validateHtml();
+  };
+  tabs.appendChild(validate);
 
   function stopEvent(event) {
     event.preventDefault();
@@ -3501,10 +3729,10 @@ SourceViewer.prototype.selectSource = function(sourceDefinition) {
   } else if (sourceDefinition.getContent) {
     sourceDefinition.content = sourceDefinition.getContent(sourceDefinition.url);
     display(sourceDefinition.content);
-  } else if (this.isInternetExplorer() && sourceDefinition.url.indexOf("css/") === 0) {
+  } else if (gEnv.isInternetExplorer && sourceDefinition.url.indexOf("css/") === 0) {
     sourceDefinition.content = this.getStylesheetSource(sourceDefinition.url);
     display(sourceDefinition.content);
-  } else if (this.isInternetExplorer()) {
+  } else if (gEnv.isInternetExplorer) {
     display("Internet Explorer cannot display cached JavaScript source.\n" +
       "Use the Edge WebView2 browser control for this source view.");
   } else {
@@ -3528,7 +3756,7 @@ SourceViewer.prototype.handleKeydown = function(event) {
 
 function registerSourceViewerShortcuts() {
   var sourceViewer = new SourceViewer();
-  document.addEventListener("keydown", sourceViewer.handleKeydown.bind(sourceViewer));
+  gKeyboard.on("keydown", gKeyboard.order.sourceViewer, sourceViewer.handleKeydown.bind(sourceViewer));
 }
 
 registerSourceViewerShortcuts();

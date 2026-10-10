@@ -1,15 +1,16 @@
 CLASS zcl_abapgit_sap_package DEFINITION
   PUBLIC
   CREATE PRIVATE
-  GLOBAL FRIENDS zcl_abapgit_factory .
+  GLOBAL FRIENDS zcl_abapgit_factory.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_sap_package .
+    INTERFACES zif_abapgit_sap_package.
 
     METHODS constructor
       IMPORTING
-        !iv_package TYPE devclass .
+        !iv_package TYPE devclass.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA mv_package TYPE devclass.
@@ -89,7 +90,6 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
           ls_package   TYPE scompkdtln,
           lv_component TYPE dlvunit.
 
-
     ASSERT NOT is_package-devclass IS INITIAL.
 
     cl_package_factory=>load_package(
@@ -109,10 +109,15 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
     MOVE-CORRESPONDING is_package TO ls_package.
 
-    " Set software component to 'HOME' if none is set at this point.
+    " Set software component to HOME or ZCUSTOM_DEVELOPMENT (ABAP Cloud) if none is set at this point.
     " Otherwise SOFTWARE_COMPONENT_INVALID will be raised.
     IF ls_package-dlvunit IS INITIAL.
-      ls_package-dlvunit = 'HOME'.
+      IF is_package-packkind = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development.
+        ls_package-parentcl = 'ZCUSTOM_DEVELOPMENT'.
+        ls_package-dlvunit  = 'ZCUSTOM_DEVELOPMENT'.
+      ELSE.
+        ls_package-dlvunit = 'HOME'.
+      ENDIF.
     ENDIF.
 
     " For transportable packages, get default transport and layer
@@ -135,7 +140,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     cl_package_factory=>create_new_package(
       EXPORTING
         i_reuse_deleted_object     = abap_true
-*        i_suppress_dialog          = abap_true " does not exist in 730
+*       i_suppress_dialog          = abap_true " does not exist in 730
       IMPORTING
         e_package                  = li_package
       CHANGING
@@ -158,10 +163,10 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
         unexpected_error           = 15
         intern_err                 = 16
         no_access                  = 17
-*        invalid_translation_depth  = 18
-*        wrong_mainpack_value       = 19
-*        superpackage_invalid       = 20
-*        error_in_cts_checks        = 21
+*       invalid_translation_depth  = 18
+*       wrong_mainpack_value       = 19
+*       superpackage_invalid       = 20
+*       error_in_cts_checks        = 21
         OTHERS                     = 18 ).
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
@@ -208,6 +213,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     DATA: li_parent TYPE REF TO if_package,
           ls_child  TYPE zif_abapgit_sap_package=>ty_create.
 
+    FIELD-SYMBOLS <lv_package_kind> TYPE uccheck.
 
     cl_package_factory=>load_package(
       EXPORTING
@@ -233,6 +239,12 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     ls_child-pdevclass = li_parent->transport_layer.
     ls_child-as4user   = sy-uname.
 
+    " Interface does not contain ABAP language version (package_kind) in lower releases
+    ASSIGN li_parent->('PACKAGE_KIND') TO <lv_package_kind>.
+    IF sy-subrc = 0.
+      ls_child-packkind = <lv_package_kind>.
+    ENDIF.
+
     zif_abapgit_sap_package~create( ls_child ).
 
   ENDMETHOD.
@@ -244,8 +256,13 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
     ls_package-devclass = mv_package.
     ls_package-ctext    = mv_package.
-    ls_package-parentcl = '$TMP'.
-    ls_package-dlvunit  = 'LOCAL'.
+    IF iv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development.
+      ls_package-parentcl = 'ZLOCAL'.
+      ls_package-dlvunit  = 'ZLOCAL'.
+    ELSE.
+      ls_package-parentcl = '$TMP'.
+      ls_package-dlvunit  = 'LOCAL'.
+    ENDIF.
     ls_package-as4user  = sy-uname.
     ls_package-packkind = iv_abap_language_version.
 
@@ -274,6 +291,8 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
     DATA li_package TYPE REF TO if_package.
 
+    FIELD-SYMBOLS <lv_package_kind> TYPE uccheck.
+
     cl_package_factory=>load_package(
       EXPORTING
         i_package_name             = mv_package
@@ -300,6 +319,12 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     rs_package-as4user   = li_package->changed_by.
     rs_package-korrflag  = li_package->wbo_korr_flag.
 
+    " Interface does not contain ABAP language version (package_kind) in lower releases
+    ASSIGN li_package->('PACKAGE_KIND') TO <lv_package_kind>.
+    IF sy-subrc = 0.
+      rs_package-packkind = <lv_package_kind>.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -319,7 +344,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
             cts_initialization_failure = 3
             OTHERS                     = 4.
         IF sy-subrc <> 0.
-      " Return empty layer (i.e. "local workbench request" for the package)
+          " Return empty layer (i.e. "local workbench request" for the package)
           CLEAR rv_transport_layer.
         ENDIF.
       CATCH cx_sy_dyn_call_illegal_func.
@@ -416,7 +441,6 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     DATA: lt_list   LIKE rt_list,
           lv_parent TYPE tdevc-parentcl.
 
-
     APPEND mv_package TO rt_list.
 
     lv_parent = zif_abapgit_sap_package~read_parent( ).
@@ -430,6 +454,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
 
   METHOD zif_abapgit_sap_package~read_description.
+
     DATA li_package TYPE REF TO if_package.
 
     cl_package_factory=>load_package(
@@ -450,6 +475,14 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     ENDIF.
 
     rv_description = li_package->short_text.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_sap_package~read_namespace.
+    SELECT SINGLE namespace FROM tdevc
+      INTO rv_namespace
+      WHERE devclass = mv_package ##SUBRC_OK.           "#EC CI_GENBUFF
   ENDMETHOD.
 
 
@@ -471,19 +504,13 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_sap_package~read_namespace.
-    SELECT SINGLE namespace FROM tdevc
-      INTO rv_namespace
-      WHERE devclass = mv_package ##SUBRC_OK.           "#EC CI_GENBUFF
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_sap_package~update_tree.
 
     DATA lv_tree TYPE string.
 
-* update package tree for SE80
+    " update package tree for SE80
     lv_tree = 'EU_' && mv_package.
+
     CALL FUNCTION 'WB_TREE_ACTUALIZE'
       EXPORTING
         tree_name              = lv_tree

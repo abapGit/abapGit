@@ -55,6 +55,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     DATA mv_diff_first TYPE abap_bool .
     DATA mv_key TYPE zif_abapgit_persistence=>ty_value .
     DATA mv_are_changes_recorded_in_tr TYPE abap_bool .
+    DATA mo_ref_selection TYPE REF TO zcl_abapgit_gui_page_ref_sel.
 
     METHODS render_head_line
       RETURNING
@@ -1052,6 +1053,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_palette( zif_abapgit_definitions=>c_action-go_repo ) ).
+    ri_html->add( |rememberScrollPosition("repo-view-{ mv_key }");| ).
 
   ENDMETHOD.
 
@@ -1184,6 +1186,15 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         open_in_main_language( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
+      WHEN zif_abapgit_definitions=>c_action-git_branch_delete
+        OR zif_abapgit_definitions=>c_action-git_branch_switch
+        OR zif_abapgit_definitions=>c_action-git_tag_delete
+        OR zif_abapgit_definitions=>c_action-git_tag_switch.
+        mo_ref_selection = zcl_abapgit_gui_page_ref_sel=>create_in_page(
+          iv_key    = mv_key
+          iv_action = ii_event->mv_action ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
       WHEN zif_abapgit_definitions=>c_action-go_back.
         IF zcl_abapgit_ui_factory=>get_gui( )->back( ) = abap_true. " end of stack
           " shutdown
@@ -1309,7 +1320,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
-    register_handlers( ).
+    IF mo_ref_selection IS BOUND AND mo_ref_selection->is_fulfilled( ) = abap_true.
+      CLEAR mo_ref_selection.
+    ENDIF.
 
     CREATE OBJECT mo_repo_aggregated_state.
 
@@ -1460,6 +1473,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDTRY.
 
     register_deferred_script( render_scripts( ) ).
+
+    IF mo_ref_selection IS NOT BOUND.
+      register_handlers( ).
+    ELSE.
+      " Block the repository page while the ref selection modal is open
+      ri_html->add( zcl_abapgit_gui_in_page_modal=>create( mo_ref_selection ) ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

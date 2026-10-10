@@ -86,6 +86,7 @@ span.separator {
 .w800px       { width: 800px }
 .w1000px      { width: 1000px }
 .wmax600px    { max-width: 600px }
+.borders      { border: 1px solid }
 .auto-center  { /* use with max-width */
   width: 100%;
   margin-left: auto;
@@ -562,7 +563,7 @@ table.diff_tab tr.diff_line:hover td {
 }
 
 table.diff_tab td.num::before {
-  content: attr(line-num);
+  content: attr(data-num);
 }
 table.diff_tab code {
   font-family: inherit;
@@ -1842,6 +1843,8 @@ div.wu table th[data-gid="where"] {
   box-sizing: border-box;
   resize: none;
   font-size: 12px;
+  overflow-x: auto;
+  overflow-y: auto;
   white-space: pre;
 }
 

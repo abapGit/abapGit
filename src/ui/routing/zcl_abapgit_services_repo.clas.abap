@@ -146,6 +146,11 @@ CLASS zcl_abapgit_services_repo DEFINITION
         VALUE(rv_yes) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
+    CLASS-METHODS get_objects_to_delete
+      IMPORTING
+        !is_checks      TYPE zif_abapgit_definitions=>ty_deserialize_checks
+      RETURNING
+        VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt .
 ENDCLASS.
 
 
@@ -370,24 +375,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     DATA:
       ls_checks TYPE zif_abapgit_definitions=>ty_delete_checks,
-      ls_tadir  TYPE zif_abapgit_definitions=>ty_tadir,
       lt_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
-    FIELD-SYMBOLS <ls_overwrite> LIKE LINE OF is_checks-overwrite.
-
-    " get confirmed deletions
-    LOOP AT is_checks-overwrite ASSIGNING <ls_overwrite>
-      WHERE ( action = zif_abapgit_objects=>c_deserialize_action-delete
-      OR action = zif_abapgit_objects=>c_deserialize_action-delete_add )
-      AND decision = zif_abapgit_definitions=>c_yes.
-
-      ls_tadir-pgmid    = 'R3TR'.
-      ls_tadir-object   = <ls_overwrite>-obj_type.
-      ls_tadir-obj_name = <ls_overwrite>-obj_name.
-      ls_tadir-devclass = <ls_overwrite>-devclass.
-      INSERT ls_tadir INTO TABLE lt_tadir.
-
-    ENDLOOP.
+    lt_tadir = get_objects_to_delete( is_checks ).
 
     " todo, check if object type supports deletion of parts to avoid deleting complete object
 
@@ -401,6 +391,39 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
       ii_repo->refresh( iv_drop_log = abap_false ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_objects_to_delete.
+
+    DATA ls_tadir TYPE zif_abapgit_definitions=>ty_tadir.
+
+    FIELD-SYMBOLS <ls_overwrite> LIKE LINE OF is_checks-overwrite.
+    FIELD-SYMBOLS <ls_tabl_data> LIKE LINE OF is_checks-delete_tabl_with_data.
+
+    " get confirmed deletions
+    LOOP AT is_checks-overwrite ASSIGNING <ls_overwrite>
+      WHERE ( action = zif_abapgit_objects=>c_deserialize_action-delete
+      OR action = zif_abapgit_objects=>c_deserialize_action-delete_add )
+      AND decision = zif_abapgit_definitions=>c_yes.
+
+      " a table that contains data needs its own confirmation
+      READ TABLE is_checks-delete_tabl_with_data ASSIGNING <ls_tabl_data>
+        WITH KEY object_type_and_name COMPONENTS
+          obj_type = <ls_overwrite>-obj_type
+          obj_name = <ls_overwrite>-obj_name.
+      IF sy-subrc = 0 AND <ls_tabl_data>-decision = zif_abapgit_definitions=>c_no.
+        CONTINUE.
+      ENDIF.
+
+      ls_tadir-pgmid    = 'R3TR'.
+      ls_tadir-object   = <ls_overwrite>-obj_type.
+      ls_tadir-obj_name = <ls_overwrite>-obj_name.
+      ls_tadir-devclass = <ls_overwrite>-devclass.
+      INSERT ls_tadir INTO TABLE rt_tadir.
+
+    ENDLOOP.
 
   ENDMETHOD.
 

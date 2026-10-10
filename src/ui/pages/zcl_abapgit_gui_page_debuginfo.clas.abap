@@ -138,7 +138,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
-      ri_html->add( '<h2>abapGit - Standalone Version</h2>' ).
+      ri_html->add( '<h1>abapGit - Standalone Version</h1>' ).
       ri_html->add( '<div>To keep abapGit up-to-date (or also to contribute) you need to' ).
       ri_html->add( |install it as a repository ({ ri_html->a(
         iv_txt = 'Developer Version'
@@ -148,7 +148,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
       lv_devclass = zcl_abapgit_factory=>get_tadir( )->get_object_package(
         iv_object   = 'CLAS'
         iv_obj_name = 'ZCX_ABAPGIT_EXCEPTION' ).
-      ri_html->add( '<h2>abapGit - Developer Version</h2>' ).
+      ri_html->add( '<h1>abapGit - Developer Version</h1>' ).
       ri_html->add( |<div>abapGit is installed in package { lv_devclass }</div>| ).
     ENDIF.
 
@@ -257,7 +257,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( '<table border="1px"><thead><tr>' ).
+    ri_html->add( '<table class="borders"><thead><tr>' ).
     ri_html->add( '<td>Exit</td><td class="center">Implemented?</td>' ).
     ri_html->add( '</tr></thead><tbody>' ).
 
@@ -317,25 +317,16 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     DATA: lv_list     TYPE string,
           li_html     TYPE REF TO zif_abapgit_html,
-          lt_types    TYPE zif_abapgit_objects=>ty_types_tt,
-          lv_type     LIKE LINE OF lt_types,
-          lt_obj      TYPE STANDARD TABLE OF ko100 WITH DEFAULT KEY,
+          lt_details  TYPE zif_abapgit_objects=>ty_type_details_tt,
+          ls_details  LIKE LINE OF lt_details,
           lv_class    TYPE seoclsname,
           li_object   TYPE REF TO zif_abapgit_object,
           ls_item     TYPE zif_abapgit_definitions=>ty_item,
           ls_metadata TYPE zif_abapgit_definitions=>ty_metadata,
           lv_step     TYPE zif_abapgit_objects=>ty_deserialization_step,
-          lt_steps    TYPE zif_abapgit_objects=>ty_deserialization_step_tt,
-          lt_descr    TYPE zif_abapgit_oo_object_fnc=>ty_seoclasstx_tt,
-          ls_descr    LIKE LINE OF lt_descr.
+          lt_steps    TYPE zif_abapgit_objects=>ty_deserialization_step_tt.
 
-    FIELD-SYMBOLS: <ls_obj> TYPE ko100.
-
-    CALL FUNCTION 'TR_OBJECT_TABLE'
-      TABLES
-        wt_object_text = lt_obj.
-
-    lt_types = zcl_abapgit_objects=>supported_list( ).
+    lt_details = zcl_abapgit_objects=>supported_list_details( ).
 
     CREATE OBJECT li_html TYPE zcl_abapgit_html.
 
@@ -348,38 +339,26 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     rv_html = rv_html && |<br><br>Supported object types in <strong>this</strong> system:<br><br>|.
 
-    rv_html = rv_html && |<table border="1px"><thead><tr>|.
+    rv_html = rv_html && |<table class="borders"><thead><tr>|.
     rv_html = rv_html && |<td>Object</td><td>Description</td><td>Class</td><td>Version</td>|.
-    rv_html = rv_html && |<td>Steps</td>|.
+    rv_html = rv_html && |<td>Steps</td><td>AFF</td>|.
     rv_html = rv_html && |</tr></thead><tbody>|.
 
-    LOOP AT lt_types INTO lv_type.
-      lv_class = 'ZCL_ABAPGIT_OBJECT_' && lv_type.
+    LOOP AT lt_details INTO ls_details.
+      lv_class = 'ZCL_ABAPGIT_OBJECT_' && ls_details-obj_type.
 
       rv_html = rv_html && |<tr>|.
 
-      rv_html = rv_html && |<td>{ lv_type }</td>|.
+      rv_html = rv_html && |<td>{ ls_details-obj_type }</td>|.
 
-      READ TABLE lt_obj ASSIGNING <ls_obj> WITH KEY pgmid = 'R3TR' object = lv_type.
-      IF sy-subrc = 0.
-        rv_html = rv_html && |<td>{ <ls_obj>-text }</td>|.
+      IF ls_details-description IS INITIAL.
+        rv_html = rv_html && |<td><span class="warning">No description</span></td>|.
       ELSE.
-        lt_descr = zcl_abapgit_oo_factory=>get_by_type( 'CLAS' )->read_descriptions_class( lv_class ).
-
-        READ TABLE lt_descr INTO ls_descr WITH KEY langu = sy-langu.
-        IF sy-subrc = 0.
-          ls_descr-descript = replace(
-            val  = ls_descr-descript
-            sub  = 'abapGit - '
-            with = '' ).
-        ELSE.
-          ls_descr-descript = '<span class="warning">No description</span>'.
-        ENDIF.
-        rv_html = rv_html && |<td>abapGit Enhancement: { ls_descr-descript }</td>|.
+        rv_html = rv_html && |<td>{ ls_details-description }</td>|.
       ENDIF.
 
       TRY.
-          ls_item-obj_type = lv_type.
+          ls_item-obj_type = ls_details-obj_type.
           ls_item-obj_name = 'TEST'.
 
           CREATE OBJECT li_object TYPE (lv_class)
@@ -395,7 +374,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
                 EXPORTING
                   is_item = ls_item.
             CATCH cx_sy_create_object_error zcx_abapgit_exception.
-              rv_html = rv_html && |<td class="error" colspan="5">{ lv_class } - error instantiating class</td>|.
+              rv_html = rv_html && |<td class="error" colspan="4">{ lv_class } - error instantiating class</td>|.
               CONTINUE.
           ENDTRY.
 
@@ -432,6 +411,18 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
       ENDLOOP.
 
       rv_html = rv_html && |<td>{ lv_list }</td>|.
+
+      IF ls_details-aff_experimental = abap_true.
+        IF ls_details-aff_supported = abap_true.
+          rv_html = rv_html && |<td>Experimental (enabled)</td>|.
+        ELSE.
+          rv_html = rv_html && |<td>Experimental (disabled)</td>|.
+        ENDIF.
+      ELSEIF ls_details-aff_supported = abap_true.
+        rv_html = rv_html && |<td>Yes</td>|.
+      ELSE.
+        rv_html = rv_html && |<td></td>|.
+      ENDIF.
 
       rv_html = rv_html && |</tr>|.
 
@@ -521,8 +512,9 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
     ri_html->add( render_supported_object_types( ) ).
     ri_html->add( '</div>' ).
 
-    mv_html = '<!DOCTYPE html><html lang="en"><title>abapGit Debug Info</title></head>'.
-    mv_html = |<body>{ ri_html->render( ) }</body></html>|.
+    mv_html = |<!DOCTYPE html>\n<html lang="en">\n|
+      && |<head>\n<title>abapGit Debug Info</title>\n</head>\n|
+      && |<body>\n{ ri_html->render( ) }\n</body>\n</html>\n|.
 
     register_deferred_script( render_scripts( ) ).
 

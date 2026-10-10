@@ -7,9 +7,10 @@ const loadUi = require("./load-ui.cjs");
 // ordering is deliberate: embedded controls can emit popstate during submit.
 function page(elements = []) {
   const listeners = {};
+  const capture = {};
   const context = loadUi({
     document: {
-      addEventListener() {},
+      addEventListener(name, fn, useCapture) { if (useCapture) capture[name] = fn; },
       querySelectorAll(selector) {
         return elements.filter(element => selector.split(", ").some(part => {
           const simple = part.match(/^([a-z]+)(\[[^\]]+\])*$/);
@@ -28,6 +29,7 @@ function page(elements = []) {
     addEventListener(name, fn) { listeners[name] = fn; }
   });
   context.popstate = () => listeners.popstate();
+  context.input = name => capture[name] && capture[name]({ type: name });
   return context;
 }
 
@@ -124,6 +126,49 @@ test("palette main submit preserves the form and ignores submit-induced popstate
   assert.equal(backs, 1);
 });
 
+// The browser SAP GUI for Java embeds has no key for Back (nor a context menu
+// entry), so abapGit takes Alt+Left there. Everywhere else the browser goes
+// back itself, and the trap turns that into go_back: a second one would follow.
+function altLeft(context, keys = {}) {
+  let prevented = false;
+  context.gKeyboard.dispatch("keydown", { key: "ArrowLeft", keyCode: 37, altKey: true, ctrlKey: false,
+    shiftKey: false, metaKey: false, ...keys, preventDefault() { prevented = true; } });
+  return prevented;
+}
+
+function backTrap(env) {
+  const context = page();
+  context.navigator = { userAgent: env.isSapGuiForWindows ? "Mozilla/5.0 Chrome/150 Edg/150" : "Mozilla/5.0" };
+  context.setEnvironment(env);
+  context.redirectBrowserBackToSapEvent();
+  const backs = [];
+  context.triggerSapEventBack = action => backs.push(action);
+  return { context, backs };
+}
+
+test("Alt+Left goes back in SAP GUI for Java", () => {
+  const { context, backs } = backTrap({ isWebGui: false, isSapGuiForWindows: false });
+  assert.equal(altLeft(context), true);
+  assert.deepEqual(backs, ["go_back"]);
+});
+
+test("Alt+Left is left to the browser in SAP GUI for Windows and WebGUI", () => {
+  for (const env of [{ isWebGui: false, isSapGuiForWindows: true }, { isWebGui: true, isSapGuiForWindows: false }]) {
+    const { context, backs } = backTrap(env);
+    if (context.gKeyboard.handlers.keydown) assert.equal(altLeft(context), false);
+    assert.deepEqual(backs, [], JSON.stringify(env));
+  }
+});
+
+test("only Alt+Left goes back in SAP GUI for Java, no other combination", () => {
+  const { context, backs } = backTrap({ isWebGui: false, isSapGuiForWindows: false });
+  for (const keys of [{ altKey: false }, { ctrlKey: true }, { shiftKey: true }, { metaKey: true },
+    { key: "ArrowRight", keyCode: 39 }]) {
+    if (context.gKeyboard.handlers.keydown) assert.equal(altLeft(context, keys), false, JSON.stringify(keys));
+  }
+  assert.deepEqual(backs, []);
+});
+
 test("submitFormById keeps guarding server-rendered forms", () => {
   const form = { id: "edit_form" };
   const context = page([form]);
@@ -131,4 +176,34 @@ test("submitFormById keeps guarding server-rendered forms", () => {
   form.submit = () => { submits++; assert.equal(context.gSapeventNavPending, true); };
   context.submitFormById(form.id);
   assert.equal(submits, 1);
+});
+
+// A sapevent that leaves the page in place (no_more_act, e.g. stage_filter or
+// clipboard) is not followed by a popstate on WebGUI. The next user input ends
+// the wait for one, so the Back press that follows is not swallowed.
+test("user input after a submit without popstate re-enables Back", () => {
+  for (const name of ["keydown", "mousedown", "contextmenu"]) {
+    const form = { id: "filter_form", submit() {} };
+    const context = page([form]);
+    let backs = 0;
+    context.redirectBrowserBackToSapEvent();
+    context.triggerSapEventBack = () => backs++;
+    context.submitFormById(form.id);
+    context.input(name);
+    context.popstate();
+    assert.equal(backs, 1, name);
+  }
+});
+
+// Enter submits on keypress; its keyup can come before the control's popstate
+test("keyup after a submit keeps ignoring the submit-induced popstate", () => {
+  const form = { id: "filter_form", submit() {} };
+  const context = page([form]);
+  let backs = 0;
+  context.redirectBrowserBackToSapEvent();
+  context.triggerSapEventBack = () => backs++;
+  context.submitFormById(form.id);
+  context.input("keyup");
+  context.popstate();
+  assert.equal(backs, 0);
 });
