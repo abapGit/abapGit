@@ -89,6 +89,7 @@
       "reposrc": false
     },
     "skip": [
+      {"object": "ZCL_ABAPGIT_GUI_PAGE_PATCH", "class": "ltcl_continue_patching", "method": "commit_refresh_warning", "note": "open-abap free-text MESSAGE does not populate sy-msgv1 through sy-msgv4; flow is covered by commit_refresh_failure"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_get_t100_longtext", "method": "test01", "note": "uses MSAG from database"},
 
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",           "note": "open-abap does not add the byte order mark"},

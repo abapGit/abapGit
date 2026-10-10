@@ -158,8 +158,12 @@ CLASS zcl_abapgit_gui_hotkey_ctl IMPLEMENTATION.
     " Render hotkeys
     ri_html->add( '<ul class="hotkeys">' ).
     LOOP AT lt_registered_hotkeys ASSIGNING <ls_hotkey>.
+      lv_hotkey = <ls_hotkey>-hotkey.
+      IF lv_hotkey CP '^*'.
+        lv_hotkey = |Ctrl+{ lv_hotkey+1 }|.
+      ENDIF.
       ri_html->add( |<li>|
-        && |<span class="key-id">{ <ls_hotkey>-hotkey }</span>|
+        && |<span class="key-id">{ lv_hotkey }</span>|
         && |<span class="key-descr">{ <ls_hotkey>-description }</span>|
         && |</li>| ).
     ENDLOOP.
