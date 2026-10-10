@@ -2302,12 +2302,14 @@ Hotkeys.prototype.onkeydown = function(oEvent) {
   // Ctrl+Enter submits a form even while editing its comment or body. Handle
   // it on keydown only: some controls also emit keypress, causing two submits.
   if (oEvent.ctrlKey) {
-    if (sKey !== "Enter" || oEvent.shiftKey || oEvent.type !== "keydown") return;
+    if (sKey !== "Enter" || oEvent.shiftKey || oEvent.type !== "keydown" || oEvent.repeat) return;
+    if (CommandPalette.isVisible()) return;
     sKey = "^" + sKey;
   }
 
-  if (gKeyboard.isTyping() && sKey !== "^Enter") {
-    return;
+  if (gKeyboard.isTyping()) {
+    var activeForm = document.activeElement.form;
+    if (sKey !== "^Enter" || !activeForm || activeForm.id !== "commit-form") return;
   }
 
   var fnHotkey = this.oKeyMap[sKey];
@@ -2323,7 +2325,7 @@ Hotkeys.formatKeyForDisplay = function(key) {
   if (Array.isArray(key)) {
     return key.map(function(singleKey) { return Hotkeys.formatKeyForDisplay(singleKey) }).join(" / ");
   }
-  return (key[0] === "^") ? "ctrl+" + key.substring(1) : key;
+  return (key[0] === "^") ? "Ctrl+" + key.substring(1) : key;
 };
 
 Hotkeys.addHotkeyToHelpSheet = function(key, description) {

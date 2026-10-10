@@ -61,7 +61,7 @@ test("Enter finds and clicks a WebGUI dialog command with a rewritten href", () 
 test("Ctrl+Enter submits the patch command from a text field only once", () => {
   const command = element("A", { "data-sapevent": "commit_patch", href: "https://host/webgui#" });
   const context = page([command]);
-  context.document.activeElement = { nodeName: "TEXTAREA" };
+  context.document.activeElement = { nodeName: "TEXTAREA", form: { id: "commit-form" } };
   context.setTimeout = () => {};
   let clicks = 0;
   let prevented = 0;
@@ -69,10 +69,11 @@ test("Ctrl+Enter submits the patch command from a text field only once", () => {
   context.setKeyBindings({ "^Enter": "commit_patch" });
   const event = { key: "Enter", ctrlKey: true, preventDefault() { prevented++; } };
   context.gKeyboard.dispatch("keydown", { ...event, type: "keydown" });
+  context.gKeyboard.dispatch("keydown", { ...event, type: "keydown", repeat: true });
   context.gKeyboard.dispatch("keypress", { ...event, type: "keypress" });
   assert.equal(clicks, 1);
   assert.equal(prevented, 1);
-  assert.match(command.title, /\[ctrl\+Enter\]/);
+  assert.match(command.title, /\[Ctrl\+Enter\]/);
 });
 
 test("Ctrl+Enter leaves ordinary commit forms and modified shortcuts alone", () => {
@@ -86,6 +87,31 @@ test("Ctrl+Enter leaves ordinary commit forms and modified shortcuts alone", () 
   delete hotkeys.oKeyMap["^Enter"];
   hotkeys.onkeydown({ type: "keydown", key: "Enter", ctrlKey: true });
   assert.equal(commits, 0);
+});
+
+for (const activeElement of [
+  { nodeName: "INPUT" },
+  { nodeName: "INPUT", form: { id: "filter-form" } },
+  { nodeName: "SPAN", isContentEditable: true }
+]) {
+  test(`Ctrl+Enter does not submit from an unrelated ${activeElement.nodeName} field`, () => {
+    const command = element("A", { "data-sapevent": "commit_patch" });
+    const context = page([command]);
+    context.document.activeElement = activeElement;
+    command.click = () => assert.fail("Unrelated field must not submit a commit");
+    new context.Hotkeys({ "^Enter": "commit_patch" }).onkeydown({
+      type: "keydown", key: "Enter", ctrlKey: true
+    });
+  });
+}
+
+test("Ctrl+Enter cannot submit while a command palette is visible", () => {
+  const command = element("A", { "data-sapevent": "commit_patch" });
+  const context = page([command]);
+  context.document.activeElement = { nodeName: "TEXTAREA", form: { id: "commit-form" } };
+  context.CommandPalette.instances = [{ elements: { palette: { style: { display: "" } } } }];
+  command.click = () => assert.fail("Visible palette must block commit shortcut");
+  new context.Hotkeys({ "^Enter": "commit_patch" }).onkeydown({ type: "keydown", key: "Enter", ctrlKey: true });
 });
 
 test("WebGUI picker is discoverable by action and by command palette", () => {

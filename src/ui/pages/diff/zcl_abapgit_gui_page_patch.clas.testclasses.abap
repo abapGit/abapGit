@@ -225,10 +225,16 @@ ENDCLASS.
 
 CLASS lcl_continue_repo DEFINITION FINAL INHERITING FROM zcl_abapgit_repo.
   PUBLIC SECTION.
+    DATA mv_pushes TYPE i.
     INTERFACES zif_abapgit_repo_online.
     METHODS zif_abapgit_repo~get_files_local REDEFINITION.
     METHODS zif_abapgit_repo~get_files_remote REDEFINITION.
     METHODS zif_abapgit_repo~find_remote_dot_abapgit REDEFINITION.
+ENDCLASS.
+
+CLASS lcl_continue_user DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_persist_user.
 ENDCLASS.
 
 CLASS lcl_continue_repo_srv DEFINITION FINAL.
@@ -240,6 +246,7 @@ ENDCLASS.
 CLASS lcl_continue_patch DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page_patch.
   PUBLIC SECTION.
     DATA mv_refreshes TYPE i.
+    DATA mv_fail_refresh TYPE abap_bool.
     METHODS get_diffs
       RETURNING
         VALUE(rt_diffs) TYPE zif_abapgit_gui_diff=>ty_file_diffs.
@@ -253,6 +260,8 @@ CLASS ltcl_continue_patching DEFINITION FINAL FOR TESTING
   RISK LEVEL HARMLESS.
   PRIVATE SECTION.
     DATA mi_previous_srv TYPE REF TO zif_abapgit_repo_srv.
+    DATA mi_previous_user TYPE REF TO zif_abapgit_persist_user.
+    DATA mo_repo TYPE REF TO lcl_continue_repo.
     DATA mo_patch TYPE REF TO zcl_abapgit_gui_page_patch.
     DATA mo_fixture TYPE REF TO lcl_continue_patch.
     METHODS setup RAISING cx_static_check.
@@ -260,6 +269,12 @@ CLASS ltcl_continue_patching DEFINITION FINAL FOR TESTING
     METHODS successive_patches FOR TESTING RAISING cx_static_check.
     METHODS invalid_commit_keeps_patch FOR TESTING RAISING cx_static_check.
     METHODS reject_continue_without_patch FOR TESTING RAISING cx_static_check.
+    METHODS commit_with_remaining_changes FOR TESTING RAISING cx_static_check.
+    METHODS commit_without_remaining FOR TESTING RAISING cx_static_check.
+    METHODS commit_refresh_failure FOR TESTING RAISING cx_static_check.
+    METHODS commit_patch
+      RETURNING VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
+      RAISING cx_static_check.
 ENDCLASS.
 
 
@@ -319,7 +334,7 @@ CLASS lcl_continue_repo IMPLEMENTATION.
   METHOD zif_abapgit_repo_online~get_switched_origin.
   ENDMETHOD.
   METHOD zif_abapgit_repo_online~push.
-    zcx_abapgit_exception=>raise( 'Unexpected push in unit test' ).
+    mv_pushes = mv_pushes + 1.
   ENDMETHOD.
   METHOD zif_abapgit_repo_online~create_branch.
   ENDMETHOD.
@@ -349,10 +364,90 @@ CLASS lcl_continue_repo IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+CLASS lcl_continue_user IMPLEMENTATION.
+  METHOD zif_abapgit_persist_user~get_changes_only.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_default_git_user_email.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_default_git_user_name.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_diff_unified.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_favorites.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_hide_files.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_show_folders.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_repo_git_user_email.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_repo_git_user_name.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_repo_last_change_seen.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_repo_login.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_repo_show.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~is_favorite_repo.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~set_default_git_user_email.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~set_default_git_user_name.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~set_repo_git_user_email.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~set_repo_git_user_name.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~set_repo_last_change_seen.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~set_repo_login.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~set_repo_show.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~toggle_changes_only.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_order_by.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~set_order_by.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_order_descending.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~set_order_descending.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_diff_first.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~set_diff_first.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~toggle_diff_unified.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~toggle_favorite.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~toggle_hide_files.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~toggle_show_folders.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_settings.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~set_settings.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_list_settings.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~set_list_settings.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~get_flow_settings.
+  ENDMETHOD.
+  METHOD zif_abapgit_persist_user~set_flow_settings.
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS lcl_continue_patch IMPLEMENTATION.
   METHOD refresh_full.
     " Simulate a successful push changing the remote, without network access
     mv_refreshes = mv_refreshes + 1.
+    IF mv_fail_refresh = abap_true.
+      zcx_abapgit_exception=>raise( 'Test refresh failure' ).
+    ENDIF.
   ENDMETHOD.
 
   METHOD get_diffs.
@@ -400,8 +495,12 @@ CLASS ltcl_continue_patching IMPLEMENTATION.
     DATA lo_srv TYPE REF TO lcl_continue_repo_srv.
     DATA ls_repo TYPE zif_abapgit_persistence=>ty_repo.
     DATA ls_file TYPE zif_abapgit_git_definitions=>ty_file.
+    DATA lo_user TYPE REF TO lcl_continue_user.
 
     mi_previous_srv = zcl_abapgit_repo_srv=>get_instance( ).
+    mi_previous_user = zcl_abapgit_persist_factory=>get_user( ).
+    CREATE OBJECT lo_user.
+    zcl_abapgit_persist_injector=>set_current_user( lo_user ).
     CREATE OBJECT lo_srv.
     ls_repo-key = '1'.
     ls_repo-url = 'https://github.com/abapGit/abapGit.git'.
@@ -412,6 +511,7 @@ CLASS ltcl_continue_patching IMPLEMENTATION.
     CREATE OBJECT lo_srv->mi_repo TYPE lcl_continue_repo
       EXPORTING
         is_data = ls_repo.
+    mo_repo ?= lo_srv->mi_repo.
     zcl_abapgit_repo_srv=>inject_instance( lo_srv ).
     ls_file-path = '/'.
     ls_file-filename = 'test.abap'.
@@ -424,6 +524,72 @@ CLASS ltcl_continue_patching IMPLEMENTATION.
 
   METHOD teardown.
     zcl_abapgit_repo_srv=>inject_instance( mi_previous_srv ).
+    zcl_abapgit_persist_injector=>set_current_user( mi_previous_user ).
+  ENDMETHOD.
+
+  METHOD commit_patch.
+    DATA lo_page TYPE REF TO zcl_abapgit_gui_page_hoc.
+    DATA lo_commit TYPE REF TO zcl_abapgit_gui_page_commit.
+    DATA lo_stage TYPE REF TO zcl_abapgit_stage.
+    DATA lt_postdata TYPE zif_abapgit_html_viewer=>ty_post_data.
+
+    CREATE OBJECT lo_stage.
+    lo_page ?= zcl_abapgit_gui_page_commit=>create(
+      ii_repo_online = mo_repo
+      io_stage = lo_stage
+      io_patch = mo_patch ).
+    lo_commit ?= lo_page->get_child( ).
+    APPEND 'comment=Test&committer_name=Committer&committer_email=test@example.org' TO lt_postdata.
+    rs_handled = lo_commit->zif_abapgit_gui_event_handler~on_event(
+      zcl_abapgit_gui_event=>new( iv_action = 'commit_patch'
+        it_postdata = lt_postdata ) ).
+  ENDMETHOD.
+
+  METHOD commit_with_remaining_changes.
+    DATA ls_handled TYPE zif_abapgit_gui_event_handler=>ty_handling_result.
+    ls_handled = commit_patch( ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_handled-state
+      exp = zcl_abapgit_gui=>c_event_state-go_back ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_repo->mv_pushes
+      exp = 1 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_fixture->mv_refreshes
+      exp = 1 ).
+  ENDMETHOD.
+
+  METHOD commit_without_remaining.
+    DATA ls_handled TYPE zif_abapgit_gui_event_handler=>ty_handling_result.
+    mo_fixture->mv_refreshes = 1.
+    ls_handled = commit_patch( ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_handled-state
+      exp = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_repo->mv_pushes
+      exp = 1 ).
+    cl_abap_unit_assert=>assert_initial( mo_fixture->get_diffs( ) ).
+  ENDMETHOD.
+
+  METHOD commit_refresh_failure.
+    DATA ls_handled TYPE zif_abapgit_gui_event_handler=>ty_handling_result.
+    DATA lv_message TYPE string.
+    mo_fixture->mv_fail_refresh = abap_true.
+    ls_handled = commit_patch( ).
+    CONCATENATE sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_message.
+    cl_abap_unit_assert=>assert_equals(
+      act = boolc( lv_message CS 'Commit was successful, but continuing patching failed' )
+      exp = abap_true ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_handled-state
+      exp = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_repo->mv_pushes
+      exp = 1 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_fixture->mv_refreshes
+      exp = 1 ).
   ENDMETHOD.
 
   METHOD successive_patches.
