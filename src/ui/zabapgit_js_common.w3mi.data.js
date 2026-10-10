@@ -1974,7 +1974,10 @@ LinkHints.prototype.isDisabled = function(element) {
 
 LinkHints.prototype.deployHintContainers = function() {
 
-  var hintTargets = document.querySelectorAll("a, input, textarea, i");
+  // The page behind an open modal is not interactive. Scope hint discovery
+  // to the modal, including numbering and copy-mode targets.
+  var root        = document.getElementById("modal") || document;
+  var hintTargets = root.querySelectorAll("a, input, textarea, i");
   var codeCounter = this.getHintStartValue(hintTargets.length);
   var hintsMap    = { first: codeCounter };
 
