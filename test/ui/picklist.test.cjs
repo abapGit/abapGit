@@ -7,6 +7,7 @@ function picker(disabled = [], webgui = false) {
     querySelector() { return picklist; },
     getElementById(id) { return radios.find(radio => radio.id === id) || null; } };
   let clicks = 0, scrolls = 0;
+  const listeners = {};
   const radios = [0, 1, 2].map(index => {
     let checked = false;
     const radio = { id: `radio${index}`, disabled: disabled.includes(index),
@@ -16,13 +17,16 @@ function picker(disabled = [], webgui = false) {
         checked = value;
       } };
     radio.nextElementSibling = { nodeName: 'LABEL',
-      setAttribute() {}, getAttribute() { return radio.id; },
+      attrs: {}, setAttribute(name, value) { this.attrs[name] = value; },
+      getAttribute(name) { return name === 'for' ? radio.id : this.attrs[name]; },
+      contains(element) { return element === this; },
       focus() { document.activeElement = this; },
-      click() { radio.checked = true; }, getBoundingClientRect() { return { top: 110, bottom: 120 }; },
+      click() { radio.checked = true; if (listeners.click) listeners.click({ target: this }); }, getBoundingClientRect() { return { top: 110, bottom: 120 }; },
       scrollIntoView() { scrolls++; } };
     return radio;
   });
-  const picklist = { querySelectorAll() { return radios; },
+  const picklist = { addEventListener(name, fn) { listeners[name] = fn; },
+    querySelectorAll() { return radios; },
     contains(element) { return radios.some(radio => radio.nextElementSibling === element); },
     querySelector(selector) {
       if (selector === '.main' || !webgui && selector === 'input[type="submit"].main') {
@@ -136,4 +140,21 @@ test('Enter activates the WebGUI Choose link after arrow navigation', () => {
   assert.equal(p.clicks(), 1);
   p.key('Enter', { repeat: true });
   assert.equal(p.clicks(), 1);
+});
+
+test('the list has one Tab stop that follows mouse and arrow selection', () => {
+  const p = picker();
+  const stops = () => p.radios.map(radio => radio.nextElementSibling.getAttribute('tabindex'));
+  assert.deepEqual(stops(), ['0', '-1', '-1']);
+  p.key('ArrowDown'); p.key('ArrowDown');
+  assert.deepEqual(stops(), ['-1', '0', '-1']);
+  p.radios[2].nextElementSibling.click();
+  assert.deepEqual(stops(), ['-1', '-1', '0']);
+  assert.equal(p.key('Tab'), false); // native Tab now goes straight to Choose
+  assert.equal(p.key('Tab', { shiftKey: true }), false);
+});
+
+test('disabled entries are never Tab stops', () => {
+  const p = picker([0]);
+  assert.deepEqual(p.radios.map(radio => radio.nextElementSibling.getAttribute('tabindex')), ['-1', '0', '-1']);
 });

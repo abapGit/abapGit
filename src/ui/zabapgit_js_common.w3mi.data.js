@@ -1953,9 +1953,28 @@ function enablePicklistNavigation() {
   var radios = picklist.querySelectorAll('input[type="radio"]');
   if (!radios.length) return;
 
-  for (var i = 0; i < radios.length; i++) {
-    radios[i].nextElementSibling.setAttribute("tabindex", "0");
+  // The list is one Tab stop. Arrows move within it; Tab goes to Choose
+  // and Back instead of visiting every entry.
+  function updateTabStop(selected) {
+    for (var i = 0; i < radios.length; i++) {
+      radios[i].nextElementSibling.setAttribute("tabindex", radios[i] === selected ? "0" : "-1");
+    }
   }
+  var initial;
+  for (var i = 0; i < radios.length; i++) {
+    if (!radios[i].disabled && (!initial || radios[i].checked)) initial = radios[i];
+  }
+  updateTabStop(initial);
+
+  picklist.addEventListener("click", function(event) {
+    for (var i = 0; i < radios.length; i++) {
+      var label = radios[i].nextElementSibling;
+      if (!radios[i].disabled && (event.target === radios[i] || label.contains(event.target))) {
+        updateTabStop(radios[i]);
+        return;
+      }
+    }
+  });
 
   gKeyboard.on("keydown", gKeyboard.order.page, function(event) {
     if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey
@@ -1981,6 +2000,7 @@ function enablePicklistNavigation() {
         : Math.max(0, Math.min(enabled.length - 1, selected + offset));
       var radio = enabled[index];
       radio.checked = true;
+      updateTabStop(radio);
       var label = radio.nextElementSibling;
       label.focus();
       scrollRowIntoView(label);
@@ -1990,6 +2010,7 @@ function enablePicklistNavigation() {
       var focusedRadio = document.getElementById(active.getAttribute("for"));
       if (!focusedRadio || focusedRadio.disabled) return;
       focusedRadio.checked = true;
+      updateTabStop(focusedRadio);
       event.preventDefault();
       // WebGUI renders Choose as a link that submits the form payload;
       // desktop controls render it as a submit input. Click the rendered
