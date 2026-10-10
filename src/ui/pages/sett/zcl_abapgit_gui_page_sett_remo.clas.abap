@@ -31,6 +31,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       BEGIN OF c_repo_type,
         online  TYPE string VALUE 'Online Repository',
         offline TYPE string VALUE 'Offline Repository',
+        oci     TYPE string VALUE 'OCI Registry Repository',
       END OF c_repo_type.
     CONSTANTS:
       BEGIN OF c_id,
@@ -38,6 +39,9 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
         repo_type    TYPE string VALUE 'repo_type',
         offline      TYPE string VALUE 'offline',
         url          TYPE string VALUE 'url',
+        oci_registry TYPE string VALUE 'oci_registry',
+        oci_repository TYPE string VALUE 'oci_repository',
+        oci_reference TYPE string VALUE 'oci_reference',
         head_group   TYPE string VALUE 'head_group',
         branch       TYPE string VALUE 'branch',
         tag          TYPE string VALUE 'tag',
@@ -379,6 +383,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       lv_button    TYPE string,
       lv_icon      TYPE string,
       lv_offline   TYPE abap_bool,
+      lv_oci       TYPE abap_bool,
       lv_head_type TYPE zif_abapgit_git_definitions=>ty_head_type.
 
     IF io_existing_form_data IS BOUND AND io_existing_form_data->is_empty( ) = abap_false.
@@ -390,12 +395,15 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       lv_offline   = ms_settings_snapshot-offline.
       lv_head_type = ms_settings_snapshot-head_type.
     ENDIF.
+    lv_oci = boolc( mi_repo->get_repo_kind( ) = zif_abapgit_persistence=>c_repo_kind-oci ).
 
     ro_form = zcl_abapgit_html_form=>create(
       iv_form_id   = 'repo-remote-settings-form'
       iv_help_page = 'https://docs.abapgit.org/settings-remote.html' ).
 
-    IF lv_offline = abap_true.
+    IF lv_oci = abap_true.
+      lv_icon = 'cloud-download-alt/darkgrey'.
+    ELSEIF lv_offline = abap_true.
       lv_button = 'Switch to Online'.
       lv_icon   = 'plug/darkgrey'.
     ELSE.
@@ -413,8 +421,24 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       iv_readonly    = abap_true
     )->hidden( c_id-offline ).
 
-    IF lv_offline = abap_false.
-
+    IF lv_offline = abap_false AND lv_oci = abap_true.
+      ro_form->text(
+        iv_name        = c_id-oci_registry
+        iv_required    = abap_true
+        iv_condense    = abap_true
+        iv_label       = 'OCI Registry'
+        iv_hint        = 'HTTPS registry host and optional port' )->text(
+        iv_name        = c_id-oci_repository
+        iv_required    = abap_true
+        iv_condense    = abap_true
+        iv_label       = 'Repository Path'
+        iv_hint        = 'Lowercase path inside the registry' )->text(
+        iv_name        = c_id-oci_reference
+        iv_required    = abap_true
+        iv_condense    = abap_true
+        iv_label       = 'Tag or SHA-256 Digest'
+        iv_hint        = 'An explicit tag or sha256:<64 lowercase hex characters>' ).
+    ELSEIF lv_offline = abap_false.
       ro_form->text(
         iv_name        = c_id-url
         iv_condense    = abap_true
@@ -482,11 +506,13 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     ro_form->command(
       iv_label    = 'Save Settings'
       iv_cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main
-      iv_action   = c_event-save
-    )->command(
-      iv_label  = lv_button
-      iv_action = c_event-switch
-    )->command(
+      iv_action   = c_event-save ).
+    IF lv_oci = abap_false.
+      ro_form->command(
+        iv_label  = lv_button
+        iv_action = c_event-switch ).
+    ENDIF.
+    ro_form->command(
       iv_label  = 'Back'
       iv_action = zif_abapgit_definitions=>c_action-go_back ).
 
@@ -496,6 +522,18 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   METHOD get_remote_settings_from_form.
 
     rs_settings-offline = io_form_data->get( c_id-offline ).
+
+    IF mi_repo->get_repo_kind( ) = zif_abapgit_persistence=>c_repo_kind-oci.
+      rs_settings-repo_kind = zif_abapgit_persistence=>c_repo_kind-oci.
+      rs_settings-oci_registry = io_form_data->get( c_id-oci_registry ).
+      rs_settings-oci_repository = io_form_data->get( c_id-oci_repository ).
+      rs_settings-oci_reference = io_form_data->get( c_id-oci_reference ).
+      rs_settings-url = zcl_abapgit_oci_reference=>build(
+        iv_registry   = rs_settings-oci_registry
+        iv_repository = rs_settings-oci_repository
+        iv_reference  = rs_settings-oci_reference ).
+      RETURN.
+    ENDIF.
 
     IF rs_settings-offline = abap_false.
       rs_settings-url       = io_form_data->get( c_id-url ).
@@ -524,7 +562,14 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
 
-    IF ii_repo->is_offline( ) = abap_false.
+    IF ii_repo->get_repo_kind( ) = zif_abapgit_persistence=>c_repo_kind-oci.
+      rs_settings-offline = abap_false.
+      rs_settings-repo_kind = zif_abapgit_persistence=>c_repo_kind-oci.
+      rs_settings-url = ii_repo->get_remote_address( ).
+      rs_settings-oci_registry = ii_repo->ms_data-oci_registry.
+      rs_settings-oci_repository = ii_repo->ms_data-oci_repository.
+      rs_settings-oci_reference = ii_repo->ms_data-oci_reference.
+    ELSEIF ii_repo->is_offline( ) = abap_false.
       li_repo_online ?= ii_repo.
       rs_settings = li_repo_online->get_remote_settings( ).
     ELSE.
@@ -565,7 +610,9 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     CREATE OBJECT ro_form_data.
 
-    IF ms_settings_snapshot-offline = abap_true.
+    IF ms_settings_snapshot-repo_kind = zif_abapgit_persistence=>c_repo_kind-oci.
+      lv_type = c_repo_type-oci.
+    ELSEIF ms_settings_snapshot-offline = abap_true.
       lv_type = c_repo_type-offline.
     ELSE.
       lv_type = c_repo_type-online.
@@ -578,7 +625,14 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       iv_key = c_id-repo_type
       iv_val = lv_type ).
 
-    IF ms_settings_snapshot-offline = abap_false.
+    IF ms_settings_snapshot-repo_kind = zif_abapgit_persistence=>c_repo_kind-oci.
+      ro_form_data->set( iv_key = c_id-oci_registry
+                         iv_val = ms_settings_snapshot-oci_registry ).
+      ro_form_data->set( iv_key = c_id-oci_repository
+                         iv_val = ms_settings_snapshot-oci_repository ).
+      ro_form_data->set( iv_key = c_id-oci_reference
+                         iv_val = ms_settings_snapshot-oci_reference ).
+    ELSEIF ms_settings_snapshot-offline = abap_false.
       ro_form_data->set(
         iv_key = c_id-url
         iv_val = ms_settings_snapshot-url ).
@@ -672,6 +726,18 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     ls_settings_new = get_remote_settings_from_form( mo_form_data ).
 
+    IF mi_repo->get_repo_kind( ) = zif_abapgit_persistence=>c_repo_kind-oci.
+      mi_repo->set_oci_reference(
+        iv_registry   = ls_settings_new-oci_registry
+        iv_repository = ls_settings_new-oci_repository
+        iv_reference  = ls_settings_new-oci_reference ).
+      COMMIT WORK AND WAIT.
+      MESSAGE 'Settings successfully saved' TYPE 'S'.
+      mv_refresh_on_back = abap_true.
+      ms_settings_snapshot = get_remote_settings_from_repo( mi_repo ).
+      RETURN.
+    ENDIF.
+
     " Switch online / offline
     IF ls_settings_new-offline <> ms_settings_snapshot-offline.
       " Remember key, switch, retrieve new instance (todo, refactor #2244)
@@ -724,6 +790,10 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     DATA: lv_offline_new TYPE abap_bool,
           lv_url         TYPE ty_remote_settings-url,
           lv_branch      TYPE ty_remote_settings-branch.
+
+    IF mi_repo->get_repo_kind( ) = zif_abapgit_persistence=>c_repo_kind-oci.
+      zcx_abapgit_exception=>raise( 'OCI repositories cannot be converted to Git or offline repositories' ).
+    ENDIF.
 
     lv_offline_new = boolc( mo_form_data->get( c_id-offline ) = abap_false ).
     mo_form_data->set(
@@ -835,12 +905,25 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       lv_branch_check_error_id TYPE string,
       lv_pull_request          TYPE ty_remote_settings-pull_request,
       lv_commit                TYPE ty_remote_settings-commit.
+    DATA lv_oci_reference TYPE string.
 
     ro_validation_log = zcl_abapgit_html_form_utils=>create( mo_form )->validate( io_form_data ).
     lv_offline = io_form_data->get( c_id-offline ).
     lv_url = io_form_data->get( c_id-url ).
 
-    IF lv_offline = abap_false AND lv_url NP 'http*'.
+    IF mi_repo->get_repo_kind( ) = zif_abapgit_persistence=>c_repo_kind-oci.
+      TRY.
+          lv_oci_reference = zcl_abapgit_oci_reference=>build(
+            iv_registry   = io_form_data->get( c_id-oci_registry )
+            iv_repository = io_form_data->get( c_id-oci_repository )
+            iv_reference  = io_form_data->get( c_id-oci_reference ) ).
+          zcl_abapgit_oci_reference=>parse( lv_oci_reference ).
+        CATCH zcx_abapgit_exception INTO lx_error.
+          ro_validation_log->set(
+            iv_key = c_id-oci_reference
+            iv_val = lx_error->get_text( ) ).
+      ENDTRY.
+    ELSEIF lv_offline = abap_false AND lv_url NP 'http*'.
       ro_validation_log->set(
         iv_key = c_id-url
         iv_val = 'Enter the URL of the repository and save' ).
@@ -864,7 +947,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    IF lv_offline = abap_false.
+    IF lv_offline = abap_false AND mi_repo->supports_git( ) = abap_true.
       lv_head_type = io_form_data->get( c_id-head_type ).
 
       CASE lv_head_type.
@@ -948,19 +1031,34 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         ENDIF.
 
       WHEN c_event-change_head_type.
+        IF mi_repo->supports_git( ) = abap_false AND mi_repo->is_offline( ) = abap_false.
+          zcx_abapgit_exception=>raise( 'Git head types are unavailable for OCI repositories' ).
+        ENDIF.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         mo_validation_log->clear( ).
 
       WHEN c_event-choose_branch.
+        IF mi_repo->supports_git( ) = abap_false AND mi_repo->is_offline( ) = abap_false.
+          zcx_abapgit_exception=>raise( 'Branches are unavailable for OCI repositories' ).
+        ENDIF.
         choose_branch( ). " Uniformly handle state below
 
       WHEN c_event-choose_tag.
+        IF mi_repo->supports_git( ) = abap_false AND mi_repo->is_offline( ) = abap_false.
+          zcx_abapgit_exception=>raise( 'Git tags are unavailable for OCI repositories' ).
+        ENDIF.
         choose_tag( ). " Uniformly handle state below
 
       WHEN c_event-choose_pull_request.
+        IF mi_repo->supports_git( ) = abap_false AND mi_repo->is_offline( ) = abap_false.
+          zcx_abapgit_exception=>raise( 'Pull requests are unavailable for OCI repositories' ).
+        ENDIF.
         choose_pr( ). " Uniformly handle state below
 
       WHEN c_event-choose_commit.
+        IF mi_repo->supports_git( ) = abap_false AND mi_repo->is_offline( ) = abap_false.
+          zcx_abapgit_exception=>raise( 'Git commits are unavailable for OCI repositories' ).
+        ENDIF.
         lv_commit = choose_commit( ).
 
         IF lv_commit IS INITIAL.

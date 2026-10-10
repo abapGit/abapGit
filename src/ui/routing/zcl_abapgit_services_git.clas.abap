@@ -61,12 +61,29 @@ CLASS zcl_abapgit_services_git DEFINITION
         !iv_source_commit      TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception.
+    CLASS-METHODS get_git_repo
+      IMPORTING
+        iv_key         TYPE zif_abapgit_persistence=>ty_repo-key
+      RETURNING
+        VALUE(ri_repo) TYPE REF TO zif_abapgit_repo_online
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
+
+  METHOD get_git_repo.
+    DATA li_repo TYPE REF TO zif_abapgit_repo.
+
+    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    IF li_repo->supports_git( ) = abap_false.
+      zcx_abapgit_exception=>raise( 'This Git operation is unavailable for the selected repository type' ).
+    ENDIF.
+    ri_repo ?= li_repo.
+  ENDMETHOD.
 
 
   METHOD commit.
@@ -126,7 +143,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
           lv_source_branch_name TYPE string.
 
 
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    li_repo_online = get_git_repo( iv_key ).
     lv_source_branch_name = li_repo_online->get_selected_branch( ).
 
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
@@ -157,7 +174,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
           ls_source_branch TYPE zif_abapgit_git_definitions=>ty_git_branch.
 
 
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    li_repo_online = get_git_repo( iv_key ).
 
     " Choose the source branch that the new branch will be created from
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
@@ -188,7 +205,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
           li_popups      TYPE REF TO zif_abapgit_popups.
 
 
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    li_repo_online = get_git_repo( iv_key ).
 
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
     li_popups->create_branch_popup(
@@ -219,7 +236,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
           lv_msg         TYPE string.
 
 
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    li_repo_online = get_git_repo( iv_key ).
 
     zcl_abapgit_git_porcelain=>delete_branch(
       iv_url    = li_repo_online->get_url( )
@@ -236,7 +253,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
     DATA: li_repo_online TYPE REF TO zif_abapgit_repo_online,
           lv_text        TYPE string.
 
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    li_repo_online = get_git_repo( iv_key ).
 
     zcl_abapgit_git_porcelain=>delete_tag(
       iv_url = li_repo_online->get_url( )
@@ -267,7 +284,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
     DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
 
 
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    li_repo_online = get_git_repo( iv_key ).
 
     IF is_branch-name = zif_abapgit_popups=>c_new_branch_label.
       create_branch( iv_key ).
@@ -294,7 +311,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
     DATA: li_repo_online TYPE REF TO zif_abapgit_repo_online,
           lv_text        TYPE string.
 
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    li_repo_online = get_git_repo( iv_key ).
 
     " Reset commit and pull request
     li_repo_online->select_commit( '' ).

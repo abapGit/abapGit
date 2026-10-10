@@ -242,6 +242,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA lt_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA lv_index       TYPE i.
     DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
+    DATA li_repo        TYPE REF TO zif_abapgit_repo.
     DATA ls_feature     LIKE LINE OF ms_information-features.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_feature-changed_objects.
@@ -250,7 +251,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     lv_key = ii_event->query( )->get( 'KEY' ).
     lv_index = ii_event->query( )->get( 'INDEX' ).
     lv_branch = ii_event->query( )->get( 'BRANCH' ).
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+    IF li_repo->supports_git( ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Flow pull is only supported for Git repositories' ).
+    ENDIF.
+    li_repo_online ?= li_repo.
 
     READ TABLE ms_information-features INTO ls_feature INDEX lv_index.
     ASSERT sy-subrc = 0.
@@ -291,6 +296,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA ls_feature     LIKE LINE OF ms_information-features.
     DATA ls_remote      LIKE LINE OF ls_feature-changed_files.
     DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
+    DATA li_repo        TYPE REF TO zif_abapgit_repo.
     DATA lt_sha1        TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
     DATA lt_objects     TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA ls_object      LIKE LINE OF lt_objects.
@@ -302,7 +308,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     lv_key = ii_event->query( )->get( 'KEY' ).
     lv_index = ii_event->query( )->get( 'INDEX' ).
     lv_branch = ii_event->query( )->get( 'BRANCH' ).
-    li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+    IF li_repo->supports_git( ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Flow staging is only supported for Git repositories' ).
+    ENDIF.
+    li_repo_online ?= li_repo.
 
     READ TABLE ms_information-features INTO ls_feature INDEX lv_index.
     ASSERT sy-subrc = 0.
@@ -400,6 +410,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-flow'.
 
     li_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( is_feature-repo-key ).
+    IF li_repo->supports_git( ) = abap_false.
+      RETURN.
+    ENDIF.
     IF li_repo->get_local_settings( )-write_protected = abap_true.
       lv_opt = zif_abapgit_html=>c_html_opt-crossout.
     ELSE.
@@ -494,10 +507,15 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     DATA lv_branch TYPE string.
     DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
+    DATA li_repo TYPE REF TO zif_abapgit_repo.
 
     IF iv_branch IS NOT INITIAL.
       lv_branch = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && iv_branch.
-      li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+      li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+      IF li_repo->supports_git( ) = abap_false.
+        zcx_abapgit_exception=>raise( 'Flow branch selection is only supported for Git repositories' ).
+      ENDIF.
+      li_repo_online ?= li_repo.
       IF li_repo_online->get_selected_branch( ) <> lv_branch.
         li_repo_online->select_branch( lv_branch ).
       ENDIF.

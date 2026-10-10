@@ -412,6 +412,26 @@ CLASS lcl_repo IMPLEMENTATION.
   METHOD zif_abapgit_repo~is_offline.
     RETURN.
   ENDMETHOD.
+  METHOD zif_abapgit_repo~get_repo_kind.
+    rv_kind = zif_abapgit_persistence=>c_repo_kind-git.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~supports_git.
+    rv_yes = abap_true.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~supports_push.
+    rv_yes = abap_true.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~get_remote_address.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~get_selected_reference.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~get_resolved_revision.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~get_imported_revision.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~set_oci_reference.
+    RETURN.
+  ENDMETHOD.
   METHOD zif_abapgit_repo~get_package.
     rv_package = lcl_data=>c_devclass.
   ENDMETHOD.
@@ -568,6 +588,9 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
   METHOD zif_abapgit_repo_srv~new_online.
+    RETURN.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo_srv~new_oci.
     RETURN.
   ENDMETHOD.
   METHOD zif_abapgit_repo_srv~purge.

@@ -2,6 +2,13 @@ INTERFACE zif_abapgit_persistence PUBLIC.
 
   TYPES:
     ty_type  TYPE c LENGTH 12 .
+  TYPES ty_repo_kind TYPE c LENGTH 7.
+  CONSTANTS:
+    BEGIN OF c_repo_kind,
+      git     TYPE ty_repo_kind VALUE 'git',
+      offline TYPE ty_repo_kind VALUE 'offline',
+      oci     TYPE ty_repo_kind VALUE 'oci',
+    END OF c_repo_kind.
   TYPES:
     ty_value TYPE c LENGTH 12 .
   TYPES:
@@ -40,36 +47,48 @@ INTERFACE zif_abapgit_persistence PUBLIC.
     WITH NON-UNIQUE KEY item-obj_type item-obj_name.
 
   TYPES: BEGIN OF ty_repo_xml,
-           url             TYPE string,
-           branch_name     TYPE string,
-           selected_commit TYPE zif_abapgit_git_definitions=>ty_sha1,
-           package         TYPE devclass,
-           created_by      TYPE syuname,
-           created_at      TYPE timestampl,
-           deserialized_by TYPE syuname,
-           deserialized_at TYPE timestampl,
-           offline         TYPE abap_bool,
-           switched_origin TYPE string,
-           dot_abapgit     TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
-           head_branch     TYPE string,   " HEAD symref of the repo, master branch
-           local_settings  TYPE ty_local_settings,
+           url                 TYPE string,
+           branch_name         TYPE string,
+           selected_commit     TYPE zif_abapgit_git_definitions=>ty_sha1,
+           package             TYPE devclass,
+           created_by          TYPE syuname,
+           created_at          TYPE timestampl,
+           deserialized_by     TYPE syuname,
+           deserialized_at     TYPE timestampl,
+           offline             TYPE abap_bool,
+           repo_kind           TYPE ty_repo_kind,
+           oci_registry        TYPE string,
+           oci_repository      TYPE string,
+           oci_reference       TYPE string,
+           oci_resolved_digest TYPE string,
+           oci_imported_digest TYPE string,
+           switched_origin     TYPE string,
+           dot_abapgit         TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
+           head_branch         TYPE string,   " HEAD symref of the repo, master branch
+           local_settings      TYPE ty_local_settings,
          END OF ty_repo_xml.
 
   TYPES:
     BEGIN OF ty_repo_meta_mask,
-      url             TYPE abap_bool,
-      branch_name     TYPE abap_bool,
-      selected_commit TYPE abap_bool,
-      package         TYPE abap_bool,
-      created_by      TYPE abap_bool,
-      created_at      TYPE abap_bool,
-      deserialized_by TYPE abap_bool,
-      deserialized_at TYPE abap_bool,
-      offline         TYPE abap_bool,
-      switched_origin TYPE abap_bool,
-      dot_abapgit     TYPE abap_bool,
-      head_branch     TYPE abap_bool,
-      local_settings  TYPE abap_bool,
+      url                 TYPE abap_bool,
+      branch_name         TYPE abap_bool,
+      selected_commit     TYPE abap_bool,
+      package             TYPE abap_bool,
+      created_by          TYPE abap_bool,
+      created_at          TYPE abap_bool,
+      deserialized_by     TYPE abap_bool,
+      deserialized_at     TYPE abap_bool,
+      offline             TYPE abap_bool,
+      repo_kind           TYPE abap_bool,
+      oci_registry        TYPE abap_bool,
+      oci_repository      TYPE abap_bool,
+      oci_reference       TYPE abap_bool,
+      oci_resolved_digest TYPE abap_bool,
+      oci_imported_digest TYPE abap_bool,
+      switched_origin     TYPE abap_bool,
+      dot_abapgit         TYPE abap_bool,
+      head_branch         TYPE abap_bool,
+      local_settings      TYPE abap_bool,
     END OF ty_repo_meta_mask.
 
   TYPES: BEGIN OF ty_repo,
@@ -81,14 +100,20 @@ INTERFACE zif_abapgit_persistence PUBLIC.
 
   TYPES:
     BEGIN OF ty_remote_settings,
-      offline         TYPE ty_repo-offline,
-      url             TYPE ty_repo-url,
-      branch          TYPE zif_abapgit_git_definitions=>ty_git_branch-name,
-      tag             TYPE zif_abapgit_git_definitions=>ty_git_tag-name,
-      commit          TYPE zif_abapgit_git_definitions=>ty_commit-sha1,
-      pull_request    TYPE string,
-      head_type       TYPE zif_abapgit_git_definitions=>ty_head_type,
-      switched_origin TYPE ty_repo-switched_origin,
+      offline             TYPE ty_repo-offline,
+      repo_kind           TYPE ty_repo-repo_kind,
+      url                 TYPE ty_repo-url,
+      oci_registry        TYPE ty_repo-oci_registry,
+      oci_repository      TYPE ty_repo-oci_repository,
+      oci_reference       TYPE ty_repo-oci_reference,
+      oci_resolved_digest TYPE ty_repo-oci_resolved_digest,
+      oci_imported_digest TYPE ty_repo-oci_imported_digest,
+      branch              TYPE zif_abapgit_git_definitions=>ty_git_branch-name,
+      tag                 TYPE zif_abapgit_git_definitions=>ty_git_tag-name,
+      commit              TYPE zif_abapgit_git_definitions=>ty_commit-sha1,
+      pull_request        TYPE string,
+      head_type           TYPE zif_abapgit_git_definitions=>ty_head_type,
+      switched_origin     TYPE ty_repo-switched_origin,
     END OF ty_remote_settings.
 
 ENDINTERFACE.

@@ -296,7 +296,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ro_advanced_dropdown->add( iv_txt = 'Activate Objects'
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_activate_objects }?key={ mv_key }| ).
 
-    IF mi_repo->is_offline( ) = abap_false. " Online ?
+    IF mi_repo->supports_git( ) = abap_true.
       ro_advanced_dropdown->add(
         iv_txt = 'Transport to Branch'
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_transport_to_branch }?key={ mv_key }|
@@ -311,7 +311,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     IF mi_repo->is_offline( ) = abap_true.
       ro_advanced_dropdown->add( iv_txt = 'Export by Transport'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-zip_export_transport }?key={ mv_key }| ).
-    ELSE.
+    ELSEIF mi_repo->supports_git( ) = abap_true.
       ro_advanced_dropdown->add( iv_txt = 'Stage by Transport'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-go_stage_transport }?key={ mv_key }| ).
     ENDIF.
@@ -375,7 +375,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CREATE OBJECT ro_branch_dropdown.
 
-    IF mi_repo->is_offline( ) = abap_true.
+    IF mi_repo->supports_git( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -443,7 +443,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     ro_toolbar = zcl_abapgit_html_toolbar=>create( 'actionbar-repo-view' ).
 
-    IF mi_repo->is_offline( ) = abap_false.
+    IF mi_repo->supports_git( ) = abap_true.
       " online repo
 
       ro_toolbar->add( iv_txt = 'Pull'
@@ -475,7 +475,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                        io_sub = build_tag_dropdown( )
                        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
-    ELSE.
+    ELSEIF mi_repo->is_offline( ) = abap_true.
       " offline repo
 
       IF mi_repo->has_remote_source( ) = abap_true AND mo_repo_aggregated_state->is_unchanged( ) = abap_false.
@@ -502,6 +502,23 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         ro_toolbar->add( iv_txt = 'Log'
                          iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      ENDIF.
+
+    ELSE.
+      " OCI repository
+      IF mi_repo->has_remote_source( ) = abap_true AND mo_repo_aggregated_state->is_unchanged( ) = abap_false.
+        ro_toolbar->add( iv_txt = 'Pull'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?key={ mv_key }|
+                         iv_opt = get_crossout( iv_protected = abap_true
+                                                iv_strong    = abap_true ) ).
+        ro_toolbar->add( iv_txt = 'Diff'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mv_key }|
+                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      ENDIF.
+      li_log = mi_repo->get_log( ).
+      IF li_log IS BOUND AND li_log->count( ) > 0.
+        ro_toolbar->add( iv_txt = 'Log'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?key={ mv_key }| ).
       ENDIF.
 
     ENDIF.
@@ -554,7 +571,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CREATE OBJECT ro_tag_dropdown.
 
-    IF mi_repo->is_offline( ) = abap_true.
+    IF mi_repo->supports_git( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -600,7 +617,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     DATA li_repo_online TYPE REF TO zif_abapgit_repo_online.
 
-    IF mi_repo->is_offline( ) = abap_false.
+    IF mi_repo->supports_git( ) = abap_true.
       li_repo_online ?= mi_repo.
       li_repo_online->check_for_valid_branch( ).
     ENDIF.
@@ -614,9 +631,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     mv_connection_error = abap_true.
 
-    IF mi_repo->is_offline( ) = abap_false.
+    IF mi_repo->supports_git( ) = abap_true.
       li_repo_online ?= mi_repo.
       zcl_abapgit_http=>check_connection( li_repo_online->get_url( ) ).
+    ELSEIF mi_repo->is_offline( ) = abap_false.
+      mi_repo->get_files_remote( ).
     ENDIF.
 
     mv_connection_error = abap_false.
@@ -1196,15 +1215,17 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
     ls_hotkey_action-ui_component = 'Repo'.
 
-    ls_hotkey_action-description   = |Stage|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_stage.
-    ls_hotkey_action-hotkey = |s|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    IF mi_repo->supports_git( ) = abap_true.
+      ls_hotkey_action-description   = |Stage|.
+      ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_stage.
+      ls_hotkey_action-hotkey = |s|.
+      INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description   = |Switch Branch|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-git_branch_switch.
-    ls_hotkey_action-hotkey = |b|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+      ls_hotkey_action-description   = |Switch Branch|.
+      ls_hotkey_action-action = zif_abapgit_definitions=>c_action-git_branch_switch.
+      ls_hotkey_action-hotkey = |b|.
+      INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    ENDIF.
 
     ls_hotkey_action-description   = |Repository List|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-abapgit_home.
@@ -1221,10 +1242,12 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_hotkey_action-hotkey = |p|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description = |Patch|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_patch.
-    ls_hotkey_action-hotkey = |a|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    IF mi_repo->supports_git( ) = abap_true.
+      ls_hotkey_action-description = |Patch|.
+      ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_patch.
+      ls_hotkey_action-hotkey = |a|.
+      INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    ENDIF.
 
     ls_hotkey_action-description   = |Diff|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_repo_diff.

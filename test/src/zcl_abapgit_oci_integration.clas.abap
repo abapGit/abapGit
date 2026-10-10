@@ -1,0 +1,5 @@
+CLASS zcl_abapgit_oci_integration DEFINITION PUBLIC FINAL CREATE PUBLIC.
+ENDCLASS.
+
+CLASS zcl_abapgit_oci_integration IMPLEMENTATION.
+ENDCLASS.

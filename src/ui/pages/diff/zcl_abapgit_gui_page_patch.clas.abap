@@ -351,8 +351,8 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
       is_object = is_object
       it_files  = it_files ).
 
-    IF mi_repo->is_offline( ) = abap_true.
-      zcx_abapgit_exception=>raise( |Patching is only possible for online repositories.| ).
+    IF mi_repo->supports_git( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Patching is only supported for Git repositories.| ).
     ENDIF.
 
 * access "me" after the super constructor has been called

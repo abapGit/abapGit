@@ -5,3 +5,15 @@ services:
     ports:
       - "3050:3000"
 #      - "2222:2222"
+  oci-registry:
+    image: registry:2.8.3
+    restart: always
+    ports:
+      - "5443:5443"
+    environment:
+      REGISTRY_HTTP_ADDR: "0.0.0.0:5443"
+      REGISTRY_HTTP_TLS_CERTIFICATE: "/certs/registry.crt"
+      REGISTRY_HTTP_TLS_KEY: "/certs/registry.key"
+    volumes:
+      - "../oci/.work/registry.crt:/certs/registry.crt:ro"
+      - "../oci/.work/registry.key:/certs/registry.key:ro"

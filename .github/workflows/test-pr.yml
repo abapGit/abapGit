@@ -44,6 +44,9 @@ jobs:
     - uses: actions/checkout@v6
     - uses: actions/setup-node@v6
     - run: npm install
+    - uses: oras-project/setup-oras@v1
+      with:
+        version: 1.2.3
     - name: start gitea
       working-directory: test/gitea/
       run: npm install && npm run gitea

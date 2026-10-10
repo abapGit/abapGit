@@ -932,6 +932,7 @@ RepoOverViewHelper.prototype.updateActionLinks = function(selectedRow) {
   // now we have a repo selected, determine which action buttons are relevant
   var selectedRepoKey       = selectedRow.dataset.key;
   var selectedRepoIsOffline = selectedRow.dataset.offline === "X";
+  var selectedRepoSupportsGit = selectedRow.dataset.git === "X";
   var reKey                 = /key=(#|\d+)$/;
   var newKey                = "key=" + selectedRepoKey;
 
@@ -966,6 +967,13 @@ RepoOverViewHelper.prototype.updateActionLinks = function(selectedRow) {
     }
     else if (link.classList.contains("action_online_repo")) {
       if (!selectedRepoIsOffline) {
+        link.parentElement.classList.add("enabled");
+      } else {
+        link.parentElement.classList.remove("enabled");
+      }
+    }
+    else if (link.classList.contains("action_git_repo")) {
+      if (selectedRepoSupportsGit) {
         link.parentElement.classList.add("enabled");
       } else {
         link.parentElement.classList.remove("enabled");
