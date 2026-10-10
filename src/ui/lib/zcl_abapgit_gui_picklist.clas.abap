@@ -132,9 +132,10 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
     ASSIGN mr_list->* TO <lt_list>.
 
     ro_form->radio(
-      iv_name     = c_radio_name
-      iv_label    = mv_title
-      iv_condense = boolc( lines( <lt_list> ) <= 15 ) ).
+      iv_name          = c_radio_name
+      iv_label         = mv_title
+      iv_default_value = '1'
+      iv_condense      = abap_true ).
 
     LOOP AT <lt_list> ASSIGNING <ls_row>.
       lv_index = sy-tabix.
@@ -263,9 +264,13 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
 
     register_handlers( ).
 
-    ri_html = zcl_abapgit_html=>create( mo_form->render(
+    ri_html = zcl_abapgit_html=>create( '<div class="picklist">' ).
+    ri_html->add( mo_form->render(
       io_values         = mo_form_data
       io_validation_log = mo_validation_log ) ).
+    ri_html->add( '</div>' ).
+
+    register_deferred_script( zcl_abapgit_html=>create( 'enablePicklistNavigation();' ) ).
 
   ENDMETHOD.
 ENDCLASS.

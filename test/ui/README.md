@@ -48,6 +48,7 @@ Avoid expanding the fixtures into a general-purpose browser emulator.
 | [`source-viewer.test.cjs`](source-viewer.test.cjs) | Asset loading, response ordering, caching, failures/retries, line numbers, and IE fallbacks |
 | [`keyboard-guards.test.cjs`](keyboard-guards.test.cjs) | Modified shortcuts, typing in editable controls, and deliberate hint activation/yanking |
 | [`keyboard.test.cjs`](keyboard.test.cjs) | Order of the page-wide key handlers, isolation of failing handlers, the shared typing guard, arrow keys, and the stage filter key |
+| [`picklist.test.cjs`](picklist.test.cjs) | Arrow navigation, mouse and keyboard selection, explicit confirmation, boundaries, disabled entries, and keyboard guards |
 | [`modal.test.cjs`](modal.test.cjs) | Tab and Shift+Tab kept inside an in-page popup, from the page behind it and at both ends |
 | [`link-hints.test.cjs`](link-hints.test.cjs) | Partial hints, cancellation/reopening, copy-mode reset, disabled controls, and checkbox activation |
 | [`key-navigation.test.cjs`](key-navigation.test.cjs) | Dropdown navigation and boundaries, link activation, modified keys, and editing controls |
