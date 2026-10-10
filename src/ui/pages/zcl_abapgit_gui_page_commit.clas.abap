@@ -8,6 +8,7 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
 
     INTERFACES zif_abapgit_gui_event_handler.
     INTERFACES zif_abapgit_gui_renderable.
+    INTERFACES zif_abapgit_gui_hotkeys.
 
     CLASS-METHODS create
       IMPORTING
@@ -598,6 +599,21 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
       WHEN OTHERS.
         ASSERT 1 = 1.
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
+
+    DATA ls_hotkey LIKE LINE OF rt_hotkey_actions.
+
+    IF mo_patch IS BOUND.
+      ls_hotkey-ui_component = 'Commit'.
+      ls_hotkey-description = 'Commit and Continue Patching'.
+      ls_hotkey-action = c_event-commit_patch.
+      ls_hotkey-hotkey = '^Enter'.
+      INSERT ls_hotkey INTO TABLE rt_hotkey_actions.
+    ENDIF.
 
   ENDMETHOD.
 

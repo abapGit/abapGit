@@ -2239,7 +2239,7 @@ function Hotkeys(oKeyMap) {
 
     // add a tooltip/title with the hotkey, currently only sapevents are supported
     findSapEventElements(action).forEach(function(elAnchor) {
-      elAnchor.title = elAnchor.title + " [" + sKey + "]";
+      elAnchor.title = elAnchor.title + " [" + Hotkeys.formatKeyForDisplay(sKey) + "]";
     });
 
     // We replace the actions with callback functions to unify
@@ -2294,17 +2294,23 @@ Hotkeys.prototype.showHotkeys = function() {
 };
 
 Hotkeys.prototype.onkeydown = function(oEvent) {
-  if (oEvent.defaultPrevented || oEvent.ctrlKey || oEvent.altKey || oEvent.metaKey) {
+  if (oEvent.defaultPrevented || oEvent.altKey || oEvent.metaKey) {
     return;
   }
 
-  if (gKeyboard.isTyping()) {
+  var sKey = oEvent.key || String.fromCharCode(oEvent.keyCode);
+  // Ctrl+Enter submits a form even while editing its comment or body. Handle
+  // it on keydown only: some controls also emit keypress, causing two submits.
+  if (oEvent.ctrlKey) {
+    if (sKey !== "Enter" || oEvent.shiftKey || oEvent.type !== "keydown") return;
+    sKey = "^" + sKey;
+  }
+
+  if (gKeyboard.isTyping() && sKey !== "^Enter") {
     return;
   }
 
-  var
-    sKey     = oEvent.key || String.fromCharCode(oEvent.keyCode),
-    fnHotkey = this.oKeyMap[sKey];
+  var fnHotkey = this.oKeyMap[sKey];
 
   if (fnHotkey) {
     fnHotkey.call(this, oEvent);
@@ -2342,6 +2348,9 @@ function setKeyBindings(oKeyMap) {
   var oHotkeys = new Hotkeys(oKeyMap);
 
   gKeyboard.on("keypress", gKeyboard.order.hotkeys, oHotkeys.onkeydown.bind(oHotkeys));
+  gKeyboard.on("keydown", gKeyboard.order.hotkeys, function(event) {
+    if (event.ctrlKey) oHotkeys.onkeydown(event);
+  });
   setTimeout(function() {
     var div                     = document.getElementById("hotkeys-hint");
     if  (div) div.style.opacity = 0.2;
