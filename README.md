@@ -35,7 +35,7 @@ Latest build: [zabapgit_standalone.prog.abap](https://raw.githubusercontent.com/
 
 *Notes: Some people reported that browsers have issues displaying the file with more than 100k lines. The easiest solution is to "Save as" the link above and then open it with any editor/viewer (notepad included) and copy from there. If your SAP GUI editor freezes when pasting the code, use Utilities > More Utilities > Upload/Download > Upload in the editor instead.*
 
-It is recommended to use SAP GUI for Windows, since there are known issues related to running abapGit and SAP GUI for Java. The focus of abapGit is on supporting [ADT](https://github.com/abapGit/ADT_Frontend) instead of supporting SAP GUI for Java.
+![abapGit repository overview](img/abapgit_1_99_0.png)
 
 ## Design Goals
 
@@ -48,7 +48,7 @@ It is recommended to use SAP GUI for Windows, since there are known issues relat
 
 https://docs.abapgit.org
 
-[Join Slack channel](https://communityinviter.com/apps/abapgit/abap)
+[Join Slack channel](https://inviter.co/abapgit)
 
 ## Contributing
 
@@ -61,8 +61,6 @@ See [dotabap.org](https://dotabap.org) or [this page](https://docs.abapgit.org/o
 ## FAQ
 
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/abapGit/abapGit/issues).
-
-![abapgit](img/abapgit_1_99_0.png)
 
 ## Credits and References
 
