@@ -1991,7 +1991,10 @@ function enablePicklistNavigation() {
       if (!focusedRadio || focusedRadio.disabled) return;
       focusedRadio.checked = true;
       event.preventDefault();
-      if (!event.repeat) picklist.querySelector('input[type="submit"].main').click();
+      // WebGUI renders Choose as a link that submits the form payload;
+      // desktop controls render it as a submit input. Click the rendered
+      // command so both use the same routing as a mouse click.
+      if (!event.repeat) picklist.querySelector(".main").click();
     } else if (event.key === " " && active && active.nodeName === "LABEL") {
       event.preventDefault();
       active.click();

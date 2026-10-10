@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const loadUi = require('./load-ui.cjs');
 
-function picker(disabled = []) {
+function picker(disabled = [], webgui = false) {
   const document = { activeElement: { nodeName: 'BODY' }, documentElement: { clientHeight: 100 }, addEventListener() {},
     querySelector() { return picklist; },
     getElementById(id) { return radios.find(radio => radio.id === id) || null; } };
@@ -24,7 +24,12 @@ function picker(disabled = []) {
   });
   const picklist = { querySelectorAll() { return radios; },
     contains(element) { return radios.some(radio => radio.nextElementSibling === element); },
-    querySelector() { return { click() { clicks++; } }; } };
+    querySelector(selector) {
+      if (selector === '.main' || !webgui && selector === 'input[type="submit"].main') {
+        return { nodeName: webgui ? 'A' : 'INPUT', click() { clicks++; } };
+      }
+      return null;
+    } };
   const context = loadUi({ document });
   context.CommandPalette.isVisible = () => false;
   context.enablePicklistNavigation();
@@ -119,4 +124,16 @@ test('pages without a picklist do not register navigation', () => {
   const count = (context.gKeyboard.handlers.keydown || []).length;
   context.enablePicklistNavigation();
   assert.equal((context.gKeyboard.handlers.keydown || []).length, count);
+});
+
+// Unlike desktop controls, WebGUI renders Choose as a form-submitting link.
+test('Enter activates the WebGUI Choose link after arrow navigation', () => {
+  const p = picker([], true);
+  p.key('ArrowDown');
+  p.key('ArrowDown');
+  assert.equal(p.key('Enter'), true);
+  assert.equal(p.selected(), 1);
+  assert.equal(p.clicks(), 1);
+  p.key('Enter', { repeat: true });
+  assert.equal(p.clicks(), 1);
 });
