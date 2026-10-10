@@ -263,9 +263,13 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
 
     register_handlers( ).
 
-    ri_html = zcl_abapgit_html=>create( mo_form->render(
+    ri_html = zcl_abapgit_html=>create( '<div class="picklist">' ).
+    ri_html->add( mo_form->render(
       io_values         = mo_form_data
       io_validation_log = mo_validation_log ) ).
+    ri_html->add( '</div>' ).
+
+    register_deferred_script( zcl_abapgit_html=>create( 'enablePicklistNavigation();' ) ).
 
   ENDMETHOD.
 ENDCLASS.

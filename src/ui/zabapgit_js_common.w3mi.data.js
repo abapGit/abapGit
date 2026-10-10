@@ -1943,6 +1943,62 @@ function enableArrowListNavigation() {
   gKeyboard.on("keydown", gKeyboard.order.menus, new KeyNavigation().getHandler());
 }
 
+// Picklists hide their radio buttons behind labels, so native radio keyboard
+// navigation cannot reach them. Move the checked state without clicking: a
+// selection must never submit the form until the user chooses it.
+// eslint-disable-next-line no-unused-vars
+function enablePicklistNavigation() {
+  var picklist = document.querySelector(".picklist");
+  if (!picklist) return;
+  var radios = picklist.querySelectorAll('input[type="radio"]');
+  if (!radios.length) return;
+
+  for (var i = 0; i < radios.length; i++) {
+    radios[i].nextElementSibling.setAttribute("tabindex", "0");
+  }
+
+  gKeyboard.on("keydown", gKeyboard.order.page, function(event) {
+    if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey
+      || CommandPalette.isVisible()) return;
+    var active = document.activeElement;
+    var modal = document.getElementById("modal");
+    if (modal && !modal.contains(picklist)) return;
+    // In-page picklists may open while the focus is still on the page behind
+    // them. Editing fields and other controls keep their own keys.
+    if (gKeyboard.isTakenByField(active, true) || active && active.nodeName === "BUTTON") return;
+    if (active && active.nodeName !== "BODY" && !picklist.contains(active) && !modal) return;
+
+    var offset = gKeyboard.getVerticalArrow(event);
+    if (offset) {
+      var enabled = [], selected = -1;
+      for (var j = 0; j < radios.length; j++) {
+        if (radios[j].disabled) continue;
+        if (radios[j].checked) selected = enabled.length;
+        enabled.push(radios[j]);
+      }
+      if (!enabled.length) return;
+      var index = selected < 0 ? (offset > 0 ? 0 : enabled.length - 1)
+        : Math.max(0, Math.min(enabled.length - 1, selected + offset));
+      var radio = enabled[index];
+      radio.checked = true;
+      var label = radio.nextElementSibling;
+      label.focus();
+      scrollRowIntoView(label);
+      event.preventDefault();
+    } else if (event.key === "Enter" && active && active.nodeName === "LABEL") {
+      // Tab can focus a label without selecting its radio first.
+      var focusedRadio = document.getElementById(active.getAttribute("for"));
+      if (!focusedRadio || focusedRadio.disabled) return;
+      focusedRadio.checked = true;
+      event.preventDefault();
+      if (!event.repeat) picklist.querySelector('input[type="submit"].main').click();
+    } else if (event.key === " " && active && active.nodeName === "LABEL") {
+      event.preventDefault();
+      active.click();
+    }
+  });
+}
+
 /**********************************************************
  * Link Hints (Vimium-like)
  **********************************************************/
