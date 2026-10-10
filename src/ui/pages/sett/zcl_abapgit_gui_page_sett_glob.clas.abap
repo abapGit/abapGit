@@ -103,7 +103,9 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Global Settings'
-      io_page_menu       = zcl_abapgit_gui_menus=>settings( zif_abapgit_definitions=>c_action-go_settings )
+      io_page_menu       = zcl_abapgit_gui_menus=>settings(
+        iv_act       = zif_abapgit_definitions=>c_action-go_settings
+        iv_with_back = abap_true )
       ii_child_component = lo_component ).
 
   ENDMETHOD.
@@ -224,7 +226,7 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
       iv_val = boolc( mo_settings->get_proxy_authentication( ) = abap_true ) ) ##TYPE.
 
     read_proxy_bypass(
-      io_settings = mo_settings
+      io_settings  = mo_settings
       io_form_data = ro_form_data ).
 
     " Commit Message
