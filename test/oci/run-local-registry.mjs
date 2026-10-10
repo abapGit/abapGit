@@ -116,16 +116,9 @@ function createRegistry() {
 
 function createTargetedTestEntry() {
   const sourcePath = path.join(outputRoot, "index.mjs");
-  if (!fs.existsSync(sourcePath) || !fs.existsSync(path.join(outputRoot, "cl_http_client.clas.mjs"))) {
+  if (!fs.existsSync(sourcePath)) {
     throw new Error("Transpiled output is missing; run npm run build before the OCI integration test");
   }
-
-  const patcher = spawnSync(process.execPath, [path.join(projectRoot, "test", "patch_transpiler_http_client.mjs")], {
-    cwd: projectRoot,
-    stdio: "inherit",
-  });
-  if (patcher.error) throw patcher.error;
-  if (patcher.status !== 0) throw new Error(`transpiler HTTP client patch exited with status ${patcher.status}`);
 
   const source = fs.readFileSync(sourcePath, "utf8");
   const loop = "  for (const st of getData()) {";
