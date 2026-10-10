@@ -401,7 +401,7 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = ls_actual_dd01v
       exp = ls_expected_dd01v ).
-    cl_abap_unit_assert=>assert_initial( act = lt_actual_dd07v ).
+    cl_abap_unit_assert=>assert_initial( lt_actual_dd07v ).
   ENDMETHOD.
 
   METHOD deserialize_non_defaults.

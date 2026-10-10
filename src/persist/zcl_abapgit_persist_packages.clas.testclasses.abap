@@ -31,7 +31,7 @@ CLASS ltcl_packages IMPLEMENTATION.
           iv_component  = c_component
           iv_comp_posid = c_comp_posid ).
       CATCH zcx_abapgit_exception INTO lx_error.
-        cl_abap_unit_assert=>fail( msg = lx_error->get_text( ) ).
+        cl_abap_unit_assert=>fail( lx_error->get_text( ) ).
     ENDTRY.
 
     TRY.
@@ -46,7 +46,7 @@ CLASS ltcl_packages IMPLEMENTATION.
           exp = c_comp_posid ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
-        cl_abap_unit_assert=>fail( msg = lx_error->get_text( ) ).
+        cl_abap_unit_assert=>fail( lx_error->get_text( ) ).
     ENDTRY.
 
   ENDMETHOD.

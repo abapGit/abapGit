@@ -181,14 +181,14 @@ CLASS ltcl_build IMPLEMENTATION.
       WITH KEY object = 'NSPC'.
 
     IF sy-subrc <> 0.
-      cl_abap_unit_assert=>fail( msg = |Read table lt_filter with table key obj_type = 'NSPC' failed'| ).
+      cl_abap_unit_assert=>fail( |Read table lt_filter with table key obj_type = 'NSPC' failed'| ).
     ENDIF.
 
     READ TABLE lt_filter TRANSPORTING NO FIELDS
       WITH KEY object = 'DEVC'.
 
     IF sy-subrc <> 0.
-      cl_abap_unit_assert=>fail( msg = |Read table lt_filter with table key obj_type = 'DEVC' failed'| ).
+      cl_abap_unit_assert=>fail( |Read table lt_filter with table key obj_type = 'DEVC' failed'| ).
     ENDIF.
 
     TRY.
