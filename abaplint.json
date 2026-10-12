@@ -75,7 +75,11 @@
     "delete_index_in_loop": false,
     "else_after_all_returns": false,
     "final_newline": true,
-    "generic_regex": true,
+    "generic_regex": {
+      "regexes": [
+        "\\bcl_abap_unit_assert\\s*=>\\s*assert_(?:true|false)\\b"
+      ]
+    },
     "inline_packed_computation": true,
     "prefer_abap_bool": true,
     "prefer_abap_bool_values": true,
