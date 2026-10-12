@@ -37,6 +37,11 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-METHODS get_function_module
       RETURNING
         VALUE(ri_function_module) TYPE REF TO zif_abapgit_function_module.
+    CLASS-METHODS get_repo_pull
+      IMPORTING
+        !ii_repo            TYPE REF TO zif_abapgit_repo
+      RETURNING
+        VALUE(ri_repo_pull) TYPE REF TO zif_abapgit_repo_pull.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -58,6 +63,7 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-DATA gi_sap_namespace TYPE REF TO zif_abapgit_sap_namespace .
     CLASS-DATA gi_sap_report TYPE REF TO zif_abapgit_sap_report.
     CLASS-DATA gi_function_module TYPE REF TO zif_abapgit_function_module.
+    CLASS-DATA gi_repo_pull TYPE REF TO zif_abapgit_repo_pull.
     CLASS-DATA gi_default_transport TYPE REF TO zif_abapgit_default_transport .
 ENDCLASS.
 
@@ -121,6 +127,20 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
       CREATE OBJECT gi_lxe_texts TYPE zcl_abapgit_lxe_texts.
     ENDIF.
     ri_lxe_texts = gi_lxe_texts.
+
+  ENDMETHOD.
+
+
+  METHOD get_repo_pull.
+
+    " bound to one repository, so a new instance unless a test double is injected
+    IF gi_repo_pull IS BOUND.
+      ri_repo_pull = gi_repo_pull.
+    ELSE.
+      CREATE OBJECT ri_repo_pull TYPE zcl_abapgit_repo_pull
+        EXPORTING
+          ii_repo = ii_repo.
+    ENDIF.
 
   ENDMETHOD.
 
