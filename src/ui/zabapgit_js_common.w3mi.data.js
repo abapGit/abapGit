@@ -2299,17 +2299,17 @@ Hotkeys.prototype.onkeydown = function(oEvent) {
   }
 
   var sKey = oEvent.key || String.fromCharCode(oEvent.keyCode);
-  // Ctrl+Enter submits a form even while editing its comment or body. Handle
+  // Ctrl+Shift+Enter submits a patch even while editing its comment or body. Handle
   // it on keydown only: some controls also emit keypress, causing two submits.
   if (oEvent.ctrlKey) {
-    if (sKey !== "Enter" || oEvent.shiftKey || oEvent.type !== "keydown" || oEvent.repeat) return;
+    if (sKey !== "Enter" || !oEvent.shiftKey || oEvent.type !== "keydown" || oEvent.repeat) return;
     if (CommandPalette.isVisible()) return;
-    sKey = "^" + sKey;
+    sKey = "^Shift+" + sKey;
   }
 
   if (gKeyboard.isTyping()) {
     var activeForm = document.activeElement.form;
-    if (sKey !== "^Enter" || !activeForm || activeForm.id !== "commit-form") return;
+    if (sKey !== "^Shift+Enter" || !activeForm || activeForm.id !== "commit-form") return;
   }
 
   var fnHotkey = this.oKeyMap[sKey];

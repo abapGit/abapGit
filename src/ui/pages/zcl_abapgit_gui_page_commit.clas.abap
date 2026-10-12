@@ -611,7 +611,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
       ls_hotkey-ui_component = 'Commit'.
       ls_hotkey-description = 'Commit and Continue Patching'.
       ls_hotkey-action = c_event-commit_patch.
-      ls_hotkey-hotkey = '^Enter'.
+      ls_hotkey-hotkey = '^Shift+Enter'.
       INSERT ls_hotkey INTO TABLE rt_hotkey_actions.
     ENDIF.
 
