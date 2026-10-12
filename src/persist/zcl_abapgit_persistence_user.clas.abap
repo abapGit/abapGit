@@ -482,4 +482,3 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
     rv_folders = ms_user-show_folders.
   ENDMETHOD.
 ENDCLASS.
-
