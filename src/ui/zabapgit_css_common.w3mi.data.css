@@ -971,7 +971,8 @@ ul.hotkeys span.key-id {
   border: 1px solid;
   border-radius: 3px;
   padding: 1px 7px;
-  width: 5em;
+  min-width: 9em;
+  white-space: nowrap;
   display: inline-block;
   text-align: center;
   margin-top: 0.2em;
