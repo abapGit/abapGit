@@ -39,6 +39,9 @@ CLASS zcl_abapgit_injector DEFINITION
     CLASS-METHODS set_default_transport
       IMPORTING
         ii_default_transport TYPE REF TO zif_abapgit_default_transport.
+    CLASS-METHODS set_repo_pull
+      IMPORTING
+        ii_repo_pull TYPE REF TO zif_abapgit_repo_pull.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -78,6 +81,11 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
 
   METHOD set_lxe_texts.
     zcl_abapgit_factory=>gi_lxe_texts = ii_lxe_texts.
+  ENDMETHOD.
+
+
+  METHOD set_repo_pull.
+    zcl_abapgit_factory=>gi_repo_pull = ii_repo_pull.
   ENDMETHOD.
 
 
