@@ -1,175 +1,152 @@
-# Implementation plan: OCI registry remotes
+# Splitting `hvam/oci2609` into mergeable PRs
 
-Implement [abapGit issue #6618](https://github.com/abapGit/abapGit/issues/6618): install and update an abapGit repository from an OCI registry, with pull operations only. This plan is based on the issue body, all three comments, and the local checkout at `cb95b0b8`. Proposed names and artifact conventions below are design decisions, not existing abapGit APIs or requirements stated in the issue.
+The branch adds OCI registry repositories (issue #6618) in one change: 91 files, about +5,900/−230 lines, of which roughly 3,000 are tests and fixtures. This plan cuts it into PRs that each pass CI on their own, can be reviewed in one sitting, and keep `main` releasable.
 
-## Scope and expected behavior
+The previous implementation plan (design, artifact profile, open validation items) is in commit `8b744379` if it is needed again.
 
-A user selects **OCI Registry** when creating a repository, enters a registry, repository path, and explicit tag or digest, and binds it to an SAP package. abapGit retrieves a packaged snapshot, shows the usual status and diff, and runs the existing pull checks and deserialization. Refreshing a tag can discover a newer snapshot; a digest reference remains pinned.
+## Principles
 
-The remote is read-only. This does not make the SAP package write-protected: pulling must still be able to create, update, and delete local objects through the normal decision dialogs. Registry uploads, registry deletion, staging, commits, branches, Git tags, pull requests, and Git history are unavailable for OCI repositories.
+- **Dark first, visible last.** Utilities, the refactor and the backend merge without any user-visible OCI option. The UI that creates OCI repositories comes last, after SAP-system validation.
+- **Separate refactors from features.** The `is_offline` → `supports_git` rewrite is mechanical and behaviour-neutral while only Git and offline kinds exist. Reviewing it next to new OCI branches hides that.
+- **Branch every slice from `main`**, not from this branch. Cherry-pick or re-apply file hunks. The branch contains a merge commit from `main`, so a straight rebase is messier than rebuilding the slices.
+- Leave out `PLAN.md` and the `.tmp` line in `.gitignore` unless something still needs it.
 
-Initial supported scope:
+## Proposed PR sequence
 
-- HTTPS registries, including a hostname with a port and nested repository paths.
-- Explicit tags and `sha256:` manifest digests; no implicit `latest`.
-- Anonymous access, HTTP Basic authentication where supported, and Bearer challenge/token authentication for private registries.
-- One OCI image manifest containing exactly one uncompressed TAR layer with an abapGit repository snapshot.
-- A documented producer recipe using an external TAR tool and ORAS. Production and upload of artifacts happen outside abapGit.
-- Existing package authorization, language checks, requirements, APACK checks, overwrite/deletion decisions, transports, activation, and checksums.
+| # | PR | Main files | Approx. size | Depends on |
+|---|----|------------|--------------|------------|
+| 1 | SHA-256 helper | `zcl_abapgit_hash` + tests | ~60 | – |
+| 2 | HTTP agent: optional redirect following | `zif/zcl_abapgit_http_agent` | ~20 | – |
+| 3 | USTAR reader | `zcl_abapgit_tar` + tests + xml | ~950 (half tests) | – |
+| 4 | Repository kind and capability accessors | `zif_abapgit_repo`, `zcl_abapgit_repo`, test doubles | ~150 | – |
+| 5 | Replace "online ⇒ Git" assumptions | router, services, flow, background, repo view, chunk lib, overview, JS + UI test | ~400 | 4 |
+| 6 | Extract the Git fetch connector | `zif/zcl_abapgit_repo_git_connector`, `zcl_abapgit_repo_online` + test | ~150 | – |
+| 7 | OCI reference parser | `zcl_abapgit_oci_reference` + tests | ~370 | – |
+| 8 | OCI registry client | `zif_abapgit_repo_connector`, `zcl_abapgit_oci_client` + tests, `abap_transpile.json` | ~1,700 (≈1,050 tests) | 1, 2, 3, 7 |
+| 9 | Persist and construct OCI repositories (no UI) | persistence types/class + tests, `zcl_abapgit_repo` set/imported digest, `zcl_abapgit_repo_oci(_connector)` + tests, `zcl_abapgit_repo_srv` | ~900 | 4, 8 |
+| 10 | OCI integration harness and fixtures | `test/oci/**`, `test/gitea/*`, `test/src/zcl_abapgit_oci_integration`, CI workflow, `package.json`, `test/README.md` | ~600 + binaries | 8 |
+| 11 | OCI UI: view, pull, self-update guard | OCI branches in repo view/chunk lib/overview, `check_self_update`/`check_for_restart` | ~200 | 5, 9 |
+| 12 | OCI UI: create and remote settings + docs | `zcl_abapgit_gui_page_addonline`, `zcl_abapgit_gui_page_sett_remo` + tests, `services_repo=>new_oci`, `docs/oci-registry-repositories.md` | ~450 | 11 |
 
-Defer gzip/zstd compression, arbitrary loose-file ORAS artifacts, multiple filesystem layers and whiteouts, image indexes, legacy ORAS artifact manifests, tag browsing, registry catalogs, signatures/referrers, OCI APACK dependency resolution, and scheduled OCI pulls. Existing Git and offline ZIP behavior must continue to work.
+PRs 1, 2, 3, 4, 6 and 7 have no dependencies on each other and can be opened in parallel.
 
-## Findings in the current code
+```text
+1 ─┐
+2 ─┼─► 8 ─┬─► 9 ─► 11 ─► 12
+3 ─┤      └─► 10
+7 ─┘
+4 ─┬─► 5 ──────────► 11
+   └─► 9
+6   (independent)
+```
 
-| Area | Current implementation | Consequence |
-| --- | --- | --- |
-| Repository model | `src/repo/zif_abapgit_repo.intf.abap` provides generic files, checks, and deserialization. `zif_abapgit_repo_online` adds Git branches, commits, and push. | OCI should use the generic repository contract without implementing fake Git operations. |
-| Remote fetch | `src/repo/zcl_abapgit_repo_online.clas.abap`, `fetch_remote`, calls Git porcelain and caches files, Git objects, and a commit. The class is `FINAL`. | Separate fetching from the repository container; do not inherit from the Git repository class. |
-| Repository construction | `src/repo/zcl_abapgit_repo_srv.clas.abap`, `instantiate_and_add`, selects a class using only `offline`. `new_online` discovers or creates a Git branch. | Add explicit OCI construction that never enters Git branch discovery or creation. |
-| Persistence | `src/persist/zif_abapgit_persistence.intf.abap` stores `offline`, URL, and Git-specific fields. XML serialization and metadata masks live in `zcl_abapgit_persistence_repo`. | Add a repository kind and separate OCI settings with backward-compatible defaults. |
-| Shared import path | `src/repo/zcl_abapgit_repo.clas.abap` owns remote files, filters, refresh flags, checks, and deserialization. `set_files_remote` marks fetching complete. | Deliver a complete validated file table and reuse the existing import pipeline. |
-| Archive precedent | `src/repo/utils/zcl_abapgit_zip.clas.abap` builds file paths and Git blob SHA-1 values, then optionally strips a common wrapper directory. | Follow the file-table convention; keep OCI root handling explicit rather than reusing ZIP's wrapper heuristic. |
-| HTTP | `src/http/zif_abapgit_http_agent.intf.abap` and `zif_abapgit_http_response` expose binary bodies, status, JSON, and headers. The implementation uses existing SSL/proxy settings. | Inject this interface into the OCI client; explicitly handle authentication and redirects. |
-| UI and services | Repository view, header helpers, remote settings, router, service helpers, and repository lookup methods assume that `is_offline = false` permits a Git-interface cast. | Audit these assumptions before exposing an OCI repository in the UI. |
-| Background processing | `src/background/zif_abapgit_background.intf.abap` requires `zif_abapgit_repo_online`. | Keep OCI out of the background scheduler initially and report unsupported requests clearly. |
-| Compatibility | `abaplint.json` targets ABAP 7.02. | Verify hashing and archive dependencies on the minimum supported SAP runtime and in the transpiler. |
+## Notes per PR
 
-The linked [issue #2216](https://github.com/abapGit/abapGit/issues/2216) proposes separating repository containers from connection strategies. Apply that idea narrowly to remote fetching. Completing its entire class hierarchy cleanup is outside this feature. Its discussion and `CONTRIBUTING.md` favor small changes with separate reviews.
+### 1. SHA-256 helper
 
-## Proposed design
+`zcl_abapgit_hash=>sha256_raw` and its two test vectors. Useful on its own, small, and reviewers can focus on one question: does `cl_abap_message_digest` with `SHA256` exist on 7.02? Answer that in the PR description; it is still an open item from the original plan.
 
-### Repository kinds and capabilities
+### 2. HTTP agent redirect flag
 
-Introduce explicit `git`, `offline`, and `oci` repository kinds. Preserve `is_offline` for compatibility, but replace checks that actually mean “supports Git operations” with a kind or capability check. An OCI repository is online and pullable, while its Git and push capabilities are false.
+Adds `iv_follow_redirect` (default `abap_true`) to `zif_abapgit_http_agent~request`. No caller changes, so no behaviour change. Very quick review, and it unblocks 8.
 
-Expose generic remote metadata and capabilities through the repository contract: remote address, selected reference, resolved revision, network refresh, and Git/push support. Keep revision identifiers as strings: an OCI `sha256:` digest cannot fit into a Git SHA-1 field. Keep Git-only operations on `zif_abapgit_repo_online`.
+### 3. USTAR reader
 
-Add `zcl_abapgit_repo_oci`, inheriting from `zcl_abapgit_repo`. Introduce a narrow `zif_abapgit_repo_connector` with a fetch operation returning a complete file snapshot and an opaque resolved revision. Attach a Git connector to the existing online repository and an OCI connector to the new repository. Git objects and commit details remain in the Git connector/adapter and are available to existing Git operations; they do not become required fields of the generic connector result. Preserve the offline repository's in-memory ZIP source and refresh semantics.
+`zcl_abapgit_tar` is a generic binary → `ty_files_tt` decoder with no OCI or HTTP dependencies. It is the biggest piece of security-sensitive parsing (path traversal, size limits, malformed headers), so it deserves a dedicated review. Already covered by the `zcl_abapgit_t` transpile prefix.
 
-Use constructor injection and the project's factory/injector patterns for connectors and HTTP dependencies. New global classes/interfaces need their `.clas.xml`/`.intf.xml` metadata as well as ABAP source.
+### 4. Repository kind and capability accessors
 
-### Reference and artifact contract
+Add `get_repo_kind`, `supports_git`, `supports_push`, `get_remote_address`, `get_selected_reference`, `get_resolved_revision` and `get_imported_revision` to `zif_abapgit_repo`, plus `c_repo_kind` containing **only `git` and `offline`**. Derive the kind from the `offline` flag; do not add a persisted field yet. Update all `zif_abapgit_repo` test doubles (flow logic, repo checksums, any others).
 
-Collect registry origin, repository name, and reference as separate fields. Display a canonical reference such as `oci://registry.example.com/team/library:1.2.3` or `oci://registry.example.com/team/library@sha256:<64 lowercase hex characters>`. The `oci://` form identifies the remote; HTTP requests use HTTPS. Reject user information, query strings, fragments, missing references, and malformed names. Do not pass these references through Git URL normalization.
+Changes to make while extracting:
 
-Proposed version-one artifact profile:
+- **Move `set_oci_reference` off `zif_abapgit_repo`.** It is the only OCI-specific method on the generic interface. It forces every test double to stub it and makes this PR depend on `zcl_abapgit_oci_reference`. Put it on `zcl_abapgit_repo_oci`, or on a small `zif_abapgit_repo_oci` mirroring `zif_abapgit_repo_online`. Settings code would then cast, the same way it already does for Git.
+- **Deduplicate the kind-defaulting logic.** "Empty kind → offline if flagged, else git" exists three times on the branch (`zcl_abapgit_repo~get_repo_kind`, `zcl_abapgit_repo_srv->instantiate_and_add`, `zcl_abapgit_persistence_repo->get_repo_from_content`/`add`). Put it in one place, for example a static helper next to `c_repo_kind`, and introduce that helper here.
 
-- Manifest media type: `application/vnd.oci.image.manifest.v1+json`, schema version 2.
-- Proposed artifact identity: `application/vnd.abapgit.repository.v1`. For OCI 1.1 use `artifactType`; for an OCI 1.0 producer use the corresponding config media type. Settle this convention with maintainers before implementation.
-- Exactly one layer with media type `application/vnd.oci.image.layer.v1.tar`, containing a valid POSIX USTAR archive.
-- `.abapgit.xml` at archive root, with serialized objects beneath the paths it declares. Do not strip an arbitrary directory or choose among multiple repository roots.
-- Ignore informational annotations. Reject incompatible artifact identities, manifest formats, layer counts, and layer types with an actionable error.
+### 5. Replace "online ⇒ Git" assumptions
 
-OCI defines the manifest envelope; this application profile deliberately narrows the accepted content. The SAP article introduces generic ORAS storage, so accepting every artifact that ORAS can upload would be a separate compatibility feature. Sources: [OCI manifest specification](https://github.com/opencontainers/image-spec/blob/v1.1.1/manifest.md), [SAP article](https://community.sap.com/t5/application-development-and-automation-blog-posts/storing-abap-build-artifacts-in-oci-registry/ba-p/13529848), and [ORAS producer options](https://oras.land/docs/commands/oras_push/).
+Mechanical change: `is_offline( ) = abap_false` used as "can cast to `zif_abapgit_repo_online`" becomes `supports_git( ) = abap_true`, and guarded casts are added in the router, `zcl_abapgit_services_git` (`get_git_repo`), flow logic/pages, background, `zcl_abapgit_repo_news`, code inspector, patch, repo view hotkeys and the overview `action_git_repo` JS class with its UI test.
 
-### Pull and snapshot lifecycle
+With only two kinds, every edit should be a no-op. State that in the PR and leave out the new `ELSE` OCI branches (OCI toolbar, OCI header display), which belong in 11. If the PR feels large, split it into **5a** backend/routing/flow/background and **5b** pages, chunk lib and JS.
 
-1. Validate the reference and fetch `GET /v2/<name>/manifests/<tag-or-digest>` with an explicit supported manifest `Accept` header.
-2. Handle authentication and bounded redirects; validate status, response media type, JSON structure, and artifact profile.
-3. Calculate the manifest's SHA-256 over the original response bytes. For digest references verify the requested digest; verify `Docker-Content-Digest` when provided. Retain the resolved digest for tag references.
-4. Fetch the selected layer with `GET /v2/<name>/blobs/<digest>`. Verify descriptor size and SHA-256 against the downloaded bytes before archive decoding.
-5. Decode TAR in memory, validate the repository root, and populate `zif_abapgit_git_definitions=>ty_files_tt` with `path`, `filename`, raw `data`, and `zcl_abapgit_hash=>sha1_blob( data )`.
-6. Publish files and resolved revision together only after validation succeeds. Use `set_files_remote` and the shared filtering/status/import path.
-7. Run checks, decisions, deletion, deserialization, and activation against this same snapshot. Do not re-resolve a mutable tag halfway through a pull. Record the last successfully imported digest separately from the currently fetched digest, using the existing success/log semantics.
+Keep the `check_self_update`/`check_for_restart` rewrite **out** of this PR. It changes behaviour for offline repositories: the early `is_offline` return is replaced by a `sy-cprog` check plus a package lookup. It belongs in 11, where that change can be discussed explicitly.
 
-Refresh invalidates fetch state; the next read can resolve a tag again. Reuse verified layer bytes by digest within the session. Fetch errors must not expose partial files as a successful snapshot or advance the imported revision. SAP imports retain the existing partial-failure and checksum behavior; this feature does not promise transactional rollback of all SAP object changes.
+### 6. Extract the Git fetch connector
 
-Protocol references: [OCI distribution pull endpoints](https://github.com/opencontainers/distribution-spec/blob/v1.1.1/spec.md#pull), [descriptor integrity rules](https://github.com/opencontainers/image-spec/blob/v1.1.1/descriptor.md).
+`zcl_abapgit_repo_online` gets an injectable `zif_abapgit_repo_git_connector`, and fetching moves into `zcl_abapgit_repo_git_connector`. Includes the new `ltcl_repo_online=>fetch_snapshot_cache` test. It is self-contained, matches the direction of issue #2216, and has no OCI code.
 
-## Implementation sequence
+Decide in this PR whether two connector interfaces are wanted. `zif_abapgit_repo_git_connector` and `zif_abapgit_repo_connector` differ only by the `objects` field. Possible options:
 
-### 1. Confirm the profile and build fixtures
+- Keep both, as on the branch.
+- Introduce one `zif_abapgit_repo_connector` here, with Git-specific extras in a sub-interface or a separate method.
 
-- [ ] Confirm the proposed artifact identity, one-layer profile, root convention, and deferred features in the existing issue discussion before substantial implementation. This plan does not post a message.
-- [x] Followed up read-only on [the offer of existing ABAP TAR code](https://github.com/abapGit/abapGit/issues/6618#issuecomment-1792386036). The comment only offers “ABAP tar” and includes no source or link; the author's public abapGit fork has no TAR-related paths. The actual code's license, variants, and 7.02 compatibility therefore cannot be assessed, so this implementation uses a standalone USTAR decoder. It compiles and is included by the standalone merge.
-- [x] Add a plain binary SHA-256 wrapper and verify vectors in transpiled tests. Prefer an existing compatible SAP API behind a small wrapper; do not truncate digests or reuse the Git blob-hashing format for OCI verification.
-- [ ] Verify the SHA-256 wrapper on supported SAP releases.
-- [x] Produce a minimal repository fixture with `.abapgit.xml`, a package, and a simple ABAP object. Store its TAR bytes, manifest, and expected digests, plus a second version with an update and a deletion.
-- [x] Validate an external producer command that explicitly selects USTAR and the layer media type. Capture an ORAS-produced manifest rather than guessing its structure.
+Reviewers will ask, so it is better settled before OCI arrives.
 
-Exit: a documented profile and independently generated fixtures that both the producer and future consumer can reproduce.
+### 7. OCI reference parser
 
-### 2. Introduce the narrow repository abstraction
+`zcl_abapgit_oci_reference` (`parse`/`build`/canonical form) with tests. Pure string logic, no dependencies, easy to review in isolation. It needs the `zcl_abapgit_oci_` entry in `test/abap_transpile.json` (or a narrower one).
 
-- [x] Add kind/capability/remote-metadata accessors and the connector contract in `src/repo/`.
-- [x] Extract Git fetching into a connector without changing branch selection, Git object caches, push, refresh, or filtered-file behavior. Keep existing Git public interfaces available.
-- [x] Update existing repository test doubles for the new contract.
-- [x] Start replacing unsafe online-to-Git assumptions; search all `src/` for `is_offline`, `zif_abapgit_repo_online`, `zcl_abapgit_repo_online`, and casts before declaring the audit complete.
-- [x] Preserve offline ZIP imports and the offline subclass's `reset_remote` behavior.
+### 8. OCI registry client
 
-Exit: existing Git/offline tests pass with no OCI repository yet exposed. Submit this mechanical refactor separately.
+Includes `zif_abapgit_repo_connector` (or the unified interface from 6), because the client returns its `ty_snapshot`. Nothing instantiates the client from product code yet.
 
-### 3. Add a bounded TAR reader
+This is the largest review: manifest/blob fetch, digest verification, Basic and Bearer auth, token caching, redirects that drop credentials across origins, and use of the login manager. If reviewers push back on size, split it as follows:
 
-- [x] Add or adapt `zcl_abapgit_tar` under `src/repo/utils/`, with a binary-input API independent of HTTP and SAP object creation.
-- [x] Implement USTAR's 512-byte headers, header checksum, octal sizes, prefix/name combination, payload padding, and end-of-archive handling. Support regular files and directory entries; preserve file bytes exactly.
-- [x] Normalize harmless leading `./`; produce absolute abapGit directory paths with trailing `/`. Reject absolute archive paths, `..` segments, drive/UNC paths, invalid names, and duplicate normalized file paths.
-- [x] Reject symlinks, hard links, devices, sparse entries, GNU/PAX extensions, and unsupported numeric encodings with descriptive errors. The producer recipe must generate the supported subset.
-- [x] Validate lengths and arithmetic before slicing binary data. Set named limits for archive bytes, individual file bytes, and entry count; reject oversized declarations and malformed/truncated archives without a runtime dump.
-- [x] Return the standard file table with Git blob hashes and require exactly one root `.abapgit.xml` when validating the OCI snapshot.
+- **8a**: anonymous fetch, manifest profile validation, digest/size verification, TAR to snapshot. Tests: `fetch_anonymous`, `fetch_pinned_digest`, `reject_*`.
+- **8b**: authentication and redirects. Tests: `fetch_basic_credentials`, `fetch_bearer`, `refresh_rejected_bearer`, `reject_denied_bearer`, `external_token_auth`, `redirect_drops_*`.
 
-Exit: ordinary, nested, empty, binary, and prefix-based filenames decode correctly; malformed and unsupported inputs fail deterministically. ZIP handling remains unchanged.
+The test class is already grouped this way, so the split is mostly cutting methods.
 
-### 4. Implement the OCI registry client and connector
+### 9. Persist and construct OCI repositories (no UI)
 
-- [x] Add a reference parser, OCI client, and connector, with injected `zif_abapgit_http_agent` and test doubles for responses.
-- [x] Implement manifest/layer retrieval, artifact-profile validation, raw SHA-256 verification, and TAR-to-snapshot conversion. Parse JSON through the existing AJSON interfaces and translate failures into `zcx_abapgit_exception`.
-- [x] Implement anonymous and Basic access, then the `401` Bearer challenge flow: parse `realm`/`service`/`scope`, request a token with repository pull scope, accept `token` or `access_token`, retry with a Bearer header, and bound retries. Cache tokens only in memory with origin/service/scope and expiry boundaries.
-- [x] Reuse existing credential prompting/session handling where suitable, but inspect the Git login manager's keying before reuse. Do not persist passwords/tokens in repository XML or log authentication headers. Restrict credential-bearing token requests to a trusted configured realm; allow explicitly configured external authentication origins.
-- [x] Handle common blob redirects with a hop limit and HTTPS validation. Do not copy registry credentials to a different origin. Close HTTP responses on success and exception paths.
-- [x] Report missing manifests/blobs, denied access, rate limits, unsupported formats, integrity failures, and transport errors with the affected operation/reference. Keep the client read-only: manifest, blob, and token retrieval use GET; no registry mutation endpoints.
-- [x] Enforce manifest/blob size limits and document that the current HTTP response API materializes whole bodies, so post-download checks do not hard-limit peak network buffer memory.
+- Add `oci` to `c_repo_kind` and the `repo_kind`/`oci_*` fields to `ty_repo_xml`, `ty_repo_meta_mask` and `ty_remote_settings`.
+- Add `zif_abapgit_persist_repo~add` parameters and the load-time validation in `get_repo_from_content`.
+- Add the persistence tests (`legacy_repo_kind_defaults`, `oci_metadata_roundtrip`, `unknown_kind_is_rejected`). The protected-section move in `zcl_abapgit_persistence_repo` exists only for those tests.
+- In `zcl_abapgit_repo`: the new `set` parameters, recording the imported digest in `deserialized`, and the guard in `switch_repo_type`.
+- Add `zcl_abapgit_repo_oci`, `zcl_abapgit_repo_oci_connector` and their tests.
+- In `zcl_abapgit_repo_srv`: `new_oci`, kind-based `instantiate_and_add`, `reinstantiate` on kind change, and kind-aware `is_repo_installed`/duplicate detection.
 
-Exit: mocked anonymous/private registry flows yield a verified snapshot; authentication, redirect, format, and digest failures yield no partial snapshot. Authentication source: [Distribution token authentication](https://distribution.github.io/distribution/spec/auth/token/).
+Points to flag for review:
 
-### 5. Persist and construct OCI repositories
+- After this PR, every **new** repository record carries `repo_kind`. Confirm that an older abapGit reading such a record ignores the unknown XML element. Downgrade safety is the question maintainers will ask.
+- `get_repo_from_content` now **raises** on inconsistent metadata. A single corrupt record could therefore break the repository list. Decide whether that should be a hard error or a logged skip.
+- `new_oci` is reachable only through the API, not the UI, so this PR stays dark.
 
-- [x] Extend `ty_repo_xml`, `ty_repo_meta_mask`, and remote-settings types in `src/persist/zif_abapgit_persistence.intf.abap`. Store kind, registry origin, repository name, selected tag/digest, and last imported digest in OCI-specific fields.
-- [x] Update `zif_abapgit_persist_repo` creation parameters, `zcl_abapgit_persistence_repo` serialization/defaults/masks, and the shared repository `set`/listener path. Keep masks and persisted fields aligned.
-- [x] Default absent kind to `offline` when the old flag is true, otherwise `git`. Write explicit kinds for new records. Reject unknown kinds and inconsistent OCI/offline settings. No destructive database migration is needed.
-- [x] Add `new_oci` to `zif_abapgit_repo_srv`/`zcl_abapgit_repo_srv`; reuse package and authorization checks, but never call Git URL validation, branch discovery, or initial-branch creation.
-- [x] Instantiate `zcl_abapgit_repo_oci` by kind and attach the OCI connector. Reinstantiate when kind changes, not just when `offline` changes.
-- [x] Update duplicate-source detection and installed-repository lookup to use kind-aware remote metadata. Preserve repository key, package binding, and local settings across reloads.
-- [x] Keep existing Git/offline switching behavior. Reject OCI type conversion initially rather than silently discarding its reference or interpreting it as Git.
+### 10. OCI integration harness and fixtures
 
-Exit: legacy records load unchanged; OCI settings survive a new session and select the right runtime class.
+Contents: `test/oci/**` (fixtures, scripts, local registry, Node fixture test), the `oci-registry` service in `test/gitea/docker-compose.yml`, `prepare-registry.sh`/`push-fixtures.sh` in the Gitea npm script, `setup-oras` in `test-pr.yml`, the `test:oci-*` scripts and their addition to `npm test`, `test/README.md`, and `test/src/zcl_abapgit_oci_integration`.
 
-### 6. Integrate creation, settings, pull, and capability checks
+Keeping this separate means CI and infrastructure changes get their own review. It can merge once 8 is in. Reviewers may question whether adding the fixture test to the default `npm test` is wanted. An alternative is to run it only in the integration workflow.
 
-- [x] Extend `src/ui/pages/dlg/zcl_abapgit_gui_page_cr_repo.clas.abap` and creation services with an OCI option and registry/repository/reference fields. Preserve existing package and local-setting inputs.
-- [x] Update `src/ui/pages/sett/zcl_abapgit_gui_page_sett_remo.clas.abap` for OCI settings and cache invalidation after a reference change. Show tag/digest semantics without branch or Git commit controls.
-- [x] Update `src/ui/pages/zcl_abapgit_gui_page_repo_view.clas.abap`, overview/list rendering, and `src/ui/lib/zcl_abapgit_gui_chunk_lib.clas.abap`. Display OCI identity and resolved/imported digest; enable refresh, status, diff, and pull when appropriate.
-- [x] Gate stage, patch-for-commit, push, branch/tag mutation, history, pull requests, and flow features using capabilities, including hotkeys and action palettes.
-- [x] Enforce the same checks in router/service entry points so direct event URLs cannot bypass hidden controls. Generic pull continues through `gui_deserialize`/`real_deserialize`.
-- [x] Fix the Git casts in `check_self_update` and `check_for_restart`. Preserve self-update protection where applicable; define and document how an OCI artifact identifies abapGit itself instead of relying on a Git-hosting URL.
-- [x] Audit background setup/dispatch and APACK installation paths. Exclude OCI from Git-only scheduling and flow operations; APACK requirements checking stays active while OCI dependency installation remains unsupported.
-- [x] Adapt remaining generic displays and services, including connection checks, installed-repository lookup, and checksum-rebuild explanations. Reuse existing authorization and write-protection rules for SAP changes.
+### 11. OCI UI: view, pull, self-update guard
 
-Exit: an OCI repository can be created, reloaded, refreshed, diffed, and pulled without any Git-interface cast or registry write. Unsupported actions fail clearly even when invoked directly.
+- Add the OCI branches in `zcl_abapgit_gui_chunk_lib` (header: reference, resolved and imported digest; icon) with its test, and the OCI toolbar (Pull, Diff, Log) in `zcl_abapgit_gui_page_repo_view`.
+- In `zcl_abapgit_services_repo`, add `is_abapgit_package_repo` and the `check_self_update`/`check_for_restart` rewrite.
+- Add the router exception that lets `git_pull` through for OCI.
 
-### 7. Validate and document the complete workflow
+An OCI repository created through the API (PR 9) becomes usable in the UI, but users still cannot create one there.
 
-- [x] Add ABAP Unit tests for reference parsing, TAR, SHA-256 vectors, OCI response handling, snapshot caching, capability guards, and persistence compatibility. Reuse the existing injection/test-double conventions.
-- [x] Test same-tag movement from fixture version one to version two, including file updates and deletions. Repository tests also verify a failed snapshot fetch preserves resolved and imported digests. Client tests verify a pinned digest is used verbatim and reject a mismatching manifest.
-- [ ] Verify status and pull use the same fetched digest, pinned references remain unchanged through the standard pull path, and a failed SAP import does not advance the imported digest. These require the SAP pull/deserialization path.
-- [x] Test anonymous, Basic, and Bearer flows, expired/denied tokens, redirects to different hosts and ports without credential leakage, `404`/`429` errors, invalid JSON, index/multilayer rejection, size mismatch, digest mismatch, and malformed TAR. Mocked tests cover these responses, including a rejected Bearer token refresh and a malformed layer whose OCI digest is otherwise valid.
-- [x] Test OCI snapshot root metadata handling together with object filtering, ignored files, and locally excluded paths through the standard repository file-list path.
-- [ ] Test language/requirements/APACK checks, overwrite/deletion decisions, local changes, transports, activation errors, and partial import retry through SAP deserialization.
-- [x] Add a local OCI registry fixture to the integration harness following `test/gitea/`; produce artifacts with ORAS in the test setup. Keep credentials out of fixtures and public-network access out of unit tests. `npm run test:oci-integration` reproducibly runs the critical fetch test against an in-process HTTPS registry serving the checked-in ORAS fixtures; the build corrects the generated transpiler HTTP shim's explicit-port URL parsing. The full Gitea + registry integration harness still needs Docker.
-- [x] Run `npm test`, `npm run unit`, `npm run merge`, and `npm run merge.ci` in the project's supported CI environment. These completed in this checkout; `merge.ci` fetched its configured abaplint dependencies.
-- [ ] Run `npm run integration` with the existing Gitea and new registry fixtures. The harness is configured, but Docker Desktop's backend pipes remain unavailable after a local start and restart attempt.
-- [ ] Validate on an SAP system at the minimum supported release, especially SHA-256, HTTP authentication/redirect behavior, certificate/proxy settings, and real object activation. SAP Logon is running, but the Windows UI automation runtime could not start, so an active system session and release could not be confirmed. Supplement with public and private hosted registry smoke tests where access is available.
-- [x] Document accepted artifact/reference formats, a reproducible USTAR + ORAS producer recipe, private-registry authentication, tag versus digest behavior, SAP trust/proxy setup, limits, and deferred formats/features.
+### 12. OCI UI: create and remote settings, plus docs
 
-## Completion criteria
+- Add the OCI option in `zcl_abapgit_gui_page_addonline`.
+- Add OCI fields and cache invalidation in `zcl_abapgit_gui_page_sett_remo`, with its tests.
+- Add `zif/zcl_abapgit_services_repo=>new_oci`.
+- Add `docs/oci-registry-repositories.md`.
 
-- [ ] A documented ORAS-produced artifact installs into a package and a later tagged snapshot updates it through the standard pull workflow.
-- [x] Digest references are requested by their full digest and verified against the manifest bytes; a mismatch is rejected.
-- [ ] Status and pull report the same snapshot digest used throughout the standard SAP workflow.
-- [x] Authenticated retrieval works without persisting secrets or requesting registry write scope.
-- [x] OCI exposes no Git/write operations, and direct attempts are rejected before network mutation or unsafe casts.
-- [ ] Corrupt/unsupported artifacts fail before SAP deserialization and leave source identity/checksums consistent with the existing error semantics.
-- [x] Existing Git repositories, offline ZIP imports, persistence records, and standalone builds pass their regression checks.
-- [x] The code and documentation state the supported profile and resource/runtime limits; gzip, multi-layer artifacts, indexes, and scheduled OCI pulls are not implied to work.
+This PR is the one that turns the feature on. Hold it until the open validation items from the original plan are done:
 
-Deliver the implementation in separate reviews: repository abstraction; TAR/hash utilities; registry client; persistence/repository construction; UI integration and end-to-end documentation. Merge prerequisites before enabling OCI creation. Recheck the relevant source paths and issue discussion against the implementation branch before starting each stage.
+- SHA-256 and HTTP auth/redirects on a minimum-release SAP system.
+- A full pull and deserialization of the v1 → v2 fixture.
+- The Docker-based `npm run integration`.
+
+If maintainers want it merged earlier, gate it behind the experimental-features setting.
+
+## Suggested order of work
+
+1. Open 1, 2, 3, 6 and 7 now. They are small, independent and uncontroversial.
+2. Open 4. Once it merges, open 5 (or 5a and 5b).
+3. Open 8 after 1, 2, 3 and 7 are merged, then 10 alongside it.
+4. Open 9 after 4 and 8.
+5. Open 11, then 12, after SAP validation.
+
+Before starting each slice, re-diff that slice's files against current `main`. Several of them (repo view, router, services) change often upstream.
