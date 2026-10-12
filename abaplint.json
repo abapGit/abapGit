@@ -222,6 +222,7 @@
       "if": false,
       "loop": true,
       "select": true,
+      "catch": true,
       "try": true,
       "when": false,
       "while": true
@@ -243,7 +244,7 @@
     "forbidden_void_type": {
       "check": [
         "^boole_d$",
-        "^char\d+$",
+        "^char\\d+$",
         "^cl_abap_syst",
         "^cl_aff_",
         "^cl_aucv_test_runner_abstract$",
@@ -274,13 +275,13 @@
         "^if_wb_object_operator$",
         "^if_xco_",
         "^int4$",
-        "^numc\d+$",
+        "^numc\\d+$",
         "^pgmid$",
         "^sabp_t_tadir_keys$",
         "^sap_bool$",
         "^srcsystem$",
         "^stringtab$",
-        "^sychar\d+$",
+        "^sychar\\d+$",
         "^sydatum$",
         "^sylangu$",
         "^syst_langu$",
