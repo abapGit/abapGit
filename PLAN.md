@@ -89,7 +89,7 @@ The Git connector extraction (issue #2216 direction) can still be proposed later
 | 4 | OCI reference parser | `zcl_abapgit_oci_reference` + tests, `abap_transpile.json` | ~370 | – |
 | 5 | OCI registry client | `zcl_abapgit_oci_client` + tests | ~1,700 (≈1,050 tests) | 1, 2, 3, 4 |
 | 6 | Replace `is_offline` with `get_type` | `zif_abapgit_repo~get_type` + `c_type`, about 30 call sites, `switch_repo_type( iv_type )`, test doubles, overview JS + UI test | ~400 | – |
-| 7 | OCI repository type, backend only | persistence + tests, `zif/zcl_abapgit_repo_oci` + tests, `zcl_abapgit_repo`, `zcl_abapgit_repo_srv` | ~700 | 4, 5, 6 |
+| 7 | OCI repository type, backend only | persistence + tests, `zif/zcl_abapgit_repo_oci` + tests, `zcl_abapgit_repo`, `zif/zcl_abapgit_repo_srv` | ~700 | 4, 5, 6 |
 | 8 | OCI integration harness and fixtures | `test/oci/**`, `test/gitea/*`, `test/src/zcl_abapgit_oci_integration`, CI workflow, `package.json`, `test/README.md` | ~600 + binaries | 5 |
 | 9 | OCI UI: view, pull, self-update guard | OCI branches in repo view, chunk lib, overview; `check_self_update`/`check_for_restart` | ~200 | 7 |
 | 10 | OCI UI: create and remote settings + docs | `zcl_abapgit_gui_page_addonline`, `zcl_abapgit_gui_page_sett_remo` + tests, `services_repo=>new_oci`, `docs/oci-registry-repositories.md` | ~450 | 9 |
@@ -154,6 +154,12 @@ For each call site, translate by what the code means, not literally:
 
 The overview list currently exposes `data-offline` to the JS. Replace it with `data-type`, so the JS can enable Git-only actions only for `online`. Update the UI test.
 
+Some code reads the `offline` flag directly instead of calling `is_offline`, so searching for `is_offline` misses it. An OCI record has `offline` empty, so each of these would treat OCI as online. Also search for `-offline` and `isOffline`:
+
+- `zcl_abapgit_gui_page_repo_over` fills `ls_overview-offline` from `ms_data-offline`, which feeds `data-offline`. Replace it with a `type` field filled from `get_type( )`, which feeds `data-type`.
+- `zcl_abapgit_gui_chunk_lib` writes `isOffline` into the `repoCatalog` JS array, and `zabapgit_js_common.w3mi.data.js` uses it to choose the icon in the repository jump list. Replace it with `type`. PR 9 adds the OCI icon there.
+- `zcl_abapgit_repo_srv=>instantiate_and_add` reads `is_repo_meta-offline`. Leave it as it is; PR 7 changes it.
+
 Also check the places that cast to `zif_abapgit_repo_online` **without** testing `is_offline` first. On `main` about 30 classes reference that interface. Once OCI exists, these are the ones that could still see an OCI repository:
 
 - **Entry points from the repository list or view:**
@@ -161,7 +167,8 @@ Also check the places that cast to `zif_abapgit_repo_online` **without** testing
   - `zcl_abapgit_services_git`
   - `zcl_abapgit_gui_page_repo_view` (toolbar, hotkeys)
   - `zcl_abapgit_gui_chunk_lib` (header)
-  - `zcl_abapgit_gui_page_repo_over` (Git-only list actions; the `data-oci` attribute and JS toggle with the UI test)
+  - `zcl_abapgit_gui_page_repo_over` (Git-only list actions; the `data-type` attribute and JS toggle with the UI test)
+  - `zcl_abapgit_gui_page_flow` (pull, stage and branch selection event handlers, and the feature toolbar) and `zcl_abapgit_flow_page_utils`. These take the repository key from the event query, so they cast without any check of their own.
   - code inspector page
   - patch page
   - `zcl_abapgit_gui_page_sett_remo`
@@ -184,6 +191,8 @@ If the PR is large, split it as follows:
 
 `is_offline` can only be deleted once both parts are merged.
 
+Deleting `is_offline` is a deliberate breaking change. Code outside this repository that calls `zif_abapgit_repo~is_offline`, such as CI runners, user exits and API consumers, stops compiling. Do not keep a deprecated wrapper. State the break in the PR description and give the replacement: `is_offline( ) = abap_true` becomes `get_type( ) = zif_abapgit_repo=>c_type-offline`, or `get_type( ) <> c_type-online` where the code means "no Git".
+
 ### 7. OCI repository type, backend only
 
 - **Persistence:**
@@ -196,8 +205,8 @@ If the PR is large, split it as follows:
   - Record `oci_imported_digest` in `deserialized`.
   - Make `switch_repo_type` reject `c_type-oci` as both the source and the target type.
 - **New types:** add `zif_abapgit_repo_oci` and `zcl_abapgit_repo_oci` with their tests. `zcl_abapgit_repo_oci` implements `get_type` (returns `c_type-oci`), fetches through the client, falls back to a name in `get_name`, and implements `has_remote_source`.
-- **`zcl_abapgit_repo_srv`:**
-  - Add `new_oci`.
+- **`zif/zcl_abapgit_repo_srv`:**
+  - Declare `new_oci` in `zif_abapgit_repo_srv` and implement it. The branch signature takes `iv_registry`, `iv_repository` and `iv_reference` separately. `new_oci` builds the canonical `url` from them with `zcl_abapgit_oci_reference=>build`, and `url` is the only place they are stored.
   - Make `instantiate_and_add` choose between three classes (oci → `zcl_abapgit_repo_oci`, offline → `_offline`, else `_online`).
   - Reinstantiate when `oci` changes.
   - Compare OCI repositories by registry and repository in `is_repo_installed`, and skip them in the Git URL duplicate check.
@@ -218,9 +227,10 @@ It can merge once 5 is in. Reviewers may question adding the fixture test to the
 ### 9. OCI UI: view, pull, self-update guard
 
 - Add the `WHEN c_type-oci` branch in `zcl_abapgit_gui_chunk_lib` (icon, `oci://` reference, resolved and imported digest via `zif_abapgit_repo_oci`) with its test.
+- Add the OCI icon for `type = "oci"` in the `repoCatalog` jump list in `zabapgit_js_common.w3mi.data.js`.
 - Add the OCI toolbar (Pull, Diff, Log) in `zcl_abapgit_gui_page_repo_view`. Fill the `CASE get_type( )` blocks that PR 6 prepared.
 - Let `git_pull` through the router for OCI repositories.
-- Add the OCI case in `check_self_update`/`check_for_restart`. The branch identifies abapGit's own package through the `ZABAPGIT` program. Keep the existing early return for offline repositories unchanged, which the branch altered, and add OCI as its own case.
+- Add the OCI case in `zcl_abapgit_services_repo=>check_self_update`/`check_for_restart`. The branch identifies abapGit's own package through the `ZABAPGIT` program. On `main`, `check_self_update` starts with `IF ii_repo->is_offline( ) = abap_true. RETURN.`, which PR 6 turns into a `get_type( )` check. The branch replaced that return with `IF sy-cprog <> 'ZABAPGIT'. RETURN.`, which changes behaviour for offline repositories. Do not carry that over. Keep the offline return and add OCI as its own case.
 
 An OCI repository created through the API (PR 7) becomes usable in the UI, but users still cannot create one there.
 
