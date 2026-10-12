@@ -1135,6 +1135,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       ls_hotkey_action-action      = <ls_command>-action.
       ls_hotkey_action-hotkey      = |Enter|.
       INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+      ls_hotkey_action-hotkey = |^Enter|.
+      INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
     ENDIF.
 
     READ TABLE mt_commands WITH KEY action = zif_abapgit_definitions=>c_action-go_back
