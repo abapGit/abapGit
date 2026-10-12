@@ -90,6 +90,9 @@ CLASS ltcl_form_hotkeys IMPLEMENTATION.
       iv_cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main ).
     lt_hotkeys = lo_form->zif_abapgit_gui_hotkeys~get_hotkey_actions( ).
 
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_hotkeys )
+      exp = 2 ).
     READ TABLE lt_hotkeys WITH KEY hotkey = 'Enter' INTO ls_hotkey.
     cl_abap_unit_assert=>assert_subrc( ).
     cl_abap_unit_assert=>assert_equals(
