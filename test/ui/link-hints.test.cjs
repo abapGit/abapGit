@@ -18,9 +18,11 @@ function node(nodeName, attrs = {}) {
   }, attrs);
 }
 
-function page(targets) {
+function page(targets, modalTargets = null) {
+  let modal = modalTargets === null ? null : { querySelectorAll() { return modalTargets; } };
   const context = loadUi({ document: {
     addEventListener() {}, activeElement: { nodeName: 'BODY' },
+    getElementById(id) { return id === 'modal' ? modal : null; },
     querySelectorAll() { return targets; },
     createEvent() { return { initEvent() {} }; }, createElement(name) { return node(name.toUpperCase()); }
   } });
@@ -29,7 +31,8 @@ function page(targets) {
   hints.hintActivate = hint => actions.push(hint.parent);
   context.submitSapeventForm = () => actions.push('clipboard');
   function key(key) { hints.handleKey({ key, preventDefault() {} }); }
-  return { context, hints, key, actions };
+  return { context, hints, key, actions,
+    setModal(targets) { modal = targets === null ? null : { querySelectorAll() { return targets; } }; } };
 }
 
 test('partial hint filters labels; reopening removes old containers and includes new targets', () => {
@@ -175,4 +178,51 @@ test('hint code keys are consumed and the displayed state is visible to page sho
   assert.deepEqual(prevented, ['2', '9', '1', '0']);
   assert.equal(p.context.LinkHints.areHintsDisplayed, false);
   assert.deepEqual(p.actions, [targets[0]]);
+});
+
+test('an open modal limits hints and their numbering to its own targets', () => {
+  const background = Array.from({ length: 30 }, () => node('A'));
+  const modal = [node('INPUT', { type: 'radio', nextElementSibling: node('LABEL') }), node('A')];
+  const p = page(background.concat(modal), modal);
+  p.key('f');
+  assert.equal(p.hints.hintsMap.first, 1);
+  assert.equal(p.hints.hintsMap.last, 2);
+  assert.equal(p.hints.hintsMap[1].parent, modal[0]);
+  assert.equal(p.hints.hintsMap[2].parent, modal[1]);
+  for (const target of background) assert.equal(target.children.length, 0);
+  p.key('2');
+  assert.deepEqual(p.actions, [modal[1]]);
+});
+
+test('copy hints also stay within the modal', () => {
+  const background = link('Background');
+  const modal = link('Modal');
+  const p = page([background, modal], [modal]);
+  const copies = [];
+  p.context.submitSapeventForm = params => copies.push(params.clipboard);
+  p.key('y'); p.key('f'); p.key('1');
+  assert.deepEqual(copies, ['Modal']);
+  assert.equal(background.children.length, 0);
+});
+
+test('an empty modal never falls back to hints on the page behind it', () => {
+  const background = node('A');
+  const p = page([background], []);
+  p.key('f'); p.key('1');
+  assert.equal(background.children.length, 0);
+  assert.deepEqual(p.actions, []);
+});
+
+test('hint scope is refreshed when a modal opens and closes', () => {
+  const background = node('A'), modal = node('A');
+  const p = page([background, modal]);
+  p.key('f'); p.key('f');
+  p.setModal([modal]);
+  p.key('f');
+  assert.equal(background.children.length, 0);
+  assert.equal(p.hints.hintsMap.last, 1);
+  assert.equal(p.hints.hintsMap[1].parent, modal);
+  p.key('f'); p.setModal(null); p.key('f');
+  assert.equal(p.hints.hintsMap.last, 2);
+  assert.equal(p.hints.hintsMap[1].parent, background);
 });
