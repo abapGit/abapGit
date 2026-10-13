@@ -21,6 +21,7 @@ CLASS zcl_abapgit_gui_menus DEFINITION
       IMPORTING
         !iv_act        TYPE string OPTIONAL
         !iv_with_back  TYPE abap_bool DEFAULT abap_false
+        !iv_form_id    TYPE string OPTIONAL
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
@@ -30,6 +31,7 @@ CLASS zcl_abapgit_gui_menus DEFINITION
         !iv_act        TYPE string OPTIONAL
         !iv_class      TYPE string OPTIONAL
         !iv_with_back  TYPE abap_bool DEFAULT abap_false
+        !iv_form_id    TYPE string OPTIONAL
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
@@ -161,9 +163,19 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
       iv_act  = iv_act ).
 
     IF iv_with_back = abap_true.
-      ro_menu->add(
-        iv_txt = 'Back'
-        iv_act = zif_abapgit_definitions=>c_action-go_back ).
+      IF iv_form_id IS INITIAL.
+        ro_menu->add(
+          iv_txt = 'Back'
+          iv_act = zif_abapgit_definitions=>c_action-go_back ).
+      ELSE.
+        " Submit current fields for the page's dirty check. Browser Back and F3
+        " still discover the form's Back command rather than this onclick link.
+        ro_menu->add(
+          iv_txt = 'Back'
+          iv_typ = zif_abapgit_html=>c_action_type-onclick
+          iv_act = |submitSapeventForm(\{ \}, '{ zif_abapgit_definitions=>c_action-go_back }', 'post', |
+                && |document.getElementById('{ iv_form_id }'))| ).
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -183,9 +195,19 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
       iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings_personal ) ).
 
     IF iv_with_back = abap_true.
-      ro_menu->add(
-        iv_txt = 'Back'
-        iv_act = zif_abapgit_definitions=>c_action-go_back ).
+      IF iv_form_id IS INITIAL.
+        ro_menu->add(
+          iv_txt = 'Back'
+          iv_act = zif_abapgit_definitions=>c_action-go_back ).
+      ELSE.
+        " Submit current fields for the page's dirty check. Browser Back and F3
+        " still discover the form's Back command rather than this onclick link.
+        ro_menu->add(
+          iv_txt = 'Back'
+          iv_typ = zif_abapgit_html=>c_action_type-onclick
+          iv_act = |submitSapeventForm(\{ \}, '{ zif_abapgit_definitions=>c_action-go_back }', 'post', |
+                && |document.getElementById('{ iv_form_id }'))| ).
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.

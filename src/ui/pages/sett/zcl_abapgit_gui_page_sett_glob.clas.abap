@@ -105,7 +105,8 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
       iv_page_title      = 'Global Settings'
       io_page_menu       = zcl_abapgit_gui_menus=>settings(
         iv_act       = zif_abapgit_definitions=>c_action-go_settings
-        iv_with_back = abap_true )
+        iv_with_back = abap_true
+        iv_form_id   = 'global-setting-form' )
       ii_child_component = lo_component ).
 
   ENDMETHOD.

@@ -214,7 +214,8 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       io_page_menu       = zcl_abapgit_gui_menus=>repo_settings(
                              iv_key = ii_repo->get_key( )
                              iv_act = zif_abapgit_definitions=>c_action-repo_local_settings
-                             iv_with_back = abap_true )
+                             iv_with_back = abap_true
+                             iv_form_id   = 'repo-local-settings-form' )
       ii_child_component = lo_component ).
 
   ENDMETHOD.
