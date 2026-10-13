@@ -41,11 +41,38 @@ CLASS zcl_abapgit_gui_menus DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    CLASS-METHODS add_back
+      IMPORTING
+        io_menu      TYPE REF TO zcl_abapgit_html_toolbar
+        iv_with_back TYPE abap_bool
+        iv_form_id   TYPE string.
+
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
+
+
+  METHOD add_back.
+
+    IF iv_with_back = abap_true.
+      IF iv_form_id IS INITIAL.
+        io_menu->add(
+          iv_txt = 'Back'
+          iv_act = zif_abapgit_definitions=>c_action-go_back ).
+      ELSE.
+        " Submit current fields for the page's dirty check
+        io_menu->add(
+          iv_txt = 'Back'
+          iv_typ = zif_abapgit_html=>c_action_type-onclick
+          iv_act = |submitSapeventForm(\{ \}, '{ zif_abapgit_definitions=>c_action-go_back }', 'post', |
+                && |document.getElementById('{ iv_form_id }'))| ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD advanced.
@@ -162,21 +189,10 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
       iv_key  = iv_key
       iv_act  = iv_act ).
 
-    IF iv_with_back = abap_true.
-      IF iv_form_id IS INITIAL.
-        ro_menu->add(
-          iv_txt = 'Back'
-          iv_act = zif_abapgit_definitions=>c_action-go_back ).
-      ELSE.
-        " Submit current fields for the page's dirty check. Browser Back and F3
-        " still discover the form's Back command rather than this onclick link.
-        ro_menu->add(
-          iv_txt = 'Back'
-          iv_typ = zif_abapgit_html=>c_action_type-onclick
-          iv_act = |submitSapeventForm(\{ \}, '{ zif_abapgit_definitions=>c_action-go_back }', 'post', |
-                && |document.getElementById('{ iv_form_id }'))| ).
-      ENDIF.
-    ENDIF.
+    add_back(
+      io_menu      = ro_menu
+      iv_with_back = iv_with_back
+      iv_form_id   = iv_form_id ).
 
   ENDMETHOD.
 
@@ -194,21 +210,10 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
       iv_act = zif_abapgit_definitions=>c_action-go_settings_personal
       iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings_personal ) ).
 
-    IF iv_with_back = abap_true.
-      IF iv_form_id IS INITIAL.
-        ro_menu->add(
-          iv_txt = 'Back'
-          iv_act = zif_abapgit_definitions=>c_action-go_back ).
-      ELSE.
-        " Submit current fields for the page's dirty check. Browser Back and F3
-        " still discover the form's Back command rather than this onclick link.
-        ro_menu->add(
-          iv_txt = 'Back'
-          iv_typ = zif_abapgit_html=>c_action_type-onclick
-          iv_act = |submitSapeventForm(\{ \}, '{ zif_abapgit_definitions=>c_action-go_back }', 'post', |
-                && |document.getElementById('{ iv_form_id }'))| ).
-      ENDIF.
-    ENDIF.
+    add_back(
+      io_menu      = ro_menu
+      iv_with_back = iv_with_back
+      iv_form_id   = iv_form_id ).
 
   ENDMETHOD.
 ENDCLASS.
