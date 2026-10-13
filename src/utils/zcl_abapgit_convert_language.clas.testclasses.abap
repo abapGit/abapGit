@@ -255,3 +255,24 @@ CLASS ltcl_sap1_to_bcp47 IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+
+CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PRIVATE SECTION.
+    METHODS conversion_exit_isola_output FOR TESTING.
+ENDCLASS.
+
+CLASS ltcl_convert IMPLEMENTATION.
+  METHOD conversion_exit_isola_output.
+
+    DATA lv_laiso TYPE laiso.
+
+    lv_laiso = zcl_abapgit_convert_language=>conversion_exit_isola_output( 'E' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_laiso
+      exp = 'EN' ).
+
+  ENDMETHOD.
+ENDCLASS.

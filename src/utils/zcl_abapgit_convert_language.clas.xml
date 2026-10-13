@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_CONVERT_LANGUAGE</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Language Convertion Routines</DESCRIPT>
+    <DESCRIPT>abapGit - Language Conversion Routines</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
