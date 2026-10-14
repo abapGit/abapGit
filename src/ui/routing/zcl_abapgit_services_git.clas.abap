@@ -101,7 +101,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
         INTO ls_comment-comment SEPARATED BY cl_abap_char_utilities=>newline.
     ENDIF.
 
-    zcl_abapgit_factory=>get_repo_push( ii_repo_online )->push(
+    zcl_abapgit_repo_factory=>get_repo_push( ii_repo_online )->push(
       is_comment = ls_comment
       io_stage   = io_stage ).
 

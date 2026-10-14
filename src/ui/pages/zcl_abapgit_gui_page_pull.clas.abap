@@ -251,7 +251,7 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( '<div class="repo-overview">' ).
 
-    li_pull = zcl_abapgit_factory=>get_repo_pull( mi_repo ).
+    li_pull = zcl_abapgit_repo_factory=>get_repo_pull( mi_repo ).
     ms_checks = li_pull->checks( ).
 
     IF lines( ms_checks-overwrite ) = 0.

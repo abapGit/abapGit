@@ -62,7 +62,7 @@ CLASS zcl_abapgit_transport_2_branch IMPLEMENTATION.
 
     ls_comment = generate_commit_message( is_transport_to_branch ).
 
-    zcl_abapgit_factory=>get_repo_push( ii_repo_online )->push(
+    zcl_abapgit_repo_factory=>get_repo_push( ii_repo_online )->push(
       is_comment = ls_comment
       io_stage   = lo_stage ).
   ENDMETHOD.

@@ -2,7 +2,7 @@ CLASS zcl_abapgit_repo_push DEFINITION
   PUBLIC
   FINAL
   CREATE PRIVATE
-  GLOBAL FRIENDS zcl_abapgit_factory .
+  GLOBAL FRIENDS zcl_abapgit_repo_factory .
 
   PUBLIC SECTION.
 

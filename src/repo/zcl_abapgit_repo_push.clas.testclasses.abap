@@ -269,7 +269,7 @@ CLASS ltcl_push IMPLEMENTATION.
     DATA li_no_push TYPE REF TO zif_abapgit_repo_push.
 
     zcl_abapgit_injector=>set_exit( li_no_exit ).
-    zcl_abapgit_injector=>set_repo_push( li_no_push ).
+    zcl_abapgit_repo_injector=>set_repo_push( li_no_push ).
 
   ENDMETHOD.
 
@@ -371,8 +371,8 @@ CLASS ltcl_push IMPLEMENTATION.
     DATA li_second TYPE REF TO zif_abapgit_repo_push.
 
     CREATE OBJECT lo_other.
-    li_first = zcl_abapgit_factory=>get_repo_push( mo_repo ).
-    li_second = zcl_abapgit_factory=>get_repo_push( lo_other ).
+    li_first = zcl_abapgit_repo_factory=>get_repo_push( mo_repo ).
+    li_second = zcl_abapgit_repo_factory=>get_repo_push( lo_other ).
     li_first->push( is_comment = ms_comment
                     io_stage   = mo_stage ).
     cl_abap_unit_assert=>assert_equals(
@@ -398,8 +398,8 @@ CLASS ltcl_push IMPLEMENTATION.
     DATA lv_same TYPE abap_bool.
 
     CREATE OBJECT lo_other.
-    zcl_abapgit_injector=>set_repo_push( mi_cut ).
-    li_push = zcl_abapgit_factory=>get_repo_push( lo_other ).
+    zcl_abapgit_repo_injector=>set_repo_push( mi_cut ).
+    li_push = zcl_abapgit_repo_factory=>get_repo_push( lo_other ).
     lv_same = boolc( li_push = mi_cut ).
     cl_abap_unit_assert=>assert_equals(
       act = lv_same
