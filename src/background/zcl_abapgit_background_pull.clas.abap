@@ -35,7 +35,7 @@ CLASS zcl_abapgit_background_pull IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ls_checks-overwrite.
 
-    li_pull = zcl_abapgit_factory=>get_repo_pull( ii_repo_online ).
+    li_pull = zcl_abapgit_repo_factory=>get_repo_pull( ii_repo_online ).
 
     ls_checks = li_pull->checks( ).
 
