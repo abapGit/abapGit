@@ -29,6 +29,14 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS continue_patching
+      IMPORTING
+        !is_commit            TYPE zif_abapgit_services_git=>ty_commit_fields
+      RETURNING
+        VALUE(rv_has_changes) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS get_patch_data
       IMPORTING
         !iv_patch      TYPE string
@@ -66,7 +74,9 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
       END OF c_patch_action .
     DATA mo_stage TYPE REF TO zcl_abapgit_stage .
     DATA mv_section_count TYPE i .
-    DATA mv_pushed TYPE abap_bool .
+    DATA ms_object TYPE zif_abapgit_definitions=>ty_item.
+    DATA mt_files TYPE zif_abapgit_definitions=>ty_stage_tt.
+    DATA ms_commit TYPE zif_abapgit_services_git=>ty_commit_fields.
     DATA mi_repo_online TYPE REF TO zif_abapgit_repo_online .
     DATA mv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result .
 
@@ -345,6 +355,8 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
   METHOD constructor.
 
+    DATA ls_file LIKE LINE OF mt_files.
+
     super->constructor(
       iv_key    = iv_key
       is_file   = is_file
@@ -360,10 +372,55 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
     mi_repo_online ?= mi_repo.
     mv_sci_result = iv_sci_result.
+    ms_object = is_object.
+    mt_files = it_files.
+    IF is_file IS NOT INITIAL.
+      " Use the file filter so a fully committed or deleted file disappears from the diff
+      ls_file-file = is_file.
+      INSERT ls_file INTO TABLE mt_files.
+    ENDIF.
 
     " While patching we always want to be in split mode
     CLEAR mv_unified.
     CREATE OBJECT mo_stage.
+
+  ENDMETHOD.
+
+
+  METHOD continue_patching.
+
+    DATA ls_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings.
+    DATA li_inspector TYPE REF TO zif_abapgit_code_inspector.
+    DATA lt_results TYPE zif_abapgit_code_inspector=>ty_results.
+
+    " Rebuild against the pushed HEAD; old line numbers and selections are no longer valid
+    CREATE OBJECT mo_stage.
+    ms_commit = is_commit.
+    CLEAR: ms_commit-comment, ms_commit-body.
+    refresh_full( ).
+    calculate_diff(
+      is_object = ms_object
+      it_files  = mt_files ).
+    rv_has_changes = boolc( mt_diff_files IS NOT INITIAL ).
+
+    " The refreshed SAP objects need a fresh inspection before the next commit
+    mv_sci_result = zif_abapgit_definitions=>c_sci_result-no_run.
+    ls_settings = mi_repo->get_local_settings( ).
+    IF rv_has_changes = abap_true AND ls_settings-code_inspector_check_variant IS NOT INITIAL.
+      li_inspector = zcl_abapgit_code_inspector=>get_code_inspector( mi_repo->get_package( ) ).
+      lt_results = li_inspector->run(
+        iv_variant = ls_settings-code_inspector_check_variant
+        iv_save    = abap_true ).
+      mv_sci_result = zif_abapgit_definitions=>c_sci_result-passed.
+      READ TABLE lt_results WITH KEY kind = 'W' TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        mv_sci_result = zif_abapgit_definitions=>c_sci_result-warning.
+      ENDIF.
+      READ TABLE lt_results WITH KEY kind = 'E' TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        mv_sci_result = zif_abapgit_definitions=>c_sci_result-failed.
+      ENDIF.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -647,7 +704,10 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
         rs_handled-page = zcl_abapgit_gui_page_commit=>create(
           ii_repo_online = mi_repo_online
-          io_stage       = mo_stage ).
+          io_stage       = mo_stage
+          io_patch       = me
+          is_commit      = ms_commit
+          iv_sci_result  = mv_sci_result ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
@@ -699,12 +759,6 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
     register_handlers( ).
 
     CLEAR mv_section_count.
-
-    IF mv_pushed = abap_true.
-      refresh_full( ).
-      calculate_diff( ).
-      CLEAR mv_pushed.
-    ENDIF.
 
     ri_html = super->zif_abapgit_gui_renderable~render( ).
 
