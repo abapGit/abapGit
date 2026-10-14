@@ -2242,12 +2242,17 @@ function Hotkeys(oKeyMap) {
 
     // add a tooltip/title with the hotkey, currently only sapevents are supported
     findSapEventElements(action).forEach(function(elAnchor) {
-      elAnchor.title = elAnchor.title + " [" + sKey + "]";
+      elAnchor.title = elAnchor.title + " [" + Hotkeys.formatKeyForDisplay(sKey) + "]";
     });
 
     // We replace the actions with callback functions to unify
     // the hotkey execution
     this.oKeyMap[sKey] = function(oEvent) {
+
+      if (sKey === "^Enter") {
+        this.submitMainForm(oEvent);
+        return;
+      }
 
       // The helper object of the page, if it has one: the diff, stage and
       // repository overview pages create it as gHelper
@@ -2296,19 +2301,39 @@ Hotkeys.prototype.showHotkeys = function() {
   }
 };
 
+// Click the primary control so native validation and WebGUI form routing run
+// exactly as they do for a user click. A focused field belongs to its own form.
+Hotkeys.prototype.submitMainForm = function(event) {
+  var active = document.activeElement;
+  var form = active && active.form;
+  for (var parent = active; !form && parent; parent = parent.parentNode) {
+    if (parent.nodeName === "FORM") form = parent;
+  }
+  var command = form ? form.querySelector("input.main, a.main")
+    : !gKeyboard.isTakenByField(active, true) && document.querySelector("form input.main, form a.main");
+  if (command && !command.disabled) {
+    clickSapEvent(command);
+    event.preventDefault();
+  }
+};
+
 Hotkeys.prototype.onkeydown = function(oEvent) {
-  if (oEvent.defaultPrevented || oEvent.ctrlKey || oEvent.altKey || oEvent.metaKey) {
+  if (oEvent.defaultPrevented || oEvent.altKey || oEvent.metaKey) {
     return;
   }
 
-  if (gKeyboard.isTyping()) {
-    return;
+  var sKey = oEvent.key || String.fromCharCode(oEvent.keyCode);
+  // Handle modified Enter on keydown only, avoiding duplicate submits in
+  // controls that also emit keypress or repeat events while the key is held.
+  if (oEvent.ctrlKey) {
+    if (sKey !== "Enter" || oEvent.shiftKey || oEvent.type !== "keydown" || oEvent.repeat) return;
+    if (CommandPalette.isVisible()) return;
+    sKey = "^" + sKey;
   }
 
-  var
-    sKey     = oEvent.key || String.fromCharCode(oEvent.keyCode),
-    fnHotkey = this.oKeyMap[sKey];
+  if (gKeyboard.isTyping() && sKey !== "^Enter") return;
 
+  var fnHotkey = this.oKeyMap[sKey];
   if (fnHotkey) {
     fnHotkey.call(this, oEvent);
   }
@@ -2320,7 +2345,7 @@ Hotkeys.formatKeyForDisplay = function(key) {
   if (Array.isArray(key)) {
     return key.map(function(singleKey) { return Hotkeys.formatKeyForDisplay(singleKey) }).join(" / ");
   }
-  return (key[0] === "^") ? "ctrl+" + key.substring(1) : key;
+  return (key[0] === "^") ? "Ctrl+" + key.substring(1) : key;
 };
 
 Hotkeys.addHotkeyToHelpSheet = function(key, description) {
@@ -2345,6 +2370,9 @@ function setKeyBindings(oKeyMap) {
   var oHotkeys = new Hotkeys(oKeyMap);
 
   gKeyboard.on("keypress", gKeyboard.order.hotkeys, oHotkeys.onkeydown.bind(oHotkeys));
+  gKeyboard.on("keydown", gKeyboard.order.hotkeys, function(event) {
+    if (event.ctrlKey) oHotkeys.onkeydown(event);
+  });
   setTimeout(function() {
     var div                     = document.getElementById("hotkeys-hint");
     if  (div) div.style.opacity = 0.2;

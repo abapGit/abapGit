@@ -69,3 +69,54 @@ CLASS ltcl_webgui_actions IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+CLASS ltcl_form_hotkeys DEFINITION FINAL FOR TESTING
+  DURATION SHORT RISK LEVEL HARMLESS.
+  PRIVATE SECTION.
+    METHODS primary_action_alias FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS secondary_action_no_alias FOR TESTING RAISING zcx_abapgit_exception.
+ENDCLASS.
+
+CLASS ltcl_form_hotkeys IMPLEMENTATION.
+  METHOD primary_action_alias.
+    DATA lo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA lt_hotkeys TYPE zif_abapgit_gui_hotkeys=>ty_hotkeys_with_descr.
+    DATA ls_hotkey LIKE LINE OF lt_hotkeys.
+
+    lo_form = zcl_abapgit_html_form=>create( ).
+    lo_form->command(
+      iv_label = 'Save'
+      iv_action = 'save'
+      iv_cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main ).
+    lt_hotkeys = lo_form->zif_abapgit_gui_hotkeys~get_hotkey_actions( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_hotkeys )
+      exp = 2 ).
+    READ TABLE lt_hotkeys WITH KEY hotkey = 'Enter' INTO ls_hotkey.
+    cl_abap_unit_assert=>assert_subrc( ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_hotkey-action
+      exp = 'save' ).
+    READ TABLE lt_hotkeys WITH KEY hotkey = '^Enter' INTO ls_hotkey.
+    cl_abap_unit_assert=>assert_subrc( ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_hotkey-action
+      exp = 'save' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_hotkey-description
+      exp = 'Save' ).
+  ENDMETHOD.
+
+  METHOD secondary_action_no_alias.
+    DATA lo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA lt_hotkeys TYPE zif_abapgit_gui_hotkeys=>ty_hotkeys_with_descr.
+
+    lo_form = zcl_abapgit_html_form=>create( ).
+    lo_form->command(
+      iv_label = 'Choose'
+      iv_action = 'choose' ).
+    lt_hotkeys = lo_form->zif_abapgit_gui_hotkeys~get_hotkey_actions( ).
+    cl_abap_unit_assert=>assert_initial( lt_hotkeys ).
+  ENDMETHOD.
+ENDCLASS.

@@ -11,7 +11,7 @@ INTERFACE zif_abapgit_gui_hotkeys
   TYPES:
     ty_hotkeys_with_descr TYPE STANDARD TABLE OF ty_hotkey_with_descr
       WITH DEFAULT KEY
-      WITH UNIQUE SORTED KEY action COMPONENTS ui_component action .
+      WITH UNIQUE SORTED KEY action COMPONENTS ui_component action hotkey .
 
   METHODS get_hotkey_actions
     RETURNING
