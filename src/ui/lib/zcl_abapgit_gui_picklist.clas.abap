@@ -135,7 +135,7 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
       iv_name          = c_radio_name
       iv_label         = mv_title
       iv_default_value = '1'
-      iv_condense      = abap_true ).
+      iv_condense      = boolc( lines( <lt_list> ) <= 15 ) ).
 
     LOOP AT <lt_list> ASSIGNING <ls_row>.
       lv_index = sy-tabix.
