@@ -49,6 +49,41 @@ for (const [environment, webgui, routingInFields] of [
   ['desktop', false, false], ['WebGUI action routing', true, false], ['WebGUI hidden routing', true, true]
 ]) {
   for (const navigation of ['toolbar', 'bottom', 'browser', 'F3']) {
+    test(`${environment}: cancelling ${navigation} Back preserves Save`, () => {
+      const { context, toolbar, bottom, submissions, form } = settingsPage(webgui, routingInFields, 'unsaved edit');
+      const originalAction = form.getAttribute('action');
+      for (let attempt = 0; attempt < 2; attempt++) {
+        if (navigation === 'toolbar') toolbar.click();
+        else if (navigation === 'bottom') context.clickSapEvent(bottom);
+        else if (navigation === 'browser') context.triggerSapEventBack('go_back');
+        else new context.Hotkeys({ F3: 'go_back' }).onkeydown({ key: 'F3', preventDefault() {} });
+        // The server's No response leaves this DOM in place.
+        assert.equal(form.getAttribute('action'), originalAction);
+        if (routingInFields) assert.equal(form.elements[1].value, 'save');
+      }
+      // Desktop's main Save button uses the form action without an override.
+      if (webgui) context.submitSapeventForm({}, 'save', 'post', form);
+      else form.submit();
+      assert.equal(submissions.length, 3);
+      assert.equal(submissions[2].value, 'unsaved edit');
+      if (routingInFields) assert.equal(submissions[2].params, 'save');
+      else assert.match(submissions[2].action, /(?:sapevent:|PARAMS=)save$/i);
+    });
+  }
+}
+
+test('failed toolbar submission restores the form action', () => {
+  const { toolbar, form } = settingsPage(false, false, 'unsaved edit');
+  const originalAction = form.getAttribute('action');
+  form.submit = () => { throw new Error('submission failed'); };
+  assert.throws(() => toolbar.click(), /submission failed/);
+  assert.equal(form.getAttribute('action'), originalAction);
+});
+
+for (const [environment, webgui, routingInFields] of [
+  ['desktop', false, false], ['WebGUI action routing', true, false], ['WebGUI hidden routing', true, true]
+]) {
+  for (const navigation of ['toolbar', 'bottom', 'browser', 'F3']) {
     for (const value of ['saved', 'unsaved edit']) {
       test(`${environment}: ${navigation} Back submits current ${value} fields`, () => {
         const { context, toolbar, bottom, submissions } = settingsPage(webgui, routingInFields, value);
