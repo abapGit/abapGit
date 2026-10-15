@@ -221,6 +221,9 @@ CLASS ltd_repo_online IMPLEMENTATION.
   METHOD zif_abapgit_repo~set_dot_abapgit.
   ENDMETHOD.
 
+  METHOD zif_abapgit_repo~set_files_local.
+  ENDMETHOD.
+
   METHOD zif_abapgit_repo~set_files_remote.
   ENDMETHOD.
 
