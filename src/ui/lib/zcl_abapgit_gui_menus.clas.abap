@@ -184,10 +184,12 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
       iv_act   = |{ zif_abapgit_definitions=>c_action-repo_infos }?key={ iv_key }|
       iv_cur   = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_infos ) ).
 
-    zcl_abapgit_exit=>get_instance( )->enhance_repo_toolbar(
-      io_menu = ro_menu
-      iv_key  = iv_key
-      iv_act  = iv_act ).
+    IF iv_act IS NOT INITIAL.
+      zcl_abapgit_exit=>get_instance( )->enhance_repo_toolbar(
+        io_menu = ro_menu
+        iv_key  = iv_key
+        iv_act  = iv_act ).
+    ENDIF.
 
     add_back(
       io_menu      = ro_menu
