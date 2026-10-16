@@ -1,0 +1,13 @@
+{
+  "orasVersion": "1.2.3",
+  "v1": {
+    "manifestDigest": "sha256:8b93708aac1e86c9f6de778dccdef032894a5999167f2a1e34a0d07b5711f7dd",
+    "layerDigest": "sha256:cc6f26a279276920ab1f0287f5d5d616fb635e8edcce3c332b3128120a80a2fe",
+    "layerSize": 10240
+  },
+  "v2": {
+    "manifestDigest": "sha256:4ae73b1acc45ba456ca9b463314b5567587cb0ce1b684283b1060e71b1c9b2c0",
+    "layerDigest": "sha256:f77d86f891fbb427a4580705f2161ab52b0a5f0fcc04a088941d72a39d9c056e",
+    "layerSize": 10240
+  }
+}

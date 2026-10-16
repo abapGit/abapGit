@@ -161,6 +161,10 @@ CLASS ltd_repo_srv IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_repo_srv~new_oci.
+
+  ENDMETHOD.
+
   METHOD zif_abapgit_repo_srv~purge.
 
   ENDMETHOD.
@@ -235,6 +239,33 @@ CLASS ltd_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~is_offline.
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_repo_kind.
+    rv_kind = zif_abapgit_persistence=>c_repo_kind-git.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~supports_git.
+    rv_yes = abap_true.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~supports_push.
+    rv_yes = abap_true.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_remote_address.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_selected_reference.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_resolved_revision.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_imported_revision.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~set_oci_reference.
   ENDMETHOD.
 
   METHOD zif_abapgit_repo~refresh.

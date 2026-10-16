@@ -874,6 +874,8 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
     LOOP AT lt_repos INTO li_repo.
       IF li_repo->get_local_settings( )-flow = abap_false.
         CONTINUE.
+      ELSEIF li_repo->supports_git( ) = abap_false.
+        CONTINUE.
       ELSEIF zcl_abapgit_factory=>get_sap_package( li_repo->get_package( )
           )->are_changes_recorded_in_tr_req( ) = abap_false.
         CONTINUE.
@@ -888,6 +890,7 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
   METHOD update_all_branches.
 
     DATA ls_feature      LIKE LINE OF it_features.
+    DATA li_repo         TYPE REF TO zif_abapgit_repo.
     DATA li_repo_online  TYPE REF TO zif_abapgit_repo_online.
     DATA lo_github       TYPE REF TO zcl_abapgit_pr_enum_github.
     DATA lv_previous_key TYPE zif_abapgit_persistence=>ty_value.
@@ -905,7 +908,12 @@ CLASS zcl_abapgit_flow_logic IMPLEMENTATION.
       ENDIF.
 
       IF lv_previous_key <> ls_feature-repo-key.
-        li_repo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( ls_feature-repo-key ).
+        li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( ls_feature-repo-key ).
+        IF li_repo->supports_git( ) = abap_false.
+          rs_result-skipped = rs_result-skipped + 1.
+          CONTINUE.
+        ENDIF.
+        li_repo_online ?= li_repo.
         lv_url = li_repo_online->get_url( ).
 
         FIND FIRST OCCURRENCE OF REGEX 'github\.com\/([^\/]+)\/([^\/]+)'

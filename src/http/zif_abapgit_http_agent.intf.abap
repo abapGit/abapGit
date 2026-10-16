@@ -16,13 +16,14 @@ INTERFACE zif_abapgit_http_agent
 
   METHODS request
     IMPORTING
-      !iv_url            TYPE string
-      !iv_method         TYPE string DEFAULT c_methods-get
-      !io_query          TYPE REF TO zcl_abapgit_string_map OPTIONAL
-      !io_headers        TYPE REF TO zcl_abapgit_string_map OPTIONAL
-      !iv_payload        TYPE any OPTIONAL " can be string, xstring
+      !iv_url             TYPE string
+      !iv_method          TYPE string DEFAULT c_methods-get
+      !io_query           TYPE REF TO zcl_abapgit_string_map OPTIONAL
+      !io_headers         TYPE REF TO zcl_abapgit_string_map OPTIONAL
+      !iv_payload         TYPE any OPTIONAL " can be string, xstring
+      !iv_follow_redirect TYPE abap_bool DEFAULT abap_true
     RETURNING
-      VALUE(ri_response) TYPE REF TO zif_abapgit_http_response
+      VALUE(ri_response)  TYPE REF TO zif_abapgit_http_response
     RAISING
       zcx_abapgit_exception .
 

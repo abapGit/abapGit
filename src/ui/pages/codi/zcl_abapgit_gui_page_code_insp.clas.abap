@@ -193,6 +193,9 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_actions-stage.
 
+        IF mi_repo->supports_git( ) = abap_false.
+          zcx_abapgit_exception=>raise( 'Staging is only supported for Git repositories' ).
+        ENDIF.
         li_repo_online ?= mi_repo.
 
         IF is_stage_allowed( ) = abap_true.
@@ -212,6 +215,9 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
       WHEN c_actions-patch.
 
+        IF mi_repo->supports_git( ) = abap_false.
+          zcx_abapgit_exception=>raise( 'Patch staging is only supported for Git repositories' ).
+        ENDIF.
         IF is_stage_allowed( ) = abap_true.
 
           rs_handled-page = zcl_abapgit_gui_page_patch=>create(
@@ -228,6 +234,9 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
       WHEN c_actions-commit.
 
+        IF mi_repo->supports_git( ) = abap_false.
+          zcx_abapgit_exception=>raise( 'Committing is only supported for Git repositories' ).
+        ENDIF.
         li_repo_online ?= mi_repo.
 
         IF is_stage_allowed( ) = abap_true.
@@ -290,7 +299,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
       lv_opt = zif_abapgit_html=>c_html_opt-crossout.
     ENDIF.
 
-    IF mi_repo->is_offline( ) = abap_true.
+    IF mi_repo->supports_git( ) = abap_false.
       RETURN.
     ENDIF.
 
