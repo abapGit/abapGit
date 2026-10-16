@@ -113,6 +113,9 @@ INTERFACE zif_abapgit_repo
   METHODS set_files_remote
     IMPORTING
       it_files TYPE zif_abapgit_git_definitions=>ty_files_tt .
+  METHODS set_files_local
+    IMPORTING
+      it_files TYPE zif_abapgit_definitions=>ty_files_item_tt .
   METHODS set_local_settings
     IMPORTING
       is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
