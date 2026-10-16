@@ -19,14 +19,19 @@ CLASS zcl_abapgit_gui_menus DEFINITION
 
     CLASS-METHODS settings
       IMPORTING
-        !iv_act        TYPE string
+        !iv_act        TYPE string OPTIONAL
+        !iv_with_back  TYPE abap_bool DEFAULT abap_false
+        !iv_form_id    TYPE string OPTIONAL
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
     CLASS-METHODS repo_settings
       IMPORTING
         !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
-        !iv_act        TYPE string
+        !iv_act        TYPE string OPTIONAL
+        !iv_class      TYPE string OPTIONAL
+        !iv_with_back  TYPE abap_bool DEFAULT abap_false
+        !iv_form_id    TYPE string OPTIONAL
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
@@ -36,11 +41,38 @@ CLASS zcl_abapgit_gui_menus DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    CLASS-METHODS add_back
+      IMPORTING
+        io_menu      TYPE REF TO zcl_abapgit_html_toolbar
+        iv_with_back TYPE abap_bool
+        iv_form_id   TYPE string.
+
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
+
+
+  METHOD add_back.
+
+    IF iv_with_back = abap_true.
+      IF iv_form_id IS INITIAL.
+        io_menu->add(
+          iv_txt = 'Back'
+          iv_act = zif_abapgit_definitions=>c_action-go_back ).
+      ELSE.
+        " Submit current fields for the page's dirty check
+        io_menu->add(
+          iv_txt = 'Back'
+          iv_typ = zif_abapgit_html=>c_action_type-onclick
+          iv_act = |submitSapeventForm(\{ \}, '{ zif_abapgit_definitions=>c_action-go_back }', 'post', |
+                && |document.getElementById('{ iv_form_id }'))| ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD advanced.
@@ -122,30 +154,47 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
     ro_menu = zcl_abapgit_html_toolbar=>create( 'toolbar-repo-settings' ).
 
     ro_menu->add(
-      iv_txt = 'Repository'
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ iv_key }|
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_settings )
+      iv_txt   = 'Repository'
+      iv_title = `Repository Settings`
+      iv_class = iv_class
+      iv_act   = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ iv_key }|
+      iv_cur   = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_settings )
     )->add(
-      iv_txt = 'Local'
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_local_settings }?key={ iv_key }|
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_local_settings )
+      iv_txt   = 'Local'
+      iv_title = `Local Settings`
+      iv_class = iv_class
+      iv_act   = |{ zif_abapgit_definitions=>c_action-repo_local_settings }?key={ iv_key }|
+      iv_cur   = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_local_settings )
     )->add(
-      iv_txt = 'Remote'
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_settings }?key={ iv_key }|
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_remote_settings )
+      iv_txt   = 'Remote'
+      iv_title = `Remote Settings`
+      iv_class = iv_class
+      iv_act   = |{ zif_abapgit_definitions=>c_action-repo_remote_settings }?key={ iv_key }|
+      iv_cur   = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_remote_settings )
     )->add(
-      iv_txt = 'Background'
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_background }?key={ iv_key }|
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_background )
+      iv_txt   = 'Background'
+      iv_title = `Background Settings`
+      iv_class = iv_class
+      iv_act   = |{ zif_abapgit_definitions=>c_action-repo_background }?key={ iv_key }|
+      iv_cur   = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_background )
     )->add(
-      iv_txt = 'Stats'
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_infos }?key={ iv_key }|
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_infos ) ).
+      iv_txt   = 'Stats'
+      iv_title = `Statistics`
+      iv_class = iv_class
+      iv_act   = |{ zif_abapgit_definitions=>c_action-repo_infos }?key={ iv_key }|
+      iv_cur   = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_infos ) ).
 
-    zcl_abapgit_exit=>get_instance( )->enhance_repo_toolbar(
-      io_menu = ro_menu
-      iv_key  = iv_key
-      iv_act  = iv_act ).
+    IF iv_act IS NOT INITIAL.
+      zcl_abapgit_exit=>get_instance( )->enhance_repo_toolbar(
+        io_menu = ro_menu
+        iv_key  = iv_key
+        iv_act  = iv_act ).
+    ENDIF.
+
+    add_back(
+      io_menu      = ro_menu
+      iv_with_back = iv_with_back
+      iv_form_id   = iv_form_id ).
 
   ENDMETHOD.
 
@@ -162,6 +211,11 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
       iv_txt = 'Personal'
       iv_act = zif_abapgit_definitions=>c_action-go_settings_personal
       iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings_personal ) ).
+
+    add_back(
+      io_menu      = ro_menu
+      iv_with_back = iv_with_back
+      iv_form_id   = iv_form_id ).
 
   ENDMETHOD.
 ENDCLASS.

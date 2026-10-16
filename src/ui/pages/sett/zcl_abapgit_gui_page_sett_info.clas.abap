@@ -2,12 +2,12 @@ CLASS zcl_abapgit_gui_page_sett_info DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_component
   FINAL
-  CREATE PRIVATE .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_gui_event_handler .
-    INTERFACES zif_abapgit_gui_renderable .
+    INTERFACES zif_abapgit_gui_event_handler.
+    INTERFACES zif_abapgit_gui_renderable.
 
     CLASS-METHODS create
       IMPORTING
@@ -15,12 +15,12 @@ CLASS zcl_abapgit_gui_page_sett_info DEFINITION
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS constructor
       IMPORTING
         !ii_repo TYPE REF TO zif_abapgit_repo
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -30,13 +30,13 @@ CLASS zcl_abapgit_gui_page_sett_info DEFINITION
         measure TYPE string,
         local   TYPE i,
         remote  TYPE i,
-      END OF ty_stats .
+      END OF ty_stats.
     TYPES:
       BEGIN OF ty_infos,
         size TYPE p LENGTH 16 DECIMALS 0,
         line TYPE p LENGTH 16 DECIMALS 0,
         sloc TYPE p LENGTH 16 DECIMALS 0,
-      END OF ty_infos .
+      END OF ty_infos.
 
     CONSTANTS:
       BEGIN OF c_id,
@@ -47,34 +47,34 @@ CLASS zcl_abapgit_gui_page_sett_info DEFINITION
         deserialized_at TYPE string VALUE 'deserialized_at',
         stats           TYPE string VALUE 'stats',
         stats_table     TYPE string VALUE 'stats_table',
-      END OF c_id .
+      END OF c_id.
 
-    DATA mo_form TYPE REF TO zcl_abapgit_html_form .
-    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
-    DATA mi_repo TYPE REF TO zif_abapgit_repo .
+    DATA mo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
+    DATA mi_repo TYPE REF TO zif_abapgit_repo.
     DATA:
-      mt_stats TYPE STANDARD TABLE OF ty_stats WITH KEY measure .
+      mt_stats TYPE STANDARD TABLE OF ty_stats WITH KEY measure.
 
     METHODS get_form_schema
       RETURNING
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS read_settings
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS read_stats
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS read_stats_files
       EXPORTING
         !et_local  TYPE zif_abapgit_definitions=>ty_files_item_tt
         !et_remote TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS read_stats_state
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS read_stats_size_lines_sloc
       IMPORTING
         !it_local        TYPE zif_abapgit_definitions=>ty_files_item_tt
@@ -83,38 +83,38 @@ CLASS zcl_abapgit_gui_page_sett_info DEFINITION
         !et_local_items  TYPE zif_abapgit_definitions=>ty_items_tt
         !et_remote_items TYPE zif_abapgit_definitions=>ty_items_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS read_stats_file
       IMPORTING
         !is_file       TYPE zif_abapgit_git_definitions=>ty_file
       RETURNING
-        VALUE(rs_info) TYPE ty_infos .
+        VALUE(rs_info) TYPE ty_infos.
     METHODS read_stats_objects
       CHANGING
         !ct_local_items  TYPE zif_abapgit_definitions=>ty_items_tt
         !ct_remote_items TYPE zif_abapgit_definitions=>ty_items_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS format_user
       IMPORTING
         !iv_username   TYPE syuname
       RETURNING
-        VALUE(rv_user) TYPE string .
+        VALUE(rv_user) TYPE string.
     METHODS format_timestamp
       IMPORTING
         !iv_timestamp       TYPE timestampl
       RETURNING
-        VALUE(rv_timestamp) TYPE string .
+        VALUE(rv_timestamp) TYPE string.
     METHODS format_size
       IMPORTING
         !iv_size       TYPE i
       RETURNING
-        VALUE(rv_size) TYPE string .
+        VALUE(rv_size) TYPE string.
     METHODS get_unsupported_objects_local
       RETURNING
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_items_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -144,7 +144,8 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
       iv_page_title      = 'Repository Stats'
       io_page_menu       = zcl_abapgit_gui_menus=>repo_settings(
                              iv_key = ii_repo->get_key( )
-                             iv_act = zif_abapgit_definitions=>c_action-repo_infos )
+                             iv_act = zif_abapgit_definitions=>c_action-repo_infos
+                             iv_with_back = abap_true )
       ii_child_component = lo_component ).
 
   ENDMETHOD.
@@ -181,8 +182,10 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     ENDIF.
 
     cl_abap_tstmp=>move(
-      EXPORTING tstmp_src = iv_timestamp
-      IMPORTING tstmp_tgt = lv_short ).
+      EXPORTING
+        tstmp_src = iv_timestamp
+      IMPORTING
+        tstmp_tgt = lv_short ).
 
     rv_timestamp = |{ lv_short TIMESTAMP = ISO }|.
 
@@ -215,8 +218,8 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     DATA lv_label TYPE string.
 
     ro_form = zcl_abapgit_html_form=>create(
-                iv_form_id   = 'repo-infos-form'
-                iv_help_page = 'https://docs.abapgit.org/settings-stats.html' ).
+      iv_form_id   = 'repo-infos-form'
+      iv_help_page = 'https://docs.abapgit.org/settings-stats.html' ).
 
     IF mi_repo->is_offline( ) = abap_true.
       lv_label = 'ZIP File'.
@@ -262,6 +265,29 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
       iv_label       = 'Back'
       iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-link
       iv_action      = zif_abapgit_definitions=>c_action-go_back ).
+
+  ENDMETHOD.
+
+
+  METHOD get_unsupported_objects_local.
+
+    DATA: lt_tadir           TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lt_supported_types TYPE zif_abapgit_objects=>ty_types_tt.
+
+    FIELD-SYMBOLS: <ls_tadir>  LIKE LINE OF lt_tadir,
+                   <ls_object> LIKE LINE OF rt_objects.
+
+    lt_tadir = mi_repo->get_tadir_objects( ).
+
+    lt_supported_types = zcl_abapgit_objects=>supported_list( ).
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      READ TABLE lt_supported_types WITH KEY table_line = <ls_tadir>-object TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        APPEND INITIAL LINE TO rt_objects ASSIGNING <ls_object>.
+        MOVE-CORRESPONDING <ls_tadir> TO <ls_object>.
+        <ls_object>-obj_type = <ls_tadir>-object.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -597,29 +623,6 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     ri_html->add( mo_form->render( mo_form_data ) ).
 
     ri_html->add( `</div>` ).
-
-  ENDMETHOD.
-
-
-  METHOD get_unsupported_objects_local.
-
-    DATA: lt_tadir           TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lt_supported_types TYPE zif_abapgit_objects=>ty_types_tt.
-
-    FIELD-SYMBOLS: <ls_tadir>  LIKE LINE OF lt_tadir,
-                   <ls_object> LIKE LINE OF rt_objects.
-
-    lt_tadir = mi_repo->get_tadir_objects( ).
-
-    lt_supported_types = zcl_abapgit_objects=>supported_list( ).
-    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      READ TABLE lt_supported_types WITH KEY table_line = <ls_tadir>-object TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
-        APPEND INITIAL LINE TO rt_objects ASSIGNING <ls_object>.
-        MOVE-CORRESPONDING <ls_tadir> TO <ls_object>.
-        <ls_object>-obj_type = <ls_tadir>-object.
-      ENDIF.
-    ENDLOOP.
 
   ENDMETHOD.
 ENDCLASS.

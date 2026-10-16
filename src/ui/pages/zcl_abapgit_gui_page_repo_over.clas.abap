@@ -495,9 +495,12 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_class    = |{ lc_action_class } { lc_offline_class }|
       iv_li_class = |{ lc_action_class }| ).
 
-    zcl_abapgit_html_toolbar_lib=>render_repo_settings_dropdown(
-      io_toolbar  = lo_toolbar
-      iv_key      = c_dummy_key
+    lo_toolbar->add(
+      iv_txt      = 'Repo Settings'
+      iv_title    = 'Repository Settings'
+      io_sub      = zcl_abapgit_gui_menus=>repo_settings(
+                      iv_key   = c_dummy_key
+                      iv_class = lc_action_class )
       iv_class    = |{ lc_action_class }|
       iv_li_class = |{ lc_action_class }| ).
 
@@ -1063,7 +1066,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_act = zif_abapgit_definitions=>c_action-repo_newoffline
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>settings( )
-      io_sub = zcl_abapgit_gui_menus=>settings( space )
+      io_sub = zcl_abapgit_gui_menus=>settings( )
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>refresh( )
       iv_act = c_action-refresh_list

@@ -301,6 +301,8 @@ function appendParamsToAction(action, params) {
 // and submit with sapevent
 function submitSapeventForm(params, action, method, form) {
 
+  var isSuppliedForm = Boolean(form);
+
   // A GET submit replaces the action URL's query string with the form fields.
   // On WebGUI that would wipe the ITS routing parameters the wired-up form
   // action carries (~control / ~event / PARAMS), so the request no longer
@@ -352,6 +354,7 @@ function submitSapeventForm(params, action, method, form) {
   // Nothing wires up a form anywhere else, so outside the HTML GUI there is
   // nothing to look for.
   var itsParams = [];
+  var originalItsParams = [];
   var isItsForm = false;
   var i;
 
@@ -366,6 +369,7 @@ function submitSapeventForm(params, action, method, form) {
     // request with conflicting PARAMS would raise whichever event ITS picks.
     // No escaping here, unlike the action below: the browser encodes the value
     for (i = 0; i < itsParams.length; i++) {
+      originalItsParams.push(itsParams[i].value);
       itsParams[i].value = action;
     }
   } else if (isItsForm) {
@@ -406,7 +410,20 @@ function submitSapeventForm(params, action, method, form) {
     }
   }
 
-  submitForm(form);
+  try {
+    submitForm(form);
+  } finally {
+    // A cancelled Back can leave the same settings DOM on screen. The submit
+    // has consumed the temporary routing; keep the supplied form's default
+    // action and ITS fields ready for its next command (especially Save).
+    if (isSuppliedForm) {
+      if (form_action === null) form.removeAttribute("action");
+      else form.setAttribute("action", form_action);
+      for (i = 0; i < itsParams.length; i++) {
+        itsParams[i].value = originalItsParams[i];
+      }
+    }
+  }
 }
 
 // Trigger a server-rendered sapevent element (anchor / submit input) the way a
