@@ -199,8 +199,8 @@ CLASS ltcl_is_patch_line_possible IMPLEMENTATION.
   METHOD then_patch_shd_be_possible.
 
     cl_abap_unit_assert=>assert_not_initial(
-        act = mv_is_patch_line_possible
-        msg = |Patch should be possible| ).
+      act = mv_is_patch_line_possible
+      msg = |Patch should be possible| ).
 
   ENDMETHOD.
 
@@ -208,8 +208,8 @@ CLASS ltcl_is_patch_line_possible IMPLEMENTATION.
   METHOD then_patch_shd_not_be_possible.
 
     cl_abap_unit_assert=>assert_initial(
-        act = mv_is_patch_line_possible
-        msg = |Patch should not be possible| ).
+      act = mv_is_patch_line_possible
+      msg = |Patch should not be possible| ).
 
   ENDMETHOD.
 
@@ -281,7 +281,7 @@ CLASS ltcl_continue_patching DEFINITION FINAL FOR TESTING
     METHODS commit_refresh_warning FOR TESTING RAISING cx_static_check.
     METHODS commit_patch
       RETURNING VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
-      RAISING cx_static_check.
+      RAISING   cx_static_check.
 ENDCLASS.
 
 
@@ -537,7 +537,7 @@ CLASS ltcl_continue_patching IMPLEMENTATION.
     ls_file-filename = 'test.abap'.
     CREATE OBJECT mo_fixture
       EXPORTING
-        iv_key = ls_repo-key
+        iv_key  = ls_repo-key
         is_file = ls_file.
     mo_patch = mo_fixture.
   ENDMETHOD.
@@ -557,8 +557,8 @@ CLASS ltcl_continue_patching IMPLEMENTATION.
     CREATE OBJECT lo_stage.
     lo_page ?= zcl_abapgit_gui_page_commit=>create(
       ii_repo_online = mo_repo
-      io_stage = lo_stage
-      io_patch = mo_patch ).
+      io_stage       = lo_stage
+      io_patch       = mo_patch ).
     lo_commit ?= lo_page->get_child( ).
     APPEND 'comment=Test&committer_name=Committer&committer_email=test@example.org' TO lt_postdata.
     rs_handled = lo_commit->zif_abapgit_gui_event_handler~on_event(
@@ -611,12 +611,14 @@ CLASS ltcl_continue_patching IMPLEMENTATION.
   METHOD commit_refresh_warning.
     DATA ls_handled TYPE zif_abapgit_gui_event_handler=>ty_handling_result.
     DATA lv_message TYPE string.
+    DATA lv_act TYPE abap_bool.
     mo_fixture->mv_fail_refresh = abap_true.
     ls_handled = commit_patch( ).
     " MESSAGE with a free text fills these fields on SAP, but not in open-abap
     CONCATENATE sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_message.
+    lv_act = boolc( lv_message CS 'Commit was successful, but continuing patching failed' ).
     cl_abap_unit_assert=>assert_equals(
-      act = boolc( lv_message CS 'Commit was successful, but continuing patching failed' )
+      act = lv_act
       exp = abap_true ).
   ENDMETHOD.
 
@@ -632,7 +634,7 @@ CLASS ltcl_continue_patching IMPLEMENTATION.
     READ TABLE lt_files INTO ls_file INDEX 1.
     cl_abap_unit_assert=>assert_subrc( ).
     ls_file-o_diff->set_patch_new(
-      iv_line_new = 2
+      iv_line_new   = 2
       iv_patch_flag = abap_true ).
     ls_commit-committer_name = 'Committer'.
     ls_commit-committer_email = 'committer@example.org'.
@@ -685,10 +687,10 @@ CLASS ltcl_continue_patching IMPLEMENTATION.
     li_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( '1' ).
     CREATE OBJECT lo_stage.
     lo_page ?= zcl_abapgit_gui_page_commit=>create(
-        ii_repo_online = li_repo
-        io_stage       = lo_stage
-        io_patch       = mo_patch
-        iv_sci_result  = zif_abapgit_definitions=>c_sci_result-no_run ).
+      ii_repo_online = li_repo
+      io_stage       = lo_stage
+      io_patch       = mo_patch
+      iv_sci_result  = zif_abapgit_definitions=>c_sci_result-no_run ).
     lo_commit ?= lo_page->get_child( ).
     " Missing required fields: no push or patch reset may happen
     ls_handled = lo_commit->zif_abapgit_gui_event_handler~on_event(
@@ -709,9 +711,9 @@ CLASS ltcl_continue_patching IMPLEMENTATION.
     li_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( '1' ).
     CREATE OBJECT lo_stage.
     lo_page ?= zcl_abapgit_gui_page_commit=>create(
-        ii_repo_online = li_repo
-        io_stage       = lo_stage
-        iv_sci_result  = zif_abapgit_definitions=>c_sci_result-no_run ).
+      ii_repo_online = li_repo
+      io_stage       = lo_stage
+      iv_sci_result  = zif_abapgit_definitions=>c_sci_result-no_run ).
     lo_commit ?= lo_page->get_child( ).
     TRY.
         lo_commit->zif_abapgit_gui_event_handler~on_event(
