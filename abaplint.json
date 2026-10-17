@@ -586,6 +586,18 @@
     "use_new": true,
     "when_others_last": true,
     "whitespace_end": true,
+    "alias_never_reassigned": true,
+    "boolean_flag_via_if": true,
+    "bound_check_after_create": true,
+    "clear_after_declaration": false,
+    "constant_condition": true,
+    "copy_chain": true,
+    "copy_of_initial_variable": true,
+    "is_assigned_in_loop": false,
+    "redundant_cast": true,
+    "single_use_expression_temp": true,
+    "try_cast_empty_catch": true,
+    "unnecessary_copy": true,
     "xml_consistency": true
   }
 }
