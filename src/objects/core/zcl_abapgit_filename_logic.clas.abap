@@ -204,8 +204,8 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
         IF ev_ext = `po`.
           ev_lang = to_lower( lv_lang_suffix ).
         ELSEIF ev_ext = `properties`.
-          lv_sap1 = zcl_abapgit_convert=>language_bcp47_to_sap1( lv_lang_suffix ).
-          ev_lang = zcl_abapgit_convert=>language_sap1_to_sap2( lv_sap1 ). " actually it is to_upper( ISO-639 )
+          lv_sap1 = zcl_abapgit_convert_language=>bcp47_to_sap1( lv_lang_suffix ).
+          ev_lang = zcl_abapgit_convert_language=>sap1_to_sap2( lv_sap1 ). " actually it is to_upper( ISO-639 )
         ELSE.
           zcx_abapgit_exception=>raise( |Unexpected translation file format { iv_filename }| ).
         ENDIF.

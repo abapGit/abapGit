@@ -291,7 +291,7 @@ CLASS ltcl_pull IMPLEMENTATION.
 
     DATA li_no_pull TYPE REF TO zif_abapgit_repo_pull.
 
-    zcl_abapgit_injector=>set_repo_pull( li_no_pull ).
+    zcl_abapgit_repo_injector=>set_repo_pull( li_no_pull ).
 
   ENDMETHOD.
 
@@ -305,8 +305,8 @@ CLASS ltcl_pull IMPLEMENTATION.
     CREATE OBJECT lo_other.
     mo_repo->ms_checks-transport-transport = 'A4HK900001'.
     lo_other->ms_checks-transport-transport = 'A4HK900002'.
-    li_first = zcl_abapgit_factory=>get_repo_pull( mo_repo ).
-    li_second = zcl_abapgit_factory=>get_repo_pull( lo_other ).
+    li_first = zcl_abapgit_repo_factory=>get_repo_pull( mo_repo ).
+    li_second = zcl_abapgit_repo_factory=>get_repo_pull( lo_other ).
     ls_checks = li_first->checks( ).
     cl_abap_unit_assert=>assert_equals(
       act = ls_checks-transport-transport
@@ -339,8 +339,8 @@ CLASS ltcl_pull IMPLEMENTATION.
     DATA lv_same TYPE abap_bool.
 
     CREATE OBJECT lo_other.
-    zcl_abapgit_injector=>set_repo_pull( mi_cut ).
-    li_pull = zcl_abapgit_factory=>get_repo_pull( lo_other ).
+    zcl_abapgit_repo_injector=>set_repo_pull( mi_cut ).
+    li_pull = zcl_abapgit_repo_factory=>get_repo_pull( lo_other ).
     lv_same = boolc( li_pull = mi_cut ).
     cl_abap_unit_assert=>assert_equals(
       act = lv_same

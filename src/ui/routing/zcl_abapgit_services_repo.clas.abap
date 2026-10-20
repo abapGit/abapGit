@@ -365,7 +365,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     DATA ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
 
     " find troublesome objects
-    li_pull = zcl_abapgit_factory=>get_repo_pull( ii_repo ).
+    li_pull = zcl_abapgit_repo_factory=>get_repo_pull( ii_repo ).
 
     ls_checks = li_pull->checks( ).
 
@@ -927,7 +927,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     DATA li_log TYPE REF TO zif_abapgit_log.
     DATA lv_msg TYPE string.
 
-    li_pull = zcl_abapgit_factory=>get_repo_pull( ii_repo ).
+    li_pull = zcl_abapgit_repo_factory=>get_repo_pull( ii_repo ).
 
     li_log = li_pull->pull( is_checks ).
 

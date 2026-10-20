@@ -636,7 +636,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
   METHOD laiso_to_langu_safe.
 
-    zcl_abapgit_convert=>language_sap2_to_sap1(
+    zcl_abapgit_convert_language=>sap2_to_sap1(
       EXPORTING
         im_lang_sap2  = iv_laiso
       RECEIVING
@@ -653,7 +653,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
   METHOD langu_to_laiso_safe.
 
-    zcl_abapgit_convert=>language_sap1_to_sap2(
+    zcl_abapgit_convert_language=>sap1_to_sap2(
       EXPORTING
         im_lang_sap1  = iv_langu
       RECEIVING

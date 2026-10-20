@@ -686,7 +686,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
   METHOD fill_translation.
     DATA: lv_langu_sap1 TYPE sy-langu.
 
-    lv_langu_sap1 = zcl_abapgit_convert=>language_sap2_to_sap1( iv_language ).
+    lv_langu_sap1 = zcl_abapgit_convert_language=>sap2_to_sap1( iv_language ).
 
     rt_result-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
       iv_clif_name = iv_name
@@ -718,7 +718,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
       lo_properties_file ?= li_translation_file.
       lo_properties_file->get_translations( IMPORTING ev_data = ls_aff_data ).
 
-      lv_sap1 = zcl_abapgit_convert=>language_sap2_to_sap1( li_translation_file->lang( ) ).
+      lv_sap1 = zcl_abapgit_convert_language=>sap2_to_sap1( li_translation_file->lang( ) ).
       ls_aff_data-header-original_language = lv_sap1.
 
 

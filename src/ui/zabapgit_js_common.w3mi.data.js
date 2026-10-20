@@ -301,6 +301,8 @@ function appendParamsToAction(action, params) {
 // and submit with sapevent
 function submitSapeventForm(params, action, method, form) {
 
+  var isSuppliedForm = Boolean(form);
+
   // A GET submit replaces the action URL's query string with the form fields.
   // On WebGUI that would wipe the ITS routing parameters the wired-up form
   // action carries (~control / ~event / PARAMS), so the request no longer
@@ -352,6 +354,7 @@ function submitSapeventForm(params, action, method, form) {
   // Nothing wires up a form anywhere else, so outside the HTML GUI there is
   // nothing to look for.
   var itsParams = [];
+  var originalItsParams = [];
   var isItsForm = false;
   var i;
 
@@ -366,6 +369,7 @@ function submitSapeventForm(params, action, method, form) {
     // request with conflicting PARAMS would raise whichever event ITS picks.
     // No escaping here, unlike the action below: the browser encodes the value
     for (i = 0; i < itsParams.length; i++) {
+      originalItsParams.push(itsParams[i].value);
       itsParams[i].value = action;
     }
   } else if (isItsForm) {
@@ -406,7 +410,20 @@ function submitSapeventForm(params, action, method, form) {
     }
   }
 
-  submitForm(form);
+  try {
+    submitForm(form);
+  } finally {
+    // A cancelled Back can leave the same settings DOM on screen. The submit
+    // has consumed the temporary routing; keep the supplied form's default
+    // action and ITS fields ready for its next command (especially Save).
+    if (isSuppliedForm) {
+      if (form_action === null) form.removeAttribute("action");
+      else form.setAttribute("action", form_action);
+      for (i = 0; i < itsParams.length; i++) {
+        itsParams[i].value = originalItsParams[i];
+      }
+    }
+  }
 }
 
 // Trigger a server-rendered sapevent element (anchor / submit input) the way a
@@ -1951,6 +1968,86 @@ function enableArrowListNavigation() {
   gKeyboard.on("keydown", gKeyboard.order.menus, new KeyNavigation().getHandler());
 }
 
+// Picklists hide their radio buttons behind labels, so native radio keyboard
+// navigation cannot reach them. Move the checked state without clicking: a
+// selection must never submit the form until the user chooses it.
+// eslint-disable-next-line no-unused-vars
+function enablePicklistNavigation() {
+  var picklist = document.querySelector(".picklist");
+  if (!picklist) return;
+  var radios = picklist.querySelectorAll('input[type="radio"]');
+  if (!radios.length) return;
+
+  // The list is one Tab stop. Arrows move within it; Tab goes to Choose
+  // and Back instead of visiting every entry.
+  function updateTabStop(selected) {
+    for (var i = 0; i < radios.length; i++) {
+      radios[i].nextElementSibling.setAttribute("tabindex", radios[i] === selected ? "0" : "-1");
+    }
+  }
+  var initial;
+  for (var i = 0; i < radios.length; i++) {
+    if (!radios[i].disabled && (!initial || radios[i].checked)) initial = radios[i];
+  }
+  updateTabStop(initial);
+
+  picklist.addEventListener("click", function(event) {
+    for (var i = 0; i < radios.length; i++) {
+      var label = radios[i].nextElementSibling;
+      if (!radios[i].disabled && (event.target === radios[i] || label.contains(event.target))) {
+        updateTabStop(radios[i]);
+        return;
+      }
+    }
+  });
+
+  gKeyboard.on("keydown", gKeyboard.order.page, function(event) {
+    if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey
+      || CommandPalette.isVisible()) return;
+    var active = document.activeElement;
+    var modal = document.getElementById("modal");
+    if (modal && !modal.contains(picklist)) return;
+    // In-page picklists may open while the focus is still on the page behind
+    // them. Editing fields and other controls keep their own keys.
+    if (gKeyboard.isTakenByField(active, true) || active && active.nodeName === "BUTTON") return;
+    if (active && active.nodeName !== "BODY" && !picklist.contains(active) && !modal) return;
+
+    var offset = gKeyboard.getVerticalArrow(event);
+    if (offset) {
+      var enabled = [], selected = -1;
+      for (var j = 0; j < radios.length; j++) {
+        if (radios[j].disabled) continue;
+        if (radios[j].checked) selected = enabled.length;
+        enabled.push(radios[j]);
+      }
+      if (!enabled.length) return;
+      var index = selected < 0 ? (offset > 0 ? 0 : enabled.length - 1)
+        : Math.max(0, Math.min(enabled.length - 1, selected + offset));
+      var radio = enabled[index];
+      radio.checked = true;
+      updateTabStop(radio);
+      var label = radio.nextElementSibling;
+      label.focus();
+      scrollRowIntoView(label);
+      event.preventDefault();
+    } else if (event.key === "Enter" && active && active.nodeName === "LABEL") {
+      // Tab can focus a label without selecting its radio first.
+      var focusedRadio = document.getElementById(active.getAttribute("for"));
+      if (!focusedRadio || focusedRadio.disabled) return;
+      focusedRadio.checked = true;
+      updateTabStop(focusedRadio);
+      event.preventDefault();
+      // WebGUI renders Choose as a link that submits the form payload;
+      // desktop controls render it as a submit input. Click the rendered
+      // command so both use the same routing as a mouse click.
+      if (!event.repeat) picklist.querySelector(".main").click();
+    } else if (event.key === " " && active && active.nodeName === "LABEL") {
+      event.preventDefault();
+      active.click();
+    }
+  });
+}
+
 /**********************************************************
  * Link Hints (Vimium-like)
  **********************************************************/
@@ -1982,7 +2079,10 @@ LinkHints.prototype.isDisabled = function(element) {
 
 LinkHints.prototype.deployHintContainers = function() {
 
-  var hintTargets = document.querySelectorAll("a, input, textarea, i");
+  // The page behind an open modal is not interactive. Scope hint discovery
+  // to the modal, including numbering and copy-mode targets.
+  var root        = document.getElementById("modal") || document;
+  var hintTargets = root.querySelectorAll("a, input, textarea, i");
   var codeCounter = this.getHintStartValue(hintTargets.length);
   var hintsMap    = { first: codeCounter };
 
@@ -2247,7 +2347,7 @@ function Hotkeys(oKeyMap) {
 
     // add a tooltip/title with the hotkey, currently only sapevents are supported
     findSapEventElements(action).forEach(function(elAnchor) {
-      elAnchor.title = elAnchor.title + " [" + sKey + "]";
+      elAnchor.title = elAnchor.title + " [" + Hotkeys.formatKeyForDisplay(sKey) + "]";
     });
 
     // We replace the actions with callback functions to unify
@@ -2302,17 +2402,25 @@ Hotkeys.prototype.showHotkeys = function() {
 };
 
 Hotkeys.prototype.onkeydown = function(oEvent) {
-  if (oEvent.defaultPrevented || oEvent.ctrlKey || oEvent.altKey || oEvent.metaKey) {
+  if (oEvent.defaultPrevented || oEvent.altKey || oEvent.metaKey) {
     return;
+  }
+
+  var sKey = oEvent.key || String.fromCharCode(oEvent.keyCode);
+  // Ctrl+Shift+Enter submits a patch even while editing its comment or body. Handle
+  // it on keydown only: some controls also emit keypress, causing two submits.
+  if (oEvent.ctrlKey) {
+    if (sKey !== "Enter" || !oEvent.shiftKey || oEvent.type !== "keydown" || oEvent.repeat) return;
+    if (CommandPalette.isVisible()) return;
+    sKey = "^Shift+" + sKey;
   }
 
   if (gKeyboard.isTyping()) {
-    return;
+    var activeForm = document.activeElement.form;
+    if (sKey !== "^Shift+Enter" || !activeForm || activeForm.id !== "commit-form") return;
   }
 
-  var
-    sKey     = oEvent.key || String.fromCharCode(oEvent.keyCode),
-    fnHotkey = this.oKeyMap[sKey];
+  var fnHotkey = this.oKeyMap[sKey];
 
   if (fnHotkey) {
     fnHotkey.call(this, oEvent);
@@ -2325,7 +2433,7 @@ Hotkeys.formatKeyForDisplay = function(key) {
   if (Array.isArray(key)) {
     return key.map(function(singleKey) { return Hotkeys.formatKeyForDisplay(singleKey) }).join(" / ");
   }
-  return (key[0] === "^") ? "ctrl+" + key.substring(1) : key;
+  return (key[0] === "^") ? "Ctrl+" + key.substring(1) : key;
 };
 
 Hotkeys.addHotkeyToHelpSheet = function(key, description) {
@@ -2350,6 +2458,9 @@ function setKeyBindings(oKeyMap) {
   var oHotkeys = new Hotkeys(oKeyMap);
 
   gKeyboard.on("keypress", gKeyboard.order.hotkeys, oHotkeys.onkeydown.bind(oHotkeys));
+  gKeyboard.on("keydown", gKeyboard.order.hotkeys, function(event) {
+    if (event.ctrlKey) oHotkeys.onkeydown(event);
+  });
   setTimeout(function() {
     var div                     = document.getElementById("hotkeys-hint");
     if  (div) div.style.opacity = 0.2;
