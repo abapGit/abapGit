@@ -2346,6 +2346,11 @@ function Hotkeys(oKeyMap) {
     // the hotkey execution
     this.oKeyMap[sKey] = function(oEvent) {
 
+      if (sKey === "^Enter") {
+        this.submitMainForm(oEvent);
+        return;
+      }
+
       // The helper object of the page, if it has one: the diff, stage and
       // repository overview pages create it as gHelper
       var pageHelper = (window.gHelper || {});
@@ -2393,27 +2398,43 @@ Hotkeys.prototype.showHotkeys = function() {
   }
 };
 
+// Click the primary control so native validation and WebGUI form routing run
+// exactly as they do for a user click. A focused field belongs to its own form.
+Hotkeys.prototype.submitMainForm = function(event) {
+  var active = document.activeElement;
+  var form = active && active.form;
+  for (var parent = active; !form && parent; parent = parent.parentNode) {
+    if (parent.nodeName === "FORM") form = parent;
+  }
+  var command = form ? form.querySelector("input.main, a.main")
+    : !gKeyboard.isTakenByField(active, true) && document.querySelector("form input.main, form a.main");
+  if (command && !command.disabled) {
+    clickSapEvent(command);
+    event.preventDefault();
+  }
+};
+
 Hotkeys.prototype.onkeydown = function(oEvent) {
   if (oEvent.defaultPrevented || oEvent.altKey || oEvent.metaKey) {
     return;
   }
 
   var sKey = oEvent.key || String.fromCharCode(oEvent.keyCode);
-  // Ctrl+Shift+Enter submits a patch even while editing its comment or body. Handle
-  // it on keydown only: some controls also emit keypress, causing two submits.
+  // Ctrl+Enter submits the main form; Ctrl+Shift+Enter submits a patch even while
+  // editing its comment or body. Handle them on keydown only, avoiding duplicate
+  // submits in controls that also emit keypress or repeat events while the key is held.
   if (oEvent.ctrlKey) {
-    if (sKey !== "Enter" || !oEvent.shiftKey || oEvent.type !== "keydown" || oEvent.repeat) return;
+    if (sKey !== "Enter" || oEvent.type !== "keydown" || oEvent.repeat) return;
     if (CommandPalette.isVisible()) return;
-    sKey = "^Shift+" + sKey;
+    sKey = (oEvent.shiftKey ? "^Shift+" : "^") + sKey;
   }
 
-  if (gKeyboard.isTyping()) {
+  if (gKeyboard.isTyping() && sKey !== "^Enter") {
     var activeForm = document.activeElement.form;
     if (sKey !== "^Shift+Enter" || !activeForm || activeForm.id !== "commit-form") return;
   }
 
   var fnHotkey = this.oKeyMap[sKey];
-
   if (fnHotkey) {
     fnHotkey.call(this, oEvent);
   }
