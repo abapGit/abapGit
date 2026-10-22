@@ -10,12 +10,16 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
     INTERFACES zif_abapgit_gui_renderable.
 
     CLASS-METHODS create
+      IMPORTING
+        iv_oci         TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception.
 
     METHODS constructor
+      IMPORTING
+        iv_oci TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception.
 
@@ -25,6 +29,9 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
     CONSTANTS:
       BEGIN OF c_id,
         url                TYPE string VALUE 'url',
+        oci_registry       TYPE string VALUE 'oci_registry',
+        oci_repository     TYPE string VALUE 'oci_repository',
+        oci_reference      TYPE string VALUE 'oci_reference',
         package            TYPE string VALUE 'package',
         branch_name        TYPE string VALUE 'branch_name',
         display_name       TYPE string VALUE 'display_name',
@@ -43,6 +50,7 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
         choose_labels   TYPE string VALUE 'choose-labels',
         add_online_repo TYPE string VALUE 'add-repo-online',
         create_repo     TYPE string VALUE 'create-repository',
+        create_oci_repo TYPE string VALUE 'create-oci-repository',
       END OF c_event.
 
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
@@ -50,6 +58,7 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
     DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
     DATA mo_popup_picklist TYPE REF TO zcl_abapgit_gui_picklist.
+    DATA mv_oci TYPE abap_bool.
 
     METHODS choose_branch
       IMPORTING
@@ -160,6 +169,7 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
+    mv_oci = iv_oci.
     CREATE OBJECT mo_validation_log.
     CREATE OBJECT mo_form_data.
     mo_form = get_form_schema( ).
@@ -170,11 +180,20 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
   METHOD create.
 
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_addonline.
+    DATA lv_page_title TYPE string.
 
-    CREATE OBJECT lo_component.
+    CREATE OBJECT lo_component
+      EXPORTING
+        iv_oci = iv_oci.
+
+    IF iv_oci = abap_true.
+      lv_page_title = 'New OCI Registry Repository'.
+    ELSE.
+      lv_page_title = 'New Online Repository'.
+    ENDIF.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
-      iv_page_title      = 'New Online Repository'
+      iv_page_title      = lv_page_title
       ii_child_component = lo_component ).
 
   ENDMETHOD.
@@ -186,29 +205,58 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
       iv_form_id   = 'add-repo-online-form'
       iv_help_page = 'https://docs.abapgit.org/guide-online-install.html' ).
 
-    ro_form->text(
-      iv_name        = c_id-url
-      iv_required    = abap_true
-      iv_condense    = abap_true
-      iv_label       = 'Git Repository URL'
-      iv_hint        = 'HTTPS address of the repository'
-      iv_placeholder = 'https://github.com/...git'
-    )->text(
-      iv_name        = c_id-package
-      iv_side_action = c_event-choose_package
-      iv_required    = abap_true
-      iv_upper_case  = abap_true
-      iv_label       = 'Package'
-      iv_hint        = 'SAP package for repository (should be a dedicated one)'
-      iv_placeholder = 'Z... / $...'
-      iv_max         = 30
-    )->text(
-      iv_name        = c_id-branch_name
-      iv_side_action = c_event-choose_branch
-      iv_label       = 'Branch'
-      iv_hint        = 'Switch to a specific branch (default: autodetect)'
-      iv_placeholder = 'Autodetect default branch'
-    )->radio(
+    IF mv_oci = abap_true.
+      ro_form->text(
+        iv_name        = c_id-oci_registry
+        iv_required    = abap_true
+        iv_condense    = abap_true
+        iv_label       = 'OCI Registry'
+        iv_hint        = 'HTTPS registry host, optionally followed by a port'
+        iv_placeholder = 'registry.example.com' )->text(
+        iv_name        = c_id-oci_repository
+        iv_required    = abap_true
+        iv_condense    = abap_true
+        iv_label       = 'Repository Path'
+        iv_hint        = 'Lowercase registry path, including nested components'
+        iv_placeholder = 'team/library' )->text(
+        iv_name        = c_id-oci_reference
+        iv_required    = abap_true
+        iv_condense    = abap_true
+        iv_label       = 'Tag or SHA-256 Digest'
+        iv_hint        = 'Enter an explicit tag or sha256:<64 lowercase hex characters>'
+        iv_placeholder = '1.2.3 or sha256:...' )->text(
+        iv_name        = c_id-package
+        iv_side_action = c_event-choose_package
+        iv_required    = abap_true
+        iv_upper_case  = abap_true
+        iv_label       = 'Package'
+        iv_hint        = 'SAP package for repository (should be a dedicated one)'
+        iv_placeholder = 'Z... / $...'
+        iv_max         = 30 ).
+    ELSE.
+      ro_form->text(
+        iv_name        = c_id-url
+        iv_required    = abap_true
+        iv_condense    = abap_true
+        iv_label       = 'Git Repository URL'
+        iv_hint        = 'HTTPS address of the repository'
+        iv_placeholder = 'https://github.com/...git' )->text(
+        iv_name        = c_id-package
+        iv_side_action = c_event-choose_package
+        iv_required    = abap_true
+        iv_upper_case  = abap_true
+        iv_label       = 'Package'
+        iv_hint        = 'SAP package for repository (should be a dedicated one)'
+        iv_placeholder = 'Z... / $...'
+        iv_max         = 30 )->text(
+        iv_name        = c_id-branch_name
+        iv_side_action = c_event-choose_branch
+        iv_label       = 'Branch'
+        iv_hint        = 'Switch to a specific branch (default: autodetect)'
+        iv_placeholder = 'Autodetect default branch' ).
+    ENDIF.
+
+    ro_form->radio(
       iv_name        = c_id-folder_logic
       iv_default_value = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
       iv_label       = 'Folder Logic'
@@ -261,17 +309,26 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
       iv_label       = 'For Cloud Development'
       iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development ).
 
+    IF mv_oci = abap_true.
+      ro_form->command(
+        iv_label       = 'Create OCI Repo'
+        iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
+        iv_action      = c_event-add_online_repo )->command(
+        iv_label  = 'Back to Git Repository'
+        iv_action = c_event-create_oci_repo ).
+    ELSE.
+      ro_form->command(
+        iv_label       = 'Create Online Repo'
+        iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
+        iv_action      = c_event-add_online_repo )->command(
+        iv_label       = 'Create Package'
+        iv_action      = c_event-create_package )->command(
+        iv_label       = 'Create GitHub Repo'
+        iv_action      = c_event-create_repo )->command(
+        iv_label       = 'Create OCI Registry Repo'
+        iv_action      = c_event-create_oci_repo ).
+    ENDIF.
     ro_form->command(
-      iv_label       = 'Create Online Repo'
-      iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
-      iv_action      = c_event-add_online_repo
-    )->command(
-      iv_label       = 'Create Package'
-      iv_action      = c_event-create_package
-    )->command(
-      iv_label       = 'Create GitHub Repo'
-      iv_action      = c_event-create_repo
-    )->command(
       iv_label       = 'Back'
       iv_action      = zif_abapgit_definitions=>c_action-go_back ).
 
@@ -283,12 +340,32 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
     DATA:
       lv_url TYPE string,
       lo_url TYPE REF TO zcl_abapgit_git_url,
-      lx_err TYPE REF TO zcx_abapgit_exception.
+      lx_err TYPE REF TO zcx_abapgit_exception,
+      lv_oci_reference TYPE string,
+      ls_oci_reference TYPE zcl_abapgit_oci_reference=>ty_reference.
 
     ro_validation_log = mo_form_util->validate( io_form_data ).
 
-    lv_url = io_form_data->get( c_id-url ).
-    IF lv_url IS NOT INITIAL.
+    IF mv_oci = abap_true.
+      IF io_form_data->get( c_id-oci_registry ) IS NOT INITIAL OR
+         io_form_data->get( c_id-oci_repository ) IS NOT INITIAL OR
+         io_form_data->get( c_id-oci_reference ) IS NOT INITIAL.
+        TRY.
+            lv_oci_reference = zcl_abapgit_oci_reference=>build(
+              iv_registry   = io_form_data->get( c_id-oci_registry )
+              iv_repository = io_form_data->get( c_id-oci_repository )
+              iv_reference  = io_form_data->get( c_id-oci_reference ) ).
+            ls_oci_reference = zcl_abapgit_oci_reference=>parse( lv_oci_reference ).
+          CATCH zcx_abapgit_exception INTO lx_err.
+            ro_validation_log->set(
+              iv_key = c_id-oci_registry
+              iv_val = lx_err->get_text( ) ).
+        ENDTRY.
+      ENDIF.
+    ELSE.
+      lv_url = io_form_data->get( c_id-url ).
+    ENDIF.
+    IF mv_oci = abap_false AND lv_url IS NOT INITIAL.
       TRY.
           zcl_abapgit_repo_srv=>get_instance( )->validate_url( lv_url ).
 
@@ -358,6 +435,10 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
       WHEN c_event-create_repo.
 
+        IF mv_oci = abap_true.
+          zcx_abapgit_exception=>raise( 'GitHub repository creation is unavailable for OCI registries' ).
+        ENDIF.
+
         rs_handled-page  = zcl_abapgit_gui_page_cr_repo=>create(
           iv_url          = mo_form_data->get( c_id-url )
           io_caller_form  = mo_form_data
@@ -378,6 +459,10 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
       WHEN c_event-choose_branch.
 
+        IF mv_oci = abap_true.
+          zcx_abapgit_exception=>raise( 'Branches are not available for OCI repositories' ).
+        ENDIF.
+
         choose_branch( ). " Uniformly handle state below
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
@@ -386,13 +471,26 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
         choose_labels( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
+      WHEN c_event-create_oci_repo.
+
+        IF mv_oci = abap_true.
+          rs_handled-page = create( ).
+        ELSE.
+          rs_handled-page = create( abap_true ).
+        ENDIF.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
+
       WHEN c_event-add_online_repo.
 
         mo_validation_log = validate_form( mo_form_data ).
 
         IF mo_validation_log->is_empty( ) = abap_true.
           mo_form_data->to_abap( CHANGING cs_container = ls_repo_params ).
-          li_new_repo = zcl_abapgit_services_repo=>new_online( ls_repo_params ).
+          IF mv_oci = abap_true.
+            li_new_repo = zcl_abapgit_services_repo=>new_oci( ls_repo_params ).
+          ELSE.
+            li_new_repo = zcl_abapgit_services_repo=>new_online( ls_repo_params ).
+          ENDIF.
           rs_handled-page  = zcl_abapgit_gui_page_repo_view=>create( li_new_repo->get_key( ) ).
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
         ELSE.

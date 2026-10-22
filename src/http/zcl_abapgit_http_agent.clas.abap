@@ -89,6 +89,10 @@ CLASS ZCL_ABAPGIT_HTTP_AGENT IMPLEMENTATION.
       IMPORTING
         client = li_client ).
 
+    IF iv_follow_redirect = abap_false.
+      li_client->propertytype_redirect = if_http_client=>co_disabled.
+    ENDIF.
+
     li_client->request->set_version( if_http_request=>co_protocol_version_1_1 ).
     li_client->request->set_method( iv_method ).
 
