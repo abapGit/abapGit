@@ -178,3 +178,43 @@ CLASS ltcl_find_remote_dot_abapgit IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+CLASS ltcl_files_local DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    METHODS given_files_are_used FOR TESTING RAISING zcx_abapgit_exception.
+
+ENDCLASS.
+
+CLASS ltcl_files_local IMPLEMENTATION.
+
+  METHOD given_files_are_used.
+
+    DATA: ls_data  TYPE zif_abapgit_persistence=>ty_repo,
+          li_repo  TYPE REF TO zif_abapgit_repo,
+          lt_files TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          ls_file  LIKE LINE OF lt_files.
+
+    ls_data-key = '000000001'.
+    CREATE OBJECT li_repo TYPE zcl_abapgit_repo_offline
+      EXPORTING
+        is_data = ls_data.
+
+    ls_file-file-path     = zif_abapgit_definitions=>c_root_dir.
+    ls_file-file-filename = 'zcl_any.clas.abap'.
+    ls_file-item-obj_type = 'CLAS'.
+    ls_file-item-obj_name = 'ZCL_ANY'.
+    INSERT ls_file INTO TABLE lt_files.
+
+    li_repo->set_files_local( lt_files ).
+
+    " served from the given files, without serializing the (empty) package
+    cl_abap_unit_assert=>assert_equals(
+      act = li_repo->get_files_local( )
+      exp = lt_files ).
+
+  ENDMETHOD.
+
+ENDCLASS.

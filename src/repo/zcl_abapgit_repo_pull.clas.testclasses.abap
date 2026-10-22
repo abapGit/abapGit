@@ -77,6 +77,8 @@ CLASS ltd_repo IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_repo~delete_checks.
   ENDMETHOD.
+  METHOD zif_abapgit_repo~set_files_local.
+  ENDMETHOD.
   METHOD zif_abapgit_repo~set_files_remote.
   ENDMETHOD.
   METHOD zif_abapgit_repo~set_local_settings.
