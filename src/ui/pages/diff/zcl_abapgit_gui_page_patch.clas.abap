@@ -13,6 +13,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
         !is_file       TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
         !is_object     TYPE zif_abapgit_definitions=>ty_item OPTIONAL
         !it_files      TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
+        !iv_changed_by TYPE syuname OPTIONAL
         !iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
@@ -25,6 +26,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
         !is_file       TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
         !is_object     TYPE zif_abapgit_definitions=>ty_item OPTIONAL
         !it_files      TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
+        !iv_changed_by TYPE syuname OPTIONAL
         !iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
       RAISING
         zcx_abapgit_exception.
@@ -358,10 +360,11 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
     DATA ls_file LIKE LINE OF mt_files.
 
     super->constructor(
-      iv_key    = iv_key
-      is_file   = is_file
-      is_object = is_object
-      it_files  = it_files ).
+      iv_key        = iv_key
+      is_file       = is_file
+      is_object     = is_object
+      it_files      = it_files
+      iv_changed_by = iv_changed_by ).
 
     IF mi_repo->is_offline( ) = abap_true.
       zcx_abapgit_exception=>raise( |Patching is only possible for online repositories.| ).
@@ -435,6 +438,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
         is_file       = is_file
         is_object     = is_object
         it_files      = it_files
+        iv_changed_by = iv_changed_by
         iv_sci_result = iv_sci_result.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(

@@ -292,6 +292,7 @@ INTERFACE zif_abapgit_definitions
       go_file_diff                  TYPE string VALUE 'go_file_diff',
       go_home                       TYPE string VALUE 'go_home',
       go_patch                      TYPE string VALUE 'go_patch',
+      go_patch_me                   TYPE string VALUE 'go_patch_me',
       go_repo                       TYPE string VALUE 'go_repo',
       go_repo_diff                  TYPE string VALUE 'go_repo_diff',
       go_repo_diff_me               TYPE string VALUE 'go_repo_diff_me',
