@@ -76,17 +76,6 @@ CLASS zcl_abapgit_gui_page_ref_sel IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD create_in_page.
-
-    CREATE OBJECT ro_component
-      EXPORTING
-        iv_key     = iv_key
-        iv_action  = iv_action
-        iv_in_page = abap_true.
-
-  ENDMETHOD.
-
-
   METHOD create.
 
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_ref_sel.
@@ -99,6 +88,17 @@ CLASS zcl_abapgit_gui_page_ref_sel IMPLEMENTATION.
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       ii_child_component = lo_component
       iv_show_as_modal   = abap_true ).
+
+  ENDMETHOD.
+
+
+  METHOD create_in_page.
+
+    CREATE OBJECT ro_component
+      EXPORTING
+        iv_key     = iv_key
+        iv_action  = iv_action
+        iv_in_page = abap_true.
 
   ENDMETHOD.
 
@@ -117,6 +117,7 @@ CLASS zcl_abapgit_gui_page_ref_sel IMPLEMENTATION.
           iv_url             = lv_url
           iv_default_branch  = zcl_abapgit_git_branch_utils=>get_display_name(
                                  li_repo_online->get_selected_branch( ) )
+          iv_hide_branch     = li_repo_online->get_selected_branch( )
           iv_show_new_option = abap_true )->create_picklist( ).
       WHEN zif_abapgit_definitions=>c_action-git_branch_delete.
         mo_picklist = zcl_abapgit_popup_branch_list=>create(
@@ -131,13 +132,6 @@ CLASS zcl_abapgit_gui_page_ref_sel IMPLEMENTATION.
     ENDCASE.
 
     mo_picklist->set_id( mv_action )->set_in_page( mv_in_page ).
-
-  ENDMETHOD.
-
-
-  METHOD is_fulfilled.
-
-    rv_yes = mo_picklist->is_fulfilled( ).
 
   ENDMETHOD.
 
@@ -173,6 +167,13 @@ CLASS zcl_abapgit_gui_page_ref_sel IMPLEMENTATION.
           is_tag = ls_tag ).
         zcl_abapgit_services_repo=>refresh( mv_key ).
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD is_fulfilled.
+
+    rv_yes = mo_picklist->is_fulfilled( ).
 
   ENDMETHOD.
 
