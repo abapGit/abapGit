@@ -19,10 +19,11 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
 
     METHODS constructor
       IMPORTING
-        !iv_key    TYPE zif_abapgit_persistence=>ty_repo-key OPTIONAL
-        !is_file   TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
-        !is_object TYPE zif_abapgit_definitions=>ty_item OPTIONAL
-        !it_files  TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
+        !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key OPTIONAL
+        !is_file       TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
+        !is_object     TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+        !it_files      TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
+        !iv_changed_by TYPE syuname OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
@@ -54,6 +55,8 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
     DATA mv_unified TYPE abap_bool VALUE abap_true ##NO_TEXT.
     DATA mi_repo TYPE REF TO zif_abapgit_repo .
     DATA mt_diff_files TYPE zif_abapgit_gui_diff=>ty_file_diffs .
+    " Show only the local changes of this user (the diff of "My Changes")
+    DATA mv_changed_by TYPE syuname.
 
     CLASS-METHODS get_page_layout
       RETURNING
@@ -255,6 +258,14 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         !it_diffs           TYPE zif_abapgit_definitions=>ty_diffs_tt
       RETURNING
         VALUE(rv_has_diffs) TYPE abap_bool.
+    METHODS set_changed_by_of_deleted
+      IMPORTING
+        !it_remote TYPE zif_abapgit_git_definitions=>ty_files_tt.
+    CLASS-METHODS filter_changed_by
+      IMPORTING
+        !iv_changed_by TYPE syuname
+      CHANGING
+        !ct_diff_files TYPE zif_abapgit_gui_diff=>ty_file_diffs.
 ENDCLASS.
 
 
@@ -594,6 +605,16 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
     ENDIF.
 
+    set_changed_by_of_deleted( lt_remote ).
+
+    IF mv_changed_by IS NOT INITIAL.
+      filter_changed_by(
+        EXPORTING
+          iv_changed_by = mv_changed_by
+        CHANGING
+          ct_diff_files = mt_diff_files ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -602,6 +623,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     super->constructor( ).
     mv_unified  = zcl_abapgit_persist_factory=>get_user( )->get_diff_unified( ).
     mv_repo_key = iv_key.
+    mv_changed_by = iv_changed_by.
     IF iv_key IS NOT INITIAL.
       mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     ENDIF.
@@ -614,11 +636,22 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
         is_object = is_object
         it_files  = it_files ).
 
-      IF lines( mt_diff_files ) = 0.
+      IF lines( mt_diff_files ) = 0 AND mv_changed_by IS NOT INITIAL.
+        zcx_abapgit_exception=>raise( |No changes by { mv_changed_by } in repository { mi_repo->get_name( ) }| ).
+      ELSEIF lines( mt_diff_files ) = 0.
         zcx_abapgit_exception=>raise(
           'There are no differences to show. The local state completely matches the remote repository.' ).
       ENDIF.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD filter_changed_by.
+
+    " Own changes only: files changed in the system (local state), last changed by the user.
+    " Files that changed only in the remote repository are someone else's changes.
+    DELETE ct_diff_files WHERE lstate IS INITIAL OR changed_by <> iv_changed_by.
 
   ENDMETHOD.
 
@@ -1341,6 +1374,47 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     ii_html->add( '<th class="num">new</th>' ).
     ii_html->add( '<th class="mark"></th>' ).
     ii_html->add( '<th>code</th>' ).
+
+  ENDMETHOD.
+
+
+  METHOD set_changed_by_of_deleted.
+
+    DATA lt_deleted TYPE zif_abapgit_git_definitions=>ty_files_tt.
+    DATA ls_remote LIKE LINE OF it_remote.
+    DATA lt_users TYPE zcl_abapgit_stage_changed_by=>ty_file_users_tt.
+    DATA ls_user LIKE LINE OF lt_users.
+
+    FIELD-SYMBOLS <ls_diff> LIKE LINE OF mt_diff_files.
+
+    " Objects deleted in the system cannot say who changed them; like the
+    " staging page, attribute them to the owner of their transport
+    LOOP AT mt_diff_files ASSIGNING <ls_diff> WHERE lstate = zif_abapgit_definitions=>c_state-deleted.
+      READ TABLE it_remote INTO ls_remote
+        WITH KEY file_path COMPONENTS
+          path     = <ls_diff>-path
+          filename = <ls_diff>-filename.
+      IF sy-subrc = 0.
+        APPEND ls_remote TO lt_deleted.
+      ENDIF.
+    ENDLOOP.
+
+    IF lt_deleted IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lt_users = zcl_abapgit_stage_changed_by=>get_users_of_remote_files(
+      it_remote = lt_deleted
+      io_dot    = mi_repo->get_dot_abapgit( ) ).
+
+    LOOP AT mt_diff_files ASSIGNING <ls_diff> WHERE lstate = zif_abapgit_definitions=>c_state-deleted.
+      READ TABLE lt_users INTO ls_user WITH TABLE KEY
+        path     = <ls_diff>-path
+        filename = <ls_diff>-filename.
+      IF sy-subrc = 0 AND ls_user-name IS NOT INITIAL.
+        <ls_diff>-changed_by = ls_user-name.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
