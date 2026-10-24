@@ -86,9 +86,10 @@ CLASS zcl_abapgit_gui_router DEFINITION
         zcx_abapgit_exception .
     METHODS get_page_diff
       IMPORTING
-        !ii_event      TYPE REF TO zif_abapgit_gui_event
+        !ii_event         TYPE REF TO zif_abapgit_gui_event
+        !iv_changed_by_me TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+        VALUE(ri_page)    TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
     METHODS get_page_patch
@@ -288,6 +289,10 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         OR zif_abapgit_definitions=>c_action-go_file_diff.
         rs_handled-page  = get_page_diff( ii_event ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
+      WHEN zif_abapgit_definitions=>c_action-go_repo_diff_me.                " Go Diff page, own changes only
+        rs_handled-page  = get_page_diff( ii_event         = ii_event
+                                          iv_changed_by_me = abap_true ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
       WHEN zif_abapgit_definitions=>c_action-go_patch.                       " Go Patch page
         rs_handled-page  = get_page_patch( ii_event ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
@@ -330,7 +335,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     DATA: ls_file   TYPE zif_abapgit_git_definitions=>ty_file,
           ls_object TYPE zif_abapgit_definitions=>ty_item,
-          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key.
+          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key,
+          lv_user   TYPE syuname.
 
     lv_key             = ii_event->query( )->get( 'KEY' ).
     ls_file-path       = ii_event->query( )->get( 'PATH' ).
@@ -338,12 +344,18 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     ls_object-obj_type = ii_event->query( )->get( 'OBJ_TYPE' ).
     ls_object-obj_name = ii_event->query( )->get( 'OBJ_NAME' ). " unescape ?
 
+    IF iv_changed_by_me = abap_true.
+      lv_user = sy-uname.
+    ENDIF.
+
     ri_page = zcl_abapgit_gui_page_diff=>create(
-      iv_key    = lv_key
-      is_file   = ls_file
-      is_object = ls_object ).
+      iv_key        = lv_key
+      is_file       = ls_file
+      is_object     = ls_object
+      iv_changed_by = lv_user ).
 
   ENDMETHOD.
+
 
 
   METHOD get_page_patch.
