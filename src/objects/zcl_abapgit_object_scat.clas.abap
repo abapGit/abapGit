@@ -74,10 +74,6 @@ CLASS zcl_abapgit_object_scat IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    IF zif_abapgit_object~is_locked( ) = abap_true.
-      zcx_abapgit_exception=>raise( |CATT procedure { mv_tc_name } is locked| ).
-    ENDIF.
-
     " deletes all OBJSL table entries of the object and records it on the transport
     mo_generic->delete( iv_package   = iv_package
                         iv_transport = iv_transport ).
@@ -89,10 +85,6 @@ CLASS zcl_abapgit_object_scat IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-
-    IF zif_abapgit_object~is_locked( ) = abap_true.
-      zcx_abapgit_exception=>raise( |CATT procedure { mv_tc_name } is locked| ).
-    ENDIF.
 
     " validate -> delete old table content -> insert from XML -> CORR_INSERT (+ TADIR)
     mo_generic->deserialize( iv_package   = iv_package
@@ -200,10 +192,6 @@ CLASS zcl_abapgit_object_scat IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~serialize.
-
-    IF zif_abapgit_object~exists( ) = abap_false.
-      RETURN.
-    ENDIF.
 
     " writes one XML node per OBJSL table (TNODE02_A, CATF, CATP, ...)
     mo_generic->serialize( io_xml ).
