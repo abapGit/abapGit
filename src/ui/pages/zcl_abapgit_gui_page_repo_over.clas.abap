@@ -447,6 +447,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
     DATA lo_toolbar_more_sub TYPE REF TO zcl_abapgit_html_toolbar.
+    DATA lo_toolbar_patch_sub TYPE REF TO zcl_abapgit_html_toolbar.
     DATA lo_toolbar_diff_sub TYPE REF TO zcl_abapgit_html_toolbar.
     DATA lv_dummy_key_param TYPE string.
 
@@ -466,9 +467,24 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_class    = |{ lc_action_class } { lc_online_class }|
       iv_li_class = |{ lc_action_class }| ).
 
+    CREATE OBJECT lo_toolbar_patch_sub EXPORTING iv_id = 'toolbar-ovp-patch_sub'.
+
+    lo_toolbar_patch_sub->add(
+      iv_txt      = |All Changes|
+      iv_act      = |{ zif_abapgit_definitions=>c_action-go_patch }{ lv_dummy_key_param }|
+      iv_class    = |{ lc_action_class } { lc_online_class }|
+      iv_li_class = |{ lc_action_class }| ).
+
+    lo_toolbar_patch_sub->add(
+      iv_txt      = |My Changes|
+      iv_title    = |Patch only the objects you changed|
+      iv_act      = |{ zif_abapgit_definitions=>c_action-go_patch_me }{ lv_dummy_key_param }|
+      iv_class    = |{ lc_action_class } { lc_online_class }|
+      iv_li_class = |{ lc_action_class }| ).
+
     lo_toolbar->add(
       iv_txt      = |Patch|
-      iv_act      = |{ zif_abapgit_definitions=>c_action-go_patch }{ lv_dummy_key_param }|
+      io_sub      = lo_toolbar_patch_sub
       iv_class    = |{ lc_action_class } { lc_online_class }|
       iv_li_class = |{ lc_action_class }| ).
 
@@ -1035,6 +1051,11 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ls_hotkey_action-description = |Patch|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_patch.
     ls_hotkey_action-hotkey = |a|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Patch My Changes|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_patch_me.
+    ls_hotkey_action-hotkey = |m|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-description = |Refresh|.

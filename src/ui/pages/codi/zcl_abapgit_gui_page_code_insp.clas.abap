@@ -20,6 +20,7 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION
         iv_check_variant         TYPE sci_chkv OPTIONAL
         iv_raise_when_no_results TYPE abap_bool DEFAULT abap_false
         iv_followup_action       TYPE string DEFAULT c_actions-stage
+        iv_changed_by            TYPE syuname OPTIONAL
       RETURNING
         VALUE(ri_page)           TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -32,6 +33,7 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION
         iv_check_variant         TYPE sci_chkv OPTIONAL
         iv_raise_when_no_results TYPE abap_bool DEFAULT abap_false
         iv_followup_action       TYPE string DEFAULT c_actions-stage
+        iv_changed_by            TYPE syuname OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
@@ -41,6 +43,7 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION
     DATA mo_stage         TYPE REF TO zcl_abapgit_stage.
     DATA mv_check_variant    TYPE sci_chkv.
     DATA mv_followup_action  TYPE string.
+    DATA mv_changed_by       TYPE syuname.
 
     METHODS:
       run_code_inspector
@@ -94,6 +97,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     mo_stage = io_stage.
     mv_check_variant = iv_check_variant.
     mv_followup_action = iv_followup_action.
+    mv_changed_by = iv_changed_by.
     determine_check_variant( ).
     run_code_inspector( ).
 
@@ -114,7 +118,8 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
         io_stage                 = io_stage
         iv_check_variant         = iv_check_variant
         iv_raise_when_no_results = iv_raise_when_no_results
-        iv_followup_action       = iv_followup_action.
+        iv_followup_action       = iv_followup_action
+        iv_changed_by            = iv_changed_by.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create( lo_component ).
 
@@ -216,6 +221,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
           rs_handled-page = zcl_abapgit_gui_page_patch=>create(
             iv_key        = mi_repo->get_key( )
+            iv_changed_by = mv_changed_by
             iv_sci_result = status( ) ).
 
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
