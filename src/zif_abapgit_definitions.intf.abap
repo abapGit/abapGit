@@ -294,6 +294,7 @@ INTERFACE zif_abapgit_definitions
       go_patch                      TYPE string VALUE 'go_patch',
       go_repo                       TYPE string VALUE 'go_repo',
       go_repo_diff                  TYPE string VALUE 'go_repo_diff',
+      go_repo_diff_me               TYPE string VALUE 'go_repo_diff_me',
       go_settings                   TYPE string VALUE 'go_settings',
       go_settings_personal          TYPE string VALUE 'go_settings_personal',
       go_stage                      TYPE string VALUE 'go_stage',

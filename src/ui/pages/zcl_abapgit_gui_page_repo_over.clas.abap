@@ -447,6 +447,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
     DATA lo_toolbar_more_sub TYPE REF TO zcl_abapgit_html_toolbar.
+    DATA lo_toolbar_diff_sub TYPE REF TO zcl_abapgit_html_toolbar.
     DATA lv_dummy_key_param TYPE string.
 
     lv_dummy_key_param = |?key={ c_dummy_key }|.
@@ -471,9 +472,24 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_class    = |{ lc_action_class } { lc_online_class }|
       iv_li_class = |{ lc_action_class }| ).
 
+    CREATE OBJECT lo_toolbar_diff_sub EXPORTING iv_id = 'toolbar-ovp-diff_sub'.
+
+    lo_toolbar_diff_sub->add(
+      iv_txt      = |All Changes|
+      iv_act      = |{ zif_abapgit_definitions=>c_action-go_repo_diff }{ lv_dummy_key_param }|
+      iv_class    = |{ lc_action_class } { lc_online_class }|
+      iv_li_class = |{ lc_action_class }| ).
+
+    lo_toolbar_diff_sub->add(
+      iv_txt      = |My Changes|
+      iv_title    = |Diff only your own changes|
+      iv_act      = |{ zif_abapgit_definitions=>c_action-go_repo_diff_me }{ lv_dummy_key_param }|
+      iv_class    = |{ lc_action_class } { lc_online_class }|
+      iv_li_class = |{ lc_action_class }| ).
+
     lo_toolbar->add(
       iv_txt      = |Diff|
-      iv_act      = |{ zif_abapgit_definitions=>c_action-go_repo_diff }{ lv_dummy_key_param }|
+      io_sub      = lo_toolbar_diff_sub
       iv_class    = |{ lc_action_class } { lc_online_class }|
       iv_li_class = |{ lc_action_class }| ).
 
