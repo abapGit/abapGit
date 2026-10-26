@@ -1,0 +1,17 @@
+[req]
+distinguished_name = distinguished_name
+x509_extensions = server_certificate
+prompt = no
+
+[distinguished_name]
+CN = 127.0.0.1
+
+[server_certificate]
+basicConstraints = critical,CA:TRUE
+keyUsage = critical,digitalSignature,keyEncipherment,keyCertSign
+extendedKeyUsage = serverAuth
+subjectAltName = @subject_alt_names
+
+[subject_alt_names]
+IP.1 = 127.0.0.1
+DNS.1 = localhost

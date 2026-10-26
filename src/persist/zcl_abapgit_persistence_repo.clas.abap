@@ -17,12 +17,6 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
         zcx_abapgit_exception
         zcx_abapgit_not_found.
   PROTECTED SECTION.
-
-  PRIVATE SECTION.
-
-    DATA mt_meta_fields TYPE STANDARD TABLE OF abap_compname.
-    DATA mo_db TYPE REF TO zcl_abapgit_persistence_db .
-
     METHODS from_xml
       IMPORTING
         !iv_repo_xml_string TYPE string
@@ -35,11 +29,6 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
         !is_repo                  TYPE zif_abapgit_persistence=>ty_repo
       RETURNING
         VALUE(rv_repo_xml_string) TYPE string .
-    METHODS get_next_id
-      RETURNING
-        VALUE(rv_next_repo_id) TYPE zif_abapgit_persistence=>ty_content-value
-      RAISING
-        zcx_abapgit_exception .
     METHODS get_repo_from_content
       IMPORTING
         is_content       TYPE zif_abapgit_persistence=>ty_content
@@ -47,6 +36,17 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
         VALUE(rs_result) TYPE zif_abapgit_persistence=>ty_repo
       RAISING
         zcx_abapgit_exception.
+
+  PRIVATE SECTION.
+
+    DATA mt_meta_fields TYPE STANDARD TABLE OF abap_compname.
+    DATA mo_db TYPE REF TO zcl_abapgit_persistence_db .
+
+    METHODS get_next_id
+      RETURNING
+        VALUE(rv_next_repo_id) TYPE zif_abapgit_persistence=>ty_content-value
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -138,6 +138,34 @@ CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
 
   METHOD get_repo_from_content.
     MOVE-CORRESPONDING from_xml( is_content-data_str ) TO rs_result.
+    IF rs_result-repo_kind IS INITIAL.
+      IF rs_result-offline = abap_true.
+        rs_result-repo_kind = zif_abapgit_persistence=>c_repo_kind-offline.
+      ELSE.
+        rs_result-repo_kind = zif_abapgit_persistence=>c_repo_kind-git.
+      ENDIF.
+    ENDIF.
+    CASE rs_result-repo_kind.
+      WHEN zif_abapgit_persistence=>c_repo_kind-git.
+        IF rs_result-offline = abap_true.
+          zcx_abapgit_exception=>raise( 'Repository metadata has git kind and offline flag set' ).
+        ENDIF.
+      WHEN zif_abapgit_persistence=>c_repo_kind-offline.
+        IF rs_result-offline = abap_false.
+          zcx_abapgit_exception=>raise( 'Repository metadata has offline kind and online flag set' ).
+        ENDIF.
+      WHEN zif_abapgit_persistence=>c_repo_kind-oci.
+        IF rs_result-offline = abap_true OR rs_result-oci_registry IS INITIAL OR
+           rs_result-oci_repository IS INITIAL OR rs_result-oci_reference IS INITIAL.
+          zcx_abapgit_exception=>raise( 'OCI repository metadata is incomplete or inconsistent' ).
+        ENDIF.
+        zcl_abapgit_oci_reference=>build(
+          iv_registry   = rs_result-oci_registry
+          iv_repository = rs_result-oci_repository
+          iv_reference  = rs_result-oci_reference ).
+      WHEN OTHERS.
+        zcx_abapgit_exception=>raise( |Unknown repository kind { rs_result-repo_kind }| ).
+    ENDCASE.
     IF rs_result-local_settings-write_protected = abap_false
         AND zcl_abapgit_factory=>get_environment( )->is_repo_object_changes_allowed( ) = abap_false.
       rs_result-local_settings-write_protected = abap_true.
@@ -250,6 +278,17 @@ CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
     ls_repo-branch_name  = iv_branch_name.
     ls_repo-package      = iv_package.
     ls_repo-offline      = iv_offline.
+    ls_repo-repo_kind    = iv_repo_kind.
+    IF ls_repo-repo_kind IS INITIAL.
+      IF iv_offline = abap_true.
+        ls_repo-repo_kind = zif_abapgit_persistence=>c_repo_kind-offline.
+      ELSE.
+        ls_repo-repo_kind = zif_abapgit_persistence=>c_repo_kind-git.
+      ENDIF.
+    ENDIF.
+    ls_repo-oci_registry   = iv_oci_registry.
+    ls_repo-oci_repository = iv_oci_repository.
+    ls_repo-oci_reference  = iv_oci_reference.
     ls_repo-created_by   = sy-uname.
     GET TIME STAMP FIELD ls_repo-created_at.
     ls_repo-dot_abapgit  = is_dot_abapgit.

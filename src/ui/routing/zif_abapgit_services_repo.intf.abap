@@ -13,6 +13,10 @@ INTERFACE zif_abapgit_services_repo
       ignore_subpackages TYPE abap_bool,
       main_lang_only     TYPE abap_bool,
       abap_lang_vers     TYPE string,
+      repo_kind          TYPE zif_abapgit_persistence=>ty_repo_kind,
+      oci_registry       TYPE string,
+      oci_repository     TYPE string,
+      oci_reference      TYPE string,
     END OF ty_repo_params .
 
 ENDINTERFACE.

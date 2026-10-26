@@ -30,13 +30,15 @@ CLASS zcl_abapgit_repo_online DEFINITION
         REDEFINITION .
     METHODS constructor
       IMPORTING
-        is_data TYPE zif_abapgit_persistence=>ty_repo.
+        is_data      TYPE zif_abapgit_persistence=>ty_repo
+        ii_connector TYPE REF TO zif_abapgit_repo_git_connector OPTIONAL.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
     DATA mv_current_commit TYPE zif_abapgit_git_definitions=>ty_sha1 .
+    DATA mi_connector TYPE REF TO zif_abapgit_repo_git_connector.
 
     METHODS handle_stage_ignore
       IMPORTING
@@ -71,6 +73,10 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor( is_data ).
+    mi_connector = ii_connector.
+    IF mi_connector IS NOT BOUND.
+      CREATE OBJECT mi_connector TYPE zcl_abapgit_repo_git_connector.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -78,7 +84,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   METHOD fetch_remote.
 
     DATA: li_progress TYPE REF TO zif_abapgit_progress,
-          ls_pull     TYPE zcl_abapgit_git_porcelain=>ty_pull_result.
+          ls_pull     TYPE zif_abapgit_repo_git_connector=>ty_snapshot.
 
     IF mv_request_remote_refresh = abap_false.
       RETURN.
@@ -89,17 +95,11 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     li_progress->show( iv_current = 1
                        iv_text    = 'Fetch remote files' ).
 
-    IF get_selected_commit( ) IS INITIAL.
-      ls_pull = zcl_abapgit_git_porcelain=>pull_by_branch( iv_url         = get_url( )
-                                                           iv_branch_name = get_selected_branch( ) ).
-    ELSE.
-      ls_pull = zcl_abapgit_git_porcelain=>pull_by_commit( iv_url         = get_url( )
-                                                           iv_commit_hash = get_selected_commit( ) ).
-    ENDIF.
+    ls_pull = mi_connector->fetch( ms_data ).
 
     set_files_remote( ls_pull-files ).
     set_objects( ls_pull-objects ).
-    mv_current_commit = ls_pull-commit.
+    mv_current_commit = ls_pull-resolved_revision.
 
   ENDMETHOD.
 

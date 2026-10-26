@@ -16,7 +16,22 @@ Runs automatically for every push, not a required status check
 
 Note that the integration tests are not installed on systems, edit in vscode or copy pasta
 
-`cd test/gitea && npm install && npm run gitea && cd ../../ && npm run integration`
+`cd test/gitea && npm install && npm run gitea && cd ../.. && bash test/oci/run-integration.sh`
+
+The Gitea setup also starts a local HTTPS OCI registry on port 5443 and pushes
+the checked-in v1/v2 ORAS fixtures to the `team/library` repository. Install
+Docker, OpenSSL, ORAS 1.2.3, and Playwright before running it. The integration
+command trusts the temporary self-signed certificate only for this Node test
+process; it runs the critical Gitea and OCI client tests against the local
+services.
+
+To run only the OCI client smoke test without Docker, build first with
+`npm run build`, then run `npm run test:oci-integration`. It starts a temporary
+in-process HTTPS registry on `127.0.0.1:5443`, serves the checked-in ORAS
+fixtures, and runs `ZCL_ABAPGIT_OCI_INTEGRATION`. OpenSSL is needed only if the
+temporary test certificate has not already been generated. Stop any other
+registry using port 5443 first. This does not replace the full Gitea integration
+test or SAP pull/deserialization validation.
 
 ## Integration Testing - UI
 

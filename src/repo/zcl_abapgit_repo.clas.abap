@@ -13,6 +13,14 @@ CLASS zcl_abapgit_repo DEFINITION
     ALIASES get_key                       FOR zif_abapgit_repo~get_key.
     ALIASES get_name                      FOR zif_abapgit_repo~get_name.
     ALIASES is_offline                    FOR zif_abapgit_repo~is_offline.
+    ALIASES get_repo_kind                 FOR zif_abapgit_repo~get_repo_kind.
+    ALIASES supports_git                  FOR zif_abapgit_repo~supports_git.
+    ALIASES supports_push                 FOR zif_abapgit_repo~supports_push.
+    ALIASES get_remote_address            FOR zif_abapgit_repo~get_remote_address.
+    ALIASES get_selected_reference        FOR zif_abapgit_repo~get_selected_reference.
+    ALIASES get_resolved_revision         FOR zif_abapgit_repo~get_resolved_revision.
+    ALIASES get_imported_revision         FOR zif_abapgit_repo~get_imported_revision.
+    ALIASES set_oci_reference             FOR zif_abapgit_repo~set_oci_reference.
     ALIASES get_package                   FOR zif_abapgit_repo~get_package.
     ALIASES get_local_settings            FOR zif_abapgit_repo~get_local_settings.
     ALIASES get_tadir_objects             FOR zif_abapgit_repo~get_tadir_objects.
@@ -61,16 +69,22 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS reset_remote .
     METHODS set
       IMPORTING
-        !iv_url             TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
-        !iv_branch_name     TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
-        !iv_selected_commit TYPE zif_abapgit_persistence=>ty_repo-selected_commit OPTIONAL
-        !iv_head_branch     TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
-        !iv_offline         TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
-        !is_dot_abapgit     TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
-        !is_local_settings  TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
-        !iv_deserialized_at TYPE zif_abapgit_persistence=>ty_repo-deserialized_at OPTIONAL
-        !iv_deserialized_by TYPE zif_abapgit_persistence=>ty_repo-deserialized_by OPTIONAL
-        !iv_switched_origin TYPE zif_abapgit_persistence=>ty_repo-switched_origin OPTIONAL
+        !iv_url                 TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
+        !iv_branch_name         TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
+        !iv_selected_commit     TYPE zif_abapgit_persistence=>ty_repo-selected_commit OPTIONAL
+        !iv_head_branch         TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
+        !iv_offline             TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
+        !iv_repo_kind           TYPE zif_abapgit_persistence=>ty_repo-repo_kind OPTIONAL
+        !iv_oci_registry        TYPE zif_abapgit_persistence=>ty_repo-oci_registry OPTIONAL
+        !iv_oci_repository      TYPE zif_abapgit_persistence=>ty_repo-oci_repository OPTIONAL
+        !iv_oci_reference       TYPE zif_abapgit_persistence=>ty_repo-oci_reference OPTIONAL
+        !iv_oci_resolved_digest TYPE zif_abapgit_persistence=>ty_repo-oci_resolved_digest OPTIONAL
+        !iv_oci_imported_digest TYPE zif_abapgit_persistence=>ty_repo-oci_imported_digest OPTIONAL
+        !is_dot_abapgit         TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
+        !is_local_settings      TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
+        !iv_deserialized_at     TYPE zif_abapgit_persistence=>ty_repo-deserialized_at OPTIONAL
+        !iv_deserialized_by     TYPE zif_abapgit_persistence=>ty_repo-deserialized_by OPTIONAL
+        !iv_switched_origin     TYPE zif_abapgit_persistence=>ty_repo-switched_origin OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS set_dot_apack
@@ -392,6 +406,12 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       OR iv_selected_commit IS SUPPLIED
       OR iv_head_branch IS SUPPLIED
       OR iv_offline IS SUPPLIED
+      OR iv_repo_kind IS SUPPLIED
+      OR iv_oci_registry IS SUPPLIED
+      OR iv_oci_repository IS SUPPLIED
+      OR iv_oci_reference IS SUPPLIED
+      OR iv_oci_resolved_digest IS SUPPLIED
+      OR iv_oci_imported_digest IS SUPPLIED
       OR is_dot_abapgit IS SUPPLIED
       OR is_local_settings IS SUPPLIED
       OR iv_deserialized_by IS SUPPLIED
@@ -422,6 +442,36 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     IF iv_offline IS SUPPLIED.
       ms_data-offline = iv_offline.
       ls_mask-offline = abap_true.
+    ENDIF.
+
+    IF iv_repo_kind IS SUPPLIED.
+      ms_data-repo_kind = iv_repo_kind.
+      ls_mask-repo_kind = abap_true.
+    ENDIF.
+
+    IF iv_oci_registry IS SUPPLIED.
+      ms_data-oci_registry = iv_oci_registry.
+      ls_mask-oci_registry = abap_true.
+    ENDIF.
+
+    IF iv_oci_repository IS SUPPLIED.
+      ms_data-oci_repository = iv_oci_repository.
+      ls_mask-oci_repository = abap_true.
+    ENDIF.
+
+    IF iv_oci_reference IS SUPPLIED.
+      ms_data-oci_reference = iv_oci_reference.
+      ls_mask-oci_reference = abap_true.
+    ENDIF.
+
+    IF iv_oci_resolved_digest IS SUPPLIED.
+      ms_data-oci_resolved_digest = iv_oci_resolved_digest.
+      ls_mask-oci_resolved_digest = abap_true.
+    ENDIF.
+
+    IF iv_oci_imported_digest IS SUPPLIED.
+      ms_data-oci_imported_digest = iv_oci_imported_digest.
+      ls_mask-oci_imported_digest = abap_true.
     ENDIF.
 
     IF is_dot_abapgit IS SUPPLIED.
@@ -474,8 +524,14 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     GET TIME STAMP FIELD lv_deserialized_at.
     lv_deserialized_by = sy-uname.
 
-    set( iv_deserialized_at = lv_deserialized_at
-         iv_deserialized_by = lv_deserialized_by ).
+    IF get_repo_kind( ) = zif_abapgit_persistence=>c_repo_kind-oci.
+      set( iv_deserialized_at = lv_deserialized_at
+           iv_deserialized_by = lv_deserialized_by
+           iv_oci_imported_digest = ms_data-oci_resolved_digest ).
+    ELSE.
+      set( iv_deserialized_at = lv_deserialized_at
+           iv_deserialized_by = lv_deserialized_by ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -787,6 +843,95 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_repo~get_repo_kind.
+    rv_kind = ms_data-repo_kind.
+    IF rv_kind IS INITIAL.
+      IF ms_data-offline = abap_true.
+        rv_kind = zif_abapgit_persistence=>c_repo_kind-offline.
+      ELSE.
+        rv_kind = zif_abapgit_persistence=>c_repo_kind-git.
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~supports_git.
+    rv_yes = boolc( get_repo_kind( ) = zif_abapgit_persistence=>c_repo_kind-git ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~supports_push.
+    rv_yes = supports_git( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~get_remote_address.
+    IF get_repo_kind( ) = zif_abapgit_persistence=>c_repo_kind-oci.
+      IF ms_data-oci_reference CP 'sha256:*'.
+        rv_address = |oci://{ ms_data-oci_registry }/{ ms_data-oci_repository }@{ ms_data-oci_reference }|.
+      ELSE.
+        rv_address = |oci://{ ms_data-oci_registry }/{ ms_data-oci_repository }:{ ms_data-oci_reference }|.
+      ENDIF.
+    ELSE.
+      rv_address = ms_data-url.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~get_selected_reference.
+    CASE get_repo_kind( ).
+      WHEN zif_abapgit_persistence=>c_repo_kind-oci.
+        rv_reference = ms_data-oci_reference.
+      WHEN zif_abapgit_persistence=>c_repo_kind-git.
+        IF ms_data-selected_commit IS NOT INITIAL.
+          rv_reference = ms_data-selected_commit.
+        ELSE.
+          rv_reference = ms_data-branch_name.
+        ENDIF.
+    ENDCASE.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~get_resolved_revision.
+    IF get_repo_kind( ) = zif_abapgit_persistence=>c_repo_kind-oci.
+      rv_revision = ms_data-oci_resolved_digest.
+    ELSE.
+      rv_revision = ms_data-selected_commit.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~get_imported_revision.
+    IF get_repo_kind( ) = zif_abapgit_persistence=>c_repo_kind-oci.
+      rv_revision = ms_data-oci_imported_digest.
+    ELSE.
+      rv_revision = ms_data-selected_commit.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~set_oci_reference.
+    DATA ls_reference TYPE zcl_abapgit_oci_reference=>ty_reference.
+
+    IF get_repo_kind( ) <> zif_abapgit_persistence=>c_repo_kind-oci.
+      zcx_abapgit_exception=>raise( 'OCI reference settings are only available for OCI repositories' ).
+    ENDIF.
+
+    ls_reference = zcl_abapgit_oci_reference=>parse(
+      zcl_abapgit_oci_reference=>build(
+        iv_registry   = iv_registry
+        iv_repository = iv_repository
+        iv_reference  = iv_reference ) ).
+
+    set( iv_url                 = ls_reference-canonical
+         iv_oci_registry        = ls_reference-registry
+         iv_oci_repository      = ls_reference-repository
+         iv_oci_reference       = ls_reference-reference
+         iv_oci_resolved_digest = '' ).
+    reset_remote( ).
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_repo~refresh.
 
     mv_request_local_refresh = abap_true.
@@ -873,6 +1018,10 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~switch_repo_type.
 
+    IF get_repo_kind( ) = zif_abapgit_persistence=>c_repo_kind-oci.
+      zcx_abapgit_exception=>raise( 'OCI repositories cannot be converted to Git or offline repositories' ).
+    ENDIF.
+
     IF iv_offline = ms_data-offline.
       zcx_abapgit_exception=>raise( |Cannot switch_repo_type, offline already = "{ ms_data-offline }"| ).
     ENDIF.
@@ -882,9 +1031,11 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
            iv_branch_name     = ''
            iv_selected_commit = ''
            iv_head_branch     = ''
-           iv_offline         = abap_true ).
+           iv_offline         = abap_true
+           iv_repo_kind       = zif_abapgit_persistence=>c_repo_kind-offline ).
     ELSE. " OFFline -> On-line
-      set( iv_offline = abap_false ).
+      set( iv_offline   = abap_false
+           iv_repo_kind = zif_abapgit_persistence=>c_repo_kind-git ).
     ENDIF.
 
   ENDMETHOD.

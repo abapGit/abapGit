@@ -8,7 +8,9 @@ CLASS ltcl_test DEFINITION FOR TESTING
       adler32 FOR TESTING,
       sha1 FOR TESTING RAISING zcx_abapgit_exception,
       sha1_raw_valid FOR TESTING RAISING zcx_abapgit_exception,
-      sha1_raw_empty FOR TESTING RAISING zcx_abapgit_exception.
+      sha1_raw_empty FOR TESTING RAISING zcx_abapgit_exception,
+      sha256_raw_valid FOR TESTING RAISING zcx_abapgit_exception,
+      sha256_raw_empty FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -68,6 +70,34 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_sha1
       exp = 'da39a3ee5e6b4b0d3255bfef95601890afd80709' ).
+
+  ENDMETHOD.
+
+
+  METHOD sha256_raw_valid.
+
+    DATA lv_hash TYPE string.
+
+    lv_hash = zcl_abapgit_hash=>sha256_raw( '616263' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_hash
+      exp = 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad' ).
+
+  ENDMETHOD.
+
+
+  METHOD sha256_raw_empty.
+
+    DATA: lv_hash  TYPE string,
+          lv_input TYPE xstring.
+
+    lv_input = ''.
+    lv_hash = zcl_abapgit_hash=>sha256_raw( lv_input ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_hash
+      exp = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' ).
 
   ENDMETHOD.
 
