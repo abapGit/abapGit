@@ -205,6 +205,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
           rs_handled-page   = zcl_abapgit_gui_page_stage=>create(
             ii_repo_online   = li_repo_online
             iv_sci_result    = status( )
+            iv_changed_by    = mv_changed_by
             ii_force_refresh = abap_true ).
 
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.

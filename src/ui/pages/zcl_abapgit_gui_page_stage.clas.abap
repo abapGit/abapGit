@@ -25,6 +25,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         iv_seed          TYPE string OPTIONAL
         iv_sci_result    TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
         ii_obj_filter    TYPE REF TO zif_abapgit_object_filter OPTIONAL
+        iv_changed_by    TYPE syuname OPTIONAL
         ii_force_refresh TYPE abap_bool
       RETURNING
         VALUE(ri_page)   TYPE REF TO zif_abapgit_gui_renderable
@@ -37,6 +38,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         iv_seed          TYPE string OPTIONAL
         iv_sci_result    TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
         ii_obj_filter    TYPE REF TO zif_abapgit_object_filter OPTIONAL
+        iv_changed_by    TYPE syuname OPTIONAL
         ii_force_refresh TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
@@ -133,6 +135,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     mv_seed        = iv_seed.
     mv_sci_result  = iv_sci_result.
     mi_obj_filter  = ii_obj_filter.
+    " Same as the "me" link in the "Changed by" column: a filter the user can clear
+    mv_filter_value = to_lower( iv_changed_by ).
 
     " force refresh on stage, to make sure the latest local and remote files are used
     IF ii_force_refresh = abap_true.
@@ -182,7 +186,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         iv_seed          = iv_seed
         iv_sci_result    = iv_sci_result
         ii_force_refresh = ii_force_refresh
-        ii_obj_filter    = ii_obj_filter.
+        ii_obj_filter    = ii_obj_filter
+        iv_changed_by    = iv_changed_by.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title         = 'Stage'

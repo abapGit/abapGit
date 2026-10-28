@@ -1292,10 +1292,13 @@ StageHelper.prototype.applyFilterToRow = function(row, filter, pattern) {
     // Get the innermost tag with the text we want to filter
     // <td>text</td>: elem = td-tag
     // <td><span><i></i><a>text</a></span></td>: elem = a-tag
+    // <td><span><i></i><span>text</span></span></td>: elem = inner span-tag (no link, e.g. user "UNKNOWN")
     var elem  = row.cells[this.colIndex[attr]];
     var elemA = elem.getElementsByTagName("A")[0];
+    var spans = elem.getElementsByTagName("SPAN");
 
     if (elemA) elem = elemA;
+    else if (spans.length) elem = spans[spans.length - 1];
     return {
       elem     : elem,
       plainText: this.getPlainText(elem).replace(/ /g, "\u00a0"), // without tags, with encoded spaces
