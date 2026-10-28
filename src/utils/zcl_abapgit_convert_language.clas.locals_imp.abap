@@ -521,6 +521,11 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
                            im_bcp47 = 'ja'
                            iv_text  = 'Japanese' ).
 
+    fill_language_mapping( im_sap1  = 'BC4B'
+                           im_sap2  = 'KK'
+                           im_bcp47 = 'kk'
+                           iv_text  = 'Kazakh' ).
+
     fill_language_mapping( im_sap1  = '3'
                            im_sap2  = 'KO'
                            im_bcp47 = 'ko'
