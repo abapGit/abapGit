@@ -583,7 +583,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         )->create_picklist(
         )->set_id( zif_abapgit_definitions=>c_action-git_branch_switch
         )->set_in_page(
-        )->set_description( 'Select the branch to switch to' ).
+        )->set_description( 'Select the branch to switch to'
+        )->set_button_label( 'Switch to' ).
 
     ELSEIF io_picklist->was_cancelled( ) = abap_false.
 

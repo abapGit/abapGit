@@ -55,6 +55,13 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
         VALUE(ro_me)   TYPE REF TO zcl_abapgit_gui_picklist
       RAISING
         zcx_abapgit_exception.
+    METHODS set_button_label
+      IMPORTING
+        iv_button_label TYPE string
+      RETURNING
+        VALUE(ro_me)    TYPE REF TO zcl_abapgit_gui_picklist
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -81,6 +88,7 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
     DATA mv_id TYPE string.
     DATA mv_title TYPE string.
     DATA mv_description TYPE string.
+    DATA mv_button_label TYPE string.
 
     METHODS get_form_schema
       RETURNING
@@ -114,6 +122,7 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
     mv_in_page = iv_in_page.
     mv_id      = iv_id.
     mv_title   = iv_title.
+    mv_button_label = 'Choose'.
 
     IF mi_item_renderer IS NOT BOUND AND mv_attr_name IS INITIAL.
       zcx_abapgit_exception=>raise( 'Renderer or attr name required' ).
@@ -176,7 +185,7 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
     ENDLOOP.
 
     ro_form->command(
-      iv_label    = 'Choose'
+      iv_label    = mv_button_label
       iv_cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main
       iv_action   = c_event-choose
     )->command(
@@ -227,6 +236,15 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
     ELSE.
       rv_state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD set_button_label.
+    mv_button_label = iv_button_label.
+    " The form schema is built in the constructor, so rebuild it
+    mo_form = get_form_schema( ).
+    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
+    ro_me = me.
   ENDMETHOD.
 
 
