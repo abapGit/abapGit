@@ -299,6 +299,7 @@ INTERFACE zif_abapgit_definitions
       go_settings                   TYPE string VALUE 'go_settings',
       go_settings_personal          TYPE string VALUE 'go_settings_personal',
       go_stage                      TYPE string VALUE 'go_stage',
+      go_stage_me                   TYPE string VALUE 'go_stage_me',
       go_stage_transport            TYPE string VALUE 'go_stage_transport',
       go_tutorial                   TYPE string VALUE 'go_tutorial',
       goto_message                  TYPE string VALUE 'goto_message',
