@@ -574,6 +574,10 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     COMMIT WORK AND WAIT.
 
+    li_exit->post_pull(
+      ii_repo = me
+      ii_log  = ii_log ).
+
   ENDMETHOD.
 
 
