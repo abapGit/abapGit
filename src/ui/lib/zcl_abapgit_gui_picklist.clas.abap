@@ -134,21 +134,25 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
     FIELD-SYMBOLS <ls_row> TYPE any.
     DATA lv_index TYPE i.
     DATA lv_label TYPE string.
+    DATA lv_title TYPE string.
 
     ro_form = zcl_abapgit_html_form=>create( ).
 
     ASSIGN mr_list->* TO <lt_list>.
 
+    " The description replaces the title, both would say the same
     IF mv_description IS NOT INITIAL.
       ro_form->freetext(
         iv_name = 'description'
         iv_text = escape( val    = mv_description
                           format = cl_abap_format=>e_html_text ) ).
+    ELSE.
+      lv_title = mv_title.
     ENDIF.
 
     ro_form->radio(
       iv_name          = c_radio_name
-      iv_label         = mv_title
+      iv_label         = lv_title
       iv_default_value = '1'
       iv_condense      = boolc( lines( <lt_list> ) <= 15 ) ).
 
