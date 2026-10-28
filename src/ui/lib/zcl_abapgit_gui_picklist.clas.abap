@@ -18,6 +18,8 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
         !iv_title         TYPE string DEFAULT 'Choose from list'
         !iv_attr_name     TYPE abap_compname OPTIONAL
         !ii_item_renderer TYPE REF TO zif_abapgit_gui_render_item OPTIONAL
+        !iv_description   TYPE string OPTIONAL
+        !iv_button_label  TYPE string OPTIONAL
       RAISING
         zcx_abapgit_exception.
     METHODS get_result_idx
@@ -48,20 +50,6 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
         iv_in_page   TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(ro_me) TYPE REF TO zcl_abapgit_gui_picklist.
-    METHODS set_description
-      IMPORTING
-        iv_description TYPE string
-      RETURNING
-        VALUE(ro_me)   TYPE REF TO zcl_abapgit_gui_picklist
-      RAISING
-        zcx_abapgit_exception.
-    METHODS set_button_label
-      IMPORTING
-        iv_button_label TYPE string
-      RETURNING
-        VALUE(ro_me)    TYPE REF TO zcl_abapgit_gui_picklist
-      RAISING
-        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -122,7 +110,11 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
     mv_in_page = iv_in_page.
     mv_id      = iv_id.
     mv_title   = iv_title.
-    mv_button_label = 'Choose'.
+    mv_description  = iv_description.
+    mv_button_label = iv_button_label.
+    IF mv_button_label IS INITIAL.
+      mv_button_label = 'Choose'.
+    ENDIF.
 
     IF mi_item_renderer IS NOT BOUND AND mv_attr_name IS INITIAL.
       zcx_abapgit_exception=>raise( 'Renderer or attr name required' ).
@@ -236,24 +228,6 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
     ELSE.
       rv_state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDIF.
-  ENDMETHOD.
-
-
-  METHOD set_button_label.
-    mv_button_label = iv_button_label.
-    " The form schema is built in the constructor, so rebuild it
-    mo_form = get_form_schema( ).
-    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
-    ro_me = me.
-  ENDMETHOD.
-
-
-  METHOD set_description.
-    mv_description = iv_description.
-    " The form schema is built in the constructor, so rebuild it
-    mo_form = get_form_schema( ).
-    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
-    ro_me = me.
   ENDMETHOD.
 
 
