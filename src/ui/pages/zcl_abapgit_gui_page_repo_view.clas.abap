@@ -152,6 +152,9 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(ro_tag_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
         zcx_abapgit_exception .
+    METHODS build_stage_dropdown
+      RETURNING
+        VALUE(ro_stage_dropdown) TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS build_patch_dropdown
       RETURNING
         VALUE(ro_patch_dropdown) TYPE REF TO zcl_abapgit_html_toolbar .
@@ -317,9 +320,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     IF mi_repo->is_offline( ) = abap_true.
       ro_advanced_dropdown->add( iv_txt = 'Export by Transport'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-zip_export_transport }?key={ mv_key }| ).
-    ELSE.
-      ro_advanced_dropdown->add( iv_txt = 'Stage by Transport'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-go_stage_transport }?key={ mv_key }| ).
     ENDIF.
 
     ro_advanced_dropdown->add( iv_txt = 'Change Repository Package'
@@ -457,7 +457,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                        iv_opt = get_crossout( iv_protected = abap_true
                                               iv_strong    = abap_true ) ).
       ro_toolbar->add( iv_txt = 'Stage'
-                       iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }|
+                       io_sub = build_stage_dropdown( )
                        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
       IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " Any changes
@@ -566,6 +566,21 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ro_diff_dropdown->add( iv_txt   = 'My Changes'
                            iv_title = 'Diff only your own changes'
                            iv_act   = |{ zif_abapgit_definitions=>c_action-go_repo_diff_me }?key={ mv_key }| ).
+
+  ENDMETHOD.
+
+
+  METHOD build_stage_dropdown.
+
+    CREATE OBJECT ro_stage_dropdown.
+
+    ro_stage_dropdown->add( iv_txt = 'All Changes'
+                            iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }| ).
+    ro_stage_dropdown->add( iv_txt   = 'My Changes'
+                            iv_title = 'Stage with the filter on objects you changed'
+                            iv_act   = |{ zif_abapgit_definitions=>c_action-go_stage_me }?key={ mv_key }| ).
+    ro_stage_dropdown->add( iv_txt = 'By Transport'
+                            iv_act = |{ zif_abapgit_definitions=>c_action-go_stage_transport }?key={ mv_key }| ).
 
   ENDMETHOD.
 

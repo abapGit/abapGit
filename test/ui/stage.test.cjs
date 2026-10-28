@@ -208,3 +208,20 @@ test("stage load and unload survive storage access failure", () => {
   helper.onPageUnload();
   assert.equal(helper.selectedCount, 0);
 });
+
+// A user without a link, e.g. "UNKNOWN": the filter marks the name inside the
+// user box and must not replace the box and its icon with plain text
+test("filtering keeps the user box of a name without a link", () => {
+  const { helper, rows } = page();
+  const name = { innerHTML: "UNKNOWN", cloneNode() { return { textContent: "UNKNOWN", querySelectorAll() { return []; } }; } };
+  const box = { innerHTML: '<i class="icon"></i><span>UNKNOWN</span>' };
+  const user = cell("user", "UNKNOWN");
+  user.innerHTML = '<span class="user-box">' + box.innerHTML + "</span>";
+  user.getElementsByTagName = tag => (tag === "SPAN" ? [box, name] : []);
+  rows[0].cells[1] = user;
+  helper.applyFilterValue("unknown");
+  assert.equal(name.innerHTML, "<mark>UNKNOWN</mark>");
+  helper.applyFilterValue("");
+  assert.equal(name.innerHTML, "UNKNOWN");
+  assert.equal(user.innerHTML, '<span class="user-box"><i class="icon"></i><span>UNKNOWN</span></span>');
+});
