@@ -580,6 +580,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         iv_default_branch  = zcl_abapgit_git_branch_utils=>get_display_name(
                                mi_repo_online->get_selected_branch( ) )
         iv_show_new_option = abap_true
+        iv_description     = 'Select the branch to switch to'
+        iv_button_label    = 'Switch to'
         )->create_picklist(
         )->set_id( zif_abapgit_definitions=>c_action-git_branch_switch
         )->set_in_page( ).
