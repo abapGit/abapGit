@@ -482,6 +482,20 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_exit~post_pull.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->post_pull(
+            ii_repo = ii_repo
+            ii_log  = ii_log ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_exit~pre_calculate_repo_status.
 
     IF gi_exit IS NOT INITIAL.
