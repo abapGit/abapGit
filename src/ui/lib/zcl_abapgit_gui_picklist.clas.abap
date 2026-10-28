@@ -48,6 +48,13 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
         iv_in_page   TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(ro_me) TYPE REF TO zcl_abapgit_gui_picklist.
+    METHODS set_description
+      IMPORTING
+        iv_description TYPE string
+      RETURNING
+        VALUE(ro_me)   TYPE REF TO zcl_abapgit_gui_picklist
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -73,6 +80,7 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
     DATA mv_in_page TYPE abap_bool.
     DATA mv_id TYPE string.
     DATA mv_title TYPE string.
+    DATA mv_description TYPE string.
 
     METHODS get_form_schema
       RETURNING
@@ -130,6 +138,13 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
     ro_form = zcl_abapgit_html_form=>create( ).
 
     ASSIGN mr_list->* TO <lt_list>.
+
+    IF mv_description IS NOT INITIAL.
+      ro_form->freetext(
+        iv_name = 'description'
+        iv_text = escape( val    = mv_description
+                          format = cl_abap_format=>e_html_text ) ).
+    ENDIF.
 
     ro_form->radio(
       iv_name          = c_radio_name
@@ -208,6 +223,15 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
     ELSE.
       rv_state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD set_description.
+    mv_description = iv_description.
+    " The form schema is built in the constructor, so rebuild it
+    mo_form = get_form_schema( ).
+    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
+    ro_me = me.
   ENDMETHOD.
 
 

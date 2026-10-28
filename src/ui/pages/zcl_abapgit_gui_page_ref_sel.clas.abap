@@ -133,6 +133,17 @@ CLASS zcl_abapgit_gui_page_ref_sel IMPLEMENTATION.
 
     mo_picklist->set_id( mv_action )->set_in_page( mv_in_page ).
 
+    CASE mv_action.
+      WHEN zif_abapgit_definitions=>c_action-git_branch_switch.
+        mo_picklist->set_description( 'Select the branch to switch to' ).
+      WHEN zif_abapgit_definitions=>c_action-git_branch_delete.
+        mo_picklist->set_description( 'Select the branch to delete' ).
+      WHEN zif_abapgit_definitions=>c_action-git_tag_switch.
+        mo_picklist->set_description( 'Select the tag to switch to' ).
+      WHEN zif_abapgit_definitions=>c_action-git_tag_delete.
+        mo_picklist->set_description( 'Select the tag to delete' ).
+    ENDCASE.
+
   ENDMETHOD.
 
 
