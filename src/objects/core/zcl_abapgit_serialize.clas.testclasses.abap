@@ -261,6 +261,9 @@ CLASS ltd_exit IMPLEMENTATION.
   METHOD zif_abapgit_exit~on_event.
   ENDMETHOD.
 
+  METHOD zif_abapgit_exit~post_pull.
+  ENDMETHOD.
+
   METHOD zif_abapgit_exit~pre_calculate_repo_status.
   ENDMETHOD.
 
