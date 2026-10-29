@@ -118,15 +118,26 @@ CLASS zcl_abapgit_gui_page_ref_sel IMPLEMENTATION.
           iv_default_branch  = zcl_abapgit_git_branch_utils=>get_display_name(
                                  li_repo_online->get_selected_branch( ) )
           iv_hide_branch     = li_repo_online->get_selected_branch( )
-          iv_show_new_option = abap_true )->create_picklist( ).
+          iv_show_new_option = abap_true
+          iv_description     = 'Select the branch to switch to'
+          iv_button_label    = 'Switch to' )->create_picklist( ).
       WHEN zif_abapgit_definitions=>c_action-git_branch_delete.
         mo_picklist = zcl_abapgit_popup_branch_list=>create(
-          iv_url         = lv_url
-          iv_hide_branch = li_repo_online->get_selected_branch( )
-          iv_hide_head   = abap_true )->create_picklist( ).
-      WHEN zif_abapgit_definitions=>c_action-git_tag_switch
-        OR zif_abapgit_definitions=>c_action-git_tag_delete.
-        mo_picklist = zcl_abapgit_popup_tag_list=>create( lv_url )->create_picklist( ).
+          iv_url          = lv_url
+          iv_hide_branch  = li_repo_online->get_selected_branch( )
+          iv_hide_head    = abap_true
+          iv_description  = 'Select the branch to delete'
+          iv_button_label = 'Delete' )->create_picklist( ).
+      WHEN zif_abapgit_definitions=>c_action-git_tag_switch.
+        mo_picklist = zcl_abapgit_popup_tag_list=>create(
+          iv_url          = lv_url
+          iv_description  = 'Select the tag to switch to'
+          iv_button_label = 'Switch to' )->create_picklist( ).
+      WHEN zif_abapgit_definitions=>c_action-git_tag_delete.
+        mo_picklist = zcl_abapgit_popup_tag_list=>create(
+          iv_url          = lv_url
+          iv_description  = 'Select the tag to delete'
+          iv_button_label = 'Delete' )->create_picklist( ).
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( |Unexpected ref selection action { mv_action }| ).
     ENDCASE.
