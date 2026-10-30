@@ -105,6 +105,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !ii_event         TYPE REF TO zif_abapgit_gui_event
         ii_obj_filter     TYPE REF TO zif_abapgit_object_filter OPTIONAL
         !iv_changed_by_me TYPE abap_bool DEFAULT abap_false
+        !iv_force_refresh TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(ri_page)    TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -310,8 +311,9 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
                                            iv_changed_by_me = abap_true ).
         rs_handled-state = get_state_diff( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_stage_transport.              " Go Staging page by Transport
-        rs_handled-page = get_page_stage( ii_event      = ii_event
-                                          ii_obj_filter = go_stage_transport( lv_key ) ).
+        rs_handled-page = get_page_stage( ii_event         = ii_event
+                                          ii_obj_filter    = go_stage_transport( lv_key )
+                                          iv_force_refresh = abap_false ).
         rs_handled-state = get_state_diff( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_tutorial.                     " Go to tutorial
         rs_handled-page  = zcl_abapgit_gui_page_tutorial=>create( ).
@@ -475,7 +477,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         iv_sci_result    = lv_sci_result
         ii_obj_filter    = ii_obj_filter
         iv_changed_by    = lv_user
-        ii_force_refresh = abap_true ).
+        ii_force_refresh = iv_force_refresh ).
     ENDIF.
 
   ENDMETHOD.
@@ -550,9 +552,14 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     DATA lt_r_trkorr TYPE zif_abapgit_definitions=>ty_trrngtrkor_tt.
     DATA li_repo TYPE REF TO zif_abapgit_repo.
 
-    lt_r_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_select_wb_tc_tr_and_tsk( ).
-
     li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+
+    " Refresh and fetch before the popup: if the fetch needs a login, the GUI reruns
+    " the whole action, which would ask for the transport a second time
+    li_repo->refresh( ).
+    li_repo->get_files_remote( ).
+
+    lt_r_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_select_wb_tc_tr_and_tsk( ).
 
     CREATE OBJECT ro_filter.
     ro_filter->set_filter_values( iv_package  = li_repo->get_package( )
