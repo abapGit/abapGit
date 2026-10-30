@@ -460,7 +460,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           ri_page = zcl_abapgit_gui_page_code_insp=>create(
             ii_repo                  = li_repo
             iv_raise_when_no_results = abap_true
-            iv_changed_by            = lv_user ).
+            iv_changed_by            = lv_user
+            ii_obj_filter            = ii_obj_filter ).
 
         CATCH zcx_abapgit_exception.
           lv_sci_result = zif_abapgit_definitions=>c_sci_result-passed.
