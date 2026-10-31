@@ -32,6 +32,7 @@ CLASS zcl_abapgit_repo DEFINITION
     ALIASES get_dot_apack                 FOR zif_abapgit_repo~get_dot_apack.
     ALIASES delete_checks                 FOR zif_abapgit_repo~delete_checks.
     ALIASES set_files_remote              FOR zif_abapgit_repo~set_files_remote.
+    ALIASES set_files_local               FOR zif_abapgit_repo~set_files_local.
     ALIASES set_local_settings            FOR zif_abapgit_repo~set_local_settings.
     ALIASES switch_repo_type              FOR zif_abapgit_repo~switch_repo_type.
     ALIASES refresh_local_object          FOR zif_abapgit_repo~refresh_local_object.
@@ -857,6 +858,15 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~set_dot_abapgit.
     set( is_dot_abapgit = io_dot_abapgit->get_data( ) ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~set_files_local.
+
+    " Files serialized elsewhere (e.g. in a background task), as get_files_local returns them
+    mt_local = it_files.
+    mv_request_local_refresh = abap_false.
+
   ENDMETHOD.
 
 
