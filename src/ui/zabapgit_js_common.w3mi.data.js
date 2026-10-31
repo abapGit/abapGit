@@ -687,7 +687,7 @@ function perfClear() {
 var gKeyboard = {
   order: {
     sourceViewer: 10, // Ctrl+Shift+?, a troubleshooting key that no page shortcut may take
-    browserBack : 15, // Alt+Left where the browser does not go back itself (SAP GUI for Java)
+    browserBack : 15, // Alt+Left in SAP GUI for Java; Escape on the Edge control and WebGUI
     linkHints   : 20,
     menus       : 30, // arrow keys through dropdown menus (KeyNavigation)
     palette     : 40, // the toggle keys of the command palettes
@@ -3338,6 +3338,7 @@ function displayBrowserControlFooter() {
 // only trigger go_back for a genuine Back press.
 function redirectBrowserBackToSapEvent(backAction) {
   backAction = backAction || "go_back";
+  goBackOnEscape(backAction);
   if (!window.history || !window.history.pushState) return;
 
   // Arm the trap: this sentinel entry absorbs the first Back press
@@ -3445,6 +3446,45 @@ function triggerSapEventBack(backAction) {
   submitSapeventForm({}, backAction);
 }
 
+// Escape goes back, as in SAP GUI for Java. There SAP GUI sends Escape as a
+// graceful go_back itself: an in-page popup treats it as cancel, any other page
+// goes back, and the start page leaves abapGit. Taking the key here too would go
+// back twice. On the Edge control and on WebGUI Escape did nothing, so the page
+// sends that go_back itself. Not on the IE control, where this was never tried.
+//
+// Also while typing in a field, as in Java. Not while something the page opened
+// itself is open: that must not take the page with it. The source viewer stops
+// every key while it is open, before these handlers see it.
+//
+// keypress and keyup are cancelled as well: on the Edge control, an Escape keyup
+// that reaches SAP GUI leaves abapGit.
+function goBackOnEscape(backAction) {
+  if (!gEnv.isWebGui && gEnv.browserControl !== "Edge") return;
+
+  var sent = false;
+
+  function isPageOverlayOpen() {
+    var hotkeys = document.getElementById("hotkeys");
+    return CommandPalette.isVisible()
+      || LinkHints.areHintsDisplayed
+      || Boolean(hotkeys && hotkeys.style.display !== "none")
+      || Boolean(document.querySelector(".force-nav-hover"));
+  }
+
+  function onEscape(event) {
+    var isEscape = event.key === "Escape" || event.key === "Esc" || (event.keyCode || event.which) === 27;
+    if (!isEscape || isPageOverlayOpen()) return;
+    event.preventDefault();
+    if (event.type !== "keydown" || sent) return;
+    sent = true; // a held key repeats keydown, the round trip must start once
+    triggerSapEventBack(backAction);
+  }
+
+  ["keydown", "keypress", "keyup"].forEach(function(type) {
+    gKeyboard.on(type, gKeyboard.order.browserBack, onEscape);
+  });
+}
+
 /**********************************************************
  * Popup Control
  **********************************************************/
@@ -3497,36 +3537,6 @@ function trapFocus() {
     event.preventDefault();
     target.focus();
   }, true);
-
-  closePopupOnEscape();
-}
-
-// Escape cancels the in-page popup. SAP GUI for Java does that itself: it sends
-// Escape as a graceful go_back to the topmost handler, which the popups treat as
-// cancel, so taking the key here too would go back twice. On the Edge control
-// and on WebGUI Escape does nothing, so the page sends that go_back itself.
-// Not on the IE control, where this was never tried.
-//
-// keypress and keyup are cancelled as well: on the Edge control, an Escape keyup
-// that reaches SAP GUI leaves abapGit.
-function closePopupOnEscape() {
-  if (!gEnv.isWebGui && gEnv.browserControl !== "Edge") return;
-
-  var sent = false;
-
-  function onEscape(event) {
-    var isEscape = event.key === "Escape" || event.key === "Esc" || (event.keyCode || event.which) === 27;
-    if (!isEscape || !document.getElementById("modal")) return;
-    event.preventDefault();
-    event.stopPropagation();
-    if (event.type !== "keydown" || sent) return;
-    sent = true; // a held key repeats keydown, the round trip must start once
-    triggerSapEventBack("go_back");
-  }
-
-  ["keydown", "keypress", "keyup"].forEach(function(type) {
-    document.addEventListener(type, onEscape, true);
-  });
 }
 
 /**********************************************************

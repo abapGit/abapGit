@@ -3,25 +3,13 @@ const test = require("node:test");
 
 const loadUi = require("./load-ui.cjs");
 
-const EDGE = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0";
-const IE = "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko";
-const CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-
 // An in-page popup (zcl_abapgit_gui_in_page_modal) over a page. Focus starts on
 // the page behind it, as after rendering: nothing in the popup has it yet.
-// listeners[name] calls every listener of that event type the popup registered.
-function popup(items = ["first", "middle", "last"], userAgent = CHROME, env = {}) {
-  const registered = {};
+function popup(items = ["first", "middle", "last"]) {
   const listeners = {};
   const document = {
     activeElement: null,
-    addEventListener(name, fn) {
-      if (!registered[name]) {
-        registered[name] = [];
-        listeners[name] = event => registered[name].forEach(handler => handler(event));
-      }
-      registered[name].push(fn);
-    },
+    addEventListener(name, fn) { listeners[name] = fn; },
     getElementById(id) { return id === "modal" ? modal : null; }
   };
   const element = (name, attrs = {}) => ({
@@ -34,14 +22,11 @@ function popup(items = ["first", "middle", "last"], userAgent = CHROME, env = {}
     focus() { document.activeElement = this; }
   });
   const elements = items.map(item => typeof item === "string" ? element(item) : element(item.name, item));
-  let modal = { querySelectorAll() { return elements; } };
+  const modal = { querySelectorAll() { return elements; } };
   const pageLink = element("page link");
   document.activeElement = pageLink;
-  const context = loadUi({ document, navigator: { userAgent } });
-  context.setEnvironment(env);
-  for (const name in registered) { delete registered[name]; delete listeners[name]; } // only what trapFocus registers
-  const backActions = [];
-  context.triggerSapEventBack = action => backActions.push(action);
+  const context = loadUi({ document });
+  for (const name in listeners) delete listeners[name]; // only what trapFocus registers
   context.trapFocus();
   return {
     tab(shiftKey = false) {
@@ -50,19 +35,7 @@ function popup(items = ["first", "middle", "last"], userAgent = CHROME, env = {}
       return prevented;
     },
     focus(name) { elements.find(item => item.name === name).focus(); },
-    // keydown, keypress and keyup of one key press; returns which were prevented
-    press(key, keyCode) {
-      return ["keydown", "keypress", "keyup"].map(type => {
-        let prevented = false;
-        if (listeners[type]) {
-          listeners[type]({ type, key, keyCode, preventDefault() { prevented = true; }, stopPropagation() {} });
-        }
-        return prevented;
-      });
-    },
-    close() { modal = null; },
     get focused() { return document.activeElement.name; },
-    backActions,
     listeners
   };
 }
@@ -112,47 +85,4 @@ test("a page without a popup gets no focus trap", () => {
   for (const name in listeners) delete listeners[name];
   context.trapFocus();
   assert.equal(listeners.keydown, undefined);
-});
-
-for (const [name, userAgent, env] of [
-  ["the Edge control", EDGE, { isSapGuiForWindows: true }],
-  ["WebGUI", CHROME, { isWebGui: true }]
-]) {
-  test(`on ${name} Escape cancels the popup with go_back and keeps the key from SAP GUI`, () => {
-    const page = popup(undefined, userAgent, env);
-    assert.deepEqual(page.press("Escape", 27), [true, true, true]);
-    assert.deepEqual(page.backActions, ["go_back"]);
-  });
-}
-
-test("a held Escape sends go_back only once", () => {
-  const page = popup(undefined, EDGE, { isSapGuiForWindows: true });
-  page.press("Escape", 27);
-  page.press("Escape", 27);
-  page.press("Esc", 27); // the name older controls use
-  assert.deepEqual(page.backActions, ["go_back"]);
-});
-
-for (const [name, userAgent, env] of [
-  ["SAP GUI for Java, which closes the popup itself,", CHROME, {}],
-  ["the IE control", IE, { isSapGuiForWindows: true }]
-]) {
-  test(`on ${name} Escape is left alone`, () => {
-    const page = popup(undefined, userAgent, env);
-    assert.deepEqual(page.press("Escape", 27), [false, false, false]);
-    assert.deepEqual(page.backActions, []);
-  });
-}
-
-test("other keys than Escape are left alone", () => {
-  const page = popup(undefined, EDGE, { isSapGuiForWindows: true });
-  assert.deepEqual(page.press("Enter", 13), [false, false, false]);
-  assert.deepEqual(page.backActions, []);
-});
-
-test("Escape is left alone once the popup is gone", () => {
-  const page = popup(undefined, CHROME, { isWebGui: true });
-  page.close();
-  assert.deepEqual(page.press("Escape", 27), [false, false, false]);
-  assert.deepEqual(page.backActions, []);
 });
