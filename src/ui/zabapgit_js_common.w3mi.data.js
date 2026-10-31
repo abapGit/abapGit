@@ -3497,6 +3497,36 @@ function trapFocus() {
     event.preventDefault();
     target.focus();
   }, true);
+
+  closePopupOnEscape();
+}
+
+// Escape cancels the in-page popup. SAP GUI for Java does that itself: it sends
+// Escape as a graceful go_back to the topmost handler, which the popups treat as
+// cancel, so taking the key here too would go back twice. On the Edge control
+// and on WebGUI Escape does nothing, so the page sends that go_back itself.
+// Not on the IE control, where this was never tried.
+//
+// keypress and keyup are cancelled as well: on the Edge control, an Escape keyup
+// that reaches SAP GUI leaves abapGit.
+function closePopupOnEscape() {
+  if (!gEnv.isWebGui && gEnv.browserControl !== "Edge") return;
+
+  var sent = false;
+
+  function onEscape(event) {
+    var isEscape = event.key === "Escape" || event.key === "Esc" || (event.keyCode || event.which) === 27;
+    if (!isEscape || !document.getElementById("modal")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.type !== "keydown" || sent) return;
+    sent = true; // a held key repeats keydown, the round trip must start once
+    triggerSapEventBack("go_back");
+  }
+
+  ["keydown", "keypress", "keyup"].forEach(function(type) {
+    document.addEventListener(type, onEscape, true);
+  });
 }
 
 /**********************************************************
