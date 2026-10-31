@@ -339,7 +339,13 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
               ii_page = ls_handled-page
               iv_replacing = abap_true ).
           WHEN c_event_state-go_back.
-            back( ).
+            IF back( ) = abap_true.
+              " Back on the start page leaves abapGit, as F3 and Escape do in SAP GUI.
+              " A go_back sapevent (Escape or the browser Back on the Edge control
+              " and WebGUI) ends up here, those keys never reach the screen
+              free( ).
+              SET SCREEN 0.
+            ENDIF.
           WHEN c_event_state-go_back_to_bookmark.
             back( iv_to_bookmark = abap_true ).
           WHEN c_event_state-no_more_act.
