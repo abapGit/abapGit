@@ -3461,8 +3461,6 @@ function triggerSapEventBack(backAction) {
 function goBackOnEscape(backAction) {
   if (!gEnv.isWebGui && gEnv.browserControl !== "Edge") return;
 
-  var sent = false;
-
   function isPageOverlayOpen() {
     var hotkeys = document.getElementById("hotkeys");
     return CommandPalette.isVisible()
@@ -3475,8 +3473,10 @@ function goBackOnEscape(backAction) {
     var isEscape = event.key === "Escape" || event.key === "Esc" || (event.keyCode || event.which) === 27;
     if (!isEscape || isPageOverlayOpen()) return;
     event.preventDefault();
-    if (event.type !== "keydown" || sent) return;
-    sent = true; // a held key repeats keydown, the round trip must start once
+    // A held key repeats keydown, the round trip must start once. Not a flag
+    // per page: when the user answers "No" to leaving a form with unsaved
+    // changes, WebGUI keeps this very page, and the next press must work.
+    if (event.type !== "keydown" || event.repeat) return;
     triggerSapEventBack(backAction);
   }
 

@@ -34,11 +34,11 @@ function page(userAgent, env) {
     dom,
     backActions,
     // keydown, keypress and keyup of one key press; returns which were prevented
-    press(key, keyCode) {
+    press(key, keyCode, repeat = false) {
       return ["keydown", "keypress", "keyup"].map(type => {
         let prevented = false;
         if (context.gKeyboard.handlers[type]) {
-          context.gKeyboard.dispatch(type, { type, key, keyCode,
+          context.gKeyboard.dispatch(type, { type, key, keyCode, repeat: type === "keydown" && repeat,
             get defaultPrevented() { return prevented; },
             preventDefault() { prevented = true; }, stopPropagation() {} });
         }
@@ -66,9 +66,17 @@ for (const [name, userAgent, env] of [EDGE_CONTROL, WEBGUI]) {
 test("a held Escape goes back only once", () => {
   const { press, backActions } = page(...EDGE_CONTROL.slice(1));
   press("Escape", 27);
-  press("Escape", 27);
-  press("Esc", 27); // the name older controls use
+  assert.deepEqual(press("Escape", 27, true), [true, true, true]); // repeats are still kept from SAP GUI
+  press("Esc", 27, true); // the name older controls use
   assert.deepEqual(backActions, ["go_back"]);
+});
+
+// Answering "No" to leaving a form with unsaved changes keeps the same page on WebGUI
+test("every new Escape press goes back again on the same page", () => {
+  const { press, backActions } = page(...WEBGUI.slice(1));
+  press("Escape", 27);
+  press("Escape", 27);
+  assert.deepEqual(backActions, ["go_back", "go_back"]);
 });
 
 test("Escape goes back while typing in a field, as in SAP GUI for Java", () => {
