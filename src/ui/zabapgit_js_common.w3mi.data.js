@@ -2230,6 +2230,17 @@ LinkHints.prototype.closeActivatedDropdown = function() {
 // registered before the link hints cannot rely on the key being marked as
 // consumed. A page has at most one LinkHints instance (activateLinkHints).
 LinkHints.areHintsDisplayed = false;
+LinkHints.instance          = null;
+
+// Hide the hints as pressing the hint key again does, and drop what a hint code
+// typed so far, the yank mode and a dropdown the hints opened.
+LinkHints.prototype.hide = function() {
+  if (!this.areHintsDisplayed) return;
+  if (this.activatedDropdown) this.closeActivatedDropdown();
+  this.yankModeActive = false;
+  this.pendingPath    = "";
+  this.displayHints(false);
+};
 
 LinkHints.prototype.displayHints = function(isActivate) {
   this.areHintsDisplayed      = isActivate;
@@ -2325,7 +2336,50 @@ function getTextWithoutLinkHints(element) {
 function activateLinkHints(linkHintHotKey) {
   if (!linkHintHotKey) return;
   var oLinkHint = new LinkHints(linkHintHotKey);
+  LinkHints.instance = oLinkHint;
   gKeyboard.on("keypress", gKeyboard.order.linkHints, oLinkHint.getHandler());
+  closeOverlaysOnEscape();
+}
+
+// Escape closes what the page itself opened: the command palettes and the link
+// hints (on keydown: the link hints listen to keypress, which Chrome and Edge do
+// not send for Escape). On the Edge control and on WebGUI only: SAP GUI for Java
+// takes Escape itself whatever the page does with it, and leaves the page. Not
+// on the IE control, where this was never tried.
+//
+// keypress and keyup of that press are cancelled as well: on the Edge control,
+// an Escape keyup that reaches SAP GUI leaves abapGit.
+//
+// Registered by the link hints and by every palette, so once per page.
+var gOverlaysCloseOnEscape = false;
+
+function closeOverlaysOnEscape() {
+  if (gOverlaysCloseOnEscape || (!gEnv.isWebGui && gEnv.browserControl !== "Edge")) return;
+  gOverlaysCloseOnEscape = true;
+
+  var isClosing = false;
+
+  function onEscape(event) {
+    var isEscape = event.key === "Escape" || event.key === "Esc" || (event.keyCode || event.which) === 27;
+    if (!isEscape) return;
+
+    if (event.type === "keydown") {
+      var hints = LinkHints.instance;
+      isClosing = CommandPalette.isVisible() || Boolean(hints && hints.areHintsDisplayed);
+      if (!isClosing) return;
+      CommandPalette.instances.forEach(function(palette) {
+        if (palette.elements.palette.style.display !== "none") palette.toggleDisplay(false);
+      });
+      if (hints) hints.hide();
+    }
+    if (!isClosing) return;
+    event.preventDefault();
+    if (event.type === "keyup") isClosing = false;
+  }
+
+  ["keydown", "keypress", "keyup"].forEach(function(type) {
+    gKeyboard.on(type, gKeyboard.order.linkHints, onEscape);
+  });
 }
 
 /**********************************************************
@@ -2802,6 +2856,7 @@ CommandPalette.instances = [];
 
 CommandPalette.prototype.hookEvents = function() {
   gKeyboard.on("keydown", gKeyboard.order.palette, this.handleToggleKey.bind(this));
+  closeOverlaysOnEscape();
   document.addEventListener("mousedown", this.handleOutsideClick.bind(this));
   this.elements.input.addEventListener("keydown", this.handleInputKeydown.bind(this));
   this.elements.input.addEventListener("keyup", this.handleInputKey.bind(this));
@@ -2810,9 +2865,7 @@ CommandPalette.prototype.hookEvents = function() {
 
 // Moving the selection on keydown lets a held arrow key repeat, and keeps the
 // caret from jumping to the start or end of the input.
-// No Escape to close: SAP GUI acts on that key whatever the page does with it.
-// SAP GUI for Java leaves abapGit, and the Edge control loses the keyboard
-// focus, so the next toggle key (Ctrl+P) opens the print dialog instead.
+// Escape closes the palette on the Edge control and WebGUI (closeOverlaysOnEscape).
 CommandPalette.prototype.handleInputKeydown = function(event) {
   var arrow = gKeyboard.getVerticalArrow(event);
   if (arrow === -1) {
