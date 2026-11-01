@@ -50,7 +50,9 @@ Avoid expanding the fixtures into a general-purpose browser emulator.
 | [`keyboard.test.cjs`](keyboard.test.cjs) | Order of the page-wide key handlers, isolation of failing handlers, the shared typing guard, arrow keys, and the stage filter key |
 | [`picklist.test.cjs`](picklist.test.cjs) | Arrow navigation, mouse and keyboard selection, explicit confirmation, boundaries, disabled entries, and keyboard guards |
 | [`modal.test.cjs`](modal.test.cjs) | Tab and Shift+Tab kept inside an in-page popup, from the page behind it and at both ends |
+| [`escape.test.cjs`](escape.test.cjs) | Escape as Back on the Edge control and WebGUI (popup or page, once per press, also in fields), left to SAP GUI for Java and the IE control, and not while a palette, link hints, the hotkey overview, or a keyboard-opened menu is open |
 | [`link-hints.test.cjs`](link-hints.test.cjs) | Partial hints, cancellation/reopening, copy-mode reset, disabled controls, and checkbox activation |
+| [`escape-overlays.test.cjs`](escape-overlays.test.cjs) | Escape closing the command palette and the link hints (with a half-typed code and yank mode) on the Edge control and WebGUI without also going back, and left alone on SAP GUI for Java and the IE control |
 | [`key-navigation.test.cjs`](key-navigation.test.cjs) | Dropdown navigation and boundaries, link activation, modified keys, and editing controls |
 | [`diff-copy.test.cjs`](diff-copy.test.cjs) | Diff-column copying, invalid/empty selections, unrelated table clicks, and clipboard fallbacks |
 | [`error-banner.test.cjs`](error-banner.test.cjs) | Reporting later script errors in the banner, and ignoring scripts that are not ours |
