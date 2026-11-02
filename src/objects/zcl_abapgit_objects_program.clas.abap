@@ -1303,7 +1303,9 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         lv_save_native = abap_true.
       ENDIF.
 
-      READ TABLE LT_FIELDLIST_INT TRANSPORTING NO FIELDS WITH KEY fill = 'A' ltyp = 'T'.
+      " Radio buttons in a radio button group inside a table control:
+      " RPY_DYNPRO_INSERT does not keep their column width (DIDX)
+      READ TABLE lt_fieldlist_int TRANSPORTING NO FIELDS WITH KEY fill = 'A' ltyp = 'T'.
       IF sy-subrc = 0.
         lv_save_native = abap_true.
       ENDIF.
