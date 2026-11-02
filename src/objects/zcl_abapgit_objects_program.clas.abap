@@ -1579,6 +1579,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     " statement counts as new and is analyzed recursively. For table maintenance function groups
     " this rewrites RSEUINC for the whole LSVIM* include tree (#7974). Skip that (temporary)
     " and update the index with the real old source below. The transport entry is written by the callers.
+    " Read the old source before the update: exit includes are saved active, so afterwards
+    " the active version is already the new one.
     READ REPORT is_progdir-name INTO lt_source_old STATE c_state-active.
 
     CALL FUNCTION 'RPY_INCLUDE_UPDATE'
