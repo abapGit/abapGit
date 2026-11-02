@@ -687,7 +687,7 @@ function perfClear() {
 var gKeyboard = {
   order: {
     sourceViewer: 10, // Ctrl+Shift+?, a troubleshooting key that no page shortcut may take
-    browserBack : 15, // Alt+Left where the browser does not go back itself (SAP GUI for Java)
+    browserBack : 15, // Alt+Left in SAP GUI for Java; Escape on the Edge control and WebGUI
     linkHints   : 20,
     menus       : 30, // arrow keys through dropdown menus (KeyNavigation)
     palette     : 40, // the toggle keys of the command palettes
@@ -2230,6 +2230,17 @@ LinkHints.prototype.closeActivatedDropdown = function() {
 // registered before the link hints cannot rely on the key being marked as
 // consumed. A page has at most one LinkHints instance (activateLinkHints).
 LinkHints.areHintsDisplayed = false;
+LinkHints.instance          = null;
+
+// Hide the hints as pressing the hint key again does, and drop what a hint code
+// typed so far, the yank mode and a dropdown the hints opened.
+LinkHints.prototype.hide = function() {
+  if (!this.areHintsDisplayed) return;
+  if (this.activatedDropdown) this.closeActivatedDropdown();
+  this.yankModeActive = false;
+  this.pendingPath    = "";
+  this.displayHints(false);
+};
 
 LinkHints.prototype.displayHints = function(isActivate) {
   this.areHintsDisplayed      = isActivate;
@@ -2325,7 +2336,50 @@ function getTextWithoutLinkHints(element) {
 function activateLinkHints(linkHintHotKey) {
   if (!linkHintHotKey) return;
   var oLinkHint = new LinkHints(linkHintHotKey);
+  LinkHints.instance = oLinkHint;
   gKeyboard.on("keypress", gKeyboard.order.linkHints, oLinkHint.getHandler());
+  closeOverlaysOnEscape();
+}
+
+// Escape closes what the page itself opened: the command palettes and the link
+// hints (on keydown: the link hints listen to keypress, which Chrome and Edge do
+// not send for Escape). On the Edge control and on WebGUI only: SAP GUI for Java
+// takes Escape itself whatever the page does with it, and leaves the page. Not
+// on the IE control, where this was never tried.
+//
+// keypress and keyup of that press are cancelled as well: on the Edge control,
+// an Escape keyup that reaches SAP GUI leaves abapGit.
+//
+// Registered by the link hints and by every palette, so once per page.
+var gOverlaysCloseOnEscape = false;
+
+function closeOverlaysOnEscape() {
+  if (gOverlaysCloseOnEscape || (!gEnv.isWebGui && gEnv.browserControl !== "Edge")) return;
+  gOverlaysCloseOnEscape = true;
+
+  var isClosing = false;
+
+  function onEscape(event) {
+    var isEscape = event.key === "Escape" || event.key === "Esc" || (event.keyCode || event.which) === 27;
+    if (!isEscape) return;
+
+    if (event.type === "keydown") {
+      var hints = LinkHints.instance;
+      isClosing = CommandPalette.isVisible() || Boolean(hints && hints.areHintsDisplayed);
+      if (!isClosing) return;
+      CommandPalette.instances.forEach(function(palette) {
+        if (palette.elements.palette.style.display !== "none") palette.toggleDisplay(false);
+      });
+      if (hints) hints.hide();
+    }
+    if (!isClosing) return;
+    event.preventDefault();
+    if (event.type === "keyup") isClosing = false;
+  }
+
+  ["keydown", "keypress", "keyup"].forEach(function(type) {
+    gKeyboard.on(type, gKeyboard.order.linkHints, onEscape);
+  });
 }
 
 /**********************************************************
@@ -2802,6 +2856,7 @@ CommandPalette.instances = [];
 
 CommandPalette.prototype.hookEvents = function() {
   gKeyboard.on("keydown", gKeyboard.order.palette, this.handleToggleKey.bind(this));
+  closeOverlaysOnEscape();
   document.addEventListener("mousedown", this.handleOutsideClick.bind(this));
   this.elements.input.addEventListener("keydown", this.handleInputKeydown.bind(this));
   this.elements.input.addEventListener("keyup", this.handleInputKey.bind(this));
@@ -2810,9 +2865,7 @@ CommandPalette.prototype.hookEvents = function() {
 
 // Moving the selection on keydown lets a held arrow key repeat, and keeps the
 // caret from jumping to the start or end of the input.
-// No Escape to close: SAP GUI acts on that key whatever the page does with it.
-// SAP GUI for Java leaves abapGit, and the Edge control loses the keyboard
-// focus, so the next toggle key (Ctrl+P) opens the print dialog instead.
+// Escape closes the palette on the Edge control and WebGUI (closeOverlaysOnEscape).
 CommandPalette.prototype.handleInputKeydown = function(event) {
   var arrow = gKeyboard.getVerticalArrow(event);
   if (arrow === -1) {
@@ -3338,6 +3391,7 @@ function displayBrowserControlFooter() {
 // only trigger go_back for a genuine Back press.
 function redirectBrowserBackToSapEvent(backAction) {
   backAction = backAction || "go_back";
+  goBackOnEscape(backAction);
   if (!window.history || !window.history.pushState) return;
 
   // Arm the trap: this sentinel entry absorbs the first Back press
@@ -3443,6 +3497,45 @@ function triggerSapEventBack(backAction) {
   // This reuses the page-global sapevent form, so it routes on WebGUI as well
   // as on the desktop browser controls.
   submitSapeventForm({}, backAction);
+}
+
+// Escape goes back, as in SAP GUI for Java. There SAP GUI sends Escape as a
+// graceful go_back itself: an in-page popup treats it as cancel, any other page
+// goes back, and the start page leaves abapGit. Taking the key here too would go
+// back twice. On the Edge control and on WebGUI Escape did nothing, so the page
+// sends that go_back itself. Not on the IE control, where this was never tried.
+//
+// Also while typing in a field, as in Java. Not while something the page opened
+// itself is open: that must not take the page with it. The source viewer stops
+// every key while it is open, before these handlers see it.
+//
+// keypress and keyup are cancelled as well: on the Edge control, an Escape keyup
+// that reaches SAP GUI leaves abapGit.
+function goBackOnEscape(backAction) {
+  if (!gEnv.isWebGui && gEnv.browserControl !== "Edge") return;
+
+  function isPageOverlayOpen() {
+    var hotkeys = document.getElementById("hotkeys");
+    return CommandPalette.isVisible()
+      || LinkHints.areHintsDisplayed
+      || Boolean(hotkeys && hotkeys.style.display !== "none")
+      || Boolean(document.querySelector(".force-nav-hover"));
+  }
+
+  function onEscape(event) {
+    var isEscape = event.key === "Escape" || event.key === "Esc" || (event.keyCode || event.which) === 27;
+    if (!isEscape || isPageOverlayOpen()) return;
+    event.preventDefault();
+    // A held key repeats keydown, the round trip must start once. Not a flag
+    // per page: when the user answers "No" to leaving a form with unsaved
+    // changes, WebGUI keeps this very page, and the next press must work.
+    if (event.type !== "keydown" || event.repeat) return;
+    triggerSapEventBack(backAction);
+  }
+
+  ["keydown", "keypress", "keyup"].forEach(function(type) {
+    gKeyboard.on(type, gKeyboard.order.browserBack, onEscape);
+  });
 }
 
 /**********************************************************
