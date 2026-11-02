@@ -1182,7 +1182,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           lt_flow_logic           TYPE swydyflow,
           lt_d020s                TYPE TABLE OF d020s,
           lt_texts                TYPE TABLE OF d021t,
-          lt_fieldlist_int        TYPE TABLE OF d021s. "internal format
+          lt_fieldlist_int        TYPE TABLE OF d021s, "internal format
+          lv_save_native          TYPE abap_bool.
 
     FIELD-SYMBOLS: <ls_d020s>       LIKE LINE OF lt_d020s,
                    <lv_outputstyle> TYPE scrpostyle,
@@ -1295,8 +1296,19 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         iv_extra = 'screen_' && ls_header-screen
         it_abap  = lt_flow_logic ).
 
+      CLEAR lv_save_native.
+
       READ TABLE lt_fieldlist_int TRANSPORTING NO FIELDS WITH KEY fill = 'X'.
-      IF ls_header-type CA c_native_dynpro AND sy-subrc = 0.
+      IF sy-subrc = 0.
+        lv_save_native = abap_true.
+      ENDIF.
+
+      READ TABLE LT_FIELDLIST_INT TRANSPORTING NO FIELDS WITH KEY fill = 'A' ltyp = 'T'.
+      IF sy-subrc = 0.
+        lv_save_native = abap_true.
+      ENDIF.
+
+      IF ls_header-type CA c_native_dynpro AND lv_save_native = abap_true.
         " In particular for dynpros with splitter
         <ls_dynpro>-nat_header = <ls_d020s>.
         CLEAR: <ls_dynpro>-nat_header-dgen, <ls_dynpro>-nat_header-tgen.
