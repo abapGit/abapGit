@@ -76,13 +76,6 @@ CLASS zcl_abapgit_services_repo DEFINITION
         VALUE(ri_log) TYPE REF TO zif_abapgit_log
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS delete_unnecessary_objects
-      IMPORTING
-        !ii_repo   TYPE REF TO zif_abapgit_repo
-        !ii_log    TYPE REF TO zif_abapgit_log
-        !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
-      RAISING
-        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -317,53 +310,17 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD delete_unnecessary_objects.
-
-    DATA:
-      ls_checks TYPE zif_abapgit_definitions=>ty_delete_checks,
-      ls_tadir  TYPE zif_abapgit_definitions=>ty_tadir,
-      lt_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt.
-
-    FIELD-SYMBOLS <ls_overwrite> LIKE LINE OF is_checks-overwrite.
-
-    " get confirmed deletions
-    LOOP AT is_checks-overwrite ASSIGNING <ls_overwrite>
-      WHERE ( action = zif_abapgit_objects=>c_deserialize_action-delete
-      OR action = zif_abapgit_objects=>c_deserialize_action-delete_add )
-      AND decision = zif_abapgit_definitions=>c_yes.
-
-      ls_tadir-pgmid    = 'R3TR'.
-      ls_tadir-object   = <ls_overwrite>-obj_type.
-      ls_tadir-obj_name = <ls_overwrite>-obj_name.
-      ls_tadir-devclass = <ls_overwrite>-devclass.
-      INSERT ls_tadir INTO TABLE lt_tadir.
-
-    ENDLOOP.
-
-    " todo, check if object type supports deletion of parts to avoid deleting complete object
-
-    " delete objects
-    IF lines( lt_tadir ) > 0.
-      ls_checks-transport = is_checks-transport.
-
-      zcl_abapgit_objects=>delete( it_tadir  = lt_tadir
-                                   is_checks = ls_checks
-                                   ii_log    = ii_log ).
-
-      ii_repo->refresh( iv_drop_log = abap_false ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD gui_deserialize.
 
+    DATA li_pull TYPE REF TO zif_abapgit_repo_pull.
     DATA ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
 
     " find troublesome objects
-    ls_checks = ii_repo->deserialize_checks( ).
+    li_pull = zcl_abapgit_repo_factory=>get_repo_pull( ii_repo ).
 
-    IF ls_checks-overwrite IS INITIAL.
+    ls_checks = li_pull->checks( ).
+
+    IF ls_checks-overwrite IS INITIAL AND ls_checks-overwrite_files IS INITIAL.
       zcx_abapgit_exception=>raise(
         'There is nothing to pull. The local state completely matches the remote repository.' ).
     ENDIF.
@@ -880,21 +837,13 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD real_deserialize.
 
+    DATA li_pull TYPE REF TO zif_abapgit_repo_pull.
     DATA li_log TYPE REF TO zif_abapgit_log.
     DATA lv_msg TYPE string.
 
-    li_log = ii_repo->create_new_log( 'Pull Log' ).
+    li_pull = zcl_abapgit_repo_factory=>get_repo_pull( ii_repo ).
 
-    " pass decisions to delete
-    delete_unnecessary_objects(
-      ii_repo   = ii_repo
-      is_checks = is_checks
-      ii_log    = li_log ).
-
-    " pass decisions to deserialize
-    ii_repo->deserialize(
-      is_checks = is_checks
-      ii_log    = li_log ).
+    li_log = li_pull->pull( is_checks ).
 
     IF li_log->get_status( ) = zif_abapgit_log=>c_status-ok.
       lv_msg = |Repository { ii_repo->get_name( ) } successfully pulled for package { ii_repo->get_package( ) }|.
@@ -908,7 +857,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD refresh.
 
-    zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->refresh( ).
+    zcl_abapgit_repo_srv=>get_instance( )->reload( iv_key )->refresh( ).
 
   ENDMETHOD.
 

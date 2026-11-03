@@ -366,6 +366,11 @@ CLASS lcl_sap_package IMPLEMENTATION.
   METHOD zif_abapgit_sap_package~read_responsible.
     RETURN.
   ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~read_namespace.
+    RETURN.
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~create_child.
     RETURN.
   ENDMETHOD.
@@ -581,6 +586,10 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
   METHOD zif_abapgit_repo_srv~get_label_list.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_srv~reload.
     RETURN.
   ENDMETHOD.
 ENDCLASS.

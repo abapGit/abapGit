@@ -202,10 +202,19 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
   METHOD cache_html.
 
-    rv_url = zif_abapgit_gui_services~cache_asset(
-      iv_text    = iv_text
-      iv_type    = 'text'
-      iv_subtype = 'html' ).
+    IF zcl_abapgit_ui_factory=>get_frontend_services( )->is_sapgui_for_java( ) = abap_true.
+      "Java GUI needs the UTF-8 payload length in bytes for non-ASCII HTML.
+      rv_url = zif_abapgit_gui_services~cache_asset(
+        iv_xdata   = zcl_abapgit_convert=>string_to_xstring_utf8( iv_text )
+        iv_type    = 'text'
+        iv_subtype = 'html' ).
+    ELSE.
+      "Keep the character-based HTML processing for WebGUI and Windows.
+      rv_url = zif_abapgit_gui_services~cache_asset(
+        iv_text    = iv_text
+        iv_type    = 'text'
+        iv_subtype = 'html' ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -330,7 +339,13 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
               ii_page = ls_handled-page
               iv_replacing = abap_true ).
           WHEN c_event_state-go_back.
-            back( ).
+            IF back( ) = abap_true.
+              " Back on the start page leaves abapGit, as F3 and Escape do in SAP GUI.
+              " A go_back sapevent (Escape or the browser Back on the Edge control
+              " and WebGUI) ends up here, those keys never reach the screen
+              free( ).
+              SET SCREEN 0.
+            ENDIF.
           WHEN c_event_state-go_back_to_bookmark.
             back( iv_to_bookmark = abap_true ).
           WHEN c_event_state-no_more_act.

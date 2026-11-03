@@ -69,6 +69,9 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS supported_list
       RETURNING
         VALUE(rt_types) TYPE zif_abapgit_objects=>ty_types_tt.
+    CLASS-METHODS supported_list_details
+      RETURNING
+        VALUE(rt_details) TYPE zif_abapgit_objects=>ty_type_details_tt.
     CLASS-METHODS is_active
       IMPORTING
         !is_item         TYPE zif_abapgit_definitions=>ty_item
@@ -227,6 +230,16 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_obj_name   TYPE tadir-obj_name
       RETURNING
         VALUE(rv_bool) TYPE abap_bool.
+
+    CLASS-METHODS read_metadata
+      IMPORTING
+        !is_item     TYPE zif_abapgit_definitions=>ty_item
+        !io_files    TYPE REF TO zcl_abapgit_objects_files
+      EXPORTING
+        !eo_xml      TYPE REF TO zif_abapgit_xml_input
+        !es_metadata TYPE zif_abapgit_definitions=>ty_metadata
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -722,14 +735,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
           lo_files->set_files( lt_remote ).
 
-          IF lo_files->is_json_metadata( ) = abap_false.
-            "analyze XML in order to instantiate the proper serializer
-            lo_xml = lo_files->read_xml( ).
-            ls_metadata = lo_xml->get_metadata( ).
-          ELSE.
-            " there's no XML and metadata for JSON format
-            CLEAR: lo_xml, ls_metadata.
-          ENDIF.
+          read_metadata(
+            EXPORTING
+              is_item     = ls_item
+              io_files    = lo_files
+            IMPORTING
+              eo_xml      = lo_xml
+              es_metadata = ls_metadata ).
 
           li_obj = create_object(
             is_item        = ls_item
@@ -1236,6 +1248,34 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD read_metadata.
+
+    DATA li_registry TYPE REF TO zif_abapgit_aff_registry.
+
+    CLEAR: eo_xml, es_metadata.
+
+    IF io_files->is_json_metadata( ) = abap_true.
+      " There's no XML and metadata for JSON (AFF) format
+      li_registry = zcl_abapgit_aff_factory=>get_registry( ).
+      IF li_registry->is_supported_object_type( is_item-obj_type ) = abap_false.
+        IF li_registry->is_experimental_object_type( is_item-obj_type ) = abap_true.
+          zcx_abapgit_exception=>raise( |Object is serialized in AFF format. Enable experimental | &&
+            |feature { zcl_abapgit_aff_registry=>c_aff_feature } in global settings| ).
+        ELSE.
+          zcx_abapgit_exception=>raise( |Object is serialized in AFF format| &&
+            |, which is not supported for object type { is_item-obj_type }| ).
+        ENDIF.
+      ENDIF.
+      RETURN.
+    ENDIF.
+
+    " Analyze XML in order to instantiate the proper serializer
+    eo_xml = io_files->read_xml( ).
+    es_metadata = eo_xml->get_metadata( ).
+
+  ENDMETHOD.
+
+
   METHOD serialize.
 
     DATA: li_obj   TYPE REF TO zif_abapgit_object,
@@ -1352,6 +1392,56 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
     gv_supported_obj_types_loaded = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD supported_list_details.
+
+    DATA lt_types   TYPE zif_abapgit_objects=>ty_types_tt.
+    DATA lv_type    LIKE LINE OF lt_types.
+    DATA lt_objects TYPE STANDARD TABLE OF ko100 WITH DEFAULT KEY.
+    DATA ls_details LIKE LINE OF rt_details.
+    DATA li_aff     TYPE REF TO zif_abapgit_aff_registry.
+    DATA lt_descr   TYPE zif_abapgit_oo_object_fnc=>ty_seoclasstx_tt.
+    DATA ls_descr   LIKE LINE OF lt_descr.
+
+    FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
+
+    CALL FUNCTION 'TR_OBJECT_TABLE'
+      TABLES
+        wt_object_text = lt_objects
+      EXCEPTIONS
+        OTHERS         = 1 ##FM_SUBRC_OK.
+
+    lt_types = supported_list( ).
+    li_aff = zcl_abapgit_aff_factory=>get_registry( ).
+
+    LOOP AT lt_types INTO lv_type.
+      CLEAR ls_details.
+      ls_details-obj_type = lv_type.
+
+      READ TABLE lt_objects ASSIGNING <ls_object> WITH KEY pgmid = 'R3TR' object = lv_type.
+      IF sy-subrc = 0.
+        ls_details-description = <ls_object>-text.
+      ELSE.
+        " Object type added via user exit, use description of object handler
+        lt_descr = zcl_abapgit_oo_factory=>get_by_type( 'CLAS' )->read_descriptions_class(
+          |ZCL_ABAPGIT_OBJECT_{ lv_type }| ).
+        READ TABLE lt_descr INTO ls_descr WITH KEY langu = sy-langu.
+        IF sy-subrc = 0.
+          ls_details-description = |abapGit Enhancement: { replace(
+            val  = ls_descr-descript
+            sub  = 'abapGit - '
+            with = '' ) }|.
+        ENDIF.
+      ENDIF.
+
+      ls_details-aff_supported    = li_aff->is_supported_object_type( lv_type ).
+      ls_details-aff_experimental = li_aff->is_experimental_object_type( lv_type ).
+
+      INSERT ls_details INTO TABLE rt_details.
+    ENDLOOP.
 
   ENDMETHOD.
 

@@ -9,10 +9,17 @@ CLASS zcl_abapgit_abap_language_vers DEFINITION
       c_any_abap_language_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version VALUE '*',
       c_no_abap_language_version  TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version VALUE '-'.
 
+    CLASS-METHODS create
+      IMPORTING
+        !io_dot_abapgit  TYPE REF TO zcl_abapgit_dot_abapgit
+      RETURNING
+        VALUE(ro_result) TYPE REF TO zcl_abapgit_abap_language_vers.
+
     METHODS constructor
       IMPORTING
         !io_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit.
 
+    "! Return the allowed ABAP language version for an object type and package
     METHODS get_abap_language_vers_by_objt
       IMPORTING
         !iv_object_type                      TYPE trobjtype
@@ -20,16 +27,24 @@ CLASS zcl_abapgit_abap_language_vers DEFINITION
       RETURNING
         VALUE(rv_allowed_abap_langu_version) TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
 
+    "! Returns ABAP language version (char 1) for repo objects based on .abapGit.xml setting
     METHODS get_repo_abap_language_version
       RETURNING
         VALUE(rv_abap_language_version) TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
 
+    "! Returns ABAP language version (char 1) for repo packages based on .abapGit.xml setting
+    METHODS get_package_abap_language_vers
+      RETURNING
+        VALUE(rv_abap_language_version) TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
+
+    "! Check if importing a package is allowed based on the ABAP language settings in .abapGit.xml
     METHODS is_import_allowed
       IMPORTING
         !iv_package       TYPE devclass
       RETURNING
         VALUE(rv_allowed) TYPE abap_bool.
 
+    "! Check if the expected ABAP language version matches the ABAP language version of an object
     CLASS-METHODS check_abap_language_version
       IMPORTING
         !iv_abap_language_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version
@@ -122,6 +137,15 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
     ELSE.
       mv_has_abap_language_vers = abap_true.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD create.
+
+    CREATE OBJECT ro_result
+      EXPORTING
+        io_dot_abapgit = io_dot_abapgit.
 
   ENDMETHOD.
 
@@ -246,6 +270,28 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
     ENDCASE.
 
     rv_description = |ABAP language version "{ rv_description }"|.
+
+  ENDMETHOD.
+
+
+  METHOD get_package_abap_language_vers.
+
+    DATA lv_abap_language_version TYPE string.
+
+    IF mv_has_abap_language_vers <> abap_undefined. " abap_true or abap_false
+      lv_abap_language_version = mo_dot_abapgit->get_abap_language_version( ).
+    ENDIF.
+
+    CASE lv_abap_language_version.
+      WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-standard.
+        rv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
+      WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-key_user.
+        rv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-key_user.
+      WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development.
+        rv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development.
+      WHEN OTHERS.
+        rv_abap_language_version = ''.
+    ENDCASE.
 
   ENDMETHOD.
 

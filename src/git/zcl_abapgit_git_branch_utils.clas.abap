@@ -33,7 +33,9 @@ ENDCLASS.
 CLASS zcl_abapgit_git_branch_utils IMPLEMENTATION.
 
   METHOD complete_heads_branch_name.
-    IF iv_branch_name CP zif_abapgit_git_definitions=>c_git_branch-heads.
+    " refs are case-sensitive, CP is not
+    IF find( val = iv_branch_name
+             sub = zif_abapgit_git_definitions=>c_git_branch-heads_prefix ) = 0.
       rv_name = iv_branch_name.
     ELSE.
       rv_name = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && iv_branch_name.

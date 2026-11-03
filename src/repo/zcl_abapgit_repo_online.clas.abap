@@ -205,7 +205,10 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     DATA: lv_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
 
-    ASSERT iv_name CP zif_abapgit_git_definitions=>c_git_branch-heads.
+    IF iv_name NP zif_abapgit_git_definitions=>c_git_branch-heads.
+      zcx_abapgit_exception=>raise( |Branch name must start with {
+        zif_abapgit_git_definitions=>c_git_branch-heads_prefix }: { iv_name }| ).
+    ENDIF.
 
     IF iv_from IS INITIAL.
       lv_sha1 = get_current_remote( ).

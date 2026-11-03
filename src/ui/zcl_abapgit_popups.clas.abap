@@ -185,33 +185,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     lv_head_suffix = | ({ zif_abapgit_git_definitions=>c_head_name })|.
     lv_head_symref = lo_branches->get_head_symref( ).
 
-    IF iv_hide_branch IS NOT INITIAL.
-      DELETE lt_branches WHERE name = iv_hide_branch.
-    ENDIF.
-
-    IF iv_hide_head IS NOT INITIAL.
-      DELETE lt_branches WHERE name    = zif_abapgit_git_definitions=>c_head_name
-                            OR is_head = abap_true.
-    ENDIF.
-
     IF lt_branches IS INITIAL.
-      IF iv_hide_head IS NOT INITIAL.
-        lv_text = 'main'.
-      ENDIF.
-      IF iv_hide_branch IS NOT INITIAL AND iv_hide_branch <> zif_abapgit_git_definitions=>c_git_branch-main.
-        IF lv_text IS INITIAL.
-          lv_text = iv_hide_branch && ' is'.
-        ELSE.
-          CONCATENATE lv_text 'and' iv_hide_branch 'are' INTO lv_text SEPARATED BY space.
-        ENDIF.
-      ELSE.
-        lv_text = lv_text && ' is'.
-      ENDIF.
-      IF lv_text IS NOT INITIAL.
-        zcx_abapgit_exception=>raise( 'No branches available to select (' && lv_text && ' hidden)' ).
-      ELSE.
-        zcx_abapgit_exception=>raise( 'No branches are available to select' ).
-      ENDIF.
+      zcx_abapgit_exception=>raise( 'No branches are available to select' ).
     ENDIF.
 
     LOOP AT lt_branches ASSIGNING <ls_branch>.
@@ -814,79 +789,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ELSEIF sy-subrc > 1.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_popups~tag_list_popup.
-
-    DATA: lo_branches  TYPE REF TO zif_abapgit_git_branch_list,
-          lt_tags      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
-          ls_branch    TYPE zif_abapgit_git_definitions=>ty_git_branch,
-          lv_answer    TYPE c LENGTH 1,
-          lv_default   TYPE i,
-          lv_tag       TYPE string,
-          lt_selection TYPE TABLE OF spopli.
-
-    FIELD-SYMBOLS: <ls_sel> LIKE LINE OF lt_selection,
-                   <ls_tag> LIKE LINE OF lt_tags.
-
-
-    lo_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( iv_url ).
-    lt_tags     = lo_branches->get_tags_only( ).
-
-    LOOP AT lt_tags ASSIGNING <ls_tag> WHERE name NP '*' && zif_abapgit_git_definitions=>c_git_branch-peel.
-
-      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
-      <ls_sel>-varoption = zcl_abapgit_git_tag=>remove_tag_prefix( <ls_tag>-name ).
-
-    ENDLOOP.
-
-    IF lt_selection IS INITIAL.
-      zcx_abapgit_exception=>raise( 'No tags are available to select' ).
-    ENDIF.
-
-    ms_position = center(
-      iv_width  = 30
-      iv_height = lines( lt_selection ) ).
-
-    CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
-      EXPORTING
-        titel      = 'Select Tag'
-        textline1  = 'Select a tag'
-        start_col  = ms_position-start_column
-        start_row  = ms_position-start_row
-        cursorline = lv_default
-      IMPORTING
-        answer     = lv_answer
-      TABLES
-        t_spopli   = lt_selection
-      EXCEPTIONS
-        OTHERS     = 1.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
-    ENDIF.
-
-    IF lv_answer = c_answer_cancel.
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
-    ASSERT sy-subrc = 0.
-
-    lv_tag = zcl_abapgit_git_tag=>add_tag_prefix( <ls_sel>-varoption ).
-
-    READ TABLE lt_tags WITH KEY name_key COMPONENTS name = lv_tag ASSIGNING <ls_tag>.
-    IF sy-subrc <> 0.
-      " tag name longer than 65 characters
-      LOOP AT lt_tags ASSIGNING <ls_tag> WHERE name CS lv_tag.
-        EXIT.
-      ENDLOOP.
-    ENDIF.
-    ASSERT <ls_tag> IS ASSIGNED.
-
-    ls_branch = lo_branches->find_by_name( <ls_tag>-name ).
-    MOVE-CORRESPONDING ls_branch TO rs_tag.
 
   ENDMETHOD.
 

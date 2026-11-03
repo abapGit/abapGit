@@ -91,9 +91,6 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
   METHOD zif_abapgit_popups~popup_select_wb_tc_tr_and_tsk.
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~tag_list_popup.
-  ENDMETHOD.
-
   METHOD zif_abapgit_popups~popup_to_select_labels.
   ENDMETHOD.
 

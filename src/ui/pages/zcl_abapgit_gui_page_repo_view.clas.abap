@@ -55,6 +55,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     DATA mv_diff_first TYPE abap_bool .
     DATA mv_key TYPE zif_abapgit_persistence=>ty_value .
     DATA mv_are_changes_recorded_in_tr TYPE abap_bool .
+    DATA mo_ref_selection TYPE REF TO zcl_abapgit_gui_page_ref_sel.
 
     METHODS render_head_line
       RETURNING
@@ -151,6 +152,15 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(ro_tag_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
         zcx_abapgit_exception .
+    METHODS build_stage_dropdown
+      RETURNING
+        VALUE(ro_stage_dropdown) TYPE REF TO zcl_abapgit_html_toolbar .
+    METHODS build_patch_dropdown
+      RETURNING
+        VALUE(ro_patch_dropdown) TYPE REF TO zcl_abapgit_html_toolbar .
+    METHODS build_diff_dropdown
+      RETURNING
+        VALUE(ro_diff_dropdown) TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS build_advanced_dropdown
       RETURNING
         VALUE(ro_advanced_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
@@ -310,9 +320,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     IF mi_repo->is_offline( ) = abap_true.
       ro_advanced_dropdown->add( iv_txt = 'Export by Transport'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-zip_export_transport }?key={ mv_key }| ).
-    ELSE.
-      ro_advanced_dropdown->add( iv_txt = 'Stage by Transport'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-go_stage_transport }?key={ mv_key }| ).
     ENDIF.
 
     ro_advanced_dropdown->add( iv_txt = 'Change Repository Package'
@@ -450,26 +457,29 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                        iv_opt = get_crossout( iv_protected = abap_true
                                               iv_strong    = abap_true ) ).
       ro_toolbar->add( iv_txt = 'Stage'
-                       iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }|
+                       io_sub = build_stage_dropdown( )
                        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
       IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " Any changes
         ro_toolbar->add( iv_txt = 'Patch'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?key={ mv_key }|
+                         io_sub = build_patch_dropdown( )
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
         ro_toolbar->add( iv_txt = 'Diff'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mv_key }|
+                         io_sub = build_diff_dropdown( )
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
       li_log = mi_repo->get_log( ).
       IF li_log IS BOUND AND li_log->count( ) > 0.
         ro_toolbar->add( iv_txt = 'Log'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?key={ mv_key }| ).
+                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?key={ mv_key }|
+                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
       ro_toolbar->add( iv_txt = 'Branch'
-                       io_sub = build_branch_dropdown( ) ).
+                       io_sub = build_branch_dropdown( )
+                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ro_toolbar->add( iv_txt = 'Tag'
-                       io_sub = build_tag_dropdown( ) ).
+                       io_sub = build_tag_dropdown( )
+                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
     ELSE.
       " offline repo
@@ -496,25 +506,29 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       li_log = mi_repo->get_log( ).
       IF li_log IS BOUND AND li_log->count( ) > 0.
         ro_toolbar->add( iv_txt = 'Log'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?key={ mv_key }| ).
+                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?key={ mv_key }|
+                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
 
     ENDIF.
 
     ro_toolbar->add( iv_txt = 'Advanced'
-                     io_sub = build_advanced_dropdown( ) ).
+                     io_sub = build_advanced_dropdown( )
+                     iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
     ro_toolbar->add( iv_txt = 'View'
-                     io_sub = build_view_dropdown( ) ).
+                     io_sub = build_view_dropdown( )
+                     iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
     ro_toolbar->add( iv_txt = 'Refresh'
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh }?key={ mv_key }|
                      iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
-    zcl_abapgit_html_toolbar_lib=>render_repo_settings_dropdown(
-      io_toolbar = ro_toolbar
-      iv_key     = mv_key
-      iv_opt     = zif_abapgit_html=>c_html_opt-strong ).
+    ro_toolbar->add(
+      iv_txt   = 'Repo Settings'
+      iv_title = 'Repository Settings'
+      io_sub   = zcl_abapgit_gui_menus=>repo_settings( mv_key )
+      iv_opt   = zif_abapgit_html=>c_html_opt-strong ).
 
   ENDMETHOD.
 
@@ -539,6 +553,47 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         iv_hint  = |Original system: { is_item-srcsystem }|
         iv_class = 'cursor-pointer' ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD build_diff_dropdown.
+
+    CREATE OBJECT ro_diff_dropdown.
+
+    ro_diff_dropdown->add( iv_txt = 'All Changes'
+                           iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mv_key }| ).
+    ro_diff_dropdown->add( iv_txt   = 'My Changes'
+                           iv_title = 'Diff only your own changes'
+                           iv_act   = |{ zif_abapgit_definitions=>c_action-go_repo_diff_me }?key={ mv_key }| ).
+
+  ENDMETHOD.
+
+
+  METHOD build_stage_dropdown.
+
+    CREATE OBJECT ro_stage_dropdown.
+
+    ro_stage_dropdown->add( iv_txt = 'All Changes'
+                            iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }| ).
+    ro_stage_dropdown->add( iv_txt   = 'My Changes'
+                            iv_title = 'Stage with the filter on objects you changed'
+                            iv_act   = |{ zif_abapgit_definitions=>c_action-go_stage_me }?key={ mv_key }| ).
+    ro_stage_dropdown->add( iv_txt = 'By Transport'
+                            iv_act = |{ zif_abapgit_definitions=>c_action-go_stage_transport }?key={ mv_key }| ).
+
+  ENDMETHOD.
+
+
+  METHOD build_patch_dropdown.
+
+    CREATE OBJECT ro_patch_dropdown.
+
+    ro_patch_dropdown->add( iv_txt = 'All Changes'
+                            iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?key={ mv_key }| ).
+    ro_patch_dropdown->add( iv_txt   = 'My Changes'
+                            iv_title = 'Patch only the objects you changed'
+                            iv_act   = |{ zif_abapgit_definitions=>c_action-go_patch_me }?key={ mv_key }| ).
 
   ENDMETHOD.
 
@@ -1027,6 +1082,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_palette( zif_abapgit_definitions=>c_action-go_repo ) ).
+    ri_html->add( |rememberScrollPosition("repo-view-{ mv_key }");| ).
 
   ENDMETHOD.
 
@@ -1159,6 +1215,15 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         open_in_main_language( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
+      WHEN zif_abapgit_definitions=>c_action-git_branch_delete
+        OR zif_abapgit_definitions=>c_action-git_branch_switch
+        OR zif_abapgit_definitions=>c_action-git_tag_delete
+        OR zif_abapgit_definitions=>c_action-git_tag_switch.
+        mo_ref_selection = zcl_abapgit_gui_page_ref_sel=>create_in_page(
+          iv_key    = mv_key
+          iv_action = ii_event->mv_action ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
       WHEN zif_abapgit_definitions=>c_action-go_back.
         IF zcl_abapgit_ui_factory=>get_gui( )->back( ) = abap_true. " end of stack
           " shutdown
@@ -1207,6 +1272,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_hotkey_action-description = |Patch|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_patch.
     ls_hotkey_action-hotkey = |a|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Patch My Changes|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_patch_me.
+    ls_hotkey_action-hotkey = |m|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-description   = |Diff|.
@@ -1280,7 +1350,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
-    register_handlers( ).
+    IF mo_ref_selection IS BOUND AND mo_ref_selection->is_fulfilled( ) = abap_true.
+      CLEAR mo_ref_selection.
+    ENDIF.
 
     CREATE OBJECT mo_repo_aggregated_state.
 
@@ -1431,6 +1503,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDTRY.
 
     register_deferred_script( render_scripts( ) ).
+
+    IF mo_ref_selection IS NOT BOUND.
+      register_handlers( ).
+    ELSE.
+      " Block the repository page while the ref selection modal is open
+      ri_html->add( zcl_abapgit_gui_in_page_modal=>create( mo_ref_selection ) ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

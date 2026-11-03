@@ -13,6 +13,10 @@ CLASS zcl_abapgit_popup_branch_list DEFINITION
         !iv_url             TYPE string
         !iv_default_branch  TYPE string OPTIONAL
         !iv_show_new_option TYPE abap_bool DEFAULT abap_false
+        !iv_hide_branch     TYPE zif_abapgit_git_definitions=>ty_git_branch-name OPTIONAL
+        !iv_hide_head       TYPE abap_bool DEFAULT abap_false
+        !iv_description     TYPE string OPTIONAL
+        !iv_button_label    TYPE string OPTIONAL
       RETURNING
         VALUE(ri_popup)     TYPE REF TO zif_abapgit_html_popup.
 
@@ -20,7 +24,11 @@ CLASS zcl_abapgit_popup_branch_list DEFINITION
       IMPORTING
         !iv_url             TYPE string
         !iv_default_branch  TYPE string OPTIONAL
-        !iv_show_new_option TYPE abap_bool DEFAULT abap_false.
+        !iv_show_new_option TYPE abap_bool DEFAULT abap_false
+        !iv_hide_branch     TYPE zif_abapgit_git_definitions=>ty_git_branch-name OPTIONAL
+        !iv_hide_head       TYPE abap_bool DEFAULT abap_false
+        !iv_description     TYPE string OPTIONAL
+        !iv_button_label    TYPE string OPTIONAL.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -28,6 +36,10 @@ CLASS zcl_abapgit_popup_branch_list DEFINITION
     DATA mv_repo_url TYPE string.
     DATA mv_default_branch TYPE string.
     DATA mv_show_new_option TYPE abap_bool.
+    DATA mv_hide_branch TYPE zif_abapgit_git_definitions=>ty_git_branch-name.
+    DATA mv_hide_head TYPE abap_bool.
+    DATA mv_description TYPE string.
+    DATA mv_button_label TYPE string.
 
     METHODS fetch_branch_list
       RETURNING
@@ -46,6 +58,10 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
     mv_repo_url        = iv_url.
     mv_default_branch  = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && iv_default_branch.
     mv_show_new_option = iv_show_new_option.
+    mv_hide_branch     = iv_hide_branch.
+    mv_hide_head       = iv_hide_head.
+    mv_description     = iv_description.
+    mv_button_label    = iv_button_label.
   ENDMETHOD.
 
 
@@ -54,7 +70,11 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
       EXPORTING
         iv_url             = iv_url
         iv_default_branch  = iv_default_branch
-        iv_show_new_option = iv_show_new_option.
+        iv_show_new_option = iv_show_new_option
+        iv_hide_branch     = iv_hide_branch
+        iv_hide_head       = iv_hide_head
+        iv_description     = iv_description
+        iv_button_label    = iv_button_label.
   ENDMETHOD.
 
 
@@ -62,6 +82,7 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
 
     DATA lo_branches    TYPE REF TO zif_abapgit_git_branch_list.
     DATA lv_head_symref TYPE string.
+    DATA lv_text        TYPE string.
 
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF rt_branches.
 
@@ -69,8 +90,33 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
     rt_branches    = lo_branches->get_branches_only( ).
     lv_head_symref = lo_branches->get_head_symref( ).
 
+    IF mv_hide_branch IS NOT INITIAL.
+      DELETE rt_branches WHERE name = mv_hide_branch.
+    ENDIF.
+
+    IF mv_hide_head = abap_true.
+      DELETE rt_branches WHERE name    = zif_abapgit_git_definitions=>c_head_name
+                            OR is_head = abap_true.
+    ENDIF.
+
     IF rt_branches IS INITIAL.
-      zcx_abapgit_exception=>raise( 'No branches are available to select' ).
+      IF mv_hide_head = abap_true.
+        lv_text = 'main'.
+      ENDIF.
+      IF mv_hide_branch IS NOT INITIAL AND mv_hide_branch <> zif_abapgit_git_definitions=>c_git_branch-main.
+        IF lv_text IS INITIAL.
+          lv_text = mv_hide_branch && ' is'.
+        ELSE.
+          CONCATENATE lv_text 'and' mv_hide_branch 'are' INTO lv_text SEPARATED BY space.
+        ENDIF.
+      ELSE.
+        lv_text = lv_text && ' is'.
+      ENDIF.
+      IF lv_text <> ' is'.
+        zcx_abapgit_exception=>raise( 'No branches available to select (' && lv_text && ' hidden)' ).
+      ELSE.
+        zcx_abapgit_exception=>raise( 'No branches are available to select' ).
+      ENDIF.
     ENDIF.
 
     " Clean up branches: HEAD duplicates, empty names
@@ -88,6 +134,10 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
       APPEND INITIAL LINE TO rt_branches ASSIGNING <ls_branch>.
       <ls_branch>-name = zif_abapgit_popups=>c_new_branch_label.
       <ls_branch>-display_name = zif_abapgit_popups=>c_new_branch_label.
+
+      APPEND INITIAL LINE TO rt_branches ASSIGNING <ls_branch>.
+      <ls_branch>-name = zif_abapgit_popups=>c_new_branch_from_label.
+      <ls_branch>-display_name = zif_abapgit_popups=>c_new_branch_from_label.
     ENDIF.
 
   ENDMETHOD.
@@ -117,7 +167,9 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
       EXPORTING
         iv_title         = 'Choose Branch'
         it_list          = fetch_branch_list( )
-        ii_item_renderer = me.
+        ii_item_renderer = me
+        iv_description   = mv_description
+        iv_button_label  = mv_button_label.
 
   ENDMETHOD.
 ENDCLASS.

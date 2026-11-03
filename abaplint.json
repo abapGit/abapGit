@@ -68,6 +68,31 @@
     ]
   },
   "rules": {
+    "abapdoc_html_tag": true,
+    "abapdoc_leading_at": true,
+    "abapdoc_parameter_names": true,
+    "changing_sorted_line": true,
+    "delete_index_in_loop": false,
+    "else_after_all_returns": false,
+    "final_newline": true,
+    "generic_regex": {
+      "regexes": [
+        "\\bcl_abap_unit_assert\\s*=>\\s*assert_(?:true|false)\\b"
+      ]
+    },
+    "inline_packed_computation": true,
+    "prefer_abap_bool": true,
+    "prefer_abap_bool_values": true,
+    "prefer_inline_cast": true,
+    "prefer_insert_into_table": false,
+    "prefer_string_template": false,
+    "preferred_parameter_ignored": true,
+    "range_row_values": true,
+    "sort_empty_key": true,
+    "subrc_after_assign": false,
+    "unnecessary_loop_guard": true,
+    "use_message_class": false,
+    "wrong_abapdoc_position": true,
     "7bit_ascii": {
       "exclude": [
         "zcl_abapgit_git_commit.clas.testclasses.abap",
@@ -222,6 +247,7 @@
       "if": false,
       "loop": true,
       "select": true,
+      "catch": false,
       "try": true,
       "when": false,
       "while": true
@@ -243,7 +269,7 @@
     "forbidden_void_type": {
       "check": [
         "^boole_d$",
-        "^char\d+$",
+        "^char\\d+$",
         "^cl_abap_syst",
         "^cl_aff_",
         "^cl_aucv_test_runner_abstract$",
@@ -274,13 +300,13 @@
         "^if_wb_object_operator$",
         "^if_xco_",
         "^int4$",
-        "^numc\d+$",
+        "^numc\\d+$",
         "^pgmid$",
         "^sabp_t_tadir_keys$",
         "^sap_bool$",
         "^srcsystem$",
         "^stringtab$",
-        "^sychar\d+$",
+        "^sychar\\d+$",
         "^sydatum$",
         "^sylangu$",
         "^syst_langu$",
@@ -364,7 +390,7 @@
     "method_length": {
       "exclude": [
         "/diff3/",
-        "zcl_abapgit_convert.clas.locals_imp.abap"
+        "zcl_abapgit_convert_language.clas.locals_imp.abap"
       ],
       "checkForms": true,
       "errorWhenEmpty": false,
@@ -553,7 +579,7 @@
     "use_bool_expression": true,
     "use_class_based_exceptions": {
       "exclude": [
-        "zcl_abapgit_convert.clas.abap"
+        "zcl_abapgit_convert_language.clas.abap"
       ]
     },
     "use_line_exists": true,

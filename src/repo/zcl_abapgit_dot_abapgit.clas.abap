@@ -139,7 +139,9 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
       IMPORTING
         !iv_xml        TYPE string
       RETURNING
-        VALUE(rs_data) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit .
+        VALUE(rs_data) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -219,14 +221,21 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
   METHOD from_xml.
 
-    DATA: lv_xml TYPE string.
+    DATA lv_xml TYPE string.
+    DATA lx_xslt TYPE REF TO cx_xslt_format_error.
 
     lv_xml = iv_xml.
 
-    CALL TRANSFORMATION id
-      OPTIONS value_handling = 'accept_data_loss'
-      SOURCE XML lv_xml
-      RESULT data = rs_data.
+    TRY.
+        CALL TRANSFORMATION id
+          OPTIONS value_handling = 'accept_data_loss'
+          SOURCE XML lv_xml
+          RESULT data = rs_data.
+      CATCH cx_xslt_format_error INTO lx_xslt.
+        zcx_abapgit_exception=>raise(
+          iv_text     = 'Bad format for .abapgit.xml'
+          ix_previous = lx_xslt ).
+    ENDTRY.
 
 * downward compatibility
     IF rs_data-folder_logic IS INITIAL.

@@ -86,6 +86,7 @@ span.separator {
 .w800px       { width: 800px }
 .w1000px      { width: 1000px }
 .wmax600px    { max-width: 600px }
+.borders      { border: 1px solid }
 .auto-center  { /* use with max-width */
   width: 100%;
   margin-left: auto;
@@ -129,6 +130,22 @@ div.panel {
 div.dummydiv {
   padding:          0.5em 1em;
   text-align:       center;
+}
+
+/* The banner stays visible until the page scripts confirm they initialized,
+   which takes a moment on every page load. Keep it collapsed for that moment,
+   so it shows only when initialization failed, not as a flicker on every page
+   switch. Without CSS animations it simply shows at once, as before. */
+#js-error-banner {
+  animation: js-error-banner-delay 2s;
+}
+@keyframes js-error-banner-delay {
+  from, to {
+    visibility:     hidden;
+    max-height:     0;
+    padding-top:    0;
+    padding-bottom: 0;
+  }
 }
 
 a.close-btn {
@@ -546,7 +563,7 @@ table.diff_tab tr.diff_line:hover td {
 }
 
 table.diff_tab td.num::before {
-  content: attr(line-num);
+  content: attr(data-num);
 }
 table.diff_tab code {
   font-family: inherit;
@@ -624,6 +641,10 @@ div.debug_container p {
   margin: 0px;
 }
 
+div.debug_container th {
+  text-align: left;
+}
+
 /* ACTION LINKS */
 
 li.action_link.enabled{
@@ -632,7 +653,7 @@ li.action_link.enabled{
   display: block;
 }
 
-li.action_link:not(enabled){
+li.action_link:not(.enabled){
   visibility: hidden;
   position: fixed; /* so it does not take up space when hidden */
   display: none;
@@ -950,7 +971,8 @@ ul.hotkeys span.key-id {
   border: 1px solid;
   border-radius: 3px;
   padding: 1px 7px;
-  width: 5em;
+  min-width: 9em;
+  white-space: nowrap;
   display: inline-block;
   text-align: center;
   margin-top: 0.2em;
@@ -1489,8 +1511,16 @@ table.unit_tests {
   border-radius: 2px;
   display: inline-block;
 }
+.dialog .radio-container.with-border input[type="radio"] + label {
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  margin-bottom: 2px;
+}
 .dialog .radio-container input[type="radio"]:checked + label {
   border: 1px solid transparent;
+}
+.dialog .radio-container label:hover {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 .dialog table {
   width: 100%;
@@ -1643,16 +1673,6 @@ table.unit_tests {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.3);
-}
-
-.modal .radio-container label {
-  /* hacky, improve later, get rid of !important, hook it to a named style instead */
-  border-radius: 3px !important;
-  border: 1px solid rgba(0, 0, 0, 0.3) !important;
-  margin-bottom: 2px !important;
-}
-.modal .radio-container label:hover {
-  background-color: rgba(0, 0, 0, 0.1);
 }
 
 /* WHERE USED PAGE */
@@ -1824,5 +1844,40 @@ div.wu table th[data-gid="where"] {
   box-sizing: border-box;
   resize: none;
   font-size: 12px;
+  overflow-x: auto;
+  overflow-y: auto;
   white-space: pre;
+}
+
+.webgui-busy-lock {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2147483647;
+  cursor: wait;
+  outline: none;
+}
+
+.webgui-busy-lock[hidden] {
+  display: none;
+}
+
+.webgui-busy-lock span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 1em 2em;
+  background-color: var(--theme-container-background-color);
+  color: var(--theme-primary-font-color);
+  border: 1px solid var(--theme-container-border-color);
+  border-radius: 4px;
+  opacity: 0;
+  animation: webgui-busy-message 0s 500ms forwards;
+}
+
+@keyframes webgui-busy-message {
+  to { opacity: 1; }
 }

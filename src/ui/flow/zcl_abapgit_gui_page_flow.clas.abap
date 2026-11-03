@@ -871,7 +871,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       lv_filter = |, user filter: { ms_user_settings-username_filter }|.
     ENDIF.
 
-    lv_language = zcl_abapgit_convert=>conversion_exit_isola_output( sy-langu ).
+    lv_language = zcl_abapgit_convert_language=>conversion_exit_isola_output( sy-langu ).
     GET TIME STAMP FIELD lv_timestamp.
 
     ri_html->add( |<small>{ lines( ms_information-features ) } features| &&

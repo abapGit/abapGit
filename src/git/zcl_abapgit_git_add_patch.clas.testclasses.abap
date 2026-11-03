@@ -23,6 +23,9 @@ CLASS ltcl_calculate_patch DEFINITION FINAL FOR TESTING
 
       no_diff FOR TESTING RAISING cx_static_check,
 
+      no_newline_marker_removed FOR TESTING RAISING cx_static_check,
+      mixed_final_newline FOR TESTING RAISING cx_static_check,
+
       unknown_result_type FOR TESTING RAISING cx_static_check.
 
     METHODS:
@@ -643,6 +646,77 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
     then_exception_is_raised( ).
 
   ENDMETHOD.
+
+  METHOD no_newline_marker_removed.
+
+    DATA lv_line TYPE string.
+
+    " the diff marks a last line without newline with a form feed when only
+    " the other side has one; the marker must not get into the file
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = 'a'
+                iv_result     = ' '
+                iv_old_num    = '    1'
+                iv_old        = 'a' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    2'
+                iv_new        = 'b'
+                iv_result     = 'U'
+                iv_old_num    = '    2'
+                iv_old        = |b{ cl_abap_char_utilities=>form_feed }| ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '    3'
+                iv_new        = 'c'
+                iv_result     = 'I'
+                iv_old_num    = '     '
+                iv_old        = ' ' ).
+
+    when_patch_is_calculated( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( mt_patch )
+      exp = 3 ).
+    READ TABLE mt_patch INDEX 2 INTO lv_line.
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_line
+      exp = `b` ).
+
+  ENDMETHOD.
+
+
+  METHOD mixed_final_newline.
+
+    " Git: a b without final newline; system: a b c with one. Staging only
+    " the added c must give a b c, not a b<form feed> c
+    DATA: lo_diff     TYPE REF TO zif_abapgit_diff,
+          lo_patch    TYPE REF TO zcl_abapgit_git_add_patch,
+          lv_old      TYPE string,
+          lv_new      TYPE string,
+          lv_patched  TYPE string.
+
+    lv_old = |a{ cl_abap_char_utilities=>newline }b|.
+    lv_new = |a{ cl_abap_char_utilities=>newline }b{ cl_abap_char_utilities=>newline }c{ cl_abap_char_utilities=>newline }|.
+
+    lo_diff = zcl_abapgit_diff_factory=>get( )->create(
+      iv_new = zcl_abapgit_convert=>string_to_xstring_utf8( lv_new )
+      iv_old = zcl_abapgit_convert=>string_to_xstring_utf8( lv_old ) ).
+    lo_diff->set_patch_new( iv_line_new   = 3
+                            iv_patch_flag = abap_true ).
+
+    CREATE OBJECT lo_patch
+      EXPORTING
+        it_diff = lo_diff->get( ).
+    lv_patched = zcl_abapgit_convert=>xstring_to_string_utf8( lo_patch->get_patch_binary( ) ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_patched
+      exp = lv_new ).
+
+  ENDMETHOD.
+
 
   METHOD given_diff.
 
