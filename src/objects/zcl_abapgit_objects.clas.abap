@@ -69,6 +69,9 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS supported_list
       RETURNING
         VALUE(rt_types) TYPE zif_abapgit_objects=>ty_types_tt.
+    CLASS-METHODS supported_list_details
+      RETURNING
+        VALUE(rt_details) TYPE zif_abapgit_objects=>ty_type_details_tt.
     CLASS-METHODS is_active
       IMPORTING
         !is_item         TYPE zif_abapgit_definitions=>ty_item
@@ -1389,6 +1392,56 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
     gv_supported_obj_types_loaded = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD supported_list_details.
+
+    DATA lt_types   TYPE zif_abapgit_objects=>ty_types_tt.
+    DATA lv_type    LIKE LINE OF lt_types.
+    DATA lt_objects TYPE STANDARD TABLE OF ko100 WITH DEFAULT KEY.
+    DATA ls_details LIKE LINE OF rt_details.
+    DATA li_aff     TYPE REF TO zif_abapgit_aff_registry.
+    DATA lt_descr   TYPE zif_abapgit_oo_object_fnc=>ty_seoclasstx_tt.
+    DATA ls_descr   LIKE LINE OF lt_descr.
+
+    FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
+
+    CALL FUNCTION 'TR_OBJECT_TABLE'
+      TABLES
+        wt_object_text = lt_objects
+      EXCEPTIONS
+        OTHERS         = 1 ##FM_SUBRC_OK.
+
+    lt_types = supported_list( ).
+    li_aff = zcl_abapgit_aff_factory=>get_registry( ).
+
+    LOOP AT lt_types INTO lv_type.
+      CLEAR ls_details.
+      ls_details-obj_type = lv_type.
+
+      READ TABLE lt_objects ASSIGNING <ls_object> WITH KEY pgmid = 'R3TR' object = lv_type.
+      IF sy-subrc = 0.
+        ls_details-description = <ls_object>-text.
+      ELSE.
+        " Object type added via user exit, use description of object handler
+        lt_descr = zcl_abapgit_oo_factory=>get_by_type( 'CLAS' )->read_descriptions_class(
+          |ZCL_ABAPGIT_OBJECT_{ lv_type }| ).
+        READ TABLE lt_descr INTO ls_descr WITH KEY langu = sy-langu.
+        IF sy-subrc = 0.
+          ls_details-description = |abapGit Enhancement: { replace(
+            val  = ls_descr-descript
+            sub  = 'abapGit - '
+            with = '' ) }|.
+        ENDIF.
+      ENDIF.
+
+      ls_details-aff_supported    = li_aff->is_supported_object_type( lv_type ).
+      ls_details-aff_experimental = li_aff->is_experimental_object_type( lv_type ).
+
+      INSERT ls_details INTO TABLE rt_details.
+    ENDLOOP.
 
   ENDMETHOD.
 

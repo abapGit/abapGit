@@ -10,6 +10,19 @@ CLASS zcl_abapgit_object_vcls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     CONSTANTS c_cluster_type TYPE c VALUE 'C' ##NO_TEXT.
     CONSTANTS c_mode_insert TYPE obj_para-maint_mode VALUE 'I' ##NO_TEXT.
 
+    TYPES ty_vclstruc_tt TYPE STANDARD TABLE OF v_vclstruc WITH DEFAULT KEY.
+
+    METHODS serialize_texts
+      IMPORTING
+        !ii_xml TYPE REF TO zif_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_texts
+      IMPORTING
+        !ii_xml      TYPE REF TO zif_abapgit_xml_input
+        !it_vclstruc TYPE ty_vclstruc_tt
+      RAISING
+        zcx_abapgit_exception .
     METHODS is_locked
       IMPORTING
         !iv_tabname         TYPE tabname
@@ -23,6 +36,60 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
+
+
+  METHOD deserialize_texts.
+
+    DATA lt_vcldirt   TYPE STANDARD TABLE OF vcldirt WITH DEFAULT KEY.
+    DATA lt_vclstruct TYPE STANDARD TABLE OF vclstruct WITH DEFAULT KEY.
+    DATA lv_index     TYPE i.
+
+    FIELD-SYMBOLS <ls_vcldirt>   LIKE LINE OF lt_vcldirt.
+    FIELD-SYMBOLS <ls_vclstruct> LIKE LINE OF lt_vclstruct.
+
+    ii_xml->read( EXPORTING iv_name = 'I18N_VCLDIRT'
+                  CHANGING  cg_data = lt_vcldirt ).
+    ii_xml->read( EXPORTING iv_name = 'I18N_VCLSTRUCT'
+                  CHANGING  cg_data = lt_vclstruct ).
+
+    mo_i18n_params->trim_saplang_keyed_table(
+      EXPORTING
+        iv_lang_field_name = 'SPRAS'
+      CHANGING
+        ct_tab             = lt_vcldirt ).
+    mo_i18n_params->trim_saplang_keyed_table(
+      EXPORTING
+        iv_lang_field_name = 'SPRAS'
+      CHANGING
+        ct_tab             = lt_vclstruct ).
+
+    " Force the view cluster name, and keep only texts of its nodes
+    LOOP AT lt_vcldirt ASSIGNING <ls_vcldirt>.
+      <ls_vcldirt>-vclname = ms_item-obj_name.
+    ENDLOOP.
+    LOOP AT lt_vclstruct ASSIGNING <ls_vclstruct>.
+      lv_index = sy-tabix.
+      <ls_vclstruct>-vclname = ms_item-obj_name.
+      READ TABLE it_vclstruc TRANSPORTING NO FIELDS WITH KEY object = <ls_vclstruct>-object.
+      IF sy-subrc <> 0.
+        DELETE lt_vclstruct INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
+
+    IF lines( lt_vcldirt ) > 0.
+      MODIFY vcldirt FROM TABLE lt_vcldirt.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Update of view cluster title translations failed' ).
+      ENDIF.
+    ENDIF.
+    IF lines( lt_vclstruct ) > 0.
+      MODIFY vclstruct FROM TABLE lt_vclstruct.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Update of view cluster node translations failed' ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD is_locked.
@@ -41,6 +108,53 @@ CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
 
     rv_is_locked = exists_a_lock_entry_for( iv_lock_object         = 'E_TABLEE'
                                             iv_argument            = lv_argument ).
+
+  ENDMETHOD.
+
+
+  METHOD serialize_texts.
+
+    DATA lt_vcldirt   TYPE STANDARD TABLE OF vcldirt WITH DEFAULT KEY.
+    DATA lt_vclstruct TYPE STANDARD TABLE OF vclstruct WITH DEFAULT KEY.
+
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
+      RETURN.
+    ENDIF.
+
+    " Skip the main language, it is part of the definition already.
+    " Without the view cluster name, it is the object's name anyway.
+    SELECT spras text
+      INTO CORRESPONDING FIELDS OF TABLE lt_vcldirt
+      FROM vcldirt
+      WHERE vclname = ms_item-obj_name
+      AND spras <> mv_language
+      ORDER BY spras.                                   "#EC CI_SUBRC
+    SELECT spras object objecttext
+      INTO CORRESPONDING FIELDS OF TABLE lt_vclstruct
+      FROM vclstruct
+      WHERE vclname = ms_item-obj_name
+      AND spras <> mv_language
+      ORDER BY spras object.                            "#EC CI_SUBRC
+
+    mo_i18n_params->trim_saplang_keyed_table(
+      EXPORTING
+        iv_lang_field_name = 'SPRAS'
+      CHANGING
+        ct_tab             = lt_vcldirt ).
+    mo_i18n_params->trim_saplang_keyed_table(
+      EXPORTING
+        iv_lang_field_name = 'SPRAS'
+      CHANGING
+        ct_tab             = lt_vclstruct ).
+
+    IF lines( lt_vcldirt ) > 0.
+      ii_xml->add( iv_name = 'I18N_VCLDIRT'
+                   ig_data = lt_vcldirt ).
+    ENDIF.
+    IF lines( lt_vclstruct ) > 0.
+      ii_xml->add( iv_name = 'I18N_VCLSTRUCT'
+                   ig_data = lt_vclstruct ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -76,7 +190,7 @@ CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_vcldir_entry TYPE v_vcldir,
-          lt_vclstruc     TYPE TABLE OF v_vclstruc,
+          lt_vclstruc     TYPE ty_vclstruc_tt,
           lt_vclstrudep   TYPE TABLE OF v_vclstdep,
           lt_vclmf        TYPE TABLE OF v_vclmf,
           lv_objectname   TYPE ob_object.
@@ -88,7 +202,7 @@ CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
                   CHANGING cg_data = lt_vclstruc ).
     io_xml->read( EXPORTING iv_name = 'VCLSTRUDEP_TAB'
                   CHANGING cg_data = lt_vclstrudep ).
-    io_xml->read( EXPORTING iv_name = 'lt_vclstrudep'
+    io_xml->read( EXPORTING iv_name = 'VCLMF_TAB'
                   CHANGING cg_data = lt_vclmf ).
 
     ls_vcldir_entry-author = sy-uname.
@@ -101,6 +215,13 @@ CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
         vclstruc_tab   = lt_vclstruc
         vclstrudep_tab = lt_vclstrudep
         vclmf_tab      = lt_vclmf.
+
+    " The function module writes the texts in the logon language only and
+    " deletes all others, so the translations are written afterwards
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
+      deserialize_texts( ii_xml      = io_xml
+                         it_vclstruc = lt_vclstruc ).
+    ENDIF.
 
     corr_insert( iv_package ).
 
@@ -150,6 +271,7 @@ CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-lxe TO rt_steps.
   ENDMETHOD.
 
 
@@ -303,6 +425,10 @@ CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
                  ig_data = lt_vclstrudep ).
     io_xml->add( iv_name = 'VCLMF_TAB'
                  ig_data = lt_vclmf ).
+
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
+      serialize_texts( io_xml ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

@@ -52,8 +52,7 @@ function page({ action = "SAPEVENT:old", fields = [], webgui = false, global = t
     },
     body: { appendChild(node) { assert.equal(node, form); } }
   } });
-  context.setEnvironment({ isWebGui: webgui });
-  context.gSapeventPrefix = prefix;
+  context.setEnvironment({ isWebGui: webgui, sapeventPrefix: prefix });
   return { context, form, submissions };
 }
 

@@ -182,6 +182,13 @@ INTERFACE zif_abapgit_exit PUBLIC.
     RAISING
       zcx_abapgit_exception.
 
+  METHODS post_pull
+    IMPORTING
+      !ii_repo TYPE REF TO zif_abapgit_repo
+      !ii_log  TYPE REF TO zif_abapgit_log
+    RAISING
+      zcx_abapgit_exception.
+
   METHODS pre_calculate_repo_status
     IMPORTING
       !is_repo_meta TYPE zif_abapgit_persistence=>ty_repo

@@ -82,5 +82,10 @@ CLASS zcl_abapgit_gui_in_page_modal IMPLEMENTATION.
     ri_html->add( |</div>| ).
     ri_html->add( |<div class="modal-overlay"></div>| ).
 
+    " Keep Tab inside the popup
+    zcl_abapgit_ui_factory=>get_gui_services( )->get_html_parts( )->add_part(
+      iv_collection = zcl_abapgit_gui_component=>c_html_parts-scripts
+      ii_part       = zcl_abapgit_html=>create( )->set_title( 'in_page_modal' )->add( 'trapFocus();' ) ).
+
   ENDMETHOD.
 ENDCLASS.

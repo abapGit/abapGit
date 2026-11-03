@@ -129,6 +129,10 @@ CLASS ltd_repo_srv IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_repo_srv~reload.
+
+  ENDMETHOD.
+
   METHOD zif_abapgit_repo_srv~get_repo_from_package.
 
   ENDMETHOD.

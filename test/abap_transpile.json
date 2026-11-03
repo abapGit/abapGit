@@ -29,6 +29,7 @@
     "zcl_abapgit_object_doma",
     "zcl_abapgit_object_dtel",
     "zcl_abapgit_object_sfpf",
+    "zcl_abapgit_object_tabl_ddl",
     "zcl_abapgit_object_sicf",
     "zcl_abapgit_object_zag",
     "zcl_abapgit_objects_bridge",
@@ -58,6 +59,9 @@
       "url": "https://github.com/open-abap/open-abap-core"
     },
     {
+      "url": "https://github.com/open-abap/open-abap-bal"
+    },
+    {
       "url": "https://github.com/open-abap/open-abap-gui"
     },
     {
@@ -72,6 +76,7 @@
   ],
   "write_unit_tests": true,
   "write_source_map": true,
+  "incremental_output": true,
   "options": {
     "ignoreSyntaxCheck": false,
     "addFilenames": true,
@@ -85,6 +90,7 @@
       "reposrc": false
     },
     "skip": [
+      {"object": "ZCL_ABAPGIT_GUI_PAGE_PATCH", "class": "ltcl_continue_patching", "method": "commit_refresh_warning", "note": "open-abap free-text MESSAGE does not populate sy-msgv1 through sy-msgv4; flow is covered by commit_refresh_failure"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_get_t100_longtext", "method": "test01", "note": "uses MSAG from database"},
 
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",           "note": "open-abap does not add the byte order mark"},

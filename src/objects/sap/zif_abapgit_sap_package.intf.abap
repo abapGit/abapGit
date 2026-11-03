@@ -14,7 +14,7 @@ INTERFACE zif_abapgit_sap_package
            parentcl  TYPE devclass,
            pdevclass TYPE c LENGTH 4,
            as4user   TYPE usnam,
-           packkind  TYPE uccheck,
+           packkind  TYPE uccheck, " ABAP language version
          END OF ty_create.
 
   METHODS get

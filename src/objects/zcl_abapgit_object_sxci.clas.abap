@@ -64,6 +64,11 @@ CLASS zcl_abapgit_object_sxci IMPLEMENTATION.
           lv_package                     TYPE devclass,
           ls_classic_badi_implementation TYPE ty_classic_badi_implementation.
 
+    " cl_badi_flt_values_alv requires SAP GUI
+    IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_false.
+      zcx_abapgit_exception=>raise( |SXCI { ms_item-obj_name }: deserialization requires SAP GUI| ).
+    ENDIF.
+
     io_xml->read(
       EXPORTING
         iv_name = 'SXCI'

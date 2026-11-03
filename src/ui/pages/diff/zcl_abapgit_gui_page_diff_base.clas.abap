@@ -19,10 +19,11 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
 
     METHODS constructor
       IMPORTING
-        !iv_key    TYPE zif_abapgit_persistence=>ty_repo-key OPTIONAL
-        !is_file   TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
-        !is_object TYPE zif_abapgit_definitions=>ty_item OPTIONAL
-        !it_files  TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
+        !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key OPTIONAL
+        !is_file       TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
+        !is_object     TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+        !it_files      TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
+        !iv_changed_by TYPE syuname OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
@@ -54,6 +55,8 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
     DATA mv_unified TYPE abap_bool VALUE abap_true ##NO_TEXT.
     DATA mi_repo TYPE REF TO zif_abapgit_repo .
     DATA mt_diff_files TYPE zif_abapgit_gui_diff=>ty_file_diffs .
+    " Show only the local changes of this user (the diff of "My Changes")
+    DATA mv_changed_by TYPE syuname.
 
     CLASS-METHODS get_page_layout
       RETURNING
@@ -149,7 +152,6 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
       END OF ty_view.
     DATA mt_delayed_lines TYPE zif_abapgit_definitions=>ty_diffs_tt .
     DATA mv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key .
-    DATA mv_seed TYPE string .                    " Unique page id to bind JS sessionStorage
     DATA ms_view TYPE ty_view.
 
 
@@ -256,6 +258,14 @@ CLASS zcl_abapgit_gui_page_diff_base DEFINITION
         !it_diffs           TYPE zif_abapgit_definitions=>ty_diffs_tt
       RETURNING
         VALUE(rv_has_diffs) TYPE abap_bool.
+    METHODS set_changed_by_of_deleted
+      IMPORTING
+        !it_remote TYPE zif_abapgit_git_definitions=>ty_files_tt.
+    CLASS-METHODS filter_changed_by
+      IMPORTING
+        !iv_changed_by TYPE syuname
+      CHANGING
+        !ct_diff_files TYPE zif_abapgit_gui_diff=>ty_file_diffs.
 ENDCLASS.
 
 
@@ -595,22 +605,28 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
     ENDIF.
 
+    set_changed_by_of_deleted( lt_remote ).
+
+    IF mv_changed_by IS NOT INITIAL.
+      filter_changed_by(
+        EXPORTING
+          iv_changed_by = mv_changed_by
+        CHANGING
+          ct_diff_files = mt_diff_files ).
+    ENDIF.
+
   ENDMETHOD.
 
 
   METHOD constructor.
 
-    DATA: lv_ts TYPE timestamp.
-
     super->constructor( ).
     mv_unified  = zcl_abapgit_persist_factory=>get_user( )->get_diff_unified( ).
     mv_repo_key = iv_key.
+    mv_changed_by = iv_changed_by.
     IF iv_key IS NOT INITIAL.
       mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     ENDIF.
-
-    GET TIME STAMP FIELD lv_ts.
-    mv_seed = |diff{ lv_ts }|. " Generate based on time
 
     ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
 
@@ -620,11 +636,22 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
         is_object = is_object
         it_files  = it_files ).
 
-      IF lines( mt_diff_files ) = 0.
+      IF lines( mt_diff_files ) = 0 AND mv_changed_by IS NOT INITIAL.
+        zcx_abapgit_exception=>raise( |No changes by { mv_changed_by } in repository { mi_repo->get_name( ) }| ).
+      ELSEIF lines( mt_diff_files ) = 0.
         zcx_abapgit_exception=>raise(
           'There are no differences to show. The local state completely matches the remote repository.' ).
       ENDIF.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD filter_changed_by.
+
+    " Own changes only: files changed in the system (local state), last changed by the user.
+    " Files that changed only in the remote repository are someone else's changes.
+    DELETE ct_diff_files WHERE lstate IS INITIAL OR changed_by <> iv_changed_by.
 
   ENDMETHOD.
 
@@ -849,6 +876,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
   METHOD render_beacon.
 
     DATA: lv_beacon  TYPE string,
+          lv_colspan TYPE i,
           lt_beacons TYPE zif_abapgit_definitions=>ty_string_tt.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -860,16 +888,17 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
       lv_beacon = '---'.
     ENDIF.
 
-    ri_html->add( '<thead class="nav_line">' ).
-    ri_html->add( '<tr>' ).
+    ri_html->add( '<tr class="nav_line">' ).
 
     IF mi_extra IS BOUND.
       " Extra interface for rendering the beacon row
       mi_extra->render_beacon_begin_of_row(
         ii_html = ri_html
         is_diff = is_diff ).
+      lv_colspan = 6.
     ELSE.
       render_beacon_begin_of_row( ri_html ).
+      lv_colspan = 5.
     ENDIF.
 
     IF mv_unified = abap_true.
@@ -877,11 +906,10 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
       ri_html->add( '<th class="mark"></th>' ).
       ri_html->add( |<th>@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
     ELSE.
-      ri_html->add( |<th colspan="6">@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
+      ri_html->add( |<th colspan="{ lv_colspan }">@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
     ENDIF.
 
     ri_html->add( '</tr>' ).
-    ri_html->add( '</thead>' ).
 
   ENDMETHOD.
 
@@ -1157,7 +1185,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
         lv_mark = `+`.
       ENDIF.
     ENDIF.
-    lv_new = |<td class="num diff_others" line-num="{ is_diff_line-new_num }"></td>|
+    lv_new = |<td class="num diff_others" data-num="{ is_diff_line-new_num }"></td>|
           && |<td class="mark diff_others">{ lv_mark }</td>|
           && |<td class="code{ lv_bg } diff_left new">{ is_diff_line-new }</td>|.
 
@@ -1173,7 +1201,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
         lv_mark = `-`.
       ENDIF.
     ENDIF.
-    lv_old = |<td class="num diff_others" line-num="{ is_diff_line-old_num }"></td>|
+    lv_old = |<td class="num diff_others" data-num="{ is_diff_line-old_num }"></td>|
           && |<td class="mark diff_others">{ lv_mark }</td>|
           && |<td class="code{ lv_bg } diff_right old">{ is_diff_line-old }</td>|.
 
@@ -1227,16 +1255,16 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     IF is_diff_line-result <> zif_abapgit_definitions=>c_diff-update.
       LOOP AT mt_delayed_lines ASSIGNING <ls_diff_line>.
         ri_html->add( '<tr class="diff_line">' ).
-        ri_html->add( |<td class="num diff_others" line-num="{ <ls_diff_line>-old_num }"></td>|
-                   && |<td class="num diff_others" line-num=""></td>|
+        ri_html->add( |<td class="num diff_others" data-num="{ <ls_diff_line>-old_num }"></td>|
+                   && |<td class="num diff_others" data-num=""></td>|
                    && |<td class="mark diff_others">-</td>|
                    && |<td class="code diff_del diff_unified old">{ <ls_diff_line>-old }</td>| ).
         ri_html->add( '</tr>' ).
       ENDLOOP.
       LOOP AT mt_delayed_lines ASSIGNING <ls_diff_line>.
         ri_html->add( '<tr class="diff_line">' ).
-        ri_html->add( |<td class="num diff_others" line-num=""></td>|
-                   && |<td class="num diff_others" line-num="{ <ls_diff_line>-new_num }"></td>|
+        ri_html->add( |<td class="num diff_others" data-num=""></td>|
+                   && |<td class="num diff_others" data-num="{ <ls_diff_line>-new_num }"></td>|
                    && |<td class="mark diff_others">+</td>|
                    && |<td class="code diff_ins diff_unified new">{ <ls_diff_line>-new }</td>| ).
         ri_html->add( '</tr>' ).
@@ -1247,20 +1275,21 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     ri_html->add( '<tr class="diff_line">' ).
     CASE is_diff_line-result.
       WHEN zif_abapgit_definitions=>c_diff-update.
+        ri_html->add( |<td class="num diff_others" colspan="4"></td>| ).
         APPEND is_diff_line TO mt_delayed_lines. " Delay output of subsequent updates
       WHEN zif_abapgit_definitions=>c_diff-insert.
-        ri_html->add( |<td class="num diff_others" line-num=""></td>|
-                   && |<td class="num diff_others" line-num="{ is_diff_line-new_num }"></td>|
+        ri_html->add( |<td class="num diff_others" data-num=""></td>|
+                   && |<td class="num diff_others" data-num="{ is_diff_line-new_num }"></td>|
                    && |<td class="mark diff_others">+</td>|
                    && |<td class="code diff_ins diff_unified new">{ is_diff_line-new }</td>| ).
       WHEN zif_abapgit_definitions=>c_diff-delete.
-        ri_html->add( |<td class="num diff_others" line-num="{ is_diff_line-old_num }"></td>|
-                   && |<td class="num diff_others" line-num=""></td>|
+        ri_html->add( |<td class="num diff_others" data-num="{ is_diff_line-old_num }"></td>|
+                   && |<td class="num diff_others" data-num=""></td>|
                    && |<td class="mark diff_others">-</td>|
                    && |<td class="code diff_del diff_unified old">{ is_diff_line-old }</td>| ).
       WHEN OTHERS. "none
-        ri_html->add( |<td class="num diff_others" line-num="{ is_diff_line-old_num }"></td>|
-                   && |<td class="num diff_others" line-num="{ is_diff_line-new_num }"></td>|
+        ri_html->add( |<td class="num diff_others" data-num="{ is_diff_line-old_num }"></td>|
+                   && |<td class="num diff_others" data-num="{ is_diff_line-new_num }"></td>|
                    && |<td class="mark diff_others">&nbsp;</td>|
                    && |<td class="code diff_unified">{ is_diff_line-old }</td>| ).
     ENDCASE.
@@ -1277,7 +1306,6 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
     ri_html->add( 'restoreScrollPosition();' ).
     ri_html->add( 'var gHelper = new DiffHelper({' ).
-    ri_html->add( |  seed:        "{ mv_seed }",| ).
     ri_html->add( '  ids: {' ).
     ri_html->add( '    jump:        "jump",' ).
     ri_html->add( '    diffList:    "diff-list",' ).
@@ -1346,6 +1374,47 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     ii_html->add( '<th class="num">new</th>' ).
     ii_html->add( '<th class="mark"></th>' ).
     ii_html->add( '<th>code</th>' ).
+
+  ENDMETHOD.
+
+
+  METHOD set_changed_by_of_deleted.
+
+    DATA lt_deleted TYPE zif_abapgit_git_definitions=>ty_files_tt.
+    DATA ls_remote LIKE LINE OF it_remote.
+    DATA lt_users TYPE zcl_abapgit_stage_changed_by=>ty_file_users_tt.
+    DATA ls_user LIKE LINE OF lt_users.
+
+    FIELD-SYMBOLS <ls_diff> LIKE LINE OF mt_diff_files.
+
+    " Objects deleted in the system cannot say who changed them; like the
+    " staging page, attribute them to the owner of their transport
+    LOOP AT mt_diff_files ASSIGNING <ls_diff> WHERE lstate = zif_abapgit_definitions=>c_state-deleted.
+      READ TABLE it_remote INTO ls_remote
+        WITH KEY file_path COMPONENTS
+          path     = <ls_diff>-path
+          filename = <ls_diff>-filename.
+      IF sy-subrc = 0.
+        APPEND ls_remote TO lt_deleted.
+      ENDIF.
+    ENDLOOP.
+
+    IF lt_deleted IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lt_users = zcl_abapgit_stage_changed_by=>get_users_of_remote_files(
+      it_remote = lt_deleted
+      io_dot    = mi_repo->get_dot_abapgit( ) ).
+
+    LOOP AT mt_diff_files ASSIGNING <ls_diff> WHERE lstate = zif_abapgit_definitions=>c_state-deleted.
+      READ TABLE lt_users INTO ls_user WITH TABLE KEY
+        path     = <ls_diff>-path
+        filename = <ls_diff>-filename.
+      IF sy-subrc = 0 AND ls_user-name IS NOT INITIAL.
+        <ls_diff>-changed_by = ls_user-name.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -1473,7 +1542,6 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
 
     ri_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
 
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
     LOOP AT mt_diff_files INTO ls_diff_file.
       li_progress->show(
         iv_current = sy-tabix

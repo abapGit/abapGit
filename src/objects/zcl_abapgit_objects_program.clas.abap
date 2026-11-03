@@ -787,6 +787,10 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     ls_varikey-report = iv_program_name.
 
     LOOP AT it_varis ASSIGNING <ls_vari>.
+      IF <ls_vari>-variant NP c_sysvari_pattern_sap AND <ls_vari>-variant NP c_sysvari_pattern_cus.
+        zcx_abapgit_exception=>raise( 'Invalid variant. Only system variants SAP& and CUS& are allowed' ).
+      ENDIF.
+
       CLEAR: lt_vari_text,
              ls_varid,
              lv_recreate,

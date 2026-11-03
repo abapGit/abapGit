@@ -169,18 +169,15 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_jumper~jump.
 
-    " WebGUI cannot open windows or ADT
-    IF zcl_abapgit_ui_factory=>get_frontend_services( )->is_webgui( ) = abap_true.
-      zcx_abapgit_exception=>raise( |Jump not possible in WebGUI| ).
-    ENDIF.
-
     " Try all generic jump options
 
     " 1) ADT Jump
-    rv_exit = zif_abapgit_gui_jumper~jump_adt(
-      is_item         = is_item
-      iv_sub_obj_name = is_sub_item-obj_name
-      iv_line_number  = iv_line_number ).
+    IF zcl_abapgit_ui_factory=>get_frontend_services( )->is_webgui( ) = abap_false.
+      rv_exit = zif_abapgit_gui_jumper~jump_adt(
+        is_item         = is_item
+        iv_sub_obj_name = is_sub_item-obj_name
+        iv_line_number  = iv_line_number ).
+    ENDIF.
 
     IF rv_exit = abap_true.
       RETURN.
@@ -263,7 +260,7 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
       WHEN 1.
         lv_msg = |Communication error { lv_msg }|.
       WHEN 2.
-        lv_msg = |Language { iv_language } ({ zcl_abapgit_convert=>language_sap1_to_text( iv_language ) })|
+        lv_msg = |Language { iv_language } ({ zcl_abapgit_convert_language=>sap1_to_text( iv_language ) })|
               && | is not installed|.
       WHEN 3.
         lv_msg = |{ lv_subrc }|.

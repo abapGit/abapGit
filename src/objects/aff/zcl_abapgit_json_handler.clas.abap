@@ -95,7 +95,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
+CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
 
   METHOD deserialize.
@@ -164,7 +164,7 @@ CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
 
     lv_bcp47_language = co_ajson->get_string( '/header/original_language' ).
 
-    lv_original_language = zcl_abapgit_convert=>language_bcp47_to_sap1( lv_bcp47_language ).
+    lv_original_language = zcl_abapgit_convert_language=>bcp47_to_sap1( lv_bcp47_language ).
 
     co_ajson->set_string( iv_path = '/header/original_language'
                           iv_val  = lv_original_language ).
@@ -221,7 +221,7 @@ CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_bcp47_language = zcl_abapgit_convert=>language_sap1_to_bcp47( lv_original_language ).
+    lv_bcp47_language = zcl_abapgit_convert_language=>sap1_to_bcp47( lv_original_language ).
 
     co_ajson->set_string( iv_path = '/header/originalLanguage'
                           iv_val  = lv_bcp47_language ).

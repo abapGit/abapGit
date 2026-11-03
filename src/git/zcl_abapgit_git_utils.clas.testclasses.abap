@@ -8,6 +8,9 @@ CLASS ltcl_git_utils DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
       setup,
       get_null FOR TESTING,
       pkt_string FOR TESTING RAISING zcx_abapgit_exception,
+      pkt_string_utf8 FOR TESTING RAISING zcx_abapgit_exception,
+      pkt_string_long FOR TESTING RAISING zcx_abapgit_exception,
+      pkt_string_too_long FOR TESTING,
       length_utf8_hex FOR TESTING RAISING zcx_abapgit_exception.
 ENDCLASS.
 
@@ -40,6 +43,55 @@ CLASS ltcl_git_utils IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->pkt_string( 'test' )
       exp = '0008test' ).
+
+  ENDMETHOD.
+
+  METHOD pkt_string_utf8.
+
+    " the length counts bytes as sent (UTF-8), not characters: "test-" plus a-umlaut is 7 bytes
+    DATA lv_line TYPE string.
+
+    lv_line = zcl_abapgit_convert=>xstring_to_string_utf8( '746573742DC3A4' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->pkt_string( lv_line )
+      exp = |000B{ lv_line }| ).
+
+  ENDMETHOD.
+
+  METHOD pkt_string_long.
+
+    " Git allows up to 65516 bytes of data in a line, not only 250
+    DATA lv_line TYPE string.
+
+    lv_line = repeat( val = 'a'
+                      occ = 300 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->pkt_string( lv_line )
+      exp = |0130{ lv_line }| ).
+
+    lv_line = repeat( val = 'a'
+                      occ = 65516 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->pkt_string( lv_line )
+      exp = |FFF0{ lv_line }| ).
+
+  ENDMETHOD.
+
+  METHOD pkt_string_too_long.
+
+    DATA lv_line TYPE string.
+
+    lv_line = repeat( val = 'a'
+                      occ = 65517 ).
+
+    TRY.
+        mo_cut->pkt_string( lv_line ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
 
   ENDMETHOD.
 

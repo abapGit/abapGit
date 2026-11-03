@@ -11,6 +11,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         !is_file       TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
         !is_object     TYPE zif_abapgit_definitions=>ty_item OPTIONAL
         !it_files      TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
+        !iv_changed_by TYPE syuname OPTIONAL
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -31,10 +32,11 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        iv_key    = iv_key
-        is_file   = is_file
-        is_object = is_object
-        it_files  = it_files.
+        iv_key        = iv_key
+        is_file       = is_file
+        is_object     = is_object
+        it_files      = it_files
+        iv_changed_by = iv_changed_by.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title         = 'Diff'

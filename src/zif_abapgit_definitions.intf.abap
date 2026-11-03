@@ -37,6 +37,8 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_files_item_by_file_tt TYPE SORTED TABLE OF ty_file_item WITH UNIQUE KEY file-path file-filename.
   TYPES:
+    ty_files TYPE STANDARD TABLE OF zif_abapgit_git_definitions=>ty_file WITH DEFAULT KEY.
+  TYPES:
     ty_yes_no         TYPE c LENGTH 1,
     ty_yes_no_partial TYPE c LENGTH 1.
   TYPES:
@@ -78,6 +80,7 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     BEGIN OF ty_deserialize_checks,
       overwrite             TYPE ty_overwrite_tt,
+      overwrite_files       TYPE ty_files,
       warning_package       TYPE ty_overwrite_tt,
       data_loss             TYPE ty_overwrite_tt,
       delete_tabl_with_data TYPE ty_overwrite_tt,
@@ -289,11 +292,14 @@ INTERFACE zif_abapgit_definitions
       go_file_diff                  TYPE string VALUE 'go_file_diff',
       go_home                       TYPE string VALUE 'go_home',
       go_patch                      TYPE string VALUE 'go_patch',
+      go_patch_me                   TYPE string VALUE 'go_patch_me',
       go_repo                       TYPE string VALUE 'go_repo',
       go_repo_diff                  TYPE string VALUE 'go_repo_diff',
+      go_repo_diff_me               TYPE string VALUE 'go_repo_diff_me',
       go_settings                   TYPE string VALUE 'go_settings',
       go_settings_personal          TYPE string VALUE 'go_settings_personal',
       go_stage                      TYPE string VALUE 'go_stage',
+      go_stage_me                   TYPE string VALUE 'go_stage_me',
       go_stage_transport            TYPE string VALUE 'go_stage_transport',
       go_tutorial                   TYPE string VALUE 'go_tutorial',
       goto_message                  TYPE string VALUE 'goto_message',
