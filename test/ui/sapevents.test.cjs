@@ -1,0 +1,266 @@
+const assert = require("node:assert/strict");
+const test = require("node:test");
+
+const loadUi = require("./load-ui.cjs");
+
+// Model only the DOM surface used by action discovery and dispatch. The event
+// ordering is deliberate: embedded controls can emit popstate during submit.
+function page(elements = []) {
+  const listeners = {};
+  const capture = {};
+  const context = loadUi({
+    document: {
+      addEventListener(name, fn, useCapture) { if (useCapture) capture[name] = fn; },
+      querySelectorAll(selector) {
+        return elements.filter(element => selector.split(", ").some(part => {
+          const simple = part.match(/^([a-z]+)(\[[^\]]+\])*$/);
+          if (!simple) return false; // No toolbars or nested links in these fixtures
+          const tag = simple[1];
+          if (element.nodeName !== tag.toUpperCase()) return false;
+          const attrs = [...part.matchAll(/\[([^=\]]+)(?:='([^']*)')?\]/g)];
+          return attrs.every(([, name, value]) => value === undefined
+            ? element.getAttribute(name) !== null : element.getAttribute(name) === value);
+        }));
+      },
+      querySelector() { return null; },
+      getElementById(id) { return elements.find(element => element.id === id); }
+    },
+    history: { pushState() {} },
+    addEventListener(name, fn) { listeners[name] = fn; }
+  });
+  context.popstate = () => listeners.popstate();
+  context.input = name => capture[name] && capture[name]({ type: name });
+  return context;
+}
+
+function element(nodeName, attrs = {}) {
+  return {
+    nodeName,
+    type: attrs.type,
+    title: attrs.title || "",
+    value: attrs.value || "",
+    href: attrs.href,
+    getAttribute(name) { return attrs[name] === undefined ? null : attrs[name]; },
+    classList: { contains(name) { return (attrs.class || "").split(" ").includes(name); } }
+  };
+}
+
+test("Enter finds and clicks a WebGUI dialog command with a rewritten href", () => {
+  const command = element("A", { "data-sapevent": "save", href: "https://host/webgui#" });
+  const context = page([command]);
+  let clicks = 0;
+  let prevented = false;
+  command.click = () => { clicks++; assert.equal(context.gSapeventNavPending, true); };
+  const hotkeys = new context.Hotkeys({ Enter: "save" });
+  hotkeys.onkeydown({ key: "Enter", preventDefault() { prevented = true; } });
+  assert.equal(clicks, 1);
+  assert.equal(prevented, true);
+  assert.match(command.title, /\[Enter\]/);
+});
+
+test("Ctrl+Shift+Enter submits the patch command from a text field only once", () => {
+  const command = element("A", { "data-sapevent": "commit_patch", href: "https://host/webgui#" });
+  const context = page([command]);
+  context.document.activeElement = { nodeName: "TEXTAREA", form: { id: "commit-form" } };
+  context.setTimeout = () => {};
+  let clicks = 0;
+  let prevented = 0;
+  command.click = () => clicks++;
+  context.setKeyBindings({ "^Shift+Enter": "commit_patch" });
+  const event = { key: "Enter", ctrlKey: true, shiftKey: true, preventDefault() { prevented++; } };
+  context.gKeyboard.dispatch("keydown", { ...event, type: "keydown" });
+  context.gKeyboard.dispatch("keydown", { ...event, type: "keydown", repeat: true });
+  context.gKeyboard.dispatch("keypress", { ...event, type: "keypress" });
+  assert.equal(clicks, 1);
+  assert.equal(prevented, 1);
+  assert.match(command.title, /\[Ctrl\+Shift\+Enter\]/);
+});
+
+test("Ctrl+Shift+Enter leaves ordinary commit forms and modified shortcuts alone", () => {
+  const context = page();
+  let commits = 0;
+  const hotkeys = Object.create(context.Hotkeys.prototype);
+  hotkeys.oKeyMap = { Enter() { commits++; }, "^Shift+Enter"() { commits++; } };
+  for (const modifier of ["altKey", "metaKey", "defaultPrevented"]) {
+    hotkeys.onkeydown({ type: "keydown", key: "Enter", ctrlKey: true, shiftKey: true, [modifier]: true });
+  }
+  hotkeys.onkeydown({ type: "keydown", key: "Enter", ctrlKey: true });
+  delete hotkeys.oKeyMap["^Shift+Enter"];
+  hotkeys.onkeydown({ type: "keydown", key: "Enter", ctrlKey: true, shiftKey: true });
+  assert.equal(commits, 0);
+});
+
+for (const activeElement of [
+  { nodeName: "INPUT" },
+  { nodeName: "INPUT", form: { id: "filter-form" } },
+  { nodeName: "SPAN", isContentEditable: true }
+]) {
+  test(`Ctrl+Shift+Enter does not submit from an unrelated ${activeElement.nodeName} field`, () => {
+    const command = element("A", { "data-sapevent": "commit_patch" });
+    const context = page([command]);
+    context.document.activeElement = activeElement;
+    command.click = () => assert.fail("Unrelated field must not submit a commit");
+    new context.Hotkeys({ "^Shift+Enter": "commit_patch" }).onkeydown({
+      type: "keydown", key: "Enter", ctrlKey: true, shiftKey: true
+    });
+  });
+}
+
+test("Ctrl+Shift+Enter cannot submit while a command palette is visible", () => {
+  const command = element("A", { "data-sapevent": "commit_patch" });
+  const context = page([command]);
+  context.document.activeElement = { nodeName: "TEXTAREA", form: { id: "commit-form" } };
+  context.CommandPalette.instances = [{ elements: { palette: { style: { display: "" } } } }];
+  command.click = () => assert.fail("Visible palette must block commit shortcut");
+  new context.Hotkeys({ "^Shift+Enter": "commit_patch" }).onkeydown({ type: "keydown", key: "Enter", ctrlKey: true, shiftKey: true });
+});
+
+test("WebGUI picker is discoverable by action and by command palette", () => {
+  const picker = element("INPUT", { type: "button", "data-sapevent": "choose_package", title: "Package" });
+  const unrelated = element("INPUT", { type: "button", title: "Unrelated" });
+  const context = page([picker, unrelated]);
+  let clicks = 0;
+  picker.click = () => { clicks++; assert.equal(context.gSapeventNavPending, true); };
+  assert.equal(context.findSapEventElement("choose_package"), picker);
+  const commands = context.enumerateUiActions();
+  assert.equal(commands.length, 1);
+  assert.match(commands[0].title, /Package/);
+  commands[0].action();
+  assert.equal(clicks, 1);
+});
+
+for (const type of ["button", "submit"]) {
+  test(`link hints activate ${type} actions with the navigation guard`, () => {
+    const input = element("INPUT", { type, "data-sapevent": "choose_package" });
+    const context = page();
+    let clicks = 0;
+    input.focus = () => assert.fail("Action must be clicked, not merely focused");
+    input.click = () => { clicks++; assert.equal(context.gSapeventNavPending, true); };
+    new context.LinkHints("f").hintActivate({ parent: input });
+    assert.equal(clicks, 1);
+  });
+}
+
+test("link hints guard main submits inheriting the form action", () => {
+  const input = element("INPUT", { type: "submit" });
+  input.form = element("FORM", { action: "SAPEVENT:save" });
+  const context = page();
+  input.click = () => assert.equal(context.gSapeventNavPending, true);
+  new context.LinkHints("f").hintActivate({ parent: input });
+});
+
+test("link hints guard sapevent links but leave ordinary links unarmed", () => {
+  for (const href of ["SAPEVENT:go_back", "https://example.org/"]) {
+    const anchor = element("A", { href });
+    const context = page();
+    context.document.location = { href: "https://host/webgui" };
+    anchor.click = () => assert.equal(context.gSapeventNavPending, href.startsWith("SAPEVENT:"));
+    new context.LinkHints("f").hintActivate({ parent: anchor });
+  }
+});
+
+test("palette main submit preserves the form and ignores submit-induced popstate", () => {
+  const input = element("INPUT", { type: "submit", class: "main", value: "Save" });
+  input.formAction = "https://host/current-page";
+  const context = page([input]);
+  let submits = 0;
+  let backs = 0;
+  const form = { action: "SAPEVENT:save", elements: [{ name: "message", value: "keep me" }] };
+  form.submit = function() {
+    assert.equal(this, form);
+    assert.equal(this.elements[0].value, "keep me");
+    assert.equal(context.gSapeventNavPending, true);
+    submits++;
+    context.popstate();
+  };
+  input.form = form;
+  context.redirectBrowserBackToSapEvent();
+  context.triggerSapEventBack = () => backs++;
+  context.enumerateUiActions()[0].action();
+  assert.equal(submits, 1);
+  assert.equal(backs, 0);
+  context.popstate();
+  assert.equal(backs, 1);
+});
+
+// The browser SAP GUI for Java embeds has no key for Back (nor a context menu
+// entry), so abapGit takes Alt+Left there. Everywhere else the browser goes
+// back itself, and the trap turns that into go_back: a second one would follow.
+function altLeft(context, keys = {}) {
+  let prevented = false;
+  context.gKeyboard.dispatch("keydown", { key: "ArrowLeft", keyCode: 37, altKey: true, ctrlKey: false,
+    shiftKey: false, metaKey: false, ...keys, preventDefault() { prevented = true; } });
+  return prevented;
+}
+
+function backTrap(env) {
+  const context = page();
+  context.navigator = { userAgent: env.isSapGuiForWindows ? "Mozilla/5.0 Chrome/150 Edg/150" : "Mozilla/5.0" };
+  context.setEnvironment(env);
+  context.redirectBrowserBackToSapEvent();
+  const backs = [];
+  context.triggerSapEventBack = action => backs.push(action);
+  return { context, backs };
+}
+
+test("Alt+Left goes back in SAP GUI for Java", () => {
+  const { context, backs } = backTrap({ isWebGui: false, isSapGuiForWindows: false });
+  assert.equal(altLeft(context), true);
+  assert.deepEqual(backs, ["go_back"]);
+});
+
+test("Alt+Left is left to the browser in SAP GUI for Windows and WebGUI", () => {
+  for (const env of [{ isWebGui: false, isSapGuiForWindows: true }, { isWebGui: true, isSapGuiForWindows: false }]) {
+    const { context, backs } = backTrap(env);
+    if (context.gKeyboard.handlers.keydown) assert.equal(altLeft(context), false);
+    assert.deepEqual(backs, [], JSON.stringify(env));
+  }
+});
+
+test("only Alt+Left goes back in SAP GUI for Java, no other combination", () => {
+  const { context, backs } = backTrap({ isWebGui: false, isSapGuiForWindows: false });
+  for (const keys of [{ altKey: false }, { ctrlKey: true }, { shiftKey: true }, { metaKey: true },
+    { key: "ArrowRight", keyCode: 39 }]) {
+    if (context.gKeyboard.handlers.keydown) assert.equal(altLeft(context, keys), false, JSON.stringify(keys));
+  }
+  assert.deepEqual(backs, []);
+});
+
+test("submitFormById keeps guarding server-rendered forms", () => {
+  const form = { id: "edit_form" };
+  const context = page([form]);
+  let submits = 0;
+  form.submit = () => { submits++; assert.equal(context.gSapeventNavPending, true); };
+  context.submitFormById(form.id);
+  assert.equal(submits, 1);
+});
+
+// A sapevent that leaves the page in place (no_more_act, e.g. stage_filter or
+// clipboard) is not followed by a popstate on WebGUI. The next user input ends
+// the wait for one, so the Back press that follows is not swallowed.
+test("user input after a submit without popstate re-enables Back", () => {
+  for (const name of ["keydown", "mousedown", "contextmenu"]) {
+    const form = { id: "filter_form", submit() {} };
+    const context = page([form]);
+    let backs = 0;
+    context.redirectBrowserBackToSapEvent();
+    context.triggerSapEventBack = () => backs++;
+    context.submitFormById(form.id);
+    context.input(name);
+    context.popstate();
+    assert.equal(backs, 1, name);
+  }
+});
+
+// Enter submits on keypress; its keyup can come before the control's popstate
+test("keyup after a submit keeps ignoring the submit-induced popstate", () => {
+  const form = { id: "filter_form", submit() {} };
+  const context = page([form]);
+  let backs = 0;
+  context.redirectBrowserBackToSapEvent();
+  context.triggerSapEventBack = () => backs++;
+  context.submitFormById(form.id);
+  context.input("keyup");
+  context.popstate();
+  assert.equal(backs, 0);
+});

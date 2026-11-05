@@ -125,7 +125,11 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD clear_abap_language_version.
 
-    " Used during serializing of objects
+    " This method is used during serializing of objects
+    "
+    " ms_item-abap_language_version is the ABAP language version of the repository
+    " cv_abap_language_version is the ABAP language version of the current object
+
     IF ms_item-abap_language_version = zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
       " Ignore ABAP language version
       CLEAR cv_abap_language_version.
@@ -365,15 +369,6 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD serialize_longtexts_aff.
-    zcl_abapgit_factory=>get_longtexts( )->serialize_aff(
-      iv_object_name   = ms_item-obj_name
-*      iv_longtext_name = iv_longtext_name
-      iv_longtext_id   = iv_longtext_id
-      it_dokil         = it_dokil
-      io_files         = mo_files ).
-  ENDMETHOD.
-
 
   METHOD serialize_longtexts.
 
@@ -388,9 +383,23 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD serialize_longtexts_aff.
+    zcl_abapgit_factory=>get_longtexts( )->serialize_aff(
+      iv_object_name   = ms_item-obj_name
+*      iv_longtext_name = iv_longtext_name
+      iv_longtext_id   = iv_longtext_id
+      it_dokil         = it_dokil
+      io_files         = mo_files ).
+  ENDMETHOD.
+
+
   METHOD set_abap_language_version.
 
-    " Used during deserializing of objects
+    " This method is used during deserializing of objects
+    "
+    " ms_item-abap_language_version is the ABAP language version of the repository
+    " cv_abap_language_version is the ABAP language version of the current object
+
     IF ms_item-abap_language_version = zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
       " ABAP language version is derived from object type and target package (see zcl_abapgit_objects->deserialize)
       cv_abap_language_version = ms_item-abap_language_version.

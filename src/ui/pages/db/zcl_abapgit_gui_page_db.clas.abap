@@ -17,10 +17,6 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS constructor
-      RAISING
-        zcx_abapgit_exception.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -36,7 +32,6 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
         cancel                   TYPE string VALUE 'cancel',
       END OF c_action.
 
-    CONSTANTS c_css_url TYPE string VALUE 'css/page_db.css'.
     CONSTANTS c_toc_filename TYPE string VALUE '#_Table_of_Content_#.txt'.
 
     TYPES:
@@ -46,10 +41,6 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
       END OF ty_explanation.
 
     DATA mt_methods TYPE zcl_abapgit_background=>ty_methods.
-
-    METHODS register_stylesheet
-      RAISING
-        zcx_abapgit_exception.
 
     METHODS render_stats
       IMPORTING
@@ -127,12 +118,6 @@ ENDCLASS.
 CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
 
-  METHOD constructor.
-    super->constructor( ).
-    register_stylesheet( ).
-  ENDMETHOD.
-
-
   METHOD create.
 
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_db.
@@ -141,7 +126,6 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title         = 'Database Utility'
-      iv_extra_css_url      = c_css_url
       ii_page_menu_provider = lo_component
       ii_child_component    = lo_component ).
 
@@ -533,22 +517,6 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD register_stylesheet.
-
-    DATA lo_buf TYPE REF TO zcl_abapgit_string_buffer.
-
-    CREATE OBJECT lo_buf.
-
-    " @@abapmerge include zabapgit_css_page_db.w3mi.data.css > lo_buf->add( '$$' ).
-    gui_services( )->register_page_asset(
-      iv_url       = c_css_url
-      iv_type      = 'text/css'
-      iv_mime_name = 'ZABAPGIT_CSS_PAGE_DB'
-      iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
-
-  ENDMETHOD.
-
-
   METHOD render_stats.
 
     DATA:
@@ -676,6 +644,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
 
     DATA lt_db_entries TYPE zif_abapgit_persistence=>ty_contents.
+    DATA lo_script TYPE REF TO zif_abapgit_html.
 
     register_handlers( ).
 
@@ -692,6 +661,10 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
     ri_html->add( '</div>' ).
 
     ri_html->add( lcl_popup_to_confirm=>render( ) ).
+
+    lo_script = zcl_abapgit_html=>create( ).
+    lo_script->add( 'rememberScrollPosition("db-list");' ).
+    register_deferred_script( lo_script ).
 
   ENDMETHOD.
 
@@ -713,7 +686,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
         rs_render-css_class = 'data'.
       WHEN 'cmd'.
         lv_action  = zcl_abapgit_html_action_utils=>dbkey_encode( is_row ).
-        lo_toolbar = zcl_abapgit_html_toolbar=>create( 'actionbar-database-utility'
+        lo_toolbar = zcl_abapgit_html_toolbar=>create( |actionbar-database-utility-{ iv_row_index }|
           )->add(
             iv_txt = 'Display'
             iv_act = |{ zif_abapgit_definitions=>c_action-db_display }?{ lv_action }|

@@ -53,15 +53,16 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_http IMPLEMENTATION.
 
+
   METHOD constructor.
 
     DATA: lr_dummy TYPE REF TO data.
 
     super->constructor(
-        is_item        = is_item
-        iv_language    = iv_language
-        io_files       = io_files
-        io_i18n_params = io_i18n_params ).
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     TRY.
         CREATE DATA lr_dummy TYPE ('UCONHTTPSERVHEAD').
@@ -111,20 +112,32 @@ CLASS zcl_abapgit_object_http IMPLEMENTATION.
 
     TRY.
         io_xml->read(
-          EXPORTING iv_name = 'HTTPID'
-          CHANGING  cg_data = lv_http_servid ).
+          EXPORTING
+            iv_name = 'HTTPID'
+          CHANGING
+            cg_data = lv_http_servid ).
         io_xml->read(
-          EXPORTING iv_name = 'HTTPTEXT'
-          CHANGING  cg_data = ls_description ).
+          EXPORTING
+            iv_name = 'HTTPTEXT'
+          CHANGING
+            cg_data = ls_description ).
         io_xml->read(
-          EXPORTING iv_name = 'HTTPHDL'
-          CHANGING  cg_data = lt_handler ).
+          EXPORTING
+            iv_name = 'HTTPHDL'
+          CHANGING
+            cg_data = lt_handler ).
+
+        IF lv_http_servid <> ms_item-obj_name.
+          zcx_abapgit_exception=>raise( 'Invalid HTTP Service ID' ).
+        ENDIF.
 
         TRY.
             "link to icf node (in releases older than 757, a http service requires a icf node to function)
             io_xml->read(
-              EXPORTING iv_name = 'HTTPICFNODE'
-              CHANGING  cg_data = lv_icfnode ).
+              EXPORTING
+                iv_name = 'HTTPICFNODE'
+              CHANGING
+                cg_data = lv_icfnode ).
           CATCH cx_root.
         ENDTRY.
 

@@ -10,6 +10,7 @@
   --theme-primary-font: "72", Arial, Helvetica, sans-serif;
   --theme-primary-font-color: #cccccc;
   --theme-primary-font-color-reduced: #EEEEEE;
+  --theme-fixed-font: "Consolas", "SF Mono", "Menlo", "Courier New", monospace;
   --theme-font-size: 11pt;
   --theme-link-color: #d9ffff;
   --theme-link-color-hover: #f6f6f6;
@@ -154,7 +155,7 @@ div.diff_content { background-color: var(--theme-background-color); }
 /* DIFF TABLE */
 
 table.diff_tab td,th { color: #fff; }
-table.diff_tab thead.nav_line { background-color: var(--theme-container-background-color); }
+table.diff_tab tr.nav_line { background-color: var(--theme-container-background-color); }
 
 /* STYLES FOR SYNTAX HIGHLIGHTING */
 

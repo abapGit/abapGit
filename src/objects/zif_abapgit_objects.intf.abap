@@ -18,6 +18,15 @@ INTERFACE zif_abapgit_objects PUBLIC.
   TYPES:
     ty_types_tt TYPE SORTED TABLE OF tadir-object WITH UNIQUE KEY table_line.
   TYPES:
+    BEGIN OF ty_type_details,
+      obj_type         TYPE tadir-object,
+      description      TYPE string,
+      aff_supported    TYPE abap_bool,
+      aff_experimental TYPE abap_bool,
+    END OF ty_type_details.
+  TYPES:
+    ty_type_details_tt TYPE SORTED TABLE OF ty_type_details WITH UNIQUE KEY obj_type.
+  TYPES:
     ty_deserialization_step TYPE string.
   TYPES:
     ty_deserialization_step_tt TYPE STANDARD TABLE OF ty_deserialization_step WITH DEFAULT KEY.

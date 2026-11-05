@@ -1,0 +1,227 @@
+const assert = require("node:assert/strict");
+const test = require("node:test");
+const loadUi = require("./load-ui.cjs");
+
+function cell(className, text) {
+  return {
+    className, innerText: text, innerHTML: text, children: [],
+    classList: { add() {}, remove() {} },
+    // These fixtures contain plain cells, with no links or link hints.
+    getElementsByTagName() { return []; },
+    cloneNode() { return { textContent: text, querySelectorAll() { return []; } }; }
+  };
+}
+
+function page() {
+  const rows = [
+    { className: "local", name: "zcl_keep.clas.abap" },
+    { className: "remote", name: "zcl_keep_old.clas.abap" },
+    { className: "local", name: "zcl_hidden.clas.abap" }
+  ].map(({ className, name }) => ({
+    className, style: { display: "" },
+    cells: [cell("name", name), cell("user", "CHRIS"), cell("transport", "DEVK900001"), cell("status", "?"), cell("cmd", "")]
+  }));
+  const nodes = {
+    table: { tBodies: [{ rows }], style: { display: "" } },
+    commit: { innerHTML: "Add All and Commit (3)" },
+    patch: { innerHTML: "Patch All (3)" },
+    search: { value: "" }
+  };
+  const listeners = {};
+  const context = loadUi({
+    document: {
+      addEventListener() {},
+      getElementById(id) { return nodes[id]; },
+      querySelector() { return null; }
+    },
+    addEventListener(type, fn) { listeners[type] = fn; },
+    scrollTo() {},
+    alert(message) { assert.fail(message); }
+  });
+  const submissions = [];
+  // Observe the staging-to-form boundary; forms.test.cjs exercises transport.
+  context.submitSapeventForm = (params, action) => submissions.push({ params: { ...params }, action });
+  const helper = new context.StageHelper({
+    seed: "stage", formAction: "stage_commit", patchAction: "stage_patch", stageAllAction: "stage_all",
+    ids: { stageTab: "table", commitBtn: "commit", patchBtn: "patch", objectSearch: "search" }
+  });
+  return { context, helper, rows, nodes, submissions, listeners };
+}
+
+test("commit without selection or filter uses the stage-all action", () => {
+  const { nodes, submissions } = page();
+  nodes.commit.onclick();
+  assert.deepEqual(submissions, [{ params: {}, action: "stage_all" }]);
+});
+
+test("filtering then committing adds matching local files and removes matching remote files", () => {
+  const { helper, rows, nodes, submissions } = page();
+  helper.applyFilterValue("KEEP");
+  assert.deepEqual(rows.map(row => row.style.display), ["", "", "none"]);
+  assert.equal(nodes.commit.innerHTML, "Add <b>Filtered</b> and Commit (2)");
+  nodes.commit.onclick();
+  assert.deepEqual(submissions, [{ action: "stage_commit", params: {
+    "zcl_keep.clas.abap": "A", "zcl_keep_old.clas.abap": "R", "zcl_hidden.clas.abap": "?"
+  } }]);
+  assert.equal(helper.selectedCount, 2);
+});
+
+for (const button of ["commit", "patch"]) {
+  test(`explicit selection takes precedence over the filter for ${button}`, () => {
+    const { helper, rows, nodes, submissions } = page();
+    helper.updateRow(rows[2], helper.STATUS.add);
+    helper.applyFilterValue("keep");
+    assert.equal(nodes[button].innerHTML, (button === "commit" ? "Commit" : "Patch") + " <b>Selected</b> (1)");
+    nodes[button].onclick();
+    assert.deepEqual(submissions, [{ action: button === "commit" ? "stage_commit" : "stage_patch", params: {
+      "zcl_keep.clas.abap": "?", "zcl_keep_old.clas.abap": "?", "zcl_hidden.clas.abap": "A"
+    } }]);
+  });
+}
+
+test("filtered patch submission includes only matching files", () => {
+  const { helper, nodes, submissions } = page();
+  helper.applyFilterValue("keep");
+  assert.equal(nodes.patch.innerHTML, "Patch <b>Filtered</b> (2)");
+  nodes.patch.onclick();
+  assert.deepEqual(submissions, [{ action: "stage_patch", params: {
+    "zcl_keep.clas.abap": "A", "zcl_keep_old.clas.abap": "R", "zcl_hidden.clas.abap": "?"
+  } }]);
+});
+
+test("clearing a filter restores all rows and the default commit action", () => {
+  const { helper, rows, nodes, submissions } = page();
+  helper.applyFilterValue("keep");
+  helper.applyFilterValue("");
+  assert.deepEqual(rows.map(row => row.style.display), ["", "", ""]);
+  assert.equal(nodes.commit.innerHTML, "Add All and Commit (3)");
+  assert.equal(nodes.patch.innerHTML, "Patch All (3)");
+  nodes.commit.onclick();
+  assert.deepEqual(submissions, [{ action: "stage_all", params: {} }]);
+});
+
+test("a filter with no matches does not fall back to committing everything", () => {
+  const { helper, nodes, submissions } = page();
+  helper.applyFilterValue("no_such_file");
+  assert.equal(nodes.commit.innerHTML, "Add <b>Filtered</b> and Commit (0)");
+  nodes.commit.onclick();
+  assert.deepEqual(submissions, [{ action: "stage_commit", params: {
+    "zcl_keep.clas.abap": "?", "zcl_keep_old.clas.abap": "?", "zcl_hidden.clas.abap": "?"
+  } }]);
+});
+
+test("changing a selected status does not double-count and resetting restores filtered mode", () => {
+  const { helper, rows, nodes } = page();
+  helper.applyFilterValue("keep");
+  helper.updateRow(rows[1], helper.STATUS.ignore);
+  helper.updateRow(rows[1], helper.STATUS.remove);
+  helper.updateRow(rows[1], helper.STATUS.remove);
+  helper.updateMenu();
+  assert.equal(helper.selectedCount, 1);
+  assert.equal(nodes.commit.innerHTML, "Commit <b>Selected</b> (1)");
+  helper.updateRow(rows[1], helper.STATUS.reset);
+  helper.updateMenu();
+  assert.equal(helper.selectedCount, 0);
+  assert.equal(nodes.commit.innerHTML, "Add <b>Filtered</b> and Commit (2)");
+});
+
+// SAP GUI for HTML renders abapGit in an ITS-managed iframe and replaces that
+// iframe wholesale on every navigation. A browser fires pagehide (and unload)
+// when a frame is torn down that way, but never beforeunload - so a listener
+// registered only on beforeunload never runs and the table state is lost.
+for (const event of ["pagehide", "beforeunload"]) {
+  test(`leaving the page on ${event} stores the table state`, () => {
+    const { context, helper, rows, listeners } = page();
+    const store = {};
+    context.sessionStorage = {
+      getItem(key) { return key in store ? store[key] : null },
+      setItem(key, value) { store[key] = value }
+    };
+
+    helper.updateRow(rows[0], helper.STATUS.add);
+    assert.ok(listeners[event], `no ${event} listener registered`);
+    listeners[event]();
+
+    assert.deepEqual(JSON.parse(store.stage), {
+      "zcl_keep.clas.abap": "A", "zcl_keep_old.clas.abap": "?", "zcl_hidden.clas.abap": "?"
+    });
+  });
+}
+
+for (const filter of ["[", "(", "\\"]) {
+  test(`malformed regex ${JSON.stringify(filter)} is literal and the table remains usable`, () => {
+    const { helper, rows, nodes } = page();
+    rows[0].cells[0] = cell("name", "file" + filter + ".txt");
+    helper.applyFilterValue(filter);
+    assert.equal(nodes.table.style.display, "");
+    assert.deepEqual(rows.map(row => row.style.display), ["", "none", "none"]);
+    helper.applyFilterValue("keep");
+    assert.equal(rows[1].style.display, "");
+    helper.applyFilterValue("");
+    assert.ok(rows.every(row => row.style.display === ""));
+  });
+}
+
+test("stage highlights escape text and preserve regex captures and file names", () => {
+  const { helper, rows } = page();
+  rows[0].cells[0] = cell("name", "<b>A&B</b>.txt");
+  helper.applyFilterValue("(A&)(B)");
+  assert.equal(rows[0].cells[0].innerHTML, "&lt;b&gt;<mark>A&amp;B</mark>&lt;/b&gt;.txt");
+  assert.equal(rows[0].style.display, "");
+  helper.applyFilterValue("<");
+  assert.equal(rows[0].cells[0].innerHTML, "<mark>&lt;</mark>b&gt;A&amp;B<mark>&lt;</mark>/b&gt;.txt");
+  helper.applyFilterValue("");
+  assert.equal(rows[0].cells[0].innerHTML, "&lt;b&gt;A&amp;B&lt;/b&gt;.txt");
+  assert.equal(helper.collectData()["<b>A&B</b>.txt"], "?");
+});
+
+test("zero-width regex matches keep matching rows visible", () => {
+  const { helper, rows } = page();
+  helper.applyFilterValue("^zcl");
+  assert.ok(rows.every(row => row.style.display === ""));
+  helper.applyFilterValue("(?=keep)");
+  assert.deepEqual(rows.map(row => row.style.display), ["", "", "none"]);
+});
+
+for (const raw of ["{broken", "[]", '{"zcl_keep.clas.abap":"BAD"}', '{"zcl_keep.clas.abap":7}']) {
+  test(`stage restores safe defaults from invalid saved state: ${raw}`, () => {
+    const { context, helper, rows } = page();
+    context.sessionStorage = { getItem() { return raw; } };
+    helper.onPageLoad();
+    assert.ok(rows.every(row => row.cells[3].innerText === "?"));
+    assert.equal(helper.selectedCount, 0);
+  });
+}
+
+test("stage restores valid selected statuses", () => {
+  const { context, helper, rows } = page();
+  context.sessionStorage = { getItem() { return '{"zcl_keep.clas.abap":"A","zcl_keep_old.clas.abap":"R"}'; } };
+  helper.onPageLoad();
+  assert.deepEqual(rows.map(row => row.cells[3].innerText), ["A", "R", "?"]);
+  assert.equal(helper.selectedCount, 2);
+});
+
+test("stage load and unload survive storage access failure", () => {
+  const { context, helper } = page();
+  Object.defineProperty(context, "sessionStorage", { get() { throw Error("denied"); } });
+  helper.onPageLoad();
+  helper.onPageUnload();
+  assert.equal(helper.selectedCount, 0);
+});
+
+// A user without a link, e.g. "UNKNOWN": the filter marks the name inside the
+// user box and must not replace the box and its icon with plain text
+test("filtering keeps the user box of a name without a link", () => {
+  const { helper, rows } = page();
+  const name = { innerHTML: "UNKNOWN", cloneNode() { return { textContent: "UNKNOWN", querySelectorAll() { return []; } }; } };
+  const box = { innerHTML: '<i class="icon"></i><span>UNKNOWN</span>' };
+  const user = cell("user", "UNKNOWN");
+  user.innerHTML = '<span class="user-box">' + box.innerHTML + "</span>";
+  user.getElementsByTagName = tag => (tag === "SPAN" ? [box, name] : []);
+  rows[0].cells[1] = user;
+  helper.applyFilterValue("unknown");
+  assert.equal(name.innerHTML, "<mark>UNKNOWN</mark>");
+  helper.applyFilterValue("");
+  assert.equal(name.innerHTML, "UNKNOWN");
+  assert.equal(user.innerHTML, '<span class="user-box"><i class="icon"></i><span>UNKNOWN</span></span>');
+});

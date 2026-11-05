@@ -86,12 +86,6 @@ CLASS zcl_abapgit_popup_to_confirm DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS render_scripts
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html
-      RAISING
-        zcx_abapgit_exception.
-
 ENDCLASS.
 
 
@@ -211,12 +205,6 @@ CLASS zcl_abapgit_popup_to_confirm IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_scripts.
-    " Prevent keyboard navigation to elements outside the modal popup
-    ri_html = zcl_abapgit_html=>create( )->set_title( 'popup_to_confirm' )->add( 'trapFocus();' ).
-  ENDMETHOD.
-
-
   METHOD was_closed.
     rv_yes = mv_closed.
   ENDMETHOD.
@@ -239,8 +227,6 @@ CLASS zcl_abapgit_popup_to_confirm IMPLEMENTATION.
     register_handlers( ).
 
     ri_html = zcl_abapgit_html=>create( mo_form->render( mo_form_data ) ).
-
-    register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
 ENDCLASS.

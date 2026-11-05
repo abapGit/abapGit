@@ -1,0 +1,94 @@
+# JavaScript UI tests
+
+These tests use Node's built-in test runner and require no SAP system or browser.
+Run them from the repository root:
+
+```sh
+npm run test:ui
+```
+
+To show individual test results on Node versions that support disabling test
+isolation:
+
+```sh
+node --test --test-isolation=none --test-reporter=spec test/ui/*.test.cjs
+```
+
+`npm test` runs ESLint, these UI tests, and ABAP lint. ABAP lint may need network
+access to fetch its configured dependency.
+
+## Test setup
+
+[`load-ui.cjs`](load-ui.cjs) evaluates the shipped
+[`zabapgit_js_common.w3mi.data.js`](../../src/ui/zabapgit_js_common.w3mi.data.js)
+in a fresh VM context for each call. The context supplies a browser-like `window`
+global; each test provides the DOM methods and other globals it needs.
+
+Add tests in `*.test.cjs` files using `node:test` and `node:assert/strict`. Keep DOM
+fixtures small and specific to the behavior under test. Assert observable results
+such as dispatched actions, submitted fields, visible commands, and selection.
+Exercise the shipped functions rather than copying their implementation into tests.
+Avoid expanding the fixtures into a general-purpose browser emulator.
+
+## Coverage
+
+| File | Behavior covered |
+| --- | --- |
+| [`sapevents.test.cjs`](sapevents.test.cjs) | Action discovery, keyboard and link-hint activation, and navigation guards |
+| [`forms.test.cjs`](forms.test.cjs) | Desktop and WebGUI form routing, parameter encoding, repeated submissions, and preservation of existing fields |
+| [`stage.test.cjs`](stage.test.cjs) | Commit and patch actions, selection/filter precedence, visible-file staging, and selection counts |
+| [`palette.test.cjs`](palette.test.cjs) | Filtering, keyboard navigation, command execution, reopening, and fuzzy matching |
+| [`busy.test.cjs`](busy.test.cjs) | WebGUI busy lock: locking and unlocking, input blocking, focus, page lifecycle, unsupported or changed shells |
+| [`checklist.test.cjs`](checklist.test.cjs) | Filter clicks and cancellation of fragment navigation |
+| [`diff.test.cjs`](diff.test.cjs) | Combined filters, jump-list visibility, and exact-path jumps |
+| [`fragments.test.cjs`](fragments.test.cjs) | Local fragment handling and browser Back interactions |
+| [`patch.test.cjs`](patch.test.cjs) | File and section selection boundaries and patch submission |
+| [`repo-overview.test.cjs`](repo-overview.test.cjs) | Repository selection and persisted state |
+| [`scroll.test.cjs`](scroll.test.cjs) | Scroll restoration and unavailable storage |
+| [`source-viewer.test.cjs`](source-viewer.test.cjs) | Asset loading, response ordering, caching, failures/retries, line numbers, and IE fallbacks |
+| [`keyboard-guards.test.cjs`](keyboard-guards.test.cjs) | Modified shortcuts, typing in editable controls, and deliberate hint activation/yanking |
+| [`keyboard.test.cjs`](keyboard.test.cjs) | Order of the page-wide key handlers, isolation of failing handlers, the shared typing guard, arrow keys, and the stage filter key |
+| [`picklist.test.cjs`](picklist.test.cjs) | Arrow navigation, mouse and keyboard selection, explicit confirmation, boundaries, disabled entries, and keyboard guards |
+| [`modal.test.cjs`](modal.test.cjs) | Tab and Shift+Tab kept inside an in-page popup, from the page behind it and at both ends |
+| [`escape.test.cjs`](escape.test.cjs) | Escape as Back on the Edge control and WebGUI (popup or page, once per press, also in fields), left to SAP GUI for Java and the IE control, and not while a palette, link hints, the hotkey overview, or a keyboard-opened menu is open |
+| [`link-hints.test.cjs`](link-hints.test.cjs) | Partial hints, cancellation/reopening, copy-mode reset, disabled controls, and checkbox activation |
+| [`escape-overlays.test.cjs`](escape-overlays.test.cjs) | Escape closing the command palette and the link hints (with a half-typed code and yank mode) on the Edge control and WebGUI without also going back, and left alone on SAP GUI for Java and the IE control |
+| [`key-navigation.test.cjs`](key-navigation.test.cjs) | Dropdown navigation and boundaries, link activation, modified keys, and editing controls |
+| [`diff-copy.test.cjs`](diff-copy.test.cjs) | Diff-column copying, invalid/empty selections, unrelated table clicks, and clipboard fallbacks |
+| [`error-banner.test.cjs`](error-banner.test.cjs) | Reporting later script errors in the banner, and ignoring scripts that are not ours |
+| [`environment.test.cjs`](environment.test.cjs) | Browser control per GUI (warning and footer), IE engine, sapevent prefix probing, and unknown environment keys |
+
+To measure the shipped JavaScript with Node's V8 coverage:
+
+```sh
+node --test --experimental-test-coverage test/ui/*.test.cjs
+```
+
+The VM loader supplies the source filename so coverage includes `common.js`,
+instead of omitting the anonymous evaluated script. Check the script's row in
+the report, not an aggregate that might also include test fixtures.
+
+Priority gaps for further regression tests:
+
+- Link hints: browser event ordering, visibility, and copying text from nested markup.
+- Diff text selection: browser-native range cloning and dragging across cells;
+  the unit tests supply representative cloned fragments.
+- Keyboard menu navigation and modal focus: disabled/hidden controls, dropdown
+  boundaries, and focus restoration.
+- Source viewer DOM lifecycle: opening/closing, keyboard-handler removal, and
+  repeated openings. Asset-loading tests do not cover these interactions.
+
+Important regression expectations:
+
+- Explicit staging selections take precedence over filters, even when selected
+  files are hidden by the filter.
+- A staging filter with no matches must not fall back to committing everything.
+- A command palette with no matches must clear its selection so Enter does nothing.
+- Reopening the palette must reset both the search field and the active filter.
+
+## Limits
+
+The fixtures model only the DOM operations needed by each test. They do not verify
+browser layout, scrolling geometry, native event ordering, or actual SAP GUI/WebGUI
+integration. Changes that depend on those behaviors still need testing in the
+relevant browser control.

@@ -33,12 +33,13 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
   PRIVATE SECTION.
 
     TYPES:
+      ty_char1 TYPE c LENGTH 1,
       BEGIN OF ty_file_diff,
         path       TYPE string,
         filename   TYPE string,
-        lstate     TYPE char1,
-        rstate     TYPE char1,
-        fstate     TYPE char1, " FILE state - Abstraction for shorter ifs
+        lstate     TYPE ty_char1,
+        rstate     TYPE ty_char1,
+        fstate     TYPE ty_char1, " FILE state - Abstraction for shorter ifs
         o_diff     TYPE REF TO zif_abapgit_diff,
         changed_by TYPE syuname,
         type       TYPE string,
@@ -204,14 +205,12 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
       lv_beacon = '---'.
     ENDIF.
 
-    ri_html->add( '<thead class="nav_line">' ).
-    ri_html->add( '<tr>' ).
+    ri_html->add( '<tr class="nav_line">' ).
 
     ri_html->add( '<th class="num"></th>' ).
     ri_html->add( |<th colspan="3">@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
 
     ri_html->add( '</tr>' ).
-    ri_html->add( '</thead>' ).
 
   ENDMETHOD.
 
@@ -380,7 +379,7 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
       lv_bg = ' diff_ins'.
       lv_mark = `+`.
     ENDIF.
-    lv_new = |<td class="num" line-num="{ is_diff_line-new_num }"></td>|
+    lv_new = |<td class="num" data-num="{ is_diff_line-new_num }"></td>|
           && |<td class="code{ lv_bg }">{ lv_mark }{ is_diff_line-new }</td>|.
 
     " Old line
@@ -393,7 +392,7 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
       lv_bg = ' diff_del'.
       lv_mark = `-`.
     ENDIF.
-    lv_old = |<td class="num" line-num="{ is_diff_line-old_num }"></td>|
+    lv_old = |<td class="num" data-num="{ is_diff_line-old_num }"></td>|
           && |<td class="code{ lv_bg }">{ lv_mark }{ is_diff_line-old }</td>|.
 
     " render line, inverse sides if remote is newer

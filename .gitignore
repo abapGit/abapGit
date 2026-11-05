@@ -15,3 +15,4 @@ list.txt
 /playwright/.cache/
 .DS_Store
 .claude
+.frontend

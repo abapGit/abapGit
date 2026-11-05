@@ -6,7 +6,10 @@ export default [
   {
     "languageOptions": {
       "parserOptions": {
-        "ecmaVersion": 2015
+        // The IE browser control of SAP GUI for Windows parses ES5 only. A single
+        // arrow function, let/const or template literal stops the whole script
+        // there, and the Node-based UI tests (test/ui) would not notice
+        "ecmaVersion": 5
       },
       "sourceType": "script",
       "globals": globals.browser,

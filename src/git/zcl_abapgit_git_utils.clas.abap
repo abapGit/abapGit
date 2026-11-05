@@ -70,19 +70,22 @@ CLASS zcl_abapgit_git_utils IMPLEMENTATION.
 
   METHOD pkt_string.
 
-    DATA: lv_x   TYPE x,
+    " the length prefix counts the bytes sent, which are UTF-8, plus its own 4
+    CONSTANTS lc_max_data TYPE i VALUE 65516.
+
+    DATA: lv_x   TYPE x LENGTH 2,
           lv_len TYPE i.
 
 
-    lv_len = strlen( iv_string ).
+    lv_len = xstrlen( zcl_abapgit_convert=>string_to_xstring_utf8( iv_string ) ).
 
-    IF lv_len >= 255.
-      zcx_abapgit_exception=>raise( 'PKT, todo' ).
+    IF lv_len > lc_max_data.
+      zcx_abapgit_exception=>raise( |PKT, line too long ({ lv_len } bytes)| ).
     ENDIF.
 
     lv_x = lv_len + 4.
 
-    rv_pkt = '00' && lv_x && iv_string.
+    rv_pkt = lv_x && iv_string.
 
   ENDMETHOD.
 ENDCLASS.

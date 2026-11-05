@@ -654,7 +654,12 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
                    <ls_blob> LIKE LINE OF it_blobs.
 
 
-    lv_time = zcl_abapgit_git_time=>get_unix( ).
+* the caller can supply a timestamp, eg when replaying historic changes,
+* it is used for both the committer and the author
+    lv_time = is_comment-time.
+    IF lv_time IS INITIAL.
+      lv_time = zcl_abapgit_git_time=>get_unix( ).
+    ENDIF.
 
     READ TABLE it_trees ASSIGNING <ls_tree> WITH KEY path = '/'.
     ASSERT sy-subrc = 0.

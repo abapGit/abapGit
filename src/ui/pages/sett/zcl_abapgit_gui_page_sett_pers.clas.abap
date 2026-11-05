@@ -36,7 +36,6 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
         hotkeys                TYPE string VALUE 'hotkeys',
         resources              TYPE string VALUE 'resources',
         parallel_proc_disabled TYPE string VALUE 'parallel_proc_disabled',
-        hide_sapgui_hint       TYPE string VALUE 'hide_sapgui_hint',
         activate_wo_popup      TYPE string VALUE 'activate_wo_popup',
         label_colors           TYPE string VALUE 'label_colors',
         git_default_values     TYPE string VALUE 'git_default_values',
@@ -102,7 +101,10 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Personal Settings'
-      io_page_menu       = zcl_abapgit_gui_menus=>settings( zif_abapgit_definitions=>c_action-go_settings_personal )
+      io_page_menu       = zcl_abapgit_gui_menus=>settings(
+        iv_act       = zif_abapgit_definitions=>c_action-go_settings_personal
+        iv_with_back = abap_true
+        iv_form_id   = 'personal-setting-form' )
       ii_child_component = lo_component ).
 
   ENDMETHOD.
@@ -208,9 +210,7 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
       iv_label         = 'Back'
       iv_action        = zif_abapgit_definitions=>c_action-go_back ).
 
-    " Not available via this form:
-    " - User-specific hotkey settings have been discontinued
-    " - hide_sapgui_hint is set via ZCL_ABAPGIT_SERVICES_ABAPGIT-CHECK_SAPGUI
+    " User-specific hotkey settings have been discontinued and are not available via this form
 
   ENDMETHOD.
 

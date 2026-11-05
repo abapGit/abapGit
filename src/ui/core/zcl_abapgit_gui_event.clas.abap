@@ -27,6 +27,7 @@ CLASS zcl_abapgit_gui_event DEFINITION
   PRIVATE SECTION.
     DATA mo_query TYPE REF TO zcl_abapgit_string_map.
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
+    DATA mv_current_page_name TYPE string.
 
     CLASS-DATA gv_non_breaking_space TYPE string .
 
@@ -112,7 +113,7 @@ CLASS zcl_abapgit_gui_event IMPLEMENTATION.
     zif_abapgit_gui_event~mt_postdata     = it_postdata.
 
     IF ii_gui_services IS BOUND.
-      zif_abapgit_gui_event~mv_current_page_name = ii_gui_services->get_current_page_name( ).
+      mv_current_page_name = ii_gui_services->get_current_page_name( ).
     ENDIF.
 
   ENDMETHOD.
@@ -255,6 +256,11 @@ CLASS zcl_abapgit_gui_event IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF '%26' IN rv_string WITH '&' IGNORING CASE.
     REPLACE ALL OCCURRENCES OF gv_non_breaking_space IN rv_string WITH ` `.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_event~current_page_name.
+    rv_page_name = mv_current_page_name.
   ENDMETHOD.
 
 

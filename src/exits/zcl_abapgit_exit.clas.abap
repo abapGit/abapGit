@@ -355,6 +355,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
       TRY.
           gi_exit->deserialize_postprocess(
             EXPORTING
+              iv_package       = iv_package
               it_remote        = it_remote
               is_step          = is_step
               ii_log           = ii_log
@@ -474,6 +475,20 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
     IF gi_exit IS NOT INITIAL.
       TRY.
           rs_handled = gi_exit->on_event( ii_event ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~post_pull.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->post_pull(
+            ii_repo = ii_repo
+            ii_log  = ii_log ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.

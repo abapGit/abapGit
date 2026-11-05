@@ -13,7 +13,6 @@ INTERFACE zif_abapgit_persist_user
       parallel_proc_disabled TYPE abap_bool,
       icon_scaling           TYPE c LENGTH 1,
       ui_theme               TYPE string,
-      hide_sapgui_hint       TYPE abap_bool,
       activate_wo_popup      TYPE abap_bool,
       label_colors           TYPE string,
       default_git_uname      TYPE string,

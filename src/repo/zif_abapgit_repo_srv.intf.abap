@@ -119,5 +119,15 @@ INTERFACE zif_abapgit_repo_srv
       VALUE(rt_labels) TYPE ty_labels
     RAISING
       zcx_abapgit_exception.
+  "! Re-read the repository metadata from the database, e.g. after the
+  "! selected branch was changed in another session. Returns a new instance
+  "! if the metadata changed, otherwise the cached one
+  METHODS reload
+    IMPORTING
+      !iv_key        TYPE zif_abapgit_persistence=>ty_value
+    RETURNING
+      VALUE(ri_repo) TYPE REF TO zif_abapgit_repo
+    RAISING
+      zcx_abapgit_exception .
 
 ENDINTERFACE.
