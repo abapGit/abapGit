@@ -18,6 +18,8 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
         !iv_title         TYPE string DEFAULT 'Choose from list'
         !iv_attr_name     TYPE abap_compname OPTIONAL
         !ii_item_renderer TYPE REF TO zif_abapgit_gui_render_item OPTIONAL
+        !iv_description   TYPE string OPTIONAL
+        !iv_button_label  TYPE string OPTIONAL
       RAISING
         zcx_abapgit_exception.
     METHODS get_result_idx
@@ -73,6 +75,8 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
     DATA mv_in_page TYPE abap_bool.
     DATA mv_id TYPE string.
     DATA mv_title TYPE string.
+    DATA mv_description TYPE string.
+    DATA mv_button_label TYPE string.
 
     METHODS get_form_schema
       RETURNING
@@ -106,6 +110,11 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
     mv_in_page = iv_in_page.
     mv_id      = iv_id.
     mv_title   = iv_title.
+    mv_description  = iv_description.
+    mv_button_label = iv_button_label.
+    IF mv_button_label IS INITIAL.
+      mv_button_label = 'Choose'.
+    ENDIF.
 
     IF mi_item_renderer IS NOT BOUND AND mv_attr_name IS INITIAL.
       zcx_abapgit_exception=>raise( 'Renderer or attr name required' ).
@@ -126,14 +135,25 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
     FIELD-SYMBOLS <ls_row> TYPE any.
     DATA lv_index TYPE i.
     DATA lv_label TYPE string.
+    DATA lv_title TYPE string.
 
     ro_form = zcl_abapgit_html_form=>create( ).
 
     ASSIGN mr_list->* TO <lt_list>.
 
+    " The description replaces the title, both would say the same
+    IF mv_description IS NOT INITIAL.
+      ro_form->freetext(
+        iv_name = 'description'
+        iv_text = escape( val    = mv_description
+                          format = cl_abap_format=>e_html_text ) ).
+    ELSE.
+      lv_title = mv_title.
+    ENDIF.
+
     ro_form->radio(
       iv_name          = c_radio_name
-      iv_label         = mv_title
+      iv_label         = lv_title
       iv_default_value = '1'
       iv_condense      = boolc( lines( <lt_list> ) <= 15 ) ).
 
@@ -157,7 +177,7 @@ CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
     ENDLOOP.
 
     ro_form->command(
-      iv_label    = 'Choose'
+      iv_label    = mv_button_label
       iv_cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main
       iv_action   = c_event-choose
     )->command(

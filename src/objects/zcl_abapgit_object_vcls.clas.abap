@@ -202,7 +202,7 @@ CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
                   CHANGING cg_data = lt_vclstruc ).
     io_xml->read( EXPORTING iv_name = 'VCLSTRUDEP_TAB'
                   CHANGING cg_data = lt_vclstrudep ).
-    io_xml->read( EXPORTING iv_name = 'lt_vclstrudep'
+    io_xml->read( EXPORTING iv_name = 'VCLMF_TAB'
                   CHANGING cg_data = lt_vclmf ).
 
     ls_vcldir_entry-author = sy-uname.
