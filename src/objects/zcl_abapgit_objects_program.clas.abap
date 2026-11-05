@@ -169,6 +169,9 @@ CLASS zcl_abapgit_objects_program DEFINITION
         VALUE(rt_tpool) TYPE textpool_table.
   PRIVATE SECTION.
 
+    TYPES:
+      ty_d021s_tt TYPE STANDARD TABLE OF d021s WITH DEFAULT KEY.
+
     CONSTANTS:
       BEGIN OF c_state,
         active   TYPE r3state VALUE 'A',
@@ -193,6 +196,12 @@ CLASS zcl_abapgit_objects_program DEFINITION
         is_cua TYPE ty_cua
       CHANGING
         cs_adm TYPE rsmpe_adm.
+
+    CLASS-METHODS fix_button_right_vislength
+      IMPORTING
+        it_fieldlist_int TYPE ty_d021s_tt
+      CHANGING
+        ct_fields        TYPE dyfatc_tab.
 
     METHODS get_program_title
       IMPORTING
@@ -866,6 +875,44 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD fix_button_right_vislength.
+    " RPY_DYNPRO_READ returns box column - text column + text length as VISLENGTH of
+    " check and radio buttons with the box on the right, but RPY_DYNPRO_INSERT expects
+    " the width from text to box, so each import would move the box further right
+
+    DATA: lv_box_coln  TYPE i,
+          lv_text_coln TYPE i.
+
+    FIELD-SYMBOLS: <ls_field>     LIKE LINE OF ct_fields,
+                   <ls_field_int> LIKE LINE OF it_fieldlist_int.
+
+    "relevant flag value (taken from include MSEUSBIT)
+    CONSTANTS lc_flg1edt TYPE x VALUE '80'.
+
+
+    LOOP AT ct_fields ASSIGNING <ls_field>
+        WHERE butt_right = abap_true AND ( type = 'CHECK' OR type = 'RADIO' ).
+
+      CLEAR: lv_box_coln, lv_text_coln.
+
+      LOOP AT it_fieldlist_int ASSIGNING <ls_field_int>
+          WHERE fnam = <ls_field>-name AND ( fill = 'A' OR fill = 'C' ).
+        IF <ls_field_int>-flg1 O lc_flg1edt.
+          lv_box_coln = <ls_field_int>-coln.
+        ELSE.
+          lv_text_coln = <ls_field_int>-coln.
+        ENDIF.
+      ENDLOOP.
+
+      IF lv_text_coln > 0 AND lv_box_coln > lv_text_coln.
+        <ls_field>-vislength = lv_box_coln - lv_text_coln + 1.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD get_program_title.
 
     DATA ls_tpool LIKE LINE OF it_tpool.
@@ -1285,6 +1332,12 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           CLEAR <ls_field>-text.
         ENDIF.
       ENDLOOP.
+
+      fix_button_right_vislength(
+        EXPORTING
+          it_fieldlist_int = lt_fieldlist_int
+        CHANGING
+          ct_fields        = lt_fields_to_containers ).
 
       LOOP AT lt_containers ASSIGNING <ls_container>.
         IF <ls_container>-c_resize_v = abap_false.
