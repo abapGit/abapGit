@@ -1410,20 +1410,17 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     zcl_abapgit_language=>restore_login_language( ).
 
-    " If inactive version exists, then RPY_PROGRAM_READ does not return the active code
+    " RPY_PROGRAM_READ does not return the active code if an inactive version exists, and it ignores
+    " errors of READ REPORT (empty source after other programs were changed in the same session).
+    " Therefore, explicitly request active source code
     li_report = zcl_abapgit_factory=>get_sap_report( ).
 
     TRY.
-        " Raises exception if inactive version does not exist
-        ls_progdir = li_report->read_progdir(
-          iv_name  = lv_program_name
-          iv_state = c_state-inactive ).
-
-        " Explicitly request active source code
         lt_source = li_report->read_report(
           iv_name  = lv_program_name
           iv_state = c_state-active ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
+        " No active source, keep the result of RPY_PROGRAM_READ
     ENDTRY.
 
     ls_progdir = li_report->read_progdir(
