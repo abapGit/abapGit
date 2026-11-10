@@ -11,7 +11,36 @@ CLASS zcl_abapgit_cts_api DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    TYPES ty_e071k_tt TYPE STANDARD TABLE OF e071k WITH DEFAULT KEY.
+
     DATA mv_confirm_transp_msgs_called TYPE abap_bool.
+
+    "! Add generic transport keys for a table whose key contains non-character fields
+    "! (character-like key prefix followed by '*', as the view maintenance does)
+    "! @parameter it_table | Table entries
+    "! @parameter iv_tabname | Table name
+    "! @parameter it_key_fields | Character-like key fields before the first other key field
+    "! @parameter ct_e071k | Transport keys
+    METHODS add_generic_table_keys
+      IMPORTING
+        !it_table      TYPE ANY TABLE
+        !iv_tabname    TYPE tabname
+        !it_key_fields TYPE ddfields
+      CHANGING
+        !ct_e071k      TYPE ty_e071k_tt.
+    "! Returns the character-like key fields before the first key field of another type
+    "! @parameter iv_tabname | Table name
+    "! @parameter et_key_fields | Character-like leading key fields
+    "! @parameter ev_generic | Key contains a field that is not character-like
+    "! @raising zcx_abapgit_exception | Table not found
+    METHODS get_char_key_fields
+      IMPORTING
+        !iv_tabname    TYPE tabname
+      EXPORTING
+        !et_key_fields TYPE ddfields
+        !ev_generic    TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
 
     "! Returns the transport request / task the object is currently locked in
     "! @parameter iv_program_id | Program ID
@@ -95,6 +124,81 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_cts_api IMPLEMENTATION.
+
+
+  METHOD add_generic_table_keys.
+
+    DATA ls_e071k  TYPE e071k.
+    DATA lv_key    TYPE c LENGTH 255.
+    DATA lv_offset TYPE i.
+
+    FIELD-SYMBOLS <lg_line> TYPE any.
+    FIELD-SYMBOLS <lg_field> TYPE any.
+    FIELD-SYMBOLS <ls_key_field> LIKE LINE OF it_key_fields.
+
+    ls_e071k-pgmid      = 'R3TR'.
+    ls_e071k-object     = 'TABU'.
+    ls_e071k-objname    = iv_tabname.
+    ls_e071k-mastertype = 'TABU'.
+    ls_e071k-mastername = iv_tabname.
+
+    LOOP AT it_table ASSIGNING <lg_line>.
+      CLEAR: lv_key, lv_offset.
+      LOOP AT it_key_fields ASSIGNING <ls_key_field>.
+        IF lv_offset >= 119.
+          EXIT.
+        ENDIF.
+        IF <ls_key_field>-datatype = 'CLNT'.
+          lv_key+lv_offset = sy-mandt.
+        ELSE.
+          ASSIGN COMPONENT <ls_key_field>-fieldname OF STRUCTURE <lg_line> TO <lg_field>.
+          ASSERT sy-subrc = 0.
+          lv_key+lv_offset = <lg_field>.
+        ENDIF.
+        lv_offset = lv_offset + <ls_key_field>-leng.
+      ENDLOOP.
+      IF lv_offset > 119.
+        lv_offset = 119.
+      ENDIF.
+      ls_e071k-tabkey = lv_key.
+      ls_e071k-tabkey+lv_offset(1) = '*'.
+      INSERT ls_e071k INTO TABLE ct_e071k.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD get_char_key_fields.
+
+    DATA lo_structdescr TYPE REF TO cl_abap_structdescr.
+    DATA lt_fields      TYPE ddfields.
+
+    FIELD-SYMBOLS <ls_field> LIKE LINE OF lt_fields.
+
+    CLEAR: et_key_fields, ev_generic.
+
+    lo_structdescr ?= cl_abap_typedescr=>describe_by_name( iv_tabname ).
+    lo_structdescr->get_ddic_field_list(
+      RECEIVING
+        p_field_list = lt_fields
+      EXCEPTIONS
+        not_found    = 1
+        no_ddic_type = 2
+        OTHERS       = 3 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Table { iv_tabname } not found| ).
+    ENDIF.
+
+    LOOP AT lt_fields ASSIGNING <ls_field> WHERE keyflag = abap_true.
+      IF <ls_field>-inttype CA 'CNDT'.
+        APPEND <ls_field> TO et_key_fields.
+      ELSE.
+        ev_generic = abap_true.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
   METHOD get_current_transport_for_obj.
@@ -420,21 +524,64 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
   METHOD zif_abapgit_cts_api~create_transport_entries.
 
     DATA lt_tables      TYPE tredt_objects.
-    DATA lt_table_keys  TYPE STANDARD TABLE OF e071k.
+    DATA lt_table_keys  TYPE ty_e071k_tt.
     DATA lv_with_dialog TYPE abap_bool.
+    DATA lt_key_fields  TYPE ddfields.
+    DATA lv_generic     TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_table> LIKE LINE OF lt_tables.
     FIELD-SYMBOLS <ls_table_key> LIKE LINE OF lt_table_keys.
 
-    cl_table_utilities_brf=>create_transport_entries(
+    get_char_key_fields(
       EXPORTING
-        it_table_ins = it_table_ins
-        it_table_upd = it_table_upd
-        it_table_del = it_table_del
-        iv_tabname   = iv_tabname
-      CHANGING
-        ct_e071      = lt_tables
-        ct_e071k     = lt_table_keys ).
+        iv_tabname    = iv_tabname
+      IMPORTING
+        et_key_fields = lt_key_fields
+        ev_generic    = lv_generic ).
+
+    IF lv_generic = abap_true.
+      " cl_table_utilities_brf dumps on keys with non-character fields
+      add_generic_table_keys(
+        EXPORTING
+          it_table      = it_table_ins
+          iv_tabname    = iv_tabname
+          it_key_fields = lt_key_fields
+        CHANGING
+          ct_e071k      = lt_table_keys ).
+      add_generic_table_keys(
+        EXPORTING
+          it_table      = it_table_upd
+          iv_tabname    = iv_tabname
+          it_key_fields = lt_key_fields
+        CHANGING
+          ct_e071k      = lt_table_keys ).
+      add_generic_table_keys(
+        EXPORTING
+          it_table      = it_table_del
+          iv_tabname    = iv_tabname
+          it_key_fields = lt_key_fields
+        CHANGING
+          ct_e071k      = lt_table_keys ).
+      SORT lt_table_keys BY tabkey.
+      DELETE ADJACENT DUPLICATES FROM lt_table_keys COMPARING tabkey.
+      IF lt_table_keys IS NOT INITIAL.
+        APPEND INITIAL LINE TO lt_tables ASSIGNING <ls_table>.
+        <ls_table>-pgmid    = 'R3TR'.
+        <ls_table>-object   = 'TABU'.
+        <ls_table>-obj_name = iv_tabname.
+        <ls_table>-objfunc  = 'K'.
+      ENDIF.
+    ELSE.
+      cl_table_utilities_brf=>create_transport_entries(
+        EXPORTING
+          it_table_ins = it_table_ins
+          it_table_upd = it_table_upd
+          it_table_del = it_table_del
+          iv_tabname   = iv_tabname
+        CHANGING
+          ct_e071      = lt_tables
+          ct_e071k     = lt_table_keys ).
+    ENDIF.
 
     " cl_table_utilities_brf=>write_transport_entries does not allow passing a request
 
