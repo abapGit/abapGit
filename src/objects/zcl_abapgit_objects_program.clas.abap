@@ -171,6 +171,8 @@ CLASS zcl_abapgit_objects_program DEFINITION
 
     TYPES:
       ty_d021s_tt TYPE STANDARD TABLE OF d021s WITH DEFAULT KEY.
+    TYPES:
+      ty_work_area_names TYPE SORTED TABLE OF dwinactiv-obj_name WITH UNIQUE KEY table_line.
 
     CONSTANTS:
       BEGIN OF c_state,
@@ -225,6 +227,15 @@ CLASS zcl_abapgit_objects_program DEFINITION
         !iv_state   TYPE progdir-state DEFAULT c_state-inactive
       RAISING
         zcx_abapgit_exception .
+    METHODS read_work_area_reports
+      RETURNING
+        VALUE(rt_names) TYPE ty_work_area_names.
+    METHODS repair_work_area
+      IMPORTING
+        !iv_program TYPE syrepid
+        !it_before  TYPE ty_work_area_names
+      RAISING
+        zcx_abapgit_exception.
     METHODS is_exit_include
       IMPORTING
         !iv_program               TYPE syrepid
@@ -1190,6 +1201,73 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD read_work_area_reports.
+
+    SELECT obj_name FROM dwinactiv INTO TABLE rt_names
+      WHERE object = 'REPS'
+      AND uname = sy-uname.
+
+  ENDMETHOD.
+
+
+  METHOD repair_work_area.
+
+    " RPY_INCLUDE_UPDATE (save_inactive) adds the program of an earlier RPY_* call in the same
+    " session to the work area instead of the updated include. This leaves an inactive entry for
+    " a program without inactive version, and the next serialization of that program is empty.
+    " Remove such new entries and add the updated include, if it is missing.
+
+    DATA:
+      lt_after    TYPE ty_work_area_names,
+      lv_obj_name TYPE e071-obj_name,
+      lv_progname TYPE progdir-name.
+
+    lt_after = read_work_area_reports( ).
+
+    LOOP AT lt_after INTO lv_obj_name.
+      IF lv_obj_name = iv_program.
+        CONTINUE.
+      ENDIF.
+
+      READ TABLE it_before WITH TABLE KEY table_line = lv_obj_name TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        CONTINUE.
+      ENDIF.
+
+      lv_progname = lv_obj_name.
+      SELECT SINGLE name FROM progdir INTO lv_progname
+        WHERE name = lv_progname
+        AND state = c_state-inactive.
+      IF sy-subrc = 0.
+        CONTINUE.
+      ENDIF.
+
+      CALL FUNCTION 'RS_DELETE_FROM_WORKING_AREA'
+        EXPORTING
+          object       = 'REPS'
+          obj_name     = lv_obj_name
+          immediate    = abap_true
+          own_set_only = abap_true.
+    ENDLOOP.
+
+    lv_obj_name = iv_program.
+    READ TABLE lt_after WITH TABLE KEY table_line = lv_obj_name TRANSPORTING NO FIELDS.
+    IF sy-subrc <> 0.
+      CALL FUNCTION 'RS_INSERT_INTO_WORKING_AREA'
+        EXPORTING
+          object            = 'REPS'
+          obj_name          = lv_obj_name
+        EXCEPTIONS
+          wrong_object_name = 1
+          OTHERS            = 2.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD serialize_cua.
 
     CALL FUNCTION 'RS_CUA_INTERNAL_FETCH'
@@ -1616,6 +1694,12 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD update_program.
 
+    DATA lt_work_area TYPE ty_work_area_names.
+
+    IF iv_state = c_state-inactive.
+      lt_work_area = read_work_area_reports( ).
+    ENDIF.
+
     zcl_abapgit_language=>set_current_language( mv_language ).
 
     CALL FUNCTION 'RPY_INCLUDE_UPDATE'
@@ -1649,6 +1733,12 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     ENDIF.
 
     zcl_abapgit_language=>restore_login_language( ).
+
+    IF iv_state = c_state-inactive.
+      repair_work_area(
+        iv_program = is_progdir-name
+        it_before  = lt_work_area ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
