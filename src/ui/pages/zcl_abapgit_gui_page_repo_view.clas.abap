@@ -56,6 +56,8 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     DATA mv_key TYPE zif_abapgit_persistence=>ty_value .
     DATA mv_are_changes_recorded_in_tr TYPE abap_bool .
     DATA mo_ref_selection TYPE REF TO zcl_abapgit_gui_page_ref_sel.
+    DATA ms_marking TYPE zcl_abapgit_dot_abapgit_local=>ty_marking.
+    DATA mv_marking TYPE abap_bool.
 
     METHODS render_head_line
       RETURNING
@@ -209,6 +211,16 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS load_marking
+      RETURNING
+        VALUE(rv_notice) TYPE string.
+
+    METHODS render_mark
+      IMPORTING
+        !iv_state      TYPE zcl_abapgit_dot_abapgit_local=>ty_mark_file-state
+      RETURNING
+        VALUE(rv_html) TYPE string.
+
 ENDCLASS.
 
 
@@ -224,10 +236,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       lt_non_code_and_metadata_items LIKE ct_repo_items,
       lt_code_items                  LIKE ct_repo_items,
       lt_diff_items                  LIKE ct_repo_items,
+      lt_applied_items               LIKE ct_repo_items,
+      lt_other_items                 LIKE ct_repo_items,
       li_persist_user                TYPE REF TO zif_abapgit_persist_user.
 
     FIELD-SYMBOLS:
-      <ls_repo_item> TYPE zif_abapgit_definitions=>ty_repo_item.
+      <ls_repo_item> TYPE zif_abapgit_definitions=>ty_repo_item,
+      <ls_mark>      LIKE LINE OF ms_marking-objects.
 
     IF mv_order_by IS INITIAL.
       RETURN.
@@ -253,6 +268,21 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ENDLOOP.
 
       DELETE lt_code_items WHERE changes > 0.
+
+      IF mv_marking = abap_true.
+        " applied (protected) objects follow the diffs
+        LOOP AT lt_code_items ASSIGNING <ls_repo_item>.
+          READ TABLE ms_marking-objects ASSIGNING <ls_mark>
+            WITH TABLE KEY obj_type = <ls_repo_item>-obj_type obj_name = <ls_repo_item>-obj_name.
+          IF sy-subrc = 0 AND <ls_mark>-state = zcl_abapgit_dot_abapgit_local=>c_state-applied.
+            INSERT <ls_repo_item> INTO TABLE lt_applied_items.
+          ELSE.
+            INSERT <ls_repo_item> INTO TABLE lt_other_items.
+          ENDIF.
+        ENDLOOP.
+
+        lt_code_items = lt_other_items.
+      ENDIF.
     ENDIF.
 
     ls_sort-descending = mv_order_descending.
@@ -275,6 +305,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     TRY.
         SORT lt_code_items STABLE BY (lt_sort).
         SORT lt_diff_items STABLE BY (lt_sort).
+        SORT lt_applied_items STABLE BY (lt_sort).
 
       CATCH cx_sy_dyn_table_ill_comp_val.
         CLEAR: mv_order_by, mv_order_descending.
@@ -288,6 +319,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     INSERT LINES OF lt_non_code_and_metadata_items INTO TABLE ct_repo_items.
     INSERT LINES OF lt_diff_items INTO TABLE ct_repo_items.
+    INSERT LINES OF lt_applied_items INTO TABLE ct_repo_items.
     INSERT LINES OF lt_code_items INTO TABLE ct_repo_items.
 
     " Files are listed under the object names so we always sort them by name
@@ -770,6 +802,28 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD load_marking.
+
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
+    CLEAR: ms_marking, mv_marking.
+
+    IF zcl_abapgit_dot_abapgit_local=>is_active( mi_repo ) = abap_false
+      OR mi_repo->has_remote_source( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    TRY.
+        ms_marking = zcl_abapgit_dot_abapgit_local=>get_marking( mi_repo ).
+        mv_marking = abap_true.
+      CATCH zcx_abapgit_exception INTO lx_error.
+        rv_notice = escape( val    = lx_error->get_text( )
+                            format = cl_abap_format=>e_html_text ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD open_in_main_language.
 
     DATA:
@@ -827,6 +881,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   METHOD render_file_command.
 
     DATA: lv_difflink TYPE string.
+    DATA lv_state TYPE zcl_abapgit_dot_abapgit_local=>ty_mark_file-state.
+
+    FIELD-SYMBOLS <ls_mark> LIKE LINE OF ms_marking-files.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -839,8 +896,27 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                       iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_difflink }| ).
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_file-lstate
                                                                   iv_rstate = is_file-rstate ) ).
+      IF mv_marking = abap_true.
+        READ TABLE ms_marking-files ASSIGNING <ls_mark>
+          WITH TABLE KEY path = is_file-path filename = is_file-filename.
+        IF sy-subrc = 0.
+          lv_state = <ls_mark>-state.
+        ENDIF.
+        ri_html->add( render_mark( lv_state ) ).
+      ENDIF.
     ELSE.
-      ri_html->add( '&nbsp;' ).
+      IF mv_marking = abap_true.
+        READ TABLE ms_marking-files ASSIGNING <ls_mark>
+          WITH TABLE KEY path = is_file-path filename = is_file-filename.
+        IF sy-subrc = 0 AND <ls_mark>-state = zcl_abapgit_dot_abapgit_local=>c_state-applied.
+          lv_state = <ls_mark>-state.
+        ENDIF.
+      ENDIF.
+      IF lv_state IS INITIAL.
+        ri_html->add( '&nbsp;' ).
+      ELSE.
+        ri_html->add( render_mark( lv_state ) ).
+      ENDIF.
     ENDIF.
     ri_html->add( '</div>' ).
 
@@ -955,6 +1031,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   METHOD render_item_command.
 
     DATA lv_difflink TYPE string.
+    DATA lv_state TYPE zcl_abapgit_dot_abapgit_local=>ty_mark_object-state.
+
+    FIELD-SYMBOLS <ls_mark> LIKE LINE OF ms_marking-objects.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -977,8 +1056,25 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                         iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_difflink }| ).
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_item-lstate
                                                                     iv_rstate = is_item-rstate ) ).
+        IF mv_marking = abap_true.
+          READ TABLE ms_marking-objects ASSIGNING <ls_mark>
+            WITH TABLE KEY obj_type = is_item-obj_type obj_name = is_item-obj_name.
+          IF sy-subrc = 0.
+            lv_state = <ls_mark>-state.
+          ENDIF.
+          ri_html->add( render_mark( lv_state ) ).
+        ENDIF.
         ri_html->add( '</div>' ).
 
+      ENDIF.
+
+    ELSEIF mv_marking = abap_true AND mv_hide_files = abap_true AND is_item-obj_name IS NOT INITIAL.
+      READ TABLE ms_marking-objects ASSIGNING <ls_mark>
+        WITH TABLE KEY obj_type = is_item-obj_type obj_name = is_item-obj_name.
+      IF sy-subrc = 0 AND <ls_mark>-state = zcl_abapgit_dot_abapgit_local=>c_state-applied.
+        ri_html->add( '<div>' ).
+        ri_html->add( render_mark( <ls_mark>-state ) ).
+        ri_html->add( '</div>' ).
       ENDIF.
 
     ENDIF.
@@ -1057,6 +1153,36 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       iv_obj_name  = is_item-obj_name ) ).
 
     ri_html->add( '</td>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_mark.
+
+    DATA lv_text TYPE string.
+    DATA lv_class TYPE string.
+    DATA lv_title TYPE string.
+
+    " No state means the marker file does not list it
+    CASE iv_state.
+      WHEN zcl_abapgit_dot_abapgit_local=>c_state-to_apply.
+        lv_text  = 'pull'.
+        lv_title = |Listed in { zif_abapgit_definitions=>c_dot_abapgit_local }, pull applies it|.
+      WHEN zcl_abapgit_dot_abapgit_local=>c_state-applied.
+        lv_text  = 'applied'.
+        lv_class = 'grey'.
+        lv_title = |Listed in { zif_abapgit_definitions=>c_dot_abapgit_local }, already applied in the system|.
+      WHEN zcl_abapgit_dot_abapgit_local=>c_state-conflict.
+        lv_text  = 'conflict'.
+        lv_class = 'error'.
+        lv_title = 'Conflicts with a change in the system, pull stops'.
+      WHEN OTHERS.
+        lv_text  = 'not listed'.
+        lv_class = 'grey'.
+        lv_title = |Not listed in { zif_abapgit_definitions=>c_dot_abapgit_local }, pull leaves it untouched|.
+    ENDCASE.
+
+    rv_html = |<span class="state-block"><span class="{ lv_class }" title="{ lv_title }">{ lv_text }</span></span>|.
 
   ENDMETHOD.
 
@@ -1346,6 +1472,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
           lv_add_str    TYPE string,
           li_log        TYPE REF TO zif_abapgit_log,
           lv_msg        TYPE string,
+          lv_notice     TYPE string,
           lo_news       TYPE REF TO zcl_abapgit_repo_news.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
@@ -1411,6 +1538,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                           iv_changes_only = mv_changes_only
                                           iv_transports   = mv_are_changes_recorded_in_tr ).
 
+        " uses the files serialized for the list
+        lv_notice = load_marking( ).
+
         apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
 
         LOOP AT lt_repo_items ASSIGNING <ls_item>.
@@ -1418,6 +1548,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         ENDLOOP.
 
         ri_html->add( render_head_line( ) ).
+
+        IF lv_notice IS NOT INITIAL.
+          ri_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner( lv_notice ) ).
+        ENDIF.
 
         li_log = lo_browser->get_log( ).
         IF li_log->count( ) > 0.

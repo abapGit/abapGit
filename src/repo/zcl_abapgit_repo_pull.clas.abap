@@ -53,7 +53,11 @@ CLASS zcl_abapgit_repo_pull IMPLEMENTATION.
 
     DATA:
       ls_checks TYPE zif_abapgit_definitions=>ty_delete_checks,
-      lt_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt.
+      lt_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt,
+      lt_items  TYPE zif_abapgit_definitions=>ty_items_ts,
+      ls_item   TYPE zif_abapgit_definitions=>ty_item.
+
+    FIELD-SYMBOLS <ls_overwrite> LIKE LINE OF is_checks-overwrite.
 
     lt_tadir = get_objects_to_delete( is_checks ).
 
@@ -66,7 +70,21 @@ CLASS zcl_abapgit_repo_pull IMPLEMENTATION.
                     is_checks = ls_checks
                     ii_log    = ii_log ).
 
-      mi_repo->refresh( iv_drop_log = abap_false ).
+      IF zcl_abapgit_dot_abapgit_local=>is_active( mi_repo ) = abap_true.
+        " The pull continues only with the objects that have a decision, so only their files are read
+        " again. All of them, as deleting one object can change the files of another one
+        LOOP AT is_checks-overwrite ASSIGNING <ls_overwrite>.
+          ls_item-obj_type = <ls_overwrite>-obj_type.
+          ls_item-obj_name = <ls_overwrite>-obj_name.
+          INSERT ls_item INTO TABLE lt_items.
+        ENDLOOP.
+        zcl_abapgit_dot_abapgit_local=>refresh_objects(
+          ii_repo  = mi_repo
+          it_items = lt_items ).
+        mi_repo->get_dot_apack( )->refresh( ).
+      ELSE.
+        mi_repo->refresh( iv_drop_log = abap_false ).
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -123,20 +141,37 @@ CLASS zcl_abapgit_repo_pull IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_pull~pull.
 
+    DATA ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
+    DATA lt_items TYPE zif_abapgit_definitions=>ty_items_ts.
+
     IF ii_log IS BOUND.
       ri_log = ii_log.
     ELSE.
       ri_log = mi_repo->create_new_log( 'Pull Log' ).
     ENDIF.
 
+    ls_checks = is_checks.
+
+    IF zcl_abapgit_dot_abapgit_local=>is_active( mi_repo ) = abap_true.
+      " the system might have changed since the checks, check again before anything is deleted
+      lt_items = zcl_abapgit_dot_abapgit_local=>check_pull( mi_repo ).
+      zcl_abapgit_dot_abapgit_local=>check_decided(
+        it_items     = lt_items
+        it_overwrite = ls_checks-overwrite ).
+      ls_checks-overwrite = zcl_abapgit_dot_abapgit_local=>filter_overwrite(
+        it_overwrite = ls_checks-overwrite
+        it_items     = lt_items ).
+      ls_checks-marker_checked = abap_true.
+    ENDIF.
+
     " pass decisions to delete
     delete_objects(
-      is_checks = is_checks
+      is_checks = ls_checks
       ii_log    = ri_log ).
 
     " pass decisions to deserialize
     mi_repo->deserialize(
-      is_checks = is_checks
+      is_checks = ls_checks
       ii_log    = ri_log ).
 
   ENDMETHOD.

@@ -44,6 +44,7 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
         block_commit                 TYPE string VALUE 'block_commit',
         flow                         TYPE string VALUE 'flow',
         exclude_remote_paths         TYPE string VALUE 'exclude_remote_paths',
+        protect_system_changes       TYPE string VALUE 'protect_system_changes',
       END OF c_id.
     CONSTANTS:
       BEGIN OF c_event,
@@ -287,6 +288,25 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       iv_readonly = boolc( li_package->are_changes_recorded_in_tr_req( ) = abap_false )
       iv_label    = 'BETA: Enable abapGit flow for this repository (requires transported packages)' ).
 
+    IF mi_repo->is_offline( ) = abap_true.
+      ro_form->radio(
+        iv_name          = c_id-protect_system_changes
+        iv_default_value = zif_abapgit_persistence=>c_protect_system_changes-off
+        iv_label         = 'Protect System Changes on Pull'
+        iv_hint          = 'Offline repos: pull applies only the changes of the uploaded ZIP and stops on conflicts.' &&
+                           ' Full Export lists all exported files in .abapgit.local.xml to find the changes,' &&
+                           ' Change List Only expects the changes listed there by a tool'
+      )->option(
+        iv_label         = 'Off'
+        iv_value         = zif_abapgit_persistence=>c_protect_system_changes-off
+      )->option(
+        iv_label         = 'Full Export'
+        iv_value         = zif_abapgit_persistence=>c_protect_system_changes-full_export
+      )->option(
+        iv_label         = 'Change List Only'
+        iv_value         = zif_abapgit_persistence=>c_protect_system_changes-change_list ).
+    ENDIF.
+
     ro_form->textarea(
       iv_name  = c_id-exclude_remote_paths
       iv_label = 'Exclude Paths'
@@ -400,6 +420,11 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     ro_form_data->set(
       iv_key = c_id-only_local_objects
       iv_val = boolc( ms_settings-only_local_objects = abap_true ) ) ##TYPE.
+    IF mi_repo->is_offline( ) = abap_true.
+      ro_form_data->set(
+        iv_key = c_id-protect_system_changes
+        iv_val = |{ ms_settings-protect_system_changes }| ).
+    ENDIF.
     ro_form_data->set(
       iv_key = c_id-code_inspector_check_variant
       iv_val = |{ ms_settings-code_inspector_check_variant }| ).
@@ -429,6 +454,9 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     ms_settings-flow                         = mo_form_data->get( c_id-flow ).
     ms_settings-write_protected              = mo_form_data->get( c_id-write_protected ).
     ms_settings-only_local_objects           = mo_form_data->get( c_id-only_local_objects ).
+    IF mi_repo->is_offline( ) = abap_true.
+      ms_settings-protect_system_changes     = mo_form_data->get( c_id-protect_system_changes ).
+    ENDIF.
     ms_settings-code_inspector_check_variant = mo_form_data->get( c_id-code_inspector_check_variant ).
     ms_settings-block_commit                 = mo_form_data->get( c_id-block_commit ).
     ms_settings-exclude_remote_paths         =

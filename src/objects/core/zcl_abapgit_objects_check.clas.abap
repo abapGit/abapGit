@@ -9,6 +9,7 @@ CLASS zcl_abapgit_objects_check DEFINITION
     CLASS-METHODS deserialize_checks
       IMPORTING
         !ii_repo         TYPE REF TO zif_abapgit_repo
+        !it_items        TYPE zif_abapgit_definitions=>ty_items_ts OPTIONAL
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
@@ -244,6 +245,13 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
     " get unfiltered status to evaluate properly which warnings are required
     lt_results = zcl_abapgit_repo_status=>calculate( ii_repo ).
+
+    IF zcl_abapgit_dot_abapgit_local=>is_active( ii_repo ) = abap_true.
+      " only the changes listed in the marker file are pulled
+      lt_results = zcl_abapgit_dot_abapgit_local=>filter_results(
+        it_results = lt_results
+        it_items   = it_items ).
+    ENDIF.
 
     check_multiple_files( lt_results ).
 

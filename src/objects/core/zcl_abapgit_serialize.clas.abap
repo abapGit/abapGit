@@ -29,6 +29,7 @@ CLASS zcl_abapgit_serialize DEFINITION
         !ii_log         TYPE REF TO zif_abapgit_log
         !it_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
         !ii_data_config TYPE REF TO zif_abapgit_data_config OPTIONAL
+        !it_data_files  TYPE zif_abapgit_definitions=>ty_files_item_tt OPTIONAL
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
@@ -396,6 +397,9 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         iv_package = iv_package
       CHANGING
         ct_files   = rt_files ).
+
+    " Data files serialized before are taken as they are, the tables are not read again
+    APPEND LINES OF it_data_files TO rt_files.
 
     add_data(
       EXPORTING

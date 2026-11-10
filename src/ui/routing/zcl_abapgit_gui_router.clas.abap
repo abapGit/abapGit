@@ -909,7 +909,10 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           lv_msg            TYPE c LENGTH 200,
           lv_package        TYPE zif_abapgit_persistence=>ty_repo-package,
           lv_folder_logic   TYPE string,
-          lv_main_lang_only TYPE zif_abapgit_persistence=>ty_local_settings-main_language_only.
+          lv_main_lang_only TYPE zif_abapgit_persistence=>ty_local_settings-main_language_only,
+          lt_files          TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          ls_file_item      LIKE LINE OF lt_files,
+          ls_marker         TYPE zcl_abapgit_dot_abapgit_local=>ty_marker.
 
     CONSTANTS:
       BEGIN OF lc_page,
@@ -974,7 +977,15 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         ENDCASE.
       WHEN zif_abapgit_definitions=>c_action-zip_export.                      " Export repo as ZIP
         li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-        lv_xstr = zcl_abapgit_zip=>encode_files( li_repo->get_files_local( ) ).
+        lt_files = li_repo->get_files_local( ).
+        IF zcl_abapgit_dot_abapgit_local=>is_active( li_repo ) = abap_true.
+          ls_marker = zcl_abapgit_dot_abapgit_local=>create_for_export(
+            ii_repo  = li_repo
+            it_files = lt_files ).
+          ls_file_item-file = zcl_abapgit_dot_abapgit_local=>to_file( ls_marker ).
+          APPEND ls_file_item TO lt_files.
+        ENDIF.
+        lv_xstr = zcl_abapgit_zip=>encode_files( lt_files ).
         file_download( iv_package = li_repo->get_package( )
                        iv_xstr    = lv_xstr ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.

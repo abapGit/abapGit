@@ -130,6 +130,8 @@ INTERFACE zif_abapgit_repo
     RAISING
       zcx_abapgit_exception .
   METHODS refresh_local_objects
+    IMPORTING
+      !ii_obj_filter TYPE REF TO zif_abapgit_object_filter OPTIONAL
     RAISING
       zcx_abapgit_exception .
   METHODS get_data_config

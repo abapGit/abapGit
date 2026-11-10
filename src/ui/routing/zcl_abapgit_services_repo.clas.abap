@@ -94,8 +94,10 @@ CLASS zcl_abapgit_services_repo DEFINITION
         zcx_abapgit_cancel
         zcx_abapgit_exception .
     CLASS-METHODS popup_objects_overwrite
+      IMPORTING
+        !iv_select_all TYPE abap_bool DEFAULT abap_false
       CHANGING
-        !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
+        !ct_overwrite  TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS popup_data_loss_overwrite
@@ -321,6 +323,10 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ls_checks = li_pull->checks( ).
 
     IF ls_checks-overwrite IS INITIAL AND ls_checks-overwrite_files IS INITIAL.
+      IF zcl_abapgit_dot_abapgit_local=>is_active( ii_repo ) = abap_true.
+        zcx_abapgit_exception=>raise( |Nothing to pull for the objects listed in |
+          && |{ zif_abapgit_definitions=>c_dot_abapgit_local }| ).
+      ENDIF.
       zcx_abapgit_exception=>raise(
         'There is nothing to pull. The local state completely matches the remote repository.' ).
     ENDIF.
@@ -529,7 +535,11 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       cs_checks-dependencies-decision = zif_abapgit_definitions=>c_yes.
     ENDIF.
 
-    popup_objects_overwrite( CHANGING ct_overwrite = lt_decision ).
+    popup_objects_overwrite(
+      EXPORTING
+        iv_select_all = zcl_abapgit_dot_abapgit_local=>is_active( ii_repo )
+      CHANGING
+        ct_overwrite  = lt_decision ).
 
     popup_data_loss_overwrite(
       EXPORTING
@@ -667,8 +677,10 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     <ls_column>-name = 'TEXT'.
     <ls_column>-text = 'Description'.
 
-    LOOP AT ct_overwrite ASSIGNING <ls_overwrite> WHERE decision = zif_abapgit_definitions=>c_yes.
-      INSERT sy-tabix INTO TABLE lt_preselected_rows.
+    LOOP AT ct_overwrite ASSIGNING <ls_overwrite>.
+      IF iv_select_all = abap_true OR <ls_overwrite>-decision = zif_abapgit_definitions=>c_yes.
+        INSERT sy-tabix INTO TABLE lt_preselected_rows.
+      ENDIF.
     ENDLOOP.
 
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).

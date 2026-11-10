@@ -24,6 +24,7 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS deserialize_checks
       IMPORTING
         !ii_repo         TYPE REF TO zif_abapgit_repo
+        !it_items        TYPE zif_abapgit_definitions=>ty_items_ts OPTIONAL
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
@@ -642,6 +643,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       ii_repo = ii_repo
       ii_log  = ii_log ).
 
+    IF zcl_abapgit_dot_abapgit_local=>is_active( ii_repo ) = abap_true.
+      " the objects to pull were decided before anything was deleted
+      lt_results = zcl_abapgit_dot_abapgit_local=>filter_results_by_overwrite(
+        it_results   = lt_results
+        it_overwrite = is_checks-overwrite ).
+    ENDIF.
+
     IF lt_results IS INITIAL.
       RETURN.
     ENDIF.
@@ -812,7 +820,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD deserialize_checks.
 
-    rs_checks = zcl_abapgit_objects_check=>deserialize_checks( ii_repo ).
+    rs_checks = zcl_abapgit_objects_check=>deserialize_checks(
+      ii_repo  = ii_repo
+      it_items = it_items ).
 
   ENDMETHOD.
 

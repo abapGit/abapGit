@@ -33,7 +33,15 @@ INTERFACE zif_abapgit_persistence PUBLIC.
       customizing_request          TYPE trkorr,
       flow                         TYPE abap_bool,
       exclude_remote_paths         TYPE string_table,
+      protect_system_changes       TYPE c LENGTH 1,
     END OF ty_local_settings.
+
+  CONSTANTS:
+    BEGIN OF c_protect_system_changes,
+      off         TYPE c LENGTH 1 VALUE '',
+      full_export TYPE c LENGTH 1 VALUE 'F',
+      change_list TYPE c LENGTH 1 VALUE 'C',
+    END OF c_protect_system_changes.
 
   TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
   TYPES: ty_local_checksum_by_item_tt TYPE SORTED TABLE OF ty_local_checksum

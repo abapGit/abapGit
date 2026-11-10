@@ -255,6 +255,10 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
     ms_checks = li_pull->checks( ).
 
     IF lines( ms_checks-overwrite ) = 0.
+      IF zcl_abapgit_dot_abapgit_local=>is_active( mi_repo ) = abap_true.
+        zcx_abapgit_exception=>raise( |Nothing to pull for the objects listed in |
+          && |{ zif_abapgit_definitions=>c_dot_abapgit_local }| ).
+      ENDIF.
       zcx_abapgit_exception=>raise(
         'There is nothing to pull. The local state completely matches the remote repository.' ).
     ENDIF.

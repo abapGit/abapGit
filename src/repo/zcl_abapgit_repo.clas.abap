@@ -130,6 +130,16 @@ CLASS zcl_abapgit_repo DEFINITION
         !ct_loc_files TYPE zif_abapgit_definitions=>ty_files_item_tt OPTIONAL
       RAISING
         zcx_abapgit_exception .
+    METHODS set_remote_dot_abapgit
+      IMPORTING
+        !it_remote    TYPE zif_abapgit_git_definitions=>ty_files_tt
+      RETURNING
+        VALUE(ro_dot) TYPE REF TO zcl_abapgit_dot_abapgit
+      RAISING
+        zcx_abapgit_exception .
+    METHODS find_remote_settings
+      RAISING
+        zcx_abapgit_exception .
 
 ENDCLASS.
 
@@ -212,18 +222,34 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     DATA:
       li_config        TYPE REF TO zif_abapgit_data_config,
+      lt_remote        TYPE zif_abapgit_git_definitions=>ty_files_tt,
+      lt_files         TYPE zif_abapgit_git_definitions=>ty_files_tt,
       lt_updated_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt,
-      lt_result        TYPE zif_abapgit_data_deserializer=>ty_results.
+      lt_result        TYPE zif_abapgit_data_deserializer=>ty_results,
+      lv_active        TYPE abap_bool.
+
+    lt_remote = mt_remote.
+    lt_files  = get_files_remote( ).
+    lv_active = zcl_abapgit_dot_abapgit_local=>is_active( me ).
+
+    IF lv_active = abap_true.
+      " data files not listed in the marker file keep the data config of the repository
+      lt_files = zcl_abapgit_dot_abapgit_local=>apply_listed_files(
+        it_remote = lt_files
+        it_system = get_data_config( )->to_json( )
+        io_dot    = get_dot_abapgit( ) ).
+      lt_remote = lt_files.
+    ENDIF.
 
     " Get remote data config
     CREATE OBJECT li_config TYPE zcl_abapgit_data_config.
-    li_config->from_json( mt_remote ).
+    li_config->from_json( lt_remote ).
 
     "Deserialize data
     lt_result = zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
       iv_package = get_package( )
       ii_config  = li_config
-      it_files   = get_files_remote( ) ).
+      it_files   = lt_files ).
 
     "Save deserialized data to DB and add entries to transport requests
     lt_updated_files = zcl_abapgit_data_factory=>get_deserializer( )->actualize(
@@ -231,7 +257,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       is_checks = is_checks ).
 
     " Save local data config if any configuration was loaded
-    IF li_config->get_configs( ) IS NOT INITIAL.
+    " (with the marker file the result is the complete config, deleting the last one included)
+    IF li_config->get_configs( ) IS NOT INITIAL OR lv_active = abap_true.
       li_config->zif_abapgit_data_persistence~save_config( ms_data-key ).
     ENDIF.
 
@@ -279,6 +306,13 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     lt_remote = get_files_remote( ).
 
+    IF zcl_abapgit_dot_abapgit_local=>is_active( me ) = abap_true.
+      " the APACK manifest changes only if the marker file lists it
+      lt_remote = zcl_abapgit_dot_abapgit_local=>apply_listed_files(
+        it_remote = lt_remote
+        io_dot    = get_dot_abapgit( ) ).
+    ENDIF.
+
     READ TABLE lt_remote ASSIGNING <ls_remote>
       WITH KEY file_path
       COMPONENTS path     = zif_abapgit_definitions=>c_root_dir
@@ -288,6 +322,22 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
                                                       iv_xstr         = <ls_remote>-data ).
       set_dot_apack( ro_dot ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD find_remote_settings.
+
+    IF zcl_abapgit_dot_abapgit_local=>is_active( me ) = abap_true.
+      " the marker file was checked, the repository settings change only if it lists them
+      set_remote_dot_abapgit( zcl_abapgit_dot_abapgit_local=>apply_listed_files(
+        it_remote = get_files_remote( )
+        io_dot    = get_dot_abapgit( ) ) ).
+    ELSE.
+      find_remote_dot_abapgit( ).
+    ENDIF.
+
+    find_remote_dot_apack( ).
 
   ENDMETHOD.
 
@@ -460,6 +510,23 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_remote_dot_abapgit.
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote.
+
+    READ TABLE it_remote ASSIGNING <ls_remote>
+      WITH KEY file_path
+      COMPONENTS path     = zif_abapgit_definitions=>c_root_dir
+                 filename = zif_abapgit_definitions=>c_dot_abapgit.
+    IF sy-subrc = 0.
+      ro_dot = zcl_abapgit_dot_abapgit=>deserialize( <ls_remote>-data ).
+      set_dot_abapgit( ro_dot ).
+      COMMIT WORK AND WAIT. " to release lock
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD set_dot_apack.
     get_dot_apack( ).
     mo_apack_reader->set_manifest_descriptor( io_dot_apack->get_manifest_descriptor( ) ).
@@ -521,9 +588,23 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     DATA lt_updated_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt.
     DATA li_exit TYPE REF TO zif_abapgit_exit.
+    DATA ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
+    DATA lt_items TYPE zif_abapgit_definitions=>ty_items_ts.
 
-    find_remote_dot_abapgit( ).
-    find_remote_dot_apack( ).
+    ls_checks = is_checks.
+
+    IF zcl_abapgit_dot_abapgit_local=>is_active( me ) = abap_true AND ls_checks-marker_checked = abap_false.
+      " not called by the pull, check the marker file before the ZIP changes anything
+      lt_items = zcl_abapgit_dot_abapgit_local=>check_pull( me ).
+      zcl_abapgit_dot_abapgit_local=>check_decided(
+        it_items     = lt_items
+        it_overwrite = ls_checks-overwrite ).
+      ls_checks-overwrite = zcl_abapgit_dot_abapgit_local=>filter_overwrite(
+        it_overwrite = ls_checks-overwrite
+        it_items     = lt_items ).
+    ENDIF.
+
+    find_remote_settings( ).
 
     check_write_protect( ).
     check_language( ).
@@ -544,14 +625,14 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     deserialize_objects(
       EXPORTING
-        is_checks = is_checks
+        is_checks = ls_checks
         ii_log    = ii_log
       CHANGING
         ct_files  = lt_updated_files ).
 
     deserialize_data(
       EXPORTING
-        is_checks = is_checks
+        is_checks = ls_checks
       CHANGING
         ct_files  = lt_updated_files ).
 
@@ -585,15 +666,28 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     DATA: lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
           lt_dependencies TYPE zif_abapgit_apack_definitions=>ty_dependencies.
+    DATA lt_items TYPE zif_abapgit_definitions=>ty_items_ts.
 
-    find_remote_dot_abapgit( ).
-    find_remote_dot_apack( ).
+    IF zcl_abapgit_dot_abapgit_local=>is_active( me ) = abap_true.
+      " a rejected ZIP must not change the repository settings
+      lt_items = zcl_abapgit_dot_abapgit_local=>check_pull( me ).
+    ENDIF.
+
+    find_remote_settings( ).
 
     check_write_protect( ).
     check_language( ).
     check_abap_language_version( ).
 
-    rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
+    rs_checks = zcl_abapgit_objects=>deserialize_checks(
+      ii_repo  = me
+      it_items = lt_items ).
+
+    IF zcl_abapgit_dot_abapgit_local=>is_active( me ) = abap_true.
+      zcl_abapgit_dot_abapgit_local=>check_decided(
+        it_items     = lt_items
+        it_overwrite = rs_checks-overwrite ).
+    ENDIF.
 
     lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
     rs_checks-requirements-met = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements ).
@@ -615,21 +709,16 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     DATA lt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt.
 
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote.
+    IF zcl_abapgit_dot_abapgit_local=>is_active( me ) = abap_true.
+      " the repository settings change only in a pull after the check of the marker file
+      RETURN.
+    ENDIF.
 
     " Use the filtered file list so exclude_remote_paths in local settings
     " can pin a repo-specific local .abapgit.xml against the remote root dot
     lt_remote = get_files_remote( ).
 
-    READ TABLE lt_remote ASSIGNING <ls_remote>
-      WITH KEY file_path
-      COMPONENTS path     = zif_abapgit_definitions=>c_root_dir
-                 filename = zif_abapgit_definitions=>c_dot_abapgit.
-    IF sy-subrc = 0.
-      ro_dot = zcl_abapgit_dot_abapgit=>deserialize( <ls_remote>-data ).
-      set_dot_abapgit( ro_dot ).
-      COMMIT WORK AND WAIT. " to release lock
-    ENDIF.
+    ro_dot = set_remote_dot_abapgit( lt_remote ).
 
   ENDMETHOD.
 
@@ -849,8 +938,69 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~refresh_local_objects.
 
-    mv_request_local_refresh = abap_true.
-    get_files_local( ).
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lt_items TYPE zif_abapgit_definitions=>ty_items_ts.
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lt_files TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_data TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
+    DATA li_log TYPE REF TO zif_abapgit_log.
+    DATA lv_index TYPE i.
+
+    FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
+    FIELD-SYMBOLS <ls_file> LIKE LINE OF mt_local.
+
+    IF ii_obj_filter IS NOT BOUND OR lines( mt_local ) = 0 OR mv_request_local_refresh = abap_true.
+      mv_request_local_refresh = abap_true.
+      get_files_local( ).
+      RETURN.
+    ENDIF.
+
+    lt_filter = ii_obj_filter->get_filter( ).
+    IF lt_filter IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    LOOP AT lt_filter ASSIGNING <ls_filter>.
+      ls_item-obj_type = <ls_filter>-object.
+      ls_item-obj_name = <ls_filter>-obj_name.
+      INSERT ls_item INTO TABLE lt_items.
+    ENDLOOP.
+
+    " Same path as get_files_local, so the files of the objects pass the same exit and exclusions.
+    " The exit gets the data files from the cache, the tables are not read again
+    LOOP AT mt_local ASSIGNING <ls_file> WHERE file-path = zif_abapgit_data_config=>c_default_path.
+      APPEND <ls_file> TO lt_data.
+    ENDLOOP.
+
+    CREATE OBJECT lo_serialize
+      EXPORTING
+        io_dot_abapgit    = get_dot_abapgit( )
+        is_local_settings = get_local_settings( ).
+
+    lt_files = lo_serialize->files_local(
+      iv_package    = get_package( )
+      ii_log        = li_log
+      it_filter     = lt_filter
+      it_data_files = lt_data ).
+    remove_locally_excluded_files( CHANGING ct_loc_files = lt_files ).
+
+    LOOP AT mt_local ASSIGNING <ls_file>.
+      lv_index = sy-tabix.
+      READ TABLE lt_items TRANSPORTING NO FIELDS
+        WITH TABLE KEY obj_type = <ls_file>-item-obj_type obj_name = <ls_file>-item-obj_name.
+      IF sy-subrc = 0.
+        DELETE mt_local INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
+
+    LOOP AT lt_files ASSIGNING <ls_file>.
+      READ TABLE lt_items TRANSPORTING NO FIELDS
+        WITH TABLE KEY obj_type = <ls_file>-item-obj_type obj_name = <ls_file>-item-obj_name.
+      IF sy-subrc = 0.
+        APPEND <ls_file> TO mt_local.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
