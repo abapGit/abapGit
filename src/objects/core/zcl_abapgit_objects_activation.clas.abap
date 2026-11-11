@@ -4,6 +4,9 @@ CLASS zcl_abapgit_objects_activation DEFINITION
 
   PUBLIC SECTION.
 
+    TYPES:
+      ty_ddls TYPE STANDARD TABLE OF sobj_name WITH DEFAULT KEY .
+
     CLASS-METHODS add
       IMPORTING
         !iv_type       TYPE trobjtype
@@ -24,6 +27,10 @@ CLASS zcl_abapgit_objects_activation DEFINITION
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS clear .
+    CLASS-METHODS update_where_used_ddls
+      IMPORTING
+        !it_ddls TYPE ty_ddls
+        !ii_log  TYPE REF TO zif_abapgit_log OPTIONAL .
     CLASS-METHODS is_ddic_type
       IMPORTING
         !iv_obj_type     TYPE trobjtype
@@ -65,6 +72,8 @@ CLASS zcl_abapgit_objects_activation DEFINITION
       gt_classes TYPE STANDARD TABLE OF ty_classes WITH DEFAULT KEY .
     CLASS-DATA:
       gt_objects TYPE TABLE OF dwinactiv .
+    CLASS-DATA:
+      gt_ddls TYPE ty_ddls .
 
     CLASS-METHODS update_where_used
       IMPORTING
@@ -368,6 +377,11 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
       <ls_object>-delet_flag = iv_delete.
     ENDIF.
 
+    " Mass activation does not write the DDLS where-used index (DDLS_RIS_INDEX)
+    IF iv_type = 'DDLS'.
+      APPEND iv_name TO gt_ddls.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -469,6 +483,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
   METHOD clear.
     CLEAR gt_objects.
     CLEAR gt_classes.
+    CLEAR gt_ddls.
   ENDMETHOD.
 
 
@@ -635,6 +650,63 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
           is_item = ls_item ).
       ENDIF.
     ENDLOOP.
+
+    update_where_used_ddls(
+      it_ddls = gt_ddls
+      ii_log  = ii_log ).
+    CLEAR gt_ddls.
+
+  ENDMETHOD.
+
+
+  METHOD update_where_used_ddls.
+
+    " Same call as the after-import program SAPRSEUT (form handle_index_for_ddl_sources).
+    " Handles created, changed and deleted DDLS.
+    " Dynamic, since the DDLS RIS index does not exist on every release.
+    DATA: lt_ddls  TYPE ty_ddls,
+          lr_names TYPE REF TO data,
+          lv_name  TYPE sobj_name,
+          lx_error TYPE REF TO cx_root.
+
+    FIELD-SYMBOLS: <lt_names>   TYPE STANDARD TABLE,
+                   <ls_name>    TYPE any,
+                   <lv_ddlname> TYPE any.
+
+    IF it_ddls IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    TRY.
+        CREATE DATA lr_names TYPE ('IF_DD_DDL_TYPES=>TY_T_DDLNAMES').
+      CATCH cx_sy_create_data_error.
+        RETURN.
+    ENDTRY.
+    ASSIGN lr_names->* TO <lt_names>.
+
+    lt_ddls = it_ddls.
+    SORT lt_ddls.
+    DELETE ADJACENT DUPLICATES FROM lt_ddls.
+    LOOP AT lt_ddls INTO lv_name.
+      APPEND INITIAL LINE TO <lt_names> ASSIGNING <ls_name>.
+      ASSIGN COMPONENT 'DDLNAME' OF STRUCTURE <ls_name> TO <lv_ddlname>.
+      IF sy-subrc = 0.
+        <lv_ddlname> = lv_name.
+      ENDIF.
+    ENDLOOP.
+
+    TRY.
+        CALL METHOD ('CL_WB_DDLS_RIS_INDEXER')=>('UPDATE_INDEX_FOR_MULTIPLE_DDLS')
+          EXPORTING
+            ddl_names = <lt_names>.
+      CATCH cx_sy_dyn_call_error.
+        " Index API not available on this release
+        RETURN.
+      CATCH cx_root INTO lx_error.
+        IF ii_log IS BOUND.
+          ii_log->add_warning( |Error updating where-used list for DDL sources: { lx_error->get_text( ) }| ).
+        ENDIF.
+    ENDTRY.
 
   ENDMETHOD.
 
