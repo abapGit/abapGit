@@ -222,6 +222,7 @@ CLASS zcl_abapgit_objects_program DEFINITION
         !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
         !it_source  TYPE abaptxt255_tab
         !iv_title   TYPE repti
+        !iv_package TYPE devclass
         !iv_state   TYPE progdir-state DEFAULT c_state-inactive
       RAISING
         zcx_abapgit_exception .
@@ -662,6 +663,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         is_progdir = is_progdir
         it_source  = it_source
         iv_title   = lv_title
+        iv_package = iv_package
         iv_state   = c_state-off ).
     ELSE.
       insert_program(
@@ -706,7 +708,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       update_program(
         is_progdir = is_progdir
         it_source  = it_source
-        iv_title   = lv_title ).
+        iv_title   = lv_title
+        iv_package = iv_package ).
     ELSE.
       insert_program(
         is_progdir = is_progdir
@@ -1618,18 +1621,24 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     zcl_abapgit_language=>set_current_language( mv_language ).
 
-    CALL FUNCTION 'RPY_INCLUDE_UPDATE'
+    " There are bugs in RPY_INCLUDE_UPDATE: The workarea isn't updated correctly and there is a
+    " performance issue when updating program index esp. for maintenance function groups.
+    " We therefore switched to RPY_PROGRAM_UPDATE which does not have these problems.
+
+    CALL FUNCTION 'RPY_PROGRAM_UPDATE'
       EXPORTING
-        include_name     = is_progdir-name
-        title_string     = iv_title
-        save_inactive    = iv_state
+        development_class = iv_package
+        program_name      = is_progdir-name
+        program_type      = is_progdir-subc
+        title_string      = iv_title
+        save_inactive     = iv_state
       TABLES
-        source_extended  = it_source
+        source_extended   = it_source
       EXCEPTIONS
-        not_found        = 1
-        cancelled        = 2
-        permission_error = 3
-        OTHERS           = 4.
+        not_found         = 1
+        cancelled         = 2
+        permission_error  = 3
+        OTHERS            = 4.
 
     IF sy-subrc <> 0.
       zcl_abapgit_language=>restore_login_language( ).
