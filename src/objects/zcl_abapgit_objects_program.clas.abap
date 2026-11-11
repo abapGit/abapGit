@@ -1386,13 +1386,14 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     zcl_abapgit_language=>set_current_language( mv_language ).
 
+    " Active source is read below
     CALL FUNCTION 'RPY_PROGRAM_READ'
       EXPORTING
         program_name     = lv_program_name
         with_includelist = abap_false
         with_lowercase   = abap_true
+        only_texts       = abap_true
       TABLES
-        source_extended  = lt_source
         textelements     = lt_tpool
       EXCEPTIONS
         cancelled        = 1
@@ -1415,13 +1416,9 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     " Therefore, explicitly request active source code
     li_report = zcl_abapgit_factory=>get_sap_report( ).
 
-    TRY.
-        lt_source = li_report->read_report(
-          iv_name  = lv_program_name
-          iv_state = c_state-active ).
-      CATCH zcx_abapgit_exception ##NO_HANDLER.
-        " No active source, keep the result of RPY_PROGRAM_READ
-    ENDTRY.
+    lt_source = li_report->read_report(
+      iv_name  = lv_program_name
+      iv_state = c_state-active ).
 
     ls_progdir = li_report->read_progdir(
       iv_name  = lv_program_name
