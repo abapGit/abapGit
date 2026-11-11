@@ -228,6 +228,7 @@ CLASS lcl_continue_repo DEFINITION FINAL INHERITING FROM zcl_abapgit_repo.
     DATA mv_pushes TYPE i.
     INTERFACES zif_abapgit_repo_online.
     METHODS zif_abapgit_repo~get_files_local REDEFINITION.
+    METHODS zif_abapgit_repo~get_files_local_filtered REDEFINITION.
     METHODS zif_abapgit_repo~get_files_remote REDEFINITION.
     METHODS zif_abapgit_repo~find_remote_dot_abapgit REDEFINITION.
 ENDCLASS.
@@ -357,6 +358,11 @@ CLASS lcl_continue_repo IMPLEMENTATION.
       |unchanged\nfirst new\nsecond new\n| ).
     ls_file-file-sha1 = zcl_abapgit_hash=>sha1_blob( ls_file-file-data ).
     APPEND ls_file TO rt_files.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~get_files_local_filtered.
+    " The patch page's constructor calls the inherited get_files_and_status, which asks for
+    " the filtered files; the real method would serialize the repository package ($TMP)
+    rt_files = zif_abapgit_repo~get_files_local( ).
   ENDMETHOD.
   METHOD zif_abapgit_repo~get_files_remote.
     DATA ls_file LIKE LINE OF rt_files.
