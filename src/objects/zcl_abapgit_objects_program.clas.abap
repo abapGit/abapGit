@@ -658,6 +658,14 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       AND r3state = c_state-active.
 
     IF sy-subrc = 0.
+      " update_program skips RS_CORR_INSERT in RPY_INCLUDE_UPDATE, so record the include here
+      " the same way, without a package (it belongs to the SAP exit function group)
+      zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
+        iv_object   = 'ABAP'
+        iv_obj_name = is_progdir-name
+        iv_package  = ''
+        iv_language = mv_language ).
+
       update_program(
         is_progdir = is_progdir
         it_source  = it_source
@@ -1616,13 +1624,24 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD update_program.
 
+    DATA lt_source_old TYPE abaptxt255_tab.
+
     zcl_abapgit_language=>set_current_language( mv_language ).
+
+    " RPY_INCLUDE_UPDATE updates the navigation index with an empty old source, so every INCLUDE
+    " statement counts as new and is analyzed recursively. For table maintenance function groups
+    " this rewrites RSEUINC for the whole LSVIM* include tree (#7974). Skip that (temporary)
+    " and update the index with the real old source below. The transport entry is written by the callers.
+    " Read the old source before the update: exit includes are saved active, so afterwards
+    " the active version is already the new one.
+    READ REPORT is_progdir-name INTO lt_source_old STATE c_state-active.
 
     CALL FUNCTION 'RPY_INCLUDE_UPDATE'
       EXPORTING
         include_name     = is_progdir-name
         title_string     = iv_title
         save_inactive    = iv_state
+        temporary        = abap_true
       TABLES
         source_extended  = it_source
       EXCEPTIONS
@@ -1646,6 +1665,14 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       ELSE.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
+    ELSE.
+      CALL FUNCTION 'RS_PROGRAM_INDEX_DELTA'
+        EXPORTING
+          include_name = is_progdir-name
+          include_type = is_progdir-subc
+        TABLES
+          source_new   = it_source
+          source_old   = lt_source_old.
     ENDIF.
 
     zcl_abapgit_language=>restore_login_language( ).
