@@ -205,6 +205,13 @@ INTERFACE zif_abapgit_exit PUBLIC.
     CHANGING
       !ct_files   TYPE zif_abapgit_definitions=>ty_files_item_tt.
 
+  METHODS validate_before_pull
+    IMPORTING
+      !ii_repo   TYPE REF TO zif_abapgit_repo
+      !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks OPTIONAL
+    RAISING
+      zcx_abapgit_exception.
+
   METHODS validate_before_push
     IMPORTING
       !is_comment     TYPE zif_abapgit_git_definitions=>ty_comment

@@ -69,6 +69,7 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
       BEGIN OF ty_result_view,
         kind     TYPE zif_abapgit_code_inspector=>ty_result-kind,
         obj_type TYPE zif_abapgit_code_inspector=>ty_result-objtype,
+        obj_name TYPE zif_abapgit_code_inspector=>ty_result-objname,
         location TYPE string,
         text     TYPE string,
         nav      TYPE string,
@@ -193,6 +194,7 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
       APPEND INITIAL LINE TO rt_view ASSIGNING <ls_v>.
       <ls_v>-kind     = <ls_r>-kind.
       <ls_v>-obj_type = <ls_r>-objtype.
+      <ls_v>-obj_name = <ls_r>-objname.
       <ls_v>-nav      = build_nav_link( <ls_r> ).
       <ls_v>-text     = <ls_r>-text.
       <ls_v>-author   = <ls_r>-author.
@@ -429,8 +431,11 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
         iv_column_id    = 'obj_type'
         iv_column_title = 'Type'
       )->define_column(
+        iv_column_id    = 'obj_name'
+        iv_column_title = 'Name'
+      )->define_column(
         iv_column_id    = 'location'
-        iv_column_title = 'Obj. name / location'
+        iv_column_title = 'Location'
       )->define_column(
         iv_column_id    = 'author'
         iv_column_title = 'Changed by'
@@ -588,6 +593,10 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
         rs_render-content = |<span>{ <ls_item>-kind }</span>|.
       WHEN 'obj_type'.
         rs_render-content = <ls_item>-obj_type.
+      WHEN 'obj_name'.
+        rs_render-content = zcl_abapgit_gui_chunk_lib=>get_item_link(
+          iv_obj_type = <ls_item>-obj_type
+          iv_obj_name = <ls_item>-obj_name ).
       WHEN 'location'.
         rs_render-content = zcl_abapgit_html=>create( )->a(
           iv_txt = <ls_item>-location

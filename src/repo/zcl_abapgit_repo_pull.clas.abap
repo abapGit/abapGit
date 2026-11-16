@@ -129,6 +129,11 @@ CLASS zcl_abapgit_repo_pull IMPLEMENTATION.
       ri_log = mi_repo->create_new_log( 'Pull Log' ).
     ENDIF.
 
+    " the system might have changed while the decision popup was open
+    zcl_abapgit_exit=>get_instance( )->validate_before_pull(
+      ii_repo   = mi_repo
+      is_checks = is_checks ).
+
     " pass decisions to delete
     delete_objects(
       is_checks = is_checks
