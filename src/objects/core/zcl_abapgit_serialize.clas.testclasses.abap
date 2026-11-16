@@ -276,6 +276,9 @@ CLASS ltd_exit IMPLEMENTATION.
   METHOD zif_abapgit_exit~validate_after_push.
   ENDMETHOD.
 
+  METHOD zif_abapgit_exit~validate_before_pull.
+  ENDMETHOD.
+
   METHOD zif_abapgit_exit~wall_message_list.
   ENDMETHOD.
 
