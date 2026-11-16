@@ -85,9 +85,11 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
     lt_files = mo_files->get_files( ).
 
+    lv_filename = build_filename( iv_filename ).
+
     READ TABLE lt_files ASSIGNING <ls_file>
         WITH KEY file
-        COMPONENTS filename = iv_filename.
+        COMPONENTS filename = lv_filename.
     IF sy-subrc <> 0.
       " Fallback to getting file name from URL
       lv_filename = build_filename( get_filename( iv_url ) ).
