@@ -192,8 +192,8 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
 
     DATA: lx_root TYPE REF TO cx_root.
 
-    lr_structdescr ?= cl_abap_typedescr=>describe_by_name( p_name = '/AIF/T_FINF' ).
-    lr_tabledescr = cl_abap_tabledescr=>create( p_line_type = lr_structdescr ).
+    lr_structdescr ?= cl_abap_typedescr=>describe_by_name( '/AIF/T_FINF' ).
+    lr_tabledescr = cl_abap_tabledescr=>create( lr_structdescr ).
 
     CREATE DATA lr_table TYPE HANDLE lr_tabledescr.
     ASSIGN lr_table->* TO <lt_table>.
@@ -383,8 +383,8 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
           ENDTRY.
 
           CLEAR lr_tabledescr.
-          lr_structdescr ?= cl_abap_typedescr=>describe_by_name( p_name = lr_content->tabname ).
-          lr_tabledescr = cl_abap_tabledescr=>create( p_line_type = lr_structdescr ).
+          lr_structdescr ?= cl_abap_typedescr=>describe_by_name( lr_content->tabname ).
+          lr_tabledescr = cl_abap_tabledescr=>create( lr_structdescr ).
 
           CREATE DATA lr_table TYPE HANDLE lr_tabledescr.
           ASSIGN lr_table->* TO <lt_table>.
