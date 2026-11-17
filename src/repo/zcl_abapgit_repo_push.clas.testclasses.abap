@@ -106,6 +106,8 @@ CLASS ltd_exit IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_exit~serialize_postprocess.
   ENDMETHOD.
+  METHOD zif_abapgit_exit~validate_before_pull.
+  ENDMETHOD.
   METHOD zif_abapgit_exit~wall_message_list.
   ENDMETHOD.
   METHOD zif_abapgit_exit~wall_message_repo.
