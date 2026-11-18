@@ -235,7 +235,7 @@ CLASS zcl_abapgit_diff_diff3 IMPLEMENTATION.
       ELSEIF lv_literal IS INITIAL AND lv_char = '"' AND iv_ignore_comments = abap_true.
         EXIT.
       ELSEIF lv_literal IS INITIAL AND iv_ignore_case = abap_true.
-        TRANSLATE lv_char TO UPPER CASE.
+        lv_char = to_upper( lv_char ).
       ENDIF.
 
       rv_line = rv_line && lv_char.
