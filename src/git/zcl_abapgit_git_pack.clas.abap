@@ -250,7 +250,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
       IF lv_type = zif_abapgit_git_definitions=>c_type-ref_d.
         ls_object-sha1 = lv_ref_delta.
-        TRANSLATE ls_object-sha1 TO LOWER CASE.
+        ls_object-sha1 = to_lower( ls_object-sha1 ).
       ELSE.
         ls_object-sha1 = zcl_abapgit_hash=>sha1(
           iv_type = lv_type
@@ -443,7 +443,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       lv_offset = lv_match + 1.
       ls_node-name = lv_name.
       ls_node-sha1 = iv_data+lv_offset(lc_sha_length).
-      TRANSLATE ls_node-sha1 TO LOWER CASE.
+      ls_node-sha1 = to_lower( ls_node-sha1 ).
       APPEND ls_node TO rt_nodes.
 
       lv_cursor = lv_match + 1 + lc_sha_length.
@@ -516,7 +516,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
 
     lv_tree_lower = is_commit-tree.
-    TRANSLATE lv_tree_lower TO LOWER CASE.
+    lv_tree_lower = to_lower( lv_tree_lower ).
 
     lv_string = ''.
 
@@ -525,7 +525,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
     IF NOT is_commit-parent IS INITIAL.
       lv_parent_lower = is_commit-parent.
-      TRANSLATE lv_parent_lower TO LOWER CASE.
+      lv_parent_lower = to_lower( lv_parent_lower ).
 
       CONCATENATE 'parent' lv_parent_lower
         INTO lv_tmp SEPARATED BY space.
@@ -534,7 +534,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
     IF NOT is_commit-parent2 IS INITIAL.
       lv_parent_lower = is_commit-parent2.
-      TRANSLATE lv_parent_lower TO LOWER CASE.
+      lv_parent_lower = to_lower( lv_parent_lower ).
 
       CONCATENATE 'parent' lv_parent_lower
         INTO lv_tmp SEPARATED BY space.
