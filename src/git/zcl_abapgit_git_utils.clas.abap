@@ -61,7 +61,7 @@ CLASS zcl_abapgit_git_utils IMPLEMENTATION.
       iv_data   = lv_xstring
       iv_length = 4 ).
 
-    TRANSLATE lv_char4 TO UPPER CASE.
+    lv_char4 = to_upper( lv_char4 ).
     lv_x = lv_char4.
     rv_len = lv_x.
 

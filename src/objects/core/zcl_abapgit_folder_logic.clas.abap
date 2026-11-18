@@ -160,7 +160,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
         ENDIF.
 
         TRANSLATE lv_path USING '/#'.
-        TRANSLATE lv_path TO LOWER CASE.
+        lv_path = to_lower( lv_path ).
         CONCATENATE lv_path '/' INTO lv_path.
 
         rv_path = package_to_path( iv_top     = iv_top
@@ -246,7 +246,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
           zcx_abapgit_exception=>raise( |Invalid folder logic: { lv_folder_logic }| ).
       ENDCASE.
 
-      TRANSLATE lv_absolute_name TO UPPER CASE.
+      lv_absolute_name = to_upper( lv_absolute_name ).
 
       IF strlen( lv_absolute_name ) > 30.
         zcx_abapgit_exception=>raise( |Package { lv_absolute_name } exceeds ABAP 30-characters name limit| ).

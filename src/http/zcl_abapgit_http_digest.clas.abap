@@ -103,7 +103,7 @@ CLASS ZCL_ABAPGIT_HTTP_DIGEST IMPLEMENTATION.
     ENDTRY.
 
     rv_hash = lv_hash.
-    TRANSLATE rv_hash TO LOWER CASE.
+    rv_hash = to_lower( rv_hash ).
 
   ENDMETHOD.
 
