@@ -383,6 +383,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
       lv_changed_by = zcl_abapgit_stage_changed_by=>get_name(
         it_changed_by = lt_changed_by
         is_item       = <ls_local>-item
+        iv_path       = <ls_local>-file-path
         iv_filename   = <ls_local>-file-filename ).
 
       READ TABLE lt_transports INTO ls_transport WITH KEY
@@ -447,6 +448,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
           lv_changed_by = zcl_abapgit_stage_changed_by=>get_name(
             it_changed_by = lt_changed_by
             is_item       = ls_item_remote
+            iv_path       = <ls_remote>-path
             iv_filename   = <ls_remote>-filename ).
         CATCH zcx_abapgit_exception.
           CLEAR: ls_transport, lv_changed_by.

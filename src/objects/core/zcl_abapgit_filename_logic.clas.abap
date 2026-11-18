@@ -399,7 +399,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     ENDIF.
 
     IF lv_keep_case = abap_false. " The default behavior is to lowercase all filenames
-      TRANSLATE rv_filename TO LOWER CASE.
+      rv_filename = to_lower( rv_filename ).
     ENDIF.
 
   ENDMETHOD.

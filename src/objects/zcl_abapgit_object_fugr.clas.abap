@@ -600,14 +600,15 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       ORDER BY funcname.                                  "#EC CI_SUBRC
 
     LOOP AT lt_enlfdir ASSIGNING <ls_enlfdir>.
-      TRANSLATE <ls_enlfdir>-funcname TO UPPER CASE.
+      <ls_enlfdir>-funcname = to_upper( <ls_enlfdir>-funcname ).
     ENDLOOP.
 
     SORT lt_enlfdir BY funcname ASCENDING.
 
     "Remove anything not in FM attributes table
     LOOP AT rt_functab ASSIGNING <ls_functab>.
-      TRANSLATE <ls_functab> TO UPPER CASE.
+      <ls_functab>-funcname = to_upper( <ls_functab>-funcname ).
+      <ls_functab>-include = to_upper( <ls_functab>-include ).
       lv_index = sy-tabix.
       READ TABLE lt_enlfdir WITH KEY funcname = <ls_functab>-funcname TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
