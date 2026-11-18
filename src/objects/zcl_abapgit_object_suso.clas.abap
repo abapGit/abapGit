@@ -287,7 +287,7 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
 
     SELECT SINGLE tabname FROM dd02l INTO lv_tabname WHERE tabname = c_abap_language_table. "#EC CI_NOORDER
     IF sy-subrc = 0.
-      lr_structdescr ?= cl_abap_typedescr=>describe_by_name( p_name = c_abap_language_table ).
+      lr_structdescr ?= cl_abap_typedescr=>describe_by_name( c_abap_language_table ).
       CREATE DATA lr_tobj_attr TYPE HANDLE lr_structdescr.
       ASSIGN lr_tobj_attr->* TO <ls_tobj_attr>.
 

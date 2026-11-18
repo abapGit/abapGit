@@ -163,6 +163,7 @@ CLASS ltcl_changed_by DEFINITION FOR TESTING RISK LEVEL HARMLESS
     METHODS remote_without_transport FOR TESTING.
     METHODS remote_users_from_transport FOR TESTING.
     METHODS read_owner_once_per_transport FOR TESTING.
+    METHODS moved_object_in_two_folders FOR TESTING.
 
 ENDCLASS.
 
@@ -305,6 +306,55 @@ CLASS ltcl_changed_by IMPLEMENTATION.
     assert_user( it_users    = lt_users
                  iv_filename = 'zcl_mine_deleted.clas.testclasses.abap'
                  iv_user     = c_me ).
+
+  ENDMETHOD.
+
+  METHOD moved_object_in_two_folders.
+
+    DATA lt_changed_by TYPE zcl_abapgit_stage_changed_by=>ty_changed_by_tt.
+    DATA lt_transports TYPE zif_abapgit_cts_api=>ty_transport_list.
+    DATA ls_files TYPE zif_abapgit_definitions=>ty_stage_files.
+    DATA ls_local LIKE LINE OF ls_files-local.
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_name TYPE syuname.
+
+    " Moved to a subpackage: the old file is only remote and the new file,
+    " with the same name in another folder, is only local (#8011)
+    add_remote( 'zcl_moved.clas.abap' ).
+    ls_files-remote = mt_remote.
+
+    ls_local-item-obj_type = 'CLAS'.
+    ls_local-item-obj_name = 'ZCL_MOVED'.
+    ls_local-file-path     = '/src/sub/'.
+    ls_local-file-filename = 'zcl_moved.clas.abap'.
+    INSERT ls_local INTO TABLE ls_files-local.
+
+    mo_cts_api->add_lock( iv_obj_name = 'zcl_moved'
+                          iv_trkorr   = 'A4HK900001'
+                          iv_user     = c_me ).
+
+    lt_transports = zcl_abapgit_stage_changed_by=>find_transports(
+      it_files = ls_files
+      io_dot   = mo_dot ).
+    lt_changed_by = zcl_abapgit_stage_changed_by=>find_changed_by(
+      it_files      = ls_files
+      io_dot        = mo_dot
+      it_transports = lt_transports ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 2
+      act = lines( lt_changed_by ) ).
+
+    ls_item-obj_type = 'CLAS'.
+    ls_item-obj_name = 'ZCL_MOVED'.
+    lv_name = zcl_abapgit_stage_changed_by=>get_name(
+      it_changed_by = lt_changed_by
+      is_item       = ls_item
+      iv_path       = '/src/'
+      iv_filename   = 'zcl_moved.clas.abap' ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = c_me
+      act = lv_name ).
 
   ENDMETHOD.
 

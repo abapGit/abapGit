@@ -481,7 +481,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
     clear_fields( CHANGING cs_head  = ls_head
                            ct_nodes = lt_nodes ).
 
-    SORT lt_titles BY id.
+    SORT lt_titles BY id spras.
     DELETE ADJACENT DUPLICATES FROM lt_titles COMPARING spras id.
 
     SORT lt_texts BY spras node_id.
