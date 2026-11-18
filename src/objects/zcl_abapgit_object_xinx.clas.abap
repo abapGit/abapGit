@@ -171,7 +171,8 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
       IMPORTING
         protname    = lv_protname
       EXCEPTIONS
-        input_error = 0.
+        input_error = 0
+        OTHERS      = 1.
 
     PERFORM logdelete IN PROGRAM rddu0001 USING lv_protname.
 

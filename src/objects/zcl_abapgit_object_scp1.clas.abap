@@ -133,7 +133,8 @@ CLASS zcl_abapgit_object_scp1 IMPLEMENTATION.
         profids                  = lt_fatherprofiles
       EXCEPTIONS
         error_in_transport_layer = 1
-        user_abort               = 2.
+        user_abort               = 2
+        OTHERS                   = 3.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |error while deleting SCP1 - TRANSPORT, { sy-subrc }| ).
     ENDIF.
@@ -145,7 +146,8 @@ CLASS zcl_abapgit_object_scp1 IMPLEMENTATION.
       TABLES
         fatherprofs = lt_fatherprofiles
       EXCEPTIONS
-        user_abort  = 1.
+        user_abort  = 1
+        OTHERS      = 2.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |error while deleting SCP1 - DB_DELETE, { sy-subrc }| ).
     ENDIF.
