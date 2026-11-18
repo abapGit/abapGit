@@ -1444,8 +1444,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
               iv_token = lv_right
               iv_offset = ls_token-offset ).
           ENDIF.
-          TRANSLATE ls_dd05m-fortable TO UPPER CASE.
-          TRANSLATE ls_dd05m-forkey TO UPPER CASE.
+          ls_dd05m-fortable = to_upper( ls_dd05m-fortable ).
+          ls_dd05m-forkey = to_upper( ls_dd05m-forkey ).
         ENDIF.
         CLEAR lv_primpos.
         LOOP AT cs_data-dd05m TRANSPORTING NO FIELDS WHERE fieldname = iv_fieldname.
@@ -1523,8 +1523,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
               iv_token = lv_right
               iv_offset = ls_token-offset ).
           ENDIF.
-          TRANSLATE ls_dd36m-shtable TO UPPER CASE.
-          TRANSLATE ls_dd36m-shfield TO UPPER CASE.
+          ls_dd36m-shtable = to_upper( ls_dd36m-shtable ).
+          ls_dd36m-shfield = to_upper( ls_dd36m-shfield ).
         ENDIF.
         CLEAR lv_position.
         LOOP AT cs_data-dd36m TRANSPORTING NO FIELDS WHERE fieldname = iv_fieldname.

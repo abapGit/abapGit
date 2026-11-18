@@ -180,7 +180,7 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
       CASE sy-tabix.
         WHEN 1.
           rs_version-prerelase = lv_segment.
-          TRANSLATE rs_version-prerelase TO LOWER CASE.
+          rs_version-prerelase = to_lower( rs_version-prerelase ).
         WHEN 2.
           rs_version-prerelase_patch = lv_segment.
       ENDCASE.
