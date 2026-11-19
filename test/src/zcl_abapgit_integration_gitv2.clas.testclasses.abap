@@ -17,7 +17,7 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD setup.
     DATA lt_deps TYPE if_function_test_environment=>tt_function_dependencies.
 
-    INSERT 'SAPGUI_PROGRESS_INDICATOR' INTO TABLE lt_deps.
+    APPEND 'SAPGUI_PROGRESS_INDICATOR' TO lt_deps.
     mi_env = cl_function_test_environment=>create( lt_deps ).
 
     mi_env->get_double( 'SAPGUI_PROGRESS_INDICATOR' )->configure_call( )->ignore_all_parameters( )->then_answer( me ).

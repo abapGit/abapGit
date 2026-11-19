@@ -23,14 +23,14 @@ CLASS zcl_abapgit_inject_fm IMPLEMENTATION.
     DATA lo_dtel_put_handler TYPE REF TO zcl_abapgit_fm_ddif_dtel_put.
 
 
-    INSERT 'ENQUEUE_EZABAPGIT' INTO TABLE lt_deps.
-    INSERT 'DEQUEUE_EZABAPGIT' INTO TABLE lt_deps.
-    INSERT 'SAPGUI_PROGRESS_INDICATOR' INTO TABLE lt_deps.
-    INSERT 'TR_OBJECT_TABLE' INTO TABLE lt_deps.
-    INSERT 'SEO_INTERFACE_IMPLEM_GET_ALL' INTO TABLE lt_deps.
-    INSERT 'DDIF_DOMA_PUT' INTO TABLE lt_deps.
-    INSERT 'DDIF_DOMA_GET' INTO TABLE lt_deps.
-    INSERT 'DDIF_DTEL_PUT' INTO TABLE lt_deps.
+    APPEND 'ENQUEUE_EZABAPGIT' TO lt_deps.
+    APPEND 'DEQUEUE_EZABAPGIT' TO lt_deps.
+    APPEND 'SAPGUI_PROGRESS_INDICATOR' TO lt_deps.
+    APPEND 'TR_OBJECT_TABLE' TO lt_deps.
+    APPEND 'SEO_INTERFACE_IMPLEM_GET_ALL' TO lt_deps.
+    APPEND 'DDIF_DOMA_PUT' TO lt_deps.
+    APPEND 'DDIF_DOMA_GET' TO lt_deps.
+    APPEND 'DDIF_DTEL_PUT' TO lt_deps.
     gi_env = cl_function_test_environment=>create( lt_deps ).
 
     CREATE OBJECT lo_handler.
