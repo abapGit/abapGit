@@ -186,7 +186,9 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
     rv_filename = |{ is_trkorr-trkorr }_{ is_trkorr-as4text }_{ mv_timestamp }{ c_zip_ext }|.
 
     " Remove reserved characters (for Windows based systems)
-    TRANSLATE rv_filename USING '/ \ : " * > < ? | '.
+    rv_filename = translate( val  = rv_filename
+                             from = `/\:"*><?|`
+                             to   = `         ` ).
 
     rv_filename = |{ mv_full_folder }{ mv_separator }{ rv_filename }|.
 

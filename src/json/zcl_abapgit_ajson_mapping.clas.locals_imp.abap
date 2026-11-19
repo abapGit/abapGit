@@ -219,8 +219,10 @@ CLASS lcl_mapping_camel IMPLEMENTATION. "DEPRECATED
 
     REPLACE ALL OCCURRENCES OF `__` IN rv_result WITH `*`.
 
-    TRANSLATE rv_result TO LOWER CASE.
-    TRANSLATE rv_result USING `/_:_~_`.
+    rv_result = to_lower( rv_result ).
+    rv_result = translate( val  = rv_result
+                           from = `/:~`
+                           to   = `___` ).
 
     IF mv_first_json_upper = abap_true.
       lv_from = 1.
@@ -230,7 +232,7 @@ CLASS lcl_mapping_camel IMPLEMENTATION. "DEPRECATED
 
     SPLIT rv_result AT `_` INTO TABLE lt_tokens.
     LOOP AT lt_tokens ASSIGNING <token> FROM lv_from.
-      TRANSLATE <token>(1) TO UPPER CASE.
+      <token>(1) = to_upper( <token>(1) ).
     ENDLOOP.
 
     CONCATENATE LINES OF lt_tokens INTO rv_result.
@@ -322,7 +324,7 @@ CLASS lcl_to_camel IMPLEMENTATION.
     SPLIT cv_name AT `_` INTO TABLE lt_tokens.
     DELETE lt_tokens WHERE table_line IS INITIAL.
     LOOP AT lt_tokens ASSIGNING <token> FROM lv_from.
-      TRANSLATE <token>+0(1) TO UPPER CASE.
+      <token>+0(1) = to_upper( <token>+0(1) ).
     ENDLOOP.
 
     CONCATENATE LINES OF lt_tokens INTO cv_name.
