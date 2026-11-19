@@ -123,7 +123,9 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
 
     " In lower releases, INSERT REPORT does not support setting ABAP Language version (VERSION)
     " Therefore, update the flag directly
-    UPDATE progdir SET uccheck = iv_version WHERE name = iv_name AND state = iv_state.
+    IF iv_version IS SUPPLIED.
+      UPDATE progdir SET uccheck = iv_version WHERE name = iv_name AND state = iv_state.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -182,6 +184,26 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error reading report { iv_name }| ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_sap_report~read_textpool.
+
+    ASSERT iv_state CA ' AI'.
+
+    authorization_check(
+      iv_mode = 'SHOW'
+      is_item = is_item ).
+
+    IF iv_state IS INITIAL.
+      READ TEXTPOOL iv_name INTO rt_textpool LANGUAGE iv_language.
+    ELSE.
+      READ TEXTPOOL iv_name INTO rt_textpool LANGUAGE iv_language STATE iv_state.
+    ENDIF.
+
+    " Ignore errors since some programs/includes don't have a textpool
+    ASSERT sy-subrc >= 0.
 
   ENDMETHOD.
 

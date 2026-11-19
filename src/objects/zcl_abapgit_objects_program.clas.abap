@@ -1387,36 +1387,6 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       lv_program_name = iv_program.
     ENDIF.
 
-    zcl_abapgit_language=>set_current_language( mv_language ).
-
-    " Active source is read below
-    CALL FUNCTION 'RPY_PROGRAM_READ'
-      EXPORTING
-        program_name     = lv_program_name
-        with_includelist = abap_false
-        with_lowercase   = abap_true
-        only_texts       = abap_true
-      TABLES
-        textelements     = lt_tpool
-      EXCEPTIONS
-        cancelled        = 1
-        not_found        = 2
-        permission_error = 3
-        OTHERS           = 4.
-
-    IF sy-subrc = 2.
-      zcl_abapgit_language=>restore_login_language( ).
-      RETURN.
-    ELSEIF sy-subrc <> 0.
-      zcl_abapgit_language=>restore_login_language( ).
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-    zcl_abapgit_language=>restore_login_language( ).
-
-    " RPY_PROGRAM_READ does not return the active code if an inactive version exists, and it ignores
-    " errors of READ REPORT (empty source after other programs were changed in the same session).
-    " Therefore, explicitly request active source code
     li_report = zcl_abapgit_factory=>get_sap_report( ).
 
     lt_source = li_report->read_report(
@@ -1426,6 +1396,11 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     ls_progdir = li_report->read_progdir(
       iv_name  = lv_program_name
       iv_state = c_state-active ).
+
+    lt_tpool = li_report->read_textpool(
+      iv_name     = lv_program_name
+      iv_language = mv_language
+      iv_state    = c_state-active ).
 
     clear_abap_language_version( CHANGING cv_abap_language_version = ls_progdir-uccheck ).
 
@@ -1613,12 +1588,18 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD update_program.
 
+    DATA lt_act_source TYPE TABLE OF abaptxt255.
+
+    " Get active source before update
+    IF iv_state IS NOT INITIAL.
+      lt_act_source = zcl_abapgit_factory=>get_sap_report( )->read_report( is_progdir-name ).
+    ENDIF.
+
     zcl_abapgit_language=>set_current_language( mv_language ).
 
     " There are bugs in RPY_INCLUDE_UPDATE: The workarea isn't updated correctly and there is a
     " performance issue when updating program index esp. for maintenance function groups.
-    " We therefore switched to RPY_PROGRAM_UPDATE which does not have these problems.
-
+    " We therefore use RPY_PROGRAM_UPDATE which does not have these problems.
     CALL FUNCTION 'RPY_PROGRAM_UPDATE'
       EXPORTING
         development_class = iv_package
@@ -1652,6 +1633,15 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     ENDIF.
 
     zcl_abapgit_language=>restore_login_language( ).
+
+    " Restore active source which was overwritten by RPY_PROGRAM_UPDATE
+    IF iv_state IS NOT INITIAL.
+      zcl_abapgit_factory=>get_sap_report( )->insert_report(
+        iv_name    = is_progdir-name
+        it_source  = lt_act_source
+        iv_package = iv_package
+        iv_state   = c_state-active ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
