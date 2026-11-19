@@ -1588,7 +1588,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD update_program.
 
-    DATA lt_act_source TYPE TABLE OF abaptxt255.
+    DATA lt_act_source TYPE abaptxt255_tab.
 
     " Get active source before update
     IF iv_state IS NOT INITIAL.
@@ -1610,9 +1610,9 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       TABLES
         source_extended   = it_source
       EXCEPTIONS
-        not_found         = 1
-        cancelled         = 2
-        permission_error  = 3
+        cancelled         = 1
+        permission_error  = 2
+        not_found         = 3
         OTHERS            = 4.
 
     IF sy-subrc <> 0.
