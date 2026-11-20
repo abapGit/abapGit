@@ -85,8 +85,8 @@
      <SHORT_TEXT>abapGit - Serialize Object</SHORT_TEXT>
      <IMPORT>
       <RSIMP>
-       <PARAMETER>IS_TADIR</PARAMETER>
-       <TYP>TADIR</TYP>
+       <PARAMETER>IV_OBJECTS</PARAMETER>
+       <TYP>XSTRING</TYP>
       </RSIMP>
       <RSIMP>
        <PARAMETER>IV_ABAP_LANGUAGE_VERS</PARAMETER>
@@ -95,14 +95,6 @@
       <RSIMP>
        <PARAMETER>IV_LANGUAGE</PARAMETER>
        <TYP>SY-LANGU</TYP>
-      </RSIMP>
-      <RSIMP>
-       <PARAMETER>IV_PATH</PARAMETER>
-       <TYP>STRING</TYP>
-      </RSIMP>
-      <RSIMP>
-       <PARAMETER>IV_MAIN_LANGUAGE_ONLY</PARAMETER>
-       <TYP>CHAR1</TYP>
       </RSIMP>
       <RSIMP>
        <PARAMETER>IV_SUPPRESS_PO_COMMENTS</PARAMETER>
@@ -122,19 +114,10 @@
        <PARAMETER>EV_RESULT</PARAMETER>
        <TYP>XSTRING</TYP>
       </RSEXP>
-      <RSEXP>
-       <PARAMETER>EV_PATH</PARAMETER>
-       <TYP>STRING</TYP>
-      </RSEXP>
      </EXPORT>
-     <EXCEPTION>
-      <RSEXC>
-       <EXCEPTION>ERROR</EXCEPTION>
-      </RSEXC>
-     </EXCEPTION>
      <DOCUMENTATION>
       <RSFDO>
-       <PARAMETER>IS_TADIR</PARAMETER>
+       <PARAMETER>IV_OBJECTS</PARAMETER>
        <KIND>P</KIND>
       </RSFDO>
       <RSFDO>
@@ -146,16 +129,6 @@
        <PARAMETER>IV_LANGUAGE</PARAMETER>
        <KIND>P</KIND>
        <STEXT>ABAP System Field: Language Key of Text Environment</STEXT>
-      </RSFDO>
-      <RSFDO>
-       <PARAMETER>IV_PATH</PARAMETER>
-       <KIND>P</KIND>
-       <STEXT>Path</STEXT>
-      </RSFDO>
-      <RSFDO>
-       <PARAMETER>IV_MAIN_LANGUAGE_ONLY</PARAMETER>
-       <KIND>P</KIND>
-       <STEXT>Single-Character Indicator</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>IV_SUPPRESS_PO_COMMENTS</PARAMETER>
@@ -175,14 +148,6 @@
       <RSFDO>
        <PARAMETER>EV_RESULT</PARAMETER>
        <KIND>P</KIND>
-      </RSFDO>
-      <RSFDO>
-       <PARAMETER>EV_PATH</PARAMETER>
-       <KIND>P</KIND>
-      </RSFDO>
-      <RSFDO>
-       <PARAMETER>ERROR</PARAMETER>
-       <KIND>X</KIND>
       </RSFDO>
      </DOCUMENTATION>
     </item>

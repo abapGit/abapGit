@@ -1,6 +1,8 @@
 CLASS ltcl_determine_max_processes DEFINITION DEFERRED.
 CLASS ltcl_determine_server_group DEFINITION DEFERRED.
-CLASS zcl_abapgit_serialize DEFINITION LOCAL FRIENDS ltcl_determine_max_processes ltcl_determine_server_group.
+CLASS ltcl_determine_batch_size DEFINITION DEFERRED.
+CLASS zcl_abapgit_serialize DEFINITION LOCAL FRIENDS ltcl_determine_max_processes ltcl_determine_server_group
+                                                     ltcl_determine_batch_size.
 
 CLASS ltd_settings DEFINITION FINAL FOR TESTING
   DURATION SHORT
@@ -664,7 +666,8 @@ CLASS ltcl_serialize DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS F
       setup,
       test FOR TESTING RAISING zcx_abapgit_exception,
       unsupported FOR TESTING RAISING zcx_abapgit_exception,
-      ignored FOR TESTING RAISING zcx_abapgit_exception.
+      ignored FOR TESTING RAISING zcx_abapgit_exception,
+      not_existing FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -814,7 +817,48 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD not_existing.
+
+    DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lt_files TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          li_log   TYPE REF TO zif_abapgit_log.
+
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
+
+    " A TADIR row can outlive its object, e.g. until the transport is released
+    APPEND INITIAL LINE TO lt_tadir ASSIGNING <ls_tadir>.
+    <ls_tadir>-object     = 'PROG'.
+    <ls_tadir>-obj_name   = 'ZABAPGIT_NOT_EXISTING_OBJECT'.
+    <ls_tadir>-devclass   = 'PACKAGE'.
+    <ls_tadir>-path       = 'foobar'.
+    <ls_tadir>-masterlang = sy-langu.
+
+    CREATE OBJECT li_log TYPE zcl_abapgit_log.
+    lt_files = mo_cut->serialize(
+      it_tadir            = lt_tadir
+      ii_log              = li_log
+      iv_force_sequential = abap_true ).
+
+    cl_abap_unit_assert=>assert_initial( lt_files ).
+    cl_abap_unit_assert=>assert_equals(
+      act = li_log->count( )
+      exp = 0 ).
+
+    CREATE OBJECT li_log TYPE zcl_abapgit_log.
+    lt_files = mo_cut->serialize(
+      it_tadir            = lt_tadir
+      ii_log              = li_log
+      iv_force_sequential = abap_false ).
+
+    cl_abap_unit_assert=>assert_initial( lt_files ).
+    cl_abap_unit_assert=>assert_equals(
+      act = li_log->count( )
+      exp = 0 ).
+
+  ENDMETHOD.
+
 ENDCLASS.
+
 
 CLASS ltcl_i18n DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
 
@@ -906,6 +950,70 @@ CLASS ltcl_i18n IMPLEMENTATION.
     READ TABLE lt_i18n_langs ASSIGNING <ls_i18n_langs> WITH KEY table_line = c_german.
     cl_abap_unit_assert=>assert_subrc( ).
 
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+CLASS ltcl_determine_batch_size DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
+
+  PRIVATE SECTION.
+    DATA mo_cut TYPE REF TO zcl_abapgit_serialize.
+
+    METHODS:
+      setup,
+      small_repo FOR TESTING,
+      several_tasks_per_process FOR TESTING,
+      capped FOR TESTING,
+      no_processes FOR TESTING,
+      assert_batch_size
+        IMPORTING
+          iv_count     TYPE i
+          iv_processes TYPE i
+          iv_exp       TYPE i.
+
+ENDCLASS.
+
+
+CLASS ltcl_determine_batch_size IMPLEMENTATION.
+
+  METHOD setup.
+    TRY.
+        CREATE OBJECT mo_cut.
+      CATCH zcx_abapgit_exception.
+        cl_abap_unit_assert=>fail( 'Error creating serializer' ).
+    ENDTRY.
+  ENDMETHOD.
+
+  METHOD small_repo.
+    assert_batch_size( iv_count     = 30
+                       iv_processes = 9
+                       iv_exp       = 1 ).
+  ENDMETHOD.
+
+  METHOD several_tasks_per_process.
+    assert_batch_size( iv_count     = 100
+                       iv_processes = 3
+                       iv_exp       = 9 ).
+  ENDMETHOD.
+
+  METHOD capped.
+    assert_batch_size( iv_count     = 1000
+                       iv_processes = 9
+                       iv_exp       = 20 ).
+  ENDMETHOD.
+
+  METHOD no_processes.
+    assert_batch_size( iv_count     = 5
+                       iv_processes = 0
+                       iv_exp       = 2 ).
+  ENDMETHOD.
+
+  METHOD assert_batch_size.
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->determine_batch_size( iv_count     = iv_count
+                                          iv_processes = iv_processes )
+      exp = iv_exp ).
   ENDMETHOD.
 
 ENDCLASS.
