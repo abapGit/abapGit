@@ -50,10 +50,10 @@ CLASS ltcl_test IMPLEMENTATION.
 
     CREATE OBJECT lo_tr_object_table.
 
-    INSERT 'ENQUEUE_EZABAPGIT' INTO TABLE lt_deps.
-    INSERT 'DEQUEUE_EZABAPGIT' INTO TABLE lt_deps.
-    INSERT 'TR_OBJECT_TABLE' INTO TABLE lt_deps.
-    INSERT 'SAPGUI_PROGRESS_INDICATOR' INTO TABLE lt_deps.
+    APPEND 'ENQUEUE_EZABAPGIT' TO lt_deps.
+    APPEND 'DEQUEUE_EZABAPGIT' TO lt_deps.
+    APPEND 'TR_OBJECT_TABLE' TO lt_deps.
+    APPEND 'SAPGUI_PROGRESS_INDICATOR' TO lt_deps.
 
     mi_env = cl_function_test_environment=>create( lt_deps ).
     mi_env->get_double( 'ENQUEUE_EZABAPGIT' )->configure_call( )->ignore_all_parameters(
