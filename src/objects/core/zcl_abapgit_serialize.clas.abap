@@ -4,7 +4,11 @@ CLASS zcl_abapgit_serialize DEFINITION
 
   PUBLIC SECTION.
 
-    " Exchanged with Z_ABAPGIT_SERIALIZE_PARALLEL via EXPORT/IMPORT TO/FROM DATA BUFFER
+    " Experimental: several objects per task, so the start-up of a new session is paid once per task
+    " instead of once per object. Enable with experimental feature SERIALIZE_BATCH.
+    CONSTANTS c_feature_batch TYPE string VALUE 'SERIALIZE_BATCH'.
+
+    " Exchanged with Z_ABAPGIT_SERIALIZE_BATCH via EXPORT/IMPORT TO/FROM DATA BUFFER
     TYPES:
       BEGIN OF ty_parallel_object,
         tadir              TYPE zif_abapgit_definitions=>ty_tadir,
@@ -28,6 +32,9 @@ CLASS zcl_abapgit_serialize DEFINITION
     METHODS on_end_of_task
       IMPORTING
         !p_task TYPE clike ##NEEDED.
+    METHODS on_end_of_batch
+      IMPORTING
+        !p_task TYPE clike.
     METHODS serialize
       IMPORTING
         !iv_package          TYPE devclass OPTIONAL
@@ -67,7 +74,6 @@ CLASS zcl_abapgit_serialize DEFINITION
       END OF ty_task,
       ty_tasks TYPE HASHED TABLE OF ty_task WITH UNIQUE KEY task.
 
-    " Several objects per task, so the start-up of a new session is paid once per task instead of per object
     CONSTANTS c_max_batch_size TYPE i VALUE 20.
 
     CLASS-DATA gv_max_processes TYPE i .
@@ -80,6 +86,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     DATA ms_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
     DATA mo_abap_language_version TYPE REF TO zcl_abapgit_abap_language_vers.
     DATA mt_wo_translation_patterns TYPE string_table.
+    DATA mv_batch TYPE abap_bool.
     DATA mt_tasks TYPE ty_tasks.
     DATA mt_retry TYPE ty_parallel_objects.
 
@@ -109,6 +116,12 @@ CLASS zcl_abapgit_serialize DEFINITION
         !is_file_item TYPE zif_abapgit_objects=>ty_serialization .
     METHODS run_parallel
       IMPORTING
+        !is_tadir TYPE zif_abapgit_definitions=>ty_tadir
+        !iv_task  TYPE ty_char32
+      RAISING
+        zcx_abapgit_exception .
+    METHODS run_batch
+      IMPORTING
         !it_objects TYPE ty_parallel_objects
         !iv_task    TYPE ty_char32
       RAISING
@@ -126,7 +139,7 @@ CLASS zcl_abapgit_serialize DEFINITION
         !iv_processes  TYPE i
       RETURNING
         VALUE(rv_size) TYPE i.
-    METHODS add_parallel_results
+    METHODS add_batch_results
       IMPORTING
         !it_results TYPE ty_parallel_results.
     METHODS run_sequential
@@ -197,6 +210,27 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       APPEND INITIAL LINE TO ct_files ASSIGNING <ls_file>.
       <ls_file>-file = ls_apack_file.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD add_batch_results.
+
+    FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
+
+    LOOP AT it_results ASSIGNING <ls_result>.
+      IF <ls_result>-error IS NOT INITIAL.
+        IF mi_log IS BOUND.
+          mi_log->add_error(
+            iv_msg  = <ls_result>-error
+            is_item = <ls_result>-file_item-item ).
+        ENDIF.
+      ELSEIF <ls_result>-not_found = abap_false.
+        add_to_return(
+          is_file_item = <ls_result>-file_item
+          iv_path      = <ls_result>-path ).
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -273,7 +307,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           lt_found  LIKE ct_files,
           lt_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
-    " Existence is checked by serialize( ), in parallel where possible
+    " In batch mode, existence is checked by serialize( ), in parallel where possible
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package            = iv_package
       iv_ignore_subpackages = ms_local_settings-ignore_subpackages
@@ -281,7 +315,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       io_dot                = mo_dot_abapgit
       ii_log                = ii_log
       it_filter             = it_filter
-      iv_check_exists       = abap_false ).
+      iv_check_exists       = boolc( mv_batch = abap_false ) ).
 
     CREATE OBJECT lo_filter.
 
@@ -299,27 +333,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       ii_log              = ii_log
       iv_force_sequential = lv_force ).
     APPEND LINES OF lt_found TO ct_files.
-
-  ENDMETHOD.
-
-
-  METHOD add_parallel_results.
-
-    FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
-
-    LOOP AT it_results ASSIGNING <ls_result>.
-      IF <ls_result>-error IS NOT INITIAL.
-        IF mi_log IS BOUND.
-          mi_log->add_error(
-            iv_msg  = <ls_result>-error
-            is_item = <ls_result>-file_item-item ).
-        ENDIF.
-      ELSEIF <ls_result>-not_found = abap_false.
-        add_to_return(
-          is_file_item = <ls_result>-file_item
-          iv_path      = <ls_result>-path ).
-      ENDIF.
-    ENDLOOP.
 
   ENDMETHOD.
 
@@ -343,6 +356,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   METHOD constructor.
 
     mv_group = determine_rfc_server_group( ).
+    mv_batch = zcl_abapgit_feature=>is_enabled( c_feature_batch ).
 
     mo_dot_abapgit = io_dot_abapgit.
     ms_local_settings = is_local_settings.
@@ -644,18 +658,26 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
   METHOD is_parallelization_possible.
 
+    DATA lv_function TYPE c LENGTH 30.
+
+    IF mv_batch = abap_true.
+      lv_function = 'Z_ABAPGIT_SERIALIZE_BATCH'.
+    ELSE.
+      lv_function = 'Z_ABAPGIT_SERIALIZE_PARALLEL'.
+    ENDIF.
+
     rv_result = boolc( zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false
                    AND zcl_abapgit_persist_factory=>get_settings( )->read( )->get_parallel_proc_disabled( ) = abap_false
                    " The function module below should always exist here as is_merged evaluated to false above.
                    " It does however not exist in the transpiled version which then causes unit tests to fail.
                    " Therefore the check needs to stay.
                    AND zcl_abapgit_factory=>get_function_module(
-                                         )->function_exists( 'Z_ABAPGIT_SERIALIZE_PARALLEL' ) = abap_true ).
+                                         )->function_exists( lv_function ) = abap_true ).
 
   ENDMETHOD.
 
 
-  METHOD on_end_of_task.
+  METHOD on_end_of_batch.
 
 * this method will be called from the parallel processing, thus it must be public
 
@@ -671,7 +693,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     READ TABLE mt_tasks INTO ls_task WITH TABLE KEY task = p_task.
     DELETE TABLE mt_tasks WITH TABLE KEY task = p_task.
 
-    RECEIVE RESULTS FROM FUNCTION 'Z_ABAPGIT_SERIALIZE_PARALLEL'
+    RECEIVE RESULTS FROM FUNCTION 'Z_ABAPGIT_SERIALIZE_BATCH'
       IMPORTING
         ev_result             = lv_result
       EXCEPTIONS
@@ -699,7 +721,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     ELSE.
       IMPORT data = lt_results FROM DATA BUFFER lv_result. "#EC CI_SUBRC
       ASSERT sy-subrc = 0.
-      add_parallel_results( lt_results ).
+      add_batch_results( lt_results ).
     ENDIF.
 
     mv_free = mv_free + 1.
@@ -707,7 +729,46 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD run_parallel.
+  METHOD on_end_of_task.
+
+* this method will be called from the parallel processing, thus it must be public
+
+    DATA: lv_result    TYPE xstring,
+          lv_path      TYPE string,
+          lv_mess      TYPE c LENGTH 200,
+          ls_file_item TYPE zif_abapgit_objects=>ty_serialization.
+
+
+    RECEIVE RESULTS FROM FUNCTION 'Z_ABAPGIT_SERIALIZE_PARALLEL'
+      IMPORTING
+        ev_result             = lv_result
+        ev_path               = lv_path
+      EXCEPTIONS
+        error                 = 1
+        system_failure        = 2 MESSAGE lv_mess
+        communication_failure = 3 MESSAGE lv_mess
+        OTHERS = 4.
+    IF sy-subrc <> 0.
+      IF NOT mi_log IS INITIAL.
+        IF NOT lv_mess IS INITIAL.
+          mi_log->add_error( lv_mess ).
+        ELSE.
+          mi_log->add_error( |{ sy-msgv1 }{ sy-msgv2 }{ sy-msgv3 }{ sy-msgv3 }| ).
+        ENDIF.
+      ENDIF.
+    ELSE.
+      IMPORT data = ls_file_item FROM DATA BUFFER lv_result. "#EC CI_SUBRC
+      ASSERT sy-subrc = 0.
+      add_to_return( is_file_item = ls_file_item
+                     iv_path      = lv_path ).
+    ENDIF.
+
+    mv_free = mv_free + 1.
+
+  ENDMETHOD.
+
+
+  METHOD run_batch.
 
     DATA: lv_msg     TYPE c LENGTH 100,
           lv_objects TYPE xstring,
@@ -726,10 +787,10 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     DO.
       ls_task-task = |{ iv_task }-{ sy-index }|.
       " An initial server group is handled like DEFAULT meaning all instances are used
-      CALL FUNCTION 'Z_ABAPGIT_SERIALIZE_PARALLEL'
+      CALL FUNCTION 'Z_ABAPGIT_SERIALIZE_BATCH'
         STARTING NEW TASK ls_task-task
         DESTINATION IN GROUP mv_group
-        CALLING on_end_of_task ON END OF TASK
+        CALLING on_end_of_batch ON END OF TASK
         EXPORTING
           iv_objects              = lv_objects
           iv_abap_language_vers   = lv_abap_language_version
@@ -759,6 +820,62 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD run_parallel.
+
+    DATA: lv_msg  TYPE c LENGTH 100,
+          lv_task TYPE c LENGTH 32,
+          lv_free LIKE mv_free.
+    DATA lv_abap_language_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
+    DATA lv_main_language_only TYPE abap_bool.
+
+    ASSERT mv_free > 0.
+
+    IF mo_abap_language_version IS NOT INITIAL.
+      lv_abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
+    ENDIF.
+
+    lv_main_language_only = ms_i18n_params-main_language_only.
+    IF lv_main_language_only = abap_false AND mt_wo_translation_patterns IS NOT INITIAL.
+      lv_main_language_only = zcl_abapgit_i18n_params=>match_obj_patterns(
+        is_tadir                   = is_tadir
+        it_wo_translation_patterns = mt_wo_translation_patterns ).
+    ENDIF.
+
+    DO.
+      lv_task = |{ iv_task }-{ sy-index }|.
+      " An initial server group is handled like DEFAULT meaning all instances are used
+      CALL FUNCTION 'Z_ABAPGIT_SERIALIZE_PARALLEL'
+        STARTING NEW TASK lv_task
+        DESTINATION IN GROUP mv_group
+        CALLING on_end_of_task ON END OF TASK
+        EXPORTING
+          is_tadir                = is_tadir
+          iv_abap_language_vers   = lv_abap_language_version
+          iv_language             = ms_i18n_params-main_language
+          iv_path                 = is_tadir-path
+          iv_main_language_only   = lv_main_language_only
+          iv_suppress_po_comments = ms_i18n_params-suppress_po_comments
+          it_translation_langs    = ms_i18n_params-translation_languages
+          iv_use_lxe              = ms_i18n_params-use_lxe
+        EXCEPTIONS
+          system_failure          = 1 MESSAGE lv_msg
+          communication_failure   = 2 MESSAGE lv_msg
+          resource_failure        = 3
+          OTHERS                  = 4.
+      IF sy-subrc = 3.
+        lv_free = mv_free.
+        WAIT UNTIL mv_free <> lv_free UP TO 1 SECONDS.
+        CONTINUE.
+      ELSEIF sy-subrc <> 0.
+        ASSERT lv_msg = '' AND 0 = 1.
+      ENDIF.
+      EXIT.
+    ENDDO.
+
+    mv_free = mv_free - 1.
+
+  ENDMETHOD.
+
 
   METHOD run_sequential.
 
@@ -772,8 +889,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     ls_file_item-item-srcsystem = is_tadir-srcsystem.
     ls_file_item-item-origlang  = is_tadir-masterlang.
 
-    " TADIR rows of transportable objects remain until the transport is released
-    IF zcl_abapgit_objects=>exists( ls_file_item-item ) = abap_false.
+    " In batch mode, TADIR is read without existence check
+    IF mv_batch = abap_true AND zcl_abapgit_objects=>exists( ls_file_item-item ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -857,31 +974,39 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           iv_current = lv_index
           iv_text    = |Serialize { <ls_tadir>-obj_name }, { lv_max } thread| ).
         run_sequential( <ls_tadir> ).
-      ELSE.
+      ELSEIF mv_batch = abap_true.
         APPEND to_parallel_object( <ls_tadir> ) TO lt_batch.
         IF lines( lt_batch ) >= lv_batch_size.
           li_progress->show(
             iv_current = lv_index
             iv_text    = |Serialize { <ls_tadir>-obj_name }, { lv_max } threads| ).
-          run_parallel(
+          run_batch(
             it_objects = lt_batch
             iv_task    = |{ lv_index }| ).
           CLEAR lt_batch.
           WAIT UNTIL mv_free > 0 UP TO 120 SECONDS.
         ENDIF.
+      ELSE.
+        li_progress->show(
+          iv_current = lv_index
+          iv_text    = |Serialize { <ls_tadir>-obj_name }, { lv_max } threads| ).
+        run_parallel(
+          is_tadir = <ls_tadir>
+          iv_task  = |{ lv_index }| ).
+        WAIT UNTIL mv_free > 0 UP TO 120 SECONDS.
       ENDIF.
     ENDLOOP.
 
     IF lt_batch IS NOT INITIAL.
       WAIT UNTIL mv_free > 0 UP TO 120 SECONDS.
-      run_parallel(
+      run_batch(
         it_objects = lt_batch
         iv_task    = |{ lv_count }-last| ).
     ENDIF.
 
     WAIT UNTIL mv_free = lv_max UP TO 120 SECONDS.
 
-    " Objects of failed tasks, one task each
+    " Batch mode: objects of failed tasks, one task each
     lt_retry = mt_retry.
     CLEAR mt_retry.
     LOOP AT lt_retry ASSIGNING <ls_object>.
@@ -889,7 +1014,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       CLEAR lt_batch.
       APPEND <ls_object> TO lt_batch.
       WAIT UNTIL mv_free > 0 UP TO 120 SECONDS.
-      run_parallel(
+      run_batch(
         it_objects = lt_batch
         iv_task    = |retry-{ lv_index }| ).
     ENDLOOP.

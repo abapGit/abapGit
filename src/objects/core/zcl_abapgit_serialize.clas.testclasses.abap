@@ -15,11 +15,15 @@ CLASS ltd_settings DEFINITION FINAL FOR TESTING
     METHODS:
       set_parallel_proc_disabled
         IMPORTING
-          iv_parallel_proc_disabled TYPE abap_bool.
+          iv_parallel_proc_disabled TYPE abap_bool,
+      set_experimental_features
+        IMPORTING
+          iv_features TYPE string.
 
   PRIVATE SECTION.
     DATA:
-      mv_parallel_proc_disabled TYPE zif_abapgit_persist_user=>ty_s_user_settings-parallel_proc_disabled.
+      mv_parallel_proc_disabled TYPE zif_abapgit_persist_user=>ty_s_user_settings-parallel_proc_disabled,
+      mv_experimental_features  TYPE string.
 
 ENDCLASS.
 
@@ -32,10 +36,15 @@ CLASS ltd_settings IMPLEMENTATION.
   METHOD zif_abapgit_persist_settings~read.
     CREATE OBJECT ro_settings.
     ro_settings->set_parallel_proc_disabled( mv_parallel_proc_disabled ).
+    ro_settings->set_experimental_features( mv_experimental_features ).
   ENDMETHOD.
 
   METHOD set_parallel_proc_disabled.
     mv_parallel_proc_disabled = iv_parallel_proc_disabled.
+  ENDMETHOD.
+
+  METHOD set_experimental_features.
+    mv_experimental_features = iv_features.
   ENDMETHOD.
 
 ENDCLASS.
@@ -666,8 +675,7 @@ CLASS ltcl_serialize DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS F
       setup,
       test FOR TESTING RAISING zcx_abapgit_exception,
       unsupported FOR TESTING RAISING zcx_abapgit_exception,
-      ignored FOR TESTING RAISING zcx_abapgit_exception,
-      not_existing FOR TESTING RAISING zcx_abapgit_exception.
+      ignored FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -814,46 +822,6 @@ CLASS ltcl_serialize IMPLEMENTATION.
     cl_abap_unit_assert=>assert_char_cp(
       act = ls_msg-text
       exp = '*Object CLAS ZCL_TEST_IGNORE ignored*' ).
-
-  ENDMETHOD.
-
-  METHOD not_existing.
-
-    DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lt_files TYPE zif_abapgit_definitions=>ty_files_item_tt,
-          li_log   TYPE REF TO zif_abapgit_log.
-
-    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
-
-    " A TADIR row can outlive its object, e.g. until the transport is released
-    APPEND INITIAL LINE TO lt_tadir ASSIGNING <ls_tadir>.
-    <ls_tadir>-object     = 'PROG'.
-    <ls_tadir>-obj_name   = 'ZABAPGIT_NOT_EXISTING_OBJECT'.
-    <ls_tadir>-devclass   = 'PACKAGE'.
-    <ls_tadir>-path       = 'foobar'.
-    <ls_tadir>-masterlang = sy-langu.
-
-    CREATE OBJECT li_log TYPE zcl_abapgit_log.
-    lt_files = mo_cut->serialize(
-      it_tadir            = lt_tadir
-      ii_log              = li_log
-      iv_force_sequential = abap_true ).
-
-    cl_abap_unit_assert=>assert_initial( lt_files ).
-    cl_abap_unit_assert=>assert_equals(
-      act = li_log->count( )
-      exp = 0 ).
-
-    CREATE OBJECT li_log TYPE zcl_abapgit_log.
-    lt_files = mo_cut->serialize(
-      it_tadir            = lt_tadir
-      ii_log              = li_log
-      iv_force_sequential = abap_false ).
-
-    cl_abap_unit_assert=>assert_initial( lt_files ).
-    cl_abap_unit_assert=>assert_equals(
-      act = li_log->count( )
-      exp = 0 ).
 
   ENDMETHOD.
 
@@ -1014,6 +982,121 @@ CLASS ltcl_determine_batch_size IMPLEMENTATION.
       act = mo_cut->determine_batch_size( iv_count     = iv_count
                                           iv_processes = iv_processes )
       exp = iv_exp ).
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+CLASS ltcl_serialize_batch DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
+
+  PRIVATE SECTION.
+    DATA:
+      mo_settings_double TYPE REF TO ltd_settings,
+      mo_cut             TYPE REF TO zcl_abapgit_serialize.
+
+    METHODS:
+      setup,
+      teardown,
+      test FOR TESTING RAISING zcx_abapgit_exception,
+      not_existing FOR TESTING RAISING zcx_abapgit_exception.
+
+ENDCLASS.
+
+
+CLASS ltcl_serialize_batch IMPLEMENTATION.
+
+  METHOD setup.
+
+    CREATE OBJECT mo_settings_double.
+    mo_settings_double->set_experimental_features( zcl_abapgit_serialize=>c_feature_batch ).
+    zcl_abapgit_persist_injector=>set_settings( mo_settings_double ).
+
+    TRY.
+        CREATE OBJECT mo_cut
+          EXPORTING
+            io_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
+      CATCH zcx_abapgit_exception.
+        cl_abap_unit_assert=>fail( 'Error creating serializer' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD teardown.
+    " Leave batch mode switched off for other tests
+    CREATE OBJECT mo_settings_double.
+    zcl_abapgit_persist_injector=>set_settings( mo_settings_double ).
+  ENDMETHOD.
+
+  METHOD test.
+
+    DATA: lt_tadir      TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lt_sequential TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          lt_parallel   TYPE zif_abapgit_definitions=>ty_files_item_tt.
+
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
+
+
+    APPEND INITIAL LINE TO lt_tadir ASSIGNING <ls_tadir>.
+    <ls_tadir>-object     = 'PROG'.
+    <ls_tadir>-obj_name   = 'RSABAPPROGRAM'.
+    <ls_tadir>-devclass   = 'PACKAGE'.
+    <ls_tadir>-path       = 'foobar'.
+    <ls_tadir>-masterlang = sy-langu.
+
+    lt_sequential = mo_cut->serialize(
+      it_tadir            = lt_tadir
+      iv_force_sequential = abap_true ).
+
+    lt_parallel = mo_cut->serialize(
+      it_tadir            = lt_tadir
+      iv_force_sequential = abap_false ).
+
+    cl_abap_unit_assert=>assert_not_initial( lt_parallel ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_sequential
+      exp = lt_parallel ).
+
+  ENDMETHOD.
+
+  METHOD not_existing.
+
+    DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lt_files TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          li_log   TYPE REF TO zif_abapgit_log.
+
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
+
+    " In batch mode, serialize( ) checks existence itself.
+    " A TADIR row can outlive its object, e.g. until the transport is released
+    APPEND INITIAL LINE TO lt_tadir ASSIGNING <ls_tadir>.
+    <ls_tadir>-object     = 'PROG'.
+    <ls_tadir>-obj_name   = 'ZABAPGIT_NOT_EXISTING_OBJECT'.
+    <ls_tadir>-devclass   = 'PACKAGE'.
+    <ls_tadir>-path       = 'foobar'.
+    <ls_tadir>-masterlang = sy-langu.
+
+    CREATE OBJECT li_log TYPE zcl_abapgit_log.
+    lt_files = mo_cut->serialize(
+      it_tadir            = lt_tadir
+      ii_log              = li_log
+      iv_force_sequential = abap_true ).
+
+    cl_abap_unit_assert=>assert_initial( lt_files ).
+    cl_abap_unit_assert=>assert_equals(
+      act = li_log->count( )
+      exp = 0 ).
+
+    CREATE OBJECT li_log TYPE zcl_abapgit_log.
+    lt_files = mo_cut->serialize(
+      it_tadir            = lt_tadir
+      ii_log              = li_log
+      iv_force_sequential = abap_false ).
+
+    cl_abap_unit_assert=>assert_initial( lt_files ).
+    cl_abap_unit_assert=>assert_equals(
+      act = li_log->count( )
+      exp = 0 ).
+
   ENDMETHOD.
 
 ENDCLASS.
