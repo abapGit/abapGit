@@ -560,6 +560,14 @@
       "pattern": "^TY_.+$"
     },
     "uncaught_exception": true,
+    "unhandled_classic_exception": {
+      "exclude": [
+        "/json/"
+      ],
+      "missingErrorMessage": false,
+      "missingExceptions": false,
+      "missingOthers": true
+    },
     "unknown_types": true,
     "unnecessary_chaining": false,
     "unnecessary_pragma": {
