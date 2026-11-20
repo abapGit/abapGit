@@ -145,6 +145,13 @@ CLASS zcl_abapgit_git_pack DEFINITION
         !iv_decompressed TYPE xstring
       RETURNING
         VALUE(rv_end)    TYPE i .
+    CLASS-METHODS inflates_to
+      IMPORTING
+        !iv_data         TYPE xstring
+        !iv_length       TYPE i
+        !iv_decompressed TYPE xstring
+      RETURNING
+        VALUE(rv_equal)  TYPE abap_bool .
 ENDCLASS.
 
 
@@ -438,7 +445,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
           lv_compressed_len TYPE i,
           lv_end            TYPE i.
 
-    " Header '7801' was not handled by the kernel in older releases, hence the fallback below
+    " Data the kernel cannot decompress takes the fallback below
     TRY.
         cl_abap_gzip=>decompress_binary(
           EXPORTING
@@ -479,6 +486,10 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
     " This also fixes issues with TFS 2017 and visualstudio.com Git repos
     zlib_decompress( CHANGING cv_data         = cv_data
                               cv_decompressed = cv_decompressed ).
+
+    IF xstrlen( cv_decompressed ) <> iv_expected.
+      zcx_abapgit_exception=>raise( |Decompression failed| ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -647,13 +658,20 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
 * A zlib stream ends with the Adler-32 checksum of the uncompressed data (RFC 1950).
 * The same four bytes can also occur inside the compressed data, so a position only
-* counts if the data in front of it is exactly one complete stream of iv_decompressed.
+* counts if the bytes in front of it decompress to iv_decompressed. The kernel does not
+* report a truncated stream, but a hit inside the data yields less than iv_decompressed.
+*
+* The kernel also ignores bytes after the end of the stream. If the checksum at the real
+* end is corrupt, a later occurrence would decompress to iv_decompressed as well. After the
+* last bit of data a stream has at most lc_max_tail bytes (end-of-block code and padding,
+* or an empty final stored block), so if the prefix shortened by that already gives the
+* data, the stream ended earlier and the position is rejected.
+
+    CONSTANTS lc_max_tail TYPE i VALUE 8.
 
     DATA: lv_adler32 TYPE zif_abapgit_git_definitions=>ty_adler32,
           lv_from    TYPE i,
-          lv_offset  TYPE i,
-          lv_prefix  TYPE xstring,
-          lv_raw     TYPE xstring.
+          lv_offset  TYPE i.
 
     rv_end = -1.
     lv_adler32 = zcl_abapgit_hash=>adler32( iv_decompressed ).
@@ -667,19 +685,18 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
         RETURN.
       ENDIF.
 
-      lv_prefix = iv_data(lv_offset).
-      TRY.
-          cl_abap_gzip=>decompress_binary(
-            EXPORTING
-              gzip_in = lv_prefix
-            IMPORTING
-              raw_out = lv_raw ).
-          IF lv_raw = iv_decompressed.
-            rv_end = lv_offset.
-            RETURN.
-          ENDIF.
-        CATCH cx_sy_compression_error cx_sy_buffer_overflow ##NO_HANDLER.
-      ENDTRY.
+      IF inflates_to( iv_data         = iv_data
+                      iv_length       = lv_offset
+                      iv_decompressed = iv_decompressed ) = abap_true.
+        IF lv_offset > lc_max_tail AND inflates_to( iv_data         = iv_data
+                                                    iv_length       = lv_offset - lc_max_tail
+                                                    iv_decompressed = iv_decompressed ) = abap_true.
+          " Behind the end of the stream, every later position is as well
+          RETURN.
+        ENDIF.
+        rv_end = lv_offset.
+        RETURN.
+      ENDIF.
 
       lv_from = lv_offset + 1.
     ENDWHILE.
@@ -754,6 +771,26 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( |Todo, unknown git pack type| ).
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD inflates_to.
+
+    DATA: lv_prefix TYPE xstring,
+          lv_raw    TYPE xstring.
+
+    lv_prefix = iv_data(iv_length).
+    TRY.
+        cl_abap_gzip=>decompress_binary(
+          EXPORTING
+            gzip_in = lv_prefix
+          IMPORTING
+            raw_out = lv_raw ).
+        rv_equal = boolc( lv_raw = iv_decompressed ).
+      CATCH cx_sy_compression_error cx_sy_buffer_overflow.
+        rv_equal = abap_false.
+    ENDTRY.
 
   ENDMETHOD.
 
