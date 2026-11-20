@@ -176,7 +176,8 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
         key               = ms_key
       EXCEPTIONS
         wrong_object_type = 1
-        delete_error      = 2.
+        delete_error      = 2
+        OTHERS            = 3.
 
     IF sy-subrc IS NOT INITIAL.
       zcx_abapgit_exception=>raise( 'Cannot delete W3xx data' ).
@@ -186,7 +187,8 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
       EXPORTING
         key          = ms_key
       EXCEPTIONS
-        delete_error = 1.
+        delete_error = 1
+        OTHERS       = 2.
 
     IF sy-subrc IS NOT INITIAL.
       zcx_abapgit_exception=>raise( 'Cannot delete W3xx params' ).
@@ -252,7 +254,8 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
             binary_tab    = lt_w3mime
             text_tab      = lt_w3html
           EXCEPTIONS
-            failed        = 1.
+            failed        = 1
+            OTHERS        = 2.
         IF sy-subrc IS NOT INITIAL.
           zcx_abapgit_exception=>raise( 'Cannot update W3xx params' ).
         ENDIF.
@@ -270,7 +273,8 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
       TABLES
         params       = lt_w3params
       EXCEPTIONS
-        update_error = 1.
+        update_error = 1
+        OTHERS       = 2.
 
     IF sy-subrc IS NOT INITIAL.
       zcx_abapgit_exception=>raise( 'Cannot update W3xx params' ).
@@ -289,7 +293,8 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
         html              = lt_w3html
       EXCEPTIONS
         wrong_object_type = 1
-        export_error      = 2.
+        export_error      = 2
+        OTHERS            = 3.
 
     IF sy-subrc IS NOT INITIAL.
       zcx_abapgit_exception=>raise( 'Cannot upload W3xx data' ).
@@ -436,7 +441,8 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
         html              = lt_w3html
       EXCEPTIONS
         wrong_object_type = 1
-        import_error      = 2.
+        import_error      = 2
+        OTHERS            = 3.
 
     IF sy-subrc IS NOT INITIAL.
       zcx_abapgit_exception=>raise( 'Cannot read W3xx data' ).
@@ -449,7 +455,8 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
       TABLES
         params           = lt_w3params
       EXCEPTIONS
-        entry_not_exists = 1.
+        entry_not_exists = 1
+        OTHERS           = 2.
 
     IF sy-subrc IS NOT INITIAL.
       zcx_abapgit_exception=>raise( 'Cannot read W3xx data' ).
@@ -470,7 +477,8 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
           TABLES
             binary_tab   = lt_w3mime
           EXCEPTIONS
-            failed       = 1.
+            failed       = 1
+            OTHERS       = 2.
       WHEN 'HT'.
         CALL FUNCTION 'SCMS_TEXT_TO_XSTRING'
           IMPORTING
@@ -478,7 +486,8 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
           TABLES
             text_tab = lt_w3html
           EXCEPTIONS
-            failed   = 1.
+            failed   = 1
+            OTHERS   = 2.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( 'Wrong W3xx type' ).
     ENDCASE.

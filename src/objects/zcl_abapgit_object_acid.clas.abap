@@ -204,7 +204,7 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
 
     lo_aab->get_descript(
       IMPORTING ex_descript = lv_description
-      EXCEPTIONS no_description_found = 1 ).
+      EXCEPTIONS no_description_found = 1 OTHERS = 2 ).
 
     io_xml->add( iv_name = 'DESCRIPTION'
                  ig_data = lv_description ).
