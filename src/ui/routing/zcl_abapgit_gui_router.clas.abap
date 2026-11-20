@@ -236,7 +236,9 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       lv_package TYPE devclass.
 
     lv_package = iv_package.
-    TRANSLATE lv_package USING '/#'.
+    lv_package = translate( val  = lv_package
+                            from = `/`
+                            to   = `#` ).
     CONCATENATE lv_package '_' sy-datlo '_' sy-timlo '.zip' INTO lv_default.
 
     li_fe_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).

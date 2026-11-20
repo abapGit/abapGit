@@ -141,7 +141,7 @@ CLASS zcl_abapgit_oo_serializer IMPLEMENTATION.
       OR iv_type = seop_ext_class_testclasses.
 
     ls_include-rootname = is_clskey-clsname.
-    TRANSLATE ls_include-rootname USING ' ='.
+    OVERLAY ls_include-rootname WITH '=============================='.
     ls_include-categorya = iv_type(1).
     ls_include-codea = iv_type+1(4).
 

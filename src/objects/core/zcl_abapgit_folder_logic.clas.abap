@@ -159,7 +159,9 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
             lv_parentcl }, child: { iv_package }| ).
         ENDIF.
 
-        TRANSLATE lv_path USING '/#'.
+        lv_path = translate( val  = lv_path
+                             from = `/`
+                             to   = `#` ).
         lv_path = to_lower( lv_path ).
         CONCATENATE lv_path '/' INTO lv_path.
 
@@ -234,7 +236,9 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       CASE lv_folder_logic.
         WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.
           lv_absolute_name = lv_new.
-          TRANSLATE lv_absolute_name USING '#/'.
+          lv_absolute_name = translate( val  = lv_absolute_name
+                                        from = `#`
+                                        to   = `/` ).
           IF iv_top(1) = '$'.
             CONCATENATE '$' lv_absolute_name INTO lv_absolute_name.
           ENDIF.
