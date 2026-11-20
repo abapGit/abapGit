@@ -394,7 +394,8 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
         obj_name   = ms_object_type-objname
         obj_type   = ms_object_type-objtype
       EXCEPTIONS
-        wrong_type = 1.
+        wrong_type = 1
+        OTHERS     = 2.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).

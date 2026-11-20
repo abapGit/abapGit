@@ -255,7 +255,8 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
       CHANGING
         delta                = rs_delta
       EXCEPTIONS
-        inconsistent_objects = 1.
+        inconsistent_objects = 1
+        OTHERS               = 2.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.
@@ -313,7 +314,8 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
       CHANGING
         delta                = rs_delta
       EXCEPTIONS
-        inconsistent_objects = 1.
+        inconsistent_objects = 1
+        OTHERS               = 2.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.
@@ -386,7 +388,8 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
       CHANGING
         delta                = rs_delta
       EXCEPTIONS
-        inconsistent_objects = 1.
+        inconsistent_objects = 1
+        OTHERS               = 2.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.

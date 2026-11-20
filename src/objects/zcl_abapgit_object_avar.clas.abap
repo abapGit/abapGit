@@ -103,7 +103,8 @@ CLASS zcl_abapgit_object_avar IMPLEMENTATION.
       EXPORTING
         im_descript      = lv_description
       EXCEPTIONS
-        no_authorization = 1 ).
+        no_authorization = 1
+        OTHERS           = 2 ).
     IF sy-subrc <> 0.
       lo_aab->dequeue( ).
       zcx_abapgit_exception=>raise_t100( ).
@@ -135,7 +136,8 @@ CLASS zcl_abapgit_object_avar IMPLEMENTATION.
         propt_error           = 3
         var_id_error          = 4
         no_changes_found      = 5
-        cts_error             = 6 ).
+        cts_error             = 6
+        OTHERS                = 7 ).
     IF sy-subrc <> 0.
       lo_aab->dequeue( ).
       zcx_abapgit_exception=>raise_t100( ).
@@ -220,7 +222,8 @@ CLASS zcl_abapgit_object_avar IMPLEMENTATION.
       IMPORTING
         ex_descript = lv_description
       EXCEPTIONS
-        no_descript_found = 1 ).
+        no_descript_found = 1
+        OTHERS            = 2 ).
     IF sy-subrc = 0.
       io_xml->add( iv_name = 'DESCRIPTION'
                    ig_data = lv_description ).

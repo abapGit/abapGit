@@ -634,7 +634,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           not_executed           = 3
           not_exists             = 4
           no_modify_permission   = 5
-          popup_canceled         = 6.
+          popup_canceled         = 6
+          OTHERS                 = 7.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.

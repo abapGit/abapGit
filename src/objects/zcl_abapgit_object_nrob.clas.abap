@@ -234,7 +234,8 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
       EXPORTING
         object                 = ls_attributes-object
       EXCEPTIONS
-        object_not_initialized = 1.
+        object_not_initialized = 1
+        OTHERS                 = 2.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.

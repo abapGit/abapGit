@@ -104,7 +104,8 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
       RECEIVING
         p_descr_ref    = lo_type
       EXCEPTIONS
-        type_not_found = 1 ).
+        type_not_found = 1
+        OTHERS         = 2 ).
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Table { iv_name } not found for data serialization| ).
     ENDIF.
@@ -283,7 +284,8 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
             p_field_list = <lt_ddfields>
           EXCEPTIONS
             not_found    = 1
-            no_ddic_type = 2 ).
+            no_ddic_type = 2
+            OTHERS       = 3 ).
         IF sy-subrc <> 0.
           zcx_abapgit_exception=>raise( |Table { iv_name } not found| ).
         ENDIF.
