@@ -38,10 +38,21 @@ INTERFACE zif_abapgit_sap_report
   METHODS read_report
     IMPORTING
       iv_name          TYPE syrepid
-      iv_state         TYPE r3state OPTIONAL
+      iv_state         TYPE r3state DEFAULT 'A'
       is_item          TYPE zif_abapgit_definitions=>ty_item OPTIONAL
     RETURNING
       VALUE(rt_source) TYPE abaptxt255_tab
+    RAISING
+      zcx_abapgit_exception.
+
+  METHODS read_textpool
+    IMPORTING
+      iv_name            TYPE syrepid
+      iv_language        TYPE sy-langu
+      iv_state           TYPE r3state DEFAULT 'A'
+      is_item            TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+    RETURNING
+      VALUE(rt_textpool) TYPE textpool_table
     RAISING
       zcx_abapgit_exception.
 
@@ -53,7 +64,7 @@ INTERFACE zif_abapgit_sap_report
       iv_program_type   TYPE c OPTIONAL
       iv_extension_type TYPE c OPTIONAL
       iv_package        TYPE devclass
-      iv_version        TYPE uccheck
+      iv_version        TYPE uccheck OPTIONAL
       is_item           TYPE zif_abapgit_definitions=>ty_item OPTIONAL
     RAISING
       zcx_abapgit_exception.
