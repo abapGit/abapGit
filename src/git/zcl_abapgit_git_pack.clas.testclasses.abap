@@ -266,6 +266,14 @@ CLASS ltcl_pack DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
         RAISING zcx_abapgit_exception,
       pack_multiple FOR TESTING
         RAISING zcx_abapgit_exception,
+      pack_foreign_zlib FOR TESTING
+        RAISING zcx_abapgit_exception,
+      pack_wrong_length FOR TESTING
+        RAISING zcx_abapgit_exception,
+      zlib_end_false_hit FOR TESTING
+        RAISING zcx_abapgit_exception,
+      zlib_end_corrupt_checksum FOR TESTING
+        RAISING zcx_abapgit_exception,
       sort_tree1 FOR TESTING,
       sort_tree2 FOR TESTING.
 
@@ -273,7 +281,10 @@ CLASS ltcl_pack DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
       object_blob
         IMPORTING iv_data          TYPE xstring
         RETURNING VALUE(rs_object) TYPE zif_abapgit_definitions=>ty_object
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      stored_deflate
+        IMPORTING iv_data          TYPE xstring
+        RETURNING VALUE(rv_stream) TYPE xstring.
 
 ENDCLASS.
 
@@ -416,6 +427,191 @@ CLASS ltcl_pack IMPLEMENTATION.
     rs_object-data = iv_data.
     rs_object-index = 1.
     rs_object-adler32 = zcl_abapgit_hash=>adler32( iv_data ).
+
+  ENDMETHOD.
+
+  METHOD stored_deflate.
+
+    " DEFLATE stream of uncompressed blocks (RFC 1951, BTYPE 00). Valid for every
+    " inflater, but never what the kernel produces when compressing.
+    DATA: lv_offset TYPE i,
+          lv_chunk  TYPE i,
+          lv_final  TYPE x LENGTH 1,
+          lv_len    TYPE x LENGTH 2,
+          lv_nlen   TYPE x LENGTH 2.
+
+    DO.
+      lv_chunk = xstrlen( iv_data ) - lv_offset.
+      IF lv_chunk > 65535.
+        lv_chunk = 65535.
+        lv_final = '00'.
+      ELSE.
+        lv_final = '01'.
+      ENDIF.
+      lv_len  = lv_chunk.
+      lv_nlen = 65535 - lv_chunk.
+      CONCATENATE rv_stream lv_final lv_len+1(1) lv_len(1) lv_nlen+1(1) lv_nlen(1)
+        iv_data+lv_offset(lv_chunk) INTO rv_stream IN BYTE MODE.
+      lv_offset = lv_offset + lv_chunk.
+      IF lv_final = '01'.
+        EXIT.
+      ENDIF.
+    ENDDO.
+
+  ENDMETHOD.
+
+  METHOD pack_foreign_zlib.
+
+    " Zlib output that differs from the kernel's: the stream end is found via its Adler-32 checksum
+    CONSTANTS: lc_pack_header TYPE x LENGTH 12 VALUE '5041434B0000000200000001',
+               lc_zlib        TYPE x LENGTH 2 VALUE '789C'.
+
+    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
+          ls_object  LIKE LINE OF lt_objects,
+          lt_result  TYPE zif_abapgit_definitions=>ty_objects_tt,
+          lv_data    TYPE xstring,
+          lv_pack    TYPE xstring,
+          lv_header  TYPE xstring,
+          lv_adler32 TYPE zif_abapgit_git_definitions=>ty_adler32,
+          lv_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1,
+          lv_stream  TYPE xstring,
+          lv_zlib    TYPE xstring,
+          lv_trailer TYPE xstring.
+
+    lv_data = zcl_abapgit_convert=>string_to_xstring_utf8( 'Compressed by another zlib, abapGit' ).
+    ls_object = object_blob( lv_data ).
+    APPEND ls_object TO lt_objects.
+
+    lv_header = zcl_abapgit_git_pack=>type_and_length(
+      iv_type   = zif_abapgit_git_definitions=>c_type-blob
+      iv_length = xstrlen( lv_data ) ).
+    lv_adler32 = zcl_abapgit_hash=>adler32( lv_data ).
+    lv_stream = stored_deflate( lv_data ).
+    CONCATENATE lc_pack_header lv_header lc_zlib lv_stream lv_adler32
+      INTO lv_pack IN BYTE MODE.
+    lv_sha1 = to_upper( zcl_abapgit_hash=>sha1_raw( lv_pack ) ).
+    lv_trailer = lv_sha1.
+    CONCATENATE lv_pack lv_trailer INTO lv_pack IN BYTE MODE.
+
+    CONCATENATE lv_stream lv_adler32 INTO lv_zlib IN BYTE MODE.
+    cl_abap_unit_assert=>assert_equals(
+      exp = xstrlen( lv_stream )
+      act = zcl_abapgit_git_pack=>find_zlib_end(
+              iv_data         = lv_zlib
+              iv_decompressed = lv_data ) ).
+
+    lt_result = zcl_abapgit_git_pack=>decode( lv_pack ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = lt_objects
+      act = lt_result ).
+
+  ENDMETHOD.
+
+  METHOD pack_wrong_length.
+
+    " The object header announces one byte more than the stream contains
+    CONSTANTS: lc_pack_header TYPE x LENGTH 12 VALUE '5041434B0000000200000001',
+               lc_zlib        TYPE x LENGTH 2 VALUE '789C'.
+
+    DATA: lv_data    TYPE xstring,
+          lv_pack    TYPE xstring,
+          lv_header  TYPE xstring,
+          lv_stream  TYPE xstring,
+          lv_adler32 TYPE zif_abapgit_git_definitions=>ty_adler32,
+          lv_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1,
+          lv_trailer TYPE xstring.
+
+    lv_data = zcl_abapgit_convert=>string_to_xstring_utf8( 'Length does not match the header' ).
+
+    lv_header = zcl_abapgit_git_pack=>type_and_length(
+      iv_type   = zif_abapgit_git_definitions=>c_type-blob
+      iv_length = xstrlen( lv_data ) + 1 ).
+    lv_adler32 = zcl_abapgit_hash=>adler32( lv_data ).
+    lv_stream = stored_deflate( lv_data ).
+    CONCATENATE lc_pack_header lv_header lc_zlib lv_stream lv_adler32
+      INTO lv_pack IN BYTE MODE.
+    lv_sha1 = to_upper( zcl_abapgit_hash=>sha1_raw( lv_pack ) ).
+    lv_trailer = lv_sha1.
+    CONCATENATE lv_pack lv_trailer INTO lv_pack IN BYTE MODE.
+
+    TRY.
+        zcl_abapgit_git_pack=>decode( lv_pack ).
+        cl_abap_unit_assert=>fail( 'Length mismatch not detected' ).
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD zlib_end_corrupt_checksum.
+
+    " The checksum at the real end is corrupt, the right one follows later.
+    " The kernel would decompress up to the later one, the end must not be found there.
+    CONSTANTS: lc_corrupt TYPE x LENGTH 4 VALUE '00000000',
+               lc_filler  TYPE x LENGTH 12 VALUE 'FFFFFFFFFFFFFFFFFFFFFFFF'.
+
+    DATA: lv_data    TYPE xstring,
+          lv_stream  TYPE xstring,
+          lv_input   TYPE xstring,
+          lv_adler32 TYPE zif_abapgit_git_definitions=>ty_adler32.
+
+    lv_data = zcl_abapgit_convert=>string_to_xstring_utf8( 'Corrupt checksum at the end of the stream' ).
+    lv_adler32 = zcl_abapgit_hash=>adler32( lv_data ).
+    lv_stream = stored_deflate( lv_data ).
+
+    CONCATENATE lv_stream lc_corrupt lc_filler lv_adler32
+      INTO lv_input IN BYTE MODE.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = -1
+      act = zcl_abapgit_git_pack=>find_zlib_end(
+              iv_data         = lv_input
+              iv_decompressed = lv_data ) ).
+
+  ENDMETHOD.
+
+  METHOD zlib_end_false_hit.
+
+    " 31744 zero bytes followed by 7F7F0100 have the Adler-32 checksum 7F7F0100,
+    " so the checksum also occurs inside the stream, before its end
+    CONSTANTS: lc_tail TYPE x LENGTH 4 VALUE '7F7F0100',
+               lc_next TYPE x LENGTH 2 VALUE 'FFFF'.
+
+    DATA: lv_zeros   TYPE xstring,
+          lv_data    TYPE xstring,
+          lv_stream  TYPE xstring,
+          lv_input   TYPE xstring,
+          lv_adler32 TYPE zif_abapgit_git_definitions=>ty_adler32,
+          lv_offset  TYPE i,
+          lv_end     TYPE i.
+
+    lv_zeros = '00'.
+    DO 15 TIMES. " 2^15 = 32768 bytes
+      CONCATENATE lv_zeros lv_zeros INTO lv_zeros IN BYTE MODE.
+    ENDDO.
+    lv_zeros = lv_zeros(31744).
+    CONCATENATE lv_zeros lc_tail INTO lv_data IN BYTE MODE.
+
+    lv_adler32 = zcl_abapgit_hash=>adler32( lv_data ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = lc_tail
+      act = lv_adler32 ).
+
+    lv_stream = stored_deflate( lv_data ).
+    CONCATENATE lv_stream lv_adler32 lc_next INTO lv_input IN BYTE MODE.
+
+    FIND FIRST OCCURRENCE OF lv_adler32 IN lv_input IN BYTE MODE MATCH OFFSET lv_offset.
+    cl_abap_unit_assert=>assert_equals(
+      exp = xstrlen( lv_stream ) - 4
+      act = lv_offset ).
+
+    lv_end = zcl_abapgit_git_pack=>find_zlib_end(
+      iv_data         = lv_input
+      iv_decompressed = lv_data ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = xstrlen( lv_stream )
+      act = lv_end ).
 
   ENDMETHOD.
 

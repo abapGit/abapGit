@@ -131,6 +131,27 @@ CLASS zcl_abapgit_git_pack DEFINITION
         !cv_decompressed TYPE xstring
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS decompress_object
+      IMPORTING
+        !iv_expected     TYPE i
+      CHANGING
+        !cv_data         TYPE xstring
+        !cv_decompressed TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS find_zlib_end
+      IMPORTING
+        !iv_data         TYPE xstring
+        !iv_decompressed TYPE xstring
+      RETURNING
+        VALUE(rv_end)    TYPE i .
+    CLASS-METHODS inflates_to
+      IMPORTING
+        !iv_data         TYPE xstring
+        !iv_length       TYPE i
+        !iv_decompressed TYPE xstring
+      RETURNING
+        VALUE(rv_equal)  TYPE abap_bool .
 ENDCLASS.
 
 
@@ -148,10 +169,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
           lv_len            TYPE i,
           lv_sha1           TYPE zif_abapgit_git_definitions=>ty_sha1,
           lv_ref_delta      TYPE zif_abapgit_git_definitions=>ty_sha1,
-          lv_compressed_len TYPE i,
-          lv_compressed     TYPE xstring,
           lv_decompressed   TYPE xstring,
-          lv_decompress_len TYPE i,
           lv_xstring        TYPE xstring,
           lv_expected       TYPE i,
           ls_object         LIKE LINE OF rt_objects,
@@ -206,43 +224,12 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
 *******************************
 
-      IF lv_zlib = c_zlib.
-        cl_abap_gzip=>decompress_binary(
-          EXPORTING
-            gzip_in     = lv_data
-          IMPORTING
-            raw_out     = lv_decompressed
-            raw_out_len = lv_decompress_len ).
-
-        IF lv_expected <> lv_decompress_len.
-          zcx_abapgit_exception=>raise( |Decompression failed| ).
-        ENDIF.
-
-        cl_abap_gzip=>compress_binary(
-          EXPORTING
-            raw_in         = lv_decompressed
-          IMPORTING
-            gzip_out       = lv_compressed
-            gzip_out_len   = lv_compressed_len ).
-
-        IF xstrlen( lv_data ) <= lv_compressed_len OR
-          lv_compressed(lv_compressed_len) <> lv_data(lv_compressed_len).
-          "Lets try with zlib before error in out for good
-          "This fixes issues with TFS 2017 and visualstudio.com Git repos
-          zlib_decompress( CHANGING cv_data = lv_data
-                                    cv_decompressed = lv_decompressed ).
-        ELSE.
-          lv_data = lv_data+lv_compressed_len.
-        ENDIF.
-
-      ELSEIF lv_zlib = c_zlib_hmm.
-* cl_abap_gzip compression works for header '789C', but does not work for
-* '7801', call custom implementation of DEFLATE algorithm.
-* The custom implementation could handle both, but most likely the kernel
-* implementation runs faster than the custom ABAP.
-        zlib_decompress( CHANGING cv_data = lv_data
-                                  cv_decompressed = lv_decompressed ).
-      ENDIF.
+      decompress_object(
+        EXPORTING
+          iv_expected     = lv_expected
+        CHANGING
+          cv_data         = lv_data
+          cv_decompressed = lv_decompressed ).
 
       CLEAR ls_object.
       ls_object-adler32 = lv_data(4).
@@ -451,6 +438,62 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD decompress_object.
+
+    DATA: lv_decompress_len TYPE i,
+          lv_compressed     TYPE xstring,
+          lv_compressed_len TYPE i,
+          lv_end            TYPE i.
+
+    " Data the kernel cannot decompress takes the fallback below
+    TRY.
+        cl_abap_gzip=>decompress_binary(
+          EXPORTING
+            gzip_in     = cv_data
+          IMPORTING
+            raw_out     = cv_decompressed
+            raw_out_len = lv_decompress_len ).
+      CATCH cx_sy_compression_error cx_sy_buffer_overflow.
+        lv_decompress_len = -1.
+    ENDTRY.
+
+    IF lv_decompress_len = iv_expected.
+      " The kernel does not tell where the stream ends. If the git server compressed the
+      " same way as the kernel, compressing again gives the length.
+      cl_abap_gzip=>compress_binary(
+        EXPORTING
+          raw_in       = cv_decompressed
+        IMPORTING
+          gzip_out     = lv_compressed
+          gzip_out_len = lv_compressed_len ).
+
+      IF xstrlen( cv_data ) > lv_compressed_len AND lv_compressed(lv_compressed_len) = cv_data(lv_compressed_len).
+        cv_data = cv_data+lv_compressed_len.
+        RETURN.
+      ENDIF.
+
+      " Otherwise find the Adler-32 checksum that ends the stream
+      lv_end = find_zlib_end(
+        iv_data         = cv_data
+        iv_decompressed = cv_decompressed ).
+      IF lv_end > 0.
+        cv_data = cv_data+lv_end.
+        RETURN.
+      ENDIF.
+    ENDIF.
+
+    " Last resort, slow: DEFLATE implemented in ABAP
+    " This also fixes issues with TFS 2017 and visualstudio.com Git repos
+    zlib_decompress( CHANGING cv_data         = cv_data
+                              cv_decompressed = cv_decompressed ).
+
+    IF xstrlen( cv_decompressed ) <> iv_expected.
+      zcx_abapgit_exception=>raise( |Decompression failed| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD encode.
 
     DATA: lv_sha1          TYPE x LENGTH 20,
@@ -611,6 +654,56 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD find_zlib_end.
+
+* A zlib stream ends with the Adler-32 checksum of the uncompressed data (RFC 1950).
+* The same four bytes can also occur inside the compressed data, so a position only
+* counts if the bytes in front of it decompress to iv_decompressed. The kernel does not
+* report a truncated stream, but a hit inside the data yields less than iv_decompressed.
+*
+* The kernel also ignores bytes after the end of the stream. If the checksum at the real
+* end is corrupt, a later occurrence would decompress to iv_decompressed as well. After the
+* last bit of data a stream has at most lc_max_tail bytes (end-of-block code and padding,
+* or an empty final stored block), so if the prefix shortened by that already gives the
+* data, the stream ended earlier and the position is rejected.
+
+    CONSTANTS lc_max_tail TYPE i VALUE 8.
+
+    DATA: lv_adler32 TYPE zif_abapgit_git_definitions=>ty_adler32,
+          lv_from    TYPE i,
+          lv_offset  TYPE i.
+
+    rv_end = -1.
+    lv_adler32 = zcl_abapgit_hash=>adler32( iv_decompressed ).
+
+    " The shortest DEFLATE stream has two bytes
+    lv_from = 2.
+    WHILE lv_from < xstrlen( iv_data ).
+      FIND FIRST OCCURRENCE OF lv_adler32 IN SECTION OFFSET lv_from OF iv_data
+        IN BYTE MODE MATCH OFFSET lv_offset.
+      IF sy-subrc <> 0.
+        RETURN.
+      ENDIF.
+
+      IF inflates_to( iv_data         = iv_data
+                      iv_length       = lv_offset
+                      iv_decompressed = iv_decompressed ) = abap_true.
+        IF lv_offset > lc_max_tail AND inflates_to( iv_data         = iv_data
+                                                    iv_length       = lv_offset - lc_max_tail
+                                                    iv_decompressed = iv_decompressed ) = abap_true.
+          " Behind the end of the stream, every later position is as well
+          RETURN.
+        ENDIF.
+        rv_end = lv_offset.
+        RETURN.
+      ENDIF.
+
+      lv_from = lv_offset + 1.
+    ENDWHILE.
+
+  ENDMETHOD.
+
+
   METHOD get_length.
 
 * https://github.com/git/git/blob/master/Documentation/technical/pack-format.txt
@@ -678,6 +771,26 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( |Todo, unknown git pack type| ).
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD inflates_to.
+
+    DATA: lv_prefix TYPE xstring,
+          lv_raw    TYPE xstring.
+
+    lv_prefix = iv_data(iv_length).
+    TRY.
+        cl_abap_gzip=>decompress_binary(
+          EXPORTING
+            gzip_in = lv_prefix
+          IMPORTING
+            raw_out = lv_raw ).
+        rv_equal = boolc( lv_raw = iv_decompressed ).
+      CATCH cx_sy_compression_error cx_sy_buffer_overflow.
+        rv_equal = abap_false.
+    ENDTRY.
 
   ENDMETHOD.
 
