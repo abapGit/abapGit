@@ -75,6 +75,8 @@ CLASS zcl_abapgit_serialize DEFINITION
       ty_tasks TYPE HASHED TABLE OF ty_task WITH UNIQUE KEY task.
 
     CONSTANTS c_max_batch_size TYPE i VALUE 20.
+    " Batch mode gives up when no task finishes for this long
+    CONSTANTS c_wait_seconds TYPE i VALUE 120.
 
     CLASS-DATA gv_max_processes TYPE i .
     DATA mt_files TYPE zif_abapgit_definitions=>ty_files_item_tt .
@@ -142,6 +144,25 @@ CLASS zcl_abapgit_serialize DEFINITION
     METHODS add_batch_results
       IMPORTING
         !it_results TYPE ty_parallel_results.
+    METHODS handle_batch_result
+      IMPORTING
+        !iv_task    TYPE clike
+        !iv_failed  TYPE abap_bool
+        !iv_message TYPE csequence OPTIONAL
+        !it_results TYPE ty_parallel_results OPTIONAL.
+    METHODS wait_for_callback
+      IMPORTING
+        !iv_free TYPE i.
+    METHODS wait_for_batches
+      IMPORTING
+        !iv_free TYPE i
+      RAISING
+        zcx_abapgit_exception.
+    METHODS finish_batches
+      IMPORTING
+        !iv_max TYPE i
+      RAISING
+        zcx_abapgit_exception.
     METHODS run_sequential
       IMPORTING
         !is_tadir TYPE zif_abapgit_definitions=>ty_tadir
@@ -683,15 +704,9 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     DATA: lv_result  TYPE xstring,
           lv_mess    TYPE c LENGTH 200,
-          lt_results TYPE ty_parallel_results,
-          ls_task    TYPE ty_task,
-          ls_item    TYPE zif_abapgit_definitions=>ty_item.
+          lv_failed  TYPE abap_bool,
+          lt_results TYPE ty_parallel_results.
 
-    FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_task-objects.
-
-
-    READ TABLE mt_tasks INTO ls_task WITH TABLE KEY task = p_task.
-    DELETE TABLE mt_tasks WITH TABLE KEY task = p_task.
 
     RECEIVE RESULTS FROM FUNCTION 'Z_ABAPGIT_SERIALIZE_BATCH'
       IMPORTING
@@ -701,13 +716,44 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         communication_failure = 2 MESSAGE lv_mess
         OTHERS                = 3.
     IF sy-subrc <> 0.
+      lv_failed = abap_true.
+      IF lv_mess IS INITIAL.
+        lv_mess = |{ sy-msgv1 }{ sy-msgv2 }{ sy-msgv3 }{ sy-msgv4 }|.
+      ENDIF.
+    ELSE.
+      IMPORT data = lt_results FROM DATA BUFFER lv_result. "#EC CI_SUBRC
+      ASSERT sy-subrc = 0.
+    ENDIF.
+
+    handle_batch_result(
+      iv_task    = p_task
+      iv_failed  = lv_failed
+      iv_message = lv_mess
+      it_results = lt_results ).
+
+  ENDMETHOD.
+
+
+  METHOD handle_batch_result.
+
+    DATA: ls_task TYPE ty_task,
+          ls_item TYPE zif_abapgit_definitions=>ty_item.
+
+    FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_task-objects.
+
+
+    READ TABLE mt_tasks INTO ls_task WITH TABLE KEY task = iv_task.
+    IF sy-subrc <> 0.
+      " Late callback of a run that has given up waiting for it
+      RETURN.
+    ENDIF.
+    DELETE TABLE mt_tasks WITH TABLE KEY task = iv_task.
+
+    IF iv_failed = abap_true.
       IF lines( ls_task-objects ) > 1.
         " Retry one by one, so the object that broke the task does not take the others with it
         APPEND LINES OF ls_task-objects TO mt_retry.
       ELSEIF mi_log IS BOUND.
-        IF lv_mess IS INITIAL.
-          lv_mess = |{ sy-msgv1 }{ sy-msgv2 }{ sy-msgv3 }{ sy-msgv4 }|.
-        ENDIF.
         READ TABLE ls_task-objects ASSIGNING <ls_object> INDEX 1.
         IF sy-subrc = 0.
           ls_item-obj_type = <ls_object>-tadir-object.
@@ -715,16 +761,88 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           ls_item-devclass = <ls_object>-tadir-devclass.
         ENDIF.
         mi_log->add_error(
-          iv_msg  = lv_mess
+          iv_msg  = iv_message
           is_item = ls_item ).
       ENDIF.
     ELSE.
-      IMPORT data = lt_results FROM DATA BUFFER lv_result. "#EC CI_SUBRC
-      ASSERT sy-subrc = 0.
-      add_batch_results( lt_results ).
+      add_batch_results( it_results ).
     ENDIF.
 
     mv_free = mv_free + 1.
+
+  ENDMETHOD.
+
+
+  METHOD wait_for_callback.
+
+    WAIT UNTIL mv_free > iv_free UP TO c_wait_seconds SECONDS.
+
+  ENDMETHOD.
+
+
+  METHOD wait_for_batches.
+
+    DATA: lv_free  TYPE i,
+          lv_count TYPE i,
+          lv_first TYPE string.
+
+    FIELD-SYMBOLS: <ls_task>   LIKE LINE OF mt_tasks,
+                   <ls_object> TYPE ty_parallel_object.
+
+
+    WHILE mv_free < iv_free.
+      lv_free = mv_free.
+      wait_for_callback( lv_free ).
+      IF mv_free > lv_free.
+        CONTINUE.
+      ENDIF.
+
+      " No task finished in time, or none can finish any more. Returning now would leave the
+      " outstanding objects out of the result without an error, so they would look deleted
+      LOOP AT mt_tasks ASSIGNING <ls_task>.
+        LOOP AT <ls_task>-objects ASSIGNING <ls_object>.
+          lv_count = lv_count + 1.
+          IF lv_first IS INITIAL.
+            lv_first = |{ <ls_object>-tadir-object } { <ls_object>-tadir-obj_name }|.
+          ENDIF.
+        ENDLOOP.
+      ENDLOOP.
+      zcx_abapgit_exception=>raise( |Serialization incomplete, no parallel task finished within {
+        c_wait_seconds } seconds. { lv_count } objects outstanding, e.g. { lv_first }| ).
+    ENDWHILE.
+
+  ENDMETHOD.
+
+
+  METHOD finish_batches.
+
+    DATA: lt_retry TYPE ty_parallel_objects,
+          lt_batch TYPE ty_parallel_objects,
+          lv_retry TYPE i.
+
+    FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_retry.
+
+
+    " A failed task queues its objects in mt_retry when its callback arrives, which can be any time
+    " until the last task has finished. So the queue is only complete once nothing is outstanding
+    DO.
+      wait_for_batches( iv_max ).
+      IF mt_retry IS INITIAL.
+        EXIT.
+      ENDIF.
+
+      lt_retry = mt_retry.
+      CLEAR mt_retry.
+      LOOP AT lt_retry ASSIGNING <ls_object>.
+        lv_retry = lv_retry + 1.
+        CLEAR lt_batch.
+        APPEND <ls_object> TO lt_batch.
+        wait_for_batches( 1 ).
+        run_batch(
+          it_objects = lt_batch
+          iv_task    = |retry-{ lv_retry }| ).
+      ENDLOOP.
+    ENDDO.
 
   ENDMETHOD.
 
@@ -932,13 +1050,11 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           lv_index      TYPE i,
           lv_batch_size TYPE i,
           lt_batch      TYPE ty_parallel_objects,
-          lt_retry      TYPE ty_parallel_objects,
           li_progress   TYPE REF TO zif_abapgit_progress,
           lo_timer      TYPE REF TO zcl_abapgit_timer,
           lt_tadir      TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
-    FIELD-SYMBOLS: <ls_tadir>  LIKE LINE OF it_tadir,
-                   <ls_object> LIKE LINE OF lt_retry.
+    FIELD-SYMBOLS <ls_tadir> LIKE LINE OF it_tadir.
 
 
     CLEAR: mt_files, mt_tasks, mt_retry.
@@ -984,7 +1100,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
             it_objects = lt_batch
             iv_task    = |{ lv_index }| ).
           CLEAR lt_batch.
-          WAIT UNTIL mv_free > 0 UP TO 120 SECONDS.
+          wait_for_batches( 1 ).
         ENDIF.
       ELSE.
         li_progress->show(
@@ -998,28 +1114,17 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     ENDLOOP.
 
     IF lt_batch IS NOT INITIAL.
-      WAIT UNTIL mv_free > 0 UP TO 120 SECONDS.
+      wait_for_batches( 1 ).
       run_batch(
         it_objects = lt_batch
         iv_task    = |{ lv_count }-last| ).
     ENDIF.
 
-    WAIT UNTIL mv_free = lv_max UP TO 120 SECONDS.
-
-    " Batch mode: objects of failed tasks, one task each
-    lt_retry = mt_retry.
-    CLEAR mt_retry.
-    LOOP AT lt_retry ASSIGNING <ls_object>.
-      lv_index = sy-tabix.
-      CLEAR lt_batch.
-      APPEND <ls_object> TO lt_batch.
-      WAIT UNTIL mv_free > 0 UP TO 120 SECONDS.
-      run_batch(
-        it_objects = lt_batch
-        iv_task    = |retry-{ lv_index }| ).
-    ENDLOOP.
-
-    WAIT UNTIL mv_free = lv_max UP TO 120 SECONDS.
+    IF mv_batch = abap_true.
+      finish_batches( lv_max ).
+    ELSE.
+      WAIT UNTIL mv_free = lv_max UP TO 120 SECONDS.
+    ENDIF.
 
     li_progress->off( ).
 

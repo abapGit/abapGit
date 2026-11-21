@@ -1100,3 +1100,279 @@ CLASS ltcl_serialize_batch IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+CLASS ltd_batch_serializer DEFINITION INHERITING FROM zcl_abapgit_serialize FINAL FOR TESTING.
+
+* Batch mode without RFC: run_batch only queues a task, and each wait delivers the oldest
+* queued task's callback. Files are faked, one per object
+
+  PUBLIC SECTION.
+    TYPES ty_dispatches TYPE STANDARD TABLE OF ty_parallel_objects WITH DEFAULT KEY.
+
+    DATA mt_dispatched TYPE ty_dispatches READ-ONLY.
+    DATA mv_batch_size TYPE i VALUE 2.
+    " Tasks with several objects fail
+    DATA mv_fail_multi TYPE abap_bool.
+    " All tasks fail
+    DATA mv_fail_all TYPE abap_bool.
+    " No task ever finishes
+    DATA mv_stall TYPE abap_bool.
+
+  PROTECTED SECTION.
+    METHODS determine_max_processes REDEFINITION.
+    METHODS determine_batch_size REDEFINITION.
+    METHODS filter_unsupported_objects REDEFINITION.
+    METHODS filter_ignored_objects REDEFINITION.
+    METHODS run_batch REDEFINITION.
+    METHODS wait_for_callback REDEFINITION.
+
+  PRIVATE SECTION.
+    DATA mt_pending TYPE STANDARD TABLE OF ty_char32 WITH DEFAULT KEY.
+
+ENDCLASS.
+
+
+CLASS ltd_batch_serializer IMPLEMENTATION.
+
+  METHOD determine_max_processes.
+    rv_processes = 2.
+  ENDMETHOD.
+
+  METHOD determine_batch_size.
+    rv_size = mv_batch_size.
+  ENDMETHOD.
+
+  METHOD filter_unsupported_objects.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD filter_ignored_objects.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD run_batch.
+
+    DATA ls_task TYPE ty_task.
+
+    ASSERT mv_free > 0.
+
+    APPEND it_objects TO mt_dispatched.
+
+    ls_task-task    = iv_task.
+    ls_task-objects = it_objects.
+    INSERT ls_task INTO TABLE mt_tasks.
+    APPEND iv_task TO mt_pending.
+
+    mv_free = mv_free - 1.
+
+  ENDMETHOD.
+
+  METHOD wait_for_callback.
+
+    DATA: lv_task    TYPE ty_char32,
+          lv_failed  TYPE abap_bool,
+          ls_task    TYPE ty_task,
+          ls_file    TYPE zif_abapgit_git_definitions=>ty_file,
+          lt_results TYPE ty_parallel_results.
+
+    FIELD-SYMBOLS: <ls_object> TYPE ty_parallel_object,
+                   <ls_result> TYPE ty_parallel_result.
+
+
+    IF mv_stall = abap_true.
+      RETURN.
+    ENDIF.
+
+    READ TABLE mt_pending INTO lv_task INDEX 1.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+    DELETE mt_pending INDEX 1.
+
+    READ TABLE mt_tasks INTO ls_task WITH TABLE KEY task = lv_task.
+    ASSERT sy-subrc = 0.
+
+    IF mv_fail_all = abap_true OR ( mv_fail_multi = abap_true AND lines( ls_task-objects ) > 1 ).
+      lv_failed = abap_true.
+    ELSE.
+      LOOP AT ls_task-objects ASSIGNING <ls_object>.
+        APPEND INITIAL LINE TO lt_results ASSIGNING <ls_result>.
+        <ls_result>-path = <ls_object>-tadir-path.
+        <ls_result>-file_item-item-obj_type = <ls_object>-tadir-object.
+        <ls_result>-file_item-item-obj_name = <ls_object>-tadir-obj_name.
+        ls_file-filename = <ls_object>-tadir-obj_name.
+        APPEND ls_file TO <ls_result>-file_item-files.
+      ENDLOOP.
+    ENDIF.
+
+    handle_batch_result(
+      iv_task    = lv_task
+      iv_failed  = lv_failed
+      iv_message = 'Task failed'
+      it_results = lt_results ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+CLASS ltcl_serialize_batch_tasks DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
+
+  PRIVATE SECTION.
+    DATA:
+      mo_settings_double TYPE REF TO ltd_settings,
+      mo_cut             TYPE REF TO ltd_batch_serializer,
+      mi_log             TYPE REF TO zif_abapgit_log.
+
+    METHODS:
+      setup,
+      teardown,
+      given_programs
+        IMPORTING
+          iv_count        TYPE i
+        RETURNING
+          VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt,
+      two_objects_one_task FOR TESTING RAISING zcx_abapgit_exception,
+      failed_tasks_retried_singly FOR TESTING RAISING zcx_abapgit_exception,
+      failed_retries_logged FOR TESTING RAISING zcx_abapgit_exception,
+      stalled_tasks_raise FOR TESTING.
+
+ENDCLASS.
+
+
+CLASS ltcl_serialize_batch_tasks IMPLEMENTATION.
+
+  METHOD setup.
+
+    CREATE OBJECT mo_settings_double.
+    mo_settings_double->set_experimental_features( zcl_abapgit_serialize=>c_feature_batch ).
+    zcl_abapgit_persist_injector=>set_settings( mo_settings_double ).
+
+    TRY.
+        CREATE OBJECT mo_cut.
+      CATCH zcx_abapgit_exception.
+        cl_abap_unit_assert=>fail( 'Error creating serializer' ).
+    ENDTRY.
+
+    CREATE OBJECT mi_log TYPE zcl_abapgit_log.
+
+  ENDMETHOD.
+
+  METHOD teardown.
+    " Leave batch mode switched off for other tests
+    CREATE OBJECT mo_settings_double.
+    zcl_abapgit_persist_injector=>set_settings( mo_settings_double ).
+  ENDMETHOD.
+
+  METHOD given_programs.
+
+    FIELD-SYMBOLS <ls_tadir> LIKE LINE OF rt_tadir.
+
+    DO iv_count TIMES.
+      APPEND INITIAL LINE TO rt_tadir ASSIGNING <ls_tadir>.
+      <ls_tadir>-object     = 'PROG'.
+      <ls_tadir>-obj_name   = |ZABAPGIT_BATCH_{ sy-index }|.
+      <ls_tadir>-devclass   = 'PACKAGE'.
+      <ls_tadir>-path       = '/src/'.
+      <ls_tadir>-masterlang = sy-langu.
+    ENDDO.
+
+  ENDMETHOD.
+
+  METHOD two_objects_one_task.
+
+    DATA: lt_files   TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          lt_objects TYPE zcl_abapgit_serialize=>ty_parallel_objects.
+
+    lt_files = mo_cut->serialize(
+      it_tadir = given_programs( 2 )
+      ii_log   = mi_log ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( mo_cut->mt_dispatched )
+      exp = 1 ).
+    READ TABLE mo_cut->mt_dispatched INTO lt_objects INDEX 1.
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_objects )
+      exp = 2 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_files )
+      exp = 2 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mi_log->count( )
+      exp = 0 ).
+
+  ENDMETHOD.
+
+  METHOD failed_tasks_retried_singly.
+
+    DATA: lt_files   TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          lt_objects TYPE zcl_abapgit_serialize=>ty_parallel_objects.
+
+    " Two tasks of two objects on two processes: the first task fails while the main loop waits
+    " for a free process, the second only in the final wait, after the main loop has ended
+    mo_cut->mv_fail_multi = abap_true.
+
+    lt_files = mo_cut->serialize(
+      it_tadir = given_programs( 4 )
+      ii_log   = mi_log ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( mo_cut->mt_dispatched )
+      exp = 6 ).
+    LOOP AT mo_cut->mt_dispatched INTO lt_objects FROM 3.
+      cl_abap_unit_assert=>assert_equals(
+        act = lines( lt_objects )
+        exp = 1 ).
+    ENDLOOP.
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_files )
+      exp = 4 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mi_log->count( )
+      exp = 0 ).
+
+  ENDMETHOD.
+
+  METHOD failed_retries_logged.
+
+    DATA lt_files TYPE zif_abapgit_definitions=>ty_files_item_tt.
+
+    mo_cut->mv_fail_all = abap_true.
+
+    lt_files = mo_cut->serialize(
+      it_tadir = given_programs( 2 )
+      ii_log   = mi_log ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( mo_cut->mt_dispatched )
+      exp = 3 ).
+    cl_abap_unit_assert=>assert_initial( lt_files ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mi_log->count( )
+      exp = 2 ).
+
+  ENDMETHOD.
+
+  METHOD stalled_tasks_raise.
+
+    DATA: lx_error TYPE REF TO zcx_abapgit_exception,
+          lv_found TYPE abap_bool.
+
+    mo_cut->mv_stall = abap_true.
+
+    TRY.
+        mo_cut->serialize(
+          it_tadir = given_programs( 4 )
+          ii_log   = mi_log ).
+        cl_abap_unit_assert=>fail( 'Incomplete serialization must raise' ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        lv_found = boolc( lx_error->get_text( ) CS '4 objects outstanding' ).
+        cl_abap_unit_assert=>assert_equals(
+          act = lv_found
+          exp = abap_true ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+ENDCLASS.
