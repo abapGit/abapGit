@@ -602,7 +602,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         IF NOT lv_mess IS INITIAL.
           mi_log->add_error( lv_mess ).
         ELSE.
-          mi_log->add_error( |{ sy-msgv1 }{ sy-msgv2 }{ sy-msgv3 }{ sy-msgv3 }| ).
+          mi_log->add_error( |{ sy-msgv1 }{ sy-msgv2 }{ sy-msgv3 }{ sy-msgv4 }| ).
         ENDIF.
       ENDIF.
     ELSE.
