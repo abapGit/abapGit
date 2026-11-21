@@ -1117,6 +1117,8 @@ CLASS ltd_batch_serializer DEFINITION INHERITING FROM zcl_abapgit_serialize FINA
     DATA mv_fail_all TYPE abap_bool.
     " No task ever finishes
     DATA mv_stall TYPE abap_bool.
+    " This many waits deliver nothing before tasks finish again
+    DATA mv_stalled_waits TYPE i.
 
   PROTECTED SECTION.
     METHODS determine_max_processes REDEFINITION.
@@ -1182,6 +1184,10 @@ CLASS ltd_batch_serializer IMPLEMENTATION.
     IF mv_stall = abap_true.
       RETURN.
     ENDIF.
+    IF mv_stalled_waits > 0.
+      mv_stalled_waits = mv_stalled_waits - 1.
+      RETURN.
+    ENDIF.
 
     READ TABLE mt_pending INTO lv_task INDEX 1.
     IF sy-subrc <> 0.
@@ -1235,7 +1241,9 @@ CLASS ltcl_serialize_batch_tasks DEFINITION FOR TESTING DURATION SHORT RISK LEVE
       two_objects_one_task FOR TESTING RAISING zcx_abapgit_exception,
       failed_tasks_retried_singly FOR TESTING RAISING zcx_abapgit_exception,
       failed_retries_logged FOR TESTING RAISING zcx_abapgit_exception,
-      stalled_tasks_raise FOR TESTING.
+      stalled_tasks_raise FOR TESTING,
+      slow_batch_waited_for FOR TESTING RAISING zcx_abapgit_exception,
+      slow_single_object_raises FOR TESTING.
 
 ENDCLASS.
 
@@ -1368,6 +1376,46 @@ CLASS ltcl_serialize_batch_tasks IMPLEMENTATION.
         cl_abap_unit_assert=>fail( 'Incomplete serialization must raise' ).
       CATCH zcx_abapgit_exception INTO lx_error.
         lv_found = boolc( lx_error->get_text( ) CS '4 objects outstanding' ).
+        cl_abap_unit_assert=>assert_equals(
+          act = lv_found
+          exp = abap_true ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD slow_batch_waited_for.
+
+    DATA lt_files TYPE zif_abapgit_definitions=>ty_files_item_tt.
+
+    " Tasks of two objects get two waits; per-object mode would wait as long
+    mo_cut->mv_stalled_waits = 1.
+
+    lt_files = mo_cut->serialize(
+      it_tadir = given_programs( 4 )
+      ii_log   = mi_log ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_files )
+      exp = 4 ).
+
+  ENDMETHOD.
+
+  METHOD slow_single_object_raises.
+
+    DATA: lx_error TYPE REF TO zcx_abapgit_exception,
+          lv_found TYPE abap_bool.
+
+    " Tasks of one object get one wait, as in per-object mode
+    mo_cut->mv_batch_size    = 1.
+    mo_cut->mv_stalled_waits = 1.
+
+    TRY.
+        mo_cut->serialize(
+          it_tadir = given_programs( 2 )
+          ii_log   = mi_log ).
+        cl_abap_unit_assert=>fail( 'Incomplete serialization must raise' ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        lv_found = boolc( lx_error->get_text( ) CS '2 objects outstanding' ).
         cl_abap_unit_assert=>assert_equals(
           act = lv_found
           exp = abap_true ).

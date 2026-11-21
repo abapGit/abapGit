@@ -75,7 +75,7 @@ CLASS zcl_abapgit_serialize DEFINITION
       ty_tasks TYPE HASHED TABLE OF ty_task WITH UNIQUE KEY task.
 
     CONSTANTS c_max_batch_size TYPE i VALUE 20.
-    " Batch mode gives up when no task finishes for this long
+    " Batch mode gives up when no task finishes for this long per object of the largest outstanding task
     CONSTANTS c_wait_seconds TYPE i VALUE 120.
 
     CLASS-DATA gv_max_processes TYPE i .
@@ -782,9 +782,11 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
   METHOD wait_for_batches.
 
-    DATA: lv_free  TYPE i,
-          lv_count TYPE i,
-          lv_first TYPE string.
+    DATA: lv_free   TYPE i,
+          lv_stalls TYPE i,
+          lv_limit  TYPE i,
+          lv_count  TYPE i,
+          lv_first  TYPE string.
 
     FIELD-SYMBOLS: <ls_task>   LIKE LINE OF mt_tasks,
                    <ls_object> TYPE ty_parallel_object.
@@ -794,6 +796,19 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       lv_free = mv_free.
       wait_for_callback( lv_free ).
       IF mv_free > lv_free.
+        CLEAR lv_stalls.
+        CONTINUE.
+      ENDIF.
+
+      " Per-object mode gives each object c_wait_seconds. A task is only given up once it had that
+      " long for each of its objects, i.e. after one wait per object of the largest outstanding task
+      lv_stalls = lv_stalls + 1.
+      lv_limit = 1.
+      LOOP AT mt_tasks ASSIGNING <ls_task>.
+        lv_limit = nmax( val1 = lv_limit
+                         val2 = lines( <ls_task>-objects ) ).
+      ENDLOOP.
+      IF lv_stalls < lv_limit.
         CONTINUE.
       ENDIF.
 
@@ -808,7 +823,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         ENDLOOP.
       ENDLOOP.
       zcx_abapgit_exception=>raise( |Serialization incomplete, no parallel task finished within {
-        c_wait_seconds } seconds. { lv_count } objects outstanding, e.g. { lv_first }| ).
+        lv_stalls * c_wait_seconds } seconds. { lv_count } objects outstanding, e.g. { lv_first }| ).
     ENDWHILE.
 
   ENDMETHOD.
