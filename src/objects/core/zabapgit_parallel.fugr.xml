@@ -9,6 +9,78 @@
    </INCLUDES>
    <FUNCTIONS>
     <item>
+     <FUNCNAME>Z_ABAPGIT_SERIALIZE_BATCH</FUNCNAME>
+     <REMOTE_CALL>R</REMOTE_CALL>
+     <SHORT_TEXT>abapGit - Serialize Objects</SHORT_TEXT>
+     <IMPORT>
+      <RSIMP>
+       <PARAMETER>IV_OBJECTS</PARAMETER>
+       <TYP>XSTRING</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_ABAP_LANGUAGE_VERS</PARAMETER>
+       <TYP>UCCHECK</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_LANGUAGE</PARAMETER>
+       <TYP>SY-LANGU</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_SUPPRESS_PO_COMMENTS</PARAMETER>
+       <TYP>CHAR1</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>IT_TRANSLATION_LANGS</PARAMETER>
+       <TYP>TFPLAISO</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_USE_LXE</PARAMETER>
+       <TYP>CHAR1</TYP>
+      </RSIMP>
+     </IMPORT>
+     <EXPORT>
+      <RSEXP>
+       <PARAMETER>EV_RESULT</PARAMETER>
+       <TYP>XSTRING</TYP>
+      </RSEXP>
+     </EXPORT>
+     <DOCUMENTATION>
+      <RSFDO>
+       <PARAMETER>IV_OBJECTS</PARAMETER>
+       <KIND>P</KIND>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_ABAP_LANGUAGE_VERS</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>ABAP Language Version</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_LANGUAGE</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>ABAP System Field: Language Key of Text Environment</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_SUPPRESS_PO_COMMENTS</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Single-Character Indicator</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IT_TRANSLATION_LANGS</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Language Table in ISO Format</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_USE_LXE</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Single-Character Flag</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>EV_RESULT</PARAMETER>
+       <KIND>P</KIND>
+      </RSFDO>
+     </DOCUMENTATION>
+    </item>
+    <item>
      <FUNCNAME>Z_ABAPGIT_SERIALIZE_PACKAGE</FUNCNAME>
      <REMOTE_CALL>R</REMOTE_CALL>
      <SHORT_TEXT>abapGit - Serialize Package to ZIP</SHORT_TEXT>
