@@ -79,6 +79,8 @@ CLASS zcl_abapgit_serialize DEFINITION
     CONSTANTS c_wait_seconds TYPE i VALUE 120.
 
     CLASS-DATA gv_max_processes TYPE i .
+    " Numbers the runs of serialize( ) in this session, so batch task names are unique across runs
+    CLASS-DATA gv_run TYPE i .
     DATA mt_files TYPE zif_abapgit_definitions=>ty_files_item_tt .
     DATA mv_free TYPE i .
     DATA mi_log TYPE REF TO zif_abapgit_log .
@@ -918,7 +920,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     EXPORT data = it_objects TO DATA BUFFER lv_objects.
 
     DO.
-      ls_task-task = |{ iv_task }-{ sy-index }|.
+      " A task given up by an earlier run may still call back; its name must not match a task of this run
+      ls_task-task = |{ gv_run }-{ iv_task }-{ sy-index }|.
       " An initial server group is handled like DEFAULT meaning all instances are used
       CALL FUNCTION 'Z_ABAPGIT_SERIALIZE_BATCH'
         STARTING NEW TASK ls_task-task
@@ -1073,6 +1076,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
 
     CLEAR: mt_files, mt_tasks, mt_retry.
+    gv_run = gv_run + 1.
 
     lv_max = determine_max_processes( iv_force_sequential = iv_force_sequential
                                       iv_package          = iv_package ).

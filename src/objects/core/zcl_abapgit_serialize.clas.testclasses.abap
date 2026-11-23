@@ -668,11 +668,14 @@ CLASS ltcl_serialize DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS F
 
   PRIVATE SECTION.
     DATA:
-      mo_dot TYPE REF TO zcl_abapgit_dot_abapgit,
-      mo_cut TYPE REF TO zcl_abapgit_serialize.
+      mo_dot               TYPE REF TO zcl_abapgit_dot_abapgit,
+      mo_settings_double   TYPE REF TO ltd_settings,
+      mi_previous_settings TYPE REF TO zif_abapgit_persist_settings,
+      mo_cut               TYPE REF TO zcl_abapgit_serialize.
 
     METHODS:
       setup,
+      teardown,
       test FOR TESTING RAISING zcx_abapgit_exception,
       unsupported FOR TESTING RAISING zcx_abapgit_exception,
       ignored FOR TESTING RAISING zcx_abapgit_exception.
@@ -684,6 +687,11 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD setup.
 
+    " Per-object mode, whatever the settings in the database say about SERIALIZE_BATCH
+    mi_previous_settings = zcl_abapgit_persist_factory=>get_settings( ).
+    CREATE OBJECT mo_settings_double.
+    zcl_abapgit_persist_injector=>set_settings( mo_settings_double ).
+
     mo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
 
     TRY.
@@ -693,6 +701,10 @@ CLASS ltcl_serialize IMPLEMENTATION.
       CATCH zcx_abapgit_exception.
         cl_abap_unit_assert=>fail( 'Error creating serializer' ).
     ENDTRY.
+  ENDMETHOD.
+
+  METHOD teardown.
+    zcl_abapgit_persist_injector=>set_settings( mi_previous_settings ).
   ENDMETHOD.
 
   METHOD test.
@@ -991,8 +1003,9 @@ CLASS ltcl_serialize_batch DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARM
 
   PRIVATE SECTION.
     DATA:
-      mo_settings_double TYPE REF TO ltd_settings,
-      mo_cut             TYPE REF TO zcl_abapgit_serialize.
+      mo_settings_double   TYPE REF TO ltd_settings,
+      mi_previous_settings TYPE REF TO zif_abapgit_persist_settings,
+      mo_cut               TYPE REF TO zcl_abapgit_serialize.
 
     METHODS:
       setup,
@@ -1007,6 +1020,7 @@ CLASS ltcl_serialize_batch IMPLEMENTATION.
 
   METHOD setup.
 
+    mi_previous_settings = zcl_abapgit_persist_factory=>get_settings( ).
     CREATE OBJECT mo_settings_double.
     mo_settings_double->set_experimental_features( zcl_abapgit_serialize=>c_feature_batch ).
     zcl_abapgit_persist_injector=>set_settings( mo_settings_double ).
@@ -1022,9 +1036,7 @@ CLASS ltcl_serialize_batch IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD teardown.
-    " Leave batch mode switched off for other tests
-    CREATE OBJECT mo_settings_double.
-    zcl_abapgit_persist_injector=>set_settings( mo_settings_double ).
+    zcl_abapgit_persist_injector=>set_settings( mi_previous_settings ).
   ENDMETHOD.
 
   METHOD test.
@@ -1226,9 +1238,10 @@ CLASS ltcl_serialize_batch_tasks DEFINITION FOR TESTING DURATION SHORT RISK LEVE
 
   PRIVATE SECTION.
     DATA:
-      mo_settings_double TYPE REF TO ltd_settings,
-      mo_cut             TYPE REF TO ltd_batch_serializer,
-      mi_log             TYPE REF TO zif_abapgit_log.
+      mo_settings_double   TYPE REF TO ltd_settings,
+      mi_previous_settings TYPE REF TO zif_abapgit_persist_settings,
+      mo_cut               TYPE REF TO ltd_batch_serializer,
+      mi_log               TYPE REF TO zif_abapgit_log.
 
     METHODS:
       setup,
@@ -1252,6 +1265,7 @@ CLASS ltcl_serialize_batch_tasks IMPLEMENTATION.
 
   METHOD setup.
 
+    mi_previous_settings = zcl_abapgit_persist_factory=>get_settings( ).
     CREATE OBJECT mo_settings_double.
     mo_settings_double->set_experimental_features( zcl_abapgit_serialize=>c_feature_batch ).
     zcl_abapgit_persist_injector=>set_settings( mo_settings_double ).
@@ -1267,9 +1281,7 @@ CLASS ltcl_serialize_batch_tasks IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD teardown.
-    " Leave batch mode switched off for other tests
-    CREATE OBJECT mo_settings_double.
-    zcl_abapgit_persist_injector=>set_settings( mo_settings_double ).
+    zcl_abapgit_persist_injector=>set_settings( mi_previous_settings ).
   ENDMETHOD.
 
   METHOD given_programs.

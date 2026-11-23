@@ -21,7 +21,9 @@ FUNCTION z_abapgit_serialize_batch.
 
   FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
 
-  IMPORT data = lt_objects FROM DATA BUFFER iv_objects.
+  " Without objects the task would return no results, and its objects would look deleted
+  IMPORT data = lt_objects FROM DATA BUFFER iv_objects. "#EC CI_SUBRC
+  ASSERT sy-subrc = 0.
 
   ls_i18n_params-main_language         = iv_language.
   ls_i18n_params-suppress_po_comments  = iv_suppress_po_comments.
