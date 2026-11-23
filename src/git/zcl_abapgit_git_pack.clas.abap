@@ -149,9 +149,17 @@ CLASS zcl_abapgit_git_pack DEFINITION
       IMPORTING
         !iv_data         TYPE xstring
         !iv_length       TYPE i
+        !iv_tail         TYPE xstring
         !iv_decompressed TYPE xstring
       RETURNING
         VALUE(rv_equal)  TYPE abap_bool .
+    CLASS-METHODS stream_ended_by
+      IMPORTING
+        !iv_data         TYPE xstring
+        !iv_length       TYPE i
+        !iv_decompressed TYPE xstring
+      RETURNING
+        VALUE(rv_ended)  TYPE abap_bool .
 ENDCLASS.
 
 
@@ -657,17 +665,14 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
   METHOD find_zlib_end.
 
 * A zlib stream ends with the Adler-32 checksum of the uncompressed data (RFC 1950).
-* The same four bytes can also occur inside the compressed data, so a position only
-* counts if the bytes in front of it decompress to iv_decompressed. The kernel does not
-* report a truncated stream, but a hit inside the data yields less than iv_decompressed.
+* The same four bytes can also occur inside the compressed data, and can overlap the
+* end-of-block code at the real end. A position only counts if the DEFLATE stream ends
+* exactly there: it has ended within the bytes in front of it, but not within one byte
+* less (see stream_ended_by).
 *
-* The kernel also ignores bytes after the end of the stream. If the checksum at the real
-* end is corrupt, a later occurrence would decompress to iv_decompressed as well. After the
-* last bit of data a stream has at most lc_max_tail bytes (end-of-block code and padding,
-* or an empty final stored block), so if the prefix shortened by that already gives the
-* data, the stream ended earlier and the position is rejected.
-
-    CONSTANTS lc_max_tail TYPE i VALUE 8.
+* The kernel ignores bytes after the end of the stream. If the checksum at the real end
+* is corrupt, a later occurrence lies behind the end; that is detected by the same check
+* and the position is rejected.
 
     DATA: lv_adler32 TYPE zif_abapgit_git_definitions=>ty_adler32,
           lv_from    TYPE i,
@@ -685,12 +690,12 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
         RETURN.
       ENDIF.
 
-      IF inflates_to( iv_data         = iv_data
-                      iv_length       = lv_offset
-                      iv_decompressed = iv_decompressed ) = abap_true.
-        IF lv_offset > lc_max_tail AND inflates_to( iv_data         = iv_data
-                                                    iv_length       = lv_offset - lc_max_tail
-                                                    iv_decompressed = iv_decompressed ) = abap_true.
+      IF stream_ended_by( iv_data         = iv_data
+                          iv_length       = lv_offset
+                          iv_decompressed = iv_decompressed ) = abap_true.
+        IF stream_ended_by( iv_data         = iv_data
+                            iv_length       = lv_offset - 1
+                            iv_decompressed = iv_decompressed ) = abap_true.
           " Behind the end of the stream, every later position is as well
           RETURN.
         ENDIF.
@@ -780,7 +785,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
     DATA: lv_prefix TYPE xstring,
           lv_raw    TYPE xstring.
 
-    lv_prefix = iv_data(iv_length).
+    CONCATENATE iv_data(iv_length) iv_tail INTO lv_prefix IN BYTE MODE.
     TRY.
         cl_abap_gzip=>decompress_binary(
           EXPORTING
@@ -791,6 +796,39 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       CATCH cx_sy_compression_error cx_sy_buffer_overflow.
         rv_equal = abap_false.
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD stream_ended_by.
+
+* The kernel does not report a truncated stream: a stream cut after its last data byte,
+* but before the end-of-block code, still decompresses to all of the data. So the first
+* iv_length bytes are decompressed twice, followed once by zero bits and once by one bits.
+* If the stream ended within iv_length bytes, both tails are ignored. Otherwise the next
+* bit differs between the tails, so at least one of them continues the stream and yields
+* more data or an error (another block, invalid block type or code, stored block length).
+
+    CONSTANTS: lc_zeros TYPE x LENGTH 8 VALUE '0000000000000000',
+               lc_ones  TYPE x LENGTH 8 VALUE 'FFFFFFFFFFFFFFFF'.
+
+    DATA lv_tail TYPE xstring.
+
+    rv_ended = abap_false.
+
+    lv_tail = lc_zeros.
+    IF inflates_to( iv_data         = iv_data
+                    iv_length       = iv_length
+                    iv_tail         = lv_tail
+                    iv_decompressed = iv_decompressed ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    lv_tail = lc_ones.
+    rv_ended = inflates_to( iv_data         = iv_data
+                            iv_length       = iv_length
+                            iv_tail         = lv_tail
+                            iv_decompressed = iv_decompressed ).
 
   ENDMETHOD.
 

@@ -274,6 +274,12 @@ CLASS ltcl_pack DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
         RAISING zcx_abapgit_exception,
       zlib_end_corrupt_checksum FOR TESTING
         RAISING zcx_abapgit_exception,
+      zlib_end_corrupt_adjacent FOR TESTING
+        RAISING zcx_abapgit_exception,
+      zlib_end_corrupt_short FOR TESTING
+        RAISING zcx_abapgit_exception,
+      pack_checksum_overlaps_eob FOR TESTING
+        RAISING zcx_abapgit_exception,
       sort_tree1 FOR TESTING,
       sort_tree2 FOR TESTING.
 
@@ -567,6 +573,76 @@ CLASS ltcl_pack IMPLEMENTATION.
       act = zcl_abapgit_git_pack=>find_zlib_end(
               iv_data         = lv_input
               iv_decompressed = lv_data ) ).
+
+  ENDMETHOD.
+
+  METHOD zlib_end_corrupt_adjacent.
+
+    " The right checksum follows directly after the corrupt one at the real end
+    CONSTANTS lc_corrupt TYPE x LENGTH 4 VALUE '00000000'.
+
+    DATA: lv_data    TYPE xstring,
+          lv_stream  TYPE xstring,
+          lv_input   TYPE xstring,
+          lv_adler32 TYPE zif_abapgit_git_definitions=>ty_adler32.
+
+    lv_data = zcl_abapgit_convert=>string_to_xstring_utf8( 'Corrupt checksum, right one directly behind' ).
+    lv_adler32 = zcl_abapgit_hash=>adler32( lv_data ).
+    lv_stream = stored_deflate( lv_data ).
+
+    CONCATENATE lv_stream lc_corrupt lv_adler32 INTO lv_input IN BYTE MODE.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = -1
+      act = zcl_abapgit_git_pack=>find_zlib_end(
+              iv_data         = lv_input
+              iv_decompressed = lv_data ) ).
+
+  ENDMETHOD.
+
+  METHOD zlib_end_corrupt_short.
+
+    " Empty blob: fixed-Huffman final block with only the end-of-block code, two bytes.
+    " Its checksum is 00000001; a corrupt one is followed by the right one.
+    CONSTANTS lc_input TYPE x LENGTH 10 VALUE '0300FFFFFFFF00000001'.
+
+    DATA: lv_input TYPE xstring,
+          lv_empty TYPE xstring.
+
+    lv_input = lc_input.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = -1
+      act = zcl_abapgit_git_pack=>find_zlib_end(
+              iv_data         = lv_input
+              iv_decompressed = lv_empty ) ).
+
+  ENDMETHOD.
+
+  METHOD pack_checksum_overlaps_eob.
+
+    " 600-byte blob compressed by zlib level 1. Its Adler-32 is 00000000, and the stream
+    " ends with the byte 00 (end-of-block code and padding only). Without that last byte the
+    " kernel already returns all 600 bytes, so a checksum hit one byte early must be rejected.
+    CONSTANTS: lc_pack1 TYPE x LENGTH 46
+                 VALUE '5041434B0000000200000001B82578010B63A00310543276094D2BE790D4B2F689CDAB17503472A683AD082B1811',
+               lc_pack2 TYPE x LENGTH 34
+                 VALUE '4C3AB2FCFE8F5CB0020000000000BA069217AC353F145F416109445EAF542A863D6A'.
+
+    DATA: lv_pack   TYPE xstring,
+          lt_result TYPE zif_abapgit_definitions=>ty_objects_tt,
+          ls_result LIKE LINE OF lt_result.
+
+    CONCATENATE lc_pack1 lc_pack2 INTO lv_pack IN BYTE MODE.
+    lt_result = zcl_abapgit_git_pack=>decode( lv_pack ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 1
+      act = lines( lt_result ) ).
+    READ TABLE lt_result INTO ls_result INDEX 1.
+    cl_abap_unit_assert=>assert_equals(
+      exp = 600
+      act = xstrlen( ls_result-data ) ).
 
   ENDMETHOD.
 
