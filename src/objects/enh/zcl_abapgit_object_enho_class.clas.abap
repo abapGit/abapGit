@@ -128,7 +128,7 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
     lt_includes = io_class->get_enh_method_includes( ).
     LOOP AT lt_includes ASSIGNING <ls_include>.
       lv_include = io_class->if_enh_tool~get_name( ).
-      TRANSLATE lv_include USING ' ='.
+      OVERLAY lv_include WITH '========================================'.
       lv_include+30 = 'EM'.
       lv_include+32(8) = <ls_include>-includenr.
 

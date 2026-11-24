@@ -15,6 +15,8 @@ CLASS zcl_abapgit_popup_branch_list DEFINITION
         !iv_show_new_option TYPE abap_bool DEFAULT abap_false
         !iv_hide_branch     TYPE zif_abapgit_git_definitions=>ty_git_branch-name OPTIONAL
         !iv_hide_head       TYPE abap_bool DEFAULT abap_false
+        !iv_description     TYPE string OPTIONAL
+        !iv_button_label    TYPE string OPTIONAL
       RETURNING
         VALUE(ri_popup)     TYPE REF TO zif_abapgit_html_popup.
 
@@ -24,7 +26,9 @@ CLASS zcl_abapgit_popup_branch_list DEFINITION
         !iv_default_branch  TYPE string OPTIONAL
         !iv_show_new_option TYPE abap_bool DEFAULT abap_false
         !iv_hide_branch     TYPE zif_abapgit_git_definitions=>ty_git_branch-name OPTIONAL
-        !iv_hide_head       TYPE abap_bool DEFAULT abap_false.
+        !iv_hide_head       TYPE abap_bool DEFAULT abap_false
+        !iv_description     TYPE string OPTIONAL
+        !iv_button_label    TYPE string OPTIONAL.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -34,6 +38,8 @@ CLASS zcl_abapgit_popup_branch_list DEFINITION
     DATA mv_show_new_option TYPE abap_bool.
     DATA mv_hide_branch TYPE zif_abapgit_git_definitions=>ty_git_branch-name.
     DATA mv_hide_head TYPE abap_bool.
+    DATA mv_description TYPE string.
+    DATA mv_button_label TYPE string.
 
     METHODS fetch_branch_list
       RETURNING
@@ -54,6 +60,8 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
     mv_show_new_option = iv_show_new_option.
     mv_hide_branch     = iv_hide_branch.
     mv_hide_head       = iv_hide_head.
+    mv_description     = iv_description.
+    mv_button_label    = iv_button_label.
   ENDMETHOD.
 
 
@@ -64,7 +72,9 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
         iv_default_branch  = iv_default_branch
         iv_show_new_option = iv_show_new_option
         iv_hide_branch     = iv_hide_branch
-        iv_hide_head       = iv_hide_head.
+        iv_hide_head       = iv_hide_head
+        iv_description     = iv_description
+        iv_button_label    = iv_button_label.
   ENDMETHOD.
 
 
@@ -157,7 +167,9 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
       EXPORTING
         iv_title         = 'Choose Branch'
         it_list          = fetch_branch_list( )
-        ii_item_renderer = me.
+        ii_item_renderer = me
+        iv_description   = mv_description
+        iv_button_label  = mv_button_label.
 
   ENDMETHOD.
 ENDCLASS.

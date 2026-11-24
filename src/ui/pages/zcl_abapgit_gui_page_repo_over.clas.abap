@@ -447,6 +447,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
     DATA lo_toolbar_more_sub TYPE REF TO zcl_abapgit_html_toolbar.
+    DATA lo_toolbar_stage_sub TYPE REF TO zcl_abapgit_html_toolbar.
     DATA lo_toolbar_patch_sub TYPE REF TO zcl_abapgit_html_toolbar.
     DATA lo_toolbar_diff_sub TYPE REF TO zcl_abapgit_html_toolbar.
     DATA lv_dummy_key_param TYPE string.
@@ -461,9 +462,30 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_class    = |{ lc_action_class } { lc_online_class }|
       iv_li_class = |{ lc_action_class }| ).
 
+    CREATE OBJECT lo_toolbar_stage_sub EXPORTING iv_id = 'toolbar-ovp-stage_sub'.
+
+    lo_toolbar_stage_sub->add(
+      iv_txt      = |All Changes|
+      iv_act      = |{ zif_abapgit_definitions=>c_action-go_stage }{ lv_dummy_key_param }|
+      iv_class    = |{ lc_action_class } { lc_online_class }|
+      iv_li_class = |{ lc_action_class }| ).
+
+    lo_toolbar_stage_sub->add(
+      iv_txt      = |My Changes|
+      iv_title    = |Stage with the filter on objects you changed|
+      iv_act      = |{ zif_abapgit_definitions=>c_action-go_stage_me }{ lv_dummy_key_param }|
+      iv_class    = |{ lc_action_class } { lc_online_class }|
+      iv_li_class = |{ lc_action_class }| ).
+
+    lo_toolbar_stage_sub->add(
+      iv_txt      = |By Transport|
+      iv_act      = |{ zif_abapgit_definitions=>c_action-go_stage_transport }{ lv_dummy_key_param }|
+      iv_class    = |{ lc_action_class } { lc_online_class }|
+      iv_li_class = |{ lc_action_class }| ).
+
     lo_toolbar->add(
       iv_txt      = |Stage|
-      iv_act      = |{ zif_abapgit_definitions=>c_action-go_stage }{ lv_dummy_key_param }|
+      io_sub      = lo_toolbar_stage_sub
       iv_class    = |{ lc_action_class } { lc_online_class }|
       iv_li_class = |{ lc_action_class }| ).
 
@@ -537,12 +559,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_li_class = |{ lc_action_class }| ).
 
     CREATE OBJECT lo_toolbar_more_sub EXPORTING iv_id = 'toolbar-ovp-more_sub'.
-
-    lo_toolbar_more_sub->add(
-      iv_txt      = |Stage by Transport|
-      iv_act      = |{ zif_abapgit_definitions=>c_action-go_stage_transport }{ lv_dummy_key_param }|
-      iv_class    = |{ lc_action_class } { lc_online_class }|
-      iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar_more_sub->add(
       iv_txt      = |Export by Transport|

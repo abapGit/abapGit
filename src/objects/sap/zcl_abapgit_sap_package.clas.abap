@@ -100,7 +100,8 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
         unexpected_error           = 2
         intern_err                 = 3
         no_access                  = 4
-        object_locked_and_modified = 5 ).
+        object_locked_and_modified = 5
+        OTHERS                     = 6 ).
     IF sy-subrc = 0.
       " Package already exists. We assume this is fine. Its properties might be changed later at
       " DEVC deserialization.
@@ -225,7 +226,8 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
         unexpected_error           = 2
         intern_err                 = 3
         no_access                  = 4
-        object_locked_and_modified = 5 ).
+        object_locked_and_modified = 5
+        OTHERS                     = 6 ).
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
@@ -281,7 +283,8 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
         unexpected_error           = 2
         intern_err                 = 3
         no_access                  = 4
-        object_locked_and_modified = 5 ).
+        object_locked_and_modified = 5
+        OTHERS                     = 6 ).
     rv_bool = boolc( sy-subrc <> 1 ).
 
   ENDMETHOD.
@@ -538,7 +541,8 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
         undefined_name       = 1
         wrong_name_prefix    = 2
         reserved_local_name  = 3
-        invalid_package_name = 4 ).
+        invalid_package_name = 4
+        OTHERS               = 5 ).
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Package name { mv_package } is not valid| ).
     ENDIF.

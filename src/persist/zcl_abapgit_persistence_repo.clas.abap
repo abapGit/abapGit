@@ -131,7 +131,7 @@ CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
     ENDLOOP.
 
     SHIFT rv_next_repo_id RIGHT DELETING TRAILING space.
-    TRANSLATE rv_next_repo_id USING ' 0'.
+    OVERLAY rv_next_repo_id WITH '000000000000'.
 
   ENDMETHOD.
 

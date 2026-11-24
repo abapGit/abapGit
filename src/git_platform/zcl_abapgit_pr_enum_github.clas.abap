@@ -64,6 +64,27 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
         VALUE(rt_status) TYPE ty_status_tt
       RAISING
         zcx_abapgit_exception.
+
+    METHODS create_deployment
+      IMPORTING
+        iv_ref                  TYPE string
+        iv_environment          TYPE clike DEFAULT 'production'
+        iv_description          TYPE clike OPTIONAL
+      RETURNING
+        VALUE(rv_deployment_id) TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
+    " iv_state: error, failure, inactive, in_progress, queued, pending, success
+    METHODS set_deployment_status
+      IMPORTING
+        iv_deployment_id   TYPE string
+        iv_state           TYPE string
+        iv_description     TYPE clike OPTIONAL
+        iv_log_url         TYPE clike OPTIONAL
+        iv_environment_url TYPE clike OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -414,6 +435,106 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
+
+  METHOD create_deployment.
+* https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#create-a-deployment
+
+    DATA lv_url      TYPE string.
+    DATA li_json     TYPE REF TO zif_abapgit_ajson.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+    DATA lx_ajson    TYPE REF TO zcx_abapgit_ajson_error.
+
+    lv_url = mv_repo_url && '/deployments'.
+
+    TRY.
+        li_json = zcl_abapgit_ajson=>create_empty( ).
+        li_json->set_string(
+          iv_path = '/ref'
+          iv_val  = iv_ref ).
+        li_json->set_string(
+          iv_path = '/environment'
+          iv_val  = iv_environment ).
+        " dont let GitHub merge the default branch into the ref
+        li_json->set_boolean(
+          iv_path = '/auto_merge'
+          iv_val  = abap_false ).
+        IF iv_description IS NOT INITIAL.
+          li_json->set_string(
+            iv_path = '/description'
+            iv_val  = iv_description ).
+        ENDIF.
+
+        li_response = mi_http_agent->request(
+          iv_url     = lv_url
+          iv_method  = zif_abapgit_http_agent=>c_methods-post
+          iv_payload = li_json->stringify( ) ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+    ENDTRY.
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error creating deployment for ref { iv_ref }: { li_response->error( ) }| ).
+    ENDIF.
+
+    TRY.
+        rv_deployment_id = li_response->json( )->get( '/id' ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+    ENDTRY.
+
+    IF rv_deployment_id IS INITIAL.
+      zcx_abapgit_exception=>raise( |Error creating deployment for ref { iv_ref }, no id returned| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD set_deployment_status.
+* https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status
+
+    DATA lv_url      TYPE string.
+    DATA li_json     TYPE REF TO zif_abapgit_ajson.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
+    DATA lx_ajson    TYPE REF TO zcx_abapgit_ajson_error.
+
+    lv_url = mv_repo_url && '/deployments/' && iv_deployment_id && '/statuses'.
+
+    TRY.
+        li_json = zcl_abapgit_ajson=>create_empty( ).
+        li_json->set_string(
+          iv_path = '/state'
+          iv_val  = iv_state ).
+        IF iv_description IS NOT INITIAL.
+          li_json->set_string(
+            iv_path = '/description'
+            iv_val  = iv_description ).
+        ENDIF.
+        IF iv_log_url IS NOT INITIAL.
+          li_json->set_string(
+            iv_path = '/log_url'
+            iv_val  = iv_log_url ).
+        ENDIF.
+        IF iv_environment_url IS NOT INITIAL.
+          li_json->set_string(
+            iv_path = '/environment_url'
+            iv_val  = iv_environment_url ).
+        ENDIF.
+
+        li_response = mi_http_agent->request(
+          iv_url     = lv_url
+          iv_method  = zif_abapgit_http_agent=>c_methods-post
+          iv_payload = li_json->stringify( ) ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+    ENDTRY.
+
+    IF li_response->is_ok( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Error setting deployment { iv_deployment_id } status: { li_response->error( ) }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_pr_enum_provider~create_initial_branch.
 * https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#create-or-update-file-contents--parameters

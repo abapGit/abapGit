@@ -169,6 +169,9 @@ CLASS zcl_abapgit_objects_program DEFINITION
         VALUE(rt_tpool) TYPE textpool_table.
   PRIVATE SECTION.
 
+    TYPES:
+      ty_d021s_tt TYPE STANDARD TABLE OF d021s WITH DEFAULT KEY.
+
     CONSTANTS:
       BEGIN OF c_state,
         active   TYPE r3state VALUE 'A',
@@ -194,6 +197,12 @@ CLASS zcl_abapgit_objects_program DEFINITION
       CHANGING
         cs_adm TYPE rsmpe_adm.
 
+    CLASS-METHODS fix_button_right_vislength
+      IMPORTING
+        it_fieldlist_int TYPE ty_d021s_tt
+      CHANGING
+        ct_fields        TYPE dyfatc_tab.
+
     METHODS get_program_title
       IMPORTING
         !it_tpool       TYPE textpool_table
@@ -213,6 +222,7 @@ CLASS zcl_abapgit_objects_program DEFINITION
         !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
         !it_source  TYPE abaptxt255_tab
         !iv_title   TYPE repti
+        !iv_package TYPE devclass
         !iv_state   TYPE progdir-state DEFAULT c_state-inactive
       RAISING
         zcx_abapgit_exception .
@@ -624,7 +634,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           not_executed           = 3
           not_exists             = 4
           no_modify_permission   = 5
-          popup_canceled         = 6.
+          popup_canceled         = 6
+          OTHERS                 = 7.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
@@ -653,6 +664,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         is_progdir = is_progdir
         it_source  = it_source
         iv_title   = lv_title
+        iv_package = iv_package
         iv_state   = c_state-off ).
     ELSE.
       insert_program(
@@ -697,7 +709,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       update_program(
         is_progdir = is_progdir
         it_source  = it_source
-        iv_title   = lv_title ).
+        iv_title   = lv_title
+        iv_package = iv_package ).
     ELSE.
       insert_program(
         is_progdir = is_progdir
@@ -853,6 +866,44 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           set_vari_protection( is_vari    = ls_varikey
                                iv_protect = lv_was_protected ).
       ENDTRY.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD fix_button_right_vislength.
+    " RPY_DYNPRO_READ returns box column - text column + text length as VISLENGTH of
+    " check and radio buttons with the box on the right, but RPY_DYNPRO_INSERT expects
+    " the width from text to box, so each import would move the box further right
+
+    DATA: lv_box_coln  TYPE i,
+          lv_text_coln TYPE i.
+
+    FIELD-SYMBOLS: <ls_field>     LIKE LINE OF ct_fields,
+                   <ls_field_int> LIKE LINE OF it_fieldlist_int.
+
+    "relevant flag value (taken from include MSEUSBIT)
+    CONSTANTS lc_flg1edt TYPE x VALUE '80'.
+
+
+    LOOP AT ct_fields ASSIGNING <ls_field>
+        WHERE butt_right = abap_true AND ( type = 'CHECK' OR type = 'RADIO' ).
+
+      CLEAR: lv_box_coln, lv_text_coln.
+
+      LOOP AT it_fieldlist_int ASSIGNING <ls_field_int>
+          WHERE fnam = <ls_field>-name AND ( fill = 'A' OR fill = 'C' ).
+        IF <ls_field_int>-flg1 O lc_flg1edt.
+          lv_box_coln = <ls_field_int>-coln.
+        ELSE.
+          lv_text_coln = <ls_field_int>-coln.
+        ENDIF.
+      ENDLOOP.
+
+      IF lv_text_coln > 0 AND lv_box_coln > lv_text_coln.
+        <ls_field>-vislength = lv_box_coln - lv_text_coln + 1.
+      ENDIF.
+
     ENDLOOP.
 
   ENDMETHOD.
@@ -1278,6 +1329,12 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         ENDIF.
       ENDLOOP.
 
+      fix_button_right_vislength(
+        EXPORTING
+          it_fieldlist_int = lt_fieldlist_int
+        CHANGING
+          ct_fields        = lt_fields_to_containers ).
+
       LOOP AT lt_containers ASSIGNING <ls_container>.
         IF <ls_container>-c_resize_v = abap_false.
           CLEAR <ls_container>-c_line_min.
@@ -1331,51 +1388,20 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       lv_program_name = iv_program.
     ENDIF.
 
-    zcl_abapgit_language=>set_current_language( mv_language ).
-
-    CALL FUNCTION 'RPY_PROGRAM_READ'
-      EXPORTING
-        program_name     = lv_program_name
-        with_includelist = abap_false
-        with_lowercase   = abap_true
-      TABLES
-        source_extended  = lt_source
-        textelements     = lt_tpool
-      EXCEPTIONS
-        cancelled        = 1
-        not_found        = 2
-        permission_error = 3
-        OTHERS           = 4.
-
-    IF sy-subrc = 2.
-      zcl_abapgit_language=>restore_login_language( ).
-      RETURN.
-    ELSEIF sy-subrc <> 0.
-      zcl_abapgit_language=>restore_login_language( ).
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-    zcl_abapgit_language=>restore_login_language( ).
-
-    " If inactive version exists, then RPY_PROGRAM_READ does not return the active code
     li_report = zcl_abapgit_factory=>get_sap_report( ).
 
-    TRY.
-        " Raises exception if inactive version does not exist
-        ls_progdir = li_report->read_progdir(
-          iv_name  = lv_program_name
-          iv_state = c_state-inactive ).
-
-        " Explicitly request active source code
-        lt_source = li_report->read_report(
-          iv_name  = lv_program_name
-          iv_state = c_state-active ).
-      CATCH zcx_abapgit_exception ##NO_HANDLER.
-    ENDTRY.
+    lt_source = li_report->read_report(
+      iv_name  = lv_program_name
+      iv_state = c_state-active ).
 
     ls_progdir = li_report->read_progdir(
       iv_name  = lv_program_name
       iv_state = c_state-active ).
+
+    lt_tpool = li_report->read_textpool(
+      iv_name     = lv_program_name
+      iv_language = mv_language
+      iv_state    = c_state-active ).
 
     clear_abap_language_version( CHANGING cv_abap_language_version = ls_progdir-uccheck ).
 
@@ -1563,20 +1589,32 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD update_program.
 
+    DATA lt_act_source TYPE abaptxt255_tab.
+
+    " Get active source before update
+    IF iv_state IS NOT INITIAL.
+      lt_act_source = zcl_abapgit_factory=>get_sap_report( )->read_report( is_progdir-name ).
+    ENDIF.
+
     zcl_abapgit_language=>set_current_language( mv_language ).
 
-    CALL FUNCTION 'RPY_INCLUDE_UPDATE'
+    " There are bugs in RPY_INCLUDE_UPDATE: The workarea isn't updated correctly and there is a
+    " performance issue when updating program index esp. for maintenance function groups.
+    " We therefore use RPY_PROGRAM_UPDATE which does not have these problems.
+    CALL FUNCTION 'RPY_PROGRAM_UPDATE'
       EXPORTING
-        include_name     = is_progdir-name
-        title_string     = iv_title
-        save_inactive    = iv_state
+        development_class = iv_package
+        program_name      = is_progdir-name
+        program_type      = is_progdir-subc
+        title_string      = iv_title
+        save_inactive     = iv_state
       TABLES
-        source_extended  = it_source
+        source_extended   = it_source
       EXCEPTIONS
-        not_found        = 1
-        cancelled        = 2
-        permission_error = 3
-        OTHERS           = 4.
+        cancelled         = 1
+        permission_error  = 2
+        not_found         = 3
+        OTHERS            = 4.
 
     IF sy-subrc <> 0.
       zcl_abapgit_language=>restore_login_language( ).
@@ -1596,6 +1634,15 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     ENDIF.
 
     zcl_abapgit_language=>restore_login_language( ).
+
+    " Restore active source which was overwritten by RPY_PROGRAM_UPDATE
+    IF iv_state IS NOT INITIAL.
+      zcl_abapgit_factory=>get_sap_report( )->insert_report(
+        iv_name    = is_progdir-name
+        it_source  = lt_act_source
+        iv_package = iv_package
+        iv_state   = c_state-active ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

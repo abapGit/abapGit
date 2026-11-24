@@ -162,7 +162,8 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
       RECEIVING
         result              = rv_program
       EXCEPTIONS
-        method_not_existing = 1 ).
+        method_not_existing = 1
+        OTHERS              = 2 ).
     IF sy-subrc = 0.
       RETURN.
     ENDIF.
@@ -920,7 +921,8 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
       RECEIVING
         result             = lt_methods
       EXCEPTIONS
-        class_not_existing = 1 ).
+        class_not_existing = 1
+        OTHERS             = 2 ).
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Class { lv_class_name } not existing| ).

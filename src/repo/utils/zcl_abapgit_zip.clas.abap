@@ -244,7 +244,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       ev_path = '/'.
       ev_filename = iv_str.
     ENDIF.
-    TRANSLATE ev_filename TO LOWER CASE.
+    ev_filename = to_lower( ev_filename ).
 
   ENDMETHOD.
 

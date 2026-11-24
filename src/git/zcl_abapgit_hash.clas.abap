@@ -168,7 +168,7 @@ CLASS zcl_abapgit_hash IMPLEMENTATION.
     ENDTRY.
 
     rv_sha1 = lv_hash.
-    TRANSLATE rv_sha1 TO LOWER CASE.
+    rv_sha1 = to_lower( rv_sha1 ).
 
   ENDMETHOD.
 
@@ -190,7 +190,7 @@ CLASS zcl_abapgit_hash IMPLEMENTATION.
     ENDTRY.
 
     rv_sha1 = lv_hash.
-    TRANSLATE rv_sha1 TO LOWER CASE.
+    rv_sha1 = to_lower( rv_sha1 ).
 
   ENDMETHOD.
 

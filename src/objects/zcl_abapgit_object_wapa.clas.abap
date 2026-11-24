@@ -76,7 +76,8 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
         author_not_existing     = 5
         action_cancelled        = 6
         error_occured           = 7
-        invalid_parameter       = 8 ).
+        invalid_parameter       = 8
+        OTHERS                  = 9 ).
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |WAPA - error from create_new: { sy-subrc }| ).
@@ -159,7 +160,8 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
             p_pagekey           = ls_pagekey
           EXCEPTIONS
             object_not_existing = 1
-            error_occured       = 2 ).
+            error_occured       = 2
+            OTHERS              = 3 ).
 
         IF sy-subrc <> 0.
           zcx_abapgit_exception=>raise( |Error { sy-subrc } from CL_O2_PAGE=>DELETE_PAGE_FOR_APPLICATION| ).
@@ -226,7 +228,8 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
           p_ev_handler = rs_page-event_handlers
         EXCEPTIONS
           page_deleted = 1
-          invalid_call = 2 ).
+          invalid_call = 2
+          OTHERS       = 3 ).
       ASSERT sy-subrc = 0.
 
       lo_page->get_parameters(
@@ -332,7 +335,8 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       EXCEPTIONS
         object_not_existing = 1
         permission_failure  = 2
-        error_occured       = 3 ).
+        error_occured       = 3
+        OTHERS              = 4 ).
     ASSERT sy-subrc = 0.
 
     lo_bsp->set_changeable(
@@ -356,7 +360,8 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
           p_pagekey           = ls_pagekey
         EXCEPTIONS
           object_not_existing = 1
-          error_occured       = 2 ).
+          error_occured       = 2
+          OTHERS              = 3 ).
       ASSERT sy-subrc = 0.
     ENDLOOP.
 
@@ -379,7 +384,8 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
           p_pagekey           = ls_pagekey
         EXCEPTIONS
           object_not_existing = 1
-          error_occured       = 2 ).
+          error_occured       = 2
+          OTHERS              = 3 ).
       ASSERT sy-subrc = 0.
     ENDLOOP.
 
@@ -567,7 +573,8 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       EXCEPTIONS
         object_not_existing = 1
         permission_failure  = 2
-        error_occured       = 3 ).
+        error_occured       = 3
+        OTHERS              = 4 ).
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -642,7 +649,8 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       EXCEPTIONS
         object_not_existing = 1
         permission_failure  = 2
-        error_occured       = 3 ).
+        error_occured       = 3
+        OTHERS              = 4 ).
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.

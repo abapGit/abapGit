@@ -80,7 +80,7 @@ CLASS ltcl_xml_output IMPLEMENTATION.
       encoding    = lv_encoding
       ignore_cerr = 'X' ).
 
-    lo_conv_out_string->write( data = lv_expected ).
+    lo_conv_out_string->write( lv_expected ).
 
     lv_xstring = lo_conv_out_string->get_buffer( ).
 

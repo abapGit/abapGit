@@ -25,6 +25,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         iv_seed          TYPE string OPTIONAL
         iv_sci_result    TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
         ii_obj_filter    TYPE REF TO zif_abapgit_object_filter OPTIONAL
+        iv_changed_by    TYPE syuname OPTIONAL
         ii_force_refresh TYPE abap_bool
       RETURNING
         VALUE(ri_page)   TYPE REF TO zif_abapgit_gui_renderable
@@ -37,6 +38,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         iv_seed          TYPE string OPTIONAL
         iv_sci_result    TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
         ii_obj_filter    TYPE REF TO zif_abapgit_object_filter OPTIONAL
+        iv_changed_by    TYPE syuname OPTIONAL
         ii_force_refresh TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
@@ -133,6 +135,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     mv_seed        = iv_seed.
     mv_sci_result  = iv_sci_result.
     mi_obj_filter  = ii_obj_filter.
+    " Same as the "me" link in the "Changed by" column: a filter the user can clear
+    mv_filter_value = to_lower( iv_changed_by ).
 
     " force refresh on stage, to make sure the latest local and remote files are used
     IF ii_force_refresh = abap_true.
@@ -182,7 +186,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         iv_seed          = iv_seed
         iv_sci_result    = iv_sci_result
         ii_force_refresh = ii_force_refresh
-        ii_obj_filter    = ii_obj_filter.
+        ii_obj_filter    = ii_obj_filter
+        iv_changed_by    = iv_changed_by.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title         = 'Stage'
@@ -378,6 +383,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
       lv_changed_by = zcl_abapgit_stage_changed_by=>get_name(
         it_changed_by = lt_changed_by
         is_item       = <ls_local>-item
+        iv_path       = <ls_local>-file-path
         iv_filename   = <ls_local>-file-filename ).
 
       READ TABLE lt_transports INTO ls_transport WITH KEY
@@ -442,6 +448,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
           lv_changed_by = zcl_abapgit_stage_changed_by=>get_name(
             it_changed_by = lt_changed_by
             is_item       = ls_item_remote
+            iv_path       = <ls_remote>-path
             iv_filename   = <ls_remote>-filename ).
         CATCH zcx_abapgit_exception.
           CLEAR: ls_transport, lv_changed_by.
@@ -575,6 +582,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         iv_default_branch  = zcl_abapgit_git_branch_utils=>get_display_name(
                                mi_repo_online->get_selected_branch( ) )
         iv_show_new_option = abap_true
+        iv_description     = 'Select the branch to switch to'
+        iv_button_label    = 'Switch to'
         )->create_picklist(
         )->set_id( zif_abapgit_definitions=>c_action-git_branch_switch
         )->set_in_page( ).

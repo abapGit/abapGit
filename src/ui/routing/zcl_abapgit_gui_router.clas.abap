@@ -102,10 +102,12 @@ CLASS zcl_abapgit_gui_router DEFINITION
         zcx_abapgit_exception .
     METHODS get_page_stage
       IMPORTING
-        !ii_event      TYPE REF TO zif_abapgit_gui_event
-        ii_obj_filter  TYPE REF TO zif_abapgit_object_filter OPTIONAL
+        !ii_event         TYPE REF TO zif_abapgit_gui_event
+        ii_obj_filter     TYPE REF TO zif_abapgit_object_filter OPTIONAL
+        !iv_changed_by_me TYPE abap_bool DEFAULT abap_false
+        !iv_force_refresh TYPE abap_bool DEFAULT abap_true
       RETURNING
-        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+        VALUE(ri_page)    TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS jump_object
@@ -234,7 +236,9 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       lv_package TYPE devclass.
 
     lv_package = iv_package.
-    TRANSLATE lv_package USING '/#'.
+    lv_package = translate( val  = lv_package
+                            from = `/`
+                            to   = `#` ).
     CONCATENATE lv_package '_' sy-datlo '_' sy-timlo '.zip' INTO lv_default.
 
     li_fe_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
@@ -304,9 +308,14 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-go_stage.                        " Go Staging page
         rs_handled-page  = get_page_stage( ii_event ).
         rs_handled-state = get_state_diff( ii_event ).
+      WHEN zif_abapgit_definitions=>c_action-go_stage_me.                     " Go Staging page, own changes only
+        rs_handled-page  = get_page_stage( ii_event         = ii_event
+                                           iv_changed_by_me = abap_true ).
+        rs_handled-state = get_state_diff( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_stage_transport.              " Go Staging page by Transport
-        rs_handled-page = get_page_stage( ii_event      = ii_event
-                                          ii_obj_filter = go_stage_transport( lv_key ) ).
+        rs_handled-page = get_page_stage( ii_event         = ii_event
+                                          ii_obj_filter    = go_stage_transport( lv_key )
+                                          iv_force_refresh = abap_false ).
         rs_handled-state = get_state_diff( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_tutorial.                     " Go to tutorial
         rs_handled-page  = zcl_abapgit_gui_page_tutorial=>create( ).
@@ -422,6 +431,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           li_repo        TYPE REF TO zif_abapgit_repo,
           lv_key         TYPE zif_abapgit_persistence=>ty_repo-key,
           lv_seed        TYPE string,
+          lv_user        TYPE syuname,
           lv_sci_result  TYPE zif_abapgit_definitions=>ty_sci_result,
           lx_error       TYPE REF TO cx_sy_move_cast_error.
 
@@ -444,12 +454,18 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |You are working on a commit, must be on branch| ).
     ENDIF.
 
+    IF iv_changed_by_me = abap_true.
+      lv_user = sy-uname.
+    ENDIF.
+
     IF li_repo->get_local_settings( )-code_inspector_check_variant IS NOT INITIAL.
 
       TRY.
           ri_page = zcl_abapgit_gui_page_code_insp=>create(
             ii_repo                  = li_repo
-            iv_raise_when_no_results = abap_true ).
+            iv_raise_when_no_results = abap_true
+            iv_changed_by            = lv_user
+            ii_obj_filter            = ii_obj_filter ).
 
         CATCH zcx_abapgit_exception.
           lv_sci_result = zif_abapgit_definitions=>c_sci_result-passed.
@@ -463,7 +479,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         iv_seed          = lv_seed
         iv_sci_result    = lv_sci_result
         ii_obj_filter    = ii_obj_filter
-        ii_force_refresh = abap_true ).
+        iv_changed_by    = lv_user
+        ii_force_refresh = iv_force_refresh ).
     ENDIF.
 
   ENDMETHOD.
@@ -538,9 +555,14 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     DATA lt_r_trkorr TYPE zif_abapgit_definitions=>ty_trrngtrkor_tt.
     DATA li_repo TYPE REF TO zif_abapgit_repo.
 
-    lt_r_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_select_wb_tc_tr_and_tsk( ).
-
     li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+
+    " Refresh and fetch before the popup: if the fetch needs a login, the GUI reruns
+    " the whole action, which would ask for the transport a second time
+    li_repo->refresh( ).
+    li_repo->get_files_remote( ).
+
+    lt_r_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_select_wb_tc_tr_and_tsk( ).
 
     CREATE OBJECT ro_filter.
     ro_filter->set_filter_values( iv_package  = li_repo->get_package( )

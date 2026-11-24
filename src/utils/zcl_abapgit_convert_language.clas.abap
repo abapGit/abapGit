@@ -130,7 +130,7 @@ CLASS zcl_abapgit_convert_language IMPLEMENTATION.
         no_assignment = 1
         OTHERS        = 2 ).                              "#EC CI_SUBRC
 
-    TRANSLATE rv_spras TO UPPER CASE.
+    rv_spras = to_upper( rv_spras ).
 
   ENDMETHOD.
 

@@ -752,9 +752,12 @@ CLASS lcl_object_decision_list IMPLEMENTATION.
 
     IF sy-subrc = 0.
 
+      " Without set_functions, SALV hides its standard functions of the
+      " status (filter, sort)
       mo_alv->set_screen_status(
-        report   = sy-cprog
-        pfstatus = c_own_pfstatus ).
+        report        = sy-cprog
+        pfstatus      = c_own_pfstatus
+        set_functions = cl_salv_model_base=>c_functions_all ).
 
     ELSE.
 

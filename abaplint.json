@@ -468,7 +468,46 @@
       "ttyp": "^Z",
       "xslt": "^Z"
     },
-    "obsolete_statement": true,
+    "obsolete_statement": {
+      "exclude": [
+        "/json/"
+      ],
+      "severity": "Error",
+      "refresh": true,
+      "compute": true,
+      "add": true,
+      "subtract": true,
+      "multiply": true,
+      "divide": true,
+      "move": true,
+      "requested": true,
+      "occurs": true,
+      "setExtended": true,
+      "withHeaderLine": true,
+      "fieldSymbolStructure": true,
+      "typePools": true,
+      "load": true,
+      "parameter": true,
+      "ranges": true,
+      "communication": true,
+      "pack": true,
+      "selectWithoutInto": true,
+      "freeMemory": true,
+      "exitFromSQL": true,
+      "sortByFS": true,
+      "callTransformation": true,
+      "regex": true,
+      "occurences": true,
+      "clientSpecified": true,
+      "formDefinition": true,
+      "formImplementation": true,
+      "commonPart": true,
+      "fieldGroups": true,
+      "replaceInto": true,
+      "loopExtract": true,
+      "sortExtract": true,
+      "translate": true
+    },
     "omit_parameter_name": {
       "exclude": [
         "/json/"
@@ -560,6 +599,14 @@
       "pattern": "^TY_.+$"
     },
     "uncaught_exception": true,
+    "unhandled_classic_exception": {
+      "exclude": [
+        "/json/"
+      ],
+      "missingErrorMessage": false,
+      "missingExceptions": false,
+      "missingOthers": true
+    },
     "unknown_types": true,
     "unnecessary_chaining": false,
     "unnecessary_pragma": {
@@ -586,6 +633,18 @@
     "use_new": true,
     "when_others_last": true,
     "whitespace_end": true,
+    "alias_never_reassigned": true,
+    "boolean_flag_via_if": true,
+    "bound_check_after_create": true,
+    "clear_after_declaration": false,
+    "constant_condition": true,
+    "copy_chain": false,
+    "copy_of_initial_variable": true,
+    "is_assigned_in_loop": false,
+    "redundant_cast": true,
+    "single_use_expression_temp": false,
+    "try_cast_empty_catch": true,
+    "unnecessary_copy": true,
     "xml_consistency": true
   }
 }

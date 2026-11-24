@@ -174,7 +174,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
           langu    = mv_language
           obj_id   = 'UENC' "Entity Comments
         EXCEPTIONS
-          ret_code = 0.
+          ret_code = 0
+          OTHERS   = 1.
 
       CALL FUNCTION 'SDU_DOCU_DELETE'
         EXPORTING
@@ -184,7 +185,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
           langu    = mv_language
           obj_id   = 'UEND' "Entity Definition
         EXCEPTIONS
-          ret_code = 0.
+          ret_code = 0
+          OTHERS   = 1.
 
       CALL FUNCTION 'SDU_DOCU_DELETE'
         EXPORTING
@@ -194,7 +196,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
           langu    = mv_language
           obj_id   = 'UENE' "Entity Example
         EXCEPTIONS
-          ret_code = 0.
+          ret_code = 0
+          OTHERS   = 1.
 
     ENDLOOP.
 
@@ -223,7 +226,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
           key3     = ls_dm42s-entidfrom
           key4     = ls_dm42s-ebrolnr
         EXCEPTIONS
-          ret_code = 0.
+          ret_code = 0
+          OTHERS   = 1.
 
       CALL FUNCTION 'SDU_DOCU_DELETE'
         EXPORTING
@@ -234,7 +238,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
           key3     = ls_dm42s-entidfrom
           key4     = ls_dm42s-ebrolnr
         EXCEPTIONS
-          ret_code = 0.
+          ret_code = 0
+          OTHERS   = 1.
 
       CALL FUNCTION 'SDU_DOCU_DELETE'
         EXPORTING
@@ -245,7 +250,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
           key3     = ls_dm42s-entidfrom
           key4     = ls_dm42s-ebrolnr
         EXCEPTIONS
-          ret_code = 0.
+          ret_code = 0
+          OTHERS   = 1.
 
     ENDLOOP.
 
@@ -274,7 +280,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
           key2     = ls_dm45l-as4local
           key3     = ls_dm45l-spezid
         EXCEPTIONS
-          ret_code = 0.
+          ret_code = 0
+          OTHERS   = 1.
 
     ENDLOOP.
 
@@ -471,7 +478,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
         obj_name   = ms_item-obj_name
         obj_type   = ms_item-obj_type
       EXCEPTIONS
-        wrong_type = 1.
+        wrong_type = 1
+        OTHERS     = 2.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).

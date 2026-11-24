@@ -811,7 +811,9 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_opt> LIKE LINE OF is_field-subitems.
 
-    ii_html->add( |<label{ is_attr-hint }>{ is_field-label }</label>| ).
+    IF is_field-label IS NOT INITIAL.
+      ii_html->add( |<label{ is_attr-hint }>{ is_field-label }</label>| ).
+    ENDIF.
 
     IF is_attr-error IS NOT INITIAL.
       ii_html->add( is_attr-error ).

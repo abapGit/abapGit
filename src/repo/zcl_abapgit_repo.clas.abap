@@ -574,6 +574,10 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     COMMIT WORK AND WAIT.
 
+    li_exit->post_pull(
+      ii_repo = me
+      ii_log  = ii_log ).
+
   ENDMETHOD.
 
 
@@ -581,6 +585,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     DATA: lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
           lt_dependencies TYPE zif_abapgit_apack_definitions=>ty_dependencies.
+
+    zcl_abapgit_exit=>get_instance( )->validate_before_pull( me ).
 
     find_remote_dot_abapgit( ).
     find_remote_dot_apack( ).

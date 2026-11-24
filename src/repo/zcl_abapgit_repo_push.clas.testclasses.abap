@@ -84,6 +84,8 @@ CLASS ltd_exit IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_exit~deserialize_postprocess.
   ENDMETHOD.
+  METHOD zif_abapgit_exit~post_pull.
+  ENDMETHOD.
   METHOD zif_abapgit_exit~determine_transport_request.
   ENDMETHOD.
   METHOD zif_abapgit_exit~enable_adjust_commit_message.
@@ -103,6 +105,8 @@ CLASS ltd_exit IMPLEMENTATION.
   METHOD zif_abapgit_exit~pre_calculate_repo_status.
   ENDMETHOD.
   METHOD zif_abapgit_exit~serialize_postprocess.
+  ENDMETHOD.
+  METHOD zif_abapgit_exit~validate_before_pull.
   ENDMETHOD.
   METHOD zif_abapgit_exit~wall_message_list.
   ENDMETHOD.

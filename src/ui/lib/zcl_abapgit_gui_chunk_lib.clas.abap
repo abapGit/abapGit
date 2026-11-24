@@ -1334,7 +1334,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
                         iv_title = lv_title
                         iv_txt   = |{ iv_username }| ).
       ELSE.
-        ri_html->add( iv_username ).
+        " own tag, so the stage filter can mark the name without dropping the icon
+        ri_html->add( |<span>{ iv_username }</span>| ).
       ENDIF.
 
       ri_html->add( '</span>' ).

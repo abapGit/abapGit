@@ -9,11 +9,12 @@ CLASS zcl_abapgit_stage_changed_by DEFINITION
       BEGIN OF ty_changed_by,
         obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type,
         obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name,
+        path     TYPE string,
         filename TYPE string,
         name     TYPE syuname,
       END OF ty_changed_by .
     TYPES:
-      ty_changed_by_tt TYPE SORTED TABLE OF ty_changed_by WITH UNIQUE KEY obj_type obj_name filename.
+      ty_changed_by_tt TYPE SORTED TABLE OF ty_changed_by WITH UNIQUE KEY obj_type obj_name path filename.
     TYPES:
       BEGIN OF ty_file_user,
         path     TYPE string,
@@ -40,6 +41,7 @@ CLASS zcl_abapgit_stage_changed_by DEFINITION
       IMPORTING
         !it_changed_by TYPE ty_changed_by_tt
         !is_item       TYPE zif_abapgit_definitions=>ty_item
+        !iv_path       TYPE string
         !iv_filename   TYPE string
       RETURNING
         VALUE(rv_name) TYPE syuname .
@@ -93,6 +95,7 @@ CLASS zcl_abapgit_stage_changed_by IMPLEMENTATION.
     LOOP AT it_files-local INTO ls_local WHERE NOT item IS INITIAL.
       ls_changed_by-obj_type = ls_local-item-obj_type.
       ls_changed_by-obj_name = ls_local-item-obj_name.
+      ls_changed_by-path     = ls_local-file-path.
       ls_changed_by-filename = ls_local-file-filename.
       ls_changed_by-name = zcl_abapgit_objects=>changed_by(
         is_item     = ls_local-item
@@ -108,6 +111,7 @@ CLASS zcl_abapgit_stage_changed_by IMPLEMENTATION.
                                       io_dot    = io_dot ).
           ls_changed_by-obj_type = ls_item-obj_type.
           ls_changed_by-obj_name = ls_item-obj_name.
+          ls_changed_by-path     = ls_remote-path.
           ls_changed_by-filename = ls_remote-filename.
           INSERT ls_changed_by INTO TABLE lt_changed_by_remote.
         CATCH zcx_abapgit_exception ##NO_HANDLER.
@@ -192,6 +196,7 @@ CLASS zcl_abapgit_stage_changed_by IMPLEMENTATION.
     READ TABLE it_changed_by INTO ls_changed_by WITH TABLE KEY
       obj_type = is_item-obj_type
       obj_name = is_item-obj_name
+      path     = iv_path
       filename = iv_filename.
     IF sy-subrc = 0.
       rv_name = ls_changed_by-name.
@@ -233,6 +238,7 @@ CLASS zcl_abapgit_stage_changed_by IMPLEMENTATION.
       ls_user-name     = get_name(
         it_changed_by = lt_changed_by
         is_item       = ls_item
+        iv_path       = <ls_remote>-path
         iv_filename   = <ls_remote>-filename ).
       INSERT ls_user INTO TABLE rt_users.
     ENDLOOP.
