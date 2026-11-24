@@ -52,7 +52,8 @@ CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
 
     " cl_apl_ecatt_object=>show_object also raises warnings, for example about
     " unused command interfaces, after the object has been read completely.
-    " Like the SAP download, carry on unless the exception aborts the load.
+    " CL_APL_ECATT_DOWNLOAD carries on after any exception. Carry on as well,
+    " but not if the object is missing or the exception aborts the load.
 
     FIELD-SYMBOLS <lv_abort_flag> TYPE any.
 
