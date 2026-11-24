@@ -15,6 +15,7 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
       repo_address4 FOR TESTING RAISING zcx_abapgit_exception,
       repo_address5_dots FOR TESTING RAISING zcx_abapgit_exception,
       repo_address6_dots_and_git FOR TESTING RAISING zcx_abapgit_exception,
+      repo_address7_host_case FOR TESTING RAISING zcx_abapgit_exception,
       repo_error FOR TESTING,
       url_validate1 FOR TESTING,
       url_validate2 FOR TESTING,
@@ -182,6 +183,20 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
         exp = 'https://github.com/jfilak/abap.awesome.app1'
         act = lv_url_address ).
+
+  ENDMETHOD.
+
+
+  METHOD repo_address7_host_case.
+
+    " the host decides nothing by case, the path keeps it
+    cl_abap_unit_assert=>assert_equals(
+        exp = zcl_abapgit_url=>url_address( 'https://github.com/abapGit/abapGit.git' )
+        act = zcl_abapgit_url=>url_address( 'https://GitHub.com/abapGit/abapGit.git' ) ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = 'https://github.com/abapGit/abapGit'
+        act = zcl_abapgit_url=>url_address( 'https://GITHUB.COM/abapGit/abapGit' ) ).
 
   ENDMETHOD.
 

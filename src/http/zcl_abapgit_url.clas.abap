@@ -154,7 +154,8 @@ CLASS zcl_abapgit_url IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    rv_adress = |{ lv_host }{ lv_path }{ lv_name }|.
+    " the host is case-insensitive, the path may not be
+    rv_adress = |{ to_lower( lv_host ) }{ lv_path }{ lv_name }|.
 
   ENDMETHOD.
 
