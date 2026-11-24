@@ -10,6 +10,13 @@ const app = express();
 app.disable('x-powered-by');
 app.set('etag', false);
 app.use(express.raw({type: "*/*"}));
+// express 5 leaves req.body undefined when there is no body, the shim expects a Buffer
+app.use(function (req, res, next) {
+  if (req.body === undefined) {
+    req.body = Buffer.alloc(0);
+  }
+  next();
+});
 
 zcl_abapgit_inject_setup.setup();
 
@@ -21,7 +28,7 @@ app.get('/', function (req, res) {
 
 // ------------------
 
-app.all(["/sap", "/sap*"], async function (req, res) {
+app.all(["/sap", "/sap{*splat}"], async function (req, res) {
   await cl_express_icf_shim.run({req, res, class: "ZCL_ABAPGIT_WEB_SICF"});
 });
 
