@@ -25,15 +25,15 @@
     ]
   },
   "devDependencies": {
-    "@abaplint/cli": "^2.120.111",
-    "@abaplint/database-sqlite": "^2.14.12",
-    "@abaplint/runtime": "^2.14.34",
-    "@abaplint/transpiler-cli": "^2.14.34",
+    "@abaplint/cli": "^2.120.118",
+    "@abaplint/database-sqlite": "^2.14.35",
+    "@abaplint/runtime": "^2.14.37",
+    "@abaplint/transpiler-cli": "^2.14.37",
     "@eslint/js": "^10.0.1",
     "abapmerge": "^0.16.10",
     "c8": "^12.0.0",
     "eslint": "^10.15.0",
-    "express": "^4.22.3",
+    "express": "^5.3.0",
     "globals": "^17.14.0"
   }
 }
