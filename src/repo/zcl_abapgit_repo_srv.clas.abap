@@ -629,7 +629,8 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
           lv_branch_name LIKE iv_branch_name,
           lv_key         TYPE zif_abapgit_persistence=>ty_repo-key,
           lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
-          lv_url         TYPE string.
+          lv_url         TYPE string,
+          lx_error       TYPE REF TO zcx_abapgit_exception.
 
 
     ASSERT NOT iv_url IS INITIAL
@@ -691,8 +692,15 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     ri_repo->set_local_settings( ls_repo-local_settings ).
 
-    ri_repo->refresh( ).
-    ri_repo->find_remote_dot_abapgit( ).
+    " First access to the remote (e.g. login) happens here. If it fails,
+    " remove the repo again so no orphaned entry is left behind
+    TRY.
+        ri_repo->refresh( ).
+        ri_repo->find_remote_dot_abapgit( ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        zif_abapgit_repo_srv~delete( ri_repo ).
+        RAISE EXCEPTION lx_error.
+    ENDTRY.
 
   ENDMETHOD.
 
