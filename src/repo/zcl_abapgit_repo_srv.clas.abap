@@ -693,12 +693,14 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ri_repo->set_local_settings( ls_repo-local_settings ).
 
     " First access to the remote (e.g. login) happens here. If it fails,
-    " remove the repo again so no orphaned entry is left behind
+    " remove the repo again so no orphaned entry is left behind. The HTTP call
+    " already committed the insert, so the delete must be committed as well
     TRY.
         ri_repo->refresh( ).
         ri_repo->find_remote_dot_abapgit( ).
       CATCH zcx_abapgit_exception INTO lx_error.
         zif_abapgit_repo_srv~delete( ri_repo ).
+        COMMIT WORK.
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
