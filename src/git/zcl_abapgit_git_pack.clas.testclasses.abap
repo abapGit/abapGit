@@ -278,6 +278,8 @@ CLASS ltcl_pack DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
         RAISING zcx_abapgit_exception,
       zlib_end_corrupt_short FOR TESTING
         RAISING zcx_abapgit_exception,
+      zlib_end_any_guess FOR TESTING
+        RAISING zcx_abapgit_exception,
       pack_checksum_overlaps_eob FOR TESTING
         RAISING zcx_abapgit_exception,
       sort_tree1 FOR TESTING,
@@ -552,7 +554,7 @@ CLASS ltcl_pack IMPLEMENTATION.
   METHOD zlib_end_corrupt_checksum.
 
     " The checksum at the real end is corrupt, the right one follows later.
-    " The kernel would decompress up to the later one, the end must not be found there.
+    " The end is found from the stream alone, not where the right checksum is.
     CONSTANTS: lc_corrupt TYPE x LENGTH 4 VALUE '00000000',
                lc_filler  TYPE x LENGTH 12 VALUE 'FFFFFFFFFFFFFFFFFFFFFFFF'.
 
@@ -569,7 +571,7 @@ CLASS ltcl_pack IMPLEMENTATION.
       INTO lv_input IN BYTE MODE.
 
     cl_abap_unit_assert=>assert_equals(
-      exp = -1
+      exp = xstrlen( lv_stream )
       act = zcl_abapgit_git_pack=>find_zlib_end(
               iv_data         = lv_input
               iv_decompressed = lv_data ) ).
@@ -593,7 +595,7 @@ CLASS ltcl_pack IMPLEMENTATION.
     CONCATENATE lv_stream lc_corrupt lv_adler32 INTO lv_input IN BYTE MODE.
 
     cl_abap_unit_assert=>assert_equals(
-      exp = -1
+      exp = xstrlen( lv_stream )
       act = zcl_abapgit_git_pack=>find_zlib_end(
               iv_data         = lv_input
               iv_decompressed = lv_data ) ).
@@ -612,7 +614,7 @@ CLASS ltcl_pack IMPLEMENTATION.
     lv_input = lc_input.
 
     cl_abap_unit_assert=>assert_equals(
-      exp = -1
+      exp = 2
       act = zcl_abapgit_git_pack=>find_zlib_end(
               iv_data         = lv_input
               iv_decompressed = lv_empty ) ).
@@ -643,6 +645,55 @@ CLASS ltcl_pack IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 600
       act = xstrlen( ls_result-data ) ).
+
+  ENDMETHOD.
+
+  METHOD zlib_end_any_guess.
+
+    " Wherever the search starts, before or behind the end, it finds the end exactly.
+    " Once for a stored block, once for the kernel's compressed output.
+    CONSTANTS lc_next TYPE x LENGTH 8 VALUE '789C0123456789AB'.
+
+    DATA: lv_text   TYPE string,
+          lv_data   TYPE xstring,
+          lv_stream TYPE xstring,
+          lv_length TYPE i,
+          lv_input  TYPE xstring,
+          lv_guess  TYPE i,
+          lv_round  TYPE i.
+
+    DO 40 TIMES.
+      lv_text = |{ lv_text }line { sy-index } of a text that compresses well\n|.
+    ENDDO.
+    lv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_text ).
+
+    DO 2 TIMES.
+      lv_round = sy-index.
+      IF lv_round = 1.
+        lv_stream = stored_deflate( lv_data ).
+      ELSE.
+        cl_abap_gzip=>compress_binary(
+          EXPORTING
+            raw_in       = lv_data
+          IMPORTING
+            gzip_out     = lv_stream
+            gzip_out_len = lv_length ).
+        lv_stream = lv_stream(lv_length).
+      ENDIF.
+      CONCATENATE lv_stream lc_next lc_next INTO lv_input IN BYTE MODE.
+
+      lv_guess = 0.
+      WHILE lv_guess <= xstrlen( lv_input ) + 1.
+        cl_abap_unit_assert=>assert_equals(
+          exp = xstrlen( lv_stream )
+          act = zcl_abapgit_git_pack=>find_zlib_end(
+                  iv_data         = lv_input
+                  iv_decompressed = lv_data
+                  iv_guess        = lv_guess )
+          msg = |round { lv_round }, guess { lv_guess }| ).
+        lv_guess = lv_guess + 11.
+      ENDWHILE.
+    ENDDO.
 
   ENDMETHOD.
 

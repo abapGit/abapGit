@@ -143,6 +143,7 @@ CLASS zcl_abapgit_git_pack DEFINITION
       IMPORTING
         !iv_data         TYPE xstring
         !iv_decompressed TYPE xstring
+        !iv_guess        TYPE i OPTIONAL
       RETURNING
         VALUE(rv_end)    TYPE i .
     CLASS-METHODS inflates_to
@@ -480,10 +481,11 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
         RETURN.
       ENDIF.
 
-      " Otherwise find the Adler-32 checksum that ends the stream
+      " Otherwise search for the end of the stream, starting at that length
       lv_end = find_zlib_end(
         iv_data         = cv_data
-        iv_decompressed = cv_decompressed ).
+        iv_decompressed = cv_decompressed
+        iv_guess        = lv_compressed_len ).
       IF lv_end > 0.
         cv_data = cv_data+lv_end.
         RETURN.
@@ -664,47 +666,88 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
   METHOD find_zlib_end.
 
-* A zlib stream ends with the Adler-32 checksum of the uncompressed data (RFC 1950).
-* The same four bytes can also occur inside the compressed data, and can overlap the
-* end-of-block code at the real end. A position only counts if the DEFLATE stream ends
-* exactly there: it has ended within the bytes in front of it, but not within one byte
-* less (see stream_ended_by).
+* stream_ended_by is false for every length below the end of the DEFLATE stream and true
+* from the end on. So the end is the smallest length for which it is true. Starting at
+* iv_guess, the search steps down or up with growing steps until the end lies between a
+* length that is false and one that is true, then halves that range.
 *
-* The kernel ignores bytes after the end of the stream. If the checksum at the real end
-* is corrupt, a later occurrence lies behind the end; that is detected by the same check
-* and the position is rejected.
+* This needs no Adler-32 checksum, which is slow in ABAP. The checksum bytes behind the
+* stream are not checked here; the SHA-1 at the end of the pack covers them.
 
-    DATA: lv_adler32 TYPE zif_abapgit_git_definitions=>ty_adler32,
-          lv_from    TYPE i,
-          lv_offset  TYPE i.
+    DATA: lv_max  TYPE i,
+          lv_low  TYPE i,
+          lv_high TYPE i,
+          lv_mid  TYPE i,
+          lv_step TYPE i.
 
     rv_end = -1.
-    lv_adler32 = zcl_abapgit_hash=>adler32( iv_decompressed ).
+    lv_max = xstrlen( iv_data ).
 
-    " The shortest DEFLATE stream has two bytes
-    lv_from = 2.
-    WHILE lv_from < xstrlen( iv_data ).
-      FIND FIRST OCCURRENCE OF lv_adler32 IN SECTION OFFSET lv_from OF iv_data
-        IN BYTE MODE MATCH OFFSET lv_offset.
-      IF sy-subrc <> 0.
-        RETURN.
-      ENDIF.
+    " The shortest DEFLATE stream has two bytes, so one byte never ends it
+    lv_low = 1.
+    lv_high = iv_guess.
+    IF lv_high < 2.
+      lv_high = 2.
+    ENDIF.
+    IF lv_high > lv_max.
+      lv_high = lv_max.
+    ENDIF.
+    IF lv_high <= lv_low.
+      RETURN.
+    ENDIF.
 
-      IF stream_ended_by( iv_data         = iv_data
-                          iv_length       = lv_offset
-                          iv_decompressed = iv_decompressed ) = abap_true.
+    lv_step = 4.
+    IF stream_ended_by( iv_data         = iv_data
+                        iv_length       = lv_high
+                        iv_decompressed = iv_decompressed ) = abap_true.
+      WHILE lv_high - lv_step > lv_low.
+        lv_mid = lv_high - lv_step.
         IF stream_ended_by( iv_data         = iv_data
-                            iv_length       = lv_offset - 1
-                            iv_decompressed = iv_decompressed ) = abap_true.
-          " Behind the end of the stream, every later position is as well
+                            iv_length       = lv_mid
+                            iv_decompressed = iv_decompressed ) = abap_false.
+          lv_low = lv_mid.
+          EXIT.
+        ENDIF.
+        lv_high = lv_mid.
+        IF lv_step < lv_max.
+          lv_step = lv_step * 4.
+        ENDIF.
+      ENDWHILE.
+    ELSE.
+      lv_low = lv_high.
+      DO.
+        IF lv_low >= lv_max.
+          " The data ends before the stream does
           RETURN.
         ENDIF.
-        rv_end = lv_offset.
-        RETURN.
-      ENDIF.
+        lv_high = lv_low + lv_step.
+        IF lv_high > lv_max.
+          lv_high = lv_max.
+        ENDIF.
+        IF stream_ended_by( iv_data         = iv_data
+                            iv_length       = lv_high
+                            iv_decompressed = iv_decompressed ) = abap_true.
+          EXIT.
+        ENDIF.
+        lv_low = lv_high.
+        IF lv_step < lv_max.
+          lv_step = lv_step * 4.
+        ENDIF.
+      ENDDO.
+    ENDIF.
 
-      lv_from = lv_offset + 1.
+    WHILE lv_high - lv_low > 1.
+      lv_mid = lv_low + ( lv_high - lv_low ) DIV 2.
+      IF stream_ended_by( iv_data         = iv_data
+                          iv_length       = lv_mid
+                          iv_decompressed = iv_decompressed ) = abap_true.
+        lv_high = lv_mid.
+      ELSE.
+        lv_low = lv_mid.
+      ENDIF.
     ENDWHILE.
+
+    rv_end = lv_high.
 
   ENDMETHOD.
 
