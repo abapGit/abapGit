@@ -57,6 +57,9 @@ CLASS zcl_abapgit_zip DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    CLASS-METHODS confirm_incomplete_export
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS filename
       IMPORTING
         !iv_str      TYPE string
@@ -110,7 +113,6 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     DATA li_log       TYPE REF TO zif_abapgit_log.
     DATA lt_zip       TYPE zif_abapgit_definitions=>ty_files_item_tt.
     DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
-    DATA lv_answer    TYPE zif_abapgit_popups=>ty_char1.
 
     CREATE OBJECT li_log TYPE zcl_abapgit_log.
     li_log->set_title( 'Zip Export Log' ).
@@ -134,19 +136,6 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     IF li_log->get_log_level( ) = zif_abapgit_log=>c_log_level-error.
       IF iv_show_log = abap_true.
         zcl_abapgit_log_viewer=>show_log( li_log ).
-      ENDIF.
-
-      lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-        iv_titlebar              = `Incomplete ZIP export`
-        iv_text_question         = `Some objects failed. Export the rest as an incomplete ZIP?`
-        iv_text_button_1         = `Export partial ZIP`
-        iv_text_button_2         = `Cancel export`
-        iv_default_button        = '2'
-        iv_popup_type            = `ICON_MESSAGE_WARNING`
-        iv_display_cancel_button = abap_true ).
-
-      IF lv_answer <> '1'.
-        RAISE EXCEPTION TYPE zcx_abapgit_cancel.
       ENDIF.
 
       rs_result-incomplete = abap_true.
@@ -242,6 +231,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     lv_default = |{ lv_package_escaped }_{ sy-datlo }_{ sy-timlo }.zip|.
     lv_title = `Package Export`.
     IF ls_export_result-incomplete = abap_true.
+      confirm_incomplete_export( ).
       lv_default = |{ lv_package_escaped }_{ sy-datlo }_{ sy-timlo }_INCOMPLETE.zip|.
       lv_title = `Package Export (INCOMPLETE)`.
     ENDIF.
@@ -256,6 +246,22 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       iv_xstr = ls_export_result-xstr ).
 
     rv_incomplete = ls_export_result-incomplete.
+
+  ENDMETHOD.
+
+
+  METHOD confirm_incomplete_export.
+
+    IF zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+         iv_titlebar              = `Incomplete ZIP export`
+         iv_text_question         = `Some objects failed. Export the rest as an incomplete ZIP?`
+         iv_text_button_1         = `Export partial ZIP`
+         iv_text_button_2         = `Cancel export`
+         iv_default_button        = '2'
+         iv_popup_type            = `ICON_MESSAGE_WARNING`
+         iv_display_cancel_button = abap_true ) <> '1'.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
 
   ENDMETHOD.
 
