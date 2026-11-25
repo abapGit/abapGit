@@ -282,6 +282,8 @@ CLASS ltcl_pack DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
         RAISING zcx_abapgit_exception,
       pack_checksum_overlaps_eob FOR TESTING
         RAISING zcx_abapgit_exception,
+      pack_two_tails_same_data FOR TESTING
+        RAISING zcx_abapgit_exception,
       sort_tree1 FOR TESTING,
       sort_tree2 FOR TESTING.
 
@@ -470,7 +472,7 @@ CLASS ltcl_pack IMPLEMENTATION.
 
   METHOD pack_foreign_zlib.
 
-    " Zlib output that differs from the kernel's: the stream end is found via its Adler-32 checksum
+    " Zlib output that differs from the kernel's: the stream end is found by the search
     CONSTANTS: lc_pack_header TYPE x LENGTH 12 VALUE '5041434B0000000200000001',
                lc_zlib        TYPE x LENGTH 2 VALUE '789C'.
 
@@ -625,7 +627,7 @@ CLASS ltcl_pack IMPLEMENTATION.
 
     " 600-byte blob compressed by zlib level 1. Its Adler-32 is 00000000, and the stream
     " ends with the byte 00 (end-of-block code and padding only). Without that last byte the
-    " kernel already returns all 600 bytes, so a checksum hit one byte early must be rejected.
+    " kernel already returns all 600 bytes, so the end must not be found one byte early.
     CONSTANTS: lc_pack1 TYPE x LENGTH 46
                  VALUE '5041434B0000000200000001B82578010B63A00310543276094D2BE790D4B2F689CDAB17503472A683AD082B1811',
                lc_pack2 TYPE x LENGTH 34
@@ -645,6 +647,34 @@ CLASS ltcl_pack IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 600
       act = xstrlen( ls_result-data ) ).
+
+  ENDMETHOD.
+
+  METHOD pack_two_tails_same_data.
+
+    " Crafted dynamic-Huffman stream: literal a has the code 0, length 4 the code 111 and
+    " distance 2 the code 1. The data ends with 64 literals a (eight 00 bytes) before the
+    " end-of-block code. Cut in front of those bytes, the zero tail gives 64 literals a and
+    " the one tail 16 copies of length 4: both give all 131 bytes. The end is at 48.
+    CONSTANTS: lc_pack1 TYPE x LENGTH 44
+                 VALUE '5041434B0000000200000001B308789C15C10109000000C3A0ACBE7F8871DDB66DDBB66DDBB66DDBB66DDBB6',
+               lc_pack2 TYPE x LENGTH 44
+                 VALUE '6DDBB66DDBB66DDBB66D1B000000000000000001E66031E53BED7DF7E955067AB0355CBBF10E5EE7644361A7'.
+
+    DATA: lv_pack   TYPE xstring,
+          lt_result TYPE zif_abapgit_definitions=>ty_objects_tt,
+          ls_result LIKE LINE OF lt_result.
+
+    CONCATENATE lc_pack1 lc_pack2 INTO lv_pack IN BYTE MODE.
+    lt_result = zcl_abapgit_git_pack=>decode( lv_pack ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 1
+      act = lines( lt_result ) ).
+    READ TABLE lt_result INTO ls_result INDEX 1.
+    cl_abap_unit_assert=>assert_equals(
+      exp = '18608636db760a3ee9a39ecb2138558f7879110c'
+      act = ls_result-sha1 ).
 
   ENDMETHOD.
 
@@ -700,7 +730,8 @@ CLASS ltcl_pack IMPLEMENTATION.
   METHOD zlib_end_false_hit.
 
     " 31744 zero bytes followed by 7F7F0100 have the Adler-32 checksum 7F7F0100,
-    " so the checksum also occurs inside the stream, before its end
+    " so the checksum also occurs inside the stream, before its end.
+    " The search does not look for the checksum; this data must not mislead it either.
     CONSTANTS: lc_tail TYPE x LENGTH 4 VALUE '7F7F0100',
                lc_next TYPE x LENGTH 2 VALUE 'FFFF'.
 

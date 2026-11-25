@@ -666,8 +666,10 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
   METHOD find_zlib_end.
 
-* stream_ended_by is false for every length below the end of the DEFLATE stream and true
-* from the end on. So the end is the smallest length for which it is true. Starting at
+* stream_ended_by is true from the end of the DEFLATE stream on, and false below it for
+* any stream a compressor writes (see there). So the end is the smallest length for which
+* it is true. A crafted stream could still make it true too early; then the next object
+* or the SHA-1 at the end of the pack does not fit, and decode raises. Starting at
 * iv_guess, the search steps down or up with growing steps until the end lies between a
 * length that is false and one that is true, then halves that range.
 *
@@ -847,13 +849,19 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
 * The kernel does not report a truncated stream: a stream cut after its last data byte,
 * but before the end-of-block code, still decompresses to all of the data. So the first
-* iv_length bytes are decompressed twice, followed once by zero bits and once by one bits.
-* If the stream ended within iv_length bytes, both tails are ignored. Otherwise the next
-* bit differs between the tails, so at least one of them continues the stream and yields
-* more data or an error (another block, invalid block type or code, stored block length).
+* iv_length bytes are decompressed with tails appended: eight zero bytes, eight one bytes
+* and sixteen zero bytes. If the stream ended within iv_length bytes, every tail is
+* ignored. Otherwise the next bit differs between the tails, so usually one of them
+* continues the stream and yields more data or an error (another block, invalid block
+* type or code, stored block length).
+*
+* Two tails are not always enough: if the rest of the data is a run that both eight-byte
+* tails happen to encode, with literals for zero bits and copies for one bits, both give
+* all of the data. A tail of twice the length encodes twice the run and gives too much.
 
-    CONSTANTS: lc_zeros TYPE x LENGTH 8 VALUE '0000000000000000',
-               lc_ones  TYPE x LENGTH 8 VALUE 'FFFFFFFFFFFFFFFF'.
+    CONSTANTS: lc_zeros      TYPE x LENGTH 8 VALUE '0000000000000000',
+               lc_ones       TYPE x LENGTH 8 VALUE 'FFFFFFFFFFFFFFFF',
+               lc_zeros_long TYPE x LENGTH 16 VALUE '00000000000000000000000000000000'.
 
     DATA lv_tail TYPE xstring.
 
@@ -868,6 +876,14 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
     ENDIF.
 
     lv_tail = lc_ones.
+    IF inflates_to( iv_data         = iv_data
+                    iv_length       = iv_length
+                    iv_tail         = lv_tail
+                    iv_decompressed = iv_decompressed ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    lv_tail = lc_zeros_long.
     rv_ended = inflates_to( iv_data         = iv_data
                             iv_length       = iv_length
                             iv_tail         = lv_tail
