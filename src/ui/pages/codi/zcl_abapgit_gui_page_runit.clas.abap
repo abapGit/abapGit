@@ -34,15 +34,6 @@ CLASS zcl_abapgit_gui_page_runit DEFINITION
     DATA mi_repo TYPE REF TO zif_abapgit_repo.
     DATA mi_runner TYPE REF TO zif_abapgit_unit_test_runner.
 
-    "! Classic runner if available, otherwise the modern one
-    CLASS-METHODS create_runner
-      IMPORTING
-        !ii_repo         TYPE REF TO zif_abapgit_repo
-      RETURNING
-        VALUE(ri_runner) TYPE REF TO zif_abapgit_unit_test_runner
-      RAISING
-        zcx_abapgit_exception.
-
     METHODS render_method
       IMPORTING
         !is_method     TYPE zif_abapgit_unit_test_runner=>ty_method
@@ -71,7 +62,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     DATA li_runner    TYPE REF TO zif_abapgit_unit_test_runner.
 
     TRY.
-        li_runner = create_runner( ii_repo ).
+        li_runner = zcl_abapgit_aunit_factory=>get_runner( ii_repo ).
 
         CREATE OBJECT lo_component
           EXPORTING
@@ -90,21 +81,6 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
                     ii_repo          = ii_repo
                     iv_check_variant = 'SWF_ABAP_UNIT' ).
 
-    ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD create_runner.
-
-    TRY.
-        CREATE OBJECT ri_runner TYPE zcl_abapgit_unit_test_classic
-          EXPORTING
-            ii_repo = ii_repo.
-      CATCH zcx_abapgit_exception.
-        CREATE OBJECT ri_runner TYPE zcl_abapgit_unit_test_modern
-          EXPORTING
-            ii_repo = ii_repo.
     ENDTRY.
 
   ENDMETHOD.
