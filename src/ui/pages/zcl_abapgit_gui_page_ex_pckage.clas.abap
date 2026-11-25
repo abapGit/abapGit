@@ -33,6 +33,11 @@ CLASS zcl_abapgit_gui_page_ex_pckage DEFINITION
         choose_package TYPE string VALUE 'choose-object-type',
       END OF c_event.
 
+    CONSTANTS:
+      BEGIN OF c_message,
+        incomplete_export TYPE string VALUE 'Incomplete ZIP exported; some objects were skipped',
+      END OF c_message.
+
 
     DATA mo_form TYPE REF TO zcl_abapgit_html_form.
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
@@ -44,6 +49,8 @@ CLASS zcl_abapgit_gui_page_ex_pckage DEFINITION
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
 
     METHODS export_package
+      RETURNING
+        VALUE(rv_incomplete) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
 ENDCLASS.
@@ -77,17 +84,20 @@ CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
     DATA lv_folder_logic TYPE string.
     DATA lv_ign_subpkg TYPE abap_bool.
     DATA lv_main_lang_only TYPE abap_bool.
+    DATA lv_incomplete TYPE abap_bool.
 
     lv_package        = mo_form_data->get( c_id-package ).
     lv_folder_logic   = mo_form_data->get( c_id-folder_logic ).
     lv_ign_subpkg     = mo_form_data->get( c_id-ignore_subpackages ).
     lv_main_lang_only = mo_form_data->get( c_id-main_lang_only ).
 
-    zcl_abapgit_zip=>export_package(
+    lv_incomplete = zcl_abapgit_zip=>export_package(
       iv_package        = lv_package
       iv_folder_logic   = lv_folder_logic
       iv_ign_subpkg     = lv_ign_subpkg
       iv_main_lang_only = lv_main_lang_only ).
+
+    rv_incomplete = lv_incomplete.
   ENDMETHOD.
 
 
@@ -134,6 +144,8 @@ CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
+    DATA lv_incomplete TYPE abap_bool.
+
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
@@ -143,8 +155,12 @@ CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
         IF mo_validation_log->is_empty( ) = abap_false.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ELSE.
-          export_package( ).
-          MESSAGE 'Package successfully exported' TYPE 'S'.
+          lv_incomplete = export_package( ).
+          IF lv_incomplete = abap_true.
+            MESSAGE c_message-incomplete_export TYPE 'W'.
+          ELSE.
+            MESSAGE 'Package successfully exported' TYPE 'S'.
+          ENDIF.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
         ENDIF.
 

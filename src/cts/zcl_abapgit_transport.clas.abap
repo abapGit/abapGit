@@ -4,13 +4,19 @@ CLASS zcl_abapgit_transport DEFINITION
 
   PUBLIC SECTION.
 * todo, add interfaces for this class, consider merging zcl_abapgit_transport_mass into this class?
+    TYPES:
+      BEGIN OF ty_zip_result,
+        xstr       TYPE xstring,
+        incomplete TYPE abap_bool,
+      END OF ty_zip_result.
+
     CLASS-METHODS zip
       IMPORTING
         !iv_show_log_popup TYPE abap_bool DEFAULT abap_true
         !iv_logic          TYPE string OPTIONAL
         !is_trkorr         TYPE trwbo_request_header OPTIONAL
       RETURNING
-        VALUE(rv_xstr)     TYPE xstring
+        VALUE(rs_zip)      TYPE ty_zip_result
       RAISING
         zcx_abapgit_exception .
 
@@ -353,7 +359,8 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
           lo_dot_abapgit    TYPE REF TO zcl_abapgit_dot_abapgit,
           ls_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings,
           lt_trkorr         TYPE ty_trkorr_tt,
-          lv_trkorr         TYPE trkorr.
+          lv_trkorr         TYPE trkorr,
+          ls_export_result  TYPE zcl_abapgit_zip=>ty_export_result.
 
 
     IF is_trkorr IS SUPPLIED.
@@ -387,12 +394,15 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
       lo_dot_abapgit->set_folder_logic( zcl_abapgit_ui_factory=>get_popups( )->popup_folder_logic( ) ).
     ENDIF.
 
-    rv_xstr = zcl_abapgit_zip=>export(
+    ls_export_result = zcl_abapgit_zip=>export(
       iv_package        = lv_package
       io_dot_abapgit    = lo_dot_abapgit
       is_local_settings = ls_local_settings
       it_filter         = lt_tadir
       iv_show_log       = iv_show_log_popup ).
+
+    rs_zip-xstr = ls_export_result-xstr.
+    rs_zip-incomplete = ls_export_result-incomplete.
 
   ENDMETHOD.
 ENDCLASS.
