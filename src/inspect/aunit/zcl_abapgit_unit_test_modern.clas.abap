@@ -54,6 +54,7 @@ CLASS zcl_abapgit_unit_test_modern DEFINITION
     "! @parameter iv_type | Class or interface defining the method
     "! @parameter iv_method | Method name
     "! @parameter ig_value | Value for the importing parameter
+    "! @parameter iv_parameter | Pass the value to this parameter instead, skipped if the method does not have it
     "! @parameter rr_result | Returning value, not bound if the method has none
     METHODS call_method
       IMPORTING
@@ -61,6 +62,7 @@ CLASS zcl_abapgit_unit_test_modern DEFINITION
         !iv_type         TYPE string
         !iv_method       TYPE abap_methname
         !ig_value        TYPE any OPTIONAL
+        !iv_parameter    TYPE abap_parmname OPTIONAL
       RETURNING
         VALUE(rr_result) TYPE REF TO data
       RAISING
@@ -164,7 +166,10 @@ CLASS zcl_abapgit_unit_test_modern IMPLEMENTATION.
         eo_descr  = lo_descr
         es_method = ls_method ).
 
-    IF ig_value IS SUPPLIED.
+    IF iv_parameter IS NOT INITIAL.
+      READ TABLE ls_method-parameters INTO ls_importing
+        WITH KEY name = iv_parameter parm_kind = cl_abap_objectdescr=>importing.
+    ELSEIF ig_value IS SUPPLIED.
       LOOP AT ls_method-parameters INTO ls_param WHERE parm_kind = cl_abap_objectdescr=>importing.
         IF ls_param-is_optional = abap_false.
           ls_importing = ls_param.
@@ -176,6 +181,9 @@ CLASS zcl_abapgit_unit_test_modern IMPLEMENTATION.
       IF ls_importing IS INITIAL.
         zcx_abapgit_exception=>raise( |{ iv_type }=>{ iv_method }: no importing parameter| ).
       ENDIF.
+    ENDIF.
+
+    IF ls_importing IS NOT INITIAL.
 
       CLEAR ls_bind.
       ls_bind-name = ls_importing-name.
@@ -409,10 +417,13 @@ CLASS zcl_abapgit_unit_test_modern IMPLEMENTATION.
       it_tadir = lt_tadir ).
 
     IF contains_test_cases( lo_task ) = abap_true.
+      " depending on the release, RUN has a LISTENER parameter, else the listener from CREATE_TASK is used
       call_method(
-        io_object = lo_task
-        iv_type   = c_type-task
-        iv_method = 'RUN' ).
+        io_object    = lo_task
+        iv_type      = c_type-task
+        iv_method    = 'RUN'
+        ig_value     = lo_listener
+        iv_parameter = 'LISTENER' ).
 
       lo_aunit = to_object( call_method(
         io_object = lo_listener
