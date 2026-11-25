@@ -4,12 +4,6 @@ CLASS zcl_abapgit_zip DEFINITION
 
   PUBLIC SECTION.
 
-    TYPES:
-      BEGIN OF ty_export_result,
-        xstr       TYPE xstring,
-        incomplete TYPE abap_bool,
-      END OF ty_export_result.
-
     CLASS-METHODS encode_files
       IMPORTING
         !it_files      TYPE zif_abapgit_definitions=>ty_files_item_tt
@@ -25,7 +19,7 @@ CLASS zcl_abapgit_zip DEFINITION
         !iv_show_log       TYPE abap_bool DEFAULT abap_true
         !it_filter         TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
       RETURNING
-        VALUE(rs_result)   TYPE ty_export_result
+        VALUE(rs_result)   TYPE zif_abapgit_definitions=>ty_zip_result
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS export_object
@@ -62,22 +56,6 @@ CLASS zcl_abapgit_zip DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    CONSTANTS:
-      BEGIN OF c_export,
-        accept_answer     TYPE zif_abapgit_popups=>ty_char1 VALUE '1',
-        archive_extension TYPE string VALUE '.zip',
-        cancel_answer     TYPE zif_abapgit_popups=>ty_char1 VALUE '2',
-        cancel_button     TYPE string VALUE 'Cancel export',
-        confirm_button    TYPE string VALUE 'Export partial ZIP',
-        confirm_question  TYPE string VALUE 'Some objects failed. Export the rest as an incomplete ZIP?',
-        confirm_title     TYPE string VALUE 'Incomplete ZIP export',
-        dialog_extension  TYPE string VALUE 'zip',
-        incomplete_suffix TYPE string VALUE '_INCOMPLETE',
-        incomplete_title  TYPE string VALUE 'Package Export (INCOMPLETE)',
-        package_title     TYPE string VALUE 'Package Export',
-        popup_type        TYPE zif_abapgit_popups=>ty_icon VALUE 'ICON_MESSAGE_WARNING',
-      END OF c_export.
 
     CLASS-METHODS filename
       IMPORTING
@@ -159,15 +137,15 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       ENDIF.
 
       lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-        iv_titlebar              = c_export-confirm_title
-        iv_text_question         = c_export-confirm_question
-        iv_text_button_1         = c_export-confirm_button
-        iv_text_button_2         = c_export-cancel_button
-        iv_default_button        = c_export-cancel_answer
-        iv_popup_type            = c_export-popup_type
+        iv_titlebar              = `Incomplete ZIP export`
+        iv_text_question         = `Some objects failed. Export the rest as an incomplete ZIP?`
+        iv_text_button_1         = `Export partial ZIP`
+        iv_text_button_2         = `Cancel export`
+        iv_default_button        = '2'
+        iv_popup_type            = `ICON_MESSAGE_WARNING`
         iv_display_cancel_button = abap_true ).
 
-      IF lv_answer <> c_export-accept_answer.
+      IF lv_answer <> '1'.
         RAISE EXCEPTION TYPE zcx_abapgit_cancel.
       ENDIF.
 
@@ -239,7 +217,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     DATA: ls_local_settings  TYPE zif_abapgit_persistence=>ty_repo-local_settings,
           lo_dot_abapgit     TYPE REF TO zcl_abapgit_dot_abapgit,
           lo_frontend_serv   TYPE REF TO zif_abapgit_frontend_services,
-          ls_export_result   TYPE ty_export_result,
+          ls_export_result   TYPE zif_abapgit_definitions=>ty_zip_result,
           lv_default         TYPE string,
           lv_package_escaped TYPE string,
           lv_path            TYPE string,
@@ -261,17 +239,16 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       iv_package        = iv_package
       io_dot_abapgit    = lo_dot_abapgit ).
 
-    lv_default = |{ lv_package_escaped }_{ sy-datlo }_{ sy-timlo }{ c_export-archive_extension }|.
-    lv_title = c_export-package_title.
+    lv_default = |{ lv_package_escaped }_{ sy-datlo }_{ sy-timlo }.zip|.
+    lv_title = `Package Export`.
     IF ls_export_result-incomplete = abap_true.
-      lv_default = |{ lv_package_escaped }_{ sy-datlo }_{ sy-timlo }|
-        && |{ c_export-incomplete_suffix }{ c_export-archive_extension }|.
-      lv_title = c_export-incomplete_title.
+      lv_default = |{ lv_package_escaped }_{ sy-datlo }_{ sy-timlo }_INCOMPLETE.zip|.
+      lv_title = `Package Export (INCOMPLETE)`.
     ENDIF.
 
     lv_path = lo_frontend_serv->show_file_save_dialog(
       iv_title            = lv_title
-      iv_extension        = c_export-dialog_extension
+      iv_extension        = `zip`
       iv_default_filename = lv_default ).
 
     lo_frontend_serv->file_download(

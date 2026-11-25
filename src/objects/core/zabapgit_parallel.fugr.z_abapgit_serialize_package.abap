@@ -16,8 +16,7 @@ FUNCTION z_abapgit_serialize_package.
     lx_error          TYPE REF TO zcx_abapgit_exception,
     lv_text           TYPE c LENGTH 200,
     ls_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings,
-    lo_dot_abapgit    TYPE REF TO zcl_abapgit_dot_abapgit,
-    ls_result         TYPE zcl_abapgit_zip=>ty_export_result.
+    lo_dot_abapgit    TYPE REF TO zcl_abapgit_dot_abapgit.
 
   TRY.
       ls_local_settings-main_language_only = iv_main_lang_only.
@@ -25,13 +24,11 @@ FUNCTION z_abapgit_serialize_package.
       lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
       lo_dot_abapgit->set_folder_logic( iv_folder_logic ).
 
-      ls_result = zcl_abapgit_zip=>export(
+      ev_xstring = zcl_abapgit_zip=>export(
        is_local_settings = ls_local_settings
        iv_package        = iv_package
        iv_show_log       = iv_show_log
-       io_dot_abapgit    = lo_dot_abapgit ).
-
-      ev_xstring = ls_result-xstr.
+       io_dot_abapgit    = lo_dot_abapgit )-xstr.
 
     CATCH zcx_abapgit_exception INTO lx_error.
       lv_text = lx_error->get_text( ).

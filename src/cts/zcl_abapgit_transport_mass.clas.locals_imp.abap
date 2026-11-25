@@ -209,7 +209,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
   METHOD generate_files.
 
     DATA: ls_trkorr     LIKE LINE OF it_trkorr,
-          ls_zip_result TYPE zcl_abapgit_transport_mass=>ty_zip_result.
+          ls_zip_result TYPE zif_abapgit_definitions=>ty_zip_result.
 
     LOOP AT it_trkorr INTO ls_trkorr.
 
