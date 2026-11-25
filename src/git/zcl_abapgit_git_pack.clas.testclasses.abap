@@ -280,6 +280,10 @@ CLASS ltcl_pack DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
         RAISING zcx_abapgit_exception,
       zlib_end_any_guess FOR TESTING
         RAISING zcx_abapgit_exception,
+      zlib_end_multi_block FOR TESTING
+        RAISING zcx_abapgit_exception,
+      zlib_end_not_found FOR TESTING
+        RAISING zcx_abapgit_exception,
       pack_checksum_overlaps_eob FOR TESTING
         RAISING zcx_abapgit_exception,
       pack_two_tails_same_data FOR TESTING
@@ -724,6 +728,94 @@ CLASS ltcl_pack IMPLEMENTATION.
         lv_guess = lv_guess + 11.
       ENDWHILE.
     ENDDO.
+
+  ENDMETHOD.
+
+  METHOD zlib_end_multi_block.
+
+    " Streams of several blocks, as zlib writes them when it is flushed:
+    " 1. a sync flush (empty stored block) between two blocks with data
+    " 2. a sync flush behind the data, then an empty final block. All of the data is
+    "    decompressed several bytes before the stream ends.
+    CONSTANTS: lc_between TYPE x LENGTH 28
+                 VALUE '4ACB2C2A2E5148CAC94FCED65100000000FFFF2B4E4DCECF4B81F000',
+               lc_behind  TYPE x LENGTH 29
+                 VALUE '4ACB2C2A2E5148CAC94FCED651284E4DCECF4B81F000000000FFFF0300',
+               lc_next    TYPE x LENGTH 8 VALUE '789C0123456789AB'.
+
+    DATA: lv_data   TYPE xstring,
+          lv_stream TYPE xstring,
+          lv_input  TYPE xstring,
+          lv_guess  TYPE i,
+          lv_round  TYPE i.
+
+    lv_data = zcl_abapgit_convert=>string_to_xstring_utf8( 'first block, second block' ).
+
+    DO 2 TIMES.
+      lv_round = sy-index.
+      IF lv_round = 1.
+        lv_stream = lc_between.
+      ELSE.
+        lv_stream = lc_behind.
+      ENDIF.
+      CONCATENATE lv_stream lc_next INTO lv_input IN BYTE MODE.
+
+      lv_guess = 0.
+      WHILE lv_guess <= xstrlen( lv_input ) + 1.
+        cl_abap_unit_assert=>assert_equals(
+          exp = xstrlen( lv_stream )
+          act = zcl_abapgit_git_pack=>find_zlib_end(
+                  iv_data         = lv_input
+                  iv_decompressed = lv_data
+                  iv_guess        = lv_guess )
+          msg = |round { lv_round }, guess { lv_guess }| ).
+        lv_guess = lv_guess + 1.
+      ENDWHILE.
+    ENDDO.
+
+  ENDMETHOD.
+
+  METHOD zlib_end_not_found.
+
+    " The data ends before the stream does: a stored block without its last byte.
+    " No end is reported, wherever the search starts, so that decode takes its fallback.
+    DATA: lv_data   TYPE xstring,
+          lv_stream TYPE xstring,
+          lv_input  TYPE xstring,
+          lv_length TYPE i,
+          lv_guess  TYPE i.
+
+    lv_data = zcl_abapgit_convert=>string_to_xstring_utf8( 'The data ends before the stream does' ).
+    lv_stream = stored_deflate( lv_data ).
+    lv_length = xstrlen( lv_stream ) - 1.
+    lv_input = lv_stream(lv_length).
+
+    lv_guess = 0.
+    WHILE lv_guess <= lv_length + 1.
+      cl_abap_unit_assert=>assert_equals(
+        exp = -1
+        act = zcl_abapgit_git_pack=>find_zlib_end(
+                iv_data         = lv_input
+                iv_decompressed = lv_data
+                iv_guess        = lv_guess )
+        msg = |guess { lv_guess }| ).
+      lv_guess = lv_guess + 1.
+    ENDWHILE.
+
+    " One byte, or none, cannot hold a stream
+    lv_input = lv_stream(1).
+    cl_abap_unit_assert=>assert_equals(
+      exp = -1
+      act = zcl_abapgit_git_pack=>find_zlib_end(
+              iv_data         = lv_input
+              iv_decompressed = lv_data ) ).
+
+    CLEAR lv_input.
+    cl_abap_unit_assert=>assert_equals(
+      exp = -1
+      act = zcl_abapgit_git_pack=>find_zlib_end(
+              iv_data         = lv_input
+              iv_decompressed = lv_data ) ).
 
   ENDMETHOD.
 
