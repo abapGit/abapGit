@@ -33,10 +33,15 @@ CLASS zcl_abapgit_repo_online DEFINITION
         is_data TYPE zif_abapgit_persistence=>ty_repo.
 
   PROTECTED SECTION.
+
+    METHODS reset_remote
+        REDEFINITION .
   PRIVATE SECTION.
 
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
     DATA mv_current_commit TYPE zif_abapgit_git_definitions=>ty_sha1 .
+    " Branch list of the remote, read at most once until the remote is reset
+    DATA mi_branch_list TYPE REF TO zif_abapgit_git_branch_list .
 
     METHODS handle_stage_ignore
       IMPORTING
@@ -49,6 +54,11 @@ CLASS zcl_abapgit_repo_online DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS fetch_remote
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_branch_list
+      RETURNING
+        VALUE(ri_branch_list) TYPE REF TO zif_abapgit_git_branch_list
       RAISING
         zcx_abapgit_exception .
     METHODS is_remote_unchanged
@@ -117,6 +127,17 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_branch_list.
+
+    IF mi_branch_list IS NOT BOUND.
+      mi_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( get_url( ) ).
+    ENDIF.
+
+    ri_branch_list = mi_branch_list.
+
+  ENDMETHOD.
+
+
   METHOD get_objects.
     fetch_remote( ).
     rt_objects = mt_objects.
@@ -171,9 +192,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     lv_commit = get_selected_commit( ).
     IF lv_commit IS INITIAL.
-      lv_commit = zcl_abapgit_git_factory=>get_git_transport(
-        )->branches( get_url( )
-        )->find_by_name( get_selected_branch( ) )-sha1.
+      lv_commit = get_branch_list( )->find_by_name( get_selected_branch( ) )-sha1.
     ENDIF.
 
     rv_unchanged = boolc( lv_commit = mv_current_commit ).
@@ -202,6 +221,14 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD reset_remote.
+
+    CLEAR mi_branch_list.
+    super->reset_remote( ).
+
+  ENDMETHOD.
+
+
   METHOD set_objects.
     mt_objects = it_objects.
   ENDMETHOD.
@@ -219,7 +246,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     lv_branch = get_selected_branch( ).
 
     IF lv_branch IS NOT INITIAL.
-      li_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( get_url( ) ).
+      li_branch_list = get_branch_list( ).
 
       TRY.
           li_branch_list->find_by_name( lv_branch ).
@@ -379,6 +406,8 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     set_files_remote( ls_push-new_files ).
 
     mv_current_commit = ls_push-branch.
+    " The pushed branch points to the new commit now
+    CLEAR mi_branch_list.
 
     checksums( )->update( ls_push-updated_files ).
 

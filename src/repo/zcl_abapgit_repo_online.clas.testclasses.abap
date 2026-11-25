@@ -114,7 +114,9 @@ CLASS ltcl_fetch_remote DEFINITION FINAL FOR TESTING
       branch_moved FOR TESTING RAISING zcx_abapgit_exception,
       commit_unchanged FOR TESTING RAISING zcx_abapgit_exception,
       commit_changed FOR TESTING RAISING zcx_abapgit_exception,
-      nothing_fetched FOR TESTING RAISING zcx_abapgit_exception.
+      nothing_fetched FOR TESTING RAISING zcx_abapgit_exception,
+      branch_list_read_once FOR TESTING RAISING zcx_abapgit_exception,
+      branch_list_after_reset FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -282,6 +284,42 @@ CLASS ltcl_fetch_remote IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_transport->mv_calls
       exp = 0 ).
+
+  ENDMETHOD.
+
+  METHOD branch_list_read_once.
+
+    DATA lo_repo TYPE REF TO zcl_abapgit_repo_online.
+
+    mo_transport->mv_head = mv_commit.
+
+    " As the repository view does: check the branch, then compare the remote commit
+    lo_repo = create_repo( ).
+    lo_repo->check_for_valid_branch( ).
+    assert_files_of_commit( lo_repo ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_transport->mv_calls
+      exp = 1 ).
+
+  ENDMETHOD.
+
+  METHOD branch_list_after_reset.
+
+    DATA lo_repo TYPE REF TO zcl_abapgit_repo_online.
+
+    mo_transport->mv_head = mv_commit.
+
+    lo_repo = create_repo( ).
+    lo_repo->check_for_valid_branch( ).
+
+    " A refresh resets the remote, so the branch list is read again
+    lo_repo->reset_remote( ).
+    assert_files_of_commit( lo_repo ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_transport->mv_calls
+      exp = 2 ).
 
   ENDMETHOD.
 
