@@ -680,7 +680,11 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
           buffer_overflow = 3
           unknown_error   = 4
           OTHERS          = 5.
-      IF sy-subrc <> 0 OR lv_subrc <> 0.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise(
+          |DD_EXISTS_DATA failed for { <ls_result>-obj_name }, subrc = { sy-subrc }| ).
+      ENDIF.
+      IF lv_subrc <> 0.
         CONTINUE.
       ENDIF.
 
