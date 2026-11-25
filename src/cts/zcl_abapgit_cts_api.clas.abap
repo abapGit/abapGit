@@ -424,7 +424,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       INTO TABLE lt_parents
       FOR ALL ENTRIES IN lt_trkorr
       WHERE trkorr = lt_trkorr-table_line
-        AND strkorr <> space.
+        AND strkorr <> space ##SUBRC_OK.
 
     LOOP AT ct_transports ASSIGNING <ls_transport>.
       READ TABLE lt_parents INTO ls_parent WITH TABLE KEY trkorr = <ls_transport>-trkorr.
@@ -706,7 +706,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 * TR_CHECK_OBJECT_LOCK
 
 * avoid database lookups in TLOCK for each item,
-    SELECT * FROM tlock INTO TABLE lt_tlock.
+    SELECT * FROM tlock INTO TABLE lt_tlock ##SUBRC_OK.
 
     LOOP AT it_items ASSIGNING <ls_item>.
       CLEAR lv_request.
