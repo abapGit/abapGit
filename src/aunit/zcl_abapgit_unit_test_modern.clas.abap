@@ -112,7 +112,7 @@ CLASS zcl_abapgit_unit_test_modern IMPLEMENTATION.
             WHEN 'FUGR'.
               CALL METHOD io_task->('IF_AUNIT_TASK~ADD_FUNCTION_GROUP')
                 EXPORTING
-                  function_group = lv_program.
+                  fugr_name = lv_program.
           ENDCASE.
         CATCH cx_root INTO lx_error.
           lv_error = |{ ls_tadir-object } { ls_tadir-obj_name }: { lx_error->get_text( ) }|.
@@ -228,7 +228,7 @@ CLASS zcl_abapgit_unit_test_modern IMPLEMENTATION.
     TRY.
         CALL METHOD io_task->('IF_AUNIT_TASK~RESTRICT_RISK_LEVEL')
           EXPORTING
-            risk_level = c_risk_level_critical.
+            max_risk_level = c_risk_level_critical.
       CATCH cx_root INTO lx_error.
         lv_error = |Restrict risk level: { lx_error->get_text( ) }|.
         APPEND lv_error TO rt_errors.
@@ -237,7 +237,7 @@ CLASS zcl_abapgit_unit_test_modern IMPLEMENTATION.
     TRY.
         CALL METHOD io_task->('IF_AUNIT_TASK~RESTRICT_DURATION_CATEGORY')
           EXPORTING
-            duration_category = c_duration_long.
+            max_duration_category = c_duration_long.
       CATCH cx_root INTO lx_error.
         lv_error = |Restrict duration category: { lx_error->get_text( ) }|.
         APPEND lv_error TO rt_errors.
