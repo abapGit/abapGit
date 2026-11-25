@@ -380,7 +380,7 @@ CLASS zcl_abapgit_unit_test_modern IMPLEMENTATION.
     DATA lt_errors   TYPE string_table.
     DATA lv_summary  TYPE string.
 
-    lt_tadir = mi_repo->get_tadir_objects( ).
+    lt_tadir = zcl_abapgit_aunit_objects=>get( mi_repo ).
 
     lo_timer = zcl_abapgit_timer=>create( iv_count = lines( lt_tadir ) )->start( ).
 

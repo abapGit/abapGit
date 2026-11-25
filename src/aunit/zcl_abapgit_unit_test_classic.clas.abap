@@ -62,7 +62,7 @@ CLASS zcl_abapgit_unit_test_classic IMPLEMENTATION.
     DATA ls_tadir LIKE LINE OF lt_tadir.
     DATA ls_key   LIKE LINE OF rt_keys.
 
-    lt_tadir = mi_repo->get_tadir_objects( ).
+    lt_tadir = zcl_abapgit_aunit_objects=>get( mi_repo ).
 
     LOOP AT lt_tadir INTO ls_tadir.
       CLEAR ls_key.
