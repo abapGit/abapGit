@@ -518,6 +518,12 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
         check_objects_locked( lt_items ).
 
+        IF is_checks-check_table_data = abap_true.
+          zcl_abapgit_objects_check=>validate_table_deletions(
+            it_tadir    = lt_tadir
+            it_warnings = is_checks-delete_tabl_with_data ).
+        ENDIF.
+
       CATCH zcx_abapgit_exception INTO lx_error.
         zcl_abapgit_factory=>get_default_transport( )->reset( ).
         RAISE EXCEPTION lx_error.

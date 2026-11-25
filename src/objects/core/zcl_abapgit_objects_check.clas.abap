@@ -6,6 +6,13 @@ CLASS zcl_abapgit_objects_check DEFINITION
 
     CLASS-METHODS class_constructor.
 
+    CLASS-METHODS validate_table_deletions
+      IMPORTING
+        !it_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !it_warnings TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS deserialize_checks
       IMPORTING
         !ii_repo         TYPE REF TO zif_abapgit_repo
@@ -26,7 +33,44 @@ CLASS zcl_abapgit_objects_check DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    TYPES:
+      BEGIN OF ty_tabname,
+        tabname TYPE dd02l-tabname,
+      END OF ty_tabname.
+    TYPES ty_tabname_tt TYPE SORTED TABLE OF ty_tabname WITH UNIQUE KEY tabname.
+    TYPES ty_tabname_range TYPE RANGE OF dd02l-tabname.
+    TYPES ty_table_data_state TYPE c LENGTH 1.
+
+    TYPES:
+      BEGIN OF ty_table_data_info,
+        tabname  TYPE dd02l-tabname,
+        tabclass TYPE dd02l-tabclass,
+        sqltab   TYPE dd02l-sqltab,
+      END OF ty_table_data_info.
+    TYPES ty_table_data_info_tt TYPE HASHED TABLE OF ty_table_data_info
+      WITH UNIQUE KEY tabname.
+
+    CONSTANTS:
+      BEGIN OF c_table_data_state,
+        has_data TYPE ty_table_data_state VALUE 'D',
+        no_data  TYPE ty_table_data_state VALUE 'N',
+        error    TYPE ty_table_data_state VALUE 'E',
+      END OF c_table_data_state.
+    CONSTANTS:
+      BEGIN OF c_selection,
+        include_sign TYPE c LENGTH 1 VALUE 'I',
+        equal_option TYPE c LENGTH 2 VALUE 'EQ',
+      END OF c_selection.
+
     CLASS-DATA gi_exit TYPE REF TO zif_abapgit_exit.
+
+    CONSTANTS:
+      BEGIN OF c_table_data_warning,
+        check_failed    TYPE string VALUE 'Could not check table data; deletion may cause data loss',
+        contains_data   TYPE string VALUE 'Delete table that contains data',
+        data_appeared   TYPE string VALUE 'Table now contains data without explicit delete confirmation',
+        metadata_failed TYPE string VALUE 'Could not verify table metadata; deletion cancelled',
+      END OF c_table_data_warning.
 
     CLASS-METHODS adjust_result
       IMPORTING
@@ -111,6 +155,20 @@ CLASS zcl_abapgit_objects_check DEFINITION
         VALUE(rt_overwrite) TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
         zcx_abapgit_exception.
+
+    CLASS-METHODS read_table_info
+      IMPORTING
+        !it_tabnames         TYPE ty_tabname_tt
+      RETURNING
+        VALUE(rt_table_info) TYPE ty_table_data_info_tt
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS check_table_data
+      IMPORTING
+        !is_table_info  TYPE ty_table_data_info
+      RETURNING
+        VALUE(rv_state) TYPE ty_table_data_state.
 
     CLASS-METHODS determine_transport_request
       IMPORTING
@@ -622,24 +680,82 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD validate_table_deletions.
+
+    DATA lt_tabnames TYPE ty_tabname_tt.
+    DATA lt_table_info TYPE ty_table_data_info_tt.
+    DATA lv_data_state TYPE ty_table_data_state.
+    DATA ls_tabname TYPE ty_tabname.
+
+    FIELD-SYMBOLS: <ls_tadir>      LIKE LINE OF it_tadir,
+                   <ls_warning>    LIKE LINE OF it_warnings,
+                   <ls_table_info> TYPE ty_table_data_info.
+
+    LOOP AT it_tadir ASSIGNING <ls_tadir> WHERE object = 'TABL'.
+      ls_tabname-tabname = <ls_tadir>-obj_name.
+      INSERT ls_tabname INTO TABLE lt_tabnames.
+    ENDLOOP.
+
+    IF lt_tabnames IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lt_table_info = read_table_info( lt_tabnames ).
+
+    LOOP AT it_tadir ASSIGNING <ls_tadir> WHERE object = 'TABL'.
+      READ TABLE lt_table_info ASSIGNING <ls_table_info>
+        WITH TABLE KEY tabname = <ls_tadir>-obj_name.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |{ c_table_data_warning-metadata_failed }: { <ls_tadir>-obj_name }| ).
+      ENDIF.
+
+      IF <ls_table_info>-tabclass <> 'TRANSP'
+        AND <ls_table_info>-tabclass <> 'CLUSTER'
+        AND <ls_table_info>-tabclass <> 'POOL'.
+        CONTINUE.
+      ENDIF.
+
+      lv_data_state = check_table_data( <ls_table_info> ).
+      CASE lv_data_state.
+        WHEN c_table_data_state-no_data.
+          CONTINUE.
+        WHEN c_table_data_state-error.
+          zcx_abapgit_exception=>raise( |{ c_table_data_warning-check_failed }: { <ls_tadir>-obj_name }| ).
+      ENDCASE.
+
+      READ TABLE it_warnings ASSIGNING <ls_warning>
+        WITH TABLE KEY object_type_and_name
+          COMPONENTS obj_type = 'TABL'
+                     obj_name = <ls_tadir>-obj_name.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |{ c_table_data_warning-data_appeared }: { <ls_tadir>-obj_name }| ).
+      ENDIF.
+
+      IF <ls_warning>-decision <> zif_abapgit_definitions=>c_yes.
+        zcx_abapgit_exception=>raise( |{ c_table_data_warning-data_appeared }: { <ls_tadir>-obj_name }| ).
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD warning_tabl_data_find.
 
-    DATA:
-      ls_overwrite LIKE LINE OF rt_overwrite,
-      lv_subrc     TYPE sy-subrc,
-      BEGIN OF ls_dd02l,
-        tabname  TYPE dd02l-tabname,
-        tabclass TYPE dd02l-tabclass,
-        sqltab   TYPE dd02l-sqltab,
-      END OF ls_dd02l.
+    DATA lt_candidates TYPE zif_abapgit_definitions=>ty_results_tt.
+    DATA lt_tabnames TYPE ty_tabname_tt.
+    DATA lt_table_info TYPE ty_table_data_info_tt.
+    DATA lv_data_state TYPE ty_table_data_state.
     DATA lt_remote_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
+    DATA ls_overwrite LIKE LINE OF rt_overwrite.
+    DATA ls_tabname TYPE ty_tabname.
 
-    FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
-
+    FIELD-SYMBOLS: <ls_result>     LIKE LINE OF it_results,
+                   <ls_candidate>  LIKE LINE OF lt_candidates,
+                   <ls_table_info> TYPE ty_table_data_info.
 
     lt_remote_files = ii_repo->get_files_remote( iv_ignore_files = abap_true ).
 
-    " Check for tables being deleted that contain data
+    " Collect candidate tables and fetch their metadata in one query
     LOOP AT it_results ASSIGNING <ls_result>
       WHERE obj_type = 'TABL'
         AND match IS INITIAL
@@ -651,54 +767,128 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      " Get table metadata
-      SELECT SINGLE tabname tabclass sqltab FROM dd02l
-        INTO CORRESPONDING FIELDS OF ls_dd02l
-        WHERE tabname = <ls_result>-obj_name
-        AND as4local = 'A'
-        AND as4vers = '0000'.
+      APPEND <ls_result> TO lt_candidates.
+      ls_tabname-tabname = <ls_result>-obj_name.
+      INSERT ls_tabname INTO TABLE lt_tabnames.
+    ENDLOOP.
+
+    lt_table_info = read_table_info( lt_tabnames ).
+
+    LOOP AT lt_candidates ASSIGNING <ls_candidate>.
+      READ TABLE lt_table_info ASSIGNING <ls_table_info>
+        WITH TABLE KEY tabname = <ls_candidate>-obj_name.
       IF sy-subrc <> 0.
         CONTINUE.
       ENDIF.
 
       " Only check database tables (transparent, cluster, pool)
-      CHECK ls_dd02l-tabclass = 'TRANSP'
-         OR ls_dd02l-tabclass = 'CLUSTER'
-         OR ls_dd02l-tabclass = 'POOL'.
-
-      " Check if table contains data
-      CALL FUNCTION 'DD_EXISTS_DATA'
-        EXPORTING
-          reftab          = ls_dd02l-sqltab
-          tabclass        = ls_dd02l-tabclass
-          tabname         = ls_dd02l-tabname
-        IMPORTING
-          subrc           = lv_subrc
-        EXCEPTIONS
-          missing_reftab  = 1
-          sql_error       = 2
-          buffer_overflow = 3
-          unknown_error   = 4
-          OTHERS          = 5.
-      IF sy-subrc <> 0 OR lv_subrc <> 0.
+      IF <ls_table_info>-tabclass <> 'TRANSP'
+        AND <ls_table_info>-tabclass <> 'CLUSTER'
+        AND <ls_table_info>-tabclass <> 'POOL'.
         CONTINUE.
       ENDIF.
 
-      " Table contains data
+      lv_data_state = check_table_data( <ls_table_info> ).
+      IF lv_data_state = c_table_data_state-no_data.
+        CONTINUE.
+      ENDIF.
+
       READ TABLE rt_overwrite TRANSPORTING NO FIELDS WITH KEY object_type_and_name COMPONENTS
-        obj_type = <ls_result>-obj_type
-        obj_name = <ls_result>-obj_name.
+        obj_type = <ls_candidate>-obj_type
+        obj_name = <ls_candidate>-obj_name.
       IF sy-subrc <> 0.
         CLEAR ls_overwrite.
-        MOVE-CORRESPONDING <ls_result> TO ls_overwrite.
-        ls_overwrite-devclass = <ls_result>-package.
-        ls_overwrite-action   = zif_abapgit_objects=>c_deserialize_action-delete_tabl_with_data.
-        ls_overwrite-icon     = icon_delete.
-        ls_overwrite-text     = 'Delete table that contains data'.
+        MOVE-CORRESPONDING <ls_candidate> TO ls_overwrite.
+        ls_overwrite-devclass = <ls_candidate>-package.
+        ls_overwrite-action = zif_abapgit_objects=>c_deserialize_action-delete_tabl_with_data.
+        IF lv_data_state = c_table_data_state-error.
+          ls_overwrite-icon = icon_warning.
+          ls_overwrite-text = c_table_data_warning-check_failed.
+        ELSE.
+          ls_overwrite-icon = icon_delete.
+          ls_overwrite-text = c_table_data_warning-contains_data.
+        ENDIF.
         INSERT ls_overwrite INTO TABLE rt_overwrite.
       ENDIF.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD read_table_info.
+
+    DATA lt_range TYPE ty_tabname_range.
+    DATA lx_sql TYPE REF TO cx_sy_open_sql_db.
+    DATA lx_fallback_sql TYPE REF TO cx_sy_open_sql_db.
+
+    FIELD-SYMBOLS:
+      <ls_tabname> LIKE LINE OF it_tabnames,
+      <ls_range>   LIKE LINE OF lt_range.
+
+    IF it_tabnames IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    LOOP AT it_tabnames ASSIGNING <ls_tabname>.
+      APPEND INITIAL LINE TO lt_range ASSIGNING <ls_range>.
+      <ls_range>-sign = c_selection-include_sign.
+      <ls_range>-option = c_selection-equal_option.
+      <ls_range>-low = <ls_tabname>-tabname.
+    ENDLOOP.
+
+    TRY.
+        SELECT tabname tabclass sqltab
+          FROM dd02l
+          INTO TABLE rt_table_info
+          WHERE tabname IN lt_range
+            AND as4local = 'A'
+            AND as4vers = '0000'.
+      CATCH cx_sy_open_sql_db INTO lx_sql.
+        IF lx_sql->textid <> cx_sy_open_sql_db=>statement_too_large.
+          zcx_abapgit_exception=>raise( lx_sql->get_text( ) ).
+        ENDIF.
+
+        TRY.
+            SELECT tabname tabclass sqltab
+              FROM dd02l
+              INTO TABLE rt_table_info
+              FOR ALL ENTRIES IN it_tabnames
+              WHERE tabname = it_tabnames-tabname
+                AND as4local = 'A'
+                AND as4vers = '0000'.
+          CATCH cx_sy_open_sql_db INTO lx_fallback_sql.
+            zcx_abapgit_exception=>raise( lx_fallback_sql->get_text( ) ).
+        ENDTRY.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD check_table_data.
+
+    DATA lv_subrc TYPE sy-subrc.
+
+    CALL FUNCTION 'DD_EXISTS_DATA'
+      EXPORTING
+        reftab          = is_table_info-sqltab
+        tabclass        = is_table_info-tabclass
+        tabname         = is_table_info-tabname
+      IMPORTING
+        subrc           = lv_subrc
+      EXCEPTIONS
+        missing_reftab  = 1
+        sql_error       = 2
+        buffer_overflow = 3
+        unknown_error   = 4
+        OTHERS          = 5.
+    IF sy-subrc <> 0.
+      rv_state = c_table_data_state-error.
+    ELSEIF lv_subrc = 0.
+      rv_state = c_table_data_state-has_data.
+    ELSE.
+      rv_state = c_table_data_state-no_data.
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

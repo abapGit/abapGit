@@ -91,7 +91,9 @@ INTERFACE zif_abapgit_definitions
     END OF ty_deserialize_checks .
   TYPES:
     BEGIN OF ty_delete_checks,
-      transport TYPE ty_transport,
+      transport             TYPE ty_transport,
+      check_table_data      TYPE abap_bool,
+      delete_tabl_with_data TYPE ty_overwrite_tt,
     END OF ty_delete_checks .
   TYPES:
     BEGIN OF ty_metadata,

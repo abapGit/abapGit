@@ -61,6 +61,8 @@ CLASS zcl_abapgit_repo_pull IMPLEMENTATION.
 
     IF lines( lt_tadir ) > 0.
       ls_checks-transport = is_checks-transport.
+      ls_checks-check_table_data = abap_true.
+      ls_checks-delete_tabl_with_data = is_checks-delete_tabl_with_data.
 
       delete_tadir( it_tadir  = lt_tadir
                     is_checks = ls_checks
@@ -94,12 +96,12 @@ CLASS zcl_abapgit_repo_pull IMPLEMENTATION.
       OR action = zif_abapgit_objects=>c_deserialize_action-delete_add )
       AND decision = zif_abapgit_definitions=>c_yes.
 
-      " a table that contains data needs its own confirmation
+      " a table with data or a failed data check needs its own confirmation
       READ TABLE is_checks-delete_tabl_with_data ASSIGNING <ls_tabl_data>
         WITH KEY object_type_and_name COMPONENTS
           obj_type = <ls_overwrite>-obj_type
           obj_name = <ls_overwrite>-obj_name.
-      IF sy-subrc = 0 AND <ls_tabl_data>-decision = zif_abapgit_definitions=>c_no.
+      IF sy-subrc = 0 AND <ls_tabl_data>-decision <> zif_abapgit_definitions=>c_yes.
         CONTINUE.
       ENDIF.
 
