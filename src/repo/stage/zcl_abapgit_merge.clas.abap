@@ -428,13 +428,13 @@ CLASS zcl_abapgit_merge IMPLEMENTATION.
     ms_merge-common = find_first_common( it_list1 = lt_asource
                                          it_list2 = lt_atarget ).
 
-    ms_merge-stree = zcl_abapgit_git_porcelain=>full_tree(
+    ms_merge-stree = zcl_abapgit_git_objects=>full_tree(
       it_objects = mt_objects
       iv_parent  = ms_merge-source-sha1 ).
-    ms_merge-ttree = zcl_abapgit_git_porcelain=>full_tree(
+    ms_merge-ttree = zcl_abapgit_git_objects=>full_tree(
       it_objects = mt_objects
       iv_parent  = ms_merge-target-sha1 ).
-    ms_merge-ctree = zcl_abapgit_git_porcelain=>full_tree(
+    ms_merge-ctree = zcl_abapgit_git_objects=>full_tree(
       it_objects = mt_objects
       iv_parent  = ms_merge-common-commit ).
 
