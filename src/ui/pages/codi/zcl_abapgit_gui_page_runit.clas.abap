@@ -20,9 +20,8 @@ CLASS zcl_abapgit_gui_page_runit DEFINITION
 
     METHODS constructor
       IMPORTING
-        !ii_repo TYPE REF TO zif_abapgit_repo
-      RAISING
-        zcx_abapgit_exception.
+        !ii_repo   TYPE REF TO zif_abapgit_repo
+        !ii_runner TYPE REF TO zif_abapgit_unit_test_runner.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -33,11 +32,20 @@ CLASS zcl_abapgit_gui_page_runit DEFINITION
       END OF c_actions .
 
     DATA mi_repo TYPE REF TO zif_abapgit_repo.
-    DATA mo_runner TYPE REF TO zcl_abapgit_unit_test_runner.
+    DATA mi_runner TYPE REF TO zif_abapgit_unit_test_runner.
+
+    "! Classic runner if available, otherwise the modern one
+    CLASS-METHODS create_runner
+      IMPORTING
+        !ii_repo         TYPE REF TO zif_abapgit_repo
+      RETURNING
+        VALUE(ri_runner) TYPE REF TO zif_abapgit_unit_test_runner
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS render_method
       IMPORTING
-        !is_method     TYPE zcl_abapgit_unit_test_runner=>ty_method
+        !is_method     TYPE zif_abapgit_unit_test_runner=>ty_method
       RETURNING
         VALUE(rv_html) TYPE string.
 
@@ -52,7 +60,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
     super->constructor( ).
     mi_repo = ii_repo.
-    mo_runner = zcl_abapgit_unit_test_runner=>new( ii_repo ).
+    mi_runner = ii_runner.
 
   ENDMETHOD.
 
@@ -60,9 +68,15 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
   METHOD create.
 
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_runit.
+    DATA li_runner    TYPE REF TO zif_abapgit_unit_test_runner.
 
     TRY.
-        CREATE OBJECT lo_component EXPORTING ii_repo = ii_repo.
+        li_runner = create_runner( ii_repo ).
+
+        CREATE OBJECT lo_component
+          EXPORTING
+            ii_repo   = ii_repo
+            ii_runner = li_runner.
 
         ri_page = zcl_abapgit_gui_page_hoc=>create(
           iv_page_title         = |Unit Tests|
@@ -71,12 +85,26 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
       CATCH zcx_abapgit_exception.
 
-        " Fallback as either SAPLSAUCV_GUI_RUNNER is not available in old releases
-        " or passport=>get is private in newer releases NW >= 756
+        " Fallback if neither runner is supported in the release
         ri_page = zcl_abapgit_gui_page_code_insp=>create(
                     ii_repo          = ii_repo
                     iv_check_variant = 'SWF_ABAP_UNIT' ).
 
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD create_runner.
+
+    TRY.
+        CREATE OBJECT ri_runner TYPE zcl_abapgit_unit_test_classic
+          EXPORTING
+            ii_repo = ii_repo.
+      CATCH zcx_abapgit_exception.
+        CREATE OBJECT ri_runner TYPE zcl_abapgit_unit_test_modern
+          EXPORTING
+            ii_repo = ii_repo.
     ENDTRY.
 
   ENDMETHOD.
@@ -137,13 +165,13 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA ls_result TYPE zcl_abapgit_unit_test_runner=>ty_result.
+    DATA ls_result TYPE zif_abapgit_unit_test_runner=>ty_result.
     DATA lv_error  TYPE string.
     DATA ls_item   TYPE zif_abapgit_definitions=>ty_repo_item.
 
-    FIELD-SYMBOLS <ls_program> TYPE zcl_abapgit_unit_test_runner=>ty_program.
-    FIELD-SYMBOLS <ls_class>   TYPE zcl_abapgit_unit_test_runner=>ty_class.
-    FIELD-SYMBOLS <ls_method>  TYPE zcl_abapgit_unit_test_runner=>ty_method.
+    FIELD-SYMBOLS <ls_program> TYPE zif_abapgit_unit_test_runner=>ty_program.
+    FIELD-SYMBOLS <ls_class>   TYPE zif_abapgit_unit_test_runner=>ty_class.
+    FIELD-SYMBOLS <ls_method>  TYPE zif_abapgit_unit_test_runner=>ty_method.
 
 
     register_handlers( ).
@@ -154,7 +182,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( ii_repo        = mi_repo
                                                               iv_show_commit = abap_false ) ).
 
-    ls_result = mo_runner->run( ).
+    ls_result = mi_runner->run( ).
 
     IF ls_result-programs IS INITIAL.
       ri_html->add( '<div class="ci-head">' ).

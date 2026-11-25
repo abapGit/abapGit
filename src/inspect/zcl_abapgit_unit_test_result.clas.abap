@@ -1,113 +1,37 @@
-CLASS zcl_abapgit_unit_test_runner DEFINITION
+CLASS zcl_abapgit_unit_test_result DEFINITION
   PUBLIC
   FINAL
-  CREATE PRIVATE.
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    TYPES:
-      BEGIN OF ty_method,
-        name        TYPE string,
-        failure     TYPE string,
-        has_runtime TYPE abap_bool,
-        runtime_ms  TYPE i,
-      END OF ty_method,
-      ty_methods_tt TYPE STANDARD TABLE OF ty_method WITH DEFAULT KEY.
-
-    TYPES:
-      BEGIN OF ty_class,
-        name    TYPE string,
-        methods TYPE ty_methods_tt,
-      END OF ty_class,
-      ty_classes_tt TYPE STANDARD TABLE OF ty_class WITH DEFAULT KEY.
-
-    TYPES:
-      BEGIN OF ty_program,
-        obj_type TYPE tadir-object,
-        obj_name TYPE tadir-obj_name,
-        name     TYPE string,
-        classes  TYPE ty_classes_tt,
-      END OF ty_program,
-      ty_programs_tt TYPE STANDARD TABLE OF ty_program WITH DEFAULT KEY.
-
-    TYPES:
-      BEGIN OF ty_result,
-        errors   TYPE string_table,
-        programs TYPE ty_programs_tt,
-        summary  TYPE string,
-      END OF ty_result.
-
-    "! Raises an exception if the AUnit runner is not available in the system,
-    "! either SAPLSAUCV_GUI_RUNNER does not exist in old releases or
-    "! passport=>get is private in newer releases NW >= 756
-    CLASS-METHODS new
+    "! Converts an AUnit result of type IF_SAUNIT_INTERNAL_RESULT,
+    "! accessed dynamically as it does not exist in all releases
+    CLASS-METHODS from_aunit
       IMPORTING
-        !ii_repo           TYPE REF TO zif_abapgit_repo
+        !io_aunit        TYPE REF TO object
       RETURNING
-        VALUE(ro_instance) TYPE REF TO zcl_abapgit_unit_test_runner
-      RAISING
-        zcx_abapgit_exception.
-
-    METHODS constructor
-      IMPORTING
-        !ii_repo TYPE REF TO zif_abapgit_repo
-      RAISING
-        zcx_abapgit_exception.
-
-    "! Runs the unit tests for all objects in the repository
-    METHODS run
-      RETURNING
-        VALUE(rs_result) TYPE ty_result
+        VALUE(rs_result) TYPE zif_abapgit_unit_test_runner=>ty_result
       RAISING
         zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    TYPES:
-      BEGIN OF ty_key,
-        obj_name TYPE tadir-obj_name,
-        obj_type TYPE tadir-object,
-      END OF ty_key,
-      ty_keys_tt TYPE STANDARD TABLE OF ty_key WITH DEFAULT KEY.
-
-    DATA mi_repo TYPE REF TO zif_abapgit_repo.
-
-    METHODS build_keys
-      RETURNING
-        VALUE(rt_keys) TYPE ty_keys_tt
-      RAISING
-        zcx_abapgit_exception.
-
-    METHODS create_runner
-      RETURNING
-        VALUE(ro_runner) TYPE REF TO object
-      RAISING
-        zcx_abapgit_exception.
-
-    "! Returns an object of type IF_SAUNIT_INTERNAL_RESULT
-    METHODS run_aunit
-      IMPORTING
-        !it_keys        TYPE ty_keys_tt
-      RETURNING
-        VALUE(ro_aunit) TYPE REF TO object
-      RAISING
-        zcx_abapgit_exception.
-
-    METHODS parse_errors
+    CLASS-METHODS parse_errors
       IMPORTING
         !it_indices      TYPE ANY TABLE
       RETURNING
         VALUE(rt_errors) TYPE string_table.
 
-    METHODS parse_programs
+    CLASS-METHODS parse_programs
       IMPORTING
         !it_programs       TYPE ANY TABLE
         !it_indices        TYPE ANY TABLE
       RETURNING
-        VALUE(rt_programs) TYPE ty_programs_tt.
+        VALUE(rt_programs) TYPE zif_abapgit_unit_test_runner=>ty_programs_tt.
 
-    METHODS parse_method
+    CLASS-METHODS parse_method
       IMPORTING
         !is_method       TYPE any
         !it_indices      TYPE ANY TABLE
@@ -115,70 +39,37 @@ CLASS zcl_abapgit_unit_test_runner DEFINITION
         !iv_class_ndx    TYPE sy-tabix
         !iv_method_ndx   TYPE sy-tabix
       RETURNING
-        VALUE(rs_method) TYPE ty_method.
+        VALUE(rs_method) TYPE zif_abapgit_unit_test_runner=>ty_method.
 
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_unit_test_runner IMPLEMENTATION.
+CLASS zcl_abapgit_unit_test_result IMPLEMENTATION.
 
 
-  METHOD build_keys.
+  METHOD from_aunit.
 
-    DATA lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA ls_tadir LIKE LINE OF lt_tadir.
-    DATA ls_key   LIKE LINE OF rt_keys.
+    FIELD-SYMBOLS <ls_task_data> TYPE any.
+    FIELD-SYMBOLS <lt_indices>   TYPE ANY TABLE.
+    FIELD-SYMBOLS <lt_programs>  TYPE ANY TABLE.
 
-    lt_tadir = mi_repo->get_tadir_objects( ).
+    IF io_aunit IS NOT BOUND.
+      RETURN.
+    ENDIF.
 
-    LOOP AT lt_tadir INTO ls_tadir.
-      CLEAR ls_key.
-      ls_key-obj_type = ls_tadir-object.
-      ls_key-obj_name = ls_tadir-obj_name.
-      APPEND ls_key TO rt_keys.
-    ENDLOOP.
+    ASSIGN io_aunit->('F_TASK_DATA') TO <ls_task_data>.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Unexpected AUnit result format| ).
+    ENDIF.
+    ASSIGN COMPONENT 'ALERTS_BY_INDICIES' OF STRUCTURE <ls_task_data> TO <lt_indices>.
+    ASSIGN COMPONENT 'PROGRAMS' OF STRUCTURE <ls_task_data> TO <lt_programs>.
 
-  ENDMETHOD.
+    rs_result-errors = parse_errors( <lt_indices> ).
 
-
-  METHOD constructor.
-
-    mi_repo = ii_repo.
-
-    TRY.
-        CALL METHOD ('\PROGRAM=SAPLSAUCV_GUI_RUNNER\CLASS=PASSPORT')=>get.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( |Not supported in your NW release| ).
-    ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD create_runner.
-
-    DATA lo_passport TYPE REF TO object.
-
-    TRY.
-        CALL METHOD ('\PROGRAM=SAPLSAUCV_GUI_RUNNER\CLASS=PASSPORT')=>get
-          RECEIVING
-            result = lo_passport.
-
-        CALL METHOD ('CL_AUCV_TEST_RUNNER_STANDARD')=>create
-          EXPORTING
-            i_passport = lo_passport
-          RECEIVING
-            result     = ro_runner.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( |Not supported in your NW release| ).
-    ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD new.
-
-    CREATE OBJECT ro_instance EXPORTING ii_repo = ii_repo.
+    rs_result-programs = parse_programs(
+      it_programs = <lt_programs>
+      it_indices  = <lt_indices> ).
 
   ENDMETHOD.
 
@@ -274,9 +165,9 @@ CLASS zcl_abapgit_unit_test_runner IMPLEMENTATION.
 
   METHOD parse_programs.
 
-    DATA ls_program     TYPE ty_program.
-    DATA ls_class       TYPE ty_class.
-    DATA ls_method      TYPE ty_method.
+    DATA ls_program     TYPE zif_abapgit_unit_test_runner=>ty_program.
+    DATA ls_class       TYPE zif_abapgit_unit_test_runner=>ty_class.
+    DATA ls_method      TYPE zif_abapgit_unit_test_runner=>ty_method.
     DATA lv_program_ndx TYPE sy-tabix.
     DATA lv_class_ndx   TYPE sy-tabix.
     DATA lv_method_ndx  TYPE sy-tabix.
@@ -334,65 +225,6 @@ CLASS zcl_abapgit_unit_test_runner IMPLEMENTATION.
 
       APPEND ls_program TO rt_programs.
     ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD run.
-
-    DATA lo_aunit TYPE REF TO object.
-    DATA lo_timer TYPE REF TO zcl_abapgit_timer.
-    DATA lt_keys  TYPE ty_keys_tt.
-
-    FIELD-SYMBOLS <ls_task_data> TYPE any.
-    FIELD-SYMBOLS <lt_indices>   TYPE ANY TABLE.
-    FIELD-SYMBOLS <lt_programs>  TYPE ANY TABLE.
-
-    lt_keys = build_keys( ).
-
-    lo_timer = zcl_abapgit_timer=>create( iv_count = lines( lt_keys ) )->start( ).
-
-    lo_aunit = run_aunit( lt_keys ).
-
-    rs_result-summary = lo_timer->end( ).
-
-    ASSIGN lo_aunit->('F_TASK_DATA') TO <ls_task_data>.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Unexpected AUnit result format| ).
-    ENDIF.
-    ASSIGN COMPONENT 'ALERTS_BY_INDICIES' OF STRUCTURE <ls_task_data> TO <lt_indices>.
-    ASSIGN COMPONENT 'PROGRAMS' OF STRUCTURE <ls_task_data> TO <lt_programs>.
-
-    rs_result-errors = parse_errors( <lt_indices> ).
-
-    rs_result-programs = parse_programs(
-      it_programs = <lt_programs>
-      it_indices  = <lt_indices> ).
-
-  ENDMETHOD.
-
-
-  METHOD run_aunit.
-
-    DATA lo_runner TYPE REF TO object.
-    DATA li_result TYPE REF TO data.
-
-    FIELD-SYMBOLS <li_result> TYPE any.
-
-    lo_runner = create_runner( ).
-
-    CREATE DATA li_result TYPE REF TO ('IF_SAUNIT_INTERNAL_RESULT').
-    ASSIGN li_result->* TO <li_result>.
-
-    CALL METHOD lo_runner->('RUN_FOR_PROGRAM_KEYS')
-      EXPORTING
-        i_limit_on_duration_category = '36' " long
-        i_limit_on_risk_level        = '33' " critical
-        i_program_keys               = it_keys
-      IMPORTING
-        e_aunit_result               = <li_result>.
-
-    ro_aunit = <li_result>.
 
   ENDMETHOD.
 ENDCLASS.
