@@ -97,8 +97,8 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     IF is_remote_unchanged( ) = abap_true.
       " A commit never changes, so the objects fetched for it are still valid. The files are
       " built from them again, because set_files_remote can be called with other files.
-      set_files_remote( zcl_abapgit_git_porcelain=>pull( iv_commit  = mv_current_commit
-                                                         it_objects = mt_objects ) ).
+      set_files_remote( zcl_abapgit_git_objects=>build_files( iv_commit  = mv_current_commit
+                                                              it_objects = mt_objects ) ).
       RETURN.
     ENDIF.
 
