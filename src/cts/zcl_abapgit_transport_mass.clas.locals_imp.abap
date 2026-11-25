@@ -86,7 +86,11 @@ CLASS lcl_transport_zipper DEFINITION FINAL.
     TYPES ty_folder TYPE string.
     TYPES ty_filename TYPE string.
 
-    CONSTANTS c_zip_ext TYPE string VALUE '.zip'.
+    CONSTANTS:
+      BEGIN OF c_zip,
+        extension         TYPE string VALUE '.zip',
+        incomplete_suffix TYPE string VALUE '_INCOMPLETE',
+      END OF c_zip.
 
     METHODS constructor
       IMPORTING
@@ -129,6 +133,7 @@ CLASS lcl_transport_zipper DEFINITION FINAL.
     METHODS get_filename
       IMPORTING
         is_trkorr          TYPE trwbo_request_header
+        iv_incomplete      TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rv_filename) TYPE ty_filename.
 
@@ -182,8 +187,15 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
 
   METHOD get_filename.
 
+    DATA lv_incomplete_suffix TYPE string.
+
+    IF iv_incomplete = abap_true.
+      lv_incomplete_suffix = c_zip-incomplete_suffix.
+    ENDIF.
+
     " Generate filename
-    rv_filename = |{ is_trkorr-trkorr }_{ is_trkorr-as4text }_{ mv_timestamp }{ c_zip_ext }|.
+    rv_filename = |{ is_trkorr-trkorr }_{ is_trkorr-as4text }_{ mv_timestamp }|
+      && |{ lv_incomplete_suffix }{ c_zip-extension }|.
 
     " Remove reserved characters (for Windows based systems)
     rv_filename = translate( val  = rv_filename
@@ -196,17 +208,21 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
 
   METHOD generate_files.
 
-    DATA: ls_trkorr       LIKE LINE OF it_trkorr,
-          lv_zipbinstring TYPE xstring.
+    DATA: ls_trkorr     LIKE LINE OF it_trkorr,
+          ls_zip_result TYPE zif_abapgit_definitions=>ty_zip_result.
 
     LOOP AT it_trkorr INTO ls_trkorr.
 
-      lv_zipbinstring = zcl_abapgit_transport_mass=>zip( is_trkorr         = ls_trkorr
-                                                         iv_logic          = ig_logic
-                                                         iv_show_log_popup = abap_false ).
+      ls_zip_result = zcl_abapgit_transport_mass=>zip(
+        is_trkorr         = ls_trkorr
+        iv_logic          = ig_logic
+        iv_show_log_popup = abap_false ).
 
-      zcl_abapgit_zip=>save_binstring_to_localfile( iv_binstring = lv_zipbinstring
-                                                    iv_filename  = get_filename( ls_trkorr ) ).
+      zcl_abapgit_zip=>save_binstring_to_localfile(
+        iv_binstring = ls_zip_result-xstr
+        iv_filename  = get_filename(
+          is_trkorr     = ls_trkorr
+          iv_incomplete = ls_zip_result-incomplete ) ).
 
     ENDLOOP.
 
