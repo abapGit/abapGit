@@ -19,8 +19,8 @@ CLASS zcl_abapgit_unit_test_modern DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS c_risk_level_critical TYPE c LENGTH 2 VALUE '33'.
-    CONSTANTS c_duration_long TYPE c LENGTH 2 VALUE '36'.
+    CONSTANTS c_enum_risk_level_critical TYPE string VALUE 'IF_AUNIT_ATTRIBUTE_ENUMS=>C_RISK_LEVEL-CRITICAL'.
+    CONSTANTS c_enum_duration_long TYPE string VALUE 'IF_AUNIT_ATTRIBUTE_ENUMS=>C_DURATION-LONG'.
 
     DATA mi_repo TYPE REF TO zif_abapgit_repo.
 
@@ -225,23 +225,38 @@ CLASS zcl_abapgit_unit_test_modern IMPLEMENTATION.
     DATA lv_error TYPE string.
     DATA lx_error TYPE REF TO cx_root.
 
-    TRY.
-        CALL METHOD io_task->('IF_AUNIT_TASK~RESTRICT_RISK_LEVEL')
-          EXPORTING
-            max_risk_level = c_risk_level_critical.
-      CATCH cx_root INTO lx_error.
-        lv_error = |Restrict risk level: { lx_error->get_text( ) }|.
-        APPEND lv_error TO rt_errors.
-    ENDTRY.
+    FIELD-SYMBOLS <lv_value> TYPE any.
 
-    TRY.
-        CALL METHOD io_task->('IF_AUNIT_TASK~RESTRICT_DURATION_CATEGORY')
-          EXPORTING
-            max_duration_category = c_duration_long.
-      CATCH cx_root INTO lx_error.
-        lv_error = |Restrict duration category: { lx_error->get_text( ) }|.
-        APPEND lv_error TO rt_errors.
-    ENDTRY.
+    " the constants have the types of the parameters
+    ASSIGN (c_enum_risk_level_critical) TO <lv_value>.
+    IF sy-subrc <> 0.
+      lv_error = |Restrict risk level: { c_enum_risk_level_critical } not found|.
+      APPEND lv_error TO rt_errors.
+    ELSE.
+      TRY.
+          CALL METHOD io_task->('IF_AUNIT_TASK~RESTRICT_RISK_LEVEL')
+            EXPORTING
+              max_risk_level = <lv_value>.
+        CATCH cx_root INTO lx_error.
+          lv_error = |Restrict risk level: { lx_error->get_text( ) }|.
+          APPEND lv_error TO rt_errors.
+      ENDTRY.
+    ENDIF.
+
+    ASSIGN (c_enum_duration_long) TO <lv_value>.
+    IF sy-subrc <> 0.
+      lv_error = |Restrict duration category: { c_enum_duration_long } not found|.
+      APPEND lv_error TO rt_errors.
+    ELSE.
+      TRY.
+          CALL METHOD io_task->('IF_AUNIT_TASK~RESTRICT_DURATION_CATEGORY')
+            EXPORTING
+              max_duration_category = <lv_value>.
+        CATCH cx_root INTO lx_error.
+          lv_error = |Restrict duration category: { lx_error->get_text( ) }|.
+          APPEND lv_error TO rt_errors.
+      ENDTRY.
+    ENDIF.
 
   ENDMETHOD.
 
