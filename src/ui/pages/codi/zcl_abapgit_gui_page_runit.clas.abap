@@ -32,27 +32,8 @@ CLASS zcl_abapgit_gui_page_runit DEFINITION
         rerun TYPE string VALUE 'rerun' ##NO_TEXT,
       END OF c_actions .
 
-    TYPES:
-      BEGIN OF ty_key,
-        obj_name TYPE tadir-obj_name,
-        obj_type TYPE tadir-object,
-      END OF ty_key,
-      ty_keys_tt TYPE STANDARD TABLE OF ty_key WITH DEFAULT KEY.
-
     DATA mi_repo TYPE REF TO zif_abapgit_repo.
-    DATA mv_summary TYPE string.
-
-    METHODS build_tadir
-      RETURNING
-        VALUE(rt_tadir) TYPE ty_keys_tt
-      RAISING
-        zcx_abapgit_exception.
-
-    METHODS run
-      RETURNING
-        VALUE(ro_result) TYPE REF TO object
-      RAISING
-        zcx_abapgit_exception.
+    DATA mo_runner TYPE REF TO zcl_abapgit_unit_test_runner.
 
     METHODS get_text_for_method
       IMPORTING
@@ -71,34 +52,11 @@ ENDCLASS.
 CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
 
-  METHOD build_tadir.
-
-    DATA lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA ls_tadir LIKE LINE OF lt_tadir.
-    DATA ls_row   LIKE LINE OF rt_tadir.
-
-    lt_tadir = mi_repo->get_tadir_objects( ).
-
-    LOOP AT lt_tadir INTO ls_tadir.
-      CLEAR ls_row.
-      ls_row-obj_type = ls_tadir-object.
-      ls_row-obj_name = ls_tadir-obj_name.
-      APPEND ls_row TO rt_tadir.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD constructor.
 
     super->constructor( ).
     mi_repo = ii_repo.
-
-    TRY.
-        CALL METHOD ('\PROGRAM=SAPLSAUCV_GUI_RUNNER\CLASS=PASSPORT')=>get.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( |Not supported in your NW release| ).
-    ENDTRY.
+    mo_runner = zcl_abapgit_unit_test_runner=>new( ii_repo ).
 
   ENDMETHOD.
 
@@ -189,51 +147,6 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD run.
-
-    DATA lo_passport TYPE REF TO object.
-    DATA lo_runner   TYPE REF TO object.
-    DATA lo_timer    TYPE REF TO zcl_abapgit_timer.
-    DATA lt_keys     TYPE ty_keys_tt.
-    DATA li_result   TYPE REF TO data.
-    FIELD-SYMBOLS <li_result> TYPE any.
-
-    lt_keys = build_tadir( ).
-
-    lo_timer = zcl_abapgit_timer=>create( iv_count = lines( lt_keys ) )->start( ).
-
-    TRY.
-        CALL METHOD ('\PROGRAM=SAPLSAUCV_GUI_RUNNER\CLASS=PASSPORT')=>get
-          RECEIVING
-            result = lo_passport.
-
-        CALL METHOD ('CL_AUCV_TEST_RUNNER_STANDARD')=>create
-          EXPORTING
-            i_passport = lo_passport
-          RECEIVING
-            result     = lo_runner.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( |Not supported in your NW release| ).
-    ENDTRY.
-
-    CREATE DATA li_result TYPE REF TO ('IF_SAUNIT_INTERNAL_RESULT').
-    ASSIGN li_result->* TO <li_result>.
-
-    CALL METHOD lo_runner->('RUN_FOR_PROGRAM_KEYS')
-      EXPORTING
-        i_limit_on_duration_category = '36' " long
-        i_limit_on_risk_level        = '33' " critical
-        i_program_keys               = lt_keys
-      IMPORTING
-        e_aunit_result               = <li_result>.
-
-    mv_summary = lo_timer->end( ).
-
-    ro_result = <li_result>.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     CASE ii_event->mv_action.
@@ -264,7 +177,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA lo_result         TYPE REF TO object.
+    DATA ls_result         TYPE zcl_abapgit_unit_test_runner=>ty_result.
     DATA lv_program_ndx    TYPE i.
     DATA lv_class_ndx      TYPE i.
     DATA lv_text           TYPE string.
@@ -297,9 +210,9 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( ii_repo        = mi_repo
                                                               iv_show_commit = abap_false ) ).
 
-    lo_result = run( ).
+    ls_result = mo_runner->run( ).
 
-    ASSIGN lo_result->('F_TASK_DATA') TO <ls_task_data>.
+    ASSIGN ls_result-aunit->('F_TASK_DATA') TO <ls_task_data>.
     ASSIGN COMPONENT 'ALERTS_BY_INDICIES' OF STRUCTURE <ls_task_data> TO <lt_indices>.
     ASSIGN COMPONENT 'PROGRAMS' OF STRUCTURE <ls_task_data> TO <lt_programs>.
 
@@ -338,7 +251,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     ri_html->add( '</table>' ).
 
     ri_html->add( '<div class="ci-head">' ).
-    ri_html->add( |Unit tests completed with <strong>{ lv_count } errors</strong> ({ mv_summary })| ).
+    ri_html->add( |Unit tests completed with <strong>{ lv_count } errors</strong> ({ ls_result-summary })| ).
     ri_html->add( '</div>' ).
 
     ri_html->add( |<hr><table class="unit_tests">| ).
