@@ -82,6 +82,14 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         VALUE(rt_expanded) TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS pull
+      IMPORTING
+        !iv_commit      TYPE zif_abapgit_git_definitions=>ty_sha1
+        !it_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_git_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -117,14 +125,6 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         !it_expanded      TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       RETURNING
         VALUE(rt_folders) TYPE ty_folders_tt .
-    CLASS-METHODS pull
-      IMPORTING
-        !iv_commit      TYPE zif_abapgit_git_definitions=>ty_sha1
-        !it_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
-      RETURNING
-        VALUE(rt_files) TYPE zif_abapgit_git_definitions=>ty_files_tt
-      RAISING
-        zcx_abapgit_exception.
     CLASS-METHODS walk
       IMPORTING
         !it_objects TYPE zif_abapgit_definitions=>ty_objects_tt

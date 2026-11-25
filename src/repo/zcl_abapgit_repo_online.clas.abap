@@ -51,6 +51,11 @@ CLASS zcl_abapgit_repo_online DEFINITION
     METHODS fetch_remote
       RAISING
         zcx_abapgit_exception .
+    METHODS is_remote_unchanged
+      RETURNING
+        VALUE(rv_unchanged) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
     METHODS get_objects
       RETURNING
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
@@ -88,6 +93,14 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     li_progress->show( iv_current = 1
                        iv_text    = 'Fetch remote files' ).
+
+    IF is_remote_unchanged( ) = abap_true.
+      " A commit never changes, so the objects fetched for it are still valid. The files are
+      " built from them again, because set_files_remote can be called with other files.
+      set_files_remote( zcl_abapgit_git_porcelain=>pull( iv_commit  = mv_current_commit
+                                                         it_objects = mt_objects ) ).
+      RETURN.
+    ENDIF.
 
     IF get_selected_commit( ) IS INITIAL.
       ls_pull = zcl_abapgit_git_porcelain=>pull_by_branch( iv_url         = get_url( )
@@ -143,6 +156,27 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
       set_dot_abapgit( lo_dot_abapgit ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD is_remote_unchanged.
+
+    DATA lv_commit TYPE zif_abapgit_git_definitions=>ty_sha1.
+
+    IF mv_current_commit IS INITIAL.
+      " Nothing was fetched yet
+      RETURN.
+    ENDIF.
+
+    lv_commit = get_selected_commit( ).
+    IF lv_commit IS INITIAL.
+      lv_commit = zcl_abapgit_git_factory=>get_git_transport(
+        )->branches( get_url( )
+        )->find_by_name( get_selected_branch( ) )-sha1.
+    ENDIF.
+
+    rv_unchanged = boolc( lv_commit = mv_current_commit ).
 
   ENDMETHOD.
 
