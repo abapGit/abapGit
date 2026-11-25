@@ -39,9 +39,9 @@ CLASS zcl_abapgit_url DEFINITION
         VALUE(rv_abapgit) TYPE abap_bool .
     CLASS-METHODS url_address
       IMPORTING
-        !iv_url          TYPE string
+        !iv_url           TYPE string
       RETURNING
-        VALUE(rv_adress) TYPE string
+        VALUE(rv_address) TYPE string
       RAISING
         zcx_abapgit_exception.
   PROTECTED SECTION.
@@ -154,7 +154,8 @@ CLASS zcl_abapgit_url IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    rv_adress = |{ lv_host }{ lv_path }{ lv_name }|.
+    " the host is case-insensitive, the path may not be
+    rv_address = |{ to_lower( lv_host ) }{ lv_path }{ lv_name }|.
 
   ENDMETHOD.
 
