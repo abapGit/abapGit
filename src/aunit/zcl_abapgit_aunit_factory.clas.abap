@@ -6,7 +6,7 @@ CLASS zcl_abapgit_aunit_factory DEFINITION PUBLIC.
       IMPORTING
         !ii_repo         TYPE REF TO zif_abapgit_repo
       RETURNING
-        VALUE(ri_runner) TYPE REF TO zif_abapgit_unit_test_runner
+        VALUE(ri_runner) TYPE REF TO zif_abapgit_aunit_runner
       RAISING
         zcx_abapgit_exception.
 ENDCLASS.
@@ -15,11 +15,11 @@ CLASS zcl_abapgit_aunit_factory IMPLEMENTATION.
 
   METHOD get_runner.
     TRY.
-        CREATE OBJECT ri_runner TYPE zcl_abapgit_unit_test_classic
+        CREATE OBJECT ri_runner TYPE zcl_abapgit_aunit_classic
           EXPORTING
             ii_repo = ii_repo.
       CATCH zcx_abapgit_exception.
-        CREATE OBJECT ri_runner TYPE zcl_abapgit_unit_test_modern
+        CREATE OBJECT ri_runner TYPE zcl_abapgit_aunit_modern
           EXPORTING
             ii_repo = ii_repo.
     ENDTRY.

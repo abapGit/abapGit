@@ -1,4 +1,4 @@
-INTERFACE zif_abapgit_unit_test_runner
+INTERFACE zif_abapgit_aunit_runner
   PUBLIC.
 
   TYPES:

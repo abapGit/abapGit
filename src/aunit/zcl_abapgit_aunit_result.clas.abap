@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_unit_test_result DEFINITION
+CLASS zcl_abapgit_aunit_result DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC.
@@ -11,7 +11,7 @@ CLASS zcl_abapgit_unit_test_result DEFINITION
       IMPORTING
         !io_aunit        TYPE REF TO object
       RETURNING
-        VALUE(rs_result) TYPE zif_abapgit_unit_test_runner=>ty_result
+        VALUE(rs_result) TYPE zif_abapgit_aunit_runner=>ty_result
       RAISING
         zcx_abapgit_exception.
 
@@ -29,7 +29,7 @@ CLASS zcl_abapgit_unit_test_result DEFINITION
         !it_programs       TYPE ANY TABLE
         !it_indices        TYPE ANY TABLE
       RETURNING
-        VALUE(rt_programs) TYPE zif_abapgit_unit_test_runner=>ty_programs_tt.
+        VALUE(rt_programs) TYPE zif_abapgit_aunit_runner=>ty_programs_tt.
 
     CLASS-METHODS parse_method
       IMPORTING
@@ -39,13 +39,13 @@ CLASS zcl_abapgit_unit_test_result DEFINITION
         !iv_class_ndx    TYPE sy-tabix
         !iv_method_ndx   TYPE sy-tabix
       RETURNING
-        VALUE(rs_method) TYPE zif_abapgit_unit_test_runner=>ty_method.
+        VALUE(rs_method) TYPE zif_abapgit_aunit_runner=>ty_method.
 
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_unit_test_result IMPLEMENTATION.
+CLASS zcl_abapgit_aunit_result IMPLEMENTATION.
 
 
   METHOD from_aunit.
@@ -165,9 +165,9 @@ CLASS zcl_abapgit_unit_test_result IMPLEMENTATION.
 
   METHOD parse_programs.
 
-    DATA ls_program     TYPE zif_abapgit_unit_test_runner=>ty_program.
-    DATA ls_class       TYPE zif_abapgit_unit_test_runner=>ty_class.
-    DATA ls_method      TYPE zif_abapgit_unit_test_runner=>ty_method.
+    DATA ls_program     TYPE zif_abapgit_aunit_runner=>ty_program.
+    DATA ls_class       TYPE zif_abapgit_aunit_runner=>ty_class.
+    DATA ls_method      TYPE zif_abapgit_aunit_runner=>ty_method.
     DATA lv_program_ndx TYPE sy-tabix.
     DATA lv_class_ndx   TYPE sy-tabix.
     DATA lv_method_ndx  TYPE sy-tabix.

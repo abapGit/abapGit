@@ -1,11 +1,11 @@
-CLASS zcl_abapgit_unit_test_modern DEFINITION
+CLASS zcl_abapgit_aunit_modern DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_unit_test_runner.
+    INTERFACES zif_abapgit_aunit_runner.
 
     "! Runs the tests via CL_AUNIT_FACTORY, with the listener of CL_SAUNIT_GUI_SERVICE
     "! collecting the results. All calls are dynamic, as the AUnit API does not exist
@@ -86,7 +86,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_unit_test_modern IMPLEMENTATION.
+CLASS zcl_abapgit_aunit_modern IMPLEMENTATION.
 
 
   METHOD add_objects.
@@ -289,7 +289,7 @@ CLASS zcl_abapgit_unit_test_modern IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_unit_test_runner~run.
+  METHOD zif_abapgit_aunit_runner~run.
 
     DATA lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA lo_timer    TYPE REF TO zcl_abapgit_timer.
@@ -323,7 +323,7 @@ CLASS zcl_abapgit_unit_test_modern IMPLEMENTATION.
 
     lv_summary = lo_timer->end( ).
 
-    rs_result = zcl_abapgit_unit_test_result=>from_aunit( lo_aunit ).
+    rs_result = zcl_abapgit_aunit_result=>from_aunit( lo_aunit ).
     rs_result-summary = lv_summary.
     APPEND LINES OF lt_errors TO rs_result-errors.
 

@@ -21,7 +21,7 @@ CLASS zcl_abapgit_gui_page_runit DEFINITION
     METHODS constructor
       IMPORTING
         !ii_repo   TYPE REF TO zif_abapgit_repo
-        !ii_runner TYPE REF TO zif_abapgit_unit_test_runner.
+        !ii_runner TYPE REF TO zif_abapgit_aunit_runner.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -32,11 +32,11 @@ CLASS zcl_abapgit_gui_page_runit DEFINITION
       END OF c_actions .
 
     DATA mi_repo TYPE REF TO zif_abapgit_repo.
-    DATA mi_runner TYPE REF TO zif_abapgit_unit_test_runner.
+    DATA mi_runner TYPE REF TO zif_abapgit_aunit_runner.
 
     METHODS render_method
       IMPORTING
-        !is_method     TYPE zif_abapgit_unit_test_runner=>ty_method
+        !is_method     TYPE zif_abapgit_aunit_runner=>ty_method
       RETURNING
         VALUE(rv_html) TYPE string.
 
@@ -59,7 +59,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
   METHOD create.
 
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_runit.
-    DATA li_runner    TYPE REF TO zif_abapgit_unit_test_runner.
+    DATA li_runner    TYPE REF TO zif_abapgit_aunit_runner.
 
     TRY.
         li_runner = zcl_abapgit_aunit_factory=>get_runner( ii_repo ).
@@ -141,13 +141,13 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA ls_result TYPE zif_abapgit_unit_test_runner=>ty_result.
+    DATA ls_result TYPE zif_abapgit_aunit_runner=>ty_result.
     DATA lv_error  TYPE string.
     DATA ls_item   TYPE zif_abapgit_definitions=>ty_repo_item.
 
-    FIELD-SYMBOLS <ls_program> TYPE zif_abapgit_unit_test_runner=>ty_program.
-    FIELD-SYMBOLS <ls_class>   TYPE zif_abapgit_unit_test_runner=>ty_class.
-    FIELD-SYMBOLS <ls_method>  TYPE zif_abapgit_unit_test_runner=>ty_method.
+    FIELD-SYMBOLS <ls_program> TYPE zif_abapgit_aunit_runner=>ty_program.
+    FIELD-SYMBOLS <ls_class>   TYPE zif_abapgit_aunit_runner=>ty_class.
+    FIELD-SYMBOLS <ls_method>  TYPE zif_abapgit_aunit_runner=>ty_method.
 
 
     register_handlers( ).

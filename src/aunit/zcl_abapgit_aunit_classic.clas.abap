@@ -1,11 +1,11 @@
-CLASS zcl_abapgit_unit_test_classic DEFINITION
+CLASS zcl_abapgit_aunit_classic DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_unit_test_runner.
+    INTERFACES zif_abapgit_aunit_runner.
 
     "! Runs the tests via CL_AUCV_TEST_RUNNER_STANDARD.
     "! Raises an exception if not available in the system, either SAPLSAUCV_GUI_RUNNER
@@ -53,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_unit_test_classic IMPLEMENTATION.
+CLASS zcl_abapgit_aunit_classic IMPLEMENTATION.
 
 
   METHOD build_keys.
@@ -133,7 +133,7 @@ CLASS zcl_abapgit_unit_test_classic IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_unit_test_runner~run.
+  METHOD zif_abapgit_aunit_runner~run.
 
     DATA lo_aunit   TYPE REF TO object.
     DATA lo_timer   TYPE REF TO zcl_abapgit_timer.
@@ -148,7 +148,7 @@ CLASS zcl_abapgit_unit_test_classic IMPLEMENTATION.
 
     lv_summary = lo_timer->end( ).
 
-    rs_result = zcl_abapgit_unit_test_result=>from_aunit( lo_aunit ).
+    rs_result = zcl_abapgit_aunit_result=>from_aunit( lo_aunit ).
     rs_result-summary = lv_summary.
 
   ENDMETHOD.
