@@ -1467,9 +1467,9 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
       CALL FUNCTION 'RS_ALL_SELECTIONSCREENS'
         EXPORTING
-          program = iv_program_name
+          program             = iv_program_name
         TABLES
-          dynnr   = lt_dynnr
+          dynnr               = lt_dynnr
         EXCEPTIONS
           type_s              = 1
           load_sscr_error     = 2
