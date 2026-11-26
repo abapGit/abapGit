@@ -211,18 +211,40 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
   METHOD determine_transports.
 
-    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lt_items TYPE zif_abapgit_definitions=>ty_items_tt.
+    DATA ls_item LIKE LINE OF lt_items.
+    DATA lt_transports TYPE zif_abapgit_cts_api=>ty_transport_list.
+    DATA ls_transport LIKE LINE OF lt_transports.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF ct_repo_items.
 
-    LOOP AT ct_repo_items ASSIGNING <ls_item>.
+    LOOP AT ct_repo_items ASSIGNING <ls_item> WHERE obj_type IS NOT INITIAL AND obj_name IS NOT INITIAL.
       ls_item-obj_type = <ls_item>-obj_type.
       ls_item-obj_name = <ls_item>-obj_name.
-      TRY.
-          <ls_item>-transport = zcl_abapgit_factory=>get_cts_api( )->get_transport_for_object( ls_item ).
-        CATCH zcx_abapgit_exception ##NO_HANDLER.
-          " Ignore errors related to object check when trying to get transport
-      ENDTRY.
+      APPEND ls_item TO lt_items.
+    ENDLOOP.
+
+    IF lt_items IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    " One read of all locks instead of a lock check per object
+    TRY.
+        lt_transports = zcl_abapgit_factory=>get_cts_api( )->get_transports_for_list(
+          it_items    = lt_items
+          iv_requests = abap_true ).
+      CATCH zcx_abapgit_exception.
+        " Ignore errors related to object check when trying to get transports
+        RETURN.
+    ENDTRY.
+
+    LOOP AT ct_repo_items ASSIGNING <ls_item> WHERE obj_type IS NOT INITIAL AND obj_name IS NOT INITIAL.
+      READ TABLE lt_transports INTO ls_transport WITH TABLE KEY
+        obj_type = <ls_item>-obj_type
+        obj_name = <ls_item>-obj_name.
+      IF sy-subrc = 0.
+        <ls_item>-transport = ls_transport-trkorr.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.

@@ -57,6 +57,21 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     DATA mv_are_changes_recorded_in_tr TYPE abap_bool .
     DATA mo_ref_selection TYPE REF TO zcl_abapgit_gui_page_ref_sel.
 
+    TYPES:
+      BEGIN OF ty_transport_description,
+        trkorr      TYPE trkorr,
+        description TYPE string,
+      END OF ty_transport_description.
+
+    " Descriptions read during one render, as many items share a transport
+    DATA mt_transport_descriptions TYPE HASHED TABLE OF ty_transport_description WITH UNIQUE KEY trkorr.
+
+    METHODS get_transport_description
+      IMPORTING
+        !iv_trkorr            TYPE trkorr
+      RETURNING
+        VALUE(rv_description) TYPE string.
+
     METHODS render_head_line
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
@@ -765,6 +780,22 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_transport_description.
+
+    DATA ls_description LIKE LINE OF mt_transport_descriptions.
+
+    READ TABLE mt_transport_descriptions INTO ls_description WITH TABLE KEY trkorr = iv_trkorr.
+    IF sy-subrc <> 0.
+      ls_description-trkorr      = iv_trkorr.
+      ls_description-description = zcl_abapgit_factory=>get_cts_api( )->read_description( iv_trkorr ).
+      INSERT ls_description INTO TABLE mt_transport_descriptions.
+    ENDIF.
+
+    rv_description = ls_description-description.
+
+  ENDMETHOD.
+
+
   METHOD is_repo_lang_logon_lang.
     rv_repo_lang_is_logon_lang = boolc( mi_repo->get_dot_abapgit( )->get_main_language( ) = sy-langu ).
   ENDMETHOD.
@@ -1051,10 +1082,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     ri_html->add( '<td class="transport">' ).
 
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport(
-      iv_transport = is_item-transport
-      iv_obj_type  = is_item-obj_type
-      iv_obj_name  = is_item-obj_name ) ).
+    IF is_item-transport IS NOT INITIAL.
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport(
+        iv_transport   = is_item-transport
+        iv_obj_type    = is_item-obj_type
+        iv_obj_name    = is_item-obj_name
+        iv_description = get_transport_description( is_item-transport ) ) ).
+    ENDIF.
 
     ri_html->add( '</td>' ).
 
@@ -1355,6 +1389,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDIF.
 
     CREATE OBJECT mo_repo_aggregated_state.
+    CLEAR mt_transport_descriptions.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
