@@ -13,7 +13,8 @@ CLASS zcl_abapgit_persistence_db DEFINITION
       c_type_repo_data  TYPE zif_abapgit_persistence=>ty_type VALUE 'REPO_DATA' ##NO_TEXT,
       c_type_background TYPE zif_abapgit_persistence=>ty_type VALUE 'BACKGROUND' ##NO_TEXT,
       c_type_packages   TYPE zif_abapgit_persistence=>ty_type VALUE 'PACKAGES' ##NO_TEXT,
-      c_type_user       TYPE zif_abapgit_persistence=>ty_type VALUE 'USER' ##NO_TEXT.
+      c_type_user       TYPE zif_abapgit_persistence=>ty_type VALUE 'USER' ##NO_TEXT,
+      c_type_statistics TYPE zif_abapgit_persistence=>ty_type VALUE 'STATISTICS' ##NO_TEXT.
 
     CLASS-METHODS get_instance
       RETURNING
@@ -274,7 +275,8 @@ CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
       iv_type = c_type_user OR
       iv_type = c_type_settings OR
       iv_type = c_type_background OR
-      iv_type = c_type_packages ).
+      iv_type = c_type_packages OR
+      iv_type = c_type_statistics ).
       zcx_abapgit_exception=>raise( |Invalid DB entry type [{ iv_type }]| ).
     ENDIF.
 
