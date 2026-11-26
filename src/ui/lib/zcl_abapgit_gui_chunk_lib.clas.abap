@@ -149,6 +149,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_obj_name    TYPE zif_abapgit_definitions=>ty_repo_item-obj_name OPTIONAL
         !iv_interactive TYPE abap_bool DEFAULT abap_true
         !iv_icon_only   TYPE abap_bool DEFAULT abap_false
+        !iv_description TYPE string OPTIONAL
       RETURNING
         VALUE(ri_html)  TYPE REF TO zif_abapgit_html
       RAISING
@@ -1271,7 +1272,11 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_title = zcl_abapgit_factory=>get_cts_api( )->read_description( iv_transport ).
+    IF iv_description IS SUPPLIED.
+      lv_title = iv_description.
+    ELSE.
+      lv_title = zcl_abapgit_factory=>get_cts_api( )->read_description( iv_transport ).
+    ENDIF.
 
     lv_jump = |{ zif_abapgit_definitions=>c_action-jump_transport }?transport={ iv_transport }|.
 

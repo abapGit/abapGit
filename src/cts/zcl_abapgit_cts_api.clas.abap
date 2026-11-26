@@ -107,6 +107,12 @@ CLASS zcl_abapgit_cts_api DEFINITION
       RETURNING
         VALUE(rv_transportable) TYPE abap_bool .
 
+    "! Replace each task by its request; requests and other values are kept
+    "! @parameter ct_transports | Transport per object
+    METHODS replace_tasks_by_requests
+      CHANGING
+        !ct_transports TYPE zif_abapgit_cts_api=>ty_transport_list.
+
     "! Insert logical object into customizing request
     "! @parameter iv_transport | Transport
     "! @parameter iv_object | Object type
@@ -391,6 +397,45 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD replace_tasks_by_requests.
+
+    TYPES:
+      BEGIN OF ty_parent,
+        trkorr  TYPE e070-trkorr,
+        strkorr TYPE e070-strkorr,
+      END OF ty_parent.
+
+    DATA lt_trkorr TYPE SORTED TABLE OF trkorr WITH UNIQUE KEY table_line.
+    DATA lt_parents TYPE HASHED TABLE OF ty_parent WITH UNIQUE KEY trkorr.
+    DATA ls_parent LIKE LINE OF lt_parents.
+
+    FIELD-SYMBOLS <ls_transport> LIKE LINE OF ct_transports.
+
+    LOOP AT ct_transports ASSIGNING <ls_transport>
+        WHERE trkorr <> zif_abapgit_definitions=>c_multiple_transports.
+      INSERT <ls_transport>-trkorr INTO TABLE lt_trkorr.
+    ENDLOOP.
+
+    IF lt_trkorr IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    SELECT trkorr strkorr FROM e070
+      INTO TABLE lt_parents
+      FOR ALL ENTRIES IN lt_trkorr
+      WHERE trkorr = lt_trkorr-table_line
+        AND strkorr <> space ##SUBRC_OK.
+
+    LOOP AT ct_transports ASSIGNING <ls_transport>.
+      READ TABLE lt_parents INTO ls_parent WITH TABLE KEY trkorr = <ls_transport>-trkorr.
+      IF sy-subrc = 0.
+        <ls_transport>-trkorr = ls_parent-strkorr.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_cts_api~change_transport_type.
 
     DATA:
@@ -661,10 +706,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 * TR_CHECK_OBJECT_LOCK
 
 * avoid database lookups in TLOCK for each item,
-    SELECT * FROM tlock INTO TABLE lt_tlock.
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
+    SELECT * FROM tlock INTO TABLE lt_tlock ##SUBRC_OK.
 
     LOOP AT it_items ASSIGNING <ls_item>.
       CLEAR lv_request.
@@ -706,6 +748,10 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       ENDIF.
 
     ENDLOOP.
+
+    IF iv_requests = abap_true.
+      replace_tasks_by_requests( CHANGING ct_transports = rt_transports ).
+    ENDIF.
 
   ENDMETHOD.
 
