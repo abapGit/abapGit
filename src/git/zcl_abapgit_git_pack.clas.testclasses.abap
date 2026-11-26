@@ -288,6 +288,11 @@ CLASS ltcl_pack DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
         RAISING zcx_abapgit_exception,
       pack_two_tails_same_data FOR TESTING
         RAISING zcx_abapgit_exception,
+      pack_foreign_zlib_two FOR TESTING
+        RAISING zcx_abapgit_exception,
+      next_object_fits_trailer FOR TESTING,
+      next_object_fits_object FOR TESTING,
+      next_object_fits_ref_delta FOR TESTING,
       sort_tree1 FOR TESTING,
       sort_tree2 FOR TESTING.
 
@@ -389,7 +394,6 @@ CLASS ltcl_pack IMPLEMENTATION.
     ls_object-type = zif_abapgit_git_definitions=>c_type-blob.
     ls_object-data = lv_data.
     ls_object-index = 1.
-    ls_object-adler32 = zcl_abapgit_hash=>adler32( lv_data ).
     APPEND ls_object TO lt_objects.
 
 * commit
@@ -405,7 +409,6 @@ CLASS ltcl_pack IMPLEMENTATION.
     ls_object-type = zif_abapgit_git_definitions=>c_type-commit.
     ls_object-data = lv_data.
     ls_object-index = 2.
-    ls_object-adler32 = zcl_abapgit_hash=>adler32( lv_data ).
     APPEND ls_object TO lt_objects.
 
 * tree
@@ -420,7 +423,6 @@ CLASS ltcl_pack IMPLEMENTATION.
     ls_object-type = zif_abapgit_git_definitions=>c_type-tree.
     ls_object-data = lv_data.
     ls_object-index = 3.
-    ls_object-adler32 = zcl_abapgit_hash=>adler32( lv_data ).
     APPEND ls_object TO lt_objects.
 
 
@@ -440,7 +442,6 @@ CLASS ltcl_pack IMPLEMENTATION.
     rs_object-type = zif_abapgit_git_definitions=>c_type-blob.
     rs_object-data = iv_data.
     rs_object-index = 1.
-    rs_object-adler32 = zcl_abapgit_hash=>adler32( iv_data ).
 
   ENDMETHOD.
 
@@ -519,6 +520,125 @@ CLASS ltcl_pack IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = lt_objects
       act = lt_result ).
+
+  ENDMETHOD.
+
+  METHOD pack_foreign_zlib_two.
+
+    " Two objects in foreign zlib: the end of the first one is checked against the next object
+    CONSTANTS: lc_pack_header TYPE x LENGTH 12 VALUE '5041434B0000000200000002',
+               lc_zlib        TYPE x LENGTH 2 VALUE '789C'.
+
+    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
+          ls_object  LIKE LINE OF lt_objects,
+          lt_result  TYPE zif_abapgit_definitions=>ty_objects_tt,
+          lv_data    TYPE xstring,
+          lv_pack    TYPE xstring,
+          lv_header  TYPE xstring,
+          lv_adler32 TYPE zif_abapgit_git_definitions=>ty_adler32,
+          lv_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1,
+          lv_stream  TYPE xstring,
+          lv_trailer TYPE xstring.
+
+    lv_pack = lc_pack_header.
+
+    DO 2 TIMES.
+      lv_data = zcl_abapgit_convert=>string_to_xstring_utf8( |Object { sy-index } in another zlib, abapGit| ).
+      ls_object = object_blob( lv_data ).
+      ls_object-index = sy-index.
+      APPEND ls_object TO lt_objects.
+
+      lv_header = zcl_abapgit_git_pack=>type_and_length(
+        iv_type   = zif_abapgit_git_definitions=>c_type-blob
+        iv_length = xstrlen( lv_data ) ).
+      lv_adler32 = zcl_abapgit_hash=>adler32( lv_data ).
+      lv_stream = stored_deflate( lv_data ).
+      CONCATENATE lv_pack lv_header lc_zlib lv_stream lv_adler32 INTO lv_pack IN BYTE MODE.
+    ENDDO.
+
+    lv_sha1 = to_upper( zcl_abapgit_hash=>sha1_raw( lv_pack ) ).
+    lv_trailer = lv_sha1.
+    CONCATENATE lv_pack lv_trailer INTO lv_pack IN BYTE MODE.
+
+    lt_result = zcl_abapgit_git_pack=>decode( lv_pack ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = lt_objects
+      act = lt_result ).
+
+  ENDMETHOD.
+
+  METHOD next_object_fits_trailer.
+
+    " Stream end at offset 0, then 4 Adler-32 bytes and the 20-byte pack SHA-1
+    CONSTANTS lc_data TYPE x LENGTH 24 VALUE '010203041111111111111111111111111111111111111111'.
+
+    DATA lv_data TYPE xstring.
+
+    lv_data = lc_data.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_true
+      act = zcl_abapgit_git_pack=>next_object_fits( iv_data   = lv_data
+                                                    iv_offset = 4 ) ).
+    " One byte off: 21 or 19 bytes left, and no object header there
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_false
+      act = zcl_abapgit_git_pack=>next_object_fits( iv_data   = lv_data
+                                                    iv_offset = 3 ) ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_false
+      act = zcl_abapgit_git_pack=>next_object_fits( iv_data   = lv_data
+                                                    iv_offset = 5 ) ).
+
+  ENDMETHOD.
+
+  METHOD next_object_fits_object.
+
+    " Adler-32 bytes, then a blob header with a two-byte size (B5 01) and the zlib header
+    CONSTANTS lc_data TYPE x LENGTH 10 VALUE '01020304B501789C0102'.
+
+    DATA lv_data TYPE xstring.
+
+    lv_data = lc_data.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_true
+      act = zcl_abapgit_git_pack=>next_object_fits( iv_data   = lv_data
+                                                    iv_offset = 4 ) ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_false
+      act = zcl_abapgit_git_pack=>next_object_fits( iv_data   = lv_data
+                                                    iv_offset = 3 ) ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_false
+      act = zcl_abapgit_git_pack=>next_object_fits( iv_data   = lv_data
+                                                    iv_offset = 5 ) ).
+
+  ENDMETHOD.
+
+  METHOD next_object_fits_ref_delta.
+
+    " A ref delta header (7F) is followed by the 20-byte base SHA-1 before the zlib header
+    CONSTANTS: lc_head TYPE x LENGTH 5 VALUE '010203047F',
+               lc_base TYPE x LENGTH 20 VALUE '7801789C7801789C7801789C7801789C7801789C',
+               lc_tail TYPE x LENGTH 4 VALUE '789C0102'.
+
+    DATA lv_data TYPE xstring.
+
+    CONCATENATE lc_head lc_base lc_tail INTO lv_data IN BYTE MODE.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_true
+      act = zcl_abapgit_git_pack=>next_object_fits( iv_data   = lv_data
+                                                    iv_offset = 4 ) ).
+
+    " Without the base SHA-1 the zlib header is not where it must be
+    CONCATENATE lc_head lc_tail INTO lv_data IN BYTE MODE.
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_false
+      act = zcl_abapgit_git_pack=>next_object_fits( iv_data   = lv_data
+                                                    iv_offset = 4 ) ).
 
   ENDMETHOD.
 

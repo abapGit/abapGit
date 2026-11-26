@@ -161,6 +161,12 @@ CLASS zcl_abapgit_git_pack DEFINITION
         !iv_decompressed TYPE xstring
       RETURNING
         VALUE(rv_ended)  TYPE abap_bool .
+    CLASS-METHODS next_object_fits
+      IMPORTING
+        !iv_data       TYPE xstring
+        !iv_offset     TYPE i
+      RETURNING
+        VALUE(rv_fits) TYPE abap_bool .
 ENDCLASS.
 
 
@@ -241,8 +247,9 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
           cv_decompressed = lv_decompressed ).
 
       CLEAR ls_object.
-      ls_object-adler32 = lv_data(4).
-      lv_data = lv_data+4. " skip adler checksum
+      " Skip the Adler-32 checksum. It is not always checked, so it is not kept either:
+      " encode computes it from the data.
+      lv_data = lv_data+4.
 
       IF lv_type = zif_abapgit_git_definitions=>c_type-ref_d.
         ls_object-sha1 = lv_ref_delta.
@@ -486,7 +493,9 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
         iv_data         = cv_data
         iv_decompressed = cv_decompressed
         iv_guess        = lv_compressed_len ).
-      IF lv_end > 0.
+      " Behind the stream and its Adler-32 bytes, the next object or the pack trailer must follow
+      IF lv_end > 0 AND next_object_fits( iv_data   = cv_data
+                                          iv_offset = lv_end + 4 ) = abap_true.
         cv_data = cv_data+lv_end.
         RETURN.
       ENDIF.
@@ -669,7 +678,8 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 * stream_ended_by is true from the end of the DEFLATE stream on, and false below it for
 * any stream a compressor writes (see there). So the end is the smallest length for which
 * it is true. A crafted stream could still make it true too early; then the next object
-* or the SHA-1 at the end of the pack does not fit, and decode raises. Starting at
+* or the SHA-1 at the end of the pack does not fit (see next_object_fits), and
+* decompress_object falls back to the ABAP inflate. Starting at
 * iv_guess, the search steps down or up with growing steps until the end lies between a
 * length that is false and one that is true, then halves that range.
 *
@@ -858,10 +868,13 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 * Two tails are not always enough: if the rest of the data is a run that both eight-byte
 * tails happen to encode, with literals for zero bits and copies for one bits, both give
 * all of the data. A tail of twice the length encodes twice the run and gives too much.
+* The same holds with the roles swapped (if the all-zero code ends the block, the zero
+* tails always agree), so there is a long tail of one bits as well.
 
     CONSTANTS: lc_zeros      TYPE x LENGTH 8 VALUE '0000000000000000',
                lc_ones       TYPE x LENGTH 8 VALUE 'FFFFFFFFFFFFFFFF',
-               lc_zeros_long TYPE x LENGTH 16 VALUE '00000000000000000000000000000000'.
+               lc_zeros_long TYPE x LENGTH 16 VALUE '00000000000000000000000000000000',
+               lc_ones_long  TYPE x LENGTH 16 VALUE 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'.
 
     DATA lv_tail TYPE xstring.
 
@@ -884,10 +897,77 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
     ENDIF.
 
     lv_tail = lc_zeros_long.
+    IF inflates_to( iv_data         = iv_data
+                    iv_length       = iv_length
+                    iv_tail         = lv_tail
+                    iv_decompressed = iv_decompressed ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    lv_tail = lc_ones_long.
     rv_ended = inflates_to( iv_data         = iv_data
                             iv_length       = iv_length
                             iv_tail         = lv_tail
                             iv_decompressed = iv_decompressed ).
+
+  ENDMETHOD.
+
+
+  METHOD next_object_fits.
+
+* In a pack, a zlib stream and its four Adler-32 bytes are followed by the next object or
+* by the 20-byte SHA-1 that ends the pack. An object starts with its type and size (the
+* size continues while the high bit is set), a ref delta then has the 20-byte base SHA-1,
+* and then comes the zlib header. A stream end found off by some bytes lands in other
+* data, where this almost never matches. Offsets only, as the pack can be large.
+
+    CONSTANTS lc_msb TYPE x LENGTH 1 VALUE '80'.
+
+    DATA: lv_len  TYPE i,
+          lv_pos  TYPE i,
+          lv_byte TYPE x LENGTH 1,
+          lv_type TYPE zif_abapgit_git_definitions=>ty_type,
+          lv_zlib TYPE x LENGTH 2.
+
+    rv_fits = abap_false.
+    lv_len = xstrlen( iv_data ).
+
+    IF lv_len - iv_offset = 20.
+      rv_fits = abap_true.
+      RETURN.
+    ENDIF.
+
+    lv_pos = iv_offset.
+    IF lv_pos < 0 OR lv_pos >= lv_len.
+      RETURN.
+    ENDIF.
+
+    lv_byte = iv_data+lv_pos(1).
+    TRY.
+        lv_type = get_type( lv_byte ).
+      CATCH zcx_abapgit_exception.
+        RETURN.
+    ENDTRY.
+
+    WHILE lv_byte BIT-AND lc_msb = lc_msb.
+      lv_pos = lv_pos + 1.
+      IF lv_pos >= lv_len.
+        RETURN.
+      ENDIF.
+      lv_byte = iv_data+lv_pos(1).
+    ENDWHILE.
+    lv_pos = lv_pos + 1.
+
+    IF lv_type = zif_abapgit_git_definitions=>c_type-ref_d.
+      lv_pos = lv_pos + 20.
+    ENDIF.
+
+    IF lv_pos + 2 > lv_len.
+      RETURN.
+    ENDIF.
+
+    lv_zlib = iv_data+lv_pos(2).
+    rv_fits = boolc( lv_zlib = c_zlib OR lv_zlib = c_zlib_hmm ).
 
   ENDMETHOD.
 
