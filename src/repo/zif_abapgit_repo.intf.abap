@@ -37,6 +37,8 @@ INTERFACE zif_abapgit_repo
   METHODS get_files_local
     IMPORTING
       !ii_log         TYPE REF TO zif_abapgit_log OPTIONAL
+      !iv_force       TYPE abap_bool DEFAULT abap_false
+        PREFERRED PARAMETER ii_log
     RETURNING
       VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
     RAISING
