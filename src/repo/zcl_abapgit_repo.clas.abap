@@ -664,7 +664,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
 
     " Serialization happened before and no refresh request
-    IF lines( mt_local ) > 0 AND mv_request_local_refresh = abap_false.
+    IF lines( mt_local ) > 0 AND mv_request_local_refresh = abap_false AND iv_force = abap_false.
       rt_files = mt_local.
       RETURN.
     ENDIF.
