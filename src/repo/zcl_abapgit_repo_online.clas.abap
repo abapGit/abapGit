@@ -223,6 +223,9 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   METHOD reset_remote.
 
+    " Refresh, select_branch, select_commit and set_url end up here. Without reading the branch
+    " list again, is_remote_unchanged would compare with the old branch commit, so new commits
+    " on the remote would not be fetched in this session.
     CLEAR mi_branch_list.
     super->reset_remote( ).
 
