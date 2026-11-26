@@ -28,7 +28,7 @@ FUNCTION z_abapgit_serialize_package.
        is_local_settings = ls_local_settings
        iv_package        = iv_package
        iv_show_log       = iv_show_log
-       io_dot_abapgit    = lo_dot_abapgit ).
+       io_dot_abapgit    = lo_dot_abapgit )-xstr.
 
     CATCH zcx_abapgit_exception INTO lx_error.
       lv_text = lx_error->get_text( ).

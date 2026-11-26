@@ -284,7 +284,7 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
       iv_url  = iv_url
       it_sha1 = lt_sha1 ).
 
-    rt_expanded = zcl_abapgit_git_porcelain=>full_tree(
+    rt_expanded = zcl_abapgit_git_objects=>full_tree(
       it_objects = lt_objects
       iv_parent  = iv_sha1 ).
 

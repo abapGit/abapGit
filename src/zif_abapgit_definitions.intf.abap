@@ -39,6 +39,11 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_files TYPE STANDARD TABLE OF zif_abapgit_git_definitions=>ty_file WITH DEFAULT KEY.
   TYPES:
+    BEGIN OF ty_zip_result,
+      xstr       TYPE xstring,
+      incomplete TYPE abap_bool,
+    END OF ty_zip_result.
+  TYPES:
     ty_yes_no         TYPE c LENGTH 1,
     ty_yes_no_partial TYPE c LENGTH 1.
   TYPES:

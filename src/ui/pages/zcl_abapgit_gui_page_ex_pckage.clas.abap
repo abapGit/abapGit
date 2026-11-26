@@ -33,7 +33,6 @@ CLASS zcl_abapgit_gui_page_ex_pckage DEFINITION
         choose_package TYPE string VALUE 'choose-object-type',
       END OF c_event.
 
-
     DATA mo_form TYPE REF TO zcl_abapgit_html_form.
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
@@ -44,6 +43,8 @@ CLASS zcl_abapgit_gui_page_ex_pckage DEFINITION
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
 
     METHODS export_package
+      RETURNING
+        VALUE(rv_incomplete) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
 ENDCLASS.
@@ -83,7 +84,7 @@ CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
     lv_ign_subpkg     = mo_form_data->get( c_id-ignore_subpackages ).
     lv_main_lang_only = mo_form_data->get( c_id-main_lang_only ).
 
-    zcl_abapgit_zip=>export_package(
+    rv_incomplete = zcl_abapgit_zip=>export_package(
       iv_package        = lv_package
       iv_folder_logic   = lv_folder_logic
       iv_ign_subpkg     = lv_ign_subpkg
@@ -143,8 +144,10 @@ CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
         IF mo_validation_log->is_empty( ) = abap_false.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ELSE.
-          export_package( ).
           MESSAGE 'Package successfully exported' TYPE 'S'.
+          IF export_package( ) = abap_true.
+            MESSAGE 'Incomplete ZIP exported; some objects were skipped' TYPE 'W'.
+          ENDIF.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
         ENDIF.
 
