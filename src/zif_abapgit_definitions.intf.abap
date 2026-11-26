@@ -293,6 +293,7 @@ INTERFACE zif_abapgit_definitions
       go_commit                     TYPE string VALUE 'go_commit',
       go_db                         TYPE string VALUE 'go_db',
       go_debuginfo                  TYPE string VALUE 'go_debuginfo',
+      go_statistics                 TYPE string VALUE 'go_statistics',
       go_explore                    TYPE string VALUE 'go_explore',
       go_file_diff                  TYPE string VALUE 'go_file_diff',
       go_home                       TYPE string VALUE 'go_home',
