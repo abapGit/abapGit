@@ -88,9 +88,14 @@ INTERFACE zif_abapgit_cts_api
     RAISING
       zcx_abapgit_exception .
 
+  "! Returns the transports the objects are currently in, read in bulk
+  "! @parameter it_items | Objects
+  "! @parameter iv_requests | Return the request instead of the task that locks the object
+  "! @parameter rt_transports | Transport per object, objects in no transport are left out
   METHODS get_transports_for_list
     IMPORTING
       !it_items            TYPE zif_abapgit_definitions=>ty_items_tt
+      !iv_requests         TYPE abap_bool DEFAULT abap_false
     RETURNING
       VALUE(rt_transports) TYPE ty_transport_list
     RAISING
