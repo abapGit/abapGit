@@ -735,14 +735,19 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   METHOD render_main_language_warning.
 
+    DATA lv_main_language TYPE string.
+    DATA lv_logon_language TYPE string.
+
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     IF iv_main_language <> sy-langu.
+      lv_main_language = |{ zcl_abapgit_convert_language=>sap1_to_text( iv_main_language ) } |
+        && |({ zcl_abapgit_convert_language=>conversion_exit_isola_output( iv_main_language ) })|.
+      lv_logon_language = |{ zcl_abapgit_convert_language=>sap1_to_text( sy-langu ) } |
+        && |({ zcl_abapgit_convert_language=>conversion_exit_isola_output( sy-langu ) })|.
       ri_html->add( render_warning_banner(
-        |Caution: Main language of the repo is |
-        && |'{ zcl_abapgit_convert_language=>conversion_exit_isola_output( iv_main_language ) }', |
-        && |but you're logged on in |
-        && |'{ zcl_abapgit_convert_language=>conversion_exit_isola_output( sy-langu ) }'| ) ).
+        |Caution: Main language of the repo is { lv_main_language }, |
+        && |but you're logged on in { lv_logon_language }| ) ).
     ENDIF.
 
   ENDMETHOD.

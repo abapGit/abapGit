@@ -373,10 +373,10 @@ CLASS ltcl_main_language_warning IMPLEMENTATION.
 
     IF sy-langu = 'E'.
       lv_main_language = 'D'.
-      lv_expected = |*Caution: Main language of the repo is 'DE', but you're logged on in 'EN'*|.
+      lv_expected = |*Caution: Main language of the repo is German (DE), but you're logged on in English (EN)*|.
     ELSE.
       lv_main_language = 'E'.
-      lv_expected = |*Caution: Main language of the repo is 'EN', but you're logged on in *|.
+      lv_expected = |*Caution: Main language of the repo is English (EN), but you're logged on in *|.
     ENDIF.
 
     li_html = zcl_abapgit_gui_chunk_lib=>render_main_language_warning( lv_main_language ).
