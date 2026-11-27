@@ -1431,6 +1431,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
           iv_show_edit          = abap_true
           iv_interactive_branch = abap_true ) ).
 
+        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_main_language_warning(
+          mi_repo->get_dot_abapgit( )->get_main_language( ) ) ).
+
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
 
         zcl_abapgit_exit=>get_instance( )->wall_message_repo(
