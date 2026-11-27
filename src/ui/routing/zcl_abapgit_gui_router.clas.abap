@@ -281,6 +281,9 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-go_debuginfo.                   " Go debug info
         rs_handled-page  = zcl_abapgit_gui_page_debuginfo=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-go_statistics.
+        rs_handled-page  = zcl_abapgit_gui_page_stats=>create( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_settings.                    " Go global settings
         rs_handled-page  = zcl_abapgit_gui_page_sett_glob=>create( ).
         rs_handled-state = get_state_settings( ii_event ).
