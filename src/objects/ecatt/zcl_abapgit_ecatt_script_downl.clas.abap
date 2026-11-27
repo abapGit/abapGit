@@ -70,7 +70,10 @@ CLASS zcl_abapgit_ecatt_script_downl IMPLEMENTATION.
           IMPORTING
             re_object   = ecatt_object ).
       CATCH cx_ecatt INTO ex_ecatt.
-        RETURN.
+        IF zcl_abapgit_ecatt_helper=>is_object_loaded( io_object = ecatt_object
+                                                       ix_error  = ex_ecatt ) = abap_false.
+          RETURN.
+        ENDIF.
     ENDTRY.
 
     toolname = ecatt_object->attrib->get_tool_name( ).
