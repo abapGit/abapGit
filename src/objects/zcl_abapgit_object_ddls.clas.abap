@@ -282,7 +282,8 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
       ls_deltab   TYPE dcdeltb,
       lt_gentab   TYPE TABLE OF dcgentb,
       lv_rc       TYPE sy-subrc,
-      lv_logname  TYPE ddmass-logname.
+      lv_logname  TYPE ddmass-logname,
+      lt_ddls     TYPE zcl_abapgit_objects_activation=>ty_ddls.
 
     " CL_DD_DDL_HANDLER->DELETE does not work for CDS views that reference other views
     " To drop any views regardless of reference, we use delnoref = false
@@ -331,6 +332,12 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         p_operation   = 'DELETE'
       EXCEPTIONS
         OTHERS        = 0.
+
+    " Mass deletion does not clean up the DDLS where-used index (DDLS_RIS_INDEX)
+    APPEND ms_item-obj_name TO lt_ddls.
+    zcl_abapgit_objects_activation=>update_where_used_ddls(
+      it_ddls = lt_ddls
+      ii_log  = ii_log ).
 
   ENDMETHOD.
 
