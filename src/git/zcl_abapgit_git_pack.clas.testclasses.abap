@@ -290,6 +290,12 @@ CLASS ltcl_pack DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
         RAISING zcx_abapgit_exception,
       pack_foreign_zlib_two FOR TESTING
         RAISING zcx_abapgit_exception,
+      pack_embedded_zlib_header FOR TESTING
+        RAISING zcx_abapgit_exception,
+      pack_mixed_zlib_headers FOR TESTING
+        RAISING zcx_abapgit_exception,
+      pack_ref_delta_zlib_in_sha FOR TESTING
+        RAISING zcx_abapgit_exception,
       next_object_fits_trailer FOR TESTING,
       next_object_fits_object FOR TESTING,
       next_object_fits_ref_delta FOR TESTING,
@@ -565,6 +571,210 @@ CLASS ltcl_pack IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = lt_objects
       act = lt_result ).
+
+  ENDMETHOD.
+
+  METHOD pack_embedded_zlib_header.
+
+    " Stored DEFLATE blob whose raw bytes literally contain valid-looking object headers
+    " followed by 789C and 7801. The header scan must skip these false hits inside the stream.
+    CONSTANTS: lc_pack_header TYPE x LENGTH 12 VALUE '5041434B0000000200000002',
+               lc_zlib        TYPE x LENGTH 2  VALUE '789C',
+               lc_decoy       TYPE x LENGTH 16 VALUE '0102030435789C0001020304B5017801'.
+
+    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
+          ls_object  LIKE LINE OF lt_objects,
+          lt_result  TYPE zif_abapgit_definitions=>ty_objects_tt,
+          lv_data    TYPE xstring,
+          lv_pack    TYPE xstring,
+          lv_header  TYPE xstring,
+          lv_adler32 TYPE zif_abapgit_git_definitions=>ty_adler32,
+          lv_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1,
+          lv_stream  TYPE xstring,
+          lv_trailer TYPE xstring.
+
+    lv_pack = lc_pack_header.
+
+    " Object 1: payload containing embedded decoy headers + 789C / 7801
+    CONCATENATE lc_decoy lc_decoy INTO lv_data IN BYTE MODE.
+    ls_object = object_blob( lv_data ).
+    ls_object-index = 1.
+    APPEND ls_object TO lt_objects.
+
+    lv_header = zcl_abapgit_git_pack=>type_and_length(
+      iv_type   = zif_abapgit_git_definitions=>c_type-blob
+      iv_length = xstrlen( lv_data ) ).
+    lv_adler32 = zcl_abapgit_hash=>adler32( lv_data ).
+    lv_stream = stored_deflate( lv_data ).
+    CONCATENATE lv_pack lv_header lc_zlib lv_stream lv_adler32 INTO lv_pack IN BYTE MODE.
+
+    " Object 2: normal blob following it
+    lv_data = zcl_abapgit_convert=>string_to_xstring_utf8( 'Second object after decoy headers' ).
+    ls_object = object_blob( lv_data ).
+    ls_object-index = 2.
+    APPEND ls_object TO lt_objects.
+
+    lv_header = zcl_abapgit_git_pack=>type_and_length(
+      iv_type   = zif_abapgit_git_definitions=>c_type-blob
+      iv_length = xstrlen( lv_data ) ).
+    lv_adler32 = zcl_abapgit_hash=>adler32( lv_data ).
+    lv_stream = stored_deflate( lv_data ).
+    CONCATENATE lv_pack lv_header lc_zlib lv_stream lv_adler32 INTO lv_pack IN BYTE MODE.
+
+    lv_sha1 = to_upper( zcl_abapgit_hash=>sha1_raw( lv_pack ) ).
+    lv_trailer = lv_sha1.
+    CONCATENATE lv_pack lv_trailer INTO lv_pack IN BYTE MODE.
+
+    lt_result = zcl_abapgit_git_pack=>decode( lv_pack ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = lt_objects
+      act = lt_result ).
+
+  ENDMETHOD.
+
+  METHOD pack_mixed_zlib_headers.
+
+    " Three objects alternating 7801 and 789C zlib headers: find_next_zlib_header must find
+    " 7801 before a later 789C and vice versa.
+    CONSTANTS: lc_pack_header TYPE x LENGTH 12 VALUE '5041434B0000000200000003',
+               lc_zlib_9c     TYPE x LENGTH 2  VALUE '789C',
+               lc_zlib_01     TYPE x LENGTH 2  VALUE '7801'.
+
+    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
+          ls_object  LIKE LINE OF lt_objects,
+          lt_result  TYPE zif_abapgit_definitions=>ty_objects_tt,
+          lv_data    TYPE xstring,
+          lv_pack    TYPE xstring,
+          lv_header  TYPE xstring,
+          lv_zlib    TYPE x LENGTH 2,
+          lv_adler32 TYPE zif_abapgit_git_definitions=>ty_adler32,
+          lv_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1,
+          lv_stream  TYPE xstring,
+          lv_trailer TYPE xstring.
+
+    lv_pack = lc_pack_header.
+
+    DO 3 TIMES.
+      lv_data = zcl_abapgit_convert=>string_to_xstring_utf8( |Mixed zlib header object { sy-index }| ).
+      ls_object = object_blob( lv_data ).
+      ls_object-index = sy-index.
+      APPEND ls_object TO lt_objects.
+
+      lv_header = zcl_abapgit_git_pack=>type_and_length(
+        iv_type   = zif_abapgit_git_definitions=>c_type-blob
+        iv_length = xstrlen( lv_data ) ).
+      lv_adler32 = zcl_abapgit_hash=>adler32( lv_data ).
+      lv_stream = stored_deflate( lv_data ).
+      IF sy-index = 2.
+        lv_zlib = lc_zlib_01.
+      ELSE.
+        lv_zlib = lc_zlib_9c.
+      ENDIF.
+      CONCATENATE lv_pack lv_header lv_zlib lv_stream lv_adler32 INTO lv_pack IN BYTE MODE.
+    ENDDO.
+
+    lv_sha1 = to_upper( zcl_abapgit_hash=>sha1_raw( lv_pack ) ).
+    lv_trailer = lv_sha1.
+    CONCATENATE lv_pack lv_trailer INTO lv_pack IN BYTE MODE.
+
+    lt_result = zcl_abapgit_git_pack=>decode( lv_pack ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = lt_objects
+      act = lt_result ).
+
+  ENDMETHOD.
+
+  METHOD pack_ref_delta_zlib_in_sha.
+
+    " Object 1 followed by a REF_DELTA, plus direct test of decompress_by_header when
+    " the 20-byte base SHA-1 contains a decoy 35 789C before the real REF_DELTA zlib header.
+    CONSTANTS: lc_pack_header TYPE x LENGTH 12 VALUE '5041434B0000000200000002',
+               lc_zlib        TYPE x LENGTH 2  VALUE '789C',
+               lc_delta_ins   TYPE x LENGTH 3  VALUE '050505',
+               lc_decoy_sha   TYPE x LENGTH 20 VALUE '112233445535789C99AABBCCDDEEFF0011223344',
+               lc_ref_hdr     TYPE x LENGTH 1  VALUE '75',
+               lc_tail_pad    TYPE x LENGTH 24 VALUE '000000000000000000000000000000000000000000000000'.
+
+    DATA: lt_result  TYPE zif_abapgit_definitions=>ty_objects_tt,
+          ls_result  LIKE LINE OF lt_result,
+          lv_base    TYPE xstring,
+          lv_base_x  TYPE x LENGTH 20,
+          lv_delta   TYPE xstring,
+          lv_target  TYPE xstring,
+          lv_pack    TYPE xstring,
+          lv_header  TYPE xstring,
+          lv_adler32 TYPE zif_abapgit_git_definitions=>ty_adler32,
+          lv_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1,
+          lv_stream  TYPE xstring,
+          lv_trailer TYPE xstring,
+          lv_buf     TYPE xstring,
+          lv_out     TYPE xstring,
+          lv_head    TYPE zif_abapgit_git_definitions=>ty_adler32,
+          lv_ok      TYPE abap_bool.
+
+    lv_base = zcl_abapgit_convert=>string_to_xstring_utf8( 'hello' ).
+    lv_target = zcl_abapgit_convert=>string_to_xstring_utf8( 'world' ).
+    lv_sha1 = zcl_abapgit_hash=>sha1_blob( lv_base ).
+    lv_base_x = to_upper( lv_sha1 ).
+
+    " 1. Direct test with decoy 35 789C inside the 20-byte REF_DELTA base SHA-1
+    lv_stream = stored_deflate( lv_base ).
+    lv_adler32 = zcl_abapgit_hash=>adler32( lv_base ).
+    CONCATENATE lv_stream lv_adler32 lc_ref_hdr lc_decoy_sha lc_zlib lc_tail_pad
+      INTO lv_buf IN BYTE MODE.
+    zcl_abapgit_git_pack=>decompress_by_header(
+      EXPORTING
+        iv_expected     = xstrlen( lv_base )
+        iv_last         = abap_false
+      IMPORTING
+        ev_ok           = lv_ok
+      CHANGING
+        cv_data         = lv_buf
+        cv_decompressed = lv_out ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_true
+      act = lv_ok ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = lv_base
+      act = lv_out ).
+    lv_head = lv_buf(4).
+    cl_abap_unit_assert=>assert_equals(
+      exp = lv_adler32
+      act = lv_head ).
+
+    " 2. Full pack decode with a REF_DELTA object
+    CONCATENATE lc_delta_ins lv_target INTO lv_delta IN BYTE MODE.
+    lv_pack = lc_pack_header.
+
+    lv_header = zcl_abapgit_git_pack=>type_and_length(
+      iv_type   = zif_abapgit_git_definitions=>c_type-blob
+      iv_length = xstrlen( lv_base ) ).
+    lv_adler32 = zcl_abapgit_hash=>adler32( lv_base ).
+    lv_stream = stored_deflate( lv_base ).
+    CONCATENATE lv_pack lv_header lc_zlib lv_stream lv_adler32 INTO lv_pack IN BYTE MODE.
+
+    lv_header = zcl_abapgit_git_pack=>type_and_length(
+      iv_type   = zif_abapgit_git_definitions=>c_type-ref_d
+      iv_length = xstrlen( lv_delta ) ).
+    lv_adler32 = zcl_abapgit_hash=>adler32( lv_delta ).
+    lv_stream = stored_deflate( lv_delta ).
+    CONCATENATE lv_pack lv_header lv_base_x lc_zlib lv_stream lv_adler32 INTO lv_pack IN BYTE MODE.
+
+    lv_sha1 = to_upper( zcl_abapgit_hash=>sha1_raw( lv_pack ) ).
+    lv_trailer = lv_sha1.
+    CONCATENATE lv_pack lv_trailer INTO lv_pack IN BYTE MODE.
+
+    lt_result = zcl_abapgit_git_pack=>decode( lv_pack ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 2
+      act = lines( lt_result ) ).
+    READ TABLE lt_result INTO ls_result INDEX 2.
+    cl_abap_unit_assert=>assert_equals(
+      exp = lv_target
+      act = ls_result-data ).
 
   ENDMETHOD.
 

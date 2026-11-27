@@ -91,6 +91,9 @@ CLASS zcl_abapgit_git_pack DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    TYPES:
+      ty_int_tt TYPE STANDARD TABLE OF i WITH DEFAULT KEY .
+
     CONSTANTS:
       c_pack_start TYPE x LENGTH 4 VALUE '5041434B' ##NO_TEXT.
     CONSTANTS:
@@ -99,6 +102,10 @@ CLASS zcl_abapgit_git_pack DEFINITION
       c_zlib_hmm   TYPE x LENGTH 2 VALUE '7801' ##NO_TEXT.
     CONSTANTS:                                                    " PACK
       c_version    TYPE x LENGTH 4 VALUE '00000002' ##NO_TEXT.
+    CONSTANTS:
+      c_tail_zeros_long TYPE x LENGTH 16 VALUE '00000000000000000000000000000000' ##NO_TEXT.
+    CONSTANTS:
+      c_tail_ones_long  TYPE x LENGTH 16 VALUE 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF' ##NO_TEXT.
 
     CLASS-METHODS sort_tree
       IMPORTING
@@ -134,11 +141,42 @@ CLASS zcl_abapgit_git_pack DEFINITION
     CLASS-METHODS decompress_object
       IMPORTING
         !iv_expected     TYPE i
+        !iv_last         TYPE abap_bool DEFAULT abap_false
       CHANGING
         !cv_data         TYPE xstring
         !cv_decompressed TYPE xstring
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS decompress_by_header
+      IMPORTING
+        !iv_expected     TYPE i
+        !iv_last         TYPE abap_bool
+      EXPORTING
+        !ev_ok           TYPE abap_bool
+      CHANGING
+        !cv_data         TYPE xstring
+        !cv_decompressed TYPE xstring .
+    CLASS-METHODS find_next_zlib_header
+      IMPORTING
+        !iv_data      TYPE xstring
+        !iv_offset    TYPE i
+      RETURNING
+        VALUE(rv_pos) TYPE i .
+    CLASS-METHODS collect_header_candidates
+      IMPORTING
+        !iv_data             TYPE xstring
+        !iv_zpos             TYPE i
+      RETURNING
+        VALUE(rt_candidates) TYPE ty_int_tt .
+    CLASS-METHODS try_stream_end
+      IMPORTING
+        !iv_data         TYPE xstring
+        !iv_length       TYPE i
+        !iv_expected     TYPE i
+      EXPORTING
+        !ev_decompressed TYPE xstring
+        !ev_ended        TYPE abap_bool
+        !ev_exact        TYPE abap_bool .
     CLASS-METHODS find_zlib_end
       IMPORTING
         !iv_data         TYPE xstring
@@ -242,6 +280,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       decompress_object(
         EXPORTING
           iv_expected     = lv_expected
+          iv_last         = boolc( lv_uindex = lv_objects )
         CHANGING
           cv_data         = lv_data
           cv_decompressed = lv_decompressed ).
@@ -454,24 +493,325 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD decompress_by_header.
+
+* Fast path: locate the next object's zlib header (789C/7801) or the 20-byte pack trailer,
+* derive candidate stream ends behind the 4-byte Adler-32 checksum, and inflate + verify the
+* candidate directly. This avoids both re-compressing every object and binary-searching
+* cl_abap_gzip=>decompress_binary when the server's zlib differs from the kernel's.
+
+    DATA: lv_len      TYPE i,
+          lv_min_end  TYPE i,
+          lv_search   TYPE i,
+          lv_upper    TYPE i,
+          lv_zpos     TYPE i,
+          lv_cand     TYPE i,
+          lv_ended    TYPE abap_bool,
+          lv_exact    TYPE abap_bool,
+          lt_cands    TYPE ty_int_tt,
+          lv_raw      TYPE xstring.
+
+    ev_ok = abap_false.
+    lv_len = xstrlen( cv_data ).
+
+    IF iv_last = abap_true.
+      " Last object: <deflate stream><4-byte Adler-32><20-byte pack SHA-1>
+      lv_cand = lv_len - 24.
+      IF lv_cand >= 2.
+        try_stream_end(
+          EXPORTING
+            iv_data         = cv_data
+            iv_length       = lv_cand
+            iv_expected     = iv_expected
+          IMPORTING
+            ev_decompressed = lv_raw
+            ev_ended        = lv_ended
+            ev_exact        = lv_exact ).
+        IF lv_exact = abap_true.
+          cv_decompressed = lv_raw.
+          cv_data = cv_data+lv_cand.
+          ev_ok = abap_true.
+        ENDIF.
+      ENDIF.
+      RETURN.
+    ENDIF.
+
+    " RFC 1951 maximum DEFLATE compression ratio is 1032:1; use 1033 conservatively.
+    " Earliest possible next zlib header is lv_min_end + 4 (Adler-32) + 1 (1-byte header).
+    lv_min_end = iv_expected DIV 1033.
+    IF lv_min_end < 2.
+      lv_min_end = 2.
+    ENDIF.
+    lv_search = lv_min_end + 5.
+    lv_upper = -1.
+
+    WHILE lv_search < lv_len - 20.
+      " A REF_DELTA can place its zlib header up to 4 + 10 + 20 = 34 bytes past the stream end
+      IF lv_upper > 0 AND lv_search > lv_upper + 34.
+        RETURN.
+      ENDIF.
+
+      lv_zpos = find_next_zlib_header(
+        iv_data   = cv_data
+        iv_offset = lv_search ).
+      IF lv_zpos < 0.
+        RETURN.
+      ENDIF.
+
+      lt_cands = collect_header_candidates(
+        iv_data = cv_data
+        iv_zpos = lv_zpos ).
+
+      LOOP AT lt_cands INTO lv_cand.
+        IF lv_cand < lv_min_end OR ( lv_upper > 0 AND lv_cand > lv_upper ).
+          CONTINUE.
+        ENDIF.
+
+        try_stream_end(
+          EXPORTING
+            iv_data         = cv_data
+            iv_length       = lv_cand
+            iv_expected     = iv_expected
+          IMPORTING
+            ev_decompressed = lv_raw
+            ev_ended        = lv_ended
+            ev_exact        = lv_exact ).
+        IF lv_exact = abap_true.
+          cv_decompressed = lv_raw.
+          cv_data = cv_data+lv_cand.
+          ev_ok = abap_true.
+          RETURN.
+        ENDIF.
+
+        IF lv_ended = abap_true AND ( lv_upper < 0 OR lv_cand - 1 < lv_upper ).
+          lv_upper = lv_cand - 1.
+        ENDIF.
+      ENDLOOP.
+
+      lv_search = lv_zpos + 1.
+    ENDWHILE.
+
+  ENDMETHOD.
+
+
+  METHOD find_next_zlib_header.
+
+    DATA: lv_off1 TYPE i,
+          lv_off2 TYPE i,
+          lv_span TYPE i.
+
+    rv_pos = -1.
+
+    " Search for the common 789C header first; only look for 7801 before that hit
+    " so an absent 7801 does not scan the entire remaining pack.
+    FIND FIRST OCCURRENCE OF c_zlib IN SECTION OFFSET iv_offset OF iv_data
+      IN BYTE MODE MATCH OFFSET lv_off1.
+    IF sy-subrc = 0.
+      lv_span = lv_off1 - iv_offset.
+      IF lv_span >= 2.
+        FIND FIRST OCCURRENCE OF c_zlib_hmm IN SECTION OFFSET iv_offset LENGTH lv_span OF iv_data
+          IN BYTE MODE MATCH OFFSET lv_off2.
+        IF sy-subrc = 0.
+          rv_pos = lv_off2.
+          RETURN.
+        ENDIF.
+      ENDIF.
+      rv_pos = lv_off1.
+      RETURN.
+    ENDIF.
+
+    FIND FIRST OCCURRENCE OF c_zlib_hmm IN SECTION OFFSET iv_offset OF iv_data
+      IN BYTE MODE MATCH OFFSET lv_off2.
+    IF sy-subrc = 0.
+      rv_pos = lv_off2.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD collect_header_candidates.
+
+    CONSTANTS: lc_msb       TYPE x LENGTH 1 VALUE '80',
+               lc_type_mask TYPE x LENGTH 1 VALUE '70',
+               lc_zero      TYPE x LENGTH 1 VALUE '00'.
+
+    DATA: lv_pos  TYPE i,
+          lv_byte TYPE x LENGTH 1,
+          lv_type TYPE x LENGTH 1,
+          lv_cand TYPE i.
+
+    " Non-REF_DELTA object: varint header ends at iv_zpos - 1 (type in {16, 32, 48, 64})
+    lv_pos = iv_zpos - 1.
+    IF lv_pos >= 6.
+      lv_byte = iv_data+lv_pos(1).
+      IF lv_byte BIT-AND lc_msb = lc_zero.
+        lv_type = lv_byte BIT-AND lc_type_mask.
+        IF lv_type = 16 OR lv_type = 32 OR lv_type = 48 OR lv_type = 64.
+          lv_cand = lv_pos - 4.
+          APPEND lv_cand TO rt_candidates.
+        ENDIF.
+        lv_pos = lv_pos - 1.
+        WHILE lv_pos >= 6.
+          lv_byte = iv_data+lv_pos(1).
+          IF lv_byte BIT-AND lc_msb <> lc_msb.
+            EXIT.
+          ENDIF.
+          lv_type = lv_byte BIT-AND lc_type_mask.
+          IF lv_type = 16 OR lv_type = 32 OR lv_type = 48 OR lv_type = 64.
+            lv_cand = lv_pos - 4.
+            APPEND lv_cand TO rt_candidates.
+          ENDIF.
+          lv_pos = lv_pos - 1.
+        ENDWHILE.
+      ENDIF.
+    ENDIF.
+
+    " REF_DELTA object: 20-byte base SHA-1 precedes iv_zpos; varint ends at iv_zpos - 21 (type 112)
+    lv_pos = iv_zpos - 21.
+    IF lv_pos >= 6.
+      lv_byte = iv_data+lv_pos(1).
+      IF lv_byte BIT-AND lc_msb = lc_zero.
+        lv_type = lv_byte BIT-AND lc_type_mask.
+        IF lv_type = 112.
+          lv_cand = lv_pos - 4.
+          APPEND lv_cand TO rt_candidates.
+        ENDIF.
+        lv_pos = lv_pos - 1.
+        WHILE lv_pos >= 6.
+          lv_byte = iv_data+lv_pos(1).
+          IF lv_byte BIT-AND lc_msb <> lc_msb.
+            EXIT.
+          ENDIF.
+          lv_type = lv_byte BIT-AND lc_type_mask.
+          IF lv_type = 112.
+            lv_cand = lv_pos - 4.
+            APPEND lv_cand TO rt_candidates.
+          ENDIF.
+          lv_pos = lv_pos - 1.
+        ENDWHILE.
+      ENDIF.
+    ENDIF.
+
+    " Test smallest candidate end first so multi-byte headers are hit before longer offsets
+    SORT rt_candidates ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM rt_candidates.
+
+  ENDMETHOD.
+
+
+  METHOD try_stream_end.
+
+    DATA: lv_prefix  TYPE xstring,
+          lv_dec_len TYPE i,
+          lv_tail    TYPE xstring,
+          lv_prev    TYPE i.
+
+    CLEAR ev_decompressed.
+    ev_ended = abap_false.
+    ev_exact = abap_false.
+
+    " First inflate with the 16-byte zero tail; produces ev_decompressed and checks expected length
+    CONCATENATE iv_data(iv_length) c_tail_zeros_long INTO lv_prefix IN BYTE MODE.
+    TRY.
+        cl_abap_gzip=>decompress_binary(
+          EXPORTING
+            gzip_in     = lv_prefix
+          IMPORTING
+            raw_out     = ev_decompressed
+            raw_out_len = lv_dec_len ).
+      CATCH cx_sy_compression_error cx_sy_buffer_overflow.
+        RETURN.
+    ENDTRY.
+    IF lv_dec_len <> iv_expected.
+      RETURN.
+    ENDIF.
+
+    " Confirm with the 16-byte one tail
+    lv_tail = c_tail_ones_long.
+    IF inflates_to( iv_data         = iv_data
+                    iv_length       = iv_length
+                    iv_tail         = lv_tail
+                    iv_decompressed = ev_decompressed ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    ev_ended = abap_true.
+
+    " Verify the stream had not already ended one byte earlier (one-bits tail fails fastest)
+    lv_prev = iv_length - 1.
+    IF lv_prev >= 2 AND inflates_to( iv_data         = iv_data
+                                     iv_length       = lv_prev
+                                     iv_tail         = lv_tail
+                                     iv_decompressed = ev_decompressed ) = abap_true.
+      lv_tail = c_tail_zeros_long.
+      IF inflates_to( iv_data         = iv_data
+                      iv_length       = lv_prev
+                      iv_tail         = lv_tail
+                      iv_decompressed = ev_decompressed ) = abap_true.
+        RETURN.
+      ENDIF.
+    ENDIF.
+
+    ev_exact = abap_true.
+
+  ENDMETHOD.
+
+
   METHOD decompress_object.
 
     DATA: lv_decompress_len TYPE i,
           lv_compressed     TYPE xstring,
           lv_compressed_len TYPE i,
-          lv_end            TYPE i.
+          lv_end            TYPE i,
+          lv_limit          TYPE i,
+          lv_slice          TYPE xstring,
+          lv_ok             TYPE abap_bool.
 
-    " Data the kernel cannot decompress takes the fallback below
+    decompress_by_header(
+      EXPORTING
+        iv_expected     = iv_expected
+        iv_last         = iv_last
+      IMPORTING
+        ev_ok           = lv_ok
+      CHANGING
+        cv_data         = cv_data
+        cv_decompressed = cv_decompressed ).
+    IF lv_ok = abap_true.
+      RETURN.
+    ENDIF.
+
+    " Fallback: bound the input slice so the kernel does not process the whole remaining pack.
+    " Data the kernel cannot decompress takes the ABAP inflate fallback below.
+    lv_limit = iv_expected + iv_expected DIV 1000 + 65536.
+    IF xstrlen( cv_data ) > lv_limit.
+      lv_slice = cv_data(lv_limit).
+    ELSE.
+      lv_slice = cv_data.
+    ENDIF.
+
     TRY.
         cl_abap_gzip=>decompress_binary(
           EXPORTING
-            gzip_in     = cv_data
+            gzip_in     = lv_slice
           IMPORTING
             raw_out     = cv_decompressed
             raw_out_len = lv_decompress_len ).
       CATCH cx_sy_compression_error cx_sy_buffer_overflow.
         lv_decompress_len = -1.
     ENDTRY.
+
+    IF lv_decompress_len <> iv_expected AND xstrlen( cv_data ) > lv_limit.
+      TRY.
+          cl_abap_gzip=>decompress_binary(
+            EXPORTING
+              gzip_in     = cv_data
+            IMPORTING
+              raw_out     = cv_decompressed
+              raw_out_len = lv_decompress_len ).
+        CATCH cx_sy_compression_error cx_sy_buffer_overflow.
+          lv_decompress_len = -1.
+      ENDTRY.
+    ENDIF.
 
     IF lv_decompress_len = iv_expected.
       " The kernel does not tell where the stream ends. If the git server compressed the
@@ -871,10 +1211,8 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 * The same holds with the roles swapped (if the all-zero code ends the block, the zero
 * tails always agree), so there is a long tail of one bits as well.
 
-    CONSTANTS: lc_zeros      TYPE x LENGTH 8 VALUE '0000000000000000',
-               lc_ones       TYPE x LENGTH 8 VALUE 'FFFFFFFFFFFFFFFF',
-               lc_zeros_long TYPE x LENGTH 16 VALUE '00000000000000000000000000000000',
-               lc_ones_long  TYPE x LENGTH 16 VALUE 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'.
+    CONSTANTS: lc_zeros TYPE x LENGTH 8 VALUE '0000000000000000',
+               lc_ones  TYPE x LENGTH 8 VALUE 'FFFFFFFFFFFFFFFF'.
 
     DATA lv_tail TYPE xstring.
 
@@ -896,7 +1234,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_tail = lc_zeros_long.
+    lv_tail = c_tail_zeros_long.
     IF inflates_to( iv_data         = iv_data
                     iv_length       = iv_length
                     iv_tail         = lv_tail
@@ -904,7 +1242,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_tail = lc_ones_long.
+    lv_tail = c_tail_ones_long.
     rv_ended = inflates_to( iv_data         = iv_data
                             iv_length       = iv_length
                             iv_tail         = lv_tail
