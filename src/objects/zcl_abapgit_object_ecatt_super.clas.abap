@@ -333,6 +333,10 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
                  iv_object_type    = lv_object_type
                  io_download       = lo_download ).
 
+    IF lv_xml IS INITIAL.
+      zcx_abapgit_exception=>raise( |ECATT, empty xml, { mv_object_name }| ).
+    ENDIF.
+
     li_document = cl_ixml_80_20=>parse_to_document( stream_xstring = lv_xml ).
 
     rs_change_information-ldate = get_changed_date( li_document ).

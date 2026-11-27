@@ -96,13 +96,13 @@ CLASS ltcl_git_objects IMPLEMENTATION.
       act = lines( lt_files )
       exp = 2 ).
 
-    READ TABLE lt_files INTO ls_file WITH KEY path = '/' filename = 'a.txt'.
+    READ TABLE lt_files INTO ls_file WITH TABLE KEY file_path COMPONENTS path = '/' filename = 'a.txt'.
     cl_abap_unit_assert=>assert_subrc( ).
     cl_abap_unit_assert=>assert_equals(
       act = ls_file-sha1
       exp = mv_blob_a ).
 
-    READ TABLE lt_files INTO ls_file WITH KEY path = '/src/' filename = 'b.txt'.
+    READ TABLE lt_files INTO ls_file WITH TABLE KEY file_path COMPONENTS path = '/src/' filename = 'b.txt'.
     cl_abap_unit_assert=>assert_subrc( ).
     cl_abap_unit_assert=>assert_equals(
       act = ls_file-data
@@ -133,7 +133,7 @@ CLASS ltcl_git_objects IMPLEMENTATION.
       act = lines( lt_expanded )
       exp = 2 ).
 
-    READ TABLE lt_expanded INTO ls_expanded WITH KEY path = '/src/' name = 'b.txt'.
+    READ TABLE lt_expanded INTO ls_expanded WITH TABLE KEY path_name COMPONENTS path = '/src/' name = 'b.txt'.
     cl_abap_unit_assert=>assert_subrc( ).
     cl_abap_unit_assert=>assert_equals(
       act = ls_expanded-sha1
