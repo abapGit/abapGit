@@ -36,7 +36,10 @@ CLASS zcl_abapgit_object_docv DEFINITION
 
     METHODS read
       RETURNING
-        VALUE(rs_data) TYPE ty_data.
+        VALUE(rs_data) TYPE ty_data
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -81,18 +84,34 @@ CLASS zcl_abapgit_object_docv IMPLEMENTATION.
 
   METHOD read.
 
+    DATA lv_version TYPE dokil-version.
+
+    SELECT SINGLE version FROM dokil INTO lv_version
+       WHERE id     = mv_id
+         AND object = mv_doc_object
+         AND langu  = mv_language
+         AND typ    = c_typ.            "#EC CI_GENBUFF "#EC CI_NOORDER
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Document not found' ).
+    ENDIF.
+
     CALL FUNCTION 'DOCU_READ'
       EXPORTING
         id       = mv_id
         langu    = mv_language
         object   = mv_doc_object
         typ      = c_typ
-        version  = c_version
+        version  = lv_version
       IMPORTING
         doktitle = rs_data-doctitle
         head     = rs_data-head
       TABLES
-        line     = rs_data-lines.
+        line     = rs_data-lines
+      EXCEPTIONS
+        OTHERS   = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error reading document' ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -127,20 +146,34 @@ CLASS zcl_abapgit_object_docv IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_data TYPE ty_data.
-
+    DATA ls_data TYPE ty_data.
+    DATA lv_version TYPE dokil-version.
 
     io_xml->read( EXPORTING iv_name = c_name
-                  CHANGING cg_data = ls_data ).
+                  CHANGING  cg_data = ls_data ).
+
+    SELECT SINGLE version FROM dokil INTO lv_version
+       WHERE id     = mv_id
+         AND object = mv_doc_object
+         AND langu  = mv_language
+         AND typ    = c_typ.
+    IF sy-subrc <> 0.
+      lv_version = c_version.
+    ENDIF.
 
     CALL FUNCTION 'DOCU_UPDATE'
       EXPORTING
         head    = ls_data-head
         state   = 'A'
         typ     = c_typ
-        version = c_version
+        version = lv_version
       TABLES
-        line    = ls_data-lines.
+        line    = ls_data-lines
+      EXCEPTIONS
+        OTHERS  = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error updating document' ).
+    ENDIF.
 
     tadir_insert( iv_package ).
 
@@ -206,12 +239,12 @@ CLASS zcl_abapgit_object_docv IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_data   TYPE ty_data.
-
+    DATA ls_data TYPE ty_data.
 
     ls_data = read( ).
 
     CLEAR: ls_data-head-tdfuser,
+           ls_data-head-tdversion,
            ls_data-head-tdfreles,
            ls_data-head-tdfdate,
            ls_data-head-tdftime,
