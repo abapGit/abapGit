@@ -106,7 +106,7 @@ CLASS lcl_bcp47_language_table IMPLEMENTATION.
     IF sy-subrc = 0.
       re_text = lv_language_mapping-text.
     ELSE.
-      re_text = 'Unknonw language'.
+      re_text = 'Unknown language'.
     ENDIF.
   ENDMETHOD.
 
