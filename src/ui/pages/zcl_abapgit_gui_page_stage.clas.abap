@@ -95,9 +95,6 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
-    METHODS render_main_language_warning
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS count_default_files_to_commit
       RETURNING
         VALUE(rv_count) TYPE i .
@@ -474,23 +471,6 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_main_language_warning.
-
-    DATA lv_main_language TYPE spras.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    lv_main_language = mi_repo->get_dot_abapgit( )->get_main_language( ).
-
-    IF lv_main_language <> sy-langu.
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
-                        |Caution: Main language of the repo is '{ lv_main_language }', |
-                     && |but you're logged on in '{ sy-langu }'| ) ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD render_scripts.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -766,7 +746,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
       iv_show_commit        = abap_false
       iv_interactive_branch = abap_true
       iv_sci_result         = mv_sci_result ) ).
-    ri_html->add( render_main_language_warning( ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_main_language_warning(
+      mi_repo->get_dot_abapgit( )->get_main_language( ) ) ).
 
     ri_html->add( '<div class="stage-container">' ).
     ri_html->add( render_actions( ) ).
