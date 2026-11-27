@@ -27,7 +27,14 @@ CLASS zcl_abapgit_ecatt_helper DEFINITION
         RETURNING
           VALUE(ri_template_over_all) TYPE REF TO if_ixml_document
         RAISING
-          cx_ecatt_apl.
+          cx_ecatt_apl,
+
+      is_object_loaded
+        IMPORTING
+          io_object        TYPE REF TO cl_apl_ecatt_object
+          ix_error         TYPE REF TO cx_root
+        RETURNING
+          VALUE(rv_loaded) TYPE abap_bool.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -39,6 +46,27 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
+
+
+  METHOD is_object_loaded.
+
+    " cl_apl_ecatt_object=>show_object also raises warnings, for example about
+    " unused command interfaces, after the object has been read completely.
+    " CL_APL_ECATT_DOWNLOAD carries on after any exception. Carry on as well,
+    " but not if the object is missing or the exception aborts the load.
+
+    FIELD-SYMBOLS <lv_abort_flag> TYPE any.
+
+    IF io_object IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    ASSIGN ix_error->('ABORT_FLAG') TO <lv_abort_flag>.
+    IF sy-subrc = 0 AND <lv_abort_flag> IS INITIAL.
+      rv_loaded = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD build_xml_of_object.
