@@ -101,6 +101,10 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
         iv_act = zif_abapgit_definitions=>c_action-ie_devtools ).
     ENDIF.
 
+    ro_menu->add(
+      iv_txt = 'Statistics'
+      iv_act = zif_abapgit_definitions=>c_action-go_statistics ).
+
   ENDMETHOD.
 
 

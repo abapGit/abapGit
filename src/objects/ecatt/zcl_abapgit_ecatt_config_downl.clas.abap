@@ -43,7 +43,10 @@ CLASS ZCL_ABAPGIT_ECATT_CONFIG_DOWNL IMPLEMENTATION.
           IMPORTING
             re_object   = ecatt_object ).
       CATCH cx_ecatt INTO ex_ecatt.
-        RETURN.
+        IF zcl_abapgit_ecatt_helper=>is_object_loaded( io_object = ecatt_object
+                                                       ix_error  = ex_ecatt ) = abap_false.
+          RETURN.
+        ENDIF.
     ENDTRY.
 
     lv_partyp = cl_apl_ecatt_const=>params_type_par.
