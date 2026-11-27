@@ -14,6 +14,7 @@
     "zcl_abapgit_b",
     "zcl_abapgit_c",
     "zcl_abapgit_d",
+    "zcl_abapgit_ecatt_helper",
     "zcl_abapgit_exit",
     "zcl_abapgit_f",
     "zcl_abapgit_g",
@@ -92,6 +93,7 @@
     "skip": [
       {"object": "ZCL_ABAPGIT_GUI_PAGE_PATCH", "class": "ltcl_continue_patching", "method": "commit_refresh_warning", "note": "open-abap free-text MESSAGE does not populate sy-msgv1 through sy-msgv4; flow is covered by commit_refresh_failure"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_get_t100_longtext", "method": "test01", "note": "uses MSAG from database"},
+      {"object": "ZCL_ABAPGIT_ECATT_HELPER", "class": "ltcl_strip_deep_data", "method": "cdata_and_comment_kept", "note": "open-abap parser turns CDATA into text and drops comments"},
 
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",           "note": "open-abap does not add the byte order mark"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty2",           "note": "open-abap does not add the byte order mark"},
