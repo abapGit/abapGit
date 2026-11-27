@@ -338,3 +338,53 @@ CLASS ltcl_render_repo IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+
+CLASS ltcl_main_language_warning DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    METHODS:
+      no_warning_in_logon_language FOR TESTING,
+      warning_in_other_language FOR TESTING.
+
+ENDCLASS.
+
+
+CLASS ltcl_main_language_warning IMPLEMENTATION.
+
+  METHOD no_warning_in_logon_language.
+
+    DATA li_html TYPE REF TO zif_abapgit_html.
+
+    li_html = zcl_abapgit_gui_chunk_lib=>render_main_language_warning( sy-langu ).
+
+    cl_abap_unit_assert=>assert_initial( li_html->render( ) ).
+
+  ENDMETHOD.
+
+
+  METHOD warning_in_other_language.
+
+    DATA li_html TYPE REF TO zif_abapgit_html.
+    DATA lv_main_language TYPE spras.
+    DATA lv_expected TYPE string.
+
+    IF sy-langu = 'E'.
+      lv_main_language = 'D'.
+      lv_expected = |*Caution: Main language of the repo is 'DE', but you're logged on in 'EN'*|.
+    ELSE.
+      lv_main_language = 'E'.
+      lv_expected = |*Caution: Main language of the repo is 'EN', but you're logged on in *|.
+    ENDIF.
+
+    li_html = zcl_abapgit_gui_chunk_lib=>render_main_language_warning( lv_main_language ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = li_html->render( )
+      exp = lv_expected ).
+
+  ENDMETHOD.
+
+ENDCLASS.

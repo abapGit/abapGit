@@ -86,6 +86,11 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_text       TYPE string
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+    CLASS-METHODS render_main_language_warning
+      IMPORTING
+        !iv_main_language TYPE spras
+      RETURNING
+        VALUE(ri_html)    TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_infopanel
       IMPORTING
         !iv_div_id     TYPE string
@@ -724,6 +729,21 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     APPEND `</ul>` TO lt_fragments.
 
     rv_html = concat_lines_of( lt_fragments ).
+
+  ENDMETHOD.
+
+
+  METHOD render_main_language_warning.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    IF iv_main_language <> sy-langu.
+      ri_html->add( render_warning_banner(
+        |Caution: Main language of the repo is |
+        && |'{ zcl_abapgit_convert_language=>conversion_exit_isola_output( iv_main_language ) }', |
+        && |but you're logged on in |
+        && |'{ zcl_abapgit_convert_language=>conversion_exit_isola_output( sy-langu ) }'| ) ).
+    ENDIF.
 
   ENDMETHOD.
 
